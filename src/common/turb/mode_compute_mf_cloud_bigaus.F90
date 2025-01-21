@@ -14,7 +14,7 @@ CONTAINS
                                   PRTM, PTHM, PRM, &
                                   PRHODREF, PEXNM, PPABSM, &
                                   PRC_MF, PRI_MF, PCF_MF, PSIGMF, &
-                                  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF)
+                                  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PWEIGHT_MF_CLOUD)
 !     #################################################################
 !!
 !!****  *COMPUTE_MF_CLOUD_BIGAUS* -
@@ -54,6 +54,7 @@ CONTAINS
 !!      S. Riette Jun 2019: remove unused PRC_UP and PRI_UP, use SIGN in ERFC computation
 !!      A. Marcel Jun 2025: new bi-gaussian cloud scheme implementation
 !!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -84,6 +85,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PRC_MF, PRI_MF          ! cloud
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PCF_MF                  ! and cloud fraction for MF scheme
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PSIGMF                  ! contribution to the env s variance
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI ! low/high cloud diagnostics
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
 !
 !*                    0.1  Declaration of local variables
 !
@@ -95,7 +97,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZRT_UP_M,&
                                & ZTH_UP_M,&
                                & ZFRAC_UP_M
 REAL :: ZQ1, ZCPH, ZTEMP, ZTEMP_UP, ZLV, ZLS, ZLVS, ZQSL, ZAH, ZA, &
-        ZSBAR_MEAN, ZSBAR_ENV, ZSIGS_UP, ZALPHA_UP_M, ZPV, ZQSI, &
+        ZSBAR_MEAN, ZSBAR_ENV, ZSIGS_UP, ZPV, ZQSI, &
         ZAUTC, ZGAUTC, ZGAUC, ZAUTI, ZGAUTI, ZGAUI, ZCRIAUTI, ZAUT, &
         ZCOND, ZGAM, ZFRAC_ICE_UP_M, ZFRAC_ICE, ZSBAR_UP
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -114,6 +116,7 @@ CALL MZF_MF(D, PRT_UP(:,:), ZRT_UP_M(:,:))
 CALL MZF_MF(D, PRV_UP(:,:), ZRV_UP_M(:,:))
 CALL MZF_MF(D, PFRAC_UP(:,:), ZFRAC_UP_M(:,:))
 CALL MZF_MF(D, PTH_UP(:,:), ZTH_UP_M(:,:))
+PWEIGHT_MF_CLOUD(:,:)=0.
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
@@ -186,8 +189,8 @@ DO JK=1, IKT
       !*      2. PDF integration
       !          ------------------------------------------------
       !
-      ZALPHA_UP_M = ZFRAC_UP_M(JIJ, JK)*PARAMMF%XALPHA_MF ! XALPHA_MF = 1 --> EDMF :: XALPHA_MF > 1 --> PARAM
-      ZALPHA_UP_M = MAX(0., MIN(ZALPHA_UP_M, 1.))
+      PWEIGHT_MF_CLOUD(JIJ, JK) = ZFRAC_UP_M(JIJ, JK)*PARAMMF%XALPHA_MF ! XALPHA_MF = 1 --> EDMF :: XALPHA_MF > 1 --> PARAM
+      PWEIGHT_MF_CLOUD(JIJ, JK) = MAX(0., MIN(PWEIGHT_MF_CLOUD(JIJ, JK), 1.))
 
       !The mean of the distribution is ZSBAR_UP
       !Computation of ZA and ZGAM (=efrc(ZA)) coefficient
@@ -197,10 +200,10 @@ DO JK=1, IKT
       ZA = -ZQ1/SQRT(2.)
 
       ZGAM = 1 + ERF(-ZA)
-      ZCOND = (EXP(-ZA**2)-ZA*SQRT(CST%XPI)*ZGAM)*ZSIGS_UP/SQRT(2.*CST%XPI) * ZALPHA_UP_M
+      ZCOND = (EXP(-ZA**2)-ZA*SQRT(CST%XPI)*ZGAM)*ZSIGS_UP/SQRT(2.*CST%XPI) * PWEIGHT_MF_CLOUD(JIJ, JK)
 
       !Cloud fraction
-      PCF_MF(JIJ, JK) = MAX(0., MIN(1., 0.5*ZGAM * ZALPHA_UP_M))
+      PCF_MF(JIJ, JK) = MAX(0., MIN(1., 0.5*ZGAM * PWEIGHT_MF_CLOUD(JIJ, JK)))
       !computation of condensate, then PRC and PRI
       ZCOND = MAX(ZCOND, 0.)
       PRC_MF(JIJ, JK) = (1.-ZFRAC_ICE_UP_M) * ZCOND
@@ -213,9 +216,9 @@ DO JK=1, IKT
 
         ZGAUC = 1 + ERF(-ZGAUTC)
         PHLC_HRC(JIJ, JK) = (1-ZFRAC_ICE_UP_M)*(EXP(-ZGAUTC**2)-ZGAUTC*SQRT(CST%XPI)*ZGAUC)*ZSIGS_UP/SQRT(2.*CST%XPI) &
-         * ZALPHA_UP_M
+         * PWEIGHT_MF_CLOUD(JIJ, JK)
 
-        PHLC_HCF(JIJ, JK) = MAX( 0., MIN(1., 0.5*ZGAUC)) * ZALPHA_UP_M
+        PHLC_HCF(JIJ, JK) = MAX( 0., MIN(1., 0.5*ZGAUC)) * PWEIGHT_MF_CLOUD(JIJ, JK)
         IF (PHLC_HCF(JIJ, JK)<1.E-6)THEN !Protection for subgrid rain using HSUBG_RC_RR_ACCR=='PRFR' (valid with RC)
           PHLC_HCF(JIJ, JK) = 0.
         ENDIF
@@ -233,9 +236,9 @@ DO JK=1, IKT
 
         ZGAUI = 1 + ERF(-ZGAUTI)
         PHLI_HRI(JIJ, JK) = ZFRAC_ICE_UP_M*(EXP(-ZGAUTI**2)-ZGAUTI*SQRT(CST%XPI)*ZGAUI)*ZSIGS_UP/SQRT(2.*CST%XPI) &
-        * ZALPHA_UP_M
+        * PWEIGHT_MF_CLOUD(JIJ, JK)
 
-        PHLI_HCF(JIJ, JK) = MAX( 0., MIN(1., 0.5*ZGAUI)) * ZALPHA_UP_M
+        PHLI_HCF(JIJ, JK) = MAX( 0., MIN(1., 0.5*ZGAUI)) * PWEIGHT_MF_CLOUD(JIJ, JK)
         IF (PHLI_HCF(JIJ, JK)<1.E-6)THEN !Protection for subgrid rain using HSUBG_RC_RR_ACCR=='PRFR' (valid with RC)
           PHLI_HCF(JIJ, JK) = 0.
         ENDIF
@@ -256,6 +259,10 @@ DO JK=1, IKT
     ENDIF
   ENDDO
 ENDDO
+
+IF(.NOT. PARAMMF%LRELAX_ALPHA_MF) THEN
+  PWEIGHT_MF_CLOUD(:,:)=0.
+ENDIF
 !
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',1,ZHOOK_HANDLE)
 

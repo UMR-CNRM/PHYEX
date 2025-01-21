@@ -10,7 +10,7 @@ INTERFACE
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &
-                            &PEXN, PCF_MF, PRC_MF, PRI_MF,                     &
+                            &PEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,   &
                             &PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR,             &
                             &PRV, PRC, PRVS, PRCS, PTH, PTHS,                  &
                             &OCOMPUTE_SRC, PSRCS, PCLDFR,                      &
@@ -62,6 +62,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PEXN    ! Exner function
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PCF_MF   ! Convective Mass Flux Cloud fraction
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRC_MF   ! Convective Mass Flux liquid mixing ratio
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRI_MF   ! Convective Mass Flux ice mixing ratio
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRV     ! Water vapor m.r. to adjust
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRC     ! Cloud water m.r. to adjust

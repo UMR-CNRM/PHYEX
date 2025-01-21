@@ -5,7 +5,7 @@
                                   PTSTEP, &
                                   PZZF, PRHODJ, PEXNREF, PRHODREF,&
                                   PPABSM, PTHT, PRT, PSIGS, &
-                                  PMFCONV, PRC_MF, PRI_MF, PCF_MF, &
+                                  PMFCONV, PRC_MF, PRI_MF, PCF_MF, PWEIGHT_MF_CLOUD, &
                                   PTHS, PRS,  PSRCS, PCLDFR,&
                                   PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, &
                                   PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
@@ -80,6 +80,7 @@
 !!      2020-12 U. Andrae : Introduce SPP for HARMONIE-AROME
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !!
 !-------------------------------------------------------------------------------
 !
@@ -127,7 +128,7 @@ REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PTHT    ! Theta at time t
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT) :: PRT     ! Moist variables at time t
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PSIGS   ! Sigma_s at time t
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PMFCONV ! convective mass flux
-REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PRC_MF, PRI_MF, PCF_MF
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PRC_MF, PRI_MF, PCF_MF, PWEIGHT_MF_CLOUD ! Mass flux cloud
 !
 !
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT) :: PTHS  ! Theta source
@@ -381,7 +382,7 @@ IF (KRR==6) THEN
     & PTSTEP=ZTWOTSTEP,PSIGQSAT=ZSIGQSAT, &
     & PRHODJ=PRHODJ ,PEXNREF=PEXNREF, PRHODREF=PRHODREF,   &
     & PSIGS=PSIGS, LMFCONV=PHYEX%MISC%LMFCONV, PMFCONV=PMFCONV, PPABST=PPABSM, PZZ=ZZZ,    &
-    & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, &
+    & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD, &
     & PICLDFR=PICLDFR, PWCLDFR=PWCLDFR, & 
     & PSSIO=PSSIO, PSSIU=PSSIU, PIFR=PIFR, &
     & PRV=ZRS(:,:,:,1), PRC=ZRS(:,:,:,2),  &
@@ -404,7 +405,7 @@ ELSE
     & PTSTEP=ZTWOTSTEP,PSIGQSAT=ZSIGQSAT, &
     & PRHODJ=PRHODJ ,PEXNREF=PEXNREF, PRHODREF=PRHODREF,   &
     & PSIGS=PSIGS, LMFCONV=PHYEX%MISC%LMFCONV, PMFCONV=PMFCONV, PPABST=PPABSM, PZZ=ZZZ,    &
-    & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, &
+    & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD,&
     & PICLDFR=PICLDFR, PWCLDFR=PWCLDFR, & 
     & PSSIO=PSSIO, PSSIU=PSSIU, PIFR=PIFR, &
     & PRV=ZRS(:,:,:,1), PRC=ZRS(:,:,:,2), &

@@ -20,7 +20,8 @@ CONTAINS
                                   PDZZ, KKLCL,                              &
                                   PPABSM, PRHODREF,                         &
                                   PRC_MF, PRI_MF, PCF_MF, PSIGMF,           &
-                                  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF    )
+                                  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,   &
+                                  PWEIGHT_MF_CLOUD)
 
 !     #################################################################
 !!
@@ -58,6 +59,7 @@ CONTAINS
 !!      S. Riette Jan 2012: support for both order of vertical levels
 !  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
 !!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -108,6 +110,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PRC_MF, PRI_MF    ! cloud cont
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PCF_MF            ! and cloud fraction for MF scheme
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PSIGMF            ! SQRT(variance) for statistical cloud scheme
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF ! low/high cloud diagnostics
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
 !
 !                       1.2  Declaration of local variables
 !
@@ -127,12 +130,13 @@ PHLC_HCF(:,:) = 0.
 PHLC_HRC(:,:) = 0.
 PHLI_HCF(:,:) = 0.
 PHLI_HRI(:,:) = 0.
+PWEIGHT_MF_CLOUD(:,:) = 0.
 
 IF (PARAMMF%CMF_CLOUD == 'DIRE') THEN
   !Direct cloud scheme
   CALL COMPUTE_MF_CLOUD_DIRECT(D, PARAMMF, &
                               &KKLCL(:), PFRAC_UP(:,:), PRC_UP(:,:), PRI_UP(:,:),&
-                              &PRC_MF(:,:), PRI_MF(:,:), PCF_MF(:,:))
+                              &PRC_MF(:,:), PRI_MF(:,:), PCF_MF(:,:), PWEIGHT_MF_CLOUD(:,:))
   !
 ELSEIF (PARAMMF%CMF_CLOUD == 'STAT') THEN
   !Statistical scheme using the PDF proposed by Bougeault (81, 82) and
@@ -151,7 +155,7 @@ ELSEIF (PARAMMF%CMF_CLOUD == 'BIGA') THEN
                               &PRTM, PTHM, PRM, &
                               &PRHODREF, PEXNM, PPABSM, &
                               &PRC_MF, PRI_MF, PCF_MF, PSIGMF, &
-                              &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF)
+                              &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PWEIGHT_MF_CLOUD(:,:))
   !
 ELSEIF  (PARAMMF%CMF_CLOUD == 'NONE') THEN
   ! No CONVECTIVE CLOUD SCHEME

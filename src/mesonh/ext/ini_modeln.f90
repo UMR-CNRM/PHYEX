@@ -301,6 +301,7 @@ END MODULE MODI_INI_MODEL_n
 !  C. Barthe      03/2023: if cloud electricity is activated, both ini_micron and ini_elecn are called
 !  A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !  A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !---------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -1681,6 +1682,7 @@ ALLOCATE(XHLC_HRC_MF(IIU,IJU,IKU)) ; XHLC_HRC_MF=0.
 ALLOCATE(XHLC_HCF_MF(IIU,IJU,IKU)) ; XHLC_HCF_MF=0.
 ALLOCATE(XHLI_HRI_MF(IIU,IJU,IKU)) ; XHLI_HRI_MF=0.
 ALLOCATE(XHLI_HCF_MF(IIU,IJU,IKU)) ; XHLI_HCF_MF=0.
+ALLOCATE(XWEIGHT_MF_CLOUD(IIU,IJU,IKU)) ; XWEIGHT_MF_CLOUD=0.
 !
 !*       3.9   Local variables
 !

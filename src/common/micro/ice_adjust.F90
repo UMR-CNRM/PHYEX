@@ -9,7 +9,7 @@
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &
-                            &PEXN, PCF_MF, PRC_MF, PRI_MF,                     &
+                            &PEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,   &
                             &PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR,             &
                             &PRV, PRC, PRVS, PRCS, PTH, PTHS,                  &
                             &OCOMPUTE_SRC, PSRCS, PCLDFR,                      &
@@ -106,6 +106,7 @@
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !!     R. El Khatib 24-Oct-2023 Re-vectorize ;-)
 !!     A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !!
 !-------------------------------------------------------------------------------
 !
@@ -160,6 +161,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PEXN    ! Exner function
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PCF_MF   ! Convective Mass Flux Cloud fraction
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRC_MF   ! Convective Mass Flux liquid mixing ratio
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRI_MF   ! Convective Mass Flux ice mixing ratio
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRV     ! Water vapor m.r. to adjust
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRC     ! Cloud water m.r. to adjust
@@ -281,6 +283,26 @@ ENDDO         ! end of the iterative loop
 !               -------------------------------------------------
 !
 !
+LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
+LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
+!
+! Apply a ponderation between condensation and mas flux cloud
+DO JK=IKTB,IKTE
+  DO JIJ=IIJB,IIJE
+    ZRC(JIJ,JK)=ZRC(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+    ZRI(JIJ,JK)=ZRI(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+    PCLDFR(JIJ,JK)=PCLDFR(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+    IF(LLHLC_H) THEN
+      PHLC_HRC(JIJ,JK)=PHLC_HRC(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+      PHLC_HCF(JIJ,JK)=PHLC_HCF(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+    ENDIF
+    IF(LLHLI_H) THEN
+      PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+      PHLI_HCF(JIJ,JK)=PHLI_HCF(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+    ENDIF
+  ENDDO
+ENDDO
+!
 DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
     !
@@ -334,8 +356,6 @@ DO JK=IKTB,IKTE
     LLNONE=PARAMI%CSUBG_MF_PDF=='NONE'
     LLTRIANGLE=PARAMI%CSUBG_MF_PDF=='TRIANGLE'
     LLBIGA=PARAMI%CSUBG_MF_PDF=='BIGA'
-    LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
-    LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
     DO JIJ=IIJB,IIJE
       !We limit PRC_MF+PRI_MF to PRVS*PTSTEP to avoid negative humidity
       ZW1=PRC_MF(JIJ,JK)/PTSTEP

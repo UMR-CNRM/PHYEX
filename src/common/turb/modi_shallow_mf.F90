@@ -17,7 +17,8 @@ INTERFACE
                 PDUDT_MF,PDVDT_MF,PDTKEDT_MF,                         &
                 PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,                       &
                 PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
-                PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PFLXZTHVMF,   &
+                PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
+                PWEIGHT_MF_CLOUD, PFLXZTHVMF,                         &
                 PFLXZTHMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF,      &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTKE_UP, PTHV_UP, PW_UP,                &
@@ -78,6 +79,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT)::  PDSVDT_MF    ! tendency of Sv 
 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF ! low/high cloud diagnostics
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PWEIGHT_MF_CLOUD
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZTHMF
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZRMF

@@ -92,7 +92,7 @@ CONTAINS
 
 ! Saved variables
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PSIGS !variance of s
-REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PCF_MF, PRC_MF, PRI_MF !shallow convection cloud
+REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD !shallow convection cloud
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PHLC_HCF_MF, PHLC_HRC_MF, PHLI_HCF_MF, PHLI_HRI_MF
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: ZQR, ZQS, ZQG !rain, snow, graupel specifiq contents
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE ::  PTKEM       ! TKE
@@ -239,6 +239,7 @@ if (debut) then ! Things to do only for the first call to physics
   ALLOCATE(PTKEM(klon,klev+2))
   ALLOCATE(PSIGS(klon,klev+2))
   ALLOCATE(PCF_MF(klon,klev+2))
+  ALLOCATE(PWEIGHT_MF_CLOUD(klon,klev+2))
   ALLOCATE(PRC_MF(klon,klev+2))
   ALLOCATE(PRI_MF(klon,klev+2))
   ALLOCATE(PHLC_HCF_MF(klon,klev+2))
@@ -250,6 +251,7 @@ if (debut) then ! Things to do only for the first call to physics
   ALLOCATE(ZQG(klon, klev))
   PSIGS=0.
   PCF_MF=0.
+  PWEIGHT_MF_CLOUD=0.
   PRC_MF=0.
   PRI_MF=0.
   PHLC_HCF_MF=0.
@@ -387,7 +389,7 @@ CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, P
                 &pdtphys, ZSIGQSAT,                                                                 &
                 &PRHODJ, ZEXN, ZRHOD, PSIGS, .FALSE., zmfconv,                                      &
                 &ZPABST, ZZ_MASS,                                                                   &
-                &ZEXN, PCF_MF, PRC_MF, PRI_MF,                                                      &
+                &ZEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,                                    &
                 &ZICLDFR, ZWCLDFR, ZSSIO, ZSSIU, ZIFR,                                              &
                 &ZRX(:,:,1), ZRX(:,:,2), ZRXS(:,:,1), ZRXS(:,:,2), ZTHETA, ZTHETAS,                 &
                 &PHYEX%MISC%COMPUTE_SRC, ZSRC, ZCLDFR,                                              &
@@ -460,7 +462,7 @@ CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHY
      &PDTHLDT_MF=PDTHLDT_MF(:,:),PDRTDT_MF=PDRTDT_MF(:,:),PDSVDT_MF=PDSVDT_MF(:,:,:),                &
      &PSIGMF=PSIGMF(:,:),PRC_MF=PRC_MF(:,:),PRI_MF=PRI_MF(:,:),PCF_MF=PCF_MF(:,:),                   &
      &PHLC_HRC=PHLC_HRC_MF(:,:), PHLC_HCF=PHLC_HCF_MF(:,:), PHLI_HRI=PHLI_HRI_MF(:,:), PHLI_HCF=PHLI_HCF_MF(:,:), &
-     &PFLXZTHVMF=ZFLXZTHVMF(:,:), PFLXZUMF=ZFLXZUMF(:,:), PFLXZVMF=ZFLXZVMF(:,:),                    &
+     &PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD(:,:), PFLXZTHVMF=ZFLXZTHVMF(:,:), PFLXZUMF=ZFLXZUMF(:,:), PFLXZVMF=ZFLXZVMF(:,:),                    &
      &PFLXZTHMF=ZFLXZTHMF(:,:),PFLXZRMF=ZFLXZRMF(:,:),PFLXZUMF=ZFLXZUMF(:,:),PFLXZVMF=ZFLXZVMF(:,:), &
      &PFLXZTKEMF=ZFLXZTKEMF(:,:), &
      &PTHL_UP=PTHL_UP(:,:),PRT_UP=PRT_UP(:,:),PRV_UP=PRV_UP(:,:),                                    &

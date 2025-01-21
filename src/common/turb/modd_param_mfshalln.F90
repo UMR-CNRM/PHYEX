@@ -39,6 +39,7 @@
 !!      A. Marcel Jan 2025: KIC computed following Rooy and Siebesma (2008)
 !!      A. Marcel Jan 2025: minimum dry detrainment computed with LUP in updraft
 !!      A. Marcel Jan 2025: w_up equation update (XBRIO and XAADVEC)
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !-------------------------------------------------------------------------------
 !
 !*       0.   DECLARATIONS
@@ -99,6 +100,7 @@ LOGICAL       :: LVERLIMUP      !< .TRUE. to use correction on vertical limitati
 LOGICAL       :: LPZ_EXP_LOG    !< .TRUE. to exp/log during dP/dZ conversion
 REAL          :: XBRIO          !< coefficient to slow down wup equa like Rio 2010
 REAL          :: XAADVEC        !< coeff for advective pressure perturbation like Jia he 2022
+LOGICAL       :: LRELAX_ALPHA_MF !< .TRUE. to relax the small fraction assumption
 
 END TYPE PARAM_MFSHALL_t
 
@@ -146,6 +148,7 @@ LOGICAL, POINTER       :: LVERLIMUP=>NULL()
 LOGICAL, POINTER       :: LPZ_EXP_LOG=>NULL()
 REAL, POINTER          :: XBRIO=>NULL()
 REAL, POINTER          :: XAADVEC=>NULL()
+LOGICAL, POINTER       :: LRELAX_ALPHA_MF=>NULL()
 !
 NAMELIST/NAM_PARAM_MFSHALLn/XIMPL_MF,CMF_UPDRAFT,CMF_CLOUD,CWET_MIXING,LMIXUV,LMIXTKE,LMF_FLX,&
                             XALP_PERT,XABUO,XBENTR,XBDETR,XCMF,XENTR_MF,&
@@ -153,7 +156,7 @@ NAMELIST/NAM_PARAM_MFSHALLn/XIMPL_MF,CMF_UPDRAFT,CMF_CLOUD,CWET_MIXING,LMIXUV,LM
                             XKRC_MF,XTAUSIGMF,XPRES_UV,XALPHA_MF,XSIGMA_MF,XSIGMA_ENV,&
                             XFRAC_UP_MAX,XA1,XB,XC,XBETA1,XR,LTHETAS_MF,LGZ,XGZ,&
                             LVERLIMUP,LPZ_EXP_LOG,CKIC_COMPUTE,CDETR_DRY_LUP,&
-                            XBRIO, XAADVEC
+                            XBRIO, XAADVEC, LRELAX_ALPHA_MF
 !
 !-------------------------------------------------------------------------------
 !
@@ -213,6 +216,7 @@ LVERLIMUP=>PARAM_MFSHALL_MODEL(KTO)%LVERLIMUP
 LPZ_EXP_LOG=>PARAM_MFSHALL_MODEL(KTO)%LPZ_EXP_LOG
 XBRIO=>PARAM_MFSHALL_MODEL(KTO)%XBRIO
 XAADVEC=>PARAM_MFSHALL_MODEL(KTO)%XAADVEC
+LRELAX_ALPHA_MF=>PARAM_MFSHALL_MODEL(KTO)%LRELAX_ALPHA_MF
 !
 ENDIF
 !
@@ -331,6 +335,7 @@ IF(LLDEFAULTVAL) THEN
   LPZ_EXP_LOG=.FALSE.
   XBRIO=0.
   XAADVEC=0.
+  LRELAX_ALPHA_MF=.FALSE.
   IF(HPROGRAM=='MESONH') LVERLIMUP=.TRUE.
 ENDIF
 !

@@ -10,7 +10,7 @@ IMPLICIT NONE
 CONTAINS
       SUBROUTINE COMPUTE_MF_CLOUD_DIRECT(D, PARAMMF, &
                                         &KKLCL, PFRAC_UP, PRC_UP, PRI_UP,&
-                                        &PRC_MF, PRI_MF, PCF_MF)
+                                        &PRC_MF, PRI_MF, PCF_MF, PWEIGHT_MF_CLOUD)
 !     #################################################################
 !!
 !!****  *COMPUTE_MF_CLOUD_DIRECT* -
@@ -49,6 +49,7 @@ CONTAINS
 !!      S. Riette Jan 2012: support for both order of vertical levels
 !!      S. Riette Apr 2013: computation begins one level lower (to be able to have a cloud
 !!                          on mass level just below the first saturated flux level)
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -68,11 +69,13 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PFRAC_UP       ! Updraft Fracti
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PRC_UP,PRI_UP  ! updraft characteritics
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PRC_MF, PRI_MF ! cloud content
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PCF_MF         ! and cloud fraction for MF scheme
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
 !
 !*                    0.1  Declaration of local variables
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER  :: JI,JK, JK0, IKB,IKE,IKL,IIJB,IIJE
+INTEGER  :: JI,JK, JK0, IKB,IKE,IKL,IKT,IIJB,IIJE
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZFRAC_UP_M
 !
 !*                    0.2 Initialisation
 !
@@ -81,6 +84,7 @@ IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_DIRECT',0,ZHOOK_HANDLE)
 IKB=D%NKB
 IKE=D%NKE
 IKL=D%NKL
+IKT=D%NKT
 IIJB=D%NIJB
 IIJE=D%NIJE
 !*      1. COMPUTATION OF SUBGRID CLOUD
@@ -92,6 +96,14 @@ IIJE=D%NIJE
 PRC_MF(:,:)=0.
 PRI_MF(:,:)=0.
 PCF_MF(:,:)=0.
+
+IF(PARAMMF%LRELAX_ALPHA_MF) THEN
+  CALL MZF_MF(D, PFRAC_UP(:,:), ZFRAC_UP_M(:,:))
+  !$mnh_expand_array(JI=IIJB:IIJE,JK=1:IKT)
+  PWEIGHT_MF_CLOUD(IIJB:IIJE, 1:IKT) = ZFRAC_UP_M(IIJB:IIJE, 1:IKT)*PARAMMF%XALPHA_MF
+  PWEIGHT_MF_CLOUD(IIJB:IIJE, 1:IKT) = MAX(0., MIN(PWEIGHT_MF_CLOUD(IIJB:IIJE, 1:IKT), 1.))
+  !$mnh_end_expand_array(JI=IIJB:IIJE,JK=1:IKT)
+ENDIF
 
 DO JI=IIJB,IIJE
   JK0=KKLCL(JI)-IKL ! first mass level with cloud

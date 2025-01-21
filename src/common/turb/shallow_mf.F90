@@ -16,7 +16,8 @@
                 PDUDT_MF,PDVDT_MF,PDTKEDT_MF,                         &
                 PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,                       &
                 PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
-                PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PFLXZTHVMF,   &
+                PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
+                PWEIGHT_MF_CLOUD, PFLXZTHVMF,                         &
                 PFLXZTHMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF,      &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTKE_UP, PTHV_UP, PW_UP,                &
@@ -70,6 +71,7 @@
 !!      A. Marcel Jan 2025: TKE mixing
 !!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !!      A. Marcel Jan 2025: KIC formulation from Rooy and Siebesma (2008)
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -143,6 +145,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT)::  PDSVDT_MF    ! tendency of Sv 
 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF ! low/high cloud diagnostics
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZTHMF
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZRMF
@@ -305,7 +308,8 @@ CALL COMPUTE_MF_CLOUD(D,CST,TURBN,PARAMMF,ICEP,NEBN%LSTATNW, &
                       PDZZ,KKLCL,                       &
                       PPABSM,PRHODREF,                  &
                       PRC_MF,PRI_MF,PCF_MF,PSIGMF,      &
-                      PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF)
+                      PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
+                      PWEIGHT_MF_CLOUD)
 
 !!! 3. Compute fluxes of conservative variables and their divergence = tendency
 !!!    ------------------------------------------------------------------------
@@ -322,13 +326,14 @@ IF ( PARAMMF%XIMPL_MF > 1.E-10 ) THEN
              PDTHLDT_MF,PDRTDT_MF,PDUDT_MF,PDVDT_MF,PDSVDT_MF,PDTKEDT_MF, &
              ZEMF_O_RHODREF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,ZSV_UP,PTKE_UP,&
              PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,         &
-             ZFLXZSVMF,PFLXZTKEMF                                     )
+             ZFLXZSVMF,PFLXZTKEMF,PFRAC_UP                            )
 ELSE
   CALL MF_TURB_EXPL(D, PARAMMF,                                        &
          PRHODJ,ZTHLM,ZTHVM,ZRTM,PUM,PVM,PTKEM,                        &
          PDTHLDT_MF,PDRTDT_MF,PDUDT_MF,PDVDT_MF,PDTKEDT_MF,            &
          ZEMF_O_RHODREF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,PTKE_UP,    &
-         PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF)
+         PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF,   &
+         PFRAC_UP)
 ENDIF
 
 ! security in the case PARAMMF%CMF_UPDRAFT = 'DUAL'

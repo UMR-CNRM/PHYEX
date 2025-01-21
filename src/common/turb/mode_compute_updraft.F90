@@ -69,6 +69,7 @@ CONTAINS
 !!     A. Marcel Jan 2025: KIC formulation from Rooy and Siebesma (2008)
 !!     A. Marcel Jan 2025: minimum dry detrainment computed with LUP in updraft
 !!     A. Marcel Jan 2025: w_up equation update (XBRIO and XAADVEC)
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -202,6 +203,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZSHEAR,ZDUDZ,ZDVDZ ! vertical wind shear
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZWK, ZWK2, KDEPTH
 REAL, DIMENSION(D%NIJT,16) :: ZBUF
 REAL  :: ZGAMMA_WUP, ZDELTA_WUP, ZLVERT
+REAL, DIMENSION(D%NIJT) :: ZRELAX_ALPHA_COEFF ! 1/(1-fraction)
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
@@ -559,16 +561,27 @@ DO JK=IKB,IKE-IKL,IKL
   ENDWHERE
   !$mnh_end_expand_where(JIJ=IIJB:IIJE)
 
+  ! Coefficient to relax the small fraction assumption
+  IF(PARAMMF%LRELAX_ALPHA_MF) THEN
+    !$mnh_expand_array(JIJ=IIJB:IIJE)
+    ZRELAX_ALPHA_COEFF(IIJB:IIJE)=1./(1.-PFRAC_UP(IIJB:IIJE,JK))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  ELSE
+    ZRELAX_ALPHA_COEFF(IIJB:IIJE)=1.
+  ENDIF
+
   ! If the updraft did not stop, compute cons updraft characteritics at jk+KKL
   DO JIJ=IIJB,IIJE
     IF(GTEST(JIJ)) THEN
       ZMIX2(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*PENTR(JIJ,JK) !&
       ZMIX3_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1.-ZPART_DRY(JIJ))*ZDETR_CLD(JIJ,JK) !&                   
       ZMIX2_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1.-ZPART_DRY(JIJ))*ZENTR_CLD(JIJ,JK)
-      PTHL_UP(JIJ,JK+IKL)=(PTHL_UP(JIJ,JK)*(1.-0.5*ZMIX2(JIJ)) + PTHLM(JIJ,JK)*ZMIX2(JIJ)) &
-                            /(1.+0.5*ZMIX2(JIJ))   
-      PRT_UP(JIJ,JK+IKL) =(PRT_UP (JIJ,JK)*(1.-0.5*ZMIX2(JIJ)) + PRTM(JIJ,JK)*ZMIX2(JIJ))  &
-                            /(1.+0.5*ZMIX2(JIJ))
+      PTHL_UP(JIJ,JK+IKL)=(PTHL_UP(JIJ,JK)*(1.-0.5*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ)) + &
+                           PTHLM(JIJ,JK)*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ)) &
+                          /(1.+0.5*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ))   
+      PRT_UP(JIJ,JK+IKL) =(PRT_UP (JIJ,JK)*(1.-0.5*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ)) + &
+                           PRTM(JIJ,JK)*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ))  &
+                          /(1.+0.5*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ))
     ENDIF
   ENDDO
   
@@ -576,33 +589,33 @@ DO JK=IKB,IKE-IKL,IKL
     IF(JK/=IKB) THEN
       !$mnh_expand_where(JIJ=IIJB:IIJE)
       WHERE(GTEST(IIJB:IIJE))
-        PU_UP(IIJB:IIJE,JK+IKL) = (PU_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
-                                        &PUM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)+ &
+        PU_UP(IIJB:IIJE,JK+IKL) = (PU_UP(IIJB:IIJE,JK)*(1-0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) + &
+                                        &PUM(IIJB:IIJE,JK)*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)+ &
                           0.5*PARAMMF%XPRES_UV*(PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*&
                           ((PUM(IIJB:IIJE,JK+IKL)-PUM(IIJB:IIJE,JK))/PDZZ(IIJB:IIJE,JK+IKL)+&
                            (PUM(IIJB:IIJE,JK)-PUM(IIJB:IIJE,JK-IKL))/PDZZ(IIJB:IIJE,JK))        )   &
-                          /(1+0.5*ZMIX2(IIJB:IIJE))
-        PV_UP(IIJB:IIJE,JK+IKL) = (PV_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
-                                        &PVM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)+ &
+                          /(1+0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE))
+        PV_UP(IIJB:IIJE,JK+IKL) = (PV_UP(IIJB:IIJE,JK)*(1-0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) + &
+                                        &PVM(IIJB:IIJE,JK)*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)+ &
                           0.5*PARAMMF%XPRES_UV*(PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*&
                           ((PVM(IIJB:IIJE,JK+IKL)-PVM(IIJB:IIJE,JK))/PDZZ(IIJB:IIJE,JK+IKL)+&
                            (PVM(IIJB:IIJE,JK)-PVM(IIJB:IIJE,JK-IKL))/PDZZ(IIJB:IIJE,JK))    )   &
-                          /(1+0.5*ZMIX2(IIJB:IIJE))
+                          /(1+0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE))
       ENDWHERE
       !$mnh_end_expand_where(JIJ=IIJB:IIJE)
     ELSE
       !$mnh_expand_where(JIJ=IIJB:IIJE)
       WHERE(GTEST(IIJB:IIJE))
-        PU_UP(IIJB:IIJE,JK+IKL) = (PU_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
-                                        &PUM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)+ &
+        PU_UP(IIJB:IIJE,JK+IKL) = (PU_UP(IIJB:IIJE,JK)*(1-0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) + &
+                                        &PUM(IIJB:IIJE,JK)*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)+ &
                           0.5*PARAMMF%XPRES_UV*(PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*&
                           ((PUM(IIJB:IIJE,JK+IKL)-PUM(IIJB:IIJE,JK))/PDZZ(IIJB:IIJE,JK+IKL))        )   &
-                          /(1+0.5*ZMIX2(IIJB:IIJE))
-        PV_UP(IIJB:IIJE,JK+IKL) = (PV_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
-                                        &PVM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)+ &
+                          /(1+0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE))
+        PV_UP(IIJB:IIJE,JK+IKL) = (PV_UP(IIJB:IIJE,JK)*(1-0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) + &
+                                        &PVM(IIJB:IIJE,JK)*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)+ &
                           0.5*PARAMMF%XPRES_UV*(PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*&
                           ((PVM(IIJB:IIJE,JK+IKL)-PVM(IIJB:IIJE,JK))/PDZZ(IIJB:IIJE,JK+IKL))    )   &
-                          /(1+0.5*ZMIX2(IIJB:IIJE))
+                          /(1+0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE))
       ENDWHERE
       !$mnh_end_expand_where(JIJ=IIJB:IIJE)
     ENDIF
@@ -611,9 +624,9 @@ DO JK=IKB,IKE-IKL,IKL
   IF(PARAMMF%LMIXTKE) THEN
     !$mnh_expand_where(JIJ=IIJB:IIJE)
     WHERE(GTEST(IIJB:IIJE))
-      PTKE_UP(IIJB:IIJE,JK+IKL) = (PTKE_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
-                                   ZTKEM_F(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)) &
-                                  /(1+0.5*ZMIX2(IIJB:IIJE))
+      PTKE_UP(IIJB:IIJE,JK+IKL) = (PTKE_UP(IIJB:IIJE,JK)*(1-0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) + &
+                                   ZTKEM_F(IIJB:IIJE,JK)*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) &
+                                  /(1+0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE))
     ENDWHERE
     !$mnh_end_expand_where(JIJ=IIJB:IIJE)
   ENDIF
@@ -622,8 +635,9 @@ DO JK=IKB,IKE-IKL,IKL
     IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
     !$mnh_expand_where(JIJ=IIJB:IIJE)
     WHERE(GTEST(IIJB:IIJE)) 
-      PSV_UP(IIJB:IIJE,JK+IKL,JSV) = (PSV_UP(IIJB:IIJE,JK,JSV)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
-                   PSVM(IIJB:IIJE,JK,JSV)*ZMIX2(IIJB:IIJE))  /(1+0.5*ZMIX2(IIJB:IIJE))
+      PSV_UP(IIJB:IIJE,JK+IKL,JSV) = (PSV_UP(IIJB:IIJE,JK,JSV)*(1-0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) + &
+                                      PSVM(IIJB:IIJE,JK,JSV)*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) &
+                                     /(1+0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE))
     ENDWHERE
     !$mnh_end_expand_where(JIJ=IIJB:IIJE)
   END DO  
@@ -653,22 +667,22 @@ DO JK=IKB,IKE-IKL,IKL
       IF(GTEST(JIJ)) THEN
         PTHV_UP(JIJ,JK+IKL) = PTH_UP(JIJ,JK+IKL)*((1+ZRVORD*PRV_UP(JIJ,JK+IKL))/(1+PRT_UP(JIJ,JK+IKL)))
         ZLVERT=MAX(10., SQRT(PFRAC_UP(JIJ, JK)*PDX*PDY/CST%XPI))
-        ZGAMMA_WUP=1.+PARAMMF%XBRIO/((1-PARAMMF%XAADVEC)*ZLVERT)* &
+        ZGAMMA_WUP=1.+PARAMMF%XBRIO*ZRELAX_ALPHA_COEFF(JIJ)/((1-PARAMMF%XAADVEC)*ZLVERT)* &
                   &(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*ZPART_DRY(JIJ)
-        ZDELTA_WUP=1.-PARAMMF%XBRIO/((1-PARAMMF%XAADVEC)*ZLVERT)* &
+        ZDELTA_WUP=1.-PARAMMF%XBRIO*ZRELAX_ALPHA_COEFF(JIJ)/((1-PARAMMF%XAADVEC)*ZLVERT)* &
                   &(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*ZPART_DRY(JIJ)
         IF (ZBUO_INTEG_DRY(JIJ,JK)>0.) THEN
           ZW_UP2(JIJ,JK+IKL)=ZW_UP2(JIJ,JK)*ZDELTA_WUP/ZGAMMA_WUP + &
-                            &2./((1-PARAMMF%XAADVEC)*ZGAMMA_WUP)*&
-                            &(PARAMMF%XABUO-PARAMMF%XBENTR*PARAMMF%XENTR_DRY)*ZBUO_INTEG_DRY(JIJ,JK)
+                            &2./((1.-PARAMMF%XAADVEC)*ZGAMMA_WUP)*&
+                            &(PARAMMF%XABUO-PARAMMF%XBENTR*PARAMMF%XENTR_DRY*ZRELAX_ALPHA_COEFF(JIJ))*ZBUO_INTEG_DRY(JIJ,JK)
         ELSE
           ZW_UP2(JIJ,JK+IKL)=ZW_UP2(JIJ,JK)*ZDELTA_WUP/ZGAMMA_WUP + &
-                            &2./((1-PARAMMF%XAADVEC)*ZGAMMA_WUP)*PARAMMF%XABUO*ZBUO_INTEG_DRY(JIJ,JK)
+                            &2./((1.-PARAMMF%XAADVEC)*ZGAMMA_WUP)*PARAMMF%XABUO*ZBUO_INTEG_DRY(JIJ,JK)
         END IF
-        ZGAMMA_WUP=1.+1./(1-PARAMMF%XAADVEC)*(PARAMMF%XBRIO/ZLVERT* &
+        ZGAMMA_WUP=1.+ZRELAX_ALPHA_COEFF(JIJ)/(1.-PARAMMF%XAADVEC)*(PARAMMF%XBRIO/ZLVERT*ZRELAX_ALPHA_COEFF(JIJ)* &
                   &(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1. - ZPART_DRY(JIJ)) + &
                   &PARAMMF%XBDETR*ZMIX3_CLD(JIJ) + PARAMMF%XBENTR*ZMIX2_CLD(JIJ))
-        ZDELTA_WUP=1.-1./(1-PARAMMF%XAADVEC)*(PARAMMF%XBRIO/ZLVERT* &
+        ZDELTA_WUP=1.-ZRELAX_ALPHA_COEFF(JIJ)/(1.-PARAMMF%XAADVEC)*(PARAMMF%XBRIO/ZLVERT*ZRELAX_ALPHA_COEFF(JIJ)* &
                   &(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1. - ZPART_DRY(JIJ)) + &
                   &PARAMMF%XBDETR*ZMIX3_CLD(JIJ) + PARAMMF%XBENTR*ZMIX2_CLD(JIJ))
         ZW_UP2(JIJ,JK+IKL)=ZW_UP2(JIJ,JK+IKL)*ZDELTA_WUP/ZGAMMA_WUP + &

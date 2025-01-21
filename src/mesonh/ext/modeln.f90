@@ -285,6 +285,7 @@ END MODULE MODI_MODEL_n
 !                          (useful to close them in reverse model order (child before parent, needed by WRITE_BALLOON_n)
 !  J. Wurtz       01/2023: correction for mean in SURFEX outputs
 !  C. Barthe   03/02/2022: cloud electrification is now called from resolved_cloud to avoid duplicated routines
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !!-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -1967,7 +1968,7 @@ IF (CCLOUD /= 'NONE') THEN
                           XSVT, XRSVS,                                              &
                           XSRCT, XCLDFR,XICEFR, XCIT,                               &
                           LSEDIC,KACTIT, KSEDC, KSEDI, KRAIN, KWARM, KHHONI,        &
-                          LCONVHG, XCF_MF,XRC_MF, XRI_MF,                           &
+                          LCONVHG, XCF_MF,XRC_MF, XRI_MF, XWEIGHT_MF_CLOUD,         &
                           XHLC_HRC_MF, XHLC_HCF_MF, XHLI_HRI_MF, XHLI_HCF_MF,       &
                           XINPRC,ZINPRC3D,XINPRR, XINPRR3D, XEVAP3D,                &
                           XINPRS,ZINPRS3D, XINPRG,ZINPRG3D, XINPRH,ZINPRH3D,        &
@@ -1988,7 +1989,7 @@ IF (CCLOUD /= 'NONE') THEN
                           XSVT, XRSVS,                                              &
                           XSRCT, XCLDFR, XICEFR, XCIT,                              &
                           LSEDIC,KACTIT, KSEDC, KSEDI, KRAIN, KWARM, KHHONI,        &
-                          LCONVHG, XCF_MF,XRC_MF, XRI_MF,                           &
+                          LCONVHG, XCF_MF,XRC_MF, XRI_MF, XWEIGHT_MF_CLOUD,         &
                           XHLC_HRC_MF, XHLC_HCF_MF, XHLI_HRI_MF, XHLI_HCF_MF,       &
                           XINPRC,ZINPRC3D,XINPRR, XINPRR3D, XEVAP3D,                &
                           XINPRS,ZINPRS3D, XINPRG,ZINPRG3D, XINPRH,ZINPRH3D,        &

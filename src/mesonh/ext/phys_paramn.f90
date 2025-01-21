@@ -245,6 +245,7 @@ END MODULE MODI_PHYS_PARAM_n
 !  A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !  A. Marcel Jan 2025: TKE mixing
 !  A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !!-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -1713,7 +1714,7 @@ IF (CSCONV == 'EDKF') THEN
                    XRTHS,XRRS,XRUS,XRVS,XRTKES,XRSVS,                     &
                    ZSIGMF,XRC_MF, XRI_MF, XCF_MF,                         &
                    XHLC_HRC_MF, XHLC_HCF_MF, XHLI_HRI_MF, XHLI_HCF_MF,    &
-                   XWTHVMF, XWUMF, XWVMF)
+                   XWEIGHT_MF_CLOUD, XWTHVMF, XWUMF, XWVMF)
 !
 ELSE
     XWTHVMF(:,:,:)=0.
@@ -1726,6 +1727,7 @@ ELSE
     XHLC_HCF_MF(:,:,:)=0.
     XHLI_HRI_MF(:,:,:)=0.
     XHLI_HCF_MF(:,:,:)=0.
+    XWEIGHT_MF_CLOUD(:,:,:)=0.
 ENDIF   
 !
 CALL SECOND_MNH2(ZTIME4)

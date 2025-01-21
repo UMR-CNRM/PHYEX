@@ -13,7 +13,7 @@
                 PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,                       &
                 PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
                 PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,   &
-                PFLXZTHVMF, PFLXZUMF, PFLXZVMF,                       &
+                PWEIGHT_MF_CLOUD, PFLXZTHVMF, PFLXZUMF, PFLXZVMF,     &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF,         &
                 YDDDH,YDLDDH,YDMDDH                                   )
@@ -62,6 +62,7 @@
 !!      A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !!      A. Marcel Jan 2025: TKE mixing
 !!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !!
 !-------------------------------------------------------------------------------
 !
@@ -134,6 +135,7 @@ REAL, DIMENSION(KLON,KLEV,KSV), INTENT(OUT)::  PDSVDT_MF    ! tendency of Sv  by
 
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF ! high/low cloud diagnostics
+REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PFLXZTHVMF           ! Thermal production for TKE scheme
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PFLXZUMF             ! Dynamic production for TKE scheme
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PFLXZVMF             ! Dynamic production for TKE scheme
@@ -228,7 +230,7 @@ ENDDO
      &PDTHLDT_MF=PDTHLDT_MF,PDRTDT_MF=PDRTDT_MF,PDSVDT_MF=PDSVDT_MF,                      &
      &PSIGMF=PSIGMF,PRC_MF=PRC_MF,PRI_MF=PRI_MF,PCF_MF=PCF_MF,                            &
      &PHLC_HRC=PHLC_HRC_MF, PHLC_HCF=PHLC_HCF_MF, PHLI_HRI=PHLI_HRI_MF, PHLI_HCF=PHLI_HCF_MF,&
-     &PFLXZTHVMF=PFLXZTHVMF,      &
+     &PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD, PFLXZTHVMF=PFLXZTHVMF,      &
      &PFLXZTHMF=ZFLXZTHMF,PFLXZRMF=ZFLXZRMF,PFLXZUMF=PFLXZUMF,PFLXZVMF=PFLXZVMF,PFLXZTKEMF=ZFLXZTKEMF, &
      &PTHL_UP=PTHL_UP,PRT_UP=PRT_UP,PRV_UP=PRV_UP,PRC_UP=PRC_UP,PRI_UP=PRI_UP,            &
      &PU_UP=PU_UP, PV_UP=PV_UP, PTKE_UP=ZTKE_UP, PTHV_UP=PTHV_UP, PW_UP=PW_UP,            &

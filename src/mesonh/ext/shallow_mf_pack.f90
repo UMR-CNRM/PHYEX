@@ -20,7 +20,7 @@ INTERFACE
                 PRTHS,PRRS,PRUS,PRVS,PRTKES,PRSVS,                    &
                 PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
                 PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,   &
-                PFLXZTHVMF,PFLXZUMF,PFLXZVMF)
+                PWEIGHT_MF_CLOUD, PFLXZTHVMF,PFLXZUMF,PFLXZVMF)
 !     #################################################################
 !!
 use MODD_IO,        only: TFILEDATA
@@ -58,6 +58,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRTKES           ! TKE sources
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS            ! Scalar sources 
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF
+REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PFLXZUMF, PFLXZVMF   ! Dyn prod for TKE scheme
 !
@@ -80,7 +81,7 @@ END MODULE MODI_SHALLOW_MF_PACK
                 PRTHS,PRRS,PRUS,PRVS,PRTKES,PRSVS,                    &
                 PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
                 PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,   &
-                PFLXZTHVMF,PFLXZUMF,PFLXZVMF)
+                PWEIGHT_MF_CLOUD, PFLXZTHVMF,PFLXZUMF,PFLXZVMF)
 !     #################################################################
 !!
 !!****  *SHALLOW_MF_PACK* - 
@@ -119,6 +120,7 @@ END MODULE MODI_SHALLOW_MF_PACK
 !  A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !  A. Marcel Jan 2025: TKE mixing
 !  A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 ! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -185,6 +187,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRTKES           ! TKE sources
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS            ! Scalar sources 
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF
+REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PWEIGHT_MF_CLOUD
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PFLXZUMF, PFLXZVMF   ! Dyn prod for TKE scheme
 !
@@ -205,6 +208,7 @@ REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZDRTDT_MF  ! tendenc
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3),SIZE(PSVM,4)) ::  ZDSVDT_MF  ! tendency of Sv by massflux scheme
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZSIGMF,ZRC_MF,ZRI_MF,ZCF_MF ! cloud info for the cloud scheme
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZHLC_HRC_MF, ZHLC_HCF_MF, ZHLI_HRI_MF, ZHLI_HCF_MF
+REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZWEIGHT_MF_CLOUD
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZFLXZTHVMF           ! Thermal production for TKE scheme
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZFLXZTHMF
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZFLXZRMF
@@ -275,7 +279,7 @@ CALL SHALLOW_MF(YLDIMPHYEXPACK, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB, RAIN_I
                 ZDTHLDT_MF,ZDRTDT_MF,ZDSVDT_MF,                       &
                 ZSIGMF,ZRC_MF,ZRI_MF,ZCF_MF,                          &
                 ZHLC_HRC_MF, ZHLC_HCF_MF, ZHLI_HRI_MF, ZHLI_HCF_MF,   &
-                ZFLXZTHVMF,               &
+                ZWEIGHT_MF_CLOUD, ZFLXZTHVMF,               &
                 ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF,ZFLXZTKEMF,      &
                 ZTHL_UP,ZRT_UP,ZRV_UP,ZRC_UP,ZRI_UP,                  &
                 ZU_UP, ZV_UP, ZTKE_UP, ZTHV_UP, ZW_UP,                &
@@ -292,6 +296,7 @@ PHLC_HRC_MF(:,:,:) = ZHLC_HRC_MF(:,:,:)
 PHLC_HCF_MF(:,:,:) = ZHLC_HCF_MF(:,:,:)
 PHLI_HRI_MF(:,:,:) = ZHLI_HRI_MF(:,:,:)
 PHLI_HCF_MF(:,:,:) = ZHLI_HCF_MF(:,:,:)
+PWEIGHT_MF_CLOUD(:,:,:) = ZWEIGHT_MF_CLOUD(:,:,:)
 PFLXZTHVMF(:,:,:) = ZFLXZTHVMF(:,:,:)
 PFLXZUMF(:,:,:) = ZFLXZUMF(:,:,:)
 PFLXZVMF(:,:,:) = ZFLXZVMF(:,:,:)

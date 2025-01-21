@@ -18,7 +18,7 @@ INTERFACE
                                   PICEFR,                                              &
                                   PCIT, OSEDIC, OACTIT, OSEDC, OSEDI,                  &
                                   ORAIN, OWARM, OHHONI, OCONVHG,                       &
-                                  PCF_MF,PRC_MF, PRI_MF,                               &
+                                  PCF_MF,PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,             &
                                   PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,  &
                                   PINPRC,PINPRC3D,PINPRR,PINPRR3D, PEVAP3D,            &
                                   PINPRS,PINPRS3D,PINPRG,PINPRG3D,PINPRH,PINPRH3D,     &
@@ -112,6 +112,7 @@ LOGICAL,                  INTENT(IN)    :: OCONVHG! Switch for conversion from
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction 
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRI_MF! Convective Mass Flux solid mixing ratio
+REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF
 !
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRC   ! Cloud instant precip
@@ -161,7 +162,7 @@ END MODULE MODI_RESOLVED_CLOUD
                                   PICEFR,                                              &
                                   PCIT, OSEDIC, OACTIT, OSEDC, OSEDI,                  &
                                   ORAIN, OWARM, OHHONI, OCONVHG,                       &
-                                  PCF_MF,PRC_MF, PRI_MF,                               &
+                                  PCF_MF,PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,             &
                                   PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,  &
                                   PINPRC,PINPRC3D,PINPRR,PINPRR3D, PEVAP3D,            &
                                   PINPRS,PINPRS3D,PINPRG,PINPRG3D,PINPRH,PINPRH3D,     &
@@ -292,6 +293,7 @@ END MODULE MODI_RESOLVED_CLOUD
 !                          CELLS can be used with rain_ice with LRED=T and with LIMA with LPTSPLIT=T
 !                          the adjustement for cloud electricity is also externalized
 !  A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -434,6 +436,7 @@ LOGICAL,                  INTENT(IN)    :: OCONVHG! Switch for conversion from
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction 
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRI_MF! Convective Mass Flux solid mixing ratio
+REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PWEIGHT_MF_CLOUD
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF
 !
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRC   ! Cloud instant precip
@@ -879,7 +882,7 @@ SELECT CASE ( HCLOUD )
                       'ADJU',                                                  &
                       PTSTEP, ZSIGQSAT2D,                                      &
                       PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV,PMFCONV, PPABST, ZZZ,  &
-                      ZEXN, PCF_MF, PRC_MF, PRI_MF,                            &
+                      ZEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,          &
                       ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                            &
                       PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,        &
                       PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                    &
@@ -1096,7 +1099,7 @@ SELECT CASE ( HCLOUD )
                          PARAM_ICEN, TBUCONF, KRR, 'DEPI',                               &
                          PTSTEP, ZSIGQSAT2D,                                             &
                          PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
-                         ZEXN, PCF_MF, PRC_MF, PRI_MF,                                   &
+                         ZEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,                 &
                          ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                                   &
                          PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,               &
                          PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                           &
@@ -1161,7 +1164,7 @@ SELECT CASE ( HCLOUD )
                        'ADJU',                                                 &
                        PTSTEP, ZSIGQSAT2D,                                     &
                        PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV,PMFCONV, PPABST, ZZZ, &
-                       ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
+                       ZEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,         &
                        ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                           &
                        PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
                        PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                   &
@@ -1344,7 +1347,7 @@ SELECT CASE ( HCLOUD )
                       PARAM_ICEN, TBUCONF, KRR, 'DEPI',                               &
                       PTSTEP, ZSIGQSAT2D,                                             &
                       PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
-                      ZEXN, PCF_MF, PRC_MF, PRI_MF,                                   &
+                      ZEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,                 &
                       ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                                   &
                       PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,               &
                       PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                           &
