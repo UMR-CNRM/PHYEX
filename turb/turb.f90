@@ -1987,6 +1987,7 @@ END SUBROUTINE DELT
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PLM
 !
+LOGICAL :: GZD
 !-------------------------------------------------------------------------------
 !
 !   initialize the mixing length with the mesh grid
@@ -2118,24 +2119,27 @@ END WHERE
 IF (.NOT. TURBN%LRMC01) THEN
   ZALPHA=0.5**(-1.5)
   !
-  DO JIJ=IIJB,IIJE
+  !$acc_cr loop independent private(GZD,ZD)
+  DO CONCURRENT(JIJ=IIJB:IIJE)
+    GZD = .TRUE.
     IF (GOCEAN) THEN
+      !$acc loop seq
       DO JK=IKTE,IKTB,-1
         ZD=ZALPHA*(PZZ(JIJ,IKTE+1)-PZZ(JIJ,JK))
-        IF ( PLM(JIJ,JK)>ZD) THEN
+        IF ( ( PLM(JIJ,JK)>ZD) .AND. GZD ) THEN
           PLM(JIJ,JK)=ZD
         ELSE
-          EXIT
+          GZD = .FALSE.
         ENDIF
       END DO
     ELSE
       DO JK=IKTB,IKTE
         ZD=ZALPHA*(0.5*(PZZ(JIJ,JK)+PZZ(JIJ,JK+IKL))-PZZ(JIJ,IKB)) &
           *PDIRCOSZW(JIJ)
-        IF ( PLM(JIJ,JK)>ZD) THEN
+        IF ( ( PLM(JIJ,JK)>ZD) .AND. GZD ) THEN
           PLM(JIJ,JK)=ZD
         ELSE
-          EXIT
+          GZD = .FALSE.
         ENDIF
       END DO
     ENDIF
