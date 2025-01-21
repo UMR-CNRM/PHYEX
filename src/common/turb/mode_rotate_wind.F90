@@ -197,8 +197,7 @@ END DO
 !             ---------------
 !
 !
-DO JJ=IJB,IJE
-  DO JI=IIB,IIE
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
     PUSLOPE(JI,JJ) = PCOSSLOPE(JI,JJ) * PDIRCOSZW(JI,JJ) * ZUFIN(JI,JJ) +   &
                      PSINSLOPE(JI,JJ) * PDIRCOSZW(JI,JJ) * ZVFIN(JI,JJ) +   &
                             SQRT(1.-PDIRCOSZW(JI,JJ)**2) * ZWFIN(JI,JJ)
@@ -206,8 +205,7 @@ DO JJ=IJB,IJE
     PVSLOPE(JI,JJ) =-PSINSLOPE(JI,JJ)                    * ZUFIN(JI,JJ) +   &
                      PCOSSLOPE(JI,JJ)                    * ZVFIN(JI,JJ)
     !
-  END DO
-END DO
+!$mnh_end_expand_array()
 !
 !$acc end kernels
 !

@@ -225,6 +225,11 @@ USE MODE_PRANDTL
 USE MODI_LES_MEAN_SUBGRID_PHY
 USE MODI_SECOND_MNH
 !
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+!$mnh_undef(OPENACC)
+#endif
+!
 IMPLICIT NONE
 !
 !*      0.1  declarations of arguments
