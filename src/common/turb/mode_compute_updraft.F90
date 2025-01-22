@@ -70,6 +70,7 @@ CONTAINS
 !!     A. Marcel Jan 2025: minimum dry detrainment computed with LUP in updraft
 !!     A. Marcel Jan 2025: w_up equation update (XBRIO and XAADVEC)
 !!      A. Marcel Jan 2025: relaxation of the small fraction assumption
+!!     S. Riette Jan 2025: BF in weighting of ZMIX2_CLD and ZMIX3_CLD
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -574,8 +575,9 @@ DO JK=IKB,IKE-IKL,IKL
   DO JIJ=IIJB,IIJE
     IF(GTEST(JIJ)) THEN
       ZMIX2(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*PENTR(JIJ,JK) !&
-      ZMIX3_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1.-ZPART_DRY(JIJ))*ZDETR_CLD(JIJ,JK) !&                   
-      ZMIX2_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1.-ZPART_DRY(JIJ))*ZENTR_CLD(JIJ,JK)
+      !multiplication by (1-part_dry) already done in compute_entr_detr
+      ZMIX3_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*ZDETR_CLD(JIJ,JK) !&                   
+      ZMIX2_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*ZENTR_CLD(JIJ,JK)
       PTHL_UP(JIJ,JK+IKL)=(PTHL_UP(JIJ,JK)*(1.-0.5*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ)) + &
                            PTHLM(JIJ,JK)*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ)) &
                           /(1.+0.5*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ))   
@@ -859,6 +861,7 @@ CONTAINS
 !!                          Replace by IF conditions and traditional DO loops can only improve the performance.
 !  P. Wautelet 10/02/2021: bugfix: initialized PPART_DRY everywhere
 !!      S. Riette Jan 2025: exp/log during dP/dZ conversion
+!!      S. Riette Jan 2025: BF in the computation of the upper part of PBUO_INTEG_CLD
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -913,8 +916,8 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PRSAT_UP ! Mixing ratio at saturat
 REAL, DIMENSION(D%NIJT),   INTENT(INOUT)  ::  PRC_MIX, PRI_MIX      ! Mixture cloud content
 REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PENTR     ! Mass flux entrainment of the updraft
 REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PDETR     ! Mass flux detrainment of the updraft
-REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PENTR_CLD ! Mass flux entrainment of the updraft in cloudy part
-REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PDETR_CLD ! Mass flux detrainment of the updraft in cloudy part
+REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PENTR_CLD ! Mass flux entrainment of the updraft in cloudy part (multiplied by (1-part_dry))
+REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PDETR_CLD ! Mass flux detrainment of the updraft in cloudy part (multiplied by (1-part_dry))
 REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PBUO_INTEG_DRY, PBUO_INTEG_CLD! Integral Buoyancy
 REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PPART_DRY ! ratio of dry part at the transition level
 !
@@ -1022,6 +1025,8 @@ DO JIJ=IIJB,IIJE
                  LOG(1.+ (2.*(PARAMMF%XABUO)/PW_UP2(JIJ,KK))* &
                  (-PBUO_INTEG_DRY(JIJ)))
     ENDIF
+    !division by (Z(KK+KKL)-Z(KK)) whereas integration is computed only on the dry part
+    !result is an average over the entire layer
     PENTR(JIJ) = PARAMMF%XENTR_DRY*PENTR(JIJ)/(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))    
     PDETR(JIJ) = PARAMMF%XDETR_DRY*PDETR(JIJ)/(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))
     !Minimum value of detrainment
@@ -1031,6 +1036,7 @@ DO JIJ=IIJB,IIJE
       ZWK0D=PLUP(JIJ)
     ENDIF
     ZWK0D=SIGN(MAX(1., ABS(ZWK0D)), ZWK0D) ! ZWK0D must not be zero
+    !multiplication by PPART_DRY to get a mean value over the entire layer
     PDETR(JIJ) = MAX(PPART_DRY(JIJ)*PARAMMF%XDETR_LUP/ZWK0D, PDETR(JIJ))
   ELSE
     !No dry part, condensation reached (OTESTLCL)
@@ -1076,12 +1082,12 @@ DO JIJ=IIJB,IIJE
               - (PTHVM(JIJ,KK)-ZDZ*ZCOEFF_MINUS_HALF_THV(JIJ)) + PTHV_UP(JIJ) )
 
     !Between max(mass level, bottom of cloudy part) and flux level KK+KKL
+    !Bottom of integration could be LCL or already inside the cloud
     ZDZ=(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))-MAX(ZDZ_STOP(JIJ),0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK)))
     PBUO_INTEG_CLD(JIJ) = PBUO_INTEG_CLD(JIJ)+ZG_O_THVREF_ED(JIJ)*ZDZ*&
                       (0.5*( ZCOTHVU - ZCOEFF_PLUS_HALF_THV(JIJ))*ZDZ&
               - (PTHVM(JIJ,KK)+(0.5*((PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK)))-ZDZ)*ZCOEFF_PLUS_HALF_THV(JIJ)) +&
-              PTHV_UP(JIJ) )
-
+              (ZTHV_UP_F2(JIJ) - ZDZ*ZCOTHVU))
   ELSE
     !No cloudy part
     PBUO_INTEG_CLD(JIJ)=0.

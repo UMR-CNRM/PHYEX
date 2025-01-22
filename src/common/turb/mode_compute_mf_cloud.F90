@@ -15,8 +15,8 @@ CONTAINS
                                   KRR, KRRL, KRRI,                          &
                                   PFRAC_ICE,                                &
                                   PRV_UP, PRC_UP, PRI_UP, PEMF,             &
-                                  PTHL_UP, PRT_UP, PFRAC_UP, PTH_UP, PTHV_UP,&
-                                  PEXNM, PTHLM, PRTM, PTHM, PTHVM, PRM,     &
+                                  PTHL_UP, PRT_UP, PFRAC_UP, PTH_UP,        &
+                                  PEXNM, PTHLM, PRTM, PTHM, PRM,            &
                                   PDZZ, KKLCL,                              &
                                   PPABSM, PRHODREF,                         &
                                   PRC_MF, PRI_MF, PCF_MF, PSIGMF,           &
@@ -98,10 +98,10 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PFRAC_ICE    ! liquid/ice frac
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PRV_UP, PRC_UP, PRI_UP, PEMF! updraft characteritics
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHL_UP, PRT_UP   ! rc,w,Mass Flux,Thetal,rt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PFRAC_UP          ! Updraft Fraction
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTH_UP, PTHV_UP   ! updraft theta and thetaV
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTH_UP            ! updraft theta
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PEXNM             ! exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHLM, PRTM       ! cons. var. at t-dt
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHM, PTHVM       ! theta and thetaV
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHM              ! theta
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)   ::  PRM               ! water var. at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PDZZ
 INTEGER, DIMENSION(D%NIJT),  INTENT(IN)   ::  KKLCL             ! index of updraft condensation level

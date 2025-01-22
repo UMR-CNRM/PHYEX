@@ -303,8 +303,8 @@ CALL COMPUTE_MF_CLOUD(D,CST,TURBN,PARAMMF,ICEP,NEBN%LSTATNW, &
                       ZFRAC_ICE,                        &
                       PRV_UP,PRC_UP,PRI_UP,PEMF,        &
                       PTHL_UP,PRT_UP,PFRAC_UP,ZTH_UP,   &
-                      PTHV_UP,PEXNM,ZTHLM,ZRTM,         &
-                      PTHM, ZTHVM, PRM,                 &
+                      PEXNM,ZTHLM,ZRTM,                 &
+                      PTHM, PRM,                        &
                       PDZZ,KKLCL,                       &
                       PPABSM,PRHODREF,                  &
                       PRC_MF,PRI_MF,PCF_MF,PSIGMF,      &
