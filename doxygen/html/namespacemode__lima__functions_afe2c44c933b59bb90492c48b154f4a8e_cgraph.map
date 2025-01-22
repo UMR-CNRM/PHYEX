@@ -1,4 +1,7 @@
 <map id="mode_lima_functions::gammln" name="mode_lima_functions::gammln">
-<area shape="rect" id="node1" title=" " alt="" coords="5,5,168,47"/>
-<area shape="rect" id="node2" href="$namespacemode__lima__functions.html#a10b84151b98e285d122d4a3c9cd627ed" title=" " alt="" coords="216,5,379,47"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,29,168,69"/>
+<area shape="poly" id="edge3_Node000001_Node000001" title=" " alt="" coords="47,30,45,20,51,10,65,5,87,3,111,6,125,13,122,18,110,11,87,8,66,10,54,15,50,21,52,28"/>
+<area shape="rect" id="Node000002" href="$namespacemode__lima__functions.html#a6fcd7defdebf7e548d8dd8266af5d3c5" title=" " alt="" coords="216,29,379,69"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="168,47,202,47,202,52,168,52"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="258,30,255,20,262,10,276,5,297,3,322,6,335,13,333,18,320,11,297,8,277,10,265,15,261,21,263,28"/>
 </map>

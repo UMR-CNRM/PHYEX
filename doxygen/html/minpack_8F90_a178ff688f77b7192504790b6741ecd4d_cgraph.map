@@ -1,8 +1,16 @@
 <map id="lmstr" name="lmstr">
-<area shape="rect" id="node1" title=" " alt="" coords="5,48,61,74"/>
-<area shape="rect" id="node2" href="$minpack_8F90.html#a77bab828c23542feaca9eb2756475b89" title=" " alt="" coords="224,22,288,49"/>
-<area shape="rect" id="node3" href="$minpack_8F90.html#a1dc1e9adda30350383f28f6cc6361365" title=" " alt="" coords="113,73,173,100"/>
-<area shape="rect" id="node5" href="$minpack_8F90.html#a64d35f73f2a85378c24dd7b99ddb0c0f" title=" " alt="" coords="115,22,170,49"/>
-<area shape="rect" id="node6" href="$minpack_8F90.html#adbcfef20d552d8c5e7dc5925c975eb23" title=" " alt="" coords="109,124,176,150"/>
-<area shape="rect" id="node4" href="$minpack_8F90.html#a0dd208e826a2526722a40eab1724ac83" title=" " alt="" coords="225,73,287,100"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,55,61,80"/>
+<area shape="rect" id="Node000002" href="$minpack_8F90.html#a77bab828c23542feaca9eb2756475b89" title=" " alt="" coords="224,29,288,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="47,52,74,31,109,14,136,9,164,10,214,22,213,27,163,16,136,15,110,19,76,36,50,57"/>
+<area shape="rect" id="Node000003" href="$minpack_8F90.html#a1dc1e9adda30350383f28f6cc6361365" title=" " alt="" coords="113,79,173,104"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="62,71,100,79,99,84,61,76"/>
+<area shape="rect" id="Node000005" href="$minpack_8F90.html#a64d35f73f2a85378c24dd7b99ddb0c0f" title=" " alt="" coords="115,29,170,55"/>
+<area shape="poly" id="edge6_Node000001_Node000005" title=" " alt="" coords="61,58,101,49,102,54,62,64"/>
+<area shape="rect" id="Node000006" href="$minpack_8F90.html#adbcfef20d552d8c5e7dc5925c975eb23" title=" " alt="" coords="109,128,176,153"/>
+<area shape="poly" id="edge8_Node000001_Node000006" title=" " alt="" coords="55,78,113,118,110,122,52,82"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="236,30,232,21,234,12,243,5,256,3,272,6,279,14,275,18,269,11,256,8,245,10,239,14,238,20,241,28"/>
+<area shape="poly" id="edge4_Node000003_Node000002" title=" " alt="" coords="171,76,212,58,214,63,174,81"/>
+<area shape="rect" id="Node000004" href="$minpack_8F90.html#a0dd208e826a2526722a40eab1724ac83" title=" " alt="" coords="225,79,287,104"/>
+<area shape="poly" id="edge5_Node000003_Node000004" title=" " alt="" coords="173,89,211,89,211,94,173,94"/>
+<area shape="poly" id="edge7_Node000005_Node000002" title=" " alt="" coords="170,39,210,39,210,45,170,45"/>
 </map>

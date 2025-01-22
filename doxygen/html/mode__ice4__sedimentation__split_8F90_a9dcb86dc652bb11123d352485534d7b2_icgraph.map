@@ -1,0 +1,9 @@
+<map id="internal_sedim_spli" name="internal_sedim_spli">
+<area shape="rect" id="Node000001" title=" " alt="" coords="645,13,795,38"/>
+<area shape="rect" id="Node000002" href="$namespacemode__ice4__sedimentation__split.html#a7ba15172b1c20a4407be54212b26e573" title=" " alt="" coords="369,5,597,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="632,28,598,28,598,23,632,23"/>
+<area shape="rect" id="Node000003" href="$namespacemode__ice4__sedimentation.html#af99421af3a311bcf6fd0ea3bcadd3e89" title=" " alt="" coords="127,5,321,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="356,28,321,28,321,23,356,23"/>
+<area shape="rect" id="Node000004" href="$rain__ice_8F90.html#a02941f082f8e2db69d2f2bc4f0e4f073" title=" " alt="" coords="5,13,79,38"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="113,28,79,28,79,23,113,23"/>
+</map>

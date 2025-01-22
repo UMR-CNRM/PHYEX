@@ -1,8 +1,9 @@
 <map id="elec_init_noind_gardi" name="elec_init_noind_gardi">
-<area shape="rect" id="node1" title=" " alt="" coords="507,31,667,57"/>
-<area shape="rect" id="node2" href="$namespacemode__elec__tendencies.html#a7b9c94cea6e8bcbfca43adef1031fb44" title=" " alt="" coords="288,23,459,65"/>
-<area shape="rect" id="node3" href="$lima_8F90.html#a5ceeaba408db363087891a52efe7fc36" title=" " alt="" coords="178,5,229,32"/>
-<area shape="rect" id="node5" href="$rain__ice_8F90.html#af2ae9ca24d1f1c67ca28835f7ed549e2" title=" " alt="" coords="167,56,240,83"/>
-<area shape="rect" id="node4" href="$main__lima_8F90.html#a98a6c25ee98634744f14468b1801c7ce" title=" " alt="" coords="17,5,107,32"/>
-<area shape="rect" id="node6" href="$main__rain__ice_8F90.html#a99099c9da3ab35faf5226c772f061fde" title=" " alt="" coords="5,56,119,83"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="345,31,505,56"/>
+<area shape="rect" id="Node000002" href="$namespacemode__elec__tendencies.html#ab701b2e9e36d93e528e034f7f34d98d4" title=" " alt="" coords="127,23,297,63"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="331,46,297,46,297,41,331,41"/>
+<area shape="rect" id="Node000003" href="$lima_8F90.html#a7358dec3cc36d58f782836dc100f62fa" title=" " alt="" coords="17,5,67,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="112,31,67,24,68,19,113,26"/>
+<area shape="rect" id="Node000004" href="$rain__ice_8F90.html#a02941f082f8e2db69d2f2bc4f0e4f073" title=" " alt="" coords="5,55,79,80"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="114,60,79,65,79,60,113,55"/>
 </map>

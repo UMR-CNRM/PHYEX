@@ -1,0 +1,23 @@
+<map id="mode_elec_tendencies::elec_tendencies" name="mode_elec_tendencies::elec_tendencies">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,165,176,205"/>
+<area shape="rect" id="Node000002" href="$namespacemode__budget__phy.html#aa498d2363e7683e361ea7dfdc83cf561" title=" " alt="" coords="224,5,419,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="106,163,154,110,187,81,223,55,234,49,237,53,225,60,190,85,158,114,110,167"/>
+<area shape="rect" id="Node000004" href="$namespacemode__budget__phy.html#adb853e4fb0b59cc93057b507a52bd8ce" title=" " alt="" coords="224,69,419,109"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="129,163,223,119,242,111,244,116,225,124,131,168"/>
+<area shape="rect" id="Node000006" href="$namespacemode__budget__phy.html#a45dce5bc68868ab14b72a6c987fd5d08" title=" " alt="" coords="224,133,419,173"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="176,171,210,166,211,171,177,176"/>
+<area shape="rect" id="Node000008" href="$namespacemode__compute__lambda.html#af2d05e2662d02460970ea3f49bac8d82" title=" " alt="" coords="232,197,411,237"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="177,195,219,200,218,206,176,200"/>
+<area shape="rect" id="Node000009" href="$namespacemode__elec__compute__ex.html#a521f2c8257d9921e8ef5c73aa92a8307" title=" " alt="" coords="231,261,411,301"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="131,203,225,247,244,254,242,259,223,252,129,208"/>
+<area shape="rect" id="Node000010" href="$mode__elec__tendencies_8F90.html#a1e35548fa13a06879e39760e23b25e19" title=" " alt="" coords="241,326,401,351"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="109,204,157,258,190,287,225,311,242,319,240,324,223,316,186,291,153,261,105,207"/>
+<area shape="rect" id="Node000003" href="$namespacemode__budget__phy.html#ab73a15213f73d8a5225e1021ba265f52" title=" " alt="" coords="467,5,661,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="419,23,453,23,453,28,419,28"/>
+<area shape="rect" id="Node000005" href="$namespacemode__budget__phy.html#af12acae4d0ad98243d08fc99268ce6d0" title=" " alt="" coords="467,69,661,109"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="419,87,453,87,453,92,419,92"/>
+<area shape="rect" id="Node000007" href="$namespacemode__budget__phy.html#a65b741f24c7da49ec1c6d3cc674707dc" title=" " alt="" coords="467,133,661,173"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="419,151,453,151,453,156,419,156"/>
+<area shape="rect" id="Node000011" href="$mode__ini__rain__ice_8F90.html#add52ba87c6e3f776dd335c6aebbee776" title=" " alt="" coords="532,326,596,351"/>
+<area shape="poly" id="edge10_Node000010_Node000011" title=" " alt="" coords="402,336,518,336,518,341,402,341"/>
+</map>
