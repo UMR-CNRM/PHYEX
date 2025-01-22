@@ -545,10 +545,10 @@ END IF
 !                       
 !
 IF (NPHILLIPS == 13) THEN
-   XDT0(1)   =   5. +273.15 !DM1
-   XDT0(2)   =   5. +273.15 !DM2
-   XDT0(3)   =  10. +273.15 !BC
-   XDT0(4)   =   5. +273.15 !BIOO
+   XDT0(1)   =   5.  !DM1
+   XDT0(2)   =   5.  !DM2
+   XDT0(3)   =  10.  !BC
+   XDT0(4)   =   5.  !BIOO
 !
    XT0(1) = -40. +273.15 !DM1
    XT0(2) = XT0(1)       !DM2
@@ -577,10 +577,10 @@ IF (NPHILLIPS == 13) THEN
    XTX2(3) = -15. +273.15 !BC
    XTX2(4) =  -2. +273.15 !BIO
 ELSE IF (NPHILLIPS == 8) THEN
-   XDT0(1)   =   5. +273.15 !DM1
-   XDT0(2)   =   5. +273.15 !DM2
-   XDT0(3)   =   5. +273.15 !BC
-   XDT0(4)   =   5. +273.15 !O
+   XDT0(1)   =   5.  !DM1
+   XDT0(2)   =   5.  !DM2
+   XDT0(3)   =   5.  !BC
+   XDT0(4)   =   5.  !O
 !
    XT0(1) = -40. +273.15 !DM1
    XT0(2) = XT0(1)       !DM2

@@ -8,10 +8,11 @@ MODULE MODE_LIMA_NUCLEATION_PROCS
 CONTAINS
 !     ###############################################################################
   SUBROUTINE LIMA_NUCLEATION_PROCS (D, CST, BUCONF, TBUDGETS, KBUDGETS,             &
+                                    KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,        &
                                     PTSTEP, PRHODJ,                                 &
                                     PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,  &
                                     PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, PRHT, &
-                                    PCCT, PCRT, PCIT,                               &
+                                    PCCT, PCRT, PCIT,PAERO,PSOLORG, PMI, HACTCCN,   &
                                     PNFT, PNAT, PIFT, PINT, PNIT, PNHT,             &
                                     PCLDFR, PICEFR, PPRCFR,                         &
                                     PTOT_RV_HENU, PTOT_RC_HINC, PTOT_RI_HIND,       &
@@ -78,6 +79,12 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PT         ! Temperature
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDTHRAD    ! Radiative temperature tendency
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PAERO  ! Aerosol concentration
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PMI
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
+INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
+LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHT       ! Theta at t 
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRVT       ! Water vapor m.r. at t 
@@ -142,7 +149,9 @@ IF ( LACTI .AND. NMOD_CCN >=1 .AND. NMOM_C.GE.2) THEN
     end if
 
     CALL LIMA_CCN_ACTIVATION( CST,                                              &
+                              KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,          &
                               PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,    &
+                              PAERO, PSOLORG, PMI, HACTCCN,               & 
                               PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT, PCLDFR, &
                               PTOT_RV_HENU )
 

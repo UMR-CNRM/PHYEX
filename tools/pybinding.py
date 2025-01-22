@@ -12,10 +12,14 @@ flushing the listing file).
 """
 
 import os
-import xml.etree.ElementTree as ET
+import re
 from pyfortool import PYFT
 from pyfortool.util import n2name
 
+class PybindingError(Exception):
+    """
+    Exceptions for pybinding
+    """
 
 def pybinding(fortran_in, scope, fortran_out, python_out, libso,
               tpfileIsNam=False, Findexing=False):
@@ -28,6 +32,19 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
     :param tpfileIsNam: True if tpfile is a namelist
     :param Findexing: True to keep the same index order as in the FORTRAN subroutine
     """
+
+    def findcomponents(bound):
+        """
+        :param bound: a string representing an array bound
+        :returns: a list of components
+        If bound is '5+(X+3)', result is ['5', 'X', '3']
+        """
+        if bound is None:
+            return []
+        elemlist = bound
+        for op in ('+', '-', '*', '/', '(', ')'):
+            elemlist = elemlist.replace(op, ' ')
+        return elemlist.split(' ')
 
     #From the original subroutine, two FORTRAN subroutines will be created:
     # - the main one which receives the dummy arguments from python
@@ -46,17 +63,20 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
 
     #Loop on all the dummy arguments and prepare their use
     argList1 = [] #argument list of the main public interface
-    argList2 = [] #argument list to the existing FORTRAN routine
-    moduleList = [] #declarative module to add
+    argList2 = [] #argument list of the existing FORTRAN routine
+    moduleList = [] #declarative module to add to the main subroutine
+    moduleListHelper = [] #declarative module to add to the helper subroutine
     declList = [] #variable declaration list (dummy var and local var)
     copyList = [] #Instructions to copy public var to local var
                   # to be used to call the original subroutine
-    extra = [] #additional varaibles to read in module
+    extra = [] #additional variables to read in module
     flush = [] #list of unit to flush
     docstringIN = ["Input arguments:"]
     docstringOUT = ["Output arguments:"]
     for N in scopeNode.findall('.//{*}dummy-arg-LT/{*}arg-N/{*}N'):
         var = scopeNode.varList.findVar(n2name(N), exactScope=True)
+        if var is None:
+            raise PybindingError(n2name(N) + ' seems to be undeclared')
         vartype = var['t'].replace(' ', '').upper()
         if vartype == 'TYPE(DIMPHYEX_T)':
             moduleList.append('USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t')
@@ -221,13 +241,21 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             if vartype.startswith('LOGICAL'):
                 declList.append(pftin.varSpec2stmt(localvar))
             if 'JPSVMAX' not in extra and \
-               'JPSVMAX' in ([d[0] for d in var['as']] + [d[1] for d in var['as']]):
+               'JPSVMAX' in [elem for d in var['as'] for di in d for elem in findcomponents(di)]:
                 extra.append('JPSVMAX')
                 moduleList.append('USE MODD_PARAMETERS, ONLY: JPSVMAX')
+                moduleListHelper.append('USE MODD_PARAMETERS, ONLY: JPSVMAX')
             if 'NSV' not in extra and \
-               'NSV' in ([d[0] for d in var['as']] + [d[1] for d in var['as']]):
+               'NSV' in [elem for d in var['as'] for di in d for elem in findcomponents(di)]:
                 extra.append('NSV')
                 moduleList.append('USE MODD_NSV, ONLY: NSV')
+                moduleListHelper.append('USE MODD_NSV, ONLY: NSV')
+            for vv in ('NSP', 'NCARB', 'NSOA'):
+                if vv not in extra and \
+                   vv in [elem for d in var['as'] for di in d for elem in findcomponents(di)]:
+                    extra.append(vv)
+                    moduleList.append(f'USE MODD_CH_AEROSOL, ONLY: {vv}')
+                    moduleListHelper.append(f'USE MODD_CH_AEROSOL, ONLY: {vv}')
 
     pftin.close()
 
@@ -263,11 +291,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                  'BIND(C, name="HPY{name}")\n').format(kind=kind,
                                                        argList=', '.join(argList1name + extraname),
                                                        name=name))
-        for varname in extra:
-            if varname == 'JPSVMAX':
-                f.write('USE MODD_PARAMETERS, ONLY: JPSVMAX\n')
-            elif varname == 'NSV':
-                f.write('USE MODD_NSV, ONLY: NSV\n')
+        f.write('\n'.join(moduleListHelper) + '\n')
         f.write('INTEGER(KIND=4), INTENT(OUT) :: ' + (', '.join(argList1name + extraname)) + '\n')
         for varname, vartype, _, _, _ in argList1:
             f.write(vartype + ' :: ' + 'K_' + varname + '\n')
@@ -277,10 +301,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             else:
                 f.write('{varname}=KIND(K_{varname})\n'.format(varname=varname))
         for varname in extra:
-            if varname == 'JPSVMAX':
-                f.write('K_JPSVMAX=JPSVMAX\n')
-            elif varname == 'NSV':
-                f.write('K_NSV=NSV\n')
+            f.write(f'K_{varname}={varname}\n')
         f.write(f'END {kind} HPY{name}')
 
     #Write output pyton file
@@ -363,28 +384,25 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                 for d in dim:
                     if d[0] is not None:
                         raise NotImplementedError('Array with non-zero indexing not implemented')
-                    if 'NIT' in d[1] or 'NIJT' in d[1]:
-                        strdim.append('NIT')
-                    elif 'NJT' in d[1]:
-                        strdim.append('1')
-                    elif 'NKT' in d[1]:
-                        strdim.append('NKT')
-                    elif 'KRR' in d[1]:
-                        strdim.append('KRR') #We should check its presence in the dummy args
-                    elif 'KSV' in d[1]:
-                        strdim.append('KSV') #We should check its presence in the dummy args
-                    elif 'KGRADIENTS' in d[1]:
-                        strdim.append('KGRADIENTS') #We should check its presence in the dummy args
-                    elif 'JPSVMAX' in d[1]:
-                        strdim.append('_JPSVMAX')
-                    elif 'NSV' in d[1]:
-                        strdim.append('_NSV')
-                    else:
-                        try:
-                            strdim.append(str(int(d[1])))
-                        except ValueError as verr:
-                            raise NotImplementedError(f'Dimension not implemeneted ({d[1]}) ' + \
-                                                      f'for variable {varname}') from verr
+                    strdimpart = d[1]
+                    for elem in findcomponents(d[1]):
+                        if elem in ('NIT', 'NIJT'):
+                            strdimpart = re.sub(rf'\b{elem}\b', 'NIT', strdimpart)
+                        elif elem == 'NJT':
+                            strdimpart = re.sub(rf'\b{elem}\b', '1', strdimpart)
+                        elif elem == 'NKT':
+                            pass
+                        elif elem in argList1name:
+                            pass # This dimension is a dummy argument
+                        elif elem in ('JPSVMAX', 'NSV', 'NSP', 'NCARB', 'NSOA'):
+                            strdimpart = re.sub(rf'\b{elem}\b', f'_{elem}', strdimpart)
+                        else:
+                            try:
+                                int(elem)
+                            except ValueError as verr:
+                                raise NotImplementedError(f'Dimension not implemeneted ({elem}) ' + \
+                                                          f'for variable {varname}') from verr
+                    strdim.append(strdimpart)
             if len(strdim) == 0:
                 strdim = 'None'
             else:

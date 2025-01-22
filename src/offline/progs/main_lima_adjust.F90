@@ -45,6 +45,9 @@ REAL, ALLOCATABLE   :: PICEFR         (:,:,:)
 REAL, ALLOCATABLE   :: PSRCS_OUT      (:,:,:)
 REAL, ALLOCATABLE   :: PCLDFR_OUT     (:,:,:)
 REAL, ALLOCATABLE   :: PICEFR_OUT     (:,:,:)
+REAL, ALLOCATABLE   :: PAERO        (:,:,:,:)
+REAL, ALLOCATABLE   :: PSOLORG        (:,:,:,:)
+REAL, ALLOCATABLE   :: PMI        (:,:,:,:)
 
 INTEGER :: NPROMA, NGPBLKS, NFLEVG
 INTEGER :: JLON, JLEV
@@ -58,6 +61,9 @@ LOGICAL                  :: LLDIFF
 INTEGER                  :: IBLOCK1, IBLOCK2
 INTEGER                  :: ISTSZ(2), JBLK1, JBLK2
 INTEGER                  :: NTID, ITID
+INTEGER                  :: NSP, NCARB, NSOA
+CHARACTER(LEN=4)         :: HACTCCN ! kind of CCN activation
+LOGICAL                  :: LDUST, LSALT, LORILAM 
 
 REAL, ALLOCATABLE, TARGET :: PSTACK8(:,:)
 REAL(KIND=4), ALLOCATABLE, TARGET :: PSTACK4(:,:)
@@ -92,6 +98,12 @@ CALL CHECKOPTIONS ()
 
 LLDIFF = .FALSE.
 
+! En attendant un init d'ORILAM externalisé
+HACTCCN='   '
+LDUST=.FALSE.
+LSALT=.FALSE.
+LORILAM=.FALSE.
+
 IRANK = 0
 ISIZE = 1
 IF (LLBIND) THEN
@@ -99,12 +111,13 @@ IF (LLBIND) THEN
   CALL LINUX_BIND_DUMP (IRANK, ISIZE)
 ENDIF
 
-CALL GETDATA_LIMA_ADJUST (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, &                                                                
+CALL GETDATA_LIMA_ADJUST (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, NSP, NCARB, NSOA, &                                                                
                          &PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV, PPABSM, ZZZ, &                             
                          &PDTHRAD, PW_NU, PRT, PRS, PSVT, PSVS, PTHS, &                                         
                          &PRC_MF, PRI_MF, PCF_MF, PRS_OUT, PSVS_OUT, PTHS_OUT, &                                  
                          &PSRCS, PCLDFR, PICEFR, &
-                         &PSRCS_OUT, PCLDFR_OUT, PICEFR_OUT, &                                                          
+                         &PSRCS_OUT, PCLDFR_OUT, PICEFR_OUT, &
+                         &PAERO, PSOLORG, PMI,&                                                          
                          &LLVERBOSE)
 
 KLEV = SIZE (PRS, 2)
@@ -221,11 +234,13 @@ DO ITIME = 1, NTIME
 #else
     CALL LIMA_ADJUST_SPLIT(D, PHYEX%CST, PHYEX%MISC%TBUCONF, PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET, &
                            KRR, 1, PHYEX%NEBN%CCONDENS, PHYEX%NEBN%CLAMBDA3, &
+                           NCARB, NSOA , NSP, LDUST, LSALT, LORILAM, &
                            PHYEX%NEBN%LSUBG_COND, PHYEX%NEBN%LSIGMAS, PHYEX%MISC%PTSTEP, PHYEX%NEBN%VSIGQSAT, &
                            PRHODREF(:, :, IBL), PRHODJ(:, :, IBL), PEXNREF(:, :, IBL), PSIGS(:, :, IBL), &
                            PHYEX%MISC%LMFCONV, PMFCONV(:, :, IBL), &
                            PPABSM(:, :, IBL), PPABSM(:, :, IBL), ZZZ(:, :, IBL), .TRUE., PDTHRAD(:, :, IBL), PW_NU(:, :, IBL), &
                            PRT(:, :, :, IBL), PRS(:, :, :, IBL), PSVT(:, :, :, IBL), PSVS(:, :, :, IBL), &
+                           HACTCCN, PAERO(:,:,:, IBL), PSOLORG(:,:,:,IBL), PMI(:,:,:,IBL), &
                            PTHS(:, :, IBL), PHYEX%MISC%OCOMPUTE_SRC, PSRCS(:, :, IBL), PCLDFR(:, :, IBL), PICEFR(:, :, IBL), &
                            PRC_MF(:, :, IBL), PRI_MF(:, :, IBL), PCF_MF(:, :, IBL) &
 #ifdef USE_STACK

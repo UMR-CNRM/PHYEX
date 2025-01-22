@@ -8,7 +8,9 @@ MODULE MODE_LIMA_CCN_ACTIVATION
 CONTAINS
 !     ##############################################################################
     SUBROUTINE LIMA_CCN_ACTIVATION (CST,                                           &
+                                    KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,       &
                                     PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU, &
+                                    PAERO,PSOLORG, PMI,  HACTCCN,                  &
                                     PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT,      &
                                     PCLDFR, PTOT_RV_HENU                           )
 !     ##############################################################################
@@ -76,6 +78,8 @@ USE MODD_PARAM_LIMA_WARM, ONLY: XWMIN, NAHEN, NHYP, XAHENINTP1, XAHENINTP2, XCST
                                 XHYPINTP1, XHYPINTP2, XTMIN, XHYPF32, XPSI3, XAHENG, XAHENG2, XPSI1, &
                                 XLBC, XLBEXC
 USE MODD_NEB_n,           ONLY: LSUBG_COND
+USE MODI_CH_AER_ACTIVATION
+
 
 !USE MODE_IO_FIELD_WRITE,  only: IO_Field_write
 use mode_tools,           only: Countjv
@@ -97,6 +101,13 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDTHRAD    ! Radiative temperature te
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
                                                       ! the nucleation param.
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PAERO   ! Aerosol concentration
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PMI
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
+INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
+LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
+
 !   
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHT       ! Theta at t 
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRVT       ! Water vapor m.r. at t 
@@ -145,6 +156,8 @@ REAL, DIMENSION(SIZE(PNFT,1),SIZE(PNFT,2),SIZE(PNFT,3))               &
 !
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1             ! Vectors of indices for
                                                         ! interpolations
+REAL, DIMENSION(:)  , ALLOCATABLE  :: ZPABST, ZMCN, ZNATOLD
+REAL, DIMENSION(:,:), ALLOCATABLE  :: ZAERO, ZSOLORG, ZMI
 !
 ! 
 REAL    :: ZEPS                                ! molar mass ratio
@@ -236,6 +249,11 @@ IF( INUCT >= 1 ) THEN
    ALLOCATE(IVEC1(INUCT))
    ALLOCATE(ZRHODREF(INUCT)) 
    ALLOCATE(ZEXNREF(INUCT)) 
+   ALLOCATE(ZPABST(INUCT))
+   ALLOCATE(ZAERO(INUCT,SIZE(PAERO,4)))
+   ALLOCATE(ZSOLORG(INUCT,SIZE(PSOLORG,4)))
+   ALLOCATE(ZMI(INUCT,SIZE(PMI,4)))
+
    DO JL=1,INUCT
       ZRCT(JL) = PRCT(I1(JL),I2(JL),I3(JL))/ZCLDFR(I1(JL),I2(JL),I3(JL))
       ZCCT(JL) = PCCT(I1(JL),I2(JL),I3(JL))/ZCLDFR(I1(JL),I2(JL),I3(JL))
@@ -246,6 +264,21 @@ IF( INUCT >= 1 ) THEN
       ZSW(JL)  = PRVT(I1(JL),I2(JL),I3(JL))/ZRVSAT(I1(JL),I2(JL),I3(JL)) - 1.
       ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
       ZEXNREF(JL)  = PEXNREF(I1(JL),I2(JL),I3(JL))
+      ZPABST(JL)  = PPABST(I1(JL),I2(JL),I3(JL))
+      IF ((OORILAM).OR.(ODUST).OR.(OSALT)) THEN
+        ZAERO(JL,:)  = PAERO(I1(JL),I2(JL),I3(JL),:)
+      ELSE
+        ZAERO(JL,:) = 0.
+      END IF
+
+      IF (OORILAM) THEN
+         ZSOLORG(JL,:) = PSOLORG(I1(JL),I2(JL),I3(JL),:)
+         ZMI(JL,:) = PMI(I1(JL),I2(JL),I3(JL),:)
+      ELSE
+        ZSOLORG(JL,:) = 0.
+        ZMI(JL,:) = 0.
+      END IF
+
       DO JMOD = 1,NMOD_CCN
          ZNFT(JL,JMOD)        = PNFT(I1(JL),I2(JL),I3(JL),JMOD)
          ZNAT(JL,JMOD)        = PNAT(I1(JL),I2(JL),I3(JL),JMOD)
@@ -254,6 +287,41 @@ IF( INUCT >= 1 ) THEN
       ENDDO
    ENDDO
 !
+IF ((HACTCCN == 'ABRK').AND.((OORILAM).OR.(ODUST).OR.(OSALT))) THEN  ! CCN activation from Abdul-Razack (only if prognostic aerosols)
+!
+     ALLOCATE(ZMCN(INUCT))
+     ALLOCATE(ZNATOLD(INUCT))
+     ALLOCATE(ZSMAX(INUCT))
+
+     ZZW1(:) = 0.
+     ZZW2(:) = 0.
+     ZZW3(:) = 0.
+     ZSMAX(:) = 0.
+
+     ZMCN(:) = 0. !masse activée (non utilisée!!)
+
+     ZNATOLD(:) = ZNAT(:,1)
+   !
+     !ZZW2 veetical activation velocity
+
+     CALL CH_AER_ACTIVATION(ZAERO, ZZT, ZZW2, ZZTDT, ZRHODREF, ZPABST,&
+                             ZNAT(:,1), ZMCN, ZSOLORG, ZMI, ZSMAX)
+
+     ZZW1(:) = MAX(ZNATOLD(:)- ZNAT(:,1) , 0.0 )
+!
+     ZW(:,:,:) = UNPACK( ZZW1(:),MASK=GNUCT(:,:,:),FIELD=0.0 )
+     PNAT(:,:,:,1) = PNAT(:,:,:,1) + ZW(:,:,:)
+     ! Je sais pas ce que c'est:
+     ZZW4(:) = 1.
+     ZZW5(:) = 1.
+   !
+   !* prepare to update the cloud water concentration
+   !
+      ZZW6(:) = ZZW1(:) 
+     DEALLOCATE(ZMCN)
+     DEALLOCATE(ZNATOLD)
+!
+ELSE ! CCN activation from Cohard-Pinty
    ALLOCATE(ZSMAX(INUCT))
    IF (LADJ) THEN
       ZZW1(:) = 1.0/ZEPS + 1.0/ZZW1(:)                                   &
@@ -416,6 +484,7 @@ IF( INUCT >= 1 ) THEN
    !
       ZZW6(:) = ZZW6(:) + ZZW1(:)
    ENDDO
+END IF ! AER_ACTIVATION
 !
 ! Output tendencies
 !
@@ -470,6 +539,10 @@ IF( INUCT >= 1 ) THEN
    DEALLOCATE(ZRHODREF)
    DEALLOCATE(ZCHEN_MULTI)
    DEALLOCATE(ZEXNREF)
+   DEALLOCATE(ZPABST)
+   DEALLOCATE(ZAERO)
+   DEALLOCATE(ZSOLORG)
+   DEALLOCATE(ZMI)
 !
 END IF ! INUCT
 !
