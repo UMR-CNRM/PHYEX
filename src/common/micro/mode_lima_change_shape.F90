@@ -85,6 +85,7 @@ REAL, DIMENSION(SIZE(PT)) :: ZDGAMMA_PLA_IRR !
 REAL, DIMENSION(SIZE(PT)) :: ZZW1, ZZW2
 !
 REAL                      :: ZGAMMA_COL, ZGAMMA_PLA, ZGAMMA_IRR
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 ! 
 !-----------------------------------------------------------------------------
 !
