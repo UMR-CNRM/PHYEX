@@ -43,9 +43,9 @@ TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
 INTEGER,                 INTENT(IN)    :: KLOOP        ! dimension of the arrays
 REAL,    DIMENSION(KLOOP),   INTENT(IN)    :: PRI          ! Total cloud ice m.r. (source or at t)
-REAL,    DIMENSION(KLOOP,LIMAP%NNB_CRYSTAL_SHAPE, INTENT(IN)    :: PCI_SHAPE    ! Pristine ice conc. per shape (source or at t)
-REAL,    DIMENSION(KLOOP,LIMAP%NNB_CRYSTAL_SHAPE, INTENT(INOUT) :: PRI_SHAPE    ! pristine ice m.r. per shape (source or at t)
-REAL,    DIMENSION(KLOOP,LIMAP%NNB_CRYSTAL_SHAPE, INTENT(INOUT) :: PLBDAI_SHAPE ! lambda per habit
+REAL,    DIMENSION(KLOOP,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(IN)    :: PCI_SHAPE    ! Pristine ice conc. per shape (source or at t)
+REAL,    DIMENSION(KLOOP,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(INOUT) :: PRI_SHAPE    ! pristine ice m.r. per shape (source or at t)
+REAL,    DIMENSION(KLOOP,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(INOUT) :: PLBDAI_SHAPE ! lambda per habit
 !
 !
 !*      0.2   Declaration of local variables

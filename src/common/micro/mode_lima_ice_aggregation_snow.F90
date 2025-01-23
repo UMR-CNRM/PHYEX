@@ -106,38 +106,39 @@ IF (LIMAP%NMOM_I.EQ.1) THEN
       P_RI_AGGS(:) = - ZZW1(:)
    END WHERE
 ELSE
-   IF (.NOT. LCRYSTAL_SHAPE) THEN
-   WHERE ( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRST(:)>LIMAP%XRTMIN(5) .AND. &
+   IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
+      WHERE ( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRST(:)>LIMAP%XRTMIN(5) .AND. &
            PCIT(:)>LIMAP%XCTMIN(4) .AND. PCST(:)>LIMAP%XCTMIN(5) .AND. ODCOMPUTE(:) )
-      ZZW1(:) = (PLBDI(:) / PLBDS(:))**3
-      ZZW2(:) = PCIT(:)*PCST(:)*EXP(LIMAC%XCOLEXIS*(PT(:)-CST%XTT))*PRHODREF(:) / (PLBDI(:)**3)
-      ZZW3(:) = ZZW2(:)*(LIMAC%XAGGS_CLARGE1+LIMAC%XAGGS_CLARGE2*ZZW1(:))
+         ZZW1(:) = (PLBDI(:) / PLBDS(:))**3
+         ZZW2(:) = PCIT(:)*PCST(:)*EXP(LIMAC%XCOLEXIS*(PT(:)-CST%XTT))*PRHODREF(:) / (PLBDI(:)**3)
+         ZZW3(:) = ZZW2(:)*(LIMAC%XAGGS_CLARGE1+LIMAC%XAGGS_CLARGE2*ZZW1(:))
 !
-      P_CI_AGGS(:) = - ZZW3(:)
+         P_CI_AGGS(:) = - ZZW3(:)
 !
-      ZZW2(:) = ZZW2(:) / PLBDI(:)**LIMAC%XBI
-      ZZW2(:) = ZZW2(:)*(LIMAC%XAGGS_RLARGE1+LIMAC%XAGGS_RLARGE2*ZZW1(:))
+         ZZW2(:) = ZZW2(:) / PLBDI(:)**LIMAC%XBI
+         ZZW2(:) = ZZW2(:)*(LIMAC%XAGGS_RLARGE1+LIMAC%XAGGS_RLARGE2*ZZW1(:))
 !
-      P_RI_AGGS(:) = - ZZW2(:)
-   END WHERE
+         P_RI_AGGS(:) = - ZZW2(:)
+      END WHERE
    ELSE
-     DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
-       WHERE ( PRIT(:) > LIMAP%XRTMIN(4) .AND. PRST(:) > LIMAP%XRTMIN(5) .AND. PCST(:) > LIMAP%XCTMIN(5) .AND. &
-               PCIT_SHAPE(:,ISH) > 0. .AND. PRIT_SHAPE(:,ISH) > 0. .AND. &
-               ODCOMPUTE(:) )
-          ZZW1(:) = (PLBDAI_SHAPE(:,ISH) / PLBDS(:))**3
-          ZZW2(:) = PCIT_SHAPE(:,ISH) * PCST(:) * EXP(LIMAC%XCOLEXIS*(PT(:)-CST%XTT)) * PRHODREF(:) / &
-                   (PLBDAI_SHAPE(:,ISH)**3)
-          ZZW3(:) = ZZW2(:) * (LIMAC%XAGGS_CLARGE1 + LIMAC%XAGGS_CLARGE2 * ZZW1(:))
+      DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+         WHERE ( PRIT(:) > LIMAP%XRTMIN(4) .AND. PRST(:) > LIMAP%XRTMIN(5) .AND. PCST(:) > LIMAP%XCTMIN(5) .AND. &
+              PCIT_SHAPE(:,ISH) > 0. .AND. PRIT_SHAPE(:,ISH) > 0. .AND. &
+              ODCOMPUTE(:) )
+            ZZW1(:) = (PLBDAI_SHAPE(:,ISH) / PLBDS(:))**3
+            ZZW2(:) = PCIT_SHAPE(:,ISH) * PCST(:) * EXP(LIMAC%XCOLEXIS*(PT(:)-CST%XTT)) * PRHODREF(:) / &
+                 (PLBDAI_SHAPE(:,ISH)**3)
+            ZZW3(:) = ZZW2(:) * (LIMAC%XAGGS_CLARGE1 + LIMAC%XAGGS_CLARGE2 * ZZW1(:))
 !
-          P_SHCI_AGGS(:,ISH) = - ZZW3(:)
+            P_SHCI_AGGS(:,ISH) = - ZZW3(:)
 !
-          ZZW2(:) = ZZW2(:) / PLBDAI_SHAPE(:,ISH)**LIMAC%XBI_SHAPE(ISH)
-          ZZW2(:) = ZZW2(:) * (LIMAC%XAGGS_RLARGE1 + LIMAC%XAGGS_RLARGE2 * ZZW1(:))
+            ZZW2(:) = ZZW2(:) / PLBDAI_SHAPE(:,ISH)**LIMAC%XBI_SHAPE(ISH)
+            ZZW2(:) = ZZW2(:) * (LIMAC%XAGGS_RLARGE1 + LIMAC%XAGGS_RLARGE2 * ZZW1(:))
 !
-          P_RI_AGGS(:) = P_RI_AGGS(:) - ZZW2(:)
-       END WHERE
-     END DO
+            P_RI_AGGS(:) = P_RI_AGGS(:) - ZZW2(:)
+         END WHERE
+      END DO
+   END IF
 END IF
 !
 !
