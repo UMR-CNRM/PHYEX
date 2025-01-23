@@ -694,7 +694,7 @@ IF (LIMAP%NMOM_I.GE.1) THEN
 END IF
 !
 IF(LIMAP%LICE_ISC .AND. LIMAP%NMOM_I.GE.2) THEN
-  CALL LIMA_ICE_SELF_COLLECTION (ODCOMPUTE,                                    & 
+  CALL LIMA_ICE_SELF_COLLECTION (CST, LIMAP, LIMAC, KSIZE, ODCOMPUTE,          & 
                                  PRHODREF, ZT,                                 &
                                  ZRIT(:)/ZPF1D(:), PCIT/ZPF1D(:), ZLBDI,       &
                                  ZRIT_SHAPE/ZPF1D, PCIT_SHAPE/ZPF1D, ZLBDAI_SHAPE,         &                                  
