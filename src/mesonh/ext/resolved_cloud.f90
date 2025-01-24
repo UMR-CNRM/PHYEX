@@ -1408,7 +1408,7 @@ SELECT CASE ( HCLOUD )
       ELSE
         CALL LIMA (YLDIMPHYEX,CST, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
                    ELEC_DESCR, ELEC_PARAM,                                 &
-                   TBUCONF, TBUDGETS, HACTCCN, SIZE(TBUDGETS),             &
+                   TBUCONF, TBUDGETS, HACTCCN, SIZE(TBUDGETS), KRR,        &
                    PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
