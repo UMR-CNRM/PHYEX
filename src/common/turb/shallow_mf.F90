@@ -270,7 +270,7 @@ ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
                        PSFTH,PSFRV,PPABSM,PRHODREF,              &
                        PUM,PVM,PTKEM,                            &
                        PTHM,PRM(:,:,1),ZTHLM,ZRTM,PSVM,          &
-                       PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,      &
+                       ZTH_UP,PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,&
                        PTHV_UP, PW_UP, PU_UP, PV_UP, ZSV_UP,     &
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH )
@@ -282,7 +282,7 @@ ELSEIF (PARAMMF%CMF_UPDRAFT == 'RAHA') THEN
                        PSFTH,PSFRV,                              &
                        PPABSM,PRHODREF,PUM,PVM,PTKEM,            &
                        PEXNM,PTHM,PRM(:,:,1),ZTHLM,ZRTM,         &
-                       PSVM,PTHL_UP,PRT_UP,                      &
+                       PSVM,ZTH_UP,PTHL_UP,PRT_UP,               &
                        PRV_UP,PRC_UP,PRI_UP, PTHV_UP,            &
                        PW_UP, PU_UP, PV_UP, ZSV_UP,              &
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,           &
