@@ -45,7 +45,7 @@ LOGICAL,                  INTENT(IN)   :: OSIGMAS    ! Switch for Sigma_s:
                                                      ! use values computed in CONDENSATION
                                                      ! or that from turbulence scheme
 REAL,                     INTENT(IN)   :: PTSTEP     ! Time step
-REAL,                     INTENT(IN)   :: PSIGQSAT   ! coeff applied to qsat variance contribution
+REAL, DIMENSION(D%NIT, D%NJT), INTENT(IN)   :: PSIGQSAT   ! coeff applied to qsat variance contribution
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PRHODREF  ! Dry density of the 
                                                                    ! reference state

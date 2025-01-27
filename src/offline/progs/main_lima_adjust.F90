@@ -27,6 +27,7 @@ REAL, ALLOCATABLE   :: PSIGS          (:,:,:)
 REAL, ALLOCATABLE   :: PMFCONV        (:,:,:)
 REAL, ALLOCATABLE   :: PPABSM         (:,:,:)
 REAL, ALLOCATABLE   :: ZZZ            (:,:,:)
+REAL, ALLOCATABLE   :: ZSIGQSAT       (:,:)   
 REAL, ALLOCATABLE   :: PDTHRAD        (:,:,:)
 REAL, ALLOCATABLE   :: PW_NU          (:,:,:)
 REAL, ALLOCATABLE   :: PRT            (:,:,:,:)
@@ -101,7 +102,7 @@ IF (LLBIND) THEN
 ENDIF
 
 CALL GETDATA_LIMA_ADJUST (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, &                                                                
-                         &PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV, PPABSM, ZZZ, &                             
+                         &PRHODREF, PRHODJ, PEXNREF, ZSIGQSAT, PSIGS, PMFCONV, PPABSM, ZZZ, &                             
                          &PDTHRAD, PW_NU, PRT, PRS, PSVT, PSVS, PTHS, &                                         
                          &PRC_MF, PRI_MF, PCF_MF, PRS_OUT, PSVS_OUT, PTHS_OUT, &                                  
                          &PSRCS, PCLDFR, PICEFR, &
@@ -214,7 +215,7 @@ DO ITIME = 1, NTIME
     CALL LIMA_ADJUST_SPLIT(PHYEX%PARAM_LIMA, PHYEX%PARAM_LIMA_WARM, PHYEX%TNSV, &
                            D, PHYEX%CST, PHYEX%NEBN, PHYEX%TURBN, PHYEX%MISC%TBUCONF, PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET, &
                            KRR, PHYEX%NEBN%CCONDENS, PHYEX%NEBN%CLAMBDA3, &
-                           PHYEX%NEBN%LSUBG_COND, PHYEX%NEBN%LSIGMAS, PHYEX%MISC%PTSTEP, PHYEX%NEBN%VSIGQSAT, &
+                           PHYEX%NEBN%LSUBG_COND, PHYEX%NEBN%LSIGMAS, PHYEX%MISC%PTSTEP, ZSIGQSAT (:, IBL), &
                            PRHODREF(:, :, IBL), PRHODJ(:, :, IBL), PEXNREF(:, :, IBL), PSIGS(:, :, IBL), &
                            PHYEX%MISC%LMFCONV, PMFCONV(:, :, IBL), &
                            PPABSM(:, :, IBL), PPABSM(:, :, IBL), ZZZ(:, :, IBL), .TRUE., PDTHRAD(:, :, IBL), PW_NU(:, :, IBL), &
