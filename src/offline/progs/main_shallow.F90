@@ -68,6 +68,14 @@ REAL, ALLOCATABLE   :: ZENTR          (:,:,:)
 INTEGER, ALLOCATABLE:: IKLCL          (:,:)
 INTEGER, ALLOCATABLE:: IKETL          (:,:)
 INTEGER, ALLOCATABLE:: IKCTL          (:,:)
+REAL, ALLOCATABLE   :: PDTKEDT_MF     (:,:,:)
+REAL, ALLOCATABLE   :: PHLC_HRC       (:,:,:)
+REAL, ALLOCATABLE   :: PHLC_HCF       (:,:,:)
+REAL, ALLOCATABLE   :: PHLI_HRI       (:,:,:)
+REAL, ALLOCATABLE   :: PHLI_HCF       (:,:,:)
+REAL, ALLOCATABLE   :: PWEIGHT_MF_CLOUD(:,:,:)
+REAL, ALLOCATABLE   :: PFLXZTKEMF     (:,:,:)
+REAL, ALLOCATABLE   :: PTKE_UP        (:,:,:)
 
 !Expected values
 REAL, ALLOCATABLE   :: PDUDT_MF_OUT   (:,:,:)
@@ -171,6 +179,7 @@ CALL GETDATA_SHALLOW (NPROMA, NGPBLKS, NFLEVG, KRR, KRRL, KRRI, KSV, KLEV, &
                   &PFLXZTHVMF,ZFLXZTHMF, &
                   &ZFLXZRMF,ZFLXZUMF, &
                   &ZFLXZVMF,ZDETR,ZENTR, IKLCL, IKETL, IKCTL, &
+                  &PDTKEDT_MF, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PWEIGHT_MF_CLOUD, PFLXZTKEMF, PTKE_UP, &
                   !OUT and INOUT (expected values)
                   &PDUDT_MF_OUT, PDVDT_MF_OUT, &
                   &PDTHLDT_MF_OUT, PDRTDT_MF_OUT, &
@@ -244,7 +253,8 @@ DO ITIME = 1, NTIME
 !$acc      &          PTKEM, PSVM) & 
 !$acc      & copy    (PTHL_UP, PRT_UP, PRV_UP, PRC_UP, PRI_UP, PU_UP, PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF) &
 !$acc      & copyout (PDUDT_MF, PDVDT_MF, PDTHLDT_MF, PDRTDT_MF, PDSVDT_MF, PSIGMF, PRC_MF, PRI_MF, PCF_MF, &
-!$acc      &          PFLXZTHVMF, ZFLXZTHMF, ZFLXZRMF, ZFLXZUMF, ZFLXZVMF, ZDETR, ZENTR, IKLCL, IKETL, IKCTL) &
+!$acc      &          PFLXZTHVMF, ZFLXZTHMF, ZFLXZRMF, ZFLXZUMF, ZFLXZVMF, ZDETR, ZENTR, IKLCL, IKETL, IKCTL, &
+!$acc      &          PDTKEDT_MF, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PWEIGHT_MF_CLOUD, PFLXZTKEMF, PTKE_UP) &
 !$acc      & create  (PSTACK4, PSTACK8) 
 
   TSC = OMP_GET_WTIME ()
@@ -293,7 +303,7 @@ DO ITIME = 1, NTIME
     INUMPIN = 0
 #endif
 
-  CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB,                    &
+  CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB, PHYEX%RAIN_ICE_PARAMN,                   &
      &KRR=PHYEX%MISC%KRR, KRRL=PHYEX%MISC%KRRL, KRRI=PHYEX%MISC%KRRI, KSV=PHYEX%MISC%KSV,                                             &
      &ONOMIXLG=PHYEX%MISC%ONOMIXLG,KSV_LGBEG=PHYEX%MISC%KSV_LGBEG,KSV_LGEND=PHYEX%MISC%KSV_LGEND,      &
      &PTSTEP=PHYEX%MISC%PTSTEP, &
@@ -303,14 +313,15 @@ DO ITIME = 1, NTIME
      &PSFTH=PSFTH(:,IBL),PSFRV=PSFRV(:,IBL),                                                            &
      &PTHM=PTHM(:,:,IBL),PRM=PRM(:,:,:,IBL),PUM=PUM(:,:,IBL),PVM=PVM(:,:,IBL),&
      &PTKEM=PTKEM(:,:,IBL),PSVM=PSVM(:,:,:,IBL),                            &
-     &PDUDT_MF=PDUDT_MF(:,:,IBL),PDVDT_MF=PDVDT_MF(:,:,IBL),                                                &
+     &PDUDT_MF=PDUDT_MF(:,:,IBL),PDVDT_MF=PDVDT_MF(:,:,IBL),PDTKEDT_MF=PDTKEDT_MF(:,:,IBL),                 &
      &PDTHLDT_MF=PDTHLDT_MF(:,:,IBL),PDRTDT_MF=PDRTDT_MF(:,:,IBL),PDSVDT_MF=PDSVDT_MF(:,:,:,IBL),                      &
      &PSIGMF=PSIGMF(:,:,IBL),PRC_MF=PRC_MF(:,:,IBL),PRI_MF=PRI_MF(:,:,IBL),PCF_MF=PCF_MF(:,:,IBL),&
-     &PFLXZTHVMF=PFLXZTHVMF(:,:,IBL),      &
+     &PHLC_HRC=PHLC_HRC(:,:,IBL), PHLC_HCF=PHLC_HCF(:,:,IBL), PHLI_HRI=PHLI_HRI(:,:,IBL), PHLI_HCF=PHLI_HCF(:,:,IBL), &
+     &PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD(:,:,IBL),PFLXZTHVMF=PFLXZTHVMF(:,:,IBL),      &
      &PFLXZTHMF=ZFLXZTHMF(:,:,IBL),PFLXZRMF=ZFLXZRMF(:,:,IBL),PFLXZUMF=ZFLXZUMF(:,:,IBL),PFLXZVMF=ZFLXZVMF(:,:,IBL),     &
-     &PTHL_UP=PTHL_UP(:,:,IBL),PRT_UP=PRT_UP(:,:,IBL),PRV_UP=PRV_UP(:,:,IBL),&
+     &PFLXZTKEMF=PFLXZTKEMF(:,:,IBL),PTHL_UP=PTHL_UP(:,:,IBL),PRT_UP=PRT_UP(:,:,IBL),PRV_UP=PRV_UP(:,:,IBL),&
      &PRC_UP=PRC_UP(:,:,IBL),PRI_UP=PRI_UP(:,:,IBL),            &
-     &PU_UP=PU_UP(:,:,IBL), PV_UP=PV_UP(:,:,IBL), PTHV_UP=PTHV_UP(:,:,IBL), PW_UP=PW_UP(:,:,IBL),                        &
+     &PU_UP=PU_UP(:,:,IBL), PV_UP=PV_UP(:,:,IBL), PTKE_UP=PTKE_UP(:,:,IBL),PTHV_UP=PTHV_UP(:,:,IBL), PW_UP=PW_UP(:,:,IBL),                        &
      &PFRAC_UP=PFRAC_UP(:,:,IBL),PEMF=PEMF(:,:,IBL),PDETR=ZDETR(:,:,IBL),PENTR=ZENTR(:,:,IBL),                           &
      &KKLCL=IKLCL(:,IBL),KKETL=IKETL(:,IBL),KKCTL=IKCTL(:,IBL),PDX=PHYEX%MISC%PDX,PDY=PHYEX%MISC%PDY,KBUDGETS=PHYEX%MISC%NBUDGET &
 #ifdef USE_STACK                                                                                                                    
