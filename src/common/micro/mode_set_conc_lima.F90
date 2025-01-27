@@ -110,7 +110,7 @@ INTEGER    :: ISV_LIMA_NI, ISV_LIMA_NS, ISV_LIMA_NG, ISV_LIMA_NH, ISV_LIMA_IFN_N
 LOGICAL    :: GLLBC
 REAL       :: ZSVTHR
 INTEGER    :: ISH     ! Loop index for ice crystal shapes 
-REAL, DIMENSION(:,:), ALLOCATABLE :: ZNI_TOT  ! total ice crystal concentration
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZNI_TOT  ! total ice crystal concentration
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
@@ -201,7 +201,6 @@ IF (NMOM_I.GE.2) THEN
       PSVT(:,:,ISV_LIMA_NI) = 0.0
     END WHERE
    ELSE
-      ALLOCATE(ZNI_TOT(SIZE(PRT,1), SIZE(PRT,2)))
       ZNI_TOT(:,:) = 0.
       DO ISH = 1, NNB_CRYSTAL_SHAPE
          WHERE ( PRT(:,:,4) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI+ISH-1) < ZSVTHR) 
@@ -218,7 +217,6 @@ IF (NMOM_I.GE.2) THEN
          PSVT(:,:,ISV_LIMA_NI+2) = 0.0
          PSVT(:,:,ISV_LIMA_NI+3) = 0.0
       END WHERE
-      DEALLOCATE(ZNI_TOT)
    END IF
 
    IF (NMOD_IFN .GE. 1) THEN

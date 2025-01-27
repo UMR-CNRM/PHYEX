@@ -1463,7 +1463,7 @@ SELECT CASE ( HCLOUD )
        CALL LIMA_ADJUST_SPLIT(PARAM_LIMA, PARAM_LIMA_WARM, &
                              TNSV, YLDIMPHYEX, CST, NEBN, TURBN, TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
                              KRR, CCONDENS, CLAMBDA3,                                        &
-                             OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,                          &
+                             OSUBG_COND, OSIGMAS, PTSTEP, ZSIGQSAT2D,                        &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS,                               &
                              SIZE(PMFCONV)/=0, PMFCONV, PPABST, PPABSTT, ZZZ,                &
                              LLDTHRAD, PDTHRAD, PW_ACT,                                      &

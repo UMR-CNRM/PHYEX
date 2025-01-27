@@ -134,7 +134,7 @@ LOGICAL,                  INTENT(IN)   :: OSIGMAS    ! Switch for Sigma_s:
                                                      ! use values computed in CONDENSATION
                                                      ! or that from turbulence scheme
 REAL,                     INTENT(IN)   :: PTSTEP     ! Time step
-REAL,                     INTENT(IN)   :: PSIGQSAT   ! coeff applied to qsat variance contribution
+REAL, DIMENSION(D%NIJT),  INTENT(IN)   :: PSIGQSAT   ! coeff applied to qsat variance contribution
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)   ::  PRHODREF  ! Dry density of the 
                                                                    ! reference state
@@ -229,7 +229,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) &
                             Z_SIGS, Z_SRCS, &
                             ZW_MF, &
                             ZCND, ZS, ZVEC1, ZDUM
-REAL, DIMENSION(D%NIJT) :: ZSIGQSAT2D
 !
 INTEGER, DIMENSION(D%NIJT,D%NKT) :: IVEC1
 !
@@ -384,11 +383,9 @@ IF (LIMAP%LADJ) THEN
    IF (OSUBG_COND) THEN
       Z_SIGS=PSIGS
       G_SIGMAS=OSIGMAS
-      ZSIGQSAT2D(:)=PSIGQSAT
    ELSE
       Z_SIGS=0.
       G_SIGMAS=.TRUE.
-      ZSIGQSAT2D(:)=0.
    END IF
    !
    CALL CONDENSATION(D, CST, RAIN_ICE_PARAMN, NEBN, TURBN,                   &
@@ -397,7 +394,7 @@ IF (LIMAP%LADJ) THEN
         ZRRS*PTSTEP,ZRSS*PTSTEP, ZRGS*PTSTEP,                                &
         Z_SIGS, .FALSE., PMFCONV, PCLDFR, Z_SRCS, GUSERI, G_SIGMAS, .FALSE., &
         ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                                        &
-        ZSIGQSAT2D, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
+        PSIGQSAT, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
    !
    IF (LIMAP%NMOM_C.GE.1) THEN
       ZW1(:,:) = (ZRC(:,:) - ZRCS(:,:)*PTSTEP) / PTSTEP
@@ -520,6 +517,7 @@ IF (LIMAP%NMOM_C .GE. 2) THEN
       ZRCS(:,:) = 0.0
       ZW(:,:)   = MAX(ZCCS(:,:),0.)
       ZCCS(:,:) = 0.0
+      PCLDFR(:,:) = 0.
    END WHERE
    !
    ZW1(:,:) = 0.
