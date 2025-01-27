@@ -353,10 +353,11 @@ IF (OENTR_DETR) THEN
     !Using a z-like interpolation to be consistent with computed heights
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZWK(IIJB:IIJE,1:IKT)=LOG(PPABSM(IIJB:IIJE,1:IKT))
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MZM_MF(D, ZWK(:,:), ZPRES_F(:,:))
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZPRES_F(IIJB:IIJE,1:IKT)=EXP(ZPRES_F(IIJB:IIJE,1:IKT))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ELSE
     CALL MZM_MF(D, PPABSM(:,:), ZPRES_F(:,:))
   ENDIF
