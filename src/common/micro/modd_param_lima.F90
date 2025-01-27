@@ -655,7 +655,8 @@ INTEGER, OPTIONAL, INTENT(IN) :: KPRINT       !< Print level (defaults to 0): 0 
 !      ------------------------------
 !
 LOGICAL :: GLDEFAULTVAL, GLREADNAM, GLCHECK, GLFOUND
-INTEGER :: IPRINT 
+INTEGER :: IPRINT
+INTEGER :: ISH
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
  
 IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_INIT', 0, ZHOOK_HANDLE)
@@ -767,8 +768,8 @@ IF(GLCHECK) THEN
                                   'PLAT', 'COLU', 'BURO', 'POIR', &
                                   'YPLA', 'YCOL', 'YBUR','YDRO', 'YHCO', 'YHBU')
   IF (LCRYSTAL_SHAPE) THEN
-    DO JSH = 1, NNB_CRYSTAL_SHAPE
-      CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'HTYPE_CRYSTAL_SHAPE', HTYPE_CRYSTAL_SHAPE(JSH), &
+    DO ISH = 1, NNB_CRYSTAL_SHAPE
+      CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'HTYPE_CRYSTAL_SHAPE', HTYPE_CRYSTAL_SHAPE(ISH), &
                               'POIR', 'CCOL', 'CPLA', &
                               'YPLA', 'YCOL', 'YBUR', 'YDRO', 'YHCO', 'YHBU')
     ENDDO

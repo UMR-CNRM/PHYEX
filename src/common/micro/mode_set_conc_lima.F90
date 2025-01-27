@@ -110,6 +110,7 @@ INTEGER    :: ISV_LIMA_NI, ISV_LIMA_NS, ISV_LIMA_NG, ISV_LIMA_NH, ISV_LIMA_IFN_N
 LOGICAL    :: GLLBC
 REAL       :: ZSVTHR
 INTEGER    :: ISH     ! Loop index for ice crystal shapes 
+REAL, DIMENSION(:,:), ALLOCATABLE :: ZNI_TOT  ! total ice crystal concentration
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
@@ -192,7 +193,8 @@ IF (NMOM_I.GE.2) THEN
 !           ( XRHOLI * XAI*(10.E-06)**XBI * PRT(:,:,4) ), &
 !           ZCONC )
 ! Correction
-      PSVT(:,:,ISV_LIMA_NI) = MIN(PRT(:,:,4)/(0.82*(10.E-06)**2.5),ZCONC )
+!      PSVT(:,:,ISV_LIMA_NI) = MIN(PRT(:,:,4)/(0.82*(10.E-06)**2.5),ZCONC )
+      PSVT(:,:,ISV_LIMA_NI) = MIN(PRT(:,:,4)/(XAI*(10.E-06)**XBI),ZCONC )
     END WHERE
     WHERE ( PRT(:,:,4) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
       PRT(:,:,4)  = 0.0
@@ -203,7 +205,7 @@ IF (NMOM_I.GE.2) THEN
       ZNI_TOT(:,:) = 0.
       DO ISH = 1, NNB_CRYSTAL_SHAPE
          WHERE ( PRT(:,:,4) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI+ISH-1) < ZSVTHR) 
-            PSVT(:,:,NSV_LIMA_NI+ISH-1) = MIN(PRT(:,:,4)/(XAI_SHAPE(ISH)*(10.E-06)**XBI_SHAPE(ISH)),ZCONC )
+            PSVT(:,:,ISV_LIMA_NI+ISH-1) = MIN(PRT(:,:,4)/(XAI_SHAPE(ISH)*(10.E-06)**XBI_SHAPE(ISH)),ZCONC )
          END WHERE
          ZNI_TOT(:,:) = ZNI_TOT(:,:) + PSVT(:,:,ISV_LIMA_NI+ISH-1)
       END DO

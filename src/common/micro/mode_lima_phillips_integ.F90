@@ -104,7 +104,7 @@ DO ISPECIE = 1, LIMAP%NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively
       IF (PZT(IL)>(CST%XTT-35.) .AND. ZEMBRYO(IL)>1.0E-8) THEN
          ZZX(IL) = ZZX(IL) + ZEMBRYO(IL) * CST%XPI * (LIMAP%XMDIAM_IFN(ISPECIE))**2 / 2.0        &
               * EXP(2*(LOG(LIMAP%XSIGMA_IFN(ISPECIE)))**2)                                   &
-              * (1.0+SIGN(1.,SQRT(2.0)*LOG(LIMAP%XSIGMA_IFN(ISPECIE))-ZB)*LIMAP%XGINC_IFN(JSPECIE))
+              * (1.0+SIGN(1.,SQRT(2.0)*LOG(LIMAP%XSIGMA_IFN(ISPECIE))-ZB)*LIMAP%XGINC_IFN(ISPECIE))
       END IF
    ENDDO
 
@@ -135,7 +135,7 @@ DO ISPECIE = 1, LIMAP%NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively
       IF (GINTEG(IL2)) THEN
          ZZX(IL2) = 1 + ZZX(IL2)  &
               - ( 0.5* CST%XPI*ZEMBRYO(IL2)*(LIMAP%XMDIAM_IFN(ISPECIE))**2 * EXP( 2.0*(LOG(LIMAP%XSIGMA_IFN(ISPECIE)))**2)   &
-              * ( 1.0-SIGN(1.,SQRT(2.0)*LOG(LIMAP%XSIGMA_IFN(ISPECIE))-ZB)*LIMAP%XGINC_IFN(JSPECIE)) )
+              * ( 1.0-SIGN(1.,SQRT(2.0)*LOG(LIMAP%XSIGMA_IFN(ISPECIE))-ZB)*LIMAP%XGINC_IFN(ISPECIE)) )
       END IF
    ENDDO
 ! 

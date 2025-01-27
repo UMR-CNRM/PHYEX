@@ -371,8 +371,10 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 ! Pre-compute quantities
 INTEGER :: ISIZE ! size of 1D array
 INTEGER :: ISH   ! loop index for ice crystal shapes
-REAL, DIMENSION(:,:), ALLOCATABLE :: ZRIT_SHAPE
-REAL, DIMENSION(:,:), ALLOCATABLE :: ZLBDAI_SHAPE
+REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZRIT_SHAPE
+REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZRIT_SHAPE_IF
+REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZCIT_SHAPE_IF
+REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZLBDAI_SHAPE
 !
 ! Prevent fractions to reach 0 (divide by 0)
 !
@@ -398,6 +400,18 @@ WHERE (PRIT(:).GE.LIMAP%XRTMIN(4))
 ELSEWHERE
    ZRIT(:)=0.
 END WHERE
+IF (LIMAP%LCRYSTAL_SHAPE) THEN
+  CALL LIMA_SHAPE_COMPUTE_LBDA(LIMAP, LIMAC, ISIZE, ZRIT, PCIT_SHAPE, ZRIT_SHAPE, ZLBDAI_SHAPE)
+  DO ISH=1, LIMAP%NNB_CRYSTAL_SHAPE
+     WHERE (ZRIT_SHAPE(:,ISH).GE.LIMAP%XRTMIN(4))
+        ZRIT_SHAPE_IF(:,ISH)=ZRIT_SHAPE(:,ISH)/ZIF1D(:)
+     ELSEWHERE
+        ZRIT_SHAPE(:,ISH)=0.
+        ZRIT_SHAPE_IF(:,ISH)=0.
+     END WHERE
+     ZCIT_SHAPE_IF(:,ISH)=PCIT_SHAPE(:,ISH)/ZIF1D(:)
+  END DO
+END IF
 WHERE (PRST(:).GE.LIMAP%XRTMIN(5))
    ZRST(:)=PRST(:)
 ELSEWHERE
@@ -490,15 +504,6 @@ ZCIT(:)=PCIT(:)
 WHERE (ZRIT(:)>LIMAP%XRTMIN(4) .AND. PCIT(:)>LIMAP%XCTMIN(4) .AND. ODCOMPUTE(:))
    ZLBDI(:) = ( LIMAC%XLBI*PCIT(:) / ZRIT(:) )**LIMAC%XLBEXI
 END WHERE
-IF (LIMAP%LCRYSTAL_SHAPE) THEN
-  ISIZE = SIZE(PCIT)
-  ALLOCATE(ZLBDAI_SHAPE(ISIZE,LIMAP%NNB_CRYSTAL_SHAPE))
-  ALLOCATE(ZRIT_SHAPE(ISIZE,LIMAP%NNB_CRYSTAL_SHAPE))
-  ZRIT_SHAPE(:,:) = 0.
-  CALL LIMA_SHAPE_COMPUTE_LBDA(LIMAP, LIMAC, ISIZE, ZRIT, PCIT_SHAPE, ZRIT_SHAPE, ZLBDAI_SHAPE)
-ELSE
-  ALLOCATE(ZLBDAI_SHAPE(0,0))
-END IF
 !
 ! Snow : additional option for LSNOW_T if NMOM_S=1
 ZLBDS(:)  = 1.E10
@@ -573,7 +578,7 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_I.GE.1) THEN
    IF (LIMAP%NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_HONC(:)
    PA_RI(:) = PA_RI(:) - P_RC_HONC(:)
    IF (LIMAP%NMOM_I.GE.2) THEN
-     IF (.NOT. LCRYSTAL_SHAPE) THEN
+     IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
        PA_CI(:) = PA_CI(:) - P_CC_HONC(:) 
      ELSE
 ! Etant donnee la gamme de T, formation de polycristaux (80%) et de colonnes (20%)
@@ -668,7 +673,7 @@ IF (LIMAP%NMOM_I.GE.1) THEN
    !
    CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF
                              PRHODREF, ZT, ZSSI, ZAI, ZCJ, ZLSFACT,           &
-                             ZRIT/ZIF1D, ZCIT/ZIF1D, PCIT_SHAPE/ZIF1D, ZLBDI, &
+                             ZRIT/ZIF1D, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI, &
                              P_TH_DEPI, P_RI_DEPI, P_SHCI_HACH,               &
                              P_RI_CNVS, P_CI_CNVS, P_SHCI_CNVS                )
    !
@@ -696,12 +701,12 @@ END IF
 IF(LIMAP%LICE_ISC .AND. LIMAP%NMOM_I.GE.2) THEN
   CALL LIMA_ICE_SELF_COLLECTION (CST, LIMAP, LIMAC, KSIZE, ODCOMPUTE,          & 
                                  PRHODREF, ZT,                                 &
-                                 ZRIT(:)/ZPF1D(:), PCIT/ZPF1D(:), ZLBDI,       &
-                                 ZRIT_SHAPE/ZPF1D, PCIT_SHAPE/ZPF1D, ZLBDAI_SHAPE,         &                                  
+                                 ZRIT/ZIF1D, PCIT/ZIF1D, ZLBDI,       &
+                                 ZRIT_SHAPE_IF, ZCIT_SHAPE_IF, ZLBDAI_SHAPE,         &                                  
                                  P_CI_ISC, P_SHCI_ISC, P_SHRI_ISCS, P_SHCI_ISCS)
   !
   IF(.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
-    P_CI_ISC(:) = P_CI_ISC(:) * ZPF1D(:)
+    P_CI_ISC(:) = P_CI_ISC(:) * ZIF1D(:)
     PA_CI(:) = PA_CI(:) + P_CI_ISC(:)
   ELSE
     DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
@@ -773,7 +778,7 @@ IF (LIMAP%NMOM_I.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
    CALL LIMA_ICE_AGGREGATION_SNOW (CST, LIMAP, LIMAC, KSIZE, ODCOMPUTE,                                             & ! depends on IF, PF
                                    ZT, PRHODREF,                                                 &
                                    ZRIT/ZIF1D, ZRST/ZPF1D, ZCIT/ZIF1D, ZCST/ZPF1D, ZLBDI, ZLBDS, &
-                                   PCIT_SHAPE/ZIF1D, ZRIT_SHAPE/ZIF1D, ZLBDAI_SHAPE,                         &
+                                   ZCIT_SHAPE_IF, ZRIT_SHAPE_IF, ZLBDAI_SHAPE,                   &
                                    PLATHAM_IAGGS,                                                &
                                    P_RI_AGGS, P_CI_AGGS, P_SHCI_AGGS                             )
    P_CI_AGGS(:) = P_CI_AGGS(:) * ZIF1D(:)

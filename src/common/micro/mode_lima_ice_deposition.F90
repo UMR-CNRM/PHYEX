@@ -45,6 +45,9 @@ USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 USE MODD_CST, ONLY:CST_T
 USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
+USE MODE_LIMA_SHAPE_COMPUTE_LBDA, ONLY : LIMA_SHAPE_COMPUTE_LBDA
+USE MODE_LIMA_CHANGE_SHAPE, ONLY : LIMA_CHANGE_SHAPE
+!
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
@@ -66,6 +69,7 @@ REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  ! abs. pressure at time t
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIT    ! Cloud ice m.r. at t 
 !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT    ! Ice crystal C. at t
+REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(IN) :: PCIT_SHAPE ! Ice crystal C. at t for each shape
 !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDI    ! Graupel m.r. at t 
 !
@@ -161,7 +165,7 @@ ELSE
     ! compute the deposition rate per shape
     DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
       ZZW(:) = 0.
-      WHERE (GMICRO(:) .AND. (ZRIT_SHAPE(:,ISH) > LIMAP%XRTMIN(4)) .AND. (PCIT_SHAPE(:,ISH) > LIMAP%XCTMIN(4)))
+      WHERE ( GMICRO(:) .AND. (ZRIT_SHAPE(:,ISH)>LIMAP%XRTMIN(4)) .AND. (PCIT_SHAPE(:,ISH)>LIMAP%XCTMIN(4)) )
         ZZW(:) = (PSSI(:) / PAI(:)) * PCIT_SHAPE(:,ISH) *   &
                  (LIMAC%X0DEPI_SHAPE(ISH) / ZLBDAI_SHAPE(:,ISH) + &
                   LIMAC%X2DEPI_SHAPE(ISH) * PCJ(:) * PCJ(:) /     &
@@ -183,8 +187,8 @@ ELSE
       WHERE ( GMICRO .AND. (ZLBDAI_SHAPE(:,ISH) < LIMAC%XLBDAICNVS_LIM) &
                      .AND. (PCIT_SHAPE(:,ISH) > LIMAP%XCTMIN(4))        &
                      .AND. (PSSI(:) > 0.0) )
-        ZZW(:) = (ZLBDAI_SHAPE(:,ISH) * LIMAC%XDICNVS_LIM)**(LIMAC%XALPHAI)
-        ZZX(:) = (PSSI(:) / PAI(:)) * PCIT_SHAPE(:,ISH) * (ZZW(:)**LIMAC%XNUI) * EXP(-ZZW(:))
+        ZZW(:) = (ZLBDAI_SHAPE(:,ISH) * LIMAC%XDICNVS_LIM)**(LIMAP%XALPHAI)
+        ZZX(:) = (PSSI(:) / PAI(:)) * PCIT_SHAPE(:,ISH) * (ZZW(:)**LIMAP%XNUI) * EXP(-ZZW(:))
         ZZW(:) = (LIMAC%XR0DEPIS_SHAPE(ISH) + LIMAC%XR1DEPIS_SHAPE(ISH) * PCJ(:)) * ZZX(:)                             
         !
         ZZW2(:) = ZZW(:) * (LIMAC%XC0DEPIS_SHAPE(ISH) + LIMAC%XC1DEPIS_SHAPE(ISH) * PCJ(:)) / &

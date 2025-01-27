@@ -9,7 +9,7 @@
 !
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE LIMA_RSCOLRG( KND, PALPHAS, PZNUS, PALPHAR, PNUR,                &
+      SUBROUTINE LIMA_RSCOLRG( KSIZE1, KSIZE2, KND, PALPHAS, PZNUS, PALPHAR, PNUR,      &
                          PESR, PEXMASSS, PFALLS, PEXFALLS, PFALLEXPS, PFALLR, PEXFALLR, &
                          PLBDASMAX, PLBDARMAX, PLBDASMIN, PLBDARMIN,         &
                          PDINFTY, PRSCOLRG,PAG, PBS, PAS                     )
@@ -97,6 +97,8 @@ IMPLICIT NONE
 !              ------------------------------- 
 !
 !
+INTEGER :: KSIZE1
+INTEGER :: KSIZE2
 INTEGER, INTENT(IN) :: KND    ! Number of discrete size intervals in DS and DR  
 !
 REAL, INTENT(IN) :: PALPHAS   ! First shape parameter of the aggregates 
@@ -122,7 +124,7 @@ REAL, INTENT(IN) :: PDINFTY   ! Factor to define the largest diameter up to
                               ! which the diameter integration is performed
 REAL, INTENT(IN) :: PAG, PBS, PAS
 !
-REAL, DIMENSION(:,:), INTENT(INOUT) :: PRSCOLRG! Scaled fall speed difference in
+REAL, DIMENSION(KSIZE1,KSIZE2), INTENT(INOUT) :: PRSCOLRG! Scaled fall speed difference in
                                                ! the mass collection kernel as a
                                                ! function of LAMBDAX and LAMBDAZ
 !

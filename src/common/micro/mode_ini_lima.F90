@@ -64,7 +64,7 @@ REAL     :: ZT      ! Work variable
 REAL, DIMENSION(7)  :: ZVTRMAX
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER  :: JI
+INTEGER  :: II
 !  
 !-------------------------------------------------------------------------------
 !

@@ -371,7 +371,7 @@ ZCPH(:,:) = CST%XCPD + CST%XCPV  *PTSTEP*   ZRVS(:,:)                     &
 ZLV(:,:) = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZT(:,:) -CST%XTT )
 ZLS(:,:) = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( ZT(:,:) -CST%XTT )
 !
-IF (LADJ) THEN
+IF (LIMAP%LADJ) THEN
    ZRV_IN=ZRVS*PTSTEP
    ZRC_IN=ZRCS*PTSTEP
    IF (LIMAP%NMOM_I.EQ.1) THEN

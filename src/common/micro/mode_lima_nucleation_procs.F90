@@ -11,7 +11,7 @@ CONTAINS
                                     PTSTEP, PRHODJ,                                 &
                                     PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,  &
                                     PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, PRHT, &
-                                    PCCT, PCRT, PCIT, PCIT_SHAPE, PAERO, PSOLORG, HACTCCN,   &
+                                    PCCT, PCRT, PCIT, PCIT_SHAPE,                   &
                                     PNFT, PNAT, PIFT, PINT, PNIT, PNHT,             &
                                     PCLDFR, PICEFR, PPRCFR,                         &
                                     PTOT_RV_HENU, PTOT_RC_HINC, PTOT_RI_HIND,       &
@@ -84,9 +84,6 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST     ! abs. pressure at 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PT         ! Temperature
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDTHRAD    ! Radiative temperature tendency
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
-REAL, DIMENSION(D%NIJT,D%NKT,:), INTENT(INOUT) :: PAERO  ! Aerosol concentration
-REAL, DIMENSION(D%NIJT,D%NKT,:), INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
-CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHT       ! Theta at t 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRVT       ! Water vapor m.r. at t 
@@ -156,7 +153,6 @@ IF ( LIMAP%LACTI .AND. LIMAP%NMOD_CCN >=1 .AND. LIMAP%NMOM_C.GE.2) THEN
 
     CALL LIMA_CCN_ACTIVATION( LIMAP, LIMAW, D, CST, NEBN,                       &
                               PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,    &
-                              PAERO, PSOLORG, HACTCCN,               & 
                               PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT, PCLDFR, &
                               PTOT_RV_HENU )
 
@@ -236,7 +232,7 @@ IF ( LIMAP%LNUCL .AND. LIMAP%NMOM_I>=2 .AND. .NOT.LIMAP%LMEYERS .AND. LIMAP%NMOD
         CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+TNSV%NSV_LIMA_NI), 'HIND', Z_CI_HIND(:,:) * PRHODJ(:,:) / PTSTEP )
       ELSE
         DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
-          CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_LIMA_NI+ISH-1), 'HIND', &
+          CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+TNSV%NSV_LIMA_NI+ISH-1), 'HIND', &
                                     Z_SHCI_HIND(:, :, ISH) * PRHODJ(:, :) / PTSTEP )
         END DO
       END IF
@@ -262,7 +258,7 @@ IF ( LIMAP%LNUCL .AND. LIMAP%NMOM_I>=2 .AND. .NOT.LIMAP%LMEYERS .AND. LIMAP%NMOD
           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+TNSV%NSV_LIMA_NI), 'HINC', -Z_CC_HINC(:,:) * PRHODJ(:,:) / PTSTEP )
       ELSE
         DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
-          CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_LIMA_NI+ISH-1), 'HINC', &
+          CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+TNSV%NSV_LIMA_NI+ISH-1), 'HINC', &
                                     Z_SHCI_HIND(:, :, ISH) * PRHODJ(:, :) / PTSTEP )
         END DO
       END IF
@@ -397,7 +393,7 @@ IF ( LIMAP%LNUCL .AND. LIMAP%LHHONI .AND. LIMAP%NMOD_CCN >= 1 .AND. LIMAP%NMOM_I
         CALL BUDGET_STORE_INIT_PHY(D,TBUDGETS(NBUDGET_SV1-1+TNSV%NSV_LIMA_NI),'HONH',PCIT(:,:)*PRHODJ(:,:)/PTSTEP )
       ELSE
         DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
-          CALL BUDGET_STORE_INIT_PHY(D,TBUDGETS(NBUDGET_SV1-1+NSV_LIMA_NI+ISH-1),'HONH', &
+          CALL BUDGET_STORE_INIT_PHY(D,TBUDGETS(NBUDGET_SV1-1+TNSV%NSV_LIMA_NI+ISH-1),'HONH', &
                                      PCIT_SHAPE(:, :, ISH)*PRHODJ(:, :)/PTSTEP )
         END DO
       END IF
@@ -423,11 +419,11 @@ IF ( LIMAP%LNUCL .AND. LIMAP%LHHONI .AND. LIMAP%NMOD_CCN >= 1 .AND. LIMAP%NMOM_I
      IF ( BUCONF%LBUDGET_RI ) &
           CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'HONH', PRIT(:,:) * PRHODJ(:,:) / PTSTEP )
     IF ( BUCONF%LBUDGET_SV ) then
-      IF (.NOT. LIMAP%LCRUSTAL_SHAPE) THEN
+      IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
         CALL BUDGET_STORE_END_PHY(D,TBUDGETS(NBUDGET_SV1-1+TNSV%NSV_LIMA_NI),'HONH',PCIT(:,:)*PRHODJ(:,:)/PTSTEP )
       ELSE
         DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
-          CALL BUDGET_STORE_END_PHY(D,TBUDGETS(NBUDGET_SV1-1+NSV_LIMA_NI+ISH-1),'HONH', &
+          CALL BUDGET_STORE_END_PHY(D,TBUDGETS(NBUDGET_SV1-1+TNSV%NSV_LIMA_NI+ISH-1),'HONH', &
                                     PCIT_SHAPE(:, :, ISH)*PRHODJ(:, :)/PTSTEP )
         END DO
       END IF

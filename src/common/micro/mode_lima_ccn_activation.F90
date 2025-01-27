@@ -757,7 +757,7 @@ DO IMOD = 1, LIMAP%NMOD_CCN
                              ! sum of s**(ki+2) * F32 * Ci * ki * beta(ki/2,3/2)
    PFUNCSMAX(:) =  PFUNCSMAX(:) + (PPZSMAX)**(LIMAP%XKHEN_MULTI(IMOD) + 2) &
                  * ZHYPF* LIMAP%XKHEN_MULTI(IMOD) * ZCHEN_MULTI(:,IMOD)    &
-                 * LIMAP%XGMULTI(JMOD)
+                 * LIMAP%XGMULTI(IMOD)
 ENDDO
 ! function l.h.s. minus r.h.s. of eq. (9) of CPB98 but for LIMAP%NMOD_CCN aerosol mode
 PFUNCSMAX(:) = PFUNCSMAX(:) + PPZZW6(:)*PPZSMAX - PPZZW3(:)
@@ -817,7 +817,7 @@ DO IMOD = 1, LIMAP%NMOD_CCN
                              ! sum of s**(ki+2) * F32 * Ci * ki * bêta(ki/2,3/2)
    PSINGL_FUNCSMAX = PSINGL_FUNCSMAX + (PPZSMAX)**(LIMAP%XKHEN_MULTI(IMOD) + 2)   &
                    * ZHYPF* LIMAP%XKHEN_MULTI(IMOD) * ZCHEN_MULTI(KINDEX,IMOD) &
-                   * LIMAP%XGMULTI(JMOD)
+                   * LIMAP%XGMULTI(IMOD)
 ENDDO
 ! function l.h.s. minus r.h.s. of eq. (9) of CPB98 but for LIMAP%NMOD_CCN aerosol mode
 PSINGL_FUNCSMAX = PSINGL_FUNCSMAX + PPZZW6*PPZSMAX - PPZZW3

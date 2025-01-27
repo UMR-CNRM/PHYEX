@@ -96,7 +96,7 @@ TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
 TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 REAL                               :: ZFACT1_XNDEBRIS, ZFACT2_XNDEBRIS
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-R!
+!
 !-------------------------------------------------------------------------------
 
 IF (LHOOK) CALL DR_HOOK('LIMA_COLLISIONAL_ICE_BREAKUP', 0, ZHOOK_HANDLE)
