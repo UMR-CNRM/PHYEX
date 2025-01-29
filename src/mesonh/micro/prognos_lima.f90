@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2012-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2012-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -370,7 +370,7 @@ ENDDO
 !Calcul de S au regard de T et rv en fin de pas de temps
 ZW1=EXP(XALPW-XBETAW/PTT(:)-XGAMW*LOG(PTT(:)))
  !rvsat
-ZRVSAT1(:)=(XMV / XMD)*ZW1(:)/(PPRES-ZW1(:))
+ZRVSAT1(:)=(XMV / XMD)*ZW1(:)/(PPRES(:)-ZW1(:))
 !
 WHERE (PRC(:)==0.0D0)
  PS0(:)=(PRV(:)/ZRVSAT1(:))-1D0

@@ -227,9 +227,6 @@ USE MODD_RAIN_ICE_PARAM_n
 USE MODD_REF,             ONLY: XTHVREFZ
 
 use mode_budget,          only: Budget_store_add, Budget_store_init, Budget_store_end
-#ifdef MNH_PGI
-USE MODE_PACK_PGI
-#endif
 use mode_tools,           only: Countjv
 
 USE MODI_MOMG

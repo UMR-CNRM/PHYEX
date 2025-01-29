@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -62,8 +62,7 @@ USE MODD_NSV,             ONLY: NSV_LIMA_NC, NSV_LIMA_NR, NSV_LIMA_CCN_FREE, NSV
                                 NSV_LIMA_NI, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,             &
                                 NSV_LIMA_IFN_FREE, NSV_LIMA_IFN_NUCL, NSV_LIMA_IMM_NUCL, NSV_LIMA_HOM_HAZE, &
                                 NSV_LIMA_BEG, NSV_ELECBEG, NSV
-USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN, NMOD_IFN, NMOD_IMM, LHHONI,      &
-                                LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS,               &
+USE MODD_PARAM_LIMA,      ONLY: LHHONI, LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS,NMOD_IFN,      &
                                 LSEDC, LSEDI, XRTMIN, XCTMIN, LDEPOC, XVDEPOC,                  &
                                 NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
 USE MODE_BUDGET_PHY,      ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
@@ -414,7 +413,7 @@ ZHOMFT(:,:,:)   = 0.
 ZHOMFS(:,:,:)   = 0.
 
 !++cb++
-if ( BUCONF%lbu_enable .OR. OELEC) then
+if ( BUCONF%LBU_ENABLE .OR. OELEC) then
 !--cb--
   Z_RR_CVRC(:,:,:) = 0.
   Z_CR_CVRC(:,:,:) = 0.
@@ -425,7 +424,7 @@ if ( BUCONF%lbu_enable .OR. OELEC) then
   allocate( ZTOT_TH_IMLT (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_TH_IMLT(:,:,:) = 0.
   allocate( ZTOT_RC_IMLT (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_RC_IMLT(:,:,:) = 0.
   allocate( ZTOT_CC_IMLT (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_CC_IMLT(:,:,:) = 0.
-  allocate( ZTOT_IFNN_IMLT (size( ptht, 1), size( ptht, 2), size( ptht, 3), nmod_ifn ) ); ZTOT_IFNN_IMLT(:,:,:,:) = 0.
+  allocate( ZTOT_IFNN_IMLT (size( ptht, 1), size( ptht, 2), size( ptht, 3), NIFN ) ); ZTOT_IFNN_IMLT(:,:,:,:) = 0.
   allocate( ZTOT_TH_HONC (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_TH_HONC(:,:,:) = 0.
   allocate( ZTOT_RC_HONC (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_RC_HONC(:,:,:) = 0.
   allocate( ZTOT_CC_HONC (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_CC_HONC(:,:,:) = 0.
@@ -599,18 +598,18 @@ IF ( NMOM_G.GE.2) ZCGS(:,:,:)   = PSVS(:,:,:,ISV_LIMA_NG)
 IF ( NMOM_H.GE.2) ZCHT(:,:,:)   = PSVS(:,:,:,ISV_LIMA_NH) * PTSTEP
 IF ( NMOM_H.GE.2) ZCHS(:,:,:)   = PSVS(:,:,:,ISV_LIMA_NH)
 !
-IF ( NMOD_CCN .GE. 1 ) ZCCNFT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NMOD_CCN-1) * PTSTEP
-IF ( NMOD_CCN .GE. 1 ) ZCCNAT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NMOD_CCN-1) * PTSTEP
-IF ( NMOD_CCN .GE. 1 ) ZCCNFS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NMOD_CCN-1)
-IF ( NMOD_CCN .GE. 1 ) ZCCNAS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NMOD_CCN-1)
+IF ( NCCN .GE. 1 ) ZCCNFT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NCCN-1) * PTSTEP
+IF ( NCCN .GE. 1 ) ZCCNAT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NCCN-1) * PTSTEP
+IF ( NCCN .GE. 1 ) ZCCNFS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NCCN-1)
+IF ( NCCN .GE. 1 ) ZCCNAS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NCCN-1)
 !
-IF ( NMOD_IFN .GE. 1 ) ZIFNFT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NMOD_IFN-1) * PTSTEP
-IF ( NMOD_IFN .GE. 1 ) ZIFNNT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NMOD_IFN-1) * PTSTEP
-IF ( NMOD_IFN .GE. 1 ) ZIFNFS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NMOD_IFN-1)
-IF ( NMOD_IFN .GE. 1 ) ZIFNNS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NMOD_IFN-1)
+IF ( NIFN .GE. 1 ) ZIFNFT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NIFN-1) * PTSTEP
+IF ( NIFN .GE. 1 ) ZIFNNT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NIFN-1) * PTSTEP
+IF ( NIFN .GE. 1 ) ZIFNFS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NIFN-1)
+IF ( NIFN .GE. 1 ) ZIFNNS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NIFN-1)
 !
-IF ( NMOD_IMM .GE. 1 ) ZIMMNT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NMOD_IMM-1) * PTSTEP
-IF ( NMOD_IMM .GE. 1 ) ZIMMNS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NMOD_IMM-1)
+IF ( NIMM .GE. 1 ) ZIMMNT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NIMM-1) * PTSTEP
+IF ( NIMM .GE. 1 ) ZIMMNS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NIMM-1)
 !
 IF ( LHHONI ) ZHOMFT(:,:,:) = PSVS(:,:,:,ISV_LIMA_HOM_HAZE) * PTSTEP
 IF ( LHHONI ) ZHOMFS(:,:,:) = PSVS(:,:,:,ISV_LIMA_HOM_HAZE)
@@ -686,7 +685,7 @@ END IF
 !
 !*       0.     Check mean diameter for cloud, rain  and ice
 !               --------------------------------------------
-! if ( BUCONF%lbu_enable ) then
+! if ( BUCONF%LBU_ENABLE ) then
 !   if ( BUCONF%lbudget_rc .and. lwarm .and. lrain ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', zrcs(:, :, :) * prhodj(:, :, :) )
 !   if ( BUCONF%lbudget_rr .and. lwarm .and. lrain ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', zrrs(:, :, :) * prhodj(:, :, :) )
 !   if ( BUCONF%lbudget_ri .and. lcold .and. lsnow ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', zris(:, :, :) * prhodj(:, :, :) )
@@ -737,7 +736,7 @@ END IF
 !!$   END WHERE
 !!$END IF
 !
-! if ( BUCONF%lbu_enable ) then
+! if ( BUCONF%LBU_ENABLE ) then
 !   if ( BUCONF%lbudget_rc .and. lwarm .and. lrain ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', zrcs(:, :, :) * prhodj(:, :, :) )
 !   if ( BUCONF%lbudget_rr .and. lwarm .and. lrain ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', zrrs(:, :, :) * prhodj(:, :, :) )
 !   if ( BUCONF%lbudget_ri .and. lcold .and. lsnow ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', zris(:, :, :) * prhodj(:, :, :) )
@@ -764,7 +763,7 @@ PINPRI=0.
 PINPRS=0.
 PINPRG=0.
 PINPRH=0.
-if ( BUCONF%lbu_enable ) then
+if ( BUCONF%LBU_ENABLE ) then
   if ( BUCONF%lbudget_th ) &
        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
   if ( BUCONF%lbudget_rc .and. nmom_c.ge.1 .and. lsedc ) &
@@ -903,7 +902,7 @@ ZTHS(:,:,:) = ZT(:,:,:) / ZEXN(:,:,:) * ZINV_TSTEP
 !
 ! Call budgets
 !
-if ( BUCONF%lbu_enable ) then
+if ( BUCONF%LBU_ENABLE ) then
   if ( BUCONF%lbudget_th ) &
        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
   if ( BUCONF%lbudget_rc .and. nmom_c.ge.1 .and. lsedc ) &
@@ -972,7 +971,7 @@ END IF
 !!$Z_RR_CVRC(:,:,:) = 0.
 !!$Z_CR_CVRC(:,:,:) = 0.
 !!$IF (NMOM_R.GE.2) THEN
-!!$   if( BUCONF%lbu_enable ) then
+!!$   if( BUCONF%LBU_ENABLE ) then
 !!$    if ( BUCONF%lbudget_rc ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC),                    'R2C1', zrcs(:, :, :) * prhodj(:, :, :) )
 !!$    if ( BUCONF%lbudget_rr ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR),                    'R2C1', zrrs(:, :, :) * prhodj(:, :, :) )
 !!$    if ( BUCONF%lbudget_sv .and. nmom_c.ge.2) &
@@ -989,7 +988,7 @@ END IF
 !!$   ZCCS(:,:,:) = ZCCS(:,:,:) - Z_CR_CVRC(:,:,:)/PTSTEP
 !!$   ZCRS(:,:,:) = ZCRS(:,:,:) + Z_CR_CVRC(:,:,:)/PTSTEP
 !!$
-!!$   if( BUCONF%lbu_enable ) then
+!!$   if( BUCONF%LBU_ENABLE ) then
 !!$    if ( BUCONF%lbudget_rc ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC),                    'R2C1', zrcs(:, :, :) * prhodj(:, :, :) )
 !!$    if ( BUCONF%lbudget_rr ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR),                    'R2C1', zrrs(:, :, :) * prhodj(:, :, :) )
 !!$    if ( BUCONF%lbudget_sv .and. nmom_c.ge.2) &
@@ -1174,7 +1173,7 @@ DO WHILE(ANY(ZTIME(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<PTSTEP))
       ALLOCATE(ZCST1D(IPACK))
       ALLOCATE(ZCGT1D(IPACK))
       ALLOCATE(ZCHT1D(IPACK))
-      ALLOCATE(ZIFNN1D(IPACK,NMOD_IFN))
+      ALLOCATE(ZIFNN1D(IPACK,NIFN))
       ALLOCATE(ZEVAP1D(IPACK))
       ALLOCATE(ZTIME1D(IPACK))
       ALLOCATE(LLCOMPUTE1D(IPACK))
@@ -1275,7 +1274,7 @@ DO WHILE(ANY(ZTIME(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<PTSTEP))
       ALLOCATE(ZB_CS(IPACK))              ;  ZB_CS(:) = 0.
       ALLOCATE(ZB_CG(IPACK))              ;  ZB_CG(:) = 0.
       ALLOCATE(ZB_CH(IPACK))              ;  ZB_CH(:) = 0.
-      ALLOCATE(ZB_IFNN(IPACK,NMOD_IFN))   ;  ZB_IFNN(:,:) = 0.
+      ALLOCATE(ZB_IFNN(IPACK,NIFN))   ;  ZB_IFNN(:,:) = 0.
       !
       ALLOCATE(Z_CR_BRKU(IPACK))          ; Z_CR_BRKU(:) = 0.
       ALLOCATE(Z_TH_HONR(IPACK))          ; Z_TH_HONR(:) = 0.
@@ -1645,7 +1644,7 @@ DO WHILE(ANY(ZTIME(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<PTSTEP))
       ZRHT1D = ZRHT1D + ZA_RH(:) * ZMAXTIME(:) + ZB_RH(:)
       IF (NMOM_H.GE.2) ZCHT1D = ZCHT1D + ZA_CH(:) * ZMAXTIME(:) + ZB_CH(:)
       !
-      DO II=1,NMOD_IFN
+      DO II=1,NIFN
          ZIFNN1D(:,II) = ZIFNN1D(:,II) + ZB_IFNN(:,II)
       END DO
       !
@@ -2256,18 +2255,18 @@ IF ( NMOM_S.GE.2 ) PSVS(:,:,:,ISV_LIMA_NS) = ZCST(:,:,:) *ZINV_TSTEP
 IF ( NMOM_G.GE.2 ) PSVS(:,:,:,ISV_LIMA_NG) = ZCGT(:,:,:) *ZINV_TSTEP
 IF ( NMOM_H.GE.2 ) PSVS(:,:,:,ISV_LIMA_NH) = ZCHT(:,:,:) *ZINV_TSTEP
 !
-IF ( NMOD_CCN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NMOD_CCN-1) = ZCCNFT(:,:,:,:) *ZINV_TSTEP
-IF ( NMOD_CCN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NMOD_CCN-1) = ZCCNAT(:,:,:,:) *ZINV_TSTEP
-IF ( NMOD_IFN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NMOD_IFN-1) = ZIFNFT(:,:,:,:) *ZINV_TSTEP
-IF ( NMOD_IFN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NMOD_IFN-1) = ZIFNNT(:,:,:,:) *ZINV_TSTEP
-IF ( NMOD_IMM .GE. 1 )   PSVS(:,:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NMOD_IMM-1) = ZIMMNT(:,:,:,:) *ZINV_TSTEP
+IF ( NCCN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NCCN-1) = ZCCNFT(:,:,:,:) *ZINV_TSTEP
+IF ( NCCN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NCCN-1) = ZCCNAT(:,:,:,:) *ZINV_TSTEP
+IF ( NIFN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NIFN-1) = ZIFNFT(:,:,:,:) *ZINV_TSTEP
+IF ( NIFN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NIFN-1) = ZIFNNT(:,:,:,:) *ZINV_TSTEP
+IF ( NIMM .GE. 1 )   PSVS(:,:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NIMM-1) = ZIMMNT(:,:,:,:) *ZINV_TSTEP
 IF ( LHHONI) PSVS(:,:,:,ISV_LIMA_HOM_HAZE) = ZHOMFT(:,:,:) *ZINV_TSTEP
 !
 !
 !
 ! Call budgets
 !
-if ( BUCONF%lbu_enable ) then
+if ( BUCONF%LBU_ENABLE ) then
   allocate( zrhodjontstep(size( prhodj, 1), size( prhodj, 2), size( prhodj, 3) ) )
   zrhodjontstep(:, :, :) = zinv_tstep * prhodj(:, :, :)
 
@@ -2499,7 +2498,7 @@ if ( BUCONF%lbu_enable ) then
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'HMLT',   ztot_ch_hmlt(:, :, :) * zrhodjontstep(:, :, :) )
     end if
 
-    do ii = 1, nmod_ifn
+    do ii = 1, NIFN
       idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl + ii - 1
       call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'IMLT', ztot_ifnn_imlt(:, :, :, ii) * zrhodjontstep(:, :, :) )
     end do

@@ -72,8 +72,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMXM   ! result at flux local
 INTEGER :: JI,JJ,JK             ! Loop index in x direction
 INTEGER :: IIU            ! Size of the array in the x direction
 !          
-INTEGER :: JJK,IJU,IKU
-INTEGER :: JIJK,JIJKOR,JIJKEND
+INTEGER :: IJU,IKU
 !                     
 !
 !-------------------------------------------------------------------------------
@@ -85,22 +84,23 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-JIJKOR  = 1 + 1 
-JIJKEND = IIU*IJU*IKU
+!$acc kernels present(PA,PMXM)
+!$acc loop independent collapse(3)
+DO JK = 1, IKU
+  DO JJ = 1, IJU
+    DO JI = 1 + 1, IIU
+      PMXM(JI,JJ,JK) = 0.5*( PA(JI,JJ,JK)+PA(JI-1,JJ,JK) )
+    ENDDO
+  ENDDO
+ENDDO
 !
-!CDIR NODEP
-!OCL NOVREC
-DO JIJK=JIJKOR , JIJKEND
-   PMXM(JIJK,1,1) = 0.5*( PA(JIJK,1,1)+PA(JIJK-1,1,1) )
-END DO
-!
-!CDIR NODEP
-!OCL NOVREC
-DO JI=1,JPHEXT
-   DO JJK=1,IJU*IKU
-      PMXM(JI,JJK,1) = PMXM(IIU-2*JPHEXT+JI,JJK,1) ! for reprod JPHEXT <> 1
-   END DO
-END DO
+!$acc loop independent collapse(2)
+DO JK = 1, IKU
+  DO JJ=1,IJU
+    PMXM(1,JJ,JK)    = PMXM(IIU-2*JPHEXT+1,JJ,JK)  	!TODO: voir si ce n'est pas plutot JPHEXT+1
+  ENDDO
+ENDDO
+!$acc end kernels
 !
 END SUBROUTINE MXM_PHY
 !-------------------------------------------------------------------------------
@@ -176,8 +176,7 @@ REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMXM   ! result at flux localizatio
 INTEGER :: JI,JJ            ! Loop index in x direction
 INTEGER :: IIU            ! Size of the array in the x direction
 !          
-INTEGER :: JJK,IJU
-INTEGER :: JIJ,JIJOR,JIJEND
+INTEGER :: IJU
 !                     
 !
 !-------------------------------------------------------------------------------
@@ -188,22 +187,19 @@ INTEGER :: JIJ,JIJOR,JIJEND
 IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 !
-JIJOR  = 1 + 1 
-JIJEND = IIU*IJU
+!$acc kernels present(PA,PMXM)
+!$acc loop independent collapse(2)
+  DO JJ = 1, IJU
+    DO JI = 1 + 1, IIU
+      PMXM(JI,JJ) = 0.5*( PA(JI,JJ)+PA(JI-1,JJ) )
+    ENDDO
+  ENDDO
 !
-!CDIR NODEP
-!OCL NOVREC
-DO JIJ=JIJOR , JIJEND
-   PMXM(JIJ,1) = 0.5*( PA(JIJ,1)+PA(JIJ-1,1) )
-END DO
-!
-!CDIR NODEP
-!OCL NOVREC
-DO JI=1,JPHEXT
-   DO JJ=1,IJU
-      PMXM(JI,JJ) = PMXM(IIU-2*JPHEXT+JI,JJ) ! for reprod JPHEXT <> 1
-   END DO
-END DO
+!$acc loop independent
+  DO JJ=1,IJU
+    PMXM(1,JJ)    = PMXM(IIU-2*JPHEXT+1,JJ) !TODO: voir si ce n'est pas plutot JPHEXT+1
+  ENDDO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -275,7 +271,6 @@ INTEGER :: IKU            ! upper bound in z direction of PA
 !           
 INTEGER :: IIU,IJU
 INTEGER :: JIJ,JI,JJ
-INTEGER :: JIJK,JIJKOR,JIJKEND
 !
 !
 !-------------------------------------------------------------------------------
@@ -287,20 +282,17 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-JIJKOR  = 1 + IIU*IJU
-JIJKEND = IIU*IJU*IKU
-!
-!CDIR NODEP
-!OCL NOVREC
-DO JIJK=JIJKOR , JIJKEND
-   PMZM(JIJK,1,1) = 0.5*( PA(JIJK,1,1)+PA(JIJK-IIU*IJU,1,1) )
+!$acc kernels present(PA,PMZM)
+DO JK=2,IKU !TODO: remplacer le 2 par JPHEXT+1 ?
+!$mnh_expand_array(JI=1:IIU,JJ=1:IJU)
+  PMZM(:,:,JK) = 0.5* ( PA(:,:,JK) + PA(:,:,JK-1) )
+!$mnh_end_expand_array(JI=1:IIU,JJ=1:IJU)
 END DO
 !
-!CDIR NODEP
-!OCL NOVREC
-DO JIJ=1,IIU*IJU
-   PMZM(JIJ,1,1)    = -999.
-END DO
+!$mnh_expand_array(JI=1:IIU,JJ=1:IJU)
+PMZM(:,:,1)    = -999.
+!$mnh_end_expand_array(JI=1:IIU,JJ=1:IJU)
+!$acc end kernels
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE MZM_PHY
@@ -370,12 +362,11 @@ REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMYM   ! result at flux localizatio
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ             ! Loop index in y direction
+INTEGER :: JJ,JI,JK             ! Loop index in y direction
 INTEGER :: IJU            ! Size of the array in the y direction
 !
 !          
 INTEGER :: IIU
-INTEGER :: JIJ,JIJOR,JIJEND
 !            
 !-------------------------------------------------------------------------------
 !
@@ -385,17 +376,21 @@ INTEGER :: JIJ,JIJOR,JIJEND
 IIU=SIZE(PA,1)
 IJU=SIZE(PA,2)
 !
-JIJOR  = 1 + IIU
-JIJEND = IIU*IJU
-!CDIR NODEP
-!OCL NOVREC
-DO JIJ=JIJOR , JIJEND
-   PMYM(JIJ,1) = 0.5*( PA(JIJ,1)+PA(JIJ-IIU,1) )
-END DO
+!$acc kernels present(PA,PMYM)
+!$acc loop independent collapse(2)
+  DO JJ = 2, IJU
+    DO JI = 1, IIU
+      PMYM(JI,JJ) = 0.5*( PA(JI,JJ)+PA(JI,JJ-1) )
+    ENDDO
+  ENDDO
 !
-DO JJ=1,JPHEXT
-   PMYM(:,JJ)  = PMYM(:,IJU-2*JPHEXT+JJ) ! for reprod JPHEXT <> 1
-END DO
+!$acc loop independent collapse(2)
+  DO JJ=1,JPHEXT
+    DO JI=1,IIU
+      PMYM(JI,JJ)  = PMYM(JI,IJU-2*JPHEXT+JJ) ! for reprod JPHEXT <> 1
+    ENDDO
+  ENDDO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -466,12 +461,11 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMYM   ! result at flux local
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ             ! Loop index in y direction
+INTEGER :: JJ,JI,JK             ! Loop index in y direction
 INTEGER :: IJU            ! Size of the array in the y direction
 !
 !          
 INTEGER :: IIU,IKU
-INTEGER :: JIJK,JIJKOR,JIJKEND
 !            
 !-------------------------------------------------------------------------------
 !
@@ -482,17 +476,25 @@ IIU=SIZE(PA,1)
 IJU=SIZE(PA,2)
 IKU=SIZE(PA,3)
 !
-JIJKOR  = 1 + IIU
-JIJKEND = IIU*IJU*IKU
-!CDIR NODEP
-!OCL NOVREC
-DO JIJK=JIJKOR , JIJKEND
-   PMYM(JIJK,1,1) = 0.5*( PA(JIJK,1,1)+PA(JIJK-IIU,1,1) )
-END DO
+!$acc kernels present(PA,PMYM)
+!$acc loop independent collapse(3)
+DO JK = 1, IKU
+  DO JJ = 2, IJU
+    DO JI = 1, IIU
+      PMYM(JI,JJ,JK) = 0.5*( PA(JI,JJ,JK)+PA(JI,JJ-1,JK) )
+    ENDDO
+  ENDDO
+ENDDO
 !
-DO JJ=1,JPHEXT
-   PMYM(:,JJ,:)  = PMYM(:,IJU-2*JPHEXT+JJ,:) ! for reprod JPHEXT <> 1
-END DO
+!$acc loop independent collapse(3)
+DO JK = 1, IKU
+  DO JJ=1,JPHEXT
+    DO JI=1,IIU
+      PMYM(JI,JJ,JK)  = PMYM(JI,IJU-2*JPHEXT+JJ,JK) ! for reprod JPHEXT <> 1
+    ENDDO
+  ENDDO
+ENDDO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -558,13 +560,11 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK            ! Loop index in z direction
+INTEGER :: JK,JI,JJ            ! Loop index in z direction
 INTEGER :: IKU           ! upper bound in z direction of PA
 !
 !         
 INTEGER :: IIU,IJU
-INTEGER :: JIJ
-INTEGER :: JIJK,JIJKOR,JIJKEND
 !           
 !-------------------------------------------------------------------------------
 !
@@ -575,20 +575,20 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-JIJKOR  = 1 + IIU*IJU
-JIJKEND = IIU*IJU*IKU
-!
-!CDIR NODEP
-!OCL NOVREC
-DO JIJK=JIJKOR , JIJKEND
-   PDZM(JIJK,1,1) = PA(JIJK,1,1)-PA(JIJK-IIU*IJU,1,1)
+!$acc kernels present(PA,PDZM)
+!$acc loop independent collapse(3)
+DO JK=2,IKU !TODO: remplacer le 1+1 par 1+JPHEXT ?
+  DO JJ=1,IJU
+    DO JI=1,IIU
+      PDZM(JI,JJ,JK) = PA(JI,JJ,JK) - PA(JI,JJ,JK-1) 
+    END DO
+  END DO
 END DO
 !
-!CDIR NODEP
-!OCL NOVREC
-DO JIJ=1,IIU*IJU
-   PDZM(JIJ,1,1)    = -999.
-END DO
+!$mnh_expand_array(JI=1:IIU,JJ=1:IJU)
+PDZM(1:IIU,1:IJU,1) = -999.
+!$mnh_end_expand_array(JI=1:IIU,JJ=1:IJU)
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -654,12 +654,11 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMZF   ! result at mass local
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK             ! Loop index in z direction
+INTEGER :: JK,JI,JJ             ! Loop index in z direction
 INTEGER :: IKU          ! upper bound in z direction of PA 
 !     
 INTEGER :: IIU,IJU
 INTEGER :: JIJ
-INTEGER :: JIJK,JIJKOR,JIJKEND
 !            
 !
 !-------------------------------------------------------------------------------
@@ -671,20 +670,13 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-JIJKOR  = 1 + IIU*IJU
-JIJKEND = IIU*IJU*IKU
+!$acc kernels present(PA,PMZF)
+PMZF(:,:,1:IKU-1) = 0.5*( PA(:,:,1:IKU-1)+PA(:,:,2:) )
 !
-!CDIR NODEP
-!OCL NOVREC
-DO JIJK=JIJKOR , JIJKEND
-   PMZF(JIJK-IIU*IJU,1,1) = 0.5*( PA(JIJK-IIU*IJU,1,1)+PA(JIJK,1,1) )
-END DO
-!
-!CDIR NODEP
-!OCL NOVREC
-DO JIJ=1,IIU*IJU
-   PMZF(JIJ,1,IKU)    = PMZF(JIJ,1,IKU-1) !-999.
-END DO
+!$mnh_expand_array(JI=1:IIU,JJ=1:IJU)
+PMZF(1:IIU,1:IJU,IKU) = -999.
+!$mnh_end_expand_array(JI=1:IIU,JJ=1:IJU)
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -760,8 +752,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMXF   ! result at mass local
 INTEGER :: JI             ! Loop index in x direction
 INTEGER :: IIU            ! upper bound in x direction of PA 
 !         
-INTEGER :: JJK,IJU,IKU
-INTEGER :: JIJK,JIJKOR,JIJKEND
+INTEGER :: JJ,JK,IJU,IKU
 !          
 !
 !-------------------------------------------------------------------------------
@@ -773,22 +764,18 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-JIJKOR  = 1 + 1 
-JIJKEND = IIU*IJU*IKU
+!$acc kernels present(PMXF,PA)
+!$acc loop independent collapse(3)
+DO JK = 1, IKU
+  DO JJ = 1, IJU
+    DO JI = 1 + 1, IIU
+      PMXF(JI-1,JJ,JK) = 0.5*( PA(JI-1,JJ,JK)+PA(JI,JJ,JK) )
+    ENDDO
+  ENDDO
+ENDDO
 !
-!CDIR NODEP
-!OCL NOVREC
-DO JIJK=JIJKOR , JIJKEND
-  PMXF(JIJK-1,1,1) = 0.5*( PA(JIJK-1,1,1)+PA(JIJK,1,1) )
-END DO
-!
-!CDIR NODEP
-!OCL NOVREC
-DO JI=1,JPHEXT
-   DO JJK=1,IJU*IKU
-      PMXF(IIU-JPHEXT+JI,JJK,1) = PMXF(JPHEXT+JI,JJK,1) ! for reprod JPHEXT <> 1
-   END DO
-END DO
+PMXF(IIU,:,:)    = PMXF(2*JPHEXT,:,:) 
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -866,7 +853,6 @@ INTEGER :: JI             ! Loop index in x direction
 INTEGER :: IIU            ! upper bound in x direction of PA 
 !         
 INTEGER :: JJ,IJU
-INTEGER :: JIJ,JIJOR,JIJEND
 !          
 !
 !-------------------------------------------------------------------------------
@@ -877,22 +863,16 @@ INTEGER :: JIJ,JIJOR,JIJEND
 IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 !
-JIJOR  = 1 + 1 
-JIJEND = IIU*IJU
+!$acc kernels present(PMXF,PA)
+!$acc loop independent collapse(2)
+  DO JJ = 1, IJU
+    DO JI = 1 + 1, IIU
+      PMXF(JI-1,JJ) = 0.5*( PA(JI-1,JJ)+PA(JI,JJ) )
+    ENDDO
+  ENDDO
 !
-!CDIR NODEP
-!OCL NOVREC
-DO JIJ=JIJOR , JIJEND
-  PMXF(JIJ-1,1) = 0.5*( PA(JIJ-1,1)+PA(JIJ,1) )
-END DO
-!
-!CDIR NODEP
-!OCL NOVREC
-DO JI=1,JPHEXT
-   DO JJ=1,IJU
-      PMXF(IIU-JPHEXT+JI,JJ) = PMXF(JPHEXT+JI,JJ) ! for reprod JPHEXT <> 1
-   END DO
-END DO
+PMXF(IIU,:)    = PMXF(2*JPHEXT,:) 
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -964,11 +944,10 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMYF   ! result at mass local
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ             ! Loop index in y direction
+INTEGER :: JJ,JI,JK             ! Loop index in y direction
 INTEGER :: IJU            ! upper bound in y direction of PA 
 !           
 INTEGER :: IIU,IKU
-INTEGER :: JIJK,JIJKOR,JIJKEND
 !                
 !
 !-------------------------------------------------------------------------------
@@ -980,18 +959,26 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-JIJKOR  = 1 + IIU
-JIJKEND = IIU*IJU*IKU
-!
-!CDIR NODEP
-!OCL NOVREC
-DO JIJK=JIJKOR , JIJKEND
-   PMYF(JIJK-IIU,1,1) = 0.5*( PA(JIJK-IIU,1,1)+PA(JIJK,1,1) )
+!$acc kernels present(PA,PMYF)
+!$acc loop collapse(3) independent 
+DO JK = 1, IKU
+  DO JJ = 1, IJU-1
+    DO JI = 1, IIU
+      PMYF(JI,JJ,JK) = 0.5*( PA(JI,JJ,JK)+PA(JI,JJ+1,JK) )
+    END DO
+  END DO
 END DO
 !
+!$acc loop seq
 DO JJ=1,JPHEXT
-   PMYF(:,IJU-JPHEXT+JJ,:) = PMYF(:,JPHEXT+JJ,:) ! for reprod JPHEXT <> 1
+  !$acc loop collapse(2) independent 
+  DO JK = 1, IKU
+    DO JI = 1, IIU
+      PMYF(JI,IJU-JPHEXT+JJ,JK) = PMYF(JI,JPHEXT+JJ,JK) ! for reprod JPHEXT <>
+    END DO
+  END DO
 END DO
+!$acc end kernels
 !
 !
 !-------------------------------------------------------------------------------
@@ -1065,11 +1052,10 @@ REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMYF   ! result at mass localizatio
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ             ! Loop index in y direction
+INTEGER :: JJ,JI             ! Loop index in y direction
 INTEGER :: IJU            ! upper bound in y direction of PA 
 !           
 INTEGER :: IIU
-INTEGER :: JIJ,JIJOR,JIJEND
 !                
 !
 !-------------------------------------------------------------------------------
@@ -1080,18 +1066,22 @@ INTEGER :: JIJ,JIJOR,JIJEND
 IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 !
-JIJOR  = 1 + IIU
-JIJEND = IIU*IJU
-!
-!CDIR NODEP
-!OCL NOVREC
-DO JIJ=JIJOR , JIJEND
-   PMYF(JIJ-IIU,1) = 0.5*( PA(JIJ-IIU,1)+PA(JIJ,1) )
+!$acc kernels present(PA,PMYF)
+!$acc loop collapse(2) independent 
+DO JJ = 1, IJU-1
+  DO JI = 1, IIU
+    PMYF(JI,JJ) = 0.5*( PA(JI,JJ)+PA(JI,JJ+1) )
+  END DO
 END DO
 !
+!$acc loop seq
 DO JJ=1,JPHEXT
-   PMYF(:,IJU-JPHEXT+JJ) = PMYF(:,JPHEXT+JJ) ! for reprod JPHEXT <> 1
+  !$acc loop independent 
+  DO JI = 1, IIU
+    PMYF(JI,IJU-JPHEXT+JJ) = PMYF(JI,JPHEXT+JJ) ! for reprod JPHEXT <>
+  END DO
 END DO
+!$acc end kernels
 !
 !
 !-------------------------------------------------------------------------------
@@ -1155,13 +1145,11 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass local
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK           ! Loop index in z direction
+INTEGER :: JK,JI,JJ           ! Loop index in z direction
 INTEGER :: IKU          ! upper bound in z direction of PA 
 !
 !           
 INTEGER :: IIU,IJU
-INTEGER :: JIJ
-INTEGER :: JIJK,JIJKOR,JIJKEND
 !         
 !-------------------------------------------------------------------------------
 !
@@ -1172,20 +1160,18 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-JIJKOR  = 1 + IIU*IJU
-JIJKEND = IIU*IJU*IKU
-!
-!CDIR NODEP
-!OCL NOVREC
-DO JIJK=JIJKOR , JIJKEND
-   PDZF(JIJK-IIU*IJU,1,1)     = PA(JIJK,1,1)-PA(JIJK-IIU*IJU,1,1)
+!$acc kernels present(PA,PDZF)
+!$acc loop independent collapse(3)
+DO JK=1,IKU-1 !TODO: remplacer le 1 par JPVEXT ?
+  DO JJ=1,IJU
+    DO JI=1,IIU
+      PDZF(JI,JJ,JK) = PA(JI,JJ,JK+1)-PA(JI,JJ,JK)
+    END DO
+  END DO
 END DO
 !
-!CDIR NODEP
-!OCL NOVREC
-DO JIJ=1,IIU*IJU
-   PDZF(JIJ,1,IKU)    = -999.
-END DO
+PDZF(:,:,IKU) = -999.
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -1260,11 +1246,10 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDXF   ! result at mass
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JI             ! Loop index in x direction
+INTEGER :: JI,JJ,JK             ! Loop index in x direction
 INTEGER :: IIU            ! upper bound in x direction of PA 
 !             
-INTEGER :: JJK,IJU,IKU
-INTEGER :: JIJK,JIJKOR,JIJKEND
+INTEGER :: IJU,IKU
 !             
 !
 !-------------------------------------------------------------------------------
@@ -1276,27 +1261,128 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-JIJKOR  = 1 + 1
-JIJKEND = IIU*IJU*IKU
-!
-!CDIR NODEP
-!OCL NOVREC
-DO JIJK=JIJKOR , JIJKEND
-   PDXF(JIJK-1,1,1) = PA(JIJK,1,1) - PA(JIJK-1,1,1) 
+!$acc kernels present(PA,PDXF)
+!$acc loop independent collapse(3)
+DO JK=1,IKU
+  DO JJ=1,IJU
+    DO JI=1+1,IIU
+     PDXF(JI-1,JJ,JK) = PA(JI,JJ,JK) - PA(JI-1,JJ,JK) 
+    END DO
+  END DO
 END DO
 !
-!CDIR NODEP
-!OCL NOVREC
-DO JI=1,JPHEXT
-   DO JJK=1,IJU*IKU
-      PDXF(IIU-JPHEXT+JI,JJK,1) = PDXF(JPHEXT+JI,JJK,1) ! for reprod JPHEXT <> 1
-   END DO
-END DO
+!$acc loop independent collapse(2)
+DO JK=1,IKU
+  DO JJ=1,IJU
+    PDXF(IIU,JJ,JK)    = PDXF(2*JPHEXT,JJ,JK) 
+  ENDDO
+ENDDO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE DXF_PHY
 !
+!     ###############################
+      SUBROUTINE DXF2D_PHY(D,PA,PDXF)
+!     ###############################
+!
+!!****  *DXF* -  Shuman operator : finite difference operator in x direction
+!!                                  for a variable at a flux side
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a finite difference 
+!     along the x direction (I index) for a field PA localized at a x-flux
+!     point (u point). The result is localized at a mass point.
+!
+!!**  METHOD
+!!    ------ 
+!!        The result PDXF(i,:,:) is defined by (PA(i+1,:,:)-PA(i,:,:))
+!!        At i=size(PA,1), PDXF(i,:,:) are replaced by the values of PDXF,
+!!    which are the right values in the x-cyclic case
+!!    
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the 
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)  
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!	V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    05/07/94 
+!!      Modification to include the periodic case 13/10/94 J.Stein 
+!!                   optimisation                 20/08/00 J. Escobar
+!!      correction of in halo/pseudo-cyclic calculation for JPHEXT<> 1    
+!!      J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1 
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+USE MODD_PARAMETERS, ONLY: JPHEXT
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)                :: PA     ! variable at flux
+                                                            !  side
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDXF   ! result at mass
+                                                            ! localization 
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JI             ! Loop index in x direction
+INTEGER :: IIU            ! upper bound in x direction of PA 
+!             
+INTEGER :: JJ,IJU
+!             
+!
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF DXF
+!              ------------------
+!
+IIU = SIZE(PA,1)
+IJU = SIZE(PA,2)
+!
+!$acc kernels present(PA,PDXF)
+!$acc loop independent collapse(2)
+  DO JJ=1,IJU
+    DO JI=1+1,IIU
+     PDXF(JI-1,JJ) = PA(JI,JJ) - PA(JI-1,JJ) 
+    END DO
+  END DO
+!
+!$acc loop independent
+  DO JJ=1,IJU
+    PDXF(IIU,JJ)    = PDXF(2*JPHEXT,JJ) 
+  ENDDO
+!$acc end kernels
+!
+!-------------------------------------------------------------------------------
+!
+END SUBROUTINE DXF2D_PHY
 !     ###############################
       SUBROUTINE DXM_PHY(D,PA,PDXM)
 !     ###############################
@@ -1365,11 +1451,10 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDXM   ! result at flux
 !              -------------------------------
 !
 !
-INTEGER :: JI             ! Loop index in x direction
+INTEGER :: JI,JJ,JK             ! Loop index in x direction
 INTEGER :: IIU            ! upper bound in x direction of PA 
 !             
-INTEGER :: JJK,IJU,IKU
-INTEGER :: JIJK,JIJKOR,JIJKEND
+INTEGER :: IJU,IKU
 !            
 !-------------------------------------------------------------------------------
 !
@@ -1380,26 +1465,124 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-JIJKOR  = 1 + 1
-JIJKEND = IIU*IJU*IKU
-!
-!CDIR NODEP
-!OCL NOVREC
-DO JIJK=JIJKOR , JIJKEND
-   PDXM(JIJK,1,1) = PA(JIJK,1,1) - PA(JIJK-1,1,1) 
+!$acc kernels present(PA,PDXM)
+!$acc loop independent collapse(3)
+DO JK=1,IKU
+  DO JJ=1,IJU
+    DO JI=1+1,IIU !TODO: remplacer le 1 par JPHEXT ?
+      PDXM(JI,JJ,JK) = PA(JI,JJ,JK) - PA(JI-1,JJ,JK) 
+    END DO
+  END DO
 END DO
 !
-!CDIR NODEP
-!OCL NOVREC
-DO JI=1,JPHEXT
-   DO JJK=1,IJU*IKU
-      PDXM(JI,JJK,1) = PDXM(IIU-2*JPHEXT+JI,JJK,1) ! for reprod JPHEXT <> 1
-   END DO
-END DO
+!$acc loop independent collapse(2)
+DO JK=1,IKU
+  DO JJ=1,IJU
+    PDXM(1,JJ,JK)    = PDXM(IIU-2*JPHEXT+1,JJ,JK)   !TODO: remplacer -2*JPHEXT+1 par -JPHEXT ?
+  ENDDO
+ENDDO
+!$acc end kernels
+!
+END SUBROUTINE DXM_PHY
+!-------------------------------------------------------------------------------
+!
+      SUBROUTINE DXM2D_PHY(D,PA,PDXM)
+!     ###############################
+!
+!!****  *DXM* -  Shuman operator : finite difference operator in x direction
+!!                                  for a variable at a mass localization
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a finite difference 
+!     along the x direction (I index) for a field PA localized at a mass
+!     point. The result is localized at a x-flux point (u point).
+!
+!!**  METHOD
+!!    ------ 
+!!        The result PDXM(i,:,:) is defined by (PA(i,:,:)-PA(i-1,:,:))
+!!    At i=1, PDXM(1,:,:) are replaced by the values of PDXM,
+!!    which are the right values in the x-cyclic case. 
+!!    
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the 
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)  
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!	V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    05/07/94 
+!!      Modification to include the periodic case 13/10/94 J.Stein 
+!!                   optimisation                 20/08/00 J. Escobar
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_PARAMETERS, ONLY: JPHEXT
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT),  INTENT(IN)                :: PA     ! variable at mass
+                                                            ! localization
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDXM   ! result at flux
+                                                            ! side
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+!
+INTEGER :: JI             ! Loop index in x direction
+INTEGER :: IIU            ! upper bound in x direction of PA 
+!             
+INTEGER :: JJ,IJU
+!            
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF DXM
+!              ------------------
+!
+IIU = SIZE(PA,1)
+IJU = SIZE(PA,2)
+!
+!$acc kernels present(PA,PDXM)
+!$acc loop independent collapse(2)
+  DO JJ=1,IJU
+    DO JI=1+1,IIU !TODO: remplacer le 1 par JPHEXT ?
+      PDXM(JI,JJ) = PA(JI,JJ) - PA(JI-1,JJ) 
+    END DO
+  END DO
+!
+!$acc loop independent
+  DO JJ=1,IJU
+    PDXM(1,JJ)    = PDXM(IIU-2*JPHEXT+1,JJ)   !TODO: remplacer -2*JPHEXT+1 par -JPHEXT ?
+  ENDDO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
-END SUBROUTINE DXM_PHY
+END SUBROUTINE DXM2D_PHY
 !
 !     ###############################
       SUBROUTINE DYM_PHY(D,PA,PDYM)
@@ -1470,12 +1653,11 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDYM   ! result at flux
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ             ! Loop index in y direction
+INTEGER :: JJ,JI,JK             ! Loop index in y direction
 INTEGER :: IJU            ! Size of the array in the y direction
 !
 !    
 INTEGER :: IIU,IKU
-INTEGER :: JIJK,JIJKOR,JIJKEND
 !     
 !-------------------------------------------------------------------------------
 !
@@ -1486,23 +1668,135 @@ IIU=SIZE(PA,1)
 IJU=SIZE(PA,2)
 IKU=SIZE(PA,3)
 !
-JIJKOR  = 1 + IIU
-JIJKEND = IIU*IJU*IKU
-!
-!CDIR NODEP
-!OCL NOVREC
-DO JIJK=JIJKOR , JIJKEND
-   PDYM(JIJK,1,1)           = PA(JIJK,1,1)  -  PA(JIJK-IIU,1,1) 
+!$acc kernels present(PA,PDYM)
+!$acc loop independent collapse(3)
+DO JK=1,IKU
+  DO JJ=2,IJU !TODO: remplacer le 2 par JPHEXT+1 ?
+    DO JI=1,IIU
+      PDYM(JI,JJ,JK) = PA(JI,JJ,JK) - PA(JI,JJ-1,JK) 
+    END DO
+  END DO
 END DO
 !
+!$acc loop seq
 DO JJ=1,JPHEXT
-   PDYM(:,JJ,:) = PDYM(:,IJU-2*JPHEXT+JJ,:) ! for reprod JPHEXT <> 1
+  !$acc loop collapse(2) independent 
+  DO JK=1,IKU
+    DO JI=1,IIU
+     PDYM(JI,JJ,JK) = PDYM(JI,IJU-2*JPHEXT+JJ,JK) ! for reprod JPHEXT <> 1
+    END DO
+  END DO
 END DO
+!$acc end kernels
 !
 !
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE DYM_PHY
+!     ###############################
+      SUBROUTINE DYM2D_PHY(D,PA,PDYM)
+!     ###############################
+!
+!!****  *DYM* -  Shuman operator : finite difference operator in y direction
+!!                                  for a variable at a mass localization
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a finite difference 
+!     along the y direction (J index) for a field PA localized at a mass
+!     point. The result is localized at a y-flux point (v point).
+!
+!!**  METHOD
+!!    ------ 
+!!        The result PDYM(:,j,:) is defined by (PA(:,j,:)-PA(:,j-1,:))
+!!    At j=1, PDYM(:,1,:) are replaced by the values of PDYM,
+!!    which are the right values in the y-cyclic case. 
+!!    
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the 
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)  
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!	V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    05/07/94 
+!!      Modification to include the periodic case 13/10/94 J.Stein 
+!!                   optimisation                 20/08/00 J. Escobar
+!!      correction of in halo/pseudo-cyclic calculation for JPHEXT<> 1 
+!!      J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1 
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_PARAMETERS, ONLY: JPHEXT
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT),  INTENT(IN)                :: PA     ! variable at mass
+                                                            ! localization
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDYM   ! result at flux
+                                                            ! side
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JJ,JI            ! Loop index in y direction
+INTEGER :: IJU            ! Size of the array in the y direction
+!
+!    
+INTEGER :: IIU
+!     
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF DYM
+!              ------------------
+!
+IIU=SIZE(PA,1)
+IJU=SIZE(PA,2)
+!
+!$acc kernels present(PA,PDYM)
+!$acc loop independent collapse(2)
+  DO JJ=2,IJU !TODO: remplacer le 2 par JPHEXT+1 ?
+    DO JI=1,IIU
+      PDYM(JI,JJ) = PA(JI,JJ) - PA(JI,JJ-1) 
+    END DO
+  END DO
+!
+!$acc loop seq
+DO JJ=1,JPHEXT
+  !$acc loop independent 
+  DO JI=1,IIU
+    PDYM(JI,JJ) = PDYM(JI,IJU-2*JPHEXT+JJ) ! for reprod JPHEXT <> 1
+  END DO
+END DO
+!$acc end kernels
+!
+!
+!-------------------------------------------------------------------------------
+!
+END SUBROUTINE DYM2D_PHY
 !     ###############################
       SUBROUTINE DYF_PHY(D,PA,PDYF)
 !     ###############################
@@ -1572,12 +1866,11 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDYF   ! result at mass
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ            ! Loop index in y direction
+INTEGER :: JJ,JI,JK            ! Loop index in y direction
 INTEGER :: IJU           ! upper bound in y direction of PA 
 !
 !          
 INTEGER :: IIU,IKU
-INTEGER :: JIJK,JIJKOR,JIJKEND
 !            
 !-------------------------------------------------------------------------------
 !
@@ -1588,21 +1881,124 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-JIJKOR  = 1 + IIU
-JIJKEND = IIU*IJU*IKU
+!$acc kernels present_crm(PDYF,PA)
+!$mnh_expand_array(JI=1:IIU,JJ=1:IJU-1,JK=1:IKU)
+  PDYF(1:IIU,1:IJU-1,1:IKU) = PA(1:IIU,2:IJU+1,1:IKU) - PA(1:IIU,1:IJU-1,1:IKU)
+!$mnh_end_expand_array(JI=1:IIU,JJ=1:IJU-1,JK=1:IKU)
 !
-!CDIR NODEP
-!OCL NOVREC
-DO JIJK=JIJKOR , JIJKEND
-   PDYF(JIJK-IIU,1,1)         = PA(JIJK,1,1)  -  PA(JIJK-IIU,1,1) 
-END DO
-!
+!$acc loop seq
 DO JJ=1,JPHEXT
-   PDYF(:,IJU-JPHEXT+JJ,:) = PDYF(:,JPHEXT+JJ,:) ! for reprod JPHEXT <> 1
+  !$acc loop collapse(2) independent 
+  DO JK=1,IKU
+    DO JI=1,IIU
+      PDYF(JI,IJU-JPHEXT+JJ,JK) = PDYF(JI,JPHEXT+JJ,JK) ! for reprod JPHEXT <>
+    END DO
+  END DO
 END DO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE DYF_PHY
 !
+!     ###############################
+      SUBROUTINE DYF2D_PHY(D,PA,PDYF)
+!     ###############################
+!
+!!****  *DYF* -  Shuman operator : finite difference operator in y direction
+!!                                  for a variable at a flux side
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a finite difference 
+!     along the y direction (J index) for a field PA localized at a y-flux
+!     point (v point). The result is localized at a mass point.
+!
+!!**  METHOD
+!!    ------ 
+!!        The result PDYF(:,j,:) is defined by (PA(:,j+1,:)-PA(:,j,:))
+!!        At j=size(PA,2), PDYF(:,j,:) are replaced by the values of PDYM,
+!!    which are the right values in the y-cyclic case
+!!    
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the 
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)  
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!	V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    05/07/94 
+!!      Modification to include the periodic case 13/10/94 J.Stein 
+!!                   optimisation                 20/08/00 J. Escobar
+!!      correction of in halo/pseudo-cyclic calculation for JPHEXT<> 1 
+!!      J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1 
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+USE MODD_PARAMETERS, ONLY: JPHEXT
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)                :: PA     ! variable at flux
+                                                            !  side
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDYF   ! result at mass
+                                                            ! localization 
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JJ ,JI           ! Loop index in y direction
+INTEGER :: IJU           ! upper bound in y direction of PA 
+!
+!          
+INTEGER :: IIU
+!            
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF DYF
+!              ------------------
+!
+IIU = SIZE(PA,1)
+IJU = SIZE(PA,2)
+!
+!$acc kernels present_crm(PDYF,PA)
+!$mnh_expand_array(JI=1:IIU,JJ=1:IJU-1)
+  PDYF(1:IIU,1:IJU-1) = PA(1:IIU,2:IJU+1) - PA(1:IIU,1:IJU-1)
+!$mnh_end_expand_array(JI=1:IIU,JJ=1:IJU-1)
+!
+!$acc loop seq
+DO JJ=1,JPHEXT
+!$mnh_expand_array(JI=1:IIU)
+   PDYF(1:IIU,IJU-JPHEXT+JJ) = PDYF(1:IIU,JPHEXT+JJ) ! for reprod JPHEXT <> 1
+!$mnh_end_expand_array(JI=1:IIU)
+END DO
+!$acc end kernels
+!
+!-------------------------------------------------------------------------------
+!
+END SUBROUTINE DYF2D_PHY
+
 END MODULE MODE_SHUMAN_PHY

@@ -71,18 +71,24 @@ IF (LHOOK) CALL DR_HOOK('ICE4_RSRIMCG_OLD', 0, ZHOOK_HANDLE)
 !
 !*       5.1    cloud droplet riming of the aggregates
 !
+!$acc kernels
 PRSRIMCG_MR(:)=0.
+!$acc end kernels
 !
 IF(.NOT. LDSOFT) THEN
+!$acc kernels
+!$acc loop independent
   DO JL = 1, KSIZE
     GRIM(JL)=PRCT(JL)>ICED%XRTMIN(2) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL) .AND. PT(JL)<CST%XTT
   ENDDO
+!$acc end kernels
   CALL INTERP_MICRO_1D(KPROMA, KSIZE, PLBDAS(:), ICEP%NGAMINC, ICEP%XRIMINTP1, ICEP%XRIMINTP2, &
                       &PARAMI%LPACK_INTERP, GRIM(:), IBUF1, IBUF2, ZBUF1, ZBUF2, &
                       &IGRIM, &
                       &ICEP%XGAMINC_RIM2, ZZW)
   !
   IF(IGRIM>0) THEN
+!$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GRIM(1:KSIZE))
 #ifdef REPRO48
@@ -95,6 +101,7 @@ IF(.NOT. LDSOFT) THEN
       PRSRIMCG_MR(1:KSIZE)=MIN(PRST(1:KSIZE), PRSRIMCG_MR(1:KSIZE))
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
   END IF
 ENDIF
 !

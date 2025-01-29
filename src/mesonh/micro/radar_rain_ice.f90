@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1996-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1996-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -547,7 +547,7 @@ END WHERE
 !
 CONTAINS
 !
-  FUNCTION MOMG (PALPHA,PNU,PP) RESULT (PMOMG)
+  PURE FUNCTION MOMG (PALPHA,PNU,PP) RESULT (PMOMG)
 !
 ! auxiliary routine used to compute the Pth moment order of the generalized
 ! gamma law

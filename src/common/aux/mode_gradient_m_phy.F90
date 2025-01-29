@@ -88,18 +88,17 @@ IKA=D%NKA
 IKU=D%NKU
 IKL=D%NKL
 !
-DO JK=IKTB,IKTE 
-  DO JJ=IJB,IJE 
-    DO JI=IIB,IIE 
-      PGZ_M_W(JI,JJ,JK) =  (PY(JI,JJ,JK)-PY(JI,JJ,JK-IKL )) / PDZZ(JI,JJ,JK)
-  ENDDO
- ENDDO
-ENDDO
+!$acc kernels
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=IKTB:IKTE)
+PGZ_M_W(IIB:IIE,IJB:IJE,IKTB:IKTE) =  (PY(IIB:IIE,IJB:IJE,IKTB:IKTE)-PY(IIB:IIE,IJB:IJE,IKTB-IKL:IKTE-IKL)) &
+                           / PDZZ(IIB:IIE,IJB:IJE,IKTB:IKTE)
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=IKTB:IKTE)
 !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 PGZ_M_W(IIB:IIE,IJB:IJE,IKU)=  (PY(IIB:IIE,IJB:IJE,IKU)-PY(IIB:IIE,IJB:IJE,IKU-IKL))  &
                            / PDZZ(IIB:IIE,IJB:IJE,IKU)
 PGZ_M_W(IIB:IIE,IJB:IJE,IKA)= PGZ_M_W(IIB:IIE,IJB:IJE,IKU) ! -999.
 !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -210,19 +209,25 @@ CALL DXF_PHY(D,ZWORK1,ZWORK2)
 IF (.NOT. OFLAT) THEN
   CALL DZM_PHY(D,PA,ZWORK3)
   CALL MXF_PHY(D,PDZX,ZWORK4)
+  !$acc kernels
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
   ZWORK5(IIB:IIE,IJB:IJE,1:IKT) = ZWORK3(IIB:IIE,IJB:IJE,1:IKT) * ZWORK4(IIB:IIE,IJB:IJE,1:IKT) &
                                     / PDZZ(IIB:IIE,IJB:IJE,1:IKT)
   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
+  !$acc end kernels
   CALL MZF_PHY(D,ZWORK5,ZWORK6)
+  !$acc kernels
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
   PGX_M_M(IIB:IIE,IJB:IJE,1:IKT)= (ZWORK2(IIB:IIE,IJB:IJE,1:IKT) - ZWORK6(IIB:IIE,IJB:IJE,1:IKT)) &
                                     / ZMXF_PDXX(IIB:IIE,IJB:IJE,1:IKT)
   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
+  !$acc end kernels
 ELSE
+  !$acc kernels
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
   PGX_M_M(IIB:IIE,IJB:IJE,1:IKT)= ZWORK2(IIB:IIE,IJB:IJE,1:IKT) / ZMXF_PDXX(IIB:IIE,IJB:IJE,1:IKT) 
   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
+  !$acc end kernels
 END IF
 !
 !----------------------------------------------------------------------------
@@ -332,19 +337,25 @@ IF (.NOT. OFLAT) THEN
   !
   CALL DZM_PHY(D,PA,ZWORK3)
   CALL MYF_PHY(D,PDZY,ZWORK4)
+  !$acc kernels
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
   ZWORK5(IIB:IIE,IJB:IJE,1:IKT) = ZWORK4(IIB:IIE,IJB:IJE,1:IKT) * ZWORK3(IIB:IIE,IJB:IJE,1:IKT) &
                                    / PDZZ(IIB:IIE,IJB:IJE,1:IKT)
   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
+  !$acc end kernels
   CALL MZF_PHY(D,ZWORK5,ZWORK4)
+  !$acc kernels
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
   PGY_M_M(IIB:IIE,IJB:IJE,1:IKT)= (ZWORK2(IIB:IIE,IJB:IJE,1:IKT)-ZWORK4(IIB:IIE,IJB:IJE,1:IKT)) &
                                     /ZMYF_PDYY(IIB:IIE,IJB:IJE,1:IKT)
   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
+  !$acc end kernels
 ELSE
+  !$acc kernels
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
   PGY_M_M(IIB:IIE,IJB:IJE,1:IKT) = ZWORK2(IIB:IIE,IJB:IJE,1:IKT)/ZMYF_PDYY(IIB:IIE,IJB:IJE,1:IKT)
   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
+  !$acc end kernels
 ENDIF  
 !
 !----------------------------------------------------------------------------
@@ -425,14 +436,14 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),        INTENT(IN)  :: D
 LOGICAL, INTENT(IN) :: OFLAT
-REAL, DIMENSION(D%NIT*D%NJT*D%NKT),  INTENT(IN)  :: PY      ! variable at the mass point
-REAL, DIMENSION(D%NIT*D%NJT*D%NKT),  INTENT(IN)  :: PDXX    ! metric coefficient dyy
-REAL, DIMENSION(D%NIT*D%NJT*D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
-REAL, DIMENSION(D%NIT*D%NJT*D%NKT),  INTENT(IN)  :: PDZX    ! metric coefficient dzy
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PY      ! variable at the mass point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDXX    ! metric coefficient dyy
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZX    ! metric coefficient dzy
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PGX_M_U  ! result at flux
                                                               ! side
-REAL, DIMENSION(D%NIT*D%NJT*D%NKT) :: ZGX_M_U
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZGX_M_U
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZY, ZDXX
 INTEGER  IIU,IKU,JI,JK,IKL, IKA
 !
@@ -454,48 +465,35 @@ IKU=D%NKT
 IKL=D%NKL
 IKA=D%NKA
 !
-CALL D1D_TO_3D(D,PDXX,ZDXX)
-CALL D1D_TO_3D(D,PY,ZY)
-!
-IF (.NOT. OFLAT) THEN
-  JIJKOR  = 1 + JPHEXT + IIU*IJU*(JPVEXT_TURB+1 - 1)
-  JIJKEND = IIU*IJU*(IKU-JPVEXT_TURB)
-!CDIR NODEP
-!OCL NOVREC
-  DO JIJK=JIJKOR , JIJKEND
-! indexation
-    JI_1JK   = JIJK - 1
-    JIJK_1   = JIJK     - IIU*IJU*IKL
-    JI_1JK_1 = JIJK - 1 - IIU*IJU*IKL
-    JIJKP1   = JIJK     + IIU*IJU*IKL
-    JI_1JKP1 = JIJK - 1 + IIU*IJU*IKL
-!
-    ZGX_M_U(JIJK)=                                              &
-       (  PY(JIJK)-PY(JI_1JK)                               &
-       -(  (PY(JIJK)-PY(JIJK_1))     / PDZZ(JIJK)       &
-       +(PY(JI_1JK)-PY(JI_1JK_1)) / PDZZ(JI_1JK)        &
-       ) * PDZX(JIJK)* 0.25                                     &
-       -(  (PY(JIJKP1)-PY(JIJK))     / PDZZ(JIJKP1)     &
-       +(PY(JI_1JKP1)-PY(JI_1JK)) / PDZZ(JI_1JKP1)      &
-       ) * PDZX(JIJKP1)* 0.25                                   &
-        )  / PDXX(JIJK)
-  END DO
-!
-CALL D1D_TO_3D(D,ZGX_M_U,PGX_M_U)
+!$acc kernels !!!!present_cr(PGX_M_U)
+IF (.NOT. OFLAT) THEN 
+PGX_M_U(1+JPHEXT:IIU,1:IJU,1+JPVEXT_TURB:IKU-JPVEXT_TURB) = &
+  (  PY(1+JPHEXT:IIU,1:IJU,1+JPVEXT_TURB:IKU-JPVEXT_TURB)-PY(JPHEXT:IIU-1,1:IJU,1+JPVEXT_TURB:IKU-JPVEXT_TURB)      &
+    -(  (PY(1+JPHEXT:IIU,1:IJU,1+JPVEXT_TURB:IKU-JPVEXT_TURB)-PY(1+JPHEXT:IIU,1:IJU,JPVEXT_TURB:IKU-JPVEXT_TURB-1)) &
+    / PDZZ(1+JPHEXT:IIU,1:IJU,1+JPVEXT_TURB:IKU-JPVEXT_TURB)          &
+      +(PY(JPHEXT:IIU-1,1:IJU,1+JPVEXT_TURB:IKU-JPVEXT_TURB)-PY(JPHEXT:IIU-1,1:IJU,JPVEXT_TURB:IKU-JPVEXT_TURB-1))  &
+        / PDZZ(JPHEXT:IIU-1,1:IJU,1+JPVEXT_TURB:IKU-JPVEXT_TURB)        &
+    ) * PDZX(1+JPHEXT:IIU,1:IJU,1+JPVEXT_TURB:IKU-JPVEXT_TURB)* 0.25                                     &
+    -(  (PY(1+JPHEXT:IIU,1:IJU,1+JPVEXT_TURB+1:IKU-JPVEXT_TURB+1)-PY(1+JPHEXT:IIU,1:IJU,1+JPVEXT_TURB:IKU-JPVEXT_TURB)) &
+    / PDZZ(1+JPHEXT:IIU,1:IJU,1+JPVEXT_TURB+1:IKU-JPVEXT_TURB+1)        &
+      +(PY(JPHEXT:IIU-1,1:IJU,1+JPVEXT_TURB+1:IKU-JPVEXT_TURB+1)-PY(JPHEXT:IIU-1,1:IJU,1+JPVEXT_TURB:IKU-JPVEXT_TURB)) &
+       / PDZZ(JPHEXT:IIU-1,1:IJU,1+JPVEXT_TURB+1:IKU-JPVEXT_TURB+1)      &
+    ) * PDZX(1+JPHEXT:IIU,1:IJU,1+JPVEXT_TURB+1:IKU-JPVEXT_TURB+1)* 0.25                                   &
+  )  / PDXX(1+JPHEXT:IIU,1:IJU,1+JPVEXT_TURB:IKU-JPVEXT_TURB)
 !
   DO JI=1+JPHEXT,IIU
-    PGX_M_U(JI,:,IKU)=  ( ZY(JI,:,IKU)-ZY(JI-1,:,IKU)  )  / ZDXX(JI,:,IKU)
-    PGX_M_U(JI,:,IKA)=  -999.
+    PGX_M_U(JI,:,IKU)=  ( PY(JI,:,IKU)-PY(JI-1,:,IKU)  )  / PDXX(JI,:,IKU) 
+    PGX_M_U(JI,:,IKA)=   PGX_M_U(JI,:,IKU) ! -999.
   END DO
 ELSE
 !  PGX_M_U = DXM(PY) / PDXX
-  PGX_M_U(2:IIU,:,:) = ( ZY(2:IIU,:,:)-ZY(1:IIU-1,:,:) ) &
-                             / ZDXX(2:IIU,:,:)
-!
-ENDIF
+  PGX_M_U(2:IIU,:,:) = ( PY(2:IIU,:,:)-PY(1:IIU-1,:,:) ) & ! +JPHEXT
+                             / PDXX(2:IIU,:,:)
+ENDIF  
 DO JI=1,JPHEXT
   PGX_M_U(JI,:,:)=PGX_M_U(IIU-2*JPHEXT+JI,:,:) ! for reprod JPHEXT <> 1
 END DO  
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -600,6 +598,7 @@ IKA=D%NKA
 IKU=D%NKU
 IF (.NOT. OFLAT) THEN
 !  PGY_M_V = (   DYM(PY)  -  MZF (   MYM(  DZM(PY) /PDZZ  ) * PDZY   )   )/PDYY
+!$acc kernels   
   DO JK=1+JPVEXT_TURB,IKU-JPVEXT_TURB
     DO JJ=1+JPHEXT,IJU
         PGY_M_V(:,JJ,JK)=                                                 &
@@ -618,29 +617,26 @@ IF (.NOT. OFLAT) THEN
     PGY_M_V(:,JJ,IKU)=  ( PY(:,JJ,IKU)-PY(:,JJ-1,IKU)  )  / PDYY(:,JJ,IKU)
     PGY_M_V(:,JJ,IKA)=  -999.
   END DO
+!$acc end kernels   
 !
 ELSE
 !  PGY_M_V = DYM(PY)/PDYY
+!$acc kernels 
   PGY_M_V(:,2:IJU,:) = ( PY(:,2:IJU,:)-PY(:,1:IJU-1,:) ) &
                                / PDYY(:,2:IJU,:)
+!$acc end kernels
 !
 ENDIF
+!$acc kernels   
 DO JJ=1,JPHEXT
   PGY_M_V(:,JJ,:)=PGY_M_V(:,IJU-2*JPHEXT+JJ,:)
 END DO
+!
+!$acc end kernels   
 !
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('GY_M_V',1,ZHOOK_HANDLE)
 END SUBROUTINE GY_M_V_PHY
 !
-SUBROUTINE D1D_TO_3D (D,P1D,P3D)
-USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-IMPLICIT NONE
-TYPE(DIMPHYEX_t),        INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: P1D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT)  :: P3D
-
-P3D = P1D
-END SUBROUTINE D1D_TO_3D
 END MODULE MODE_GRADIENT_M_PHY

@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -50,7 +50,13 @@ USE MODD_ELEC_PARAM,     ONLY: ELEC_PARAM_t
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 USE MODE_ELEC_BEARD_EFFECT, ONLY: ELEC_BEARD_EFFECT
 !
-USE MODI_GAMMA, ONLY: GAMMA
+!USE MODI_GAMMA, ONLY: GAMMA
+#ifndef MNH_COMPILER_CCE
+USE MODI_GAMMA
+#endif
+#if defined(TARGET_NV70)
+USE MODI_GAMMA
+#endif
 !
 IMPLICIT NONE
 !
@@ -171,23 +177,35 @@ ENDIF
 !
 !        O. Initialization of for sedimentation
 !
+!$acc kernels
 ZINVTSTEP=1./PTSTEP
+!$acc end kernels
 IF (GPRESENT_PFPR) THEN
+!$acc kernels
   PFPR(:,:,:) = 0.
+!$acc end kernels
 END IF
 !
 !*       1. Parameters for cloud sedimentation
 !
 IF (GSEDIC) THEN
+!$acc kernels
   ZRAY(:,:)   = 0.
   ZLBC(:,:)   = ICED%XLBC(1)
   ZFSEDC(:,:) = ICEP%XFSEDC(1)
   ZCONC3D(:,:)= ICED%XCONC_LAND
   ZCONC_TMP(:)= ICED%XCONC_LAND
+!$acc end kernels
   IF (GPRESENT_PSEA) THEN
+!$acc kernels
+!$acc loop independent
     DO JIJ = IIJB, IIJE
       ZCONC_TMP(JIJ)=PSEA(JIJ)*ICED%XCONC_SEA+(1.-PSEA(JIJ))*ICED%XCONC_LAND
     ENDDO
+!$acc end kernels
+
+!$acc kernels
+!$acc loop independent collapse(2)
     DO JK=IKTB, IKTE
       DO JIJ = IIJB, IIJE
           ZLBC(JIJ,JK)   = PSEA(JIJ)*ICED%XLBC(2)+(1.-PSEA(JIJ))*ICED%XLBC(1)
@@ -198,16 +216,22 @@ IF (GSEDIC) THEN
                          & PSEA(JIJ)*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
       ENDDO
     END DO
+!$acc end kernels
   ELSE
+!$acc kernels
     ZCONC3D(:,:) = ICED%XCONC_LAND
     ZRAY(:,:)  = 0.5*(GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)))
+!$acc end kernels
   END IF
+!$acc kernels
+!$acc loop independent collapse(2)
   DO JK=IKTB, IKTE
     DO JIJ = IIJB, IIJE
       ZRAY(JIJ,JK)      = MAX(1.,ZRAY(JIJ,JK))
       ZLBC(JIJ,JK)      = MAX(MIN(ICED%XLBC(1),ICED%XLBC(2)),ZLBC(JIJ,JK))
     ENDDO
   ENDDO
+!$acc end kernels
 ENDIF
 !
 !*       2.    compute the fluxes
@@ -216,6 +240,8 @@ ENDIF
 !  the precipitating fields are larger than a minimal value only !!!
 !  For optimization we consider each variable separately
 !
+!$acc kernels
+!$acc loop independent collapse(2)
 DO JK=IKTB, IKTE
   DO JIJ = IIJB, IIJE
     ! External tendecies
@@ -260,6 +286,7 @@ DO JK=IKTB, IKTE
     ENDIF
   ENDDO
 ENDDO
+!$acc end kernels
 !
 !
 !*       2.1   for cloud
@@ -393,7 +420,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT), OPTIONAL :: PFPR    ! upper-ai
 !
 !*       0.2  declaration of local variables
 !
-INTEGER                         :: JIJ, JK
+INTEGER                         :: JI, JIJ, JK
 LOGICAL                         :: GPRESENT_PFPR
 REAL                            :: ZINVTSTEP
 REAL                            :: ZZWLBDC, ZZRAY, ZZT, ZZWLBDA, ZZCC
@@ -451,11 +478,16 @@ ELSE
   GPRESENT_PFPR = .FALSE.
 END IF
 !
+!$acc kernels
 PINPRX(:) = 0.
 ZINVTSTEP=1./PTSTEP
-ZRSMIN = ICED%XRTMIN * ZINVTSTEP
+DO JI = 1, SIZE(ICED%XRTMIN)
+  ZRSMIN(JI) = ICED%XRTMIN(JI) * ZINVTSTEP
+END DO
 ZREMAINT(:) = 0.
 ZREMAINT(IIJB:IIJE) = PTSTEP
+!$acc end kernels
+!$acc update self(ZREMAINT)
 !
 ZANYREMAINT = .TRUE.
 DO WHILE (ZANYREMAINT)
@@ -481,11 +513,15 @@ DO WHILE (ZANYREMAINT)
   !
   IF(KSPE==2) THEN
     !******* for cloud
+!$acc kernels
     ZWSED(:,:) = 0.
     IF (OELEC) THEN
       ZWSEDQ(:,:) = 0.
       ZLBDA3(:,:) = 0.
     END IF
+!$acc end kernels
+!$acc kernels
+!$acc loop independent collapse(2)
     DO JK = IKTB,IKTE
       DO JIJ = IIJB,IIJE
         IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
@@ -513,23 +549,31 @@ DO WHILE (ZANYREMAINT)
 !--cb--
       ENDDO
     ENDDO
+!$acc end kernels
     IF (OELEC .AND. OSEDIM_BEARD) THEN
       CALL ELEC_BEARD_EFFECT(D, CST, HCLOUD, KSPE, GMASK, PT, PRHODREF, PTHVREFZIKB, &
                              PRXT, PQXT, PEFIELDW, ZLBDA3, ZBEARDCOEFF, ICED=ICED)
+!$acc kernels
+!$acc loop independent collapse(2)
       DO JK = IKTB,IKTE
         DO JIJ = IIJB,IIJE
           ZWSED(JIJ,JK)  = ZWSED(JIJ,JK)  * ZBEARDCOEFF(JIJ,JK)
           ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZBEARDCOEFF(JIJ,JK)
         END DO
       END DO
+!$acc end kernels
     END IF
   ELSEIF(KSPE==4) THEN
     ! ******* for pristine ice
+!$acc kernels
     ZWSED(:,:) = 0.
     IF (OELEC) THEN
       ZWSEDQ(:,:) = 0.
       ZLBDA3(:,:) = 0.
     END IF
+!$acc end kernels
+!$acc kernels
+!$acc loop independent collapse(2)
     DO JK = IKTB,IKTE
       DO JIJ = IIJB,IIJE
         IF(PRXT(JIJ, JK) .GT. MAX(ICED%XRTMIN(4), 1.0E-7) .AND. ZREMAINT(JIJ)>0.) THEN
@@ -557,27 +601,35 @@ DO WHILE (ZANYREMAINT)
         ENDIF
       ENDDO
     ENDDO
+!$acc end kernels
     IF (OELEC .AND. OSEDIM_BEARD) THEN
       CALL ELEC_BEARD_EFFECT(D, CST, HCLOUD, KSPE, GMASK, PT, PRHODREF, PTHVREFZIKB, &
                              PRXT, PQXT, PEFIELDW, ZLBDA3, ZBEARDCOEFF, ICED=ICED)
+!$acc kernels
+!$acc loop independent collapse(2)
       DO JK = IKTB,IKTE
         DO JIJ = IIJB,IIJE
           ZWSED(JIJ,JK)  = ZWSED(JIJ,JK)  * ZBEARDCOEFF(JIJ,JK)
           ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZBEARDCOEFF(JIJ,JK)
         END DO
       END DO
+!$acc end kernels
     END IF
   ELSEIF(KSPE==5) THEN
     ! ******* for snow
+!$acc kernels
     ZWSED(:,:) = 0.
     IF (OELEC) THEN
       ZWSEDQ(:,:) = 0.
       ZLBDA3(:,:) = 0.
     END IF
+!$acc end kernels
 #ifdef REPRO48
     !The following lines must be kept equal to the computation in the general case ("for other species" case below)
     ZFSED=ICEP%XFSEDS
     ZEXSED=ICEP%XEXSEDS
+!$acc kernels
+!$acc loop independent collapse(2)
     DO JK = IKTB,IKTE
       DO JIJ = IIJB,IIJE
         IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
@@ -586,7 +638,10 @@ DO WHILE (ZANYREMAINT)
         ENDIF
       ENDDO
     ENDDO
+!$end kernels
 #else
+!$acc kernels
+!$acc loop independent collapse(2)
     DO JK = IKTB,IKTE
       DO JIJ = IIJB,IIJE
         IF(PRXT(JIJ,JK)> ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
@@ -615,15 +670,19 @@ DO WHILE (ZANYREMAINT)
         ENDIF
       ENDDO
     ENDDO
+!$acc end kernels
     IF (OELEC .AND. OSEDIM_BEARD) THEN
       CALL ELEC_BEARD_EFFECT(D, CST, HCLOUD, KSPE, GMASK, PT, PRHODREF, PTHVREFZIKB,&
                              PRXT, PQXT, PEFIELDW, ZLBDA3, ZBEARDCOEFF, ICED=ICED)
+!$acc kernels
+!$acc loop independent collapse(2)
       DO JK = IKTB,IKTE
         DO JIJ = IIJB,IIJE
           ZWSED(JIJ,JK)  = ZWSED(JIJ,JK)  * ZBEARDCOEFF(JIJ,JK)
           ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZBEARDCOEFF(JIJ,JK)
         END DO
       END DO
+!$acc end kernels
     END IF
 #endif
   ELSE
@@ -679,11 +738,15 @@ DO WHILE (ZANYREMAINT)
       END SELECT
     END IF
     !
+!$acc kernels
     ZWSED(:,:) = 0.
     IF (OELEC) THEN
       ZWSEDQ(:,:) = 0.
       ZLBDA3(:,:) = 0.
     END IF
+!$acc end kernels
+!$acc kernels
+!$acc loop independent collapse(2)
     DO JK = IKTB,IKTE
       DO JIJ = IIJB,IIJE
         IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
@@ -706,33 +769,47 @@ DO WHILE (ZANYREMAINT)
         ENDIF
       ENDDO
     ENDDO
+!$acc end kernels
     IF (OELEC .AND. OSEDIM_BEARD) THEN
       CALL ELEC_BEARD_EFFECT(D, CST, HCLOUD, KSPE, GMASK, PT, PRHODREF, PTHVREFZIKB, &
                              PRXT, PQXT, PEFIELDW, ZLBDA3, ZBEARDCOEFF, ICED=ICED)
+!$acc kernels
+!$acc loop independent collapse(2)
       DO JK = IKTB,IKTE
         DO JIJ = IIJB,IIJE
           ZWSED(JIJ,JK)  = ZWSED(JIJ,JK)  * ZBEARDCOEFF(JIJ,JK)
           ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZBEARDCOEFF(JIJ,JK)
         END DO
       END DO
+!$acc end kernels
     END IF
   ENDIF
+!$acc kernels
   ZMAX_TSTEP(:) = ZREMAINT(:)
-  DO JK = IKTB,IKTE
-    DO JIJ = IIJB,IIJE
+!QR: need of reversed order of loop (JIJ>JK) to avoid bug on Nvidia reduction of ZMAX_TSTEP
+! Tested with smaller kernels: execution crashes with
+! call to cuEventSynchronize returned error 700: Illegal address
+!$acc loop independent
+  DO JIJ = IIJB,IIJE
+!$acc loop seq
+    DO JK = IKTB,IKTE
       IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZWSED(JIJ, JK)>1.E-20 .AND. ZREMAINT(JIJ)>0.) THEN
         ZMAX_TSTEP(JIJ) = MIN(ZMAX_TSTEP(JIJ), PARAMI%XSPLIT_MAXCFL * PRHODREF(JIJ, JK) * &
                         & PRXT(JIJ, JK) * PDZZ(JIJ, JK) / ZWSED(JIJ, JK))
       ENDIF
     ENDDO
   ENDDO
-
+!$acc end kernels
+!$acc kernels
+!$acc loop independent
   DO JIJ = IIJB, IIJE
       ZREMAINT(JIJ) = ZREMAINT(JIJ) - ZMAX_TSTEP(JIJ)
       PINPRX(JIJ) = PINPRX(JIJ) + ZWSED(JIJ,IKB) / CST%XRHOLW * (ZMAX_TSTEP(JIJ) * ZINVTSTEP)
   ENDDO
-
+!$acc end kernels
+!$acc kernels
   DO JK = IKTB , IKTE
+!$acc loop independent
     DO JIJ = IIJB, IIJE
       ZMRCHANGE = ZMAX_TSTEP(JIJ) * POORHODZ(JIJ,JK)*(ZWSED(JIJ,JK+IKL)-ZWSED(JIJ,JK))
       PRXT(JIJ,JK) = PRXT(JIJ,JK) + ZMRCHANGE + PPRXS(JIJ,JK) * ZMAX_TSTEP(JIJ)
@@ -747,13 +824,17 @@ DO WHILE (ZANYREMAINT)
       ENDIF
     ENDDO
   ENDDO
+!$acc end kernels
   !
+!$acc kernels
   ZANYREMAINT = .FALSE.
+!$acc loop independent
   DO JIJ=IIJB,IIJE
     IF(ZREMAINT(JIJ)>0.) THEN
       ZANYREMAINT = .TRUE.
     END IF
   END DO
+!$acc end kernels
 END DO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT', 1, ZHOOK_HANDLE)

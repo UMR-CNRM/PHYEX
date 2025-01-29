@@ -1,6 +1,6 @@
 !MNH_LIC Copyright 2006-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
-!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
       MODULE MODE_UPDATE_LM
@@ -41,11 +41,11 @@ SUBROUTINE UPDATE_LM(D,HLBCX,HLBCY,PLM,PLEPS)
 !
 !*       0.    DECLARATIONS
 !         
+USE MODD_ARGSLIST_ll, ONLY : LIST_ll
 USE MODD_PARAMETERS
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODE_ll
-USE MODD_ARGSLIST_ll, ONLY : LIST_ll
 !
 IMPLICIT NONE
 !
@@ -67,10 +67,13 @@ INTEGER             :: IIE      ! last  physical index in x direction
 INTEGER             :: IJE      ! last  physical index in y direction
 INTEGER             :: JI       ! loop index
 !
+LOGICAL                :: GNORTH, GSOUTH, GWEST, GEAST
 TYPE(LIST_ll), POINTER :: TZLM_ll   ! list of fields to exchange
 INTEGER                :: IINFO_ll       ! return code of parallel routine
 !
 !-------------------------------------------------------------------------------
+
+!$acc data present_crm(PLM,PLEPS)
 !
 !*       1.    COMPUTE DIMENSIONS OF ARRAYS :
 !              ----------------------------
@@ -80,6 +83,11 @@ IJB = D%NJB
 IJE = D%NJE
 NULLIFY(TZLM_ll)
 !
+GWEST  = ( HLBCX(1) /= 'CYCL' .AND. LWEST_ll() )
+GEAST  = ( HLBCX(2) /= 'CYCL' .AND. LEAST_ll() )
+GSOUTH = ( HLBCY(1) /= 'CYCL' .AND. LSOUTH_ll() )
+GNORTH = ( HLBCY(2) /= 'CYCL' .AND. LNORTH_ll() )
+
 !-------------------------------------------------------------------------------
 !
 !*       2.  UPDATE HALOs :
@@ -87,10 +95,12 @@ NULLIFY(TZLM_ll)
 !
 !
 !!$IF(NHALO == 1) THEN
+!$acc update_crm self(PLM,PLEPS)
   CALL ADD3DFIELD_ll( TZLM_ll, PLM,   'UPDATE_LM::PLM'   )
   CALL ADD3DFIELD_ll( TZLM_ll, PLEPS, 'UPDATE_LM::PLEPS' )
   CALL UPDATE_HALO_ll(TZLM_ll,IINFO_ll)
   CALL CLEANLIST_ll(TZLM_ll)
+!$acc update_crm device(PLM,PLEPS)
 !!$END IF
 !
 !-------------------------------------------------------------------------------
@@ -98,26 +108,39 @@ NULLIFY(TZLM_ll)
 !*       3.  UPDATE EXTERNAL POINTS OF GLOBAL DOMAIN:
 !            ---------------------------------------
 !
-IF ( HLBCX(1) /= "CYCL" .AND. LWEST_ll()) THEN
+
+IF ( GWEST ) THEN
+  !$acc kernels async
   PLM  (IIB-1,:,:) = PLM  (IIB,:,:)
   PLEPS(IIB-1,:,:) = PLEPS(IIB,:,:)
+  !$acc end kernels
 END IF
-IF ( HLBCX(2) /= "CYCL" .AND. LEAST_ll()) THEN
+IF ( GEAST ) THEN
+  !$acc kernels async
   PLM  (IIE+1,:,:) = PLM  (IIE,:,:)
   PLEPS(IIE+1,:,:) = PLEPS(IIE,:,:)
+  !$acc end kernels
 END IF
-IF ( HLBCY(1) /= "CYCL" .AND. LSOUTH_ll()) THEN
+IF ( GSOUTH ) THEN
+  !$acc kernels async 
   DO JI=1,SIZE(PLM,1)
     PLM  (JI,IJB-1,:) = PLM  (JI,IJB,:)
     PLEPS(JI,IJB-1,:) = PLEPS(JI,IJB,:)
   END DO
+  !$acc end kernels
 END IF
-IF ( HLBCY(2) /= "CYCL" .AND. LNORTH_ll()) THEN
+IF ( GNORTH ) THEN
+  !$acc kernels async
   DO JI=1,SIZE(PLM,1)
     PLM  (JI,IJE+1,:) = PLM  (JI,IJE,:)
     PLEPS(JI,IJE+1,:) = PLEPS(JI,IJE,:)
-  END DO
+ END DO
+ !$acc end kernels
 END IF
+!$acc wait
+
+!$acc end data
+
 !-----------------------------------------------------------------------------
 END SUBROUTINE UPDATE_LM
 END MODULE MODE_UPDATE_LM

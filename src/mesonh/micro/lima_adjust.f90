@@ -23,7 +23,7 @@ IMPLICIT NONE
 !
 INTEGER,                  INTENT(IN)   :: KRR        ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KMI        ! Model index 
-TYPE(TFILEDATA),          INTENT(IN)   :: TPFILE     ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT):: TPFILE     ! Output file
 LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid 
                                                      ! Condensation
 REAL,                     INTENT(IN)   :: PTSTEP     ! Time step          
@@ -180,7 +180,7 @@ IMPLICIT NONE
 !
 INTEGER,                  INTENT(IN)   :: KRR        ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KMI        ! Model index 
-TYPE(TFILEDATA),          INTENT(IN)   :: TPFILE     ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT):: TPFILE     ! Output file
 LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid 
                                                      ! Condensation
 REAL,                     INTENT(IN)   :: PTSTEP     ! Time step          
