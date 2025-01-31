@@ -83,15 +83,15 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a6c6337291966532d9ebb0fd902db38bf" id="r_a6c6337291966532d9ebb0fd902db38bf"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__shallow__mf_1_1shallow__mf.html#a6c6337291966532d9ebb0fd902db38bf">shallow_mf</a> (d, cst, nebn, parammf, turbn, csturb, krr, krrl, krri, ksv, onomixlg, ksv_lgbeg, ksv_lgend, ptstep, pdzz, pzz, prhodj, prhodref, ppabsm, pexnm, psfth, psfrv, pthm, prm, pum, pvm, ptkem, psvm, pdudt_mf, pdvdt_mf, pdthldt_mf, pdrtdt_mf, pdsvdt_mf, psigmf, prc_mf, pri_mf, pcf_mf, pflxzthvmf, pflxzthmf, pflxzrmf, pflxzumf, pflxzvmf, pthl_up, prt_up, prv_up, prc_up, pri_up, pu_up, pv_up, pthv_up, pw_up, pfrac_up, pemf, pdetr, pentr, kklcl, kketl, kkctl, pdx, pdy, prsvs, psvmin, buconf, tbudgets, kbudgets)</td></tr>
-<tr class="separator:a6c6337291966532d9ebb0fd902db38bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0423dbd2e83eac7c5e2aa4cfc73ba455" id="r_a0423dbd2e83eac7c5e2aa4cfc73ba455"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__shallow__mf_1_1shallow__mf.html#a0423dbd2e83eac7c5e2aa4cfc73ba455">shallow_mf</a> (d, cst, nebn, parammf, turbn, csturb, icep, krr, krrl, krri, ksv, onomixlg, ksv_lgbeg, ksv_lgend, ptstep, pdzz, pzz, prhodj, prhodref, ppabsm, pexnm, psfth, psfrv, pthm, prm, pum, pvm, ptkem, psvm, pdudt_mf, pdvdt_mf, pdtkedt_mf, pdthldt_mf, pdrtdt_mf, pdsvdt_mf, psigmf, prc_mf, pri_mf, pcf_mf, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, pweight_mf_cloud, pflxzthvmf, pflxzthmf, pflxzrmf, pflxzumf, pflxzvmf, pflxztkemf, pthl_up, prt_up, prv_up, prc_up, pri_up, pu_up, pv_up, ptke_up, pthv_up, pw_up, pfrac_up, pemf, pdetr, pentr, kklcl, kketl, kkctl, pdx, pdy, prsvs, psvmin, buconf, tbudgets, kbudgets)</td></tr>
+<tr class="separator:a0423dbd2e83eac7c5e2aa4cfc73ba455"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
 <p class="definition">Definition at line <a class="el" href="modi__shallow__mf_8F90_source.html#l00008">8</a> of file <a class="el" href="modi__shallow__mf_8F90_source.html">modi_shallow_mf.F90</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a6c6337291966532d9ebb0fd902db38bf" name="a6c6337291966532d9ebb0fd902db38bf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6c6337291966532d9ebb0fd902db38bf">&#9670;&#160;</a></span>shallow_mf()</h2>
+<a id="a0423dbd2e83eac7c5e2aa4cfc73ba455" name="a0423dbd2e83eac7c5e2aa4cfc73ba455"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0423dbd2e83eac7c5e2aa4cfc73ba455">&#9670;&#160;</a></span>shallow_mf()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -131,6 +131,12 @@ Public Member Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__cturb_1_1csturb__t.html">csturb_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>csturb</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__rain__ice__param__n_1_1rain__ice__param__t.html">rain_ice_param_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>icep</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -280,6 +286,12 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>pdtkedt_mf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>pdthldt_mf</em>, </td>
         </tr>
         <tr>
@@ -322,6 +334,36 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>phlc_hrc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>phlc_hcf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>phli_hri</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>phli_hcf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>pweight_mf_cloud</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>pflxzthvmf</em>, </td>
         </tr>
         <tr>
@@ -347,6 +389,12 @@ Public Member Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>pflxzvmf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>pflxztkemf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -389,6 +437,12 @@ Public Member Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>pv_up</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
+          <td class="paramname"><em>ptke_up</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

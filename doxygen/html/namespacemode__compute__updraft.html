@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a2e7692bd2fc646b833be7583dd14e3fa" id="r_a2e7692bd2fc646b833be7583dd14e3fa"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__compute__updraft.html#a2e7692bd2fc646b833be7583dd14e3fa">compute_updraft</a> (d, cst, nebn, parammf, turbn, csturb, ksv, oentr_detr, onomixlg, ksv_lgbeg, ksv_lgend, pzz, pdzz, psfth, psfrv, ppabsm, prhodref, pum, pvm, ptkem, pthm, prvm, pthlm, prtm, psvm, pthl_up, prt_up, prv_up, prc_up, pri_up, pthv_up, pw_up, pu_up, pv_up, psv_up, pfrac_up, pfrac_ice_up, prsat_up, pemf, pdetr, pentr, pbuo_integ, kklcl, kketl, kkctl, pdepth, pdx, pdy)</td></tr>
-<tr class="separator:a2e7692bd2fc646b833be7583dd14e3fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34bfae8ab2aa1020462ff8e6c6c9f2bd" id="r_a34bfae8ab2aa1020462ff8e6c6c9f2bd"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__compute__updraft.html#a34bfae8ab2aa1020462ff8e6c6c9f2bd">compute_updraft</a> (d, cst, nebn, parammf, turbn, csturb, ksv, oentr_detr, onomixlg, ksv_lgbeg, ksv_lgend, pzz, pdzz, psfth, psfrv, pexnm, ppabsm, prhodref, pum, pvm, ptkem, pthm, prvm, pthlm, prtm, psvm, pth_up, pthl_up, prt_up, prv_up, prc_up, pri_up, pthv_up, pw_up, pu_up, pv_up, psv_up, pfrac_up, pfrac_ice_up, prsat_up, ptke_up, pemf, pdetr, pentr, pbuo_integ, kklcl, kketl, kkctl, pdepth, pdx, pdy)</td></tr>
+<tr class="separator:a34bfae8ab2aa1020462ff8e6c6c9f2bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a2e7692bd2fc646b833be7583dd14e3fa" name="a2e7692bd2fc646b833be7583dd14e3fa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2e7692bd2fc646b833be7583dd14e3fa">&#9670;&#160;</a></span>compute_updraft()</h2>
+<a id="a34bfae8ab2aa1020462ff8e6c6c9f2bd" name="a34bfae8ab2aa1020462ff8e6c6c9f2bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a34bfae8ab2aa1020462ff8e6c6c9f2bd">&#9670;&#160;</a></span>compute_updraft()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -182,6 +182,12 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>pexnm</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>ppabsm</em>, </td>
         </tr>
         <tr>
@@ -237,6 +243,12 @@ Functions/Subroutines</h2></td></tr>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt,ksv), intent(in)&#160;</td>
           <td class="paramname"><em>psvm</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>pth_up</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -319,6 +331,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>ptke_up</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>pemf</em>, </td>
         </tr>
@@ -388,12 +406,12 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__compute__updraft_a2e7692bd2fc646b833be7583dd14e3fa_cgraph.png" border="0" usemap="#anamespacemode__compute__updraft_a2e7692bd2fc646b833be7583dd14e3fa_cgraph" alt=""/></div>
-<map name="anamespacemode__compute__updraft_a2e7692bd2fc646b833be7583dd14e3fa_cgraph" id="anamespacemode__compute__updraft_a2e7692bd2fc646b833be7583dd14e3fa_cgraph">
+<div class="center"><img src="namespacemode__compute__updraft_a34bfae8ab2aa1020462ff8e6c6c9f2bd_cgraph.png" border="0" usemap="#anamespacemode__compute__updraft_a34bfae8ab2aa1020462ff8e6c6c9f2bd_cgraph" alt=""/></div>
+<map name="anamespacemode__compute__updraft_a34bfae8ab2aa1020462ff8e6c6c9f2bd_cgraph" id="anamespacemode__compute__updraft_a34bfae8ab2aa1020462ff8e6c6c9f2bd_cgraph">
 <area shape="rect" title=" " alt="" coords="5,63,181,103"/>
 <area shape="rect" href="namespacemode__compute__bl89__ml.html#ae2ee2d797185b7dc0c6900ed8a6bb881" title=" " alt="" coords="229,5,412,45"/>
 <area shape="poly" title=" " alt="" coords="173,60,227,46,228,51,174,65"/>
-<area shape="rect" href="mode__compute__updraft_8F90.html#af8caa08c87d828123d0c173bd4128cc0" title=" " alt="" coords="248,70,393,95"/>
+<area shape="rect" href="mode__compute__updraft_8F90.html#ad51c7463d7e27633f9c032c22bd725cf" title=" " alt="" coords="248,70,393,95"/>
 <area shape="poly" title=" " alt="" coords="182,80,234,80,234,85,182,85"/>
 <area shape="rect" href="th__r__from__thl__rt_8func_8h.html#a21dd4d66c5cfa28e40bba19b88d661bf" title=" " alt="" coords="460,95,587,121"/>
 <area shape="poly" title=" " alt="" coords="182,98,230,104,343,109,446,109,446,114,343,115,229,109,181,103"/>
@@ -405,10 +423,10 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__compute__updraft_a2e7692bd2fc646b833be7583dd14e3fa_icgraph.png" border="0" usemap="#anamespacemode__compute__updraft_a2e7692bd2fc646b833be7583dd14e3fa_icgraph" alt=""/></div>
-<map name="anamespacemode__compute__updraft_a2e7692bd2fc646b833be7583dd14e3fa_icgraph" id="anamespacemode__compute__updraft_a2e7692bd2fc646b833be7583dd14e3fa_icgraph">
+<div class="center"><img src="namespacemode__compute__updraft_a34bfae8ab2aa1020462ff8e6c6c9f2bd_icgraph.png" border="0" usemap="#anamespacemode__compute__updraft_a34bfae8ab2aa1020462ff8e6c6c9f2bd_icgraph" alt=""/></div>
+<map name="anamespacemode__compute__updraft_a34bfae8ab2aa1020462ff8e6c6c9f2bd_icgraph" id="anamespacemode__compute__updraft_a34bfae8ab2aa1020462ff8e6c6c9f2bd_icgraph">
 <area shape="rect" title=" " alt="" coords="151,5,327,45"/>
-<area shape="rect" href="shallow__mf_8F90.html#a45ca5dae0f80d8746977f2913f1d1e57" title=" " alt="" coords="5,13,103,38"/>
+<area shape="rect" href="shallow__mf_8F90.html#a5a75b1faaeb7bcea20095a4248b8453b" title=" " alt="" coords="5,13,103,38"/>
 <area shape="poly" title=" " alt="" coords="137,28,103,28,103,23,137,23"/>
 </map>
 </div>

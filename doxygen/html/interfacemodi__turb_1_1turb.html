@@ -83,15 +83,15 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ae54122bf2aa2276408b4edc19e11c290" id="r_ae54122bf2aa2276408b4edc19e11c290"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__turb_1_1turb.html#ae54122bf2aa2276408b4edc19e11c290">turb</a> (cst, csturb, buconf, turbn, nebn, d, tles, krr, krrl, krri, hlbcx, hlbcy, kgradients, khalo, ksplit, ocloudmodiflm, ksv, ksv_lgbeg, ksv_lgend, ksv_lima_nr, ksv_lima_ns, ksv_lima_ng, ksv_lima_nh, o2d, onomixlg, oflat, ocouples, oblowsnow, oibm, oflyer, ocompute_src, prsnow, oocean, odeepoc, odiag_in_run, hturblen_cl, hcloud, helec, ptstep, tpfile, pdxx, pdyy, pdzz, pdzx, pdzy, pzz, pdircosxw, pdircosyw, pdircoszw, pcosslope, psinslope, prhodj, pthvref, phgrad, pzs, psfth, psfrv, psfsv, psfu, psfv, ppabst, put, pvt, pwt, ptket, psvt, psrct, plengthm, plengthh, mfmoist, pbl_depth, psbl_depth, pcei, pcei_min, pcei_max, pcoef_ampl_sat, pthlt, prt, prus, prvs, prws, prthls, prrs, prsvs, prtkes, psigs, pflxzthvmf, pwth, pwrc, pwsv, pdp, ptp, ptdiff, ptdiss, tbudgets, kbudgets, pedr, plem, prtkems, ptpmf, pdrus_turb, pdrvs_turb, pdrthls_turb, pdrrts_turb, pdrsvs_turb, ptr, pdiss, pibm_ls, pibm_xmut, pcurrent_tke_diss, psstfl, psstfl_c, pssrfl_c, pssufl_c, pssvfl_c, pssufl, pssvfl)</td></tr>
-<tr class="separator:ae54122bf2aa2276408b4edc19e11c290"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4a4f09235463cf5f7b19014779ef234" id="r_ad4a4f09235463cf5f7b19014779ef234"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__turb_1_1turb.html#ad4a4f09235463cf5f7b19014779ef234">turb</a> (cst, csturb, buconf, turbn, nebn, d, tles, krr, krrl, krri, hlbcx, hlbcy, kgradients, khalo, ksplit, ocloudmodiflm, ksv, ksv_lgbeg, ksv_lgend, ksv_lima_nr, ksv_lima_ns, ksv_lima_ng, ksv_lima_nh, o2d, onomixlg, oflat, ocouples, oblowsnow, oibm, oflyer, ocompute_src, prsnow, oocean, odeepoc, odiag_in_run, hturblen_cl, hcloud, helec, ptstep, tpfile, pdxx, pdyy, pdzz, pdzx, pdzy, pzz, pdircosxw, pdircosyw, pdircoszw, pcosslope, psinslope, prhodj, pthvref, phgrad, pzs, psfth, psfrv, psfsv, psfu, psfv, ppabst, put, pvt, pwt, ptket, psvt, psrct, plengthm, plengthh, mfmoist, pbl_depth, psbl_depth, pcei, pcei_min, pcei_max, pcoef_ampl_sat, pthlt, prt, prus, prvs, prws, prthls, prrs, prsvs, prtkes, psigs, pflxzthvmf, pflxzumf, pflxzvmf, pwth, pwrc, pwsv, pdp, ptp, ptdiff, ptdiss, tbudgets, kbudgets, pedr, plem, prtkems, pdpmf, ptpmf, pdrus_turb, pdrvs_turb, pdrthls_turb, pdrrts_turb, pdrsvs_turb, ptr, pdiss, pibm_ls, pibm_xmut, pcurrent_tke_diss, psstfl, psstfl_c, pssrfl_c, pssufl_c, pssvfl_c, pssufl, pssvfl)</td></tr>
+<tr class="separator:ad4a4f09235463cf5f7b19014779ef234"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
 <p class="definition">Definition at line <a class="el" href="modi__turb_8F90_source.html#l00008">8</a> of file <a class="el" href="modi__turb_8F90_source.html">modi_turb.F90</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ae54122bf2aa2276408b4edc19e11c290" name="ae54122bf2aa2276408b4edc19e11c290"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae54122bf2aa2276408b4edc19e11c290">&#9670;&#160;</a></span>turb()</h2>
+<a id="ad4a4f09235463cf5f7b19014779ef234" name="ad4a4f09235463cf5f7b19014779ef234"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad4a4f09235463cf5f7b19014779ef234">&#9670;&#160;</a></span>turb()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -621,6 +621,18 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>pflxzumf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>pflxzvmf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>pwth</em>, </td>
         </tr>
@@ -689,6 +701,12 @@ Public Member Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
           <td class="paramname"><em>prtkems</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out), optional&#160;</td>
+          <td class="paramname"><em>pdpmf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

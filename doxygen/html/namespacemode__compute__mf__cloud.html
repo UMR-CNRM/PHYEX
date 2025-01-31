@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:ad69a360aed44303b6b54fc6ba968a6d4" id="r_ad69a360aed44303b6b54fc6ba968a6d4"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__compute__mf__cloud.html#ad69a360aed44303b6b54fc6ba968a6d4">compute_mf_cloud</a> (d, cst, turbn, parammf, ostatnw, krr, krrl, krri, pfrac_ice, prc_up, pri_up, pemf, pthl_up, prt_up, pfrac_up, pthv_up, pfrac_ice_up, prsat_up, pexnm, pthlm, prtm, pthm, pthvm, prm, pdzz, pzz, kklcl, ppabsm, prhodref, prc_mf, pri_mf, pcf_mf, psigmf, pdepth)</td></tr>
-<tr class="separator:ad69a360aed44303b6b54fc6ba968a6d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aebb83719f8f011a846bc0386bb7b6cb1" id="r_aebb83719f8f011a846bc0386bb7b6cb1"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__compute__mf__cloud.html#aebb83719f8f011a846bc0386bb7b6cb1">compute_mf_cloud</a> (d, cst, turbn, parammf, icep, ostatnw, krr, krrl, krri, pfrac_ice, prv_up, prc_up, pri_up, pemf, pthl_up, prt_up, pfrac_up, pth_up, pexnm, pthlm, prtm, pthm, prm, pdzz, kklcl, ppabsm, prhodref, prc_mf, pri_mf, pcf_mf, psigmf, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, pweight_mf_cloud)</td></tr>
+<tr class="separator:aebb83719f8f011a846bc0386bb7b6cb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="ad69a360aed44303b6b54fc6ba968a6d4" name="ad69a360aed44303b6b54fc6ba968a6d4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad69a360aed44303b6b54fc6ba968a6d4">&#9670;&#160;</a></span>compute_mf_cloud()</h2>
+<a id="aebb83719f8f011a846bc0386bb7b6cb1" name="aebb83719f8f011a846bc0386bb7b6cb1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aebb83719f8f011a846bc0386bb7b6cb1">&#9670;&#160;</a></span>compute_mf_cloud()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -115,6 +115,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__rain__ice__param__n_1_1rain__ice__param__t.html">rain_ice_param_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>icep</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">logical, intent(in)&#160;</td>
           <td class="paramname"><em>ostatnw</em>, </td>
         </tr>
@@ -141,6 +147,12 @@ Functions/Subroutines</h2></td></tr>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pfrac_ice</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>prv_up</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -182,19 +194,7 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>pthv_up</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>pfrac_ice_up</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>prsat_up</em>, </td>
+          <td class="paramname"><em>pth_up</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -223,12 +223,6 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>pthvm</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt,krr), intent(in)&#160;</td>
           <td class="paramname"><em>prm</em>, </td>
         </tr>
@@ -237,12 +231,6 @@ Functions/Subroutines</h2></td></tr>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdzz</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>pzz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -289,8 +277,32 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
-          <td class="paramname"><em>pdepth</em>&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>phlc_hrc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>phlc_hcf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>phli_hri</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>phli_hcf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>pweight_mf_cloud</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -304,15 +316,17 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__compute__mf__cloud_ad69a360aed44303b6b54fc6ba968a6d4_cgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud_ad69a360aed44303b6b54fc6ba968a6d4_cgraph" alt=""/></div>
-<map name="anamespacemode__compute__mf__cloud_ad69a360aed44303b6b54fc6ba968a6d4_cgraph" id="anamespacemode__compute__mf__cloud_ad69a360aed44303b6b54fc6ba968a6d4_cgraph">
+<div class="center"><img src="namespacemode__compute__mf__cloud_aebb83719f8f011a846bc0386bb7b6cb1_cgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud_aebb83719f8f011a846bc0386bb7b6cb1_cgraph" alt=""/></div>
+<map name="anamespacemode__compute__mf__cloud_aebb83719f8f011a846bc0386bb7b6cb1_cgraph" id="anamespacemode__compute__mf__cloud_aebb83719f8f011a846bc0386bb7b6cb1_cgraph">
 <area shape="rect" title=" " alt="" coords="5,91,196,131"/>
-<area shape="rect" href="namespacemode__compute__mf__cloud__bigaus.html#af5e9ad18c278230812a0def4926cc276" title=" " alt="" coords="251,5,455,60"/>
+<area shape="rect" href="namespacemode__compute__mf__cloud__bigaus.html#a385182a7d77aa984e5a07421a1a222c1" title=" " alt="" coords="251,5,455,60"/>
 <area shape="poly" title=" " alt="" coords="165,89,251,62,253,67,167,94"/>
-<area shape="rect" href="namespacemode__compute__mf__cloud__direct.html#a4d32a65fb6d53c06132169cf40ce6c92" title=" " alt="" coords="254,84,453,139"/>
+<area shape="rect" href="namespacemode__compute__mf__cloud__direct.html#a1542520fd1ac984bddc9109103e93e5c" title=" " alt="" coords="254,84,453,139"/>
 <area shape="poly" title=" " alt="" coords="196,109,240,109,240,114,196,114"/>
 <area shape="rect" href="namespacemode__compute__mf__cloud__stat.html#a2dcf87f2ea0be70a4d9e2dbf43ae7517" title=" " alt="" coords="244,163,463,203"/>
 <area shape="poly" title=" " alt="" coords="172,129,270,157,269,162,171,134"/>
+<area shape="rect" href="shuman__mf_8F90.html#a49a35ec2f97024b35ebdb38012cceb19" title=" " alt="" coords="587,99,659,124"/>
+<area shape="poly" title=" " alt="" coords="453,109,574,109,574,114,453,114"/>
 <area shape="rect" href="namespacemode__compute__function__thermo__mf.html#ad44bff713166d26e5a081206e25109cd" title=" " alt="" coords="511,156,736,211"/>
 <area shape="poly" title=" " alt="" coords="463,181,497,181,497,186,463,186"/>
 </map>
@@ -320,10 +334,10 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__compute__mf__cloud_ad69a360aed44303b6b54fc6ba968a6d4_icgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud_ad69a360aed44303b6b54fc6ba968a6d4_icgraph" alt=""/></div>
-<map name="anamespacemode__compute__mf__cloud_ad69a360aed44303b6b54fc6ba968a6d4_icgraph" id="anamespacemode__compute__mf__cloud_ad69a360aed44303b6b54fc6ba968a6d4_icgraph">
+<div class="center"><img src="namespacemode__compute__mf__cloud_aebb83719f8f011a846bc0386bb7b6cb1_icgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud_aebb83719f8f011a846bc0386bb7b6cb1_icgraph" alt=""/></div>
+<map name="anamespacemode__compute__mf__cloud_aebb83719f8f011a846bc0386bb7b6cb1_icgraph" id="anamespacemode__compute__mf__cloud_aebb83719f8f011a846bc0386bb7b6cb1_icgraph">
 <area shape="rect" title=" " alt="" coords="151,5,341,45"/>
-<area shape="rect" href="shallow__mf_8F90.html#a45ca5dae0f80d8746977f2913f1d1e57" title=" " alt="" coords="5,13,103,38"/>
+<area shape="rect" href="shallow__mf_8F90.html#a5a75b1faaeb7bcea20095a4248b8453b" title=" " alt="" coords="5,13,103,38"/>
 <area shape="poly" title=" " alt="" coords="137,28,103,28,103,23,137,23"/>
 </map>
 </div>

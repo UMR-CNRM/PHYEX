@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a4d32a65fb6d53c06132169cf40ce6c92" id="r_a4d32a65fb6d53c06132169cf40ce6c92"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__compute__mf__cloud__direct.html#a4d32a65fb6d53c06132169cf40ce6c92">compute_mf_cloud_direct</a> (d, parammf, kklcl, pfrac_up, prc_up, pri_up, prc_mf, pri_mf, pcf_mf)</td></tr>
-<tr class="separator:a4d32a65fb6d53c06132169cf40ce6c92"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1542520fd1ac984bddc9109103e93e5c" id="r_a1542520fd1ac984bddc9109103e93e5c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__compute__mf__cloud__direct.html#a1542520fd1ac984bddc9109103e93e5c">compute_mf_cloud_direct</a> (d, parammf, kklcl, pfrac_up, prc_up, pri_up, prc_mf, pri_mf, pcf_mf, pweight_mf_cloud)</td></tr>
+<tr class="separator:a1542520fd1ac984bddc9109103e93e5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a4d32a65fb6d53c06132169cf40ce6c92" name="a4d32a65fb6d53c06132169cf40ce6c92"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4d32a65fb6d53c06132169cf40ce6c92">&#9670;&#160;</a></span>compute_mf_cloud_direct()</h2>
+<a id="a1542520fd1ac984bddc9109103e93e5c" name="a1542520fd1ac984bddc9109103e93e5c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1542520fd1ac984bddc9109103e93e5c">&#9670;&#160;</a></span>compute_mf_cloud_direct()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -140,7 +140,13 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
-          <td class="paramname"><em>pcf_mf</em>&#160;</td>
+          <td class="paramname"><em>pcf_mf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>pweight_mf_cloud</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -152,14 +158,24 @@ Functions/Subroutines</h2></td></tr>
 
 <p class="definition">Definition at line <a class="el" href="mode__compute__mf__cloud__direct_8F90_source.html#l00011">11</a> of file <a class="el" href="mode__compute__mf__cloud__direct_8F90_source.html">mode_compute_mf_cloud_direct.F90</a>.</p>
 <div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacemode__compute__mf__cloud__direct_a1542520fd1ac984bddc9109103e93e5c_cgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud__direct_a1542520fd1ac984bddc9109103e93e5c_cgraph" alt=""/></div>
+<map name="anamespacemode__compute__mf__cloud__direct_a1542520fd1ac984bddc9109103e93e5c_cgraph" id="anamespacemode__compute__mf__cloud__direct_a1542520fd1ac984bddc9109103e93e5c_cgraph">
+<area shape="rect" title=" " alt="" coords="5,5,204,60"/>
+<area shape="rect" href="shuman__mf_8F90.html#a49a35ec2f97024b35ebdb38012cceb19" title=" " alt="" coords="252,20,324,45"/>
+<area shape="poly" title=" " alt="" coords="204,30,238,30,238,35,204,35"/>
+</map>
+</div>
+<div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__compute__mf__cloud__direct_a4d32a65fb6d53c06132169cf40ce6c92_icgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud__direct_a4d32a65fb6d53c06132169cf40ce6c92_icgraph" alt=""/></div>
-<map name="anamespacemode__compute__mf__cloud__direct_a4d32a65fb6d53c06132169cf40ce6c92_icgraph" id="anamespacemode__compute__mf__cloud__direct_a4d32a65fb6d53c06132169cf40ce6c92_icgraph">
+<div class="center"><img src="namespacemode__compute__mf__cloud__direct_a1542520fd1ac984bddc9109103e93e5c_icgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud__direct_a1542520fd1ac984bddc9109103e93e5c_icgraph" alt=""/></div>
+<map name="anamespacemode__compute__mf__cloud__direct_a1542520fd1ac984bddc9109103e93e5c_icgraph" id="anamespacemode__compute__mf__cloud__direct_a1542520fd1ac984bddc9109103e93e5c_icgraph">
 <area shape="rect" title=" " alt="" coords="389,5,588,60"/>
-<area shape="rect" href="namespacemode__compute__mf__cloud.html#ad69a360aed44303b6b54fc6ba968a6d4" title=" " alt="" coords="151,13,341,53"/>
+<area shape="rect" href="namespacemode__compute__mf__cloud.html#aebb83719f8f011a846bc0386bb7b6cb1" title=" " alt="" coords="151,13,341,53"/>
 <area shape="poly" title=" " alt="" coords="375,35,342,35,342,30,375,30"/>
-<area shape="rect" href="shallow__mf_8F90.html#a45ca5dae0f80d8746977f2913f1d1e57" title=" " alt="" coords="5,20,103,45"/>
+<area shape="rect" href="shallow__mf_8F90.html#a5a75b1faaeb7bcea20095a4248b8453b" title=" " alt="" coords="5,20,103,45"/>
 <area shape="poly" title=" " alt="" coords="137,35,103,35,103,30,137,30"/>
 </map>
 </div>

@@ -83,15 +83,15 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a20520fea9d0f9971b56cd37d34bc6c6c" id="r_a20520fea9d0f9971b56cd37d34bc6c6c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__ice__adjust_1_1ice__adjust.html#a20520fea9d0f9971b56cd37d34bc6c6c">ice_adjust</a> (d, cst, icep, nebn, turbn, parami, buconf, krr, hbuname, ptstep, psigqsat, prhodj, pexnref, prhodref, psigs, lmfconv, pmfconv, ppabst, pzz, pexn, pcf_mf, prc_mf, pri_mf, picldfr, pwcldfr, pssio, pssiu, pifr, prv, prc, prvs, prcs, pth, pths, ocompute_src, psrcs, pcldfr, prr, pri, pris, prs, prg, tbudgets, kbudgets, pice_cld_wgt, prh, pout_rv, pout_rc, pout_ri, pout_th, phlc_hrc, phlc_hcf, phli_hri, phli_hcf)</td></tr>
-<tr class="separator:a20520fea9d0f9971b56cd37d34bc6c6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04762dbbd321cfe83ed643a75006648d" id="r_a04762dbbd321cfe83ed643a75006648d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__ice__adjust_1_1ice__adjust.html#a04762dbbd321cfe83ed643a75006648d">ice_adjust</a> (d, cst, icep, nebn, turbn, parami, buconf, krr, hbuname, ptstep, psigqsat, prhodj, pexnref, prhodref, psigs, lmfconv, pmfconv, ppabst, pzz, pexn, pcf_mf, prc_mf, pri_mf, pweight_mf_cloud, picldfr, pwcldfr, pssio, pssiu, pifr, prv, prc, prvs, prcs, pth, pths, ocompute_src, psrcs, pcldfr, prr, pri, pris, prs, prg, tbudgets, kbudgets, pice_cld_wgt, prh, pout_rv, pout_rc, pout_ri, pout_th, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, phlc_hrc_mf, phlc_hcf_mf, phli_hri_mf, phli_hcf_mf)</td></tr>
+<tr class="separator:a04762dbbd321cfe83ed643a75006648d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
 <p class="definition">Definition at line <a class="el" href="modi__ice__adjust_8F90_source.html#l00008">8</a> of file <a class="el" href="modi__ice__adjust_8F90_source.html">modi_ice_adjust.F90</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a20520fea9d0f9971b56cd37d34bc6c6c" name="a20520fea9d0f9971b56cd37d34bc6c6c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a20520fea9d0f9971b56cd37d34bc6c6c">&#9670;&#160;</a></span>ice_adjust()</h2>
+<a id="a04762dbbd321cfe83ed643a75006648d" name="a04762dbbd321cfe83ed643a75006648d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a04762dbbd321cfe83ed643a75006648d">&#9670;&#160;</a></span>ice_adjust()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -233,6 +233,12 @@ Public Member Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pri_mf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>pweight_mf_cloud</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -418,7 +424,31 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out), optional&#160;</td>
-          <td class="paramname"><em>phli_hcf</em>&#160;</td>
+          <td class="paramname"><em>phli_hcf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>phlc_hrc_mf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>phlc_hcf_mf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>phli_hri_mf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>phli_hcf_mf</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

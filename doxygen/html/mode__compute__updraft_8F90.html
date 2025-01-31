@@ -90,14 +90,14 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a2e7692bd2fc646b833be7583dd14e3fa" id="r_a2e7692bd2fc646b833be7583dd14e3fa"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__compute__updraft.html#a2e7692bd2fc646b833be7583dd14e3fa">mode_compute_updraft::compute_updraft</a> (d, cst, nebn, parammf, turbn, csturb, ksv, oentr_detr, onomixlg, ksv_lgbeg, ksv_lgend, pzz, pdzz, psfth, psfrv, ppabsm, prhodref, pum, pvm, ptkem, pthm, prvm, pthlm, prtm, psvm, pthl_up, prt_up, prv_up, prc_up, pri_up, pthv_up, pw_up, pu_up, pv_up, psv_up, pfrac_up, pfrac_ice_up, prsat_up, pemf, pdetr, pentr, pbuo_integ, kklcl, kketl, kkctl, pdepth, pdx, pdy)</td></tr>
-<tr class="separator:a2e7692bd2fc646b833be7583dd14e3fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af8caa08c87d828123d0c173bd4128cc0" id="r_af8caa08c87d828123d0c173bd4128cc0"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mode__compute__updraft_8F90.html#af8caa08c87d828123d0c173bd4128cc0">compute_entr_detr</a> (d, cst, nebn, parammf, kk, kkb, kke, kkl, otest, otestlcl, pfrac_ice, prhodref, ppre_minus_half, ppre_plus_half, pzz, pdzz, pthvm, pthlm, prtm, pw_up2, pth_up, pthl_up, prt_up, plup, prc_up, pri_up, pthv_up, prsat_up, prc_mix, pri_mix, pentr, pdetr, pentr_cld, pdetr_cld, pbuo_integ_dry, pbuo_integ_cld, ppart_dry)</td></tr>
-<tr class="separator:af8caa08c87d828123d0c173bd4128cc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34bfae8ab2aa1020462ff8e6c6c9f2bd" id="r_a34bfae8ab2aa1020462ff8e6c6c9f2bd"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__compute__updraft.html#a34bfae8ab2aa1020462ff8e6c6c9f2bd">mode_compute_updraft::compute_updraft</a> (d, cst, nebn, parammf, turbn, csturb, ksv, oentr_detr, onomixlg, ksv_lgbeg, ksv_lgend, pzz, pdzz, psfth, psfrv, pexnm, ppabsm, prhodref, pum, pvm, ptkem, pthm, prvm, pthlm, prtm, psvm, pth_up, pthl_up, prt_up, prv_up, prc_up, pri_up, pthv_up, pw_up, pu_up, pv_up, psv_up, pfrac_up, pfrac_ice_up, prsat_up, ptke_up, pemf, pdetr, pentr, pbuo_integ, kklcl, kketl, kkctl, pdepth, pdx, pdy)</td></tr>
+<tr class="separator:a34bfae8ab2aa1020462ff8e6c6c9f2bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad51c7463d7e27633f9c032c22bd725cf" id="r_ad51c7463d7e27633f9c032c22bd725cf"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mode__compute__updraft_8F90.html#ad51c7463d7e27633f9c032c22bd725cf">compute_entr_detr</a> (d, cst, nebn, parammf, kk, kkb, kke, kkl, otest, otestlcl, pfrac_ice, prhodref, ppre_minus_half, ppre_plus_half, pexn_f, pzz, pdzz, pthvm, pthlm, prtm, pw_up2, pth_up, pthl_up, prt_up, plupsurf, plup, pldown, prc_up, pri_up, pthv_up, prsat_up, prc_mix, pri_mix, pentr, pdetr, pentr_cld, pdetr_cld, pbuo_integ_dry, pbuo_integ_cld, ppart_dry)</td></tr>
+<tr class="separator:ad51c7463d7e27633f9c032c22bd725cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="af8caa08c87d828123d0c173bd4128cc0" name="af8caa08c87d828123d0c173bd4128cc0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af8caa08c87d828123d0c173bd4128cc0">&#9670;&#160;</a></span>compute_entr_detr()</h2>
+<a id="ad51c7463d7e27633f9c032c22bd725cf" name="ad51c7463d7e27633f9c032c22bd725cf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad51c7463d7e27633f9c032c22bd725cf">&#9670;&#160;</a></span>compute_entr_detr()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -189,6 +189,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
+          <td class="paramname"><em>pexn_f</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pzz</em>, </td>
         </tr>
@@ -244,7 +250,19 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
+          <td class="paramname"><em>plupsurf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>plup</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
+          <td class="paramname"><em>pldown</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -332,12 +350,12 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="mode__compute__updraft_8F90_source.html#l00722">722</a> of file <a class="el" href="mode__compute__updraft_8F90_source.html">mode_compute_updraft.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mode__compute__updraft_8F90_source.html#l00804">804</a> of file <a class="el" href="mode__compute__updraft_8F90_source.html">mode_compute_updraft.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="mode__compute__updraft_8F90_af8caa08c87d828123d0c173bd4128cc0_cgraph.png" border="0" usemap="#amode__compute__updraft_8F90_af8caa08c87d828123d0c173bd4128cc0_cgraph" alt=""/></div>
-<map name="amode__compute__updraft_8F90_af8caa08c87d828123d0c173bd4128cc0_cgraph" id="amode__compute__updraft_8F90_af8caa08c87d828123d0c173bd4128cc0_cgraph">
+<div class="center"><img src="mode__compute__updraft_8F90_ad51c7463d7e27633f9c032c22bd725cf_cgraph.png" border="0" usemap="#amode__compute__updraft_8F90_ad51c7463d7e27633f9c032c22bd725cf_cgraph" alt=""/></div>
+<map name="amode__compute__updraft_8F90_ad51c7463d7e27633f9c032c22bd725cf_cgraph" id="amode__compute__updraft_8F90_ad51c7463d7e27633f9c032c22bd725cf_cgraph">
 <area shape="rect" title=" " alt="" coords="5,5,151,31"/>
 <area shape="rect" href="th__r__from__thl__rt_8func_8h.html#a21dd4d66c5cfa28e40bba19b88d661bf" title=" " alt="" coords="199,5,325,31"/>
 <area shape="poly" title=" " alt="" coords="151,15,185,15,185,21,151,21"/>
@@ -348,12 +366,12 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="mode__compute__updraft_8F90_af8caa08c87d828123d0c173bd4128cc0_icgraph.png" border="0" usemap="#amode__compute__updraft_8F90_af8caa08c87d828123d0c173bd4128cc0_icgraph" alt=""/></div>
-<map name="amode__compute__updraft_8F90_af8caa08c87d828123d0c173bd4128cc0_icgraph" id="amode__compute__updraft_8F90_af8caa08c87d828123d0c173bd4128cc0_icgraph">
+<div class="center"><img src="mode__compute__updraft_8F90_ad51c7463d7e27633f9c032c22bd725cf_icgraph.png" border="0" usemap="#amode__compute__updraft_8F90_ad51c7463d7e27633f9c032c22bd725cf_icgraph" alt=""/></div>
+<map name="amode__compute__updraft_8F90_ad51c7463d7e27633f9c032c22bd725cf_icgraph" id="amode__compute__updraft_8F90_ad51c7463d7e27633f9c032c22bd725cf_icgraph">
 <area shape="rect" title=" " alt="" coords="375,13,520,38"/>
-<area shape="rect" href="namespacemode__compute__updraft.html#a2e7692bd2fc646b833be7583dd14e3fa" title=" " alt="" coords="151,5,327,45"/>
+<area shape="rect" href="namespacemode__compute__updraft.html#a34bfae8ab2aa1020462ff8e6c6c9f2bd" title=" " alt="" coords="151,5,327,45"/>
 <area shape="poly" title=" " alt="" coords="361,28,327,28,327,23,361,23"/>
-<area shape="rect" href="shallow__mf_8F90.html#a45ca5dae0f80d8746977f2913f1d1e57" title=" " alt="" coords="5,13,103,38"/>
+<area shape="rect" href="shallow__mf_8F90.html#a5a75b1faaeb7bcea20095a4248b8453b" title=" " alt="" coords="5,13,103,38"/>
 <area shape="poly" title=" " alt="" coords="137,28,103,28,103,23,137,23"/>
 </map>
 </div>

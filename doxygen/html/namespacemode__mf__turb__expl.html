@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:adf3968aaf82f74ce4b300d64a25d7b3b" id="r_adf3968aaf82f74ce4b300d64a25d7b3b"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__mf__turb__expl.html#adf3968aaf82f74ce4b300d64a25d7b3b">mf_turb_expl</a> (d, parammf, prhodj, pthlm, pthvm, prtm, pum, pvm, pthldt, prtdt, pudt, pvdt, pemf, pthl_up, pthv_up, prt_up, pu_up, pv_up, pflxzthlmf, pflxzthvmf, pflxzrmf, pflxzumf, pflxzvmf)</td></tr>
-<tr class="separator:adf3968aaf82f74ce4b300d64a25d7b3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76bb3583555e52033705a81abcc27f99" id="r_a76bb3583555e52033705a81abcc27f99"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__mf__turb__expl.html#a76bb3583555e52033705a81abcc27f99">mf_turb_expl</a> (d, parammf, prhodj, pthlm, pthvm, prtm, pum, pvm, ptkem, pthldt, prtdt, pudt, pvdt, ptkedt, pemf, pthl_up, pthv_up, prt_up, pu_up, pv_up, ptke_up, pflxzthlmf, pflxzthvmf, pflxzrmf, pflxzumf, pflxzvmf, pflxztkemf, pfrac_up)</td></tr>
+<tr class="separator:a76bb3583555e52033705a81abcc27f99"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="adf3968aaf82f74ce4b300d64a25d7b3b" name="adf3968aaf82f74ce4b300d64a25d7b3b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adf3968aaf82f74ce4b300d64a25d7b3b">&#9670;&#160;</a></span>mf_turb_expl()</h2>
+<a id="a76bb3583555e52033705a81abcc27f99" name="a76bb3583555e52033705a81abcc27f99"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a76bb3583555e52033705a81abcc27f99">&#9670;&#160;</a></span>mf_turb_expl()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -139,6 +139,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>ptkem</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>pthldt</em>, </td>
         </tr>
@@ -159,6 +165,12 @@ Functions/Subroutines</h2></td></tr>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>pvdt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>ptkedt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -199,6 +211,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>ptke_up</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>pflxzthlmf</em>, </td>
         </tr>
@@ -224,7 +242,19 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
-          <td class="paramname"><em>pflxzvmf</em>&#160;</td>
+          <td class="paramname"><em>pflxzvmf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>pflxztkemf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>pfrac_up</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -238,10 +268,10 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__mf__turb__expl_adf3968aaf82f74ce4b300d64a25d7b3b_icgraph.png" border="0" usemap="#anamespacemode__mf__turb__expl_adf3968aaf82f74ce4b300d64a25d7b3b_icgraph" alt=""/></div>
-<map name="anamespacemode__mf__turb__expl_adf3968aaf82f74ce4b300d64a25d7b3b_icgraph" id="anamespacemode__mf__turb__expl_adf3968aaf82f74ce4b300d64a25d7b3b_icgraph">
+<div class="center"><img src="namespacemode__mf__turb__expl_a76bb3583555e52033705a81abcc27f99_icgraph.png" border="0" usemap="#anamespacemode__mf__turb__expl_a76bb3583555e52033705a81abcc27f99_icgraph" alt=""/></div>
+<map name="anamespacemode__mf__turb__expl_a76bb3583555e52033705a81abcc27f99_icgraph" id="anamespacemode__mf__turb__expl_a76bb3583555e52033705a81abcc27f99_icgraph">
 <area shape="rect" title=" " alt="" coords="151,5,311,45"/>
-<area shape="rect" href="shallow__mf_8F90.html#a45ca5dae0f80d8746977f2913f1d1e57" title=" " alt="" coords="5,13,103,38"/>
+<area shape="rect" href="shallow__mf_8F90.html#a5a75b1faaeb7bcea20095a4248b8453b" title=" " alt="" coords="5,13,103,38"/>
 <area shape="poly" title=" " alt="" coords="137,28,103,28,103,23,137,23"/>
 </map>
 </div>
