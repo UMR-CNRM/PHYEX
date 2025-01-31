@@ -81,6 +81,8 @@
 !!      2020-12 U. Andrae : Introduce SPP for HARMONIE-AROME
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !!      2021-01: SPP computations moved in aro_adjust (AROME/HARMONIE)
+!!      Jan 2025 A. Marcel: use ERF instead of approximate formulation
+!!      Jan 2025: protection against too small values
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -416,8 +418,7 @@ DO JK=IKTB,IKTE
       ! Computation of ZG and ZGAM(=erf(ZG))
       ZGCOND = -ZQ1(JIJ)/SQRT(2.)
 
-      !Approximation of erf function for Gaussian distribution
-      ZGAUV = 1 - SIGN(1., ZGCOND) * SQRT(1-EXP(-4*ZGCOND**2/CST%XPI))
+      ZGAUV = 1 + ERF(-ZGCOND)
 
       !Computation Cloud Fraction
       PCLDFR(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUV))
@@ -425,6 +426,11 @@ DO JK=IKTB,IKTE
       !Computation of condensate
       ZCOND(JIJ) = (EXP(-ZGCOND**2)-ZGCOND*SQRT(CST%XPI)*ZGAUV)*ZSIGMA(JIJ)/SQRT(2.*CST%XPI)
       ZCOND(JIJ) = MAX(ZCOND(JIJ), 0.)
+
+      IF (ZCOND(JIJ) < 1.E-12 .OR. PCLDFR(JIJ,JK) == 0.) THEN
+        PCLDFR(JIJ,JK)=0.
+        ZCOND(JIJ)=0.
+      ENDIF
 
       PSIGRC(JIJ,JK) = PCLDFR(JIJ,JK)
     END DO
@@ -434,12 +440,15 @@ DO JK=IKTB,IKTE
         IF(1-ZFRAC(JIJ) > 1.E-20)THEN
           ZAUTC = (ZSBAR(JIJ) - ICEP%XCRIAUTC/(PRHODREF(JIJ,JK)*(1-ZFRAC(JIJ))))/ZSIGMA(JIJ)
           ZGAUTC = -ZAUTC/SQRT(2.)
-          !Approximation of erf function for Gaussian distribution
-          ZGAUC = 1 - SIGN(1., ZGAUTC) * SQRT(1-EXP(-4*ZGAUTC**2/CST%XPI))
+          ZGAUC = 1 + ERF(-ZGAUTC)
           PHLC_HCF(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUC))
           PHLC_HRC(JIJ,JK) = (1-ZFRAC(JIJ))*(EXP(-ZGAUTC**2)-ZGAUTC*SQRT(CST%XPI)*ZGAUC)*ZSIGMA(JIJ)/SQRT(2.*CST%XPI)
           PHLC_HRC(JIJ,JK) = PHLC_HRC(JIJ,JK) + ICEP%XCRIAUTC/PRHODREF(JIJ,JK) * PHLC_HCF(JIJ,JK)
           PHLC_HRC(JIJ,JK) = MAX(PHLC_HRC(JIJ,JK), 0.)
+          IF(PHLC_HRC(JIJ,JK) < 1.E-12 .OR. PHLC_HCF(JIJ,JK) < 1.E-6) THEN
+            PHLC_HRC(JIJ,JK)=0.
+            PHLC_HCF(JIJ,JK)=0.
+          ENDIF
         ELSE
           PHLC_HCF(JIJ,JK)=0.
           PHLC_HRC(JIJ,JK)=0.
@@ -453,12 +462,15 @@ DO JK=IKTB,IKTE
           ZCRIAUTI=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JIJ,JK)-CST%XTT)+ICEP%XBCRIAUTI))
           ZAUTI = (ZSBAR(JIJ) - ZCRIAUTI/ZFRAC(JIJ))/ZSIGMA(JIJ)
           ZGAUTI = -ZAUTI/SQRT(2.)
-          !Approximation of erf function for Gaussian distribution
-          ZGAUI = 1 - SIGN(1., ZGAUTI) * SQRT(1-EXP(-4*ZGAUTI**2/CST%XPI))
+          ZGAUI = 1 + ERF(-ZGAUTI)
           PHLI_HCF(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUI))
           PHLI_HRI(JIJ,JK) = ZFRAC(JIJ)*(EXP(-ZGAUTI**2)-ZGAUTI*SQRT(CST%XPI)*ZGAUI)*ZSIGMA(JIJ)/SQRT(2.*CST%XPI)
           PHLI_HRI(JIJ,JK) = PHLI_HRI(JIJ,JK) + ZCRIAUTI*PHLI_HCF(JIJ,JK)
           PHLI_HRI(JIJ,JK) = MAX(PHLI_HRI(JIJ,JK), 0.)
+          IF(PHLI_HRI(JIJ,JK) < 1.E-12 .OR. PHLI_HCF(JIJ,JK) < 1.E-6) THEN
+            PHLI_HRI(JIJ,JK)=0.
+            PHLI_HCF(JIJ,JK)=0.
+          ENDIF
         ELSE
           PHLI_HCF(JIJ,JK)=0.
           PHLI_HRI(JIJ,JK)=0.

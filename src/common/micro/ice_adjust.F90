@@ -9,7 +9,7 @@
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &
-                            &PEXN, PCF_MF, PRC_MF, PRI_MF,                     &
+                            &PEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,   &
                             &PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR,             &
                             &PRV, PRC, PRVS, PRCS, PTH, PTHS,                  &
                             &OCOMPUTE_SRC, PSRCS, PCLDFR,                      &
@@ -17,7 +17,8 @@
                             &PICE_CLD_WGT,                                     &
                             &PRH,                                              &
                             &POUT_RV, POUT_RC, POUT_RI, POUT_TH,               &
-                            &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF)
+                            &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,           &
+                            &PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF)
 
 !     #########################################################################
 !
@@ -104,6 +105,8 @@
 !!      2020-12 U. Andrae : Introduce SPP for HARMONIE-AROME
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !!     R. El Khatib 24-Oct-2023 Re-vectorize ;-)
+!!     A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !!
 !-------------------------------------------------------------------------------
 !
@@ -158,6 +161,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PEXN    ! Exner function
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PCF_MF   ! Convective Mass Flux Cloud fraction
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRC_MF   ! Convective Mass Flux liquid mixing ratio
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRI_MF   ! Convective Mass Flux ice mixing ratio
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRV     ! Water vapor m.r. to adjust
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRC     ! Cloud water m.r. to adjust
@@ -196,6 +200,10 @@ REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HRC
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HCF
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HRI
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HCF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLC_HRC_MF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLC_HCF_MF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLI_HRI_MF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLI_HCF_MF
 !
 !
 !*       0.2   Declarations of local variables :
@@ -217,7 +225,7 @@ INTEGER :: IKTB, IKTE, IIJB, IIJE
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZSIGS, ZSRCS
 REAL, DIMENSION(D%NIJT) :: ZSIGQSAT
-LOGICAL :: LLNONE, LLTRIANGLE, LLHLC_H, LLHLI_H
+LOGICAL :: LLNONE, LLTRIANGLE, LLBIGA, LLHLC_H, LLHLI_H
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
@@ -275,6 +283,26 @@ ENDDO         ! end of the iterative loop
 !               -------------------------------------------------
 !
 !
+LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
+LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
+!
+! Apply a ponderation between condensation and mas flux cloud
+DO JK=IKTB,IKTE
+  DO JIJ=IIJB,IIJE
+    ZRC(JIJ,JK)=ZRC(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+    ZRI(JIJ,JK)=ZRI(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+    PCLDFR(JIJ,JK)=PCLDFR(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+    IF(LLHLC_H) THEN
+      PHLC_HRC(JIJ,JK)=PHLC_HRC(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+      PHLC_HCF(JIJ,JK)=PHLC_HCF(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+    ENDIF
+    IF(LLHLI_H) THEN
+      PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+      PHLI_HCF(JIJ,JK)=PHLI_HCF(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
+    ENDIF
+  ENDDO
+ENDDO
+!
 DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
     !
@@ -327,8 +355,7 @@ DO JK=IKTB,IKTE
     ! reals, integers or booleans only. REK.
     LLNONE=PARAMI%CSUBG_MF_PDF=='NONE'
     LLTRIANGLE=PARAMI%CSUBG_MF_PDF=='TRIANGLE'
-    LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
-    LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
+    LLBIGA=PARAMI%CSUBG_MF_PDF=='BIGA'
     DO JIJ=IIJB,IIJE
       !We limit PRC_MF+PRI_MF to PRVS*PTSTEP to avoid negative humidity
       ZW1=PRC_MF(JIJ,JK)/PTSTEP
@@ -370,6 +397,9 @@ DO JK=IKTB,IKTE
           ZHCF=ZHCF*PCF_MF(JIJ,JK) !to retrieve the part of the grid cell
           PHLC_HCF(JIJ,JK)=MIN(1.,PHLC_HCF(JIJ,JK)+ZHCF) !total part of the grid cell that is precipitating
           PHLC_HRC(JIJ,JK)=PHLC_HRC(JIJ,JK)+ZHR
+        ELSEIF(LLBIGA)THEN
+          PHLC_HCF(JIJ,JK)=MIN(1., PHLC_HCF(JIJ,JK)+PHLC_HCF_MF(JIJ,JK))
+          PHLC_HRC(JIJ,JK)=PHLC_HRC(JIJ,JK)+PHLC_HRC_MF(JIJ,JK)
         ENDIF
       ENDIF
       IF(LLHLI_H) THEN
@@ -395,6 +425,9 @@ DO JK=IKTB,IKTE
           ZHCF=ZHCF*PCF_MF(JIJ,JK) !to retrieve the part of the grid cell
           PHLI_HCF(JIJ,JK)=MIN(1.,PHLI_HCF(JIJ,JK)+ZHCF) !total part of the grid cell that is precipitating
           PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)+ZHR
+        ELSEIF(LLBIGA)THEN
+          PHLI_HCF(JIJ,JK)=MIN(1., PHLI_HCF(JIJ,JK)+PHLI_HCF_MF(JIJ,JK))
+          PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)+PHLI_HRI_MF(JIJ,JK)
         ENDIF
       ENDIF
     ENDDO

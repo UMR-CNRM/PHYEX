@@ -92,7 +92,8 @@ CONTAINS
 
 ! Saved variables
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PSIGS !variance of s
-REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PCF_MF, PRC_MF, PRI_MF !shallow convection cloud
+REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD !shallow convection cloud
+REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PHLC_HCF_MF, PHLC_HRC_MF, PHLI_HCF_MF, PHLI_HRI_MF
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: ZQR, ZQS, ZQG !rain, snow, graupel specifiq contents
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE ::  PTKEM       ! TKE
 TYPE(DIMPHYEX_t),SAVE    :: D
@@ -154,6 +155,7 @@ REAL, DIMENSION(klon)         ::  ZSBL_DEPTH ! SBL depth for RMC01
 REAL, DIMENSION(klon,klev+2)  ::  ZCEI ! Cloud Entrainment instability index to emphasize localy turbulent fluxes
 REAL, DIMENSION(klon,klev+2,0)::  ZRSVS ! Source terms for all passive scalar variables
 REAL, DIMENSION(klon,klev+2)  ::  ZFLXZTHVMF ! MF contribution for vert. turb. transport used in the buoy. prod. of TKE
+REAL, DIMENSION(klon,klev+2)  ::  ZFLXZUMF, ZFLXZVMF ! MF contribution for vert. turb. transport used in the dyn. prod. of TKE
 REAL, DIMENSION(klon,klev+2)  ::  ZWTH       ! heat flux
 REAL, DIMENSION(klon,klev+2)  ::  ZWRC       ! cloud water flux
 REAL, DIMENSION(klon,klev+2,0)::  ZWSV       ! scalar flux
@@ -171,16 +173,19 @@ REAL, DIMENSION(klon,klev+2) ::  PDVDT_MF     ! tendency of V   by massflux sche
 REAL, DIMENSION(klon,klev+2) ::  PDTHLDT_MF   ! tendency of thl by massflux scheme
 REAL, DIMENSION(klon,klev+2) ::  PDRTDT_MF    ! tendency of rt  by massflux scheme
 REAL, DIMENSION(klon,klev+2,KSV)::  PDSVDT_MF    ! tendency of Sv  by massflux scheme
+REAL, DIMENSION(klon,klev+2) ::  PDTKEDT_MF   ! tendency of TKE by massflux scheme
 REAL, DIMENSION(klon,klev+2) ::  PSIGMF
 REAL, DIMENSION(klon,klev+2) ::  ZFLXZTHMF
 REAL, DIMENSION(klon,klev+2) ::  ZFLXZRMF
 REAL, DIMENSION(klon,klev+2) ::  ZFLXZUMF
 REAL, DIMENSION(klon,klev+2) ::  ZFLXZVMF
+REAL, DIMENSION(klon,klev+2) ::  ZFLXZTKEMF
 REAL, DIMENSION(klon,klev+2) ::  PTHL_UP   ! Thl updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PRT_UP    ! Rt  updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PRV_UP    ! Vapor updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PU_UP     ! U wind updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PV_UP     ! V wind updraft characteristics
+REAL, DIMENSION(klon,klev+2) ::  PTKE_UP   ! TKE updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PRC_UP    ! cloud content updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PRI_UP    ! ice content   updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PTHV_UP   ! Thv   updraft characteristics
@@ -234,15 +239,25 @@ if (debut) then ! Things to do only for the first call to physics
   ALLOCATE(PTKEM(klon,klev+2))
   ALLOCATE(PSIGS(klon,klev+2))
   ALLOCATE(PCF_MF(klon,klev+2))
+  ALLOCATE(PWEIGHT_MF_CLOUD(klon,klev+2))
   ALLOCATE(PRC_MF(klon,klev+2))
   ALLOCATE(PRI_MF(klon,klev+2))
+  ALLOCATE(PHLC_HCF_MF(klon,klev+2))
+  ALLOCATE(PHLC_HRC_MF(klon,klev+2))
+  ALLOCATE(PHLI_HCF_MF(klon,klev+2))
+  ALLOCATE(PHLI_HRI_MF(klon,klev+2))
   ALLOCATE(ZQR(klon, klev))
   ALLOCATE(ZQS(klon, klev))
   ALLOCATE(ZQG(klon, klev))
   PSIGS=0.
   PCF_MF=0.
+  PWEIGHT_MF_CLOUD=0.
   PRC_MF=0.
   PRI_MF=0.
+  PHLC_HCF_MF=0.
+  PHLC_HRC_MF=0.
+  PHLI_HCF_MF=0.
+  PHLI_HRI_MF=0.
   ZQR=0.
   ZQS=0.
   ZQG=0.
@@ -374,14 +389,15 @@ CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, P
                 &pdtphys, ZSIGQSAT,                                                                 &
                 &PRHODJ, ZEXN, ZRHOD, PSIGS, .FALSE., zmfconv,                                      &
                 &ZPABST, ZZ_MASS,                                                                   &
-                &ZEXN, PCF_MF, PRC_MF, PRI_MF,                                                      &
+                &ZEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,                                    &
                 &ZICLDFR, ZWCLDFR, ZSSIO, ZSSIU, ZIFR,                                              &
                 &ZRX(:,:,1), ZRX(:,:,2), ZRXS(:,:,1), ZRXS(:,:,2), ZTHETA, ZTHETAS,                 &
                 &PHYEX%MISC%COMPUTE_SRC, ZSRC, ZCLDFR,                                              &
                 &ZRX(:,:,3), ZRX(:,:,4), ZRXS(:,:,4), ZRX(:,:,5), ZRX(:,:,6),                       &
                 &PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET,                                           &
                 &ZICE_CLD_WGT,                                                                      &
-                &PHLC_HRC=ZHLC_HRC, PHLC_HCF=ZHLC_HCF, PHLI_HRI=ZHLI_HRI, PHLI_HCF=ZHLI_HCF         )
+                &PHLC_HRC=ZHLC_HRC, PHLC_HCF=ZHLC_HCF, PHLI_HRI=ZHLI_HRI, PHLI_HCF=ZHLI_HCF,        &
+                &PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF, PHLI_HRI_MF=PHLI_HRI_MF, PHLI_HCF_MF=PHLI_HCF_MF)
 !
 !Variables are updated with their adjusted values (to be used by the other parametrisations)
 ZTHETA(:,:)=ZTHETAS(:,:)*pdtphys
@@ -432,7 +448,7 @@ PSFV(:) = 0.
 ! Shallow convection
 !------------------------------------------------------------
 !
-CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB,           &
+CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB, PHYEX%RAIN_ICE_PARAMN, &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                                        &
      &ONOMIXLG=PHYEX%MISC%ONOMIXLG,KSV_LGBEG=PHYEX%MISC%KSV_LGBEG,KSV_LGEND=PHYEX%MISC%KSV_LGEND,    &
      &PTSTEP=pdtphys,                                                                                &
@@ -442,14 +458,16 @@ CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHY
      &PSFTH=PSFTH(:),PSFRV=PSFRV(:),                                                                 &
      &PTHM=ZTHETA(:,:),PRM=ZRX(:,:,:),PUM=ZUT(:,:),PVM=ZVT(:,:),                                     &
      &PTKEM=PTKEM(:,:),PSVM=ZSVT(:,:,:),                                                             &
-     &PDUDT_MF=PDUDT_MF(:,:),PDVDT_MF=PDVDT_MF(:,:),                                                 &
+     &PDUDT_MF=PDUDT_MF(:,:),PDVDT_MF=PDVDT_MF(:,:), PDTKEDT_MF=PDTKEDT_MF(:,:),                     &
      &PDTHLDT_MF=PDTHLDT_MF(:,:),PDRTDT_MF=PDRTDT_MF(:,:),PDSVDT_MF=PDSVDT_MF(:,:,:),                &
      &PSIGMF=PSIGMF(:,:),PRC_MF=PRC_MF(:,:),PRI_MF=PRI_MF(:,:),PCF_MF=PCF_MF(:,:),                   &
-     &PFLXZTHVMF=ZFLXZTHVMF(:,:),                                                                    &
+     &PHLC_HRC=PHLC_HRC_MF(:,:), PHLC_HCF=PHLC_HCF_MF(:,:), PHLI_HRI=PHLI_HRI_MF(:,:), PHLI_HCF=PHLI_HCF_MF(:,:), &
+     &PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD(:,:), PFLXZTHVMF=ZFLXZTHVMF(:,:), PFLXZUMF=ZFLXZUMF(:,:), PFLXZVMF=ZFLXZVMF(:,:),                    &
      &PFLXZTHMF=ZFLXZTHMF(:,:),PFLXZRMF=ZFLXZRMF(:,:),PFLXZUMF=ZFLXZUMF(:,:),PFLXZVMF=ZFLXZVMF(:,:), &
+     &PFLXZTKEMF=ZFLXZTKEMF(:,:), &
      &PTHL_UP=PTHL_UP(:,:),PRT_UP=PRT_UP(:,:),PRV_UP=PRV_UP(:,:),                                    &
      &PRC_UP=PRC_UP(:,:),PRI_UP=PRI_UP(:,:),                                                         &
-     &PU_UP=PU_UP(:,:), PV_UP=PV_UP(:,:), PTHV_UP=PTHV_UP(:,:), PW_UP=PW_UP(:,:),                    &
+     &PU_UP=PU_UP(:,:), PV_UP=PV_UP(:,:), PTKE_UP=PTKE_UP(:,:), PTHV_UP=PTHV_UP(:,:), PW_UP=PW_UP(:,:),&
      &PFRAC_UP=PFRAC_UP(:,:),PEMF=PEMF(:,:),PDETR=PDETR(:,:),PENTR=PENTR(:,:),                       &
      &KKLCL=IKLCL(:),KKETL=IKETL(:),KKCTL=IKCTL(:),PDX=1000.0,PDY=1000.0,KBUDGETS=PHYEX%MISC%NBUDGET )
 
@@ -458,6 +476,7 @@ d_u(:,1:klev) = d_u(:,1:klev) + PDUDT_MF(:,2:klev+1)
 d_v(:,1:klev) = d_v(:,1:klev) + PDVDT_MF(:,2:klev+1) 
 ZRXS(:,:,1)=ZRXS(:,:,1)+PDRTDT_MF(:,:)
 ZTHETAS(:,:)=ZTHETAS(:,:)+PDTHLDT_MF(:,:)
+ZTKES(:,:) = ZRTKES(:,:)+PDTKEDT_MF(:,:)
 ! TODO add SV tendencies
 !
 !------------------------------------------------------------
@@ -495,7 +514,8 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, 
    & ZTHETA(:,:),ZRX(:,:,:),                                                                    &
    & ZRUS(:,:),ZRVS(:,:),ZRWS(:,:),ZRTHS(:,:),ZRRS(:,:,:),ZRSVS(:,:,:),ZRTKES(:,:),             &
    & PSIGS(:,:),                                                                                &
-   & ZFLXZTHVMF(:,:),ZWTH(:,:),ZWRC(:,:),ZWSV(:,:,:),ZDP(:,:),ZTP(:,:),ZTDIFF(:,:),ZTDISS(:,:), &
+   & ZFLXZTHVMF(:,:),ZFLXZUMF(:,:), ZFLXZVMF,                                                   &
+   & ZWTH(:,:),ZWRC(:,:),ZWSV(:,:,:),ZDP(:,:),ZTP(:,:),ZTDIFF(:,:),ZTDISS(:,:),                 &
    & PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET                                                    )
 DO JRR=1, KRR
   ZRXS(:,:,JRR) = ZRRS(:,:,JRR) / PRHODJ(:,:)

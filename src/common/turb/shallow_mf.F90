@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     #################################################################
-      SUBROUTINE SHALLOW_MF(D, CST, NEBN, PARAMMF, TURBN, CSTURB,     &
+      SUBROUTINE SHALLOW_MF(D, CST, NEBN, PARAMMF, TURBN, CSTURB, ICEP, &
                 KRR, KRRL, KRRI, KSV,                                 &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
                 PTSTEP,                                               &
@@ -13,12 +13,14 @@
                 PPABSM, PEXNM,                                        &
                 PSFTH,PSFRV,                                          &
                 PTHM,PRM,PUM,PVM,PTKEM,PSVM,                          &
-                PDUDT_MF,PDVDT_MF,                                    &
+                PDUDT_MF,PDVDT_MF,PDTKEDT_MF,                         &
                 PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,                       &
-                PSIGMF,PRC_MF,PRI_MF,PCF_MF,PFLXZTHVMF,               &
-                PFLXZTHMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,                 &
+                PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
+                PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
+                PWEIGHT_MF_CLOUD, PFLXZTHVMF,                         &
+                PFLXZTHMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF,      &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
-                PU_UP, PV_UP, PTHV_UP, PW_UP,                         &
+                PU_UP, PV_UP, PTKE_UP, PTHV_UP, PW_UP,                &
                 PFRAC_UP,PEMF,PDETR,PENTR,                            &
                 KKLCL,KKETL,KKCTL,PDX,PDY,PRSVS,PSVMIN,               &
                 BUCONF, TBUDGETS, KBUDGETS                            )
@@ -66,6 +68,10 @@
 !!      R.Honnert 1/2019  : remove SURF 
 !  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
 !  R. Honnert     04/2021: remove HRIO and BOUT schemes
+!!      A. Marcel Jan 2025: TKE mixing
+!!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: KIC formulation from Rooy and Siebesma (2008)
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -82,6 +88,7 @@ USE MODD_NEB_n,           ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n,          ONLY: TURB_t
 USE MODD_CTURB,           ONLY: CSTURB_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_PARAMETERS,      ONLY: JPSVMAX
 !
 USE MODE_BUDGET_PHY,                 ONLY: BUDGET_STORE_ADD_PHY
@@ -106,6 +113,7 @@ TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 TYPE(TURB_t),           INTENT(IN)   :: TURBN        ! modn_turbn (turb namelist) structure
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB       ! modd_csturb turb constant structure
+TYPE(RAIN_ICE_PARAM_t), INTENT(IN)   :: ICEP
 INTEGER,                INTENT(IN)   :: KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI         ! number of ice water var.
@@ -121,30 +129,35 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PRHODREF    ! dry density of the
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABSM      ! Pressure at time t-1
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PEXNM       ! Exner function at t-dt
 
-REAL, DIMENSION(D%NIJT),           INTENT(IN) ::  PSFTH,PSFRV ! normal surface fluxes of theta and Rv
-REAL, DIMENSION(D%NIJT,D%NKT),     INTENT(IN) ::  PTHM        ! Theta at t-dt
+REAL, DIMENSION(D%NIJT),         INTENT(IN) ::  PSFTH,PSFRV ! normal surface fluxes of theta and Rv
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTHM        ! Theta at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM         ! water var. at t-dt
-REAL, DIMENSION(D%NIJT,D%NKT),     INTENT(IN) ::  PUM,PVM     ! wind components at t-dt
-REAL, DIMENSION(D%NIJT,D%NKT),     INTENT(IN) ::  PTKEM       ! tke at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PUM,PVM     ! wind components at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTKEM       ! tke at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM        ! scalar variable a t-dt
 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)::  PDUDT_MF     ! tendency of U   by massflux scheme
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)::  PDVDT_MF     ! tendency of V   by massflux scheme
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)::  PDTKEDT_MF   ! tendency of TKE by massflux scheme
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)::  PDTHLDT_MF   ! tendency of thl by massflux scheme
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)::  PDRTDT_MF    ! tendency of rt  by massflux scheme
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT)::  PDSVDT_MF    ! tendency of Sv  by massflux scheme
 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF ! low/high cloud diagnostics
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZTHMF
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZRMF
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZUMF
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZVMF
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZTKEMF
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PTHL_UP   ! Thl updraft characteristics
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PRT_UP    ! Rt  updraft characteristics
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PRV_UP    ! Vapor updraft characteristics
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PU_UP     ! U wind updraft characteristics
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PV_UP     ! V wind updraft characteristics
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PTKE_UP   ! TKE updraft characteristics
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PRC_UP    ! cloud content updraft characteristics
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PRI_UP    ! ice content   updraft characteristics
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PTHV_UP   ! Thv   updraft characteristics
@@ -180,6 +193,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV) ::  &
 REAL, DIMENSION(D%NIJT) :: ZDEPTH             ! Deepness of cloud
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZFRAC_ICE_UP ! liquid/solid fraction in updraft
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRSAT_UP ! Rsat in updraft
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZTH_UP
 
 LOGICAL :: GENTR_DETR  ! flag to recompute entrainment, detrainment and mass flux
 INTEGER, DIMENSION(D%NIJT,D%NKT) :: IERR
@@ -239,12 +253,12 @@ IF (PARAMMF%CMF_UPDRAFT == 'EDKF') THEN
                        KSV, GENTR_DETR,                          &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
-                       PSFTH,PSFRV,PPABSM,PRHODREF,              &
+                       PSFTH,PSFRV,PEXNM, PPABSM,PRHODREF,       &
                        PUM,PVM,PTKEM,                            &
                        PTHM,PRM(:,:,1),ZTHLM,ZRTM,PSVM,          &
-                       PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,      &
+                       ZTH_UP,PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP, &
                        PTHV_UP, PW_UP, PU_UP, PV_UP, ZSV_UP,     &
-                       PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
+                       PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PTKE_UP,PEMF,PDETR,&
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH,&
                        PDX,PDY)
 ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
@@ -256,7 +270,7 @@ ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
                        PSFTH,PSFRV,PPABSM,PRHODREF,              &
                        PUM,PVM,PTKEM,                            &
                        PTHM,PRM(:,:,1),ZTHLM,ZRTM,PSVM,          &
-                       PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,      &
+                       ZTH_UP,PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,&
                        PTHV_UP, PW_UP, PU_UP, PV_UP, ZSV_UP,     &
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH )
@@ -268,7 +282,7 @@ ELSEIF (PARAMMF%CMF_UPDRAFT == 'RAHA') THEN
                        PSFTH,PSFRV,                              &
                        PPABSM,PRHODREF,PUM,PVM,PTKEM,            &
                        PEXNM,PTHM,PRM(:,:,1),ZTHLM,ZRTM,         &
-                       PSVM,PTHL_UP,PRT_UP,                      &
+                       PSVM,ZTH_UP,PTHL_UP,PRT_UP,               &
                        PRV_UP,PRC_UP,PRI_UP, PTHV_UP,            &
                        PW_UP, PU_UP, PV_UP, ZSV_UP,              &
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,           &
@@ -284,18 +298,18 @@ ENDIF
 !!! 5. Compute diagnostic convective cloud fraction and content
 !!!    --------------------------------------------------------
 !
-CALL COMPUTE_MF_CLOUD(D,CST,TURBN,PARAMMF,NEBN%LSTATNW, &
+CALL COMPUTE_MF_CLOUD(D,CST,TURBN,PARAMMF,ICEP,NEBN%LSTATNW, &
                       KRR, KRRL, KRRI,                  &
                       ZFRAC_ICE,                        &
-                      PRC_UP,PRI_UP,PEMF,               &
-                      PTHL_UP,PRT_UP,PFRAC_UP,          &
-                      PTHV_UP,ZFRAC_ICE_UP,             &
-                      ZRSAT_UP,PEXNM,ZTHLM,ZRTM,        &
-                      PTHM, ZTHVM, PRM,                 &
-                      PDZZ,PZZ,KKLCL,                   &
+                      PRV_UP,PRC_UP,PRI_UP,PEMF,        &
+                      PTHL_UP,PRT_UP,PFRAC_UP,ZTH_UP,   &
+                      PEXNM,ZTHLM,ZRTM,                 &
+                      PTHM, PRM,                        &
+                      PDZZ,KKLCL,                       &
                       PPABSM,PRHODREF,                  &
-                      PRC_MF,PRI_MF,PCF_MF,PSIGMF,ZDEPTH)
-
+                      PRC_MF,PRI_MF,PCF_MF,PSIGMF,      &
+                      PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
+                      PWEIGHT_MF_CLOUD)
 
 !!! 3. Compute fluxes of conservative variables and their divergence = tendency
 !!!    ------------------------------------------------------------------------
@@ -305,22 +319,21 @@ ZEMF_O_RHODREF(IIJB:IIJE,1:IKT)=PEMF(IIJB:IIJE,1:IKT)/PRHODREF(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
 IF ( PARAMMF%XIMPL_MF > 1.E-10 ) THEN  
-  CALL MF_TURB(D, KSV, PARAMMF%LMIXUV,                                &
+  CALL MF_TURB(D, KSV, PARAMMF, &
              ONOMIXLG,KSV_LGBEG,KSV_LGEND,                            &
-             PARAMMF%XIMPL_MF, PTSTEP,                                &
-             PDZZ,                                                    &
-             PRHODJ,                                                  &
-             ZTHLM,ZTHVM,ZRTM,PUM,PVM,PSVM,                           &
-             PDTHLDT_MF,PDRTDT_MF,PDUDT_MF,PDVDT_MF,PDSVDT_MF,        &
-             ZEMF_O_RHODREF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,ZSV_UP,&
+             PTSTEP, PDZZ, PRHODJ, &
+             ZTHLM,ZTHVM,ZRTM,PUM,PVM,PSVM,PTKEM,                     &
+             PDTHLDT_MF,PDRTDT_MF,PDUDT_MF,PDVDT_MF,PDSVDT_MF,PDTKEDT_MF, &
+             ZEMF_O_RHODREF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,ZSV_UP,PTKE_UP,&
              PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,         &
-             ZFLXZSVMF                                                )
+             ZFLXZSVMF,PFLXZTKEMF,PFRAC_UP                            )
 ELSE
   CALL MF_TURB_EXPL(D, PARAMMF,                                        &
-         PRHODJ,ZTHLM,ZTHVM,ZRTM,PUM,PVM,                              &
-         PDTHLDT_MF,PDRTDT_MF,PDUDT_MF,PDVDT_MF,                       &
-         ZEMF_O_RHODREF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,            &
-         PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF)
+         PRHODJ,ZTHLM,ZTHVM,ZRTM,PUM,PVM,PTKEM,                        &
+         PDTHLDT_MF,PDRTDT_MF,PDUDT_MF,PDVDT_MF,PDTKEDT_MF,            &
+         ZEMF_O_RHODREF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,PTKE_UP,    &
+         PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF,   &
+         PFRAC_UP)
 ENDIF
 
 ! security in the case PARAMMF%CMF_UPDRAFT = 'DUAL'

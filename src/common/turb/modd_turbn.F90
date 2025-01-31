@@ -42,6 +42,7 @@
 !!      D. Ricard     May 2021      add the switches for Leonard terms
 !!    JL Redelsperger  03/2021   Add O-A flux for auto-coupled LES case
 !!      S. Riette June 2023: add LSMOOTH_PRANDTL, XMINSIGS and XBL89EXP/XUSRBL89
+!!      A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !!
 !-------------------------------------------------------------------------------
 !
@@ -123,6 +124,8 @@ REAL               :: XCEI_MAX  !< maximum threshold for the instability index C
 REAL, DIMENSION(:,:,:), POINTER  :: XCEI !< Cloud Entrainment instability index to emphasize localy 
                                          ! turbulent fluxes
   LOGICAL            :: LTURB_PRECIP ! switch to apply turbulence to precipitating hydrometeor mixing ratios
+  LOGICAL            :: LDYNMF       ! true to take into account a dynamical TKE production from EDMF
+  LOGICAL            :: LTHERMMF     ! true to take into account a buoyancy TKE production from EDMF
 
 !  
 END TYPE TURB_t
@@ -153,6 +156,8 @@ CHARACTER(LEN=4),POINTER :: CTOM=>NULL()
 REAL, DIMENSION(:,:), POINTER :: XBL_DEPTH=>NULL()
 REAL, DIMENSION(:,:), POINTER :: XSBL_DEPTH=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XWTHVMF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER :: XWUMF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER :: XWVMF=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XDYP=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XTHP=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XTR=>NULL()
@@ -182,6 +187,8 @@ REAL, POINTER :: XCEI_MIN=>NULL()
 REAL, POINTER :: XCEI_MAX =>NULL()
 REAL, DIMENSION(:,:,:), POINTER  :: XCEI=>NULL()
 LOGICAL, POINTER :: LTURB_PRECIP=>NULL()
+LOGICAL, POINTER :: LDYNMF=>NULL()
+LOGICAL, POINTER :: LTHERMMF=>NULL()
 !
 NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
                    LSIG_CONV,LRMC01,CTOM,&
@@ -190,7 +197,8 @@ NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
                    XALTHGRAD, XCLDTHOLD, XLINI, LHARAT, &
                    LPROJQITURB, LSMOOTH_PRANDTL, XMINSIGS, NTURBSPLIT, &
                    LCLOUDMODIFLM, CTURBLEN_CLOUD, &
-                   XCOEF_AMPL_SAT, XCEI_MIN, XCEI_MAX, LTURB_PRECIP
+                   XCOEF_AMPL_SAT, XCEI_MIN, XCEI_MAX, LTURB_PRECIP, &
+                   LDYNMF, LTHERMMF
 !
 !-------------------------------------------------------------------------------
 !
@@ -279,6 +287,8 @@ XCEI_MIN=>TURB_MODEL(KTO)%XCEI_MIN
 XCEI_MAX =>TURB_MODEL(KTO)%XCEI_MAX
 XCEI=>TURB_MODEL(KTO)%XCEI
 LTURB_PRECIP=>TURB_MODEL(KTO)%LTURB_PRECIP
+LDYNMF=>TURB_MODEL(KTO)%LDYNMF
+LTHERMMF=>TURB_MODEL(KTO)%LTHERMMF
 !
 ENDIF
 !
@@ -390,6 +400,8 @@ IF(LLDEFAULTVAL) THEN
   XCEI_MIN = 0.001E-06
   XCEI_MAX = 0.01E-06
   LTURB_PRECIP =.FALSE.
+  LDYNMF = .FALSE.
+  LTHERMMF = .TRUE.
   !
   IF(HPROGRAM=='AROME') THEN
     XTKEMIN=1.E-6

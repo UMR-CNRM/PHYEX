@@ -7,7 +7,7 @@ INTERFACE
 !
       SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,NEBN,D,TLES,            &
               & KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,KHALO,           &
-              & KSPLIT,OCLOUDMODIFLM,KSV,KSV_LGBEG,KSV_LGEND,         &
+              & KSPLIT, OCLOUDMODIFLM, KSV,KSV_LGBEG,KSV_LGEND,       &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
               & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,OIBM,OFLYER,    &
               & OCOMPUTE_SRC, PRSNOW,                                 &
@@ -25,9 +25,10 @@ INTERFACE
               & PTHLT,PRT,                                            &
               & PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,              &
               & PSIGS,                                                &
-              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTDIFF,PTDISS,      &
+              & PFLXZTHVMF, PFLXZUMF, PFLXZVMF,                       &
+              & PWTH,PWRC,PWSV,PDP,PTP,PTDIFF,PTDISS,      &
               & TBUDGETS, KBUDGETS,                                   &
-              & PEDR,PLEM,PRTKEMS,PTPMF,                              &
+              & PEDR,PLEM,PRTKEMS,PDPMF,PTPMF,                        &
               & PDRUS_TURB,PDRVS_TURB,                                &
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS,       &
               & PIBM_LS, PIBM_XMUT,                                   &
@@ -148,14 +149,15 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT),OPTIONAL ::  PDRSVS_TURB  ! evolu
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PFLXZTHVMF
 !                                           MF contribution for vert. turb. transport
 !                                           used in the buoy. prod. of TKE
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PFLXZUMF   ! MF contribution for vert. turb. transport (dyn prod)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PFLXZVMF   ! MF contribution for vert. turb. transport (dyn prod)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PWTH       ! heat flux
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PWRC       ! cloud water flux
 REAL, DIMENSION(D%NIJT,D%NKT,KSV),INTENT(OUT) :: PWSV       ! scalar flux
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTP        ! Thermal TKE production
-                                                   ! MassFlux + turb
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL  :: PTPMF      ! Thermal TKE production
-                                                   ! MassFlux Only
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PDP        ! Dynamic TKE production
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTP        ! Thermal TKE production MassFlux + turb
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL  :: PTPMF      ! Thermal TKE production MassFlux Only
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PDP        ! Dynamic TKE production MassFlux + turb
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL  :: PDPMF      ! Dynamic TKE production MassFlux Only
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
 !

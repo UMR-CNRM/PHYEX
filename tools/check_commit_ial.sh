@@ -615,9 +615,11 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       file=$EXT/field_registry_mod.fypp; [ -f $file ] && mvdiff $file ../arpifs/module/
       file=$EXT/mf_phys_next_state_type_mod.fypp; [ -f $file ] && mvdiff $file ../arpifs/module/
       file=$EXT/yemlbc_model.F90; [ -f $file ] && mvdiff $file ../arpifs/module/
+      file=$EXT/cpg_gp.F90; [ -f $file ] && mvdiff $file ../arpifs/adiab/
       [ -f $EXT/aplpar.F90 ] && mvdiff $EXT/aplpar.F90 ../arpifs/phys_dmn/
       [ -f $EXT/su0yomb.F90 ] && mvdiff $EXT/su0yomb.F90 ../arpifs/setup/
       [ -f $EXT/acvppkf.F90 ] && mvdiff $EXT/acvppkf.F90 ../arpifs/phys_dmn/
+      file=$EXT/writemusc.F90; [ -f $file ] && mvdiff $file ../arpifs/phys_dmn/
       #Special mpa case
       for file in modd_spp_type.F90 spp_mod_type.F90 aroini_conf.h aroini_conf.F90; do
         if [ -f $EXT/$file ]; then

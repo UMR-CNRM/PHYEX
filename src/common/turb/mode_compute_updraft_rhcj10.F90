@@ -18,7 +18,7 @@ SUBROUTINE COMPUTE_UPDRAFT_RHCJ10(D,CST,NEBN,PARAMMF,TURBN,CSTURB,&
                                  PSFTH,PSFRV,                     &
                                  PPABSM,PRHODREF,PUM,PVM, PTKEM,  &
                                  PTHM,PRVM,PTHLM,PRTM,            &
-                                 PSVM,PTHL_UP,PRT_UP,             &
+                                 PSVM,PTH_UP,PTHL_UP,PRT_UP,      &
                                  PRV_UP,PRC_UP,PRI_UP,PTHV_UP,    &
                                  PW_UP,PU_UP, PV_UP, PSV_UP,      &
                                  PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,  &
@@ -110,7 +110,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHLM,PRTM     ! cons. var. at
 
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)   ::  PSVM           ! scalar var. at t-dt
 
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTHL_UP,PRT_UP   ! updraft properties
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTH_UP,PTHL_UP,PRT_UP   ! updraft properties
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PU_UP, PV_UP     ! updraft wind components
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PRV_UP,PRC_UP    ! updraft rv, rc
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PRI_UP           ! updraft ri
@@ -137,7 +137,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZPRES_F,ZTHVM_F               ! interpolated at
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZG_O_THVREF                   ! g*ThetaV ref
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZW_UP2                        ! w**2  of the updraft
 
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZTH_UP                        ! updraft THETA 
 !REAL, DIMENSION(SIZE(PTHM,1))              :: ZT_UP                         ! updraft T
 !REAL, DIMENSION(SIZE(PTHM,1))              :: ZLVOCPEXN                     ! updraft L
 !REAL, DIMENSION(SIZE(PTHM,1))              :: ZCP                           ! updraft cp
@@ -231,7 +230,7 @@ PENTR(:,:)=0.
 PRC_UP(:,:)=0.
 
 PW_UP(:,:)=0.
-ZTH_UP(:,:)=0.
+PTH_UP(:,:)=0.
 PFRAC_UP(:,:)=0.
 PTHV_UP(:,:)=0.
 
@@ -320,13 +319,13 @@ PRC_UP(IIJB:IIJE,IKB)=0.
 PRI_UP(IIJB:IIJE,IKB)=0.
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, PFRAC_ICE_UP(:,IKB), ZPRES_F(:,IKB), &
-             PTHL_UP(:,IKB),PRT_UP(:,IKB),ZTH_UP(:,IKB), &
+             PTHL_UP(:,IKB),PRT_UP(:,IKB),PTH_UP(:,IKB), &
              PRV_UP(:,IKB),PRC_UP(:,IKB),PRI_UP(:,IKB),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
              PBUF=ZBUF)
 
 DO JIJ=IIJB,IIJE
   ! compute updraft thevav and buoyancy term at KKB level             
-  PTHV_UP(JIJ,IKB) = ZTH_UP(JIJ,IKB)*((1+ZRVORD*PRV_UP(JIJ,IKB))/(1+PRT_UP(JIJ,IKB))) 
+  PTHV_UP(JIJ,IKB) = PTH_UP(JIJ,IKB)*((1+ZRVORD*PRV_UP(JIJ,IKB))/(1+PRT_UP(JIJ,IKB))) 
   ! compute mean rsat in updraft
   PRSAT_UP(JIJ,IKB) = ZRSATW(JIJ)*(1-PFRAC_ICE_UP(JIJ,IKB)) + ZRSATI(JIJ)*PFRAC_ICE_UP(JIJ,IKB)
 ENDDO
@@ -440,12 +439,12 @@ DO JK=IKB,IKE-IKL,IKL
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, PFRAC_ICE_UP(:,JK),&
                PPABSM(:,JK),PTHL_UP(:,JK),PRT_UP(:,JK),&
-               ZTH_UP(:,JK),ZRV_UP,ZRC_UP,ZRI_UP,ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
+               PTH_UP(:,JK),ZRV_UP,ZRC_UP,ZRI_UP,ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
                PBUF=ZBUF)
     
   DO JIJ=IIJB,IIJE
     IF (GTEST(JIJ)) THEN
-      PTHV_UP(JIJ,JK)    = ZTH_UP(JIJ,JK)*(1.+ZRVORD*ZRV_UP(JIJ))/(1.+PRT_UP(JIJ,JK))
+      PTHV_UP(JIJ,JK)    = PTH_UP(JIJ,JK)*(1.+ZRVORD*ZRV_UP(JIJ))/(1.+PRT_UP(JIJ,JK))
       ZBUO(JIJ,JK)       = ZG_O_THVREF(JIJ,JK)*(PTHV_UP(JIJ,JK) - ZTHVM_F(JIJ,JK))    
       PBUO_INTEG(JIJ,JK) = ZBUO(JIJ,JK)*(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))
       
@@ -542,13 +541,13 @@ DO JK=IKB,IKE-IKL,IKL
   ZRV_UP(IIJB:IIJE)=PRV_UP(IIJB:IIJE,JK)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, PFRAC_ICE_UP(:,JK+IKL), ZPRES_F(:,JK+IKL), &
-          PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),ZTH_UP(:,JK+IKL),              &
+          PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),PTH_UP(:,JK+IKL),              &
           ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
           PBUF=ZBUF)
 
   DO JIJ=IIJB,IIJE
     IF(GTEST(JIJ)) THEN
-      !ZT_UP(JIJ) = ZTH_UP(JIJ,JK+KKL)*PEXNM(JIJ,JK+KKL)
+      !ZT_UP(JIJ) = PTH_UP(JIJ,JK+KKL)*PEXNM(JIJ,JK+KKL)
       !ZCP(JIJ) = XCPD + XCL * ZRC_UP(JIJ)
       !ZLVOCPEXN(JIJ)=(XLVTT + (XCPV-XCL) *  (ZT_UP(JIJ)-XTT) ) / ZCP(JIJ) / PEXNM(JIJ,JK+KKL)
       !PRC_UP(JIJ,JK+KKL)=MIN(0.5E-3,ZRC_UP(JIJ))  ! On ne peut depasser 0.5 g/kg (autoconversion donc elimination !)
@@ -561,10 +560,10 @@ DO JK=IKB,IKE-IKL,IKL
 
       ! Compute the updraft theta_v, buoyancy and w**2 for level JK+1   
       !PTHV_UP(IIJB:IIJE,JK+KKL) = PTH_UP(IIJB:IIJE,JK+KKL)*((1+ZRVORD*PRV_UP(IIJB:IIJE,JK+KKL))/(1+PRT_UP(IIJB:IIJE,JK+KKL)))
-      !PTHV_UP(JIJ,JK+KKL) = ZTH_UP(JIJ,JK+KKL)*(1.+0.608*PRV_UP(JIJ,JK+KKL) - PRC_UP(JIJ,JK+KKL))
+      !PTHV_UP(JIJ,JK+KKL) = PTH_UP(JIJ,JK+KKL)*(1.+0.608*PRV_UP(JIJ,JK+KKL) - PRC_UP(JIJ,JK+KKL))
       !! A corriger pour utiliser q et non r !!!!      
       !ZMIX1(JIJ)=ZZDZ(JIJ,JK)*(PENTR(JIJ,JK)-PDETR(JIJ,JK))
-      PTHV_UP(JIJ,JK+IKL) = ZTH_UP(JIJ,JK+IKL)*((1+ZRVORD*PRV_UP(JIJ,JK+IKL))/(1+PRT_UP(JIJ,JK+IKL)))
+      PTHV_UP(JIJ,JK+IKL) = PTH_UP(JIJ,JK+IKL)*((1+ZRVORD*PRV_UP(JIJ,JK+IKL))/(1+PRT_UP(JIJ,JK+IKL)))
       ZMIX1(JIJ)=ZZDZ(JIJ,JK)*(PENTR(JIJ,JK)-PDETR(JIJ,JK))
     ENDIF
   ENDDO

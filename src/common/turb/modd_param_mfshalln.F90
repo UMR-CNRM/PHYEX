@@ -32,6 +32,14 @@
 !!      Original    01/02/07
 !!      10/16 R.Honnert Update with AROME
 !!      01/2019 R.Honnert add parameters for the reduction of mass-flux surface closure with resolution
+!!      Jan 2025 A. Marcel: Wet mixing according to Lapp and Randall 2001
+!!      Jan 2025 A. Marcel: TKE mixing
+!!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      S. Riette Jan 2025: LPZ_EXP_LOG switch
+!!      A. Marcel Jan 2025: KIC computed following Rooy and Siebesma (2008)
+!!      A. Marcel Jan 2025: minimum dry detrainment computed with LUP in updraft
+!!      A. Marcel Jan 2025: w_up equation update (XBRIO and XAADVEC)
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !-------------------------------------------------------------------------------
 !
 !*       0.   DECLARATIONS
@@ -47,9 +55,14 @@ REAL               :: XIMPL_MF     !< degre of implicitness
 CHARACTER (LEN=4)  :: CMF_UPDRAFT  !< Type of Mass Flux Scheme
                                    !! 'NONE' if no parameterization 
 CHARACTER (LEN=4)  :: CMF_CLOUD    !< Type of cloud scheme associated
-
+CHARACTER (LEN=4)  :: CWET_MIXING  !< Type of env mixing for buoyancy sorting scheme
+                                   !! PKFB for the original Pergaud code, LR01 for Lappen and Randall 2001
+CHARACTER (LEN=4)  :: CKIC_COMPUTE !< Method to compute KIC: KFB (PMMC09 original method, like in KFB)
+                                   !! RS08 (to use the Rooy and Siebesma (2008) formulation)
+CHARACTER (LEN=4)  :: CDETR_DRY_LUP!< 'SURF' to use LUP at surface (PMMC09), UPDR to compute LUP in updraft
                                      
 LOGICAL       :: LMIXUV      !< True if mixing of momentum
+LOGICAL       :: LMIXTKE     !< True if mixing of TKE
 LOGICAL       :: LMF_FLX     !< logical switch for the storage of the mass flux fluxes
 REAL          :: XALP_PERT   !< coefficient for the perturbation of
                              !! theta_l and r_t at the first level of the updraft
@@ -67,7 +80,8 @@ REAL          :: XKRC_MF     !< coefficient for convective rc
 REAL          :: XTAUSIGMF
 REAL          :: XPRES_UV    !< coefficient for pressure term in wind mixing
 REAL          :: XALPHA_MF   !< coefficient for cloudy fraction
-REAL          :: XSIGMA_MF   !< coefficient for sigma computation
+REAL          :: XSIGMA_MF   !< coefficient for updraft sigma computation in the bigaussian scheme
+REAL          :: XSIGMA_ENV  !< coefficient for the environment sigma contribution in the bigaussian scheme
 REAL          :: XFRAC_UP_MAX!< maximum Updraft fraction
 !
 REAL          :: XA1         !< Parameter for Rio et al (2010) formulation for entrainment and detrainment (RHCJ10)
@@ -83,6 +97,10 @@ REAL          :: XGZ         !< Tuning of the surface initialisation for Grey Zo
 LOGICAL       :: LTHETAS_MF      !< .TRUE. to use ThetaS1 instead of ThetaL
 REAL          :: XLAMBDA_MF      !< Thermodynamic parameter: Lambda to compute ThetaS1 from ThetaL
 LOGICAL       :: LVERLIMUP      !< .TRUE. to use correction on vertical limitation of updraft (issue #38 PHYEX)
+LOGICAL       :: LPZ_EXP_LOG    !< .TRUE. to exp/log during dP/dZ conversion
+REAL          :: XBRIO          !< coefficient to slow down wup equa like Rio 2010
+REAL          :: XAADVEC        !< coeff for advective pressure perturbation like Jia he 2022
+LOGICAL       :: LRELAX_ALPHA_MF !< .TRUE. to relax the small fraction assumption
 
 END TYPE PARAM_MFSHALL_t
 
@@ -92,7 +110,11 @@ TYPE(PARAM_MFSHALL_t), POINTER, SAVE :: PARAM_MFSHALLN => NULL()
 REAL             , POINTER :: XIMPL_MF=>NULL()
 CHARACTER (LEN=4), POINTER :: CMF_UPDRAFT=>NULL() 
 CHARACTER (LEN=4), POINTER :: CMF_CLOUD=>NULL()
+CHARACTER (LEN=4), POINTER :: CWET_MIXING=>NULL()
+CHARACTER (LEN=4), POINTER :: CKIC_COMPUTE=>NULL()
+CHARACTER (LEN=4), POINTER :: CDETR_DRY_LUP=>NULL()
 LOGICAL          , POINTER :: LMIXUV=>NULL() 
+LOGICAL          , POINTER :: LMIXTKE=>NULL()
 LOGICAL          , POINTER :: LMF_FLX=>NULL() 
 !
 REAL, POINTER          :: XALP_PERT=>NULL()   
@@ -111,6 +133,7 @@ REAL, POINTER          :: XTAUSIGMF=>NULL()
 REAL, POINTER          :: XPRES_UV=>NULL()   
 REAL, POINTER          :: XALPHA_MF=>NULL()   
 REAL, POINTER          :: XSIGMA_MF=>NULL()  
+REAL, POINTER          :: XSIGMA_ENV=>NULL()
 REAL, POINTER          :: XFRAC_UP_MAX=>NULL()
 REAL, POINTER          :: XA1=>NULL() 
 REAL, POINTER          :: XB=>NULL()
@@ -122,13 +145,18 @@ REAL, POINTER          :: XLAMBDA_MF=>NULL()
 LOGICAL, POINTER       :: LGZ=>NULL() 
 REAL, POINTER          :: XGZ=>NULL()
 LOGICAL, POINTER       :: LVERLIMUP=>NULL() 
+LOGICAL, POINTER       :: LPZ_EXP_LOG=>NULL()
+REAL, POINTER          :: XBRIO=>NULL()
+REAL, POINTER          :: XAADVEC=>NULL()
+LOGICAL, POINTER       :: LRELAX_ALPHA_MF=>NULL()
 !
-NAMELIST/NAM_PARAM_MFSHALLn/XIMPL_MF,CMF_UPDRAFT,CMF_CLOUD,LMIXUV,LMF_FLX,&
+NAMELIST/NAM_PARAM_MFSHALLn/XIMPL_MF,CMF_UPDRAFT,CMF_CLOUD,CWET_MIXING,LMIXUV,LMIXTKE,LMF_FLX,&
                             XALP_PERT,XABUO,XBENTR,XBDETR,XCMF,XENTR_MF,&
                             XCRAD_MF,XENTR_DRY,XDETR_DRY,XDETR_LUP,XKCF_MF,&
-                            XKRC_MF,XTAUSIGMF,XPRES_UV,XALPHA_MF,XSIGMA_MF,&
+                            XKRC_MF,XTAUSIGMF,XPRES_UV,XALPHA_MF,XSIGMA_MF,XSIGMA_ENV,&
                             XFRAC_UP_MAX,XA1,XB,XC,XBETA1,XR,LTHETAS_MF,LGZ,XGZ,&
-                            LVERLIMUP
+                            LVERLIMUP,LPZ_EXP_LOG,CKIC_COMPUTE,CDETR_DRY_LUP,&
+                            XBRIO, XAADVEC, LRELAX_ALPHA_MF
 !
 !-------------------------------------------------------------------------------
 !
@@ -150,7 +178,11 @@ PARAM_MFSHALLN => PARAM_MFSHALL_MODEL(KTO)
 XIMPL_MF=>PARAM_MFSHALL_MODEL(KTO)%XIMPL_MF
 CMF_UPDRAFT=>PARAM_MFSHALL_MODEL(KTO)%CMF_UPDRAFT
 CMF_CLOUD=>PARAM_MFSHALL_MODEL(KTO)%CMF_CLOUD
+CWET_MIXING=>PARAM_MFSHALL_MODEL(KTO)%CWET_MIXING
+CKIC_COMPUTE=>PARAM_MFSHALL_MODEL(KTO)%CKIC_COMPUTE
+CDETR_DRY_LUP=>PARAM_MFSHALL_MODEL(KTO)%CDETR_DRY_LUP
 LMIXUV=>PARAM_MFSHALL_MODEL(KTO)%LMIXUV
+LMIXTKE=>PARAM_MFSHALL_MODEL(KTO)%LMIXTKE
 LMF_FLX=>PARAM_MFSHALL_MODEL(KTO)%LMF_FLX
 !
 XALP_PERT=>PARAM_MFSHALL_MODEL(KTO)%XALP_PERT
@@ -169,6 +201,7 @@ XTAUSIGMF=>PARAM_MFSHALL_MODEL(KTO)%XTAUSIGMF
 XPRES_UV=>PARAM_MFSHALL_MODEL(KTO)%XPRES_UV
 XALPHA_MF=>PARAM_MFSHALL_MODEL(KTO)%XALPHA_MF
 XSIGMA_MF=>PARAM_MFSHALL_MODEL(KTO)%XSIGMA_MF
+XSIGMA_ENV=>PARAM_MFSHALL_MODEL(KTO)%XSIGMA_ENV
 XFRAC_UP_MAX=>PARAM_MFSHALL_MODEL(KTO)%XFRAC_UP_MAX
 XA1=>PARAM_MFSHALL_MODEL(KTO)%XA1
 XB=>PARAM_MFSHALL_MODEL(KTO)%XB
@@ -180,6 +213,10 @@ XLAMBDA_MF=>PARAM_MFSHALL_MODEL(KTO)%XLAMBDA_MF
 LGZ=>PARAM_MFSHALL_MODEL(KTO)%LGZ
 XGZ=>PARAM_MFSHALL_MODEL(KTO)%XGZ
 LVERLIMUP=>PARAM_MFSHALL_MODEL(KTO)%LVERLIMUP
+LPZ_EXP_LOG=>PARAM_MFSHALL_MODEL(KTO)%LPZ_EXP_LOG
+XBRIO=>PARAM_MFSHALL_MODEL(KTO)%XBRIO
+XAADVEC=>PARAM_MFSHALL_MODEL(KTO)%XAADVEC
+LRELAX_ALPHA_MF=>PARAM_MFSHALL_MODEL(KTO)%LRELAX_ALPHA_MF
 !
 ENDIF
 !
@@ -218,6 +255,7 @@ SUBROUTINE PARAM_MFSHALLN_INIT(HPROGRAM, TFILENAM, LDNEEDNAM, KLUOUT, &
 USE MODE_POSNAM_PHY, ONLY: POSNAM_PHY
 USE MODE_CHECK_NAM_VAL, ONLY: CHECK_NAM_VAL_CHAR
 USE MODD_IO,  ONLY: TFILEDATA
+USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
 IMPLICIT NONE
 !
@@ -261,7 +299,11 @@ IF(LLDEFAULTVAL) THEN
   XIMPL_MF=1.
   CMF_UPDRAFT='EDKF'
   CMF_CLOUD='DIRE'
+  CWET_MIXING='PKFB'
+  CKIC_COMPUTE='KFB'
+  CDETR_DRY_LUP='SURF'
   LMIXUV=.TRUE.
+  LMIXTKE=.FALSE.
   LMF_FLX=.FALSE.
   XALP_PERT=0.3
   XABUO=1.
@@ -279,6 +321,7 @@ IF(LLDEFAULTVAL) THEN
   XPRES_UV=0.5
   XALPHA_MF=2.
   XSIGMA_MF=20.
+  XSIGMA_ENV=0.
   XFRAC_UP_MAX=0.33
   XA1=2./3.
   XB=0.002
@@ -290,6 +333,10 @@ IF(LLDEFAULTVAL) THEN
   LGZ=.FALSE.
   XGZ=1.83 ! between 1.83 and 1.33
   LVERLIMUP=.FALSE.
+  LPZ_EXP_LOG=.FALSE.
+  XBRIO=0.
+  XAADVEC=0.
+  LRELAX_ALPHA_MF=.FALSE.
   IF(HPROGRAM=='MESONH') LVERLIMUP=.TRUE.
 ENDIF
 !
@@ -306,7 +353,15 @@ ENDIF
 !
 IF(LLCHECK) THEN
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CMF_CLOUD', CMF_CLOUD, 'NONE', 'STAT', 'DIRE', 'BIGA')
+  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CWET_MIXING', CWET_MIXING, 'PKFB', 'LR01')
+  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CKIC_COMPUTE', CKIC_COMPUTE, 'KFB', 'RS08')
+  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CDETR_DRY_LUP', CDETR_DRY_LUP, 'SURF', 'UPDR')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CMF_UPDRAFT', CMF_UPDRAFT, 'NONE', 'EDKF', 'RHCJ', 'RAHA')
+  !
+  IF(LMIXTKE .AND. CMF_UPDRAFT /= 'EDKF')THEN
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'PARAM_MFSHALLN_INIT', &
+                  &"LMIXTKE only implemented when CMF_UPDRAFT is 'EDKF'")
+  ENDIF
 ENDIF
 !
 !*      3. PRINTS
