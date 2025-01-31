@@ -128,8 +128,10 @@ DO JK=1, IKT
         ZFRAC_ICE_UP_M = ZRI_UP_M(JIJ, JK) / (ZRC_UP_M(JIJ, JK)+ZRI_UP_M(JIJ, JK))
       ENDIF
       ZFRAC_ICE = 0.
-      IF (PRM(JIJ, JK, 2)+PRM(JIJ, JK, 4) > 1.E-20) THEN
-        ZFRAC_ICE = PRM(JIJ, JK, 4) / (PRM(JIJ, JK, 2)+PRM(JIJ, JK, 4))
+      IF (KRR > 3) THEN
+        IF (PRM(JIJ, JK, 2)+PRM(JIJ, JK, 4) > 1.E-20) THEN
+          ZFRAC_ICE = PRM(JIJ, JK, 4) / (PRM(JIJ, JK, 2)+PRM(JIJ, JK, 4))
+        ENDIF
       ENDIF
 
       !----------------------------------------------------------------------------
@@ -158,7 +160,11 @@ DO JK=1, IKT
       ZSBAR_UP = ZA * (ZRT_UP_M(JIJ, JK) - ZQSL + ZAH * ZLVS * (ZRC_UP_M(JIJ, JK)+ZRI_UP_M(JIJ, JK)) / ZCPH)
 
       !#### Computation of S on mean grid
-      ZCPH = CST%XCPD + CST%XCPV*PRM(JIJ, JK, 1) + CST%XCL*PRM(JIJ, JK, 2) + CST%XCI*PRM(JIJ, JK, 4)
+      IF (KRR > 3) THEN
+        ZCPH = CST%XCPD + CST%XCPV*PRM(JIJ, JK, 1) + CST%XCL*PRM(JIJ, JK, 2) + CST%XCI*PRM(JIJ, JK, 4)
+      ELSE
+        ZCPH = CST%XCPD + CST%XCPV*PRM(JIJ, JK, 1) + CST%XCL*PRM(JIJ, JK, 2)
+      ENDIF
       ZTEMP = PTHM(JIJ, JK)*PEXNM(JIJ, JK)
       ZLV = CST%XLVTT + (CST%XCPV-CST%XCL) * (ZTEMP-CST%XTT)
       ZLS = CST%XLSTT + (CST%XCPV-CST%XCI) * (ZTEMP-CST%XTT)
@@ -174,7 +180,11 @@ DO JK=1, IKT
       ZAH = ZLVS * ZQSL / ( CST%XRV * ZTEMP**2 ) * (1. + (CST%XRV * ZQSL / CST%XRD))
       ZA = 1. / ( 1. + ZLVS/ZCPH * ZAH )
 
-      ZSBAR_MEAN = ZA * (PRTM(JIJ, JK) - ZQSL + ZAH * ZLVS * (PRM(JIJ, JK, 2)+PRM(JIJ, JK, 4)) / ZCPH)
+      IF (KRR > 3) THEN
+        ZSBAR_MEAN = ZA * (PRTM(JIJ, JK) - ZQSL + ZAH * ZLVS * (PRM(JIJ, JK, 2)+PRM(JIJ, JK, 4)) / ZCPH)
+      ELSE
+        ZSBAR_MEAN = ZA * (PRTM(JIJ, JK) - ZQSL + ZAH * ZLVS * PRM(JIJ, JK, 2) / ZCPH)
+      ENDIF
 
       !#### Computation of S on environment
       ZSBAR_ENV = (ZSBAR_MEAN-ZFRAC_UP_M(JIJ, JK)*ZSBAR_UP)/(1.-ZFRAC_UP_M(JIJ, JK))
