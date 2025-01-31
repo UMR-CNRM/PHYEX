@@ -312,7 +312,7 @@ ENDDO
 !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
 !
 IF (PARAMMF%LMIXTKE) THEN                                                                                                          
-  CALL TRIDIAG_MASSFLUX(D,PTKEM,PFLXZTKEMF,ZEMF,PTSTEP,PARAMMF%XIMPL_MF,PDZZ,PRHODJ,ZVARS)
+  CALL TRIDIAG_MASSFLUX(D,PTKEM,PFLXZTKEMF,ZMEMF,PTSTEP,PARAMMF%XIMPL_MF,PDZZ,PRHODJ,ZVARS)
 
   ! compute new flux and TKE tendency
   CALL MZM_MF(D, ZVARS(:,:), PFLXZTKEMF(:,:))
