@@ -155,7 +155,6 @@ REAL, DIMENSION(klon)         ::  ZSBL_DEPTH ! SBL depth for RMC01
 REAL, DIMENSION(klon,klev+2)  ::  ZCEI ! Cloud Entrainment instability index to emphasize localy turbulent fluxes
 REAL, DIMENSION(klon,klev+2,0)::  ZRSVS ! Source terms for all passive scalar variables
 REAL, DIMENSION(klon,klev+2)  ::  ZFLXZTHVMF ! MF contribution for vert. turb. transport used in the buoy. prod. of TKE
-REAL, DIMENSION(klon,klev+2)  ::  ZFLXZUMF, ZFLXZVMF ! MF contribution for vert. turb. transport used in the dyn. prod. of TKE
 REAL, DIMENSION(klon,klev+2)  ::  ZWTH       ! heat flux
 REAL, DIMENSION(klon,klev+2)  ::  ZWRC       ! cloud water flux
 REAL, DIMENSION(klon,klev+2,0)::  ZWSV       ! scalar flux
@@ -462,7 +461,7 @@ CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHY
      &PDTHLDT_MF=PDTHLDT_MF(:,:),PDRTDT_MF=PDRTDT_MF(:,:),PDSVDT_MF=PDSVDT_MF(:,:,:),                &
      &PSIGMF=PSIGMF(:,:),PRC_MF=PRC_MF(:,:),PRI_MF=PRI_MF(:,:),PCF_MF=PCF_MF(:,:),                   &
      &PHLC_HRC=PHLC_HRC_MF(:,:), PHLC_HCF=PHLC_HCF_MF(:,:), PHLI_HRI=PHLI_HRI_MF(:,:), PHLI_HCF=PHLI_HCF_MF(:,:), &
-     &PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD(:,:), PFLXZTHVMF=ZFLXZTHVMF(:,:), PFLXZUMF=ZFLXZUMF(:,:), PFLXZVMF=ZFLXZVMF(:,:),                    &
+     &PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD(:,:), PFLXZTHVMF=ZFLXZTHVMF(:,:), &
      &PFLXZTHMF=ZFLXZTHMF(:,:),PFLXZRMF=ZFLXZRMF(:,:),PFLXZUMF=ZFLXZUMF(:,:),PFLXZVMF=ZFLXZVMF(:,:), &
      &PFLXZTKEMF=ZFLXZTKEMF(:,:), &
      &PTHL_UP=PTHL_UP(:,:),PRT_UP=PRT_UP(:,:),PRV_UP=PRV_UP(:,:),                                    &
@@ -476,7 +475,7 @@ d_u(:,1:klev) = d_u(:,1:klev) + PDUDT_MF(:,2:klev+1)
 d_v(:,1:klev) = d_v(:,1:klev) + PDVDT_MF(:,2:klev+1) 
 ZRXS(:,:,1)=ZRXS(:,:,1)+PDRTDT_MF(:,:)
 ZTHETAS(:,:)=ZTHETAS(:,:)+PDTHLDT_MF(:,:)
-ZTKES(:,:) = ZRTKES(:,:)+PDTKEDT_MF(:,:)
+ZTKES(:,:) = ZTKES(:,:)+PDTKEDT_MF(:,:)
 ! TODO add SV tendencies
 !
 !------------------------------------------------------------
