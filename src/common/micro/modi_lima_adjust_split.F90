@@ -9,7 +9,7 @@ INTERFACE
                              KRR, HCONDENS, HLAMBDA3,                           &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS, OMFCONV, PMFCONV,&
-                             PPABST, PPABSTT, PZZ, ODTHRAD, PDTHRAD, PW_NU,     &
+                             PPABST, PZZ, ODTHRAD, PDTHRAD, PW_NU,              &
                              PRT, PRS, PSVT, PSVS,                              &
                              PTHS, OCOMPUTE_SRC, PSRCS, PCLDFR, PICEFR,         &
                              PRC_MF, PRI_MF, PCF_MF)
@@ -59,7 +59,6 @@ REAL, DIMENSION(MERGE(D%NIT,0,OMFCONV), &
                 MERGE(D%NJT,0,OMFCONV), &
                 MERGE(D%NKT,0,OMFCONV)),   INTENT(IN)   ::  PMFCONV   ! 
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PPABST    ! Absolute Pressure at t     
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PPABSTT   ! Absolute Pressure at t+dt     
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PZZ       !     
 LOGICAL,                                INTENT(IN)   :: ODTHRAD    ! Use radiative temperature tendency
 REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &

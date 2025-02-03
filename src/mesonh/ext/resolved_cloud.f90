@@ -1465,7 +1465,7 @@ SELECT CASE ( HCLOUD )
                              KRR, CCONDENS, CLAMBDA3,                                        &
                              OSUBG_COND, OSIGMAS, PTSTEP, ZSIGQSAT2D,                        &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS,                               &
-                             SIZE(PMFCONV)/=0, PMFCONV, PPABST, PPABSTT, ZZZ,                &
+                             SIZE(PMFCONV)/=0, PMFCONV, PPABST, ZZZ,                         &
                              LLDTHRAD, PDTHRAD, PW_ACT,                                      &
                              PRT, PRS, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                &
                              PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                          &

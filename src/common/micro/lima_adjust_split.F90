@@ -8,7 +8,7 @@ SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, TNSV, D, CST, NEBN, TURBN, BUCONF, TB
                              KRR, HCONDENS, HLAMBDA3,                           &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS, OMFCONV, PMFCONV,&
-                             PPABST, PPABSTT, PZZ, ODTHRAD, PDTHRAD, PW_NU,     &
+                             PPABST, PZZ, ODTHRAD, PDTHRAD, PW_NU,              &
                              PRT, PRS, PSVT, PSVS,                              &
                              PTHS, OCOMPUTE_SRC, PSRCS, PCLDFR, PICEFR,         &
                              PRC_MF, PRI_MF, PCF_MF)
@@ -146,7 +146,6 @@ LOGICAL,                                  INTENT(IN)    ::  OMFCONV ! T to use P
 REAL, DIMENSION(MERGE(D%NIJT,0,OMFCONV), &
                 MERGE(D%NKT,0,OMFCONV)),   INTENT(IN)   ::  PMFCONV   ! 
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)   ::  PPABST    ! Absolute Pressure at t     
-REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)   ::  PPABSTT   ! Absolute Pressure at t+dt     
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)   ::  PZZ       !     
 LOGICAL,                                INTENT(IN)   :: ODTHRAD    ! Use radiative temperature tendency
 REAL, DIMENSION(MERGE(D%NIJT,0,ODTHRAD), &
@@ -360,7 +359,7 @@ WHERE ( ZRVS(:,:)+ZRCS(:,:)+ZRIS(:,:) < 0.)
   ZRVS(:,:) = -  ZRCS(:,:) - ZRIS(:,:)
 END WHERE
 !
-ZEXNS(:,:) = ( PPABSTT(:,:) / CST%XP00 ) ** (CST%XRD/CST%XCPD)  
+ZEXNS(:,:) = ( PPABST(:,:) / CST%XP00 ) ** (CST%XRD/CST%XCPD)  
 !
 ZT(:,:) = ( PTHS(:,:) * PTSTEP ) * ZEXNS(:,:)
 ZT2(:,:) = ZT(:,:)
