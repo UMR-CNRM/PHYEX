@@ -54,6 +54,7 @@ program main_rain_ice_old
   real, allocatable, dimension(:,:,:) :: pifr    ! Ratio cloud ice moist part to dry part
   real, allocatable, dimension(:,:,:) :: pssio   ! Super-saturation with respect to ice in the supersaturated fraction
   real, allocatable, dimension(:,:,:) :: pssiu   ! Sub-saturation with respect to ice in the subsaturated fraction
+  real, allocatable, dimension(:,:,:) :: pcldrop, pifnnc
 
   logical, allocatable, dimension(:,:,:) :: llmicro
 
@@ -74,6 +75,7 @@ program main_rain_ice_old
   logical :: ocnd2
   logical :: lkogan
   logical :: lmodicedep
+  logical :: oaeronrt, oaeifn
   character(len=4) :: c_sedim
   character(len=4) :: c_micro
   character(len=4) :: csubg_aucv_rc
@@ -147,6 +149,8 @@ program main_rain_ice_old
   checkdiff = .false.
 
   owarm = .true.
+  oaeronrt = .false.
+  oaeifn = .false.
 
   kka = 1
   kku = n_levels
@@ -186,6 +190,7 @@ ENDDO
                             ptht, prt, pths, pths_out, &
                             prs, prs_out, &
                             psigs, psea, ptown,     &
+                            pcldrop, pifnnc, &
                             zinprc, zinprc_out, &
                             pinprr, pinprr_out, &
                             pevap, pevap_out,        &
@@ -263,6 +268,8 @@ ENDDO
                         pinprc=zinprc(:,i), pinprr=pinprr(:,i), pevap3d=pevap(:,:,i),      &
                         pinprs=pinprs(:,i), pinprg=pinprg(:,i), psigs=psigs(:,:,i),        &
                         psea=psea(:,i), ptown=ptown(:,i),                                  &
+                        oaeronrt=oaeronrt, oaeifn=oaeifn,                                  &
+                        pcldrop=pcldrop(:,:,i), pifnnc=pifnnc(:,:,i),                      &
                         TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET),                        &
                         picenu=picenu(:,i),                                                &
                         pkgn_acon=pkgn_acon(:,i), pkgn_sbgr=pkgn_sbgr(:,i),                &

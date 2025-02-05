@@ -32,6 +32,7 @@ SUBROUTINE GETDATA_RAIN_ICE_OLD(NPROMA, NBLOCKS, NFLEVG, KRR,             &
                                 PTHT_B, PRT_B, PTHS_B, PTHS_OUT_B,        &
                                 PRS_B, PRS_OUT_B,                         &
                                 PSIGS_B, PSEA_B, PTOWN_B,                 &
+                                PCLDROP_B, PIFNNC_B,                      &
                                 ZINPRC_B, ZINPRC_OUT_B,                   &
                                 PINPRR_B, PINPRR_OUT_B,                   &
                                 PEVAP_B, PEVAP_OUT_B,                     &
@@ -89,6 +90,8 @@ SUBROUTINE GETDATA_RAIN_ICE_OLD(NPROMA, NBLOCKS, NFLEVG, KRR,             &
   REAL, ALLOCATABLE, DIMENSION(:,:),     INTENT(OUT) :: PSEA_B
   REAL, ALLOCATABLE, DIMENSION(:,:),     INTENT(OUT) :: PTOWN_B
 
+  REAL, ALLOCATABLE, DIMENSION(:,:,:),   INTENT(OUT) :: PCLDROP_B
+  REAL, ALLOCATABLE, DIMENSION(:,:,:),   INTENT(OUT) :: PIFNNC_B
   REAL, ALLOCATABLE, DIMENSION(:,:),     INTENT(OUT) :: PICENU_B
   REAL, ALLOCATABLE, DIMENSION(:,:),     INTENT(OUT) :: PKGN_ACON_B
   REAL, ALLOCATABLE, DIMENSION(:,:),     INTENT(OUT) :: PKGN_SBGR_B
@@ -197,6 +200,8 @@ SUBROUTINE GETDATA_RAIN_ICE_OLD(NPROMA, NBLOCKS, NFLEVG, KRR,             &
   ALLOCATE (PSEA_B          (NPROMA, NBLOCKS))
   ALLOCATE (PTOWN_B         (NPROMA, NBLOCKS))
 
+  ALLOCATE (PCLDROP_B       (NPROMA, NFLEVG, NBLOCKS))
+  ALLOCATE (PIFNNC_B        (NPROMA, NFLEVG, NBLOCKS))
   ALLOCATE (PICENU_B        (NPROMA, NBLOCKS))
   ALLOCATE (PKGN_ACON_B     (NPROMA, NBLOCKS))
   ALLOCATE (PKGN_SBGR_B     (NPROMA, NBLOCKS))
@@ -263,6 +268,9 @@ SUBROUTINE GETDATA_RAIN_ICE_OLD(NPROMA, NBLOCKS, NFLEVG, KRR,             &
   ENDIF
 
   CALL SET (ODMICRO)
+
+  PCLDROP_B = 0.
+  PIFNNC_B = 0.
 
   IBL = 0
   NFILES = 0
