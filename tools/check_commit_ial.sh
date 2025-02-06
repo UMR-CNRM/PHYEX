@@ -78,8 +78,10 @@ if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taran
   HPC=1
   gmkpack_l[default]=MIMPIIFC1805
   gmkpack_l[49t0]=IMPIIFC2018
+  gmkpack_l[49t2]=IMPIIFCI2302DP
   gmkpack_o[default]=2y
   gmkpack_o[49t0]=x
+  gmkpack_o[49t2]=y
   defaultMainPackVersion=01
   defaultRef='split_${cycle}'
   availTests="${availTests},big_3D"
@@ -87,8 +89,10 @@ else
   HPC=0
   gmkpack_l[default]=MPIGFORTRAN920DBL
   gmkpack_l[49t0]=OMPIGFORT920DBL
+  gmkpack_l[49t2]=OMPIGFORT920DBL
   gmkpack_o[default]=xfftw
   gmkpack_o[49t0]=x
+  gmkpack_o[49t2]=x
   defaultMainPackVersion=01
   defaultRef='split_${cycle}'
 fi
@@ -127,6 +131,9 @@ function usage {
   echo "The cycle will be guessed from the source code"
   echo
   echo "The -f flag (full recompilation) is active only at pack creation"
+  echo
+  echo "The PHYEXROOTPACK environment variable, if set, is used as the argument"
+  echo "of the --rootpack option of ial-git2pack, for incremental packs."
 }
 
 packcreation=0
@@ -329,7 +336,66 @@ if [ $packcreation -eq 1 ]; then
 
   export GMKTMP=/dev/shm
 
-  if [ $fullcompilation == 0 ]; then
+  if [ $cycle == '49t2' ]; then
+    if ! which ial-git2pack > /dev/null 2>&1; then
+      echo "ial-git2pack not found, please install it"
+      exit 7
+    fi
+    #Pack creation using ial-git2pack
+    tmpbuilddir=$(mktemp -d)
+    trap "\rm -rf $tmpbuilddir" EXIT
+    cd $tmpbuilddir
+    git clone $(ial_version_content2key IALrepo git@github.com:ACCORD-NWP/IAL.git)
+    cd IAL
+    git checkout $(ial_version_content2key IALcommit 'XXXXXXX')
+    IALbundle_tag=$(ial_version_content2key IALbundle_tag '')
+    [ "$IALbundle_tag" != "" ] && IALbundle_tag="--hub_bundle_tag $IALbundle_tag"
+    ROOTPACKopt=""
+    if [ $fullcompilation == 0 ]; then
+      kind=incr
+      if [ "$PHYEXROOTPACK" != "" ]; then
+        ROOTPACKopt="--rootpack $PHYEXROOTPACK"
+      fi
+    else
+      kind=main
+    fi
+    echo y | ial-git2pack -l ${gmkpack_l} -o ${gmkpack_o} -t $kind -n 10 \
+                          -r $tmpbuilddir/IAL -p masterodb \
+                          $ROOTPACKopt \
+                          --homepack $tmpbuilddir/pack $IALbundle_tag
+
+    #Moving
+    oldname=$(echo $tmpbuilddir/pack/*)
+    mv $oldname $HOMEPACK/$name
+    for file in $HOMEPACK/$name/ics_*; do
+      sed -i "s*$oldname*$HOMEPACK/$name*g" $file
+    done
+    rm -rf $tmpbuilddir
+
+    #Workarounds for 49t2 compilation
+    cd $HOMEPACK/$name
+    rm -rf src/local/obstat src/local/oopsifs
+    rm -rf hub/local/src/Atlas hub/local/src/OOPS hub/local/src/ecSDK/?ckit
+    if [ $fullcompilation != 0 ]; then
+      gmkfile=$HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
+      for key in REPRO48 WITH_ODB WITHOUT_ECFLOW; do
+        if ! grep "^MACROS_FRT" $gmkfile | grep -e -D$key; then
+          sed -i "/^MACROS_FRT/s/$/ -D$key/" $gmkfile
+        fi
+      done
+      if ! grep "^GMK_CMAKE_ectrans" $gmkfile | grep -e -DENABLE_ETRANS=ON; then
+        sed -i "/^GMK_CMAKE_ectrans/s/$/ -DENABLE_ETRANS=ON/" $gmkfile
+      fi
+      reftree='local'
+    else
+      reftree='main'
+    fi
+
+    #Prepare PHYEX inclusion
+    rm -rf src/local/phyex
+    mkdir src/local/phyex
+  elif [ $fullcompilation == 0 ]; then
+    #Incremental compilation old style
     basepack=${cycle}_main.01.${gmkpack_l}.${gmkpack_o}
     #[ $HPC -eq 0 -a ! -d $ROOTPACK/$basepack ] &&  getpack $basepack
     gmkpack -r ${cycle} -b phyex -v $mainPackVersion -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb \
@@ -337,6 +403,7 @@ if [ $packcreation -eq 1 ]; then
             -u $name
     reftree='main'
   else
+    #Main pack creation old style
     if [ $(echo $cycle | cut -c 1-2) -ne 48 ]; then
       hub='-K'
     else
@@ -457,13 +524,17 @@ if [ $packcreation -eq 1 ]; then
     #compilation).
     if [ $fullcompilation == 0 ]; then
       #Content is added in the ics_masterodb script
-      sed -i "/^end_of_ignored_files/i $(first=1; for line in $(cat PHYEX/gmkpack_ignored_files); do echo -n $(test $first -ne 1 && echo \\n)${line}; first=0; done)" $HOMEPACK/$name/ics_masterodb
+      if [ $(wc -l PHYEX/gmkpack_ignored_files) != 0 ]; then
+        sed -i "/^end_of_ignored_files/i $(first=1; for line in $(cat PHYEX/gmkpack_ignored_files); do echo -n $(test $first -ne 1 && echo \\n)${line}; first=0; done)" $HOMEPACK/$name/ics_masterodb
+      fi
     else
       #Files must be suppressed (non phyex files)
       for file in $(cat PHYEX/gmkpack_ignored_files); do
         [ -f $HOMEPACK/$name/src/local/$file ] && rm -f $HOMEPACK/$name/src/local/$file
       done
-      [ ! "$(ls -A $HOMEPACK/$name/src/local/mpa/dummy)" ] && rmdir $HOMEPACK/$name/src/local/mpa/dummy
+      if [ -d $HOMEPACK/$name/src/local/mpa/dummy ]; then
+        [ ! "$(ls -A $HOMEPACK/$name/src/local/mpa/dummy)" ] && rmdir $HOMEPACK/$name/src/local/mpa/dummy
+      fi
     fi
   fi
 
@@ -581,7 +652,11 @@ if [ $check -eq 1 ]; then
   filestocheck=""
   for t in $(echo $tests | sed 's/,/ /g'); do
     if echo $t | grep 'small' > /dev/null; then
-      filestocheck="$filestocheck ${t},conf_tests/$t/ICMSHFPOS+0002:00 ${t},conf_tests/$t/DHFDLFPOS+0002"
+      if [ $cycle == '49t2' ]; then
+        filestocheck="$filestocheck ${t},conf_tests/$t/ICMSHFPOS+0002:00"
+      else
+        filestocheck="$filestocheck ${t},conf_tests/$t/ICMSHFPOS+0002:00 ${t},conf_tests/$t/DHFDLFPOS+0002"
+      fi
     else
       filestocheck="$filestocheck ${t},conf_tests/$t/NODE.001_01"
     fi
