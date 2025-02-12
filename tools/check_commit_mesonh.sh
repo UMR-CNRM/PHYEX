@@ -26,7 +26,7 @@ set -o pipefail #abort if left command on a pipe fails
 # - defaultTest is the list of tests to perform when no '-t' option is provided on the command line.
 ALLTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, 007_16janvier/008_run2_lredf, 
           COLD_BUBBLE/002_mesonh, ARMLES/RUN, COLD_BUBBLE_3D/002_mesonh,OCEAN_LES/004_run2,014_LIMA/002_mesonh"
-defaultTest="014_LIMA/002_mesonh"
+defaultTest="007_16janvier/008_run2"
 allowedTests=$ALLTests
 
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
@@ -36,6 +36,7 @@ PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 MNHPACK=${MNHPACK:=$HOME/MESO-NH/PHYEX}
 TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
+TARGZDIR=/cnrm/phynh/data1/rodierq/MESONH/
 
 ################################
 #### COMMAND LINE ARGUMENTS ####
@@ -151,7 +152,6 @@ if [ -z "${commit-}" ]; then
   exit 2
 fi
 
-echo "read arguments OK"
 ##############################
 #### FUNCTION DEFINITIONS ####
 ##############################
@@ -185,7 +185,6 @@ function mvdiff {
     fi
   fi
 }
-echo "function definitions OK"
 
 ###################################
 #### VERSION/COMMIT ADAPTATION ####
@@ -208,7 +207,6 @@ else
   else
     urlcommit=$commit
   fi
-  echo $PHYEXREPOuser ${urlcommit} $mesonh_version_file
   content_mesonh_version=$(wget --no-proxy --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$mesonh_version_file -O - 2>/dev/null || echo "")
 fi
 if [ ! "${content_mesonh_version}" == "" ]; then
@@ -232,12 +230,9 @@ if [ $refversion == "MNH-V5-5-0" ]; then
 else
   targzsuffix=""
 fi
-refversion="MNH-V5-7-1"
 tag=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
 name=${refversion}-$tag
 [ $suppress -eq 1 -a -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
-
-echo "commit adaptation user OK"
 
 #Name and directory for the reference version
 declare -A refnameByTest
@@ -269,15 +264,11 @@ for t in $(echo $ALLTests | sed 's/,/ /g'); do
   refnameByTest[$t]=$refname
 done
 
-echo "commit adaptation ref OK"
-
 if [ -z "${tests-}" ]; then
   tests=$defaultTest
 elif echo "$tests" | grep -w 'ALL' > /dev/null; then
   tests=$(echo "$tests" | sed "s:\bALL\b:$ALLTests:g")
 fi
-
-echo "commit adaptation OK"
 
 #######################
 #### PACK CREATION ####
@@ -417,8 +408,6 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
   fi
 fi
 
-echo "pack creation OK"
-
 #####################
 #### COMPILATION ####
 #####################
@@ -441,8 +430,6 @@ if [ $compilation -eq 1 ]; then
     command -v module && module load $modulelist #restore loaded modules
   fi
 fi
-
-echo "compilation OK"
 
 ###################
 #### EXECUTION ####

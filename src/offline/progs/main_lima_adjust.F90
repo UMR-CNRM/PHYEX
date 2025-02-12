@@ -218,7 +218,7 @@ DO ITIME = 1, NTIME
                            PHYEX%NEBN%LSUBG_COND, PHYEX%NEBN%LSIGMAS, PHYEX%MISC%PTSTEP, ZSIGQSAT (:, IBL), &
                            PRHODREF(:, :, IBL), PRHODJ(:, :, IBL), PEXNREF(:, :, IBL), PSIGS(:, :, IBL), &
                            PHYEX%MISC%LMFCONV, PMFCONV(:, :, IBL), &
-                           PPABSM(:, :, IBL), PPABSM(:, :, IBL), ZZZ(:, :, IBL), .TRUE., PDTHRAD(:, :, IBL), PW_NU(:, :, IBL), &
+                           PPABSM(:, :, IBL), ZZZ(:, :, IBL), .TRUE., PDTHRAD(:, :, IBL), PW_NU(:, :, IBL), &
                            PRT(:, :, :, IBL), PRS(:, :, :, IBL), PSVT(:, :, :, IBL), PSVS(:, :, :, IBL), &
                            PTHS(:, :, IBL), PHYEX%MISC%OCOMPUTE_SRC, PSRCS(:, :, IBL), PCLDFR(:, :, IBL), PICEFR(:, :, IBL), &
                            PRC_MF(:, :, IBL), PRI_MF(:, :, IBL), PCF_MF(:, :, IBL) &
