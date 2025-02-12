@@ -449,7 +449,6 @@ ZVEC2(:)=0.
 IVEC1(:)=0
 IVEC2(:)=0
 WHERE( GDRY(:) )
-!
    ZVEC1(:) = PLBDC(:)
    ZVEC2(:) = MAX( 1.0001, MIN( REAL(LIMAM%NGAMINC)-0.0001,           &
                          LIMAM%XHMLINTP1 * LOG( ZVEC1(:) ) + LIMAM%XHMLINTP2 ) )
@@ -458,13 +457,12 @@ WHERE( GDRY(:) )
    ZVEC1(:) =   LIMAM%XGAMINC_HMC( IVEC2(:)+1 )* ZVEC2(:)      &
                     - LIMAM%XGAMINC_HMC( IVEC2(:)   )*(ZVEC2(:) - 1.0)
    ZZX(:) = ZVEC1(:) ! Large droplets
-!
-   WHERE ( ZZX(:)<0.99 ) ! Dry case
-      P_CI_HMG(:) = ZZW1(:)*(PCCT(:)/PRCT(:))*(1.0-ZZX(:))*LIMAM%XHM_FACTG*  &
-                        MAX( 0.0, MIN( (PT(:)-LIMAM%XHMTMIN)/3.0,(LIMAM%XHMTMAX-PT(:))/2.0 ) )
-      P_RI_HMG(:) = P_CI_HMG(:) * LIMAC%XMNU0
-      P_RG_HMG(:) = - P_RI_HMG(:)
-   END WHERE
+END WHERE
+WHERE ( GDRY(:) .AND. ZZX(:)<0.99 ) ! Dry case
+   P_CI_HMG(:) = ZZW1(:)*(PCCT(:)/PRCT(:))*(1.0-ZZX(:))*LIMAM%XHM_FACTG*  &
+        MAX( 0.0, MIN( (PT(:)-LIMAM%XHMTMIN)/3.0,(LIMAM%XHMTMAX-PT(:))/2.0 ) )
+   P_RI_HMG(:) = P_CI_HMG(:) * LIMAC%XMNU0
+   P_RG_HMG(:) = - P_RI_HMG(:)
 END WHERE
 !
 !

@@ -88,61 +88,52 @@ P_RS_DEPS(:) = 0.
 !
 ! Looking for regions where computations are necessary
 GMICRO(:) = ODCOMPUTE(:) .AND. PRST(:)>LIMAP%XRTMIN(5)
+IF (LIMAP%NMOM_I.GE.2) GMICRO(:) = GMICRO(:) .AND. PCST(:)>LIMAP%XCTMIN(5)
 !
 IF (LIMAP%NMOM_I.EQ.1) THEN
-   WHERE( GMICRO )
 !
 ! Deposition of water vapor on r_s: RVDEPS
 !
-      ZZW(:) = 0.0
-      WHERE ( PRST(:)>LIMAP%XRTMIN(5) )
-         ZZW(:) = PCST(:) * PSSI(:) / PAI(:) * &
-              ( LIMAC%X0DEPS*PLBDS(:)**LIMAC%XEX0DEPS +             &
-                LIMAC%X1DEPS*PLBDS(:)**LIMAC%XEX1DEPS *PCJ(:) *     &
-                     (1+0.5*(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEX1DEPS/LIMAP%XALPHAS) )
-         ZZW(:) =    ZZW(:)*(0.5+SIGN(0.5,ZZW(:))) - ABS(ZZW(:))*(0.5-SIGN(0.5,ZZW(:)))
-      END WHERE
+   ZZW(:) = 0.0
+   WHERE( GMICRO )
+      ZZW(:) = PCST(:) * PSSI(:) / PAI(:) * &
+           ( LIMAC%X0DEPS*PLBDS(:)**LIMAC%XEX0DEPS +             &
+           LIMAC%X1DEPS*PLBDS(:)**LIMAC%XEX1DEPS *PCJ(:) *     &
+           (1+0.5*(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEX1DEPS/LIMAP%XALPHAS) )
+      ZZW(:) =    ZZW(:)*(0.5+SIGN(0.5,ZZW(:))) - ABS(ZZW(:))*(0.5-SIGN(0.5,ZZW(:)))
       P_RS_DEPS(:) = ZZW(:)
    END WHERE
 ELSE
-   WHERE( GMICRO )
 !
 !*       2.1    Conversion of snow to r_i: RSCNVI
 !        ----------------------------------------
 !
+   ZZW2(:) = 0.0
+   ZZW(:) = 0.0
+   WHERE ( GMICRO .AND. PLBDS(:)<LIMAC%XLBDASCNVI_MAX .AND. PSSI(:)<0.0 )
+      ZZW(:) = (PLBDS(:)*LIMAC%XDSCNVI_LIM)**(LIMAP%XALPHAS)
+      ZZX(:) = ( -PSSI(:)/PAI(:) ) * PCST(:) * (ZZW(:)**LIMAP%XNUS) * EXP(-ZZW(:))
 !
-      ZZW2(:) = 0.0
-      ZZW(:) = 0.0
-      WHERE ( PLBDS(:)<LIMAC%XLBDASCNVI_MAX .AND. PRST(:)>LIMAP%XRTMIN(5) .AND. PCST(:)>LIMAP%XCTMIN(5) &
-                                      .AND. PSSI(:)<0.0                               )
-         ZZW(:) = (PLBDS(:)*LIMAC%XDSCNVI_LIM)**(LIMAP%XALPHAS)
-         ZZX(:) = ( -PSSI(:)/PAI(:) ) * PCST(:) * (ZZW(:)**LIMAP%XNUS) * EXP(-ZZW(:))
+      ZZW(:) = ( LIMAC%XR0DEPSI+LIMAC%XR1DEPSI*PCJ(:) )*ZZX(:)
 !
-         ZZW(:) = ( LIMAC%XR0DEPSI+LIMAC%XR1DEPSI*PCJ(:) )*ZZX(:)
-!
-         ZZW2(:)= ( LIMAC%XC0DEPSI+LIMAC%XC1DEPSI*PCJ(:) )*ZZX(:)
-      END WHERE
-!
+      ZZW2(:)= ( LIMAC%XC0DEPSI+LIMAC%XC1DEPSI*PCJ(:) )*ZZX(:)
       P_RI_CNVI(:) = ZZW(:)
       P_CI_CNVI(:) = ZZW2(:)
-!
+   END WHERE
 !
 !*       2.2    Deposition of water vapor on r_s: RVDEPS
 !        -----------------------------------------------
 !
-!
       ZZW(:) = 0.0
-      WHERE ( PRST(:)>LIMAP%XRTMIN(5) .AND. PCST(:)>LIMAP%XCTMIN(5) )
+      WHERE ( GMICRO )
          ZZW(:) = ( PCST(:)*PSSI(:)/PAI(:) ) *     &
               ( LIMAC%X0DEPS*PLBDS(:)**LIMAC%XEX0DEPS +        &
               ( LIMAC%X1DEPS*PCJ(:)*PLBDS(:)**LIMAC%XEX1DEPS * &
                    (1+0.5*(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEX1DEPS/LIMAP%XALPHAS)) )
          ZZW(:) =    ZZW(:)*(0.5+SIGN(0.5,ZZW(:))) - ABS(ZZW(:))*(0.5-SIGN(0.5,ZZW(:)))
+         P_RS_DEPS(:) = ZZW(:)
       END WHERE
-!
-      P_RS_DEPS(:) = ZZW(:)
 ! 
-   END WHERE
 END IF
 !
 IF (LHOOK) CALL DR_HOOK('LIMA_SNOW_DEPOSITION', 1, ZHOOK_HANDLE)

@@ -105,100 +105,94 @@ P_CI_CNVS(:) = 0.
 ! Looking for regions where computations are necessary
 !
 GMICRO(:) = ODCOMPUTE(:) .AND. PRIT(:)>LIMAP%XRTMIN(4)
+IF (LIMAP%NMOM_I.GE.2) GMICRO(:) = GMICRO(:) .AND. PCIT(:)>LIMAP%XCTMIN(4)
 !
-!
+ZZW(:) = 0.0
+ZZW2(:) = 0.0
 IF (LIMAP%NMOM_I.EQ.1) THEN
-   WHERE( GMICRO )
 !
 !*       Conversion of pristine ice to r_s: RICNVS
 !        -----------------------------------------
 !
+   WHERE( GMICRO )
       ZCRIAUTI(:)=MIN(0.2E-4,10**(0.06*(PT(:)-CST%XTT)-3.5))
-      ZZW(:) = 0.0
-      WHERE ( (PRIT(:)>LIMAP%XRTMIN(4)))
-         ZZW(:)   = 1.E-3 * EXP( 0.015*(PT(:)-CST%XTT) ) * MAX( PRIT(:)-ZCRIAUTI(:),0.0 )
-      END WHERE
-!
+      ZZW(:)   = 1.E-3 * EXP( 0.015*(PT(:)-CST%XTT) ) * MAX( PRIT(:)-ZCRIAUTI(:),0.0 )
       P_RI_CNVS(:) = - ZZW(:)
    END WHERE
 ELSE
-  IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
-   WHERE( GMICRO )
+   IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
 !
 !*       Deposition of water vapor on r_i: RVDEPI
 !        ----------------------------------------
 !
-      ZZW(:) = 0.0
-      WHERE ( (PRIT(:)>LIMAP%XRTMIN(4)) .AND. (PCIT(:)>LIMAP%XCTMIN(4)) )
+      WHERE( GMICRO )
          ZZW(:) = ( PSSI(:) / PAI(:) ) * PCIT(:) *        &
               ( LIMAC%X0DEPI/PLBDI(:)+LIMAC%X2DEPI*PCJ(:)*PCJ(:)/PLBDI(:)**(LIMAC%XDI+2.0) )
+         P_RI_DEPI(:) = ZZW(:)
       END WHERE
-      P_RI_DEPI(:) = ZZW(:)
 !
 !*       Conversion of pristine ice to r_s: RICNVS
 !        -----------------------------------------
 !
       ZZW(:) = 0.0
       ZZW2(:) = 0.0
-      WHERE ( (PLBDI(:)<LIMAC%XLBDAICNVS_LIM) .AND. (PCIT(:)>LIMAP%XCTMIN(4)) &
-                                        .AND. (PSSI(:)>0.0)       )
+      WHERE ( GMICRO .AND. PLBDI(:)<LIMAC%XLBDAICNVS_LIM .AND. PSSI(:)>0.0 )
          ZZW(:) = (PLBDI(:)*LIMAC%XDICNVS_LIM)**(LIMAP%XALPHAI)
          ZZX(:) = (PSSI(:)/PAI(:))*PCIT(:) * (ZZW(:)**LIMAP%XNUI) *EXP(-ZZW(:))
 !
          ZZW(:) = (LIMAC%XR0DEPIS + LIMAC%XR1DEPIS*PCJ(:))*ZZX(:)                             
 !
          ZZW2(:) = ZZW(:) * (LIMAC%XC0DEPIS+LIMAC%XC1DEPIS*PCJ(:)) / (LIMAC%XR0DEPIS+LIMAC%XR1DEPIS*PCJ(:))
+         P_RI_CNVS(:) = - ZZW(:)
+         P_CI_CNVS(:) = - ZZW2(:)
       END WHERE
-      P_RI_CNVS(:) = - ZZW(:)
-      P_CI_CNVS(:) = - ZZW2(:)
-   END WHERE
-  ELSE ! LCRYSTAL_SHAPE
+   ELSE ! LCRYSTAL_SHAPE
 !
 !*       Deposition of water vapor on r_i: RVDEPI
 !        ----------------------------------------
-    ALLOCATE(ZRIT_SHAPE(SIZE(PRHODREF),LIMAP%NNB_CRYSTAL_SHAPE))
-    ALLOCATE(ZLBDAI_SHAPE(SIZE(PRHODREF),LIMAP%NNB_CRYSTAL_SHAPE))
-    ! compute lambdai and ri per shape
-    CALL LIMA_SHAPE_COMPUTE_LBDA (LIMAP, LIMAC, KSIZE, PRIT, PCIT_SHAPE, &
-                                  ZRIT_SHAPE, ZLBDAI_SHAPE)
-    !
-    ! compute the deposition rate per shape
-    DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
-      ZZW(:) = 0.
-      WHERE ( GMICRO(:) .AND. (ZRIT_SHAPE(:,ISH)>LIMAP%XRTMIN(4)) .AND. (PCIT_SHAPE(:,ISH)>LIMAP%XCTMIN(4)) )
-        ZZW(:) = (PSSI(:) / PAI(:)) * PCIT_SHAPE(:,ISH) *   &
+      ALLOCATE(ZRIT_SHAPE(SIZE(PRHODREF),LIMAP%NNB_CRYSTAL_SHAPE))
+      ALLOCATE(ZLBDAI_SHAPE(SIZE(PRHODREF),LIMAP%NNB_CRYSTAL_SHAPE))
+      ! compute lambdai and ri per shape
+      CALL LIMA_SHAPE_COMPUTE_LBDA (LIMAP, LIMAC, KSIZE, PRIT, PCIT_SHAPE, &
+           ZRIT_SHAPE, ZLBDAI_SHAPE)
+      !
+      ! compute the deposition rate per shape
+      DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+         ZZW(:) = 0.
+         WHERE ( GMICRO(:) .AND. (ZRIT_SHAPE(:,ISH)>LIMAP%XRTMIN(4)) .AND. (PCIT_SHAPE(:,ISH)>LIMAP%XCTMIN(4)) )
+            ZZW(:) = (PSSI(:) / PAI(:)) * PCIT_SHAPE(:,ISH) *   &
                  (LIMAC%X0DEPI_SHAPE(ISH) / ZLBDAI_SHAPE(:,ISH) + &
-                  LIMAC%X2DEPI_SHAPE(ISH) * PCJ(:) * PCJ(:) /     &
-                  ZLBDAI_SHAPE(:,ISH)**(LIMAC%XDI_SHAPE(ISH)+2.0))
-      END WHERE
-      P_RI_DEPI(:) = P_RI_DEPI(:) + ZZW(:)
-    END DO
-    !
-    ! plates and columns can change shape
-    CALL LIMA_CHANGE_SHAPE (CST, LIMAP, KSIZE, PT, LIMAP%XCTMIN, P_RI_DEPI, PCIT_SHAPE, P_SHCI_HACH)
-    !
-    DEALLOCATE(ZRIT_SHAPE)
+                 LIMAC%X2DEPI_SHAPE(ISH) * PCJ(:) * PCJ(:) /     &
+                 ZLBDAI_SHAPE(:,ISH)**(LIMAC%XDI_SHAPE(ISH)+2.0))
+         END WHERE
+         P_RI_DEPI(:) = P_RI_DEPI(:) + ZZW(:)
+      END DO
+      !
+      ! plates and columns can change shape
+      CALL LIMA_CHANGE_SHAPE (CST, LIMAP, KSIZE, PT, LIMAP%XCTMIN, P_RI_DEPI, PCIT_SHAPE, P_SHCI_HACH)
+      !
+      DEALLOCATE(ZRIT_SHAPE)
 !
 !*       Conversion of pristine ice to r_s: RICNVS
 !        -----------------------------------------
-    DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
-      ZZW(:) = 0.0
-      ZZW2(:) = 0.0
-      WHERE ( GMICRO .AND. (ZLBDAI_SHAPE(:,ISH) < LIMAC%XLBDAICNVS_LIM) &
-                     .AND. (PCIT_SHAPE(:,ISH) > LIMAP%XCTMIN(4))        &
-                     .AND. (PSSI(:) > 0.0) )
-        ZZW(:) = (ZLBDAI_SHAPE(:,ISH) * LIMAC%XDICNVS_LIM)**(LIMAP%XALPHAI)
-        ZZX(:) = (PSSI(:) / PAI(:)) * PCIT_SHAPE(:,ISH) * (ZZW(:)**LIMAP%XNUI) * EXP(-ZZW(:))
-        ZZW(:) = (LIMAC%XR0DEPIS_SHAPE(ISH) + LIMAC%XR1DEPIS_SHAPE(ISH) * PCJ(:)) * ZZX(:)                             
-        !
-        ZZW2(:) = ZZW(:) * (LIMAC%XC0DEPIS_SHAPE(ISH) + LIMAC%XC1DEPIS_SHAPE(ISH) * PCJ(:)) / &
-                           (LIMAC%XR0DEPIS_SHAPE(ISH) + LIMAC%XR1DEPIS_SHAPE(ISH) * PCJ(:))
-      END WHERE
-      P_RI_CNVS(:)       = P_RI_CNVS(:) - ZZW(:)
-      P_SHCI_CNVS(:,ISH) = - ZZW2(:)
-    END DO
-    DEALLOCATE(ZLBDAI_SHAPE)
-  ENDIF ! LCRYSTAL_SHAPE
+      DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+         ZZW(:) = 0.0
+         ZZW2(:) = 0.0
+         WHERE ( GMICRO .AND. (ZLBDAI_SHAPE(:,ISH) < LIMAC%XLBDAICNVS_LIM) &
+              .AND. (PCIT_SHAPE(:,ISH) > LIMAP%XCTMIN(4))        &
+              .AND. (PSSI(:) > 0.0) )
+            ZZW(:) = (ZLBDAI_SHAPE(:,ISH) * LIMAC%XDICNVS_LIM)**(LIMAP%XALPHAI)
+            ZZX(:) = (PSSI(:) / PAI(:)) * PCIT_SHAPE(:,ISH) * (ZZW(:)**LIMAP%XNUI) * EXP(-ZZW(:))
+            ZZW(:) = (LIMAC%XR0DEPIS_SHAPE(ISH) + LIMAC%XR1DEPIS_SHAPE(ISH) * PCJ(:)) * ZZX(:)                             
+            !
+            ZZW2(:) = ZZW(:) * (LIMAC%XC0DEPIS_SHAPE(ISH) + LIMAC%XC1DEPIS_SHAPE(ISH) * PCJ(:)) / &
+                 (LIMAC%XR0DEPIS_SHAPE(ISH) + LIMAC%XR1DEPIS_SHAPE(ISH) * PCJ(:))
+         END WHERE
+         P_RI_CNVS(:)       = P_RI_CNVS(:) - ZZW(:)
+         P_SHCI_CNVS(:,ISH) = - ZZW2(:)
+      END DO
+      DEALLOCATE(ZLBDAI_SHAPE)
+   ENDIF ! LCRYSTAL_SHAPE
 END IF
 !
 IF (LIMAP%NMOM_S.EQ.0) THEN
