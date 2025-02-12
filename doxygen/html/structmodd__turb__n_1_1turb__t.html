@@ -139,6 +139,10 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a986bf3091e0ed2728f5b04bbfd8ef74f" id="r_a986bf3091e0ed2728f5b04bbfd8ef74f"><td class="memItemLeft" align="right" valign="top">logical&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmodd__turb__n_1_1turb__t.html#a986bf3091e0ed2728f5b04bbfd8ef74f">lharat</a></td></tr>
 <tr class="memdesc:a986bf3091e0ed2728f5b04bbfd8ef74f"><td class="mdescLeft">&#160;</td><td class="mdescRight">if true RACMO turbulence is used  <br /></td></tr>
 <tr class="separator:a986bf3091e0ed2728f5b04bbfd8ef74f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7dd148f7327ef779d8ff484d7b425681" id="r_a7dd148f7327ef779d8ff484d7b425681"><td class="memItemLeft" align="right" valign="top">logical&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmodd__turb__n_1_1turb__t.html#a7dd148f7327ef779d8ff484d7b425681">lbl89top</a></td></tr>
+<tr class="memdesc:a7dd148f7327ef779d8ff484d7b425681"><td class="mdescLeft">&#160;</td><td class="mdescRight">if true modification in BL89 at PBL top <br  />
+  <br /></td></tr>
+<tr class="separator:a7dd148f7327ef779d8ff484d7b425681"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:affc15cc130343e180c86cf966b64860c" id="r_affc15cc130343e180c86cf966b64860c"><td class="memItemLeft" align="right" valign="top">logical&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmodd__turb__n_1_1turb__t.html#affc15cc130343e180c86cf966b64860c">lrmc01</a></td></tr>
 <tr class="memdesc:affc15cc130343e180c86cf966b64860c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Switch for computing separate mixing and dissipative length in the SBL according to Redelsperger, Mahe &amp; Carlotti 2001.  <br /></td></tr>
 <tr class="separator:affc15cc130343e180c86cf966b64860c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -184,6 +188,10 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:aefc2ca71462fc6c51ef9d267c03d883d" id="r_aefc2ca71462fc6c51ef9d267c03d883d"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmodd__turb__n_1_1turb__t.html#aefc2ca71462fc6c51ef9d267c03d883d">xalthgrad</a></td></tr>
 <tr class="memdesc:aefc2ca71462fc6c51ef9d267c03d883d"><td class="mdescLeft">&#160;</td><td class="mdescRight">altitude from which to apply the Leonard terms  <br /></td></tr>
 <tr class="separator:aefc2ca71462fc6c51ef9d267c03d883d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a388e1e5dfd1bcd978335993b8abf3323" id="r_a388e1e5dfd1bcd978335993b8abf3323"><td class="memItemLeft" align="right" valign="top">logical&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmodd__turb__n_1_1turb__t.html#a388e1e5dfd1bcd978335993b8abf3323">lgoger</a></td></tr>
+<tr class="separator:a388e1e5dfd1bcd978335993b8abf3323"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6268dc9cd3b6faa296af283de046d60" id="r_ab6268dc9cd3b6faa296af283de046d60"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmodd__turb__n_1_1turb__t.html#ab6268dc9cd3b6faa296af283de046d60">xsmag</a></td></tr>
+<tr class="separator:ab6268dc9cd3b6faa296af283de046d60"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a995c6e1057b8c72b566c5c1be5d8ee57" id="r_a995c6e1057b8c72b566c5c1be5d8ee57"><td class="memItemLeft" align="right" valign="top">real&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmodd__turb__n_1_1turb__t.html#a995c6e1057b8c72b566c5c1be5d8ee57">xcldthold</a></td></tr>
 <tr class="memdesc:a995c6e1057b8c72b566c5c1be5d8ee57"><td class="mdescLeft">&#160;</td><td class="mdescRight">cloud threshold to apply the Leonard terms: negative value to apply everywhere; 0.000001 applied only inside the clouds ri+rc &gt; 10**-6 kg/kg  <br /></td></tr>
 <tr class="separator:a995c6e1057b8c72b566c5c1be5d8ee57"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -256,7 +264,7 @@ Public Attributes</h2></td></tr>
 
 <p>type of Third Order Moments: 'NONE' none; 'TM06' Tomas Masson 2006 </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00083">83</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00084">84</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -310,7 +318,26 @@ Public Attributes</h2></td></tr>
 
 <p>type of length in the clouds </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00115">115</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00118">118</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+
+</div>
+</div>
+<a id="a7dd148f7327ef779d8ff484d7b425681" name="a7dd148f7327ef779d8ff484d7b425681"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7dd148f7327ef779d8ff484d7b425681">&#9670;&#160;</a></span>lbl89top</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">logical modd_turb_n::turb_t::lbl89top</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>if true modification in BL89 at PBL top <br  />
+ </p>
+
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00081">81</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -328,7 +355,7 @@ Public Attributes</h2></td></tr>
 
 <p>.TRUE. to activate modification of mixing length in clouds </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00114">114</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00117">117</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -344,7 +371,23 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00127">127</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00130">130</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+
+</div>
+</div>
+<a id="a388e1e5dfd1bcd978335993b8abf3323" name="a388e1e5dfd1bcd978335993b8abf3323"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a388e1e5dfd1bcd978335993b8abf3323">&#9670;&#160;</a></span>lgoger</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">logical modd_turb_n::turb_t::lgoger</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00104">104</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -380,7 +423,7 @@ Public Attributes</h2></td></tr>
 
 <p>logical switch for the computation of the Leornard Terms </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00099">99</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00100">100</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -398,7 +441,7 @@ Public Attributes</h2></td></tr>
 
 <p>project the rt tendency on rc/ri </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00109">109</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00112">112</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -416,7 +459,7 @@ Public Attributes</h2></td></tr>
 
 <p>Switch for computing separate mixing and dissipative length in the SBL according to Redelsperger, Mahe &amp; Carlotti 2001. </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00081">81</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00082">82</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -434,7 +477,7 @@ Public Attributes</h2></td></tr>
 
 <p>.TRUE. to rotate wind components </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00107">107</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00110">110</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -470,7 +513,7 @@ Public Attributes</h2></td></tr>
 
 <p>.TRUE. to smooth prandtl functions </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00110">110</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00113">113</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -486,7 +529,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00128">128</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00131">131</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -504,7 +547,7 @@ Public Attributes</h2></td></tr>
 
 <p>set a minimum value for the TKE in the turbulence scheme </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00108">108</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00111">111</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -556,7 +599,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00126">126</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00129">129</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -574,7 +617,7 @@ Public Attributes</h2></td></tr>
 
 <p>number of time-splitting for turb_hor </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00113">113</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00116">116</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -592,7 +635,7 @@ Public Attributes</h2></td></tr>
 
 <p>altitude from which to apply the Leonard terms </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00102">102</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00103">103</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -608,7 +651,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00112">112</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00115">115</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -663,7 +706,7 @@ Public Attributes</h2></td></tr>
 
 <p>Cloud Entrainment instability index to emphasize localy. </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00124">124</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00127">127</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -681,7 +724,7 @@ Public Attributes</h2></td></tr>
 
 <p>maximum threshold for the instability index CEI </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00122">122</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00125">125</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -699,7 +742,7 @@ Public Attributes</h2></td></tr>
 
 <p>minimum threshold for the instability index CEI </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00120">120</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00123">123</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -789,7 +832,7 @@ Public Attributes</h2></td></tr>
 
 <p>cloud threshold to apply the Leonard terms: negative value to apply everywhere; 0.000001 applied only inside the clouds ri+rc &gt; 10**-6 kg/kg </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00103">103</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00106">106</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -807,7 +850,7 @@ Public Attributes</h2></td></tr>
 
 <p>saturation of the amplification coefficient </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00119">119</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00122">122</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -825,7 +868,7 @@ Public Attributes</h2></td></tr>
 
 <p>coeff applied to mixing ratio contribution </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00101">101</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00102">102</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -843,7 +886,7 @@ Public Attributes</h2></td></tr>
 
 <p>coeff applied to thl contribution </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00100">100</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00101">101</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -933,7 +976,7 @@ Public Attributes</h2></td></tr>
 
 <p>Dissipation of Kinetic energy. </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00093">93</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00094">94</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -951,7 +994,7 @@ Public Attributes</h2></td></tr>
 
 <p>Dynamical production of Kinetic energy. </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00090">90</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00091">91</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -987,7 +1030,7 @@ Public Attributes</h2></td></tr>
 
 <p>Mixing length. </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00094">94</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00095">95</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -1005,7 +1048,7 @@ Public Attributes</h2></td></tr>
 
 <p>initial value for BL mixing length </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00106">106</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00109">109</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -1023,7 +1066,23 @@ Public Attributes</h2></td></tr>
 
 <p>minimum value for SIGS computed by the turbulence scheme </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00111">111</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00114">114</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+
+</div>
+</div>
+<a id="ab6268dc9cd3b6faa296af283de046d60" name="ab6268dc9cd3b6faa296af283de046d60"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab6268dc9cd3b6faa296af283de046d60">&#9670;&#160;</a></span>xsmag</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">real modd_turb_n::turb_t::xsmag</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00105">105</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -1041,7 +1100,7 @@ Public Attributes</h2></td></tr>
 
 <p>O-A interface flux for vapor. </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00098">98</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00099">99</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -1059,7 +1118,7 @@ Public Attributes</h2></td></tr>
 
 <p>O-A interface flux for theta. </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00097">97</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00098">98</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -1077,7 +1136,7 @@ Public Attributes</h2></td></tr>
 
 <p>O-A interface flux for u. </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00095">95</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00096">96</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -1095,7 +1154,7 @@ Public Attributes</h2></td></tr>
 
 <p>O-A interface flux for v. </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00096">96</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00097">97</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -1113,7 +1172,7 @@ Public Attributes</h2></td></tr>
 
 <p>Thermal production of Kinetic energy. </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00091">91</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00092">92</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -1150,7 +1209,7 @@ Public Attributes</h2></td></tr>
 
 <p>Transport production of Kinetic energy. </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00092">92</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00093">93</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>
@@ -1168,7 +1227,7 @@ Public Attributes</h2></td></tr>
 
 <p>exponent on final BL89 length </p>
 
-<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00112">112</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="modd__turbn_8F90_source.html#l00115">115</a> of file <a class="el" href="modd__turbn_8F90_source.html">modd_turbn.F90</a>.</p>
 
 </div>
 </div>

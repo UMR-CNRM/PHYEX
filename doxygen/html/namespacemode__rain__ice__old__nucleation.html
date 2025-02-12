@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a8d362034be1352064b9ab5f124183d28" id="r_a8d362034be1352064b9ab5f124183d28"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__rain__ice__old__nucleation.html#a8d362034be1352064b9ab5f124183d28">rain_ice_old_nucleation</a> (d, cst, icep, ksize, ocnd2, lmodicedep, krr, ptstep, ptht, ppabst, pexnref, picldfr, prhodj, prhodref, prvt, prct, prrt, prit, prst, prgt, pths, prvs, pris, pcit, picenu, pt, pzzz, prht)</td></tr>
-<tr class="separator:a8d362034be1352064b9ab5f124183d28"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfb0f437a9019a341a02e1a9749b1b6d" id="r_adfb0f437a9019a341a02e1a9749b1b6d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__rain__ice__old__nucleation.html#adfb0f437a9019a341a02e1a9749b1b6d">rain_ice_old_nucleation</a> (d, cst, icep, ksize, ocnd2, lmodicedep, krr, ptstep, ptht, ppabst, pexnref, picldfr, prhodj, prhodref, prvt, prct, prrt, prit, prst, prgt, oaeronrt, oaeifn, pifnnc, pths, prvs, pris, pcit, picenu, pt, pzzz, prht)</td></tr>
+<tr class="separator:adfb0f437a9019a341a02e1a9749b1b6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a8d362034be1352064b9ab5f124183d28" name="a8d362034be1352064b9ab5f124183d28"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8d362034be1352064b9ab5f124183d28">&#9670;&#160;</a></span>rain_ice_old_nucleation()</h2>
+<a id="adfb0f437a9019a341a02e1a9749b1b6d" name="adfb0f437a9019a341a02e1a9749b1b6d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adfb0f437a9019a341a02e1a9749b1b6d">&#9670;&#160;</a></span>rain_ice_old_nucleation()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -211,6 +211,24 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">logical, intent(in)&#160;</td>
+          <td class="paramname"><em>oaeronrt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in)&#160;</td>
+          <td class="paramname"><em>oaeifn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nit, d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>pifnnc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(d%nit, d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>pths</em>, </td>
         </tr>
@@ -268,8 +286,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__rain__ice__old__nucleation_a8d362034be1352064b9ab5f124183d28_cgraph.png" border="0" usemap="#anamespacemode__rain__ice__old__nucleation_a8d362034be1352064b9ab5f124183d28_cgraph" alt=""/></div>
-<map name="anamespacemode__rain__ice__old__nucleation_a8d362034be1352064b9ab5f124183d28_cgraph" id="anamespacemode__rain__ice__old__nucleation_a8d362034be1352064b9ab5f124183d28_cgraph">
+<div class="center"><img src="namespacemode__rain__ice__old__nucleation_adfb0f437a9019a341a02e1a9749b1b6d_cgraph.png" border="0" usemap="#anamespacemode__rain__ice__old__nucleation_adfb0f437a9019a341a02e1a9749b1b6d_cgraph" alt=""/></div>
+<map name="anamespacemode__rain__ice__old__nucleation_adfb0f437a9019a341a02e1a9749b1b6d_cgraph" id="anamespacemode__rain__ice__old__nucleation_adfb0f437a9019a341a02e1a9749b1b6d_cgraph">
 <area shape="rect" title=" " alt="" coords="5,133,224,173"/>
 <area shape="rect" href="namespacemode__tiwmx.html#a3fca56866cfbdb8d0f02ca280e640f01" title=" " alt="" coords="277,29,421,55"/>
 <area shape="poly" title=" " alt="" coords="147,130,204,97,271,64,288,57,290,62,273,68,206,102,149,135"/>
@@ -288,10 +306,10 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__rain__ice__old__nucleation_a8d362034be1352064b9ab5f124183d28_icgraph.png" border="0" usemap="#anamespacemode__rain__ice__old__nucleation_a8d362034be1352064b9ab5f124183d28_icgraph" alt=""/></div>
-<map name="anamespacemode__rain__ice__old__nucleation_a8d362034be1352064b9ab5f124183d28_icgraph" id="anamespacemode__rain__ice__old__nucleation_a8d362034be1352064b9ab5f124183d28_icgraph">
+<div class="center"><img src="namespacemode__rain__ice__old__nucleation_adfb0f437a9019a341a02e1a9749b1b6d_icgraph.png" border="0" usemap="#anamespacemode__rain__ice__old__nucleation_adfb0f437a9019a341a02e1a9749b1b6d_icgraph" alt=""/></div>
+<map name="anamespacemode__rain__ice__old__nucleation_adfb0f437a9019a341a02e1a9749b1b6d_icgraph" id="anamespacemode__rain__ice__old__nucleation_adfb0f437a9019a341a02e1a9749b1b6d_icgraph">
 <area shape="rect" title=" " alt="" coords="153,5,372,45"/>
-<area shape="rect" href="rain__ice__old_8F90.html#a2b31c921680902e114fc7135ac4eb78e" title=" " alt="" coords="5,13,105,38"/>
+<area shape="rect" href="rain__ice__old_8F90.html#adf4e515ca269f0cda01808d8d487e856" title=" " alt="" coords="5,13,105,38"/>
 <area shape="poly" title=" " alt="" coords="139,28,105,28,105,23,139,23"/>
 </map>
 </div>

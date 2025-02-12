@@ -73,13 +73,13 @@ $(function() {
   <div class="headertitle"><div class="title">INSTALLATION NEEDED FOR MESONH COMPILATION WITH PHYEX</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md96"></a> </p>
-<h1><a class="anchor" id="autotoc_md97"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md86"></a> </p>
+<h1><a class="anchor" id="autotoc_md87"></a>
 ABOUT THIS DOCUMENT</h1>
 <p>This document is intended for persons who want to compile the MESONH model using the PHYEX package. The installation described here is also needed in order to use the check_commit_mesonh.sh script which enable to check if a given commit reproduces a reference version.</p>
 <p>This document is written using the markdown language. With pandoc, it can be converted to HTML (pandoc -s &lt;filename&gt;.md -o &lt;filename&gt;.html) or PDF (pandoc -V geometry:landscape -s &lt;filename&gt;.md -o &lt;filename&gt;.pdf).</p>
 <p>The directory in which the repository lies is designated by the TRUNK variable. The $TRUNK dir can be put on a shared directory to share this installation among several users.</p>
-<h1><a class="anchor" id="autotoc_md98"></a>
+<h1><a class="anchor" id="autotoc_md88"></a>
 COMPILATION OF THE MASTER</h1>
 <p>An official version of Meso-Nh is installed in the pack directory:</p>
 <div class="fragment"><div class="line">cd $TRUNK/tools/pack</div>
@@ -90,7 +90,7 @@ COMPILATION OF THE MASTER</h1>
 <div class="line">. ../conf/profile_mesonh-*</div>
 <div class="line">make -j 8</div>
 <div class="line">make installmaster</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md99"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md89"></a>
 PREPROCESSING STEPS FOR THE TEST CASE</h1>
 <p>The preprocessing steps must be done at least once on the master pack:</p>
 <div class="fragment"><div class="line">cd ../MY_RUN/KTEST/007_16janvier</div>
@@ -100,14 +100,14 @@ PREPROCESSING STEPS FOR THE TEST CASE</h1>
 <div class="line">make clean</div>
 <div class="line">make #the step #10 succeed only if a isplay (X11) is available</div>
 <div class="line">     #after the error, the next steps can be executed by &quot;make E011_ncl E012_spectre&quot;</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md100"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md90"></a>
 GET A MODIFIED PACK SUITABLE FOR PHYEX</h1>
 <p>The master pack cannot be used directly to compile Meso-NH using PHYEX, the Makefile must be modified </p><div class="fragment"><div class="line">cd $TRUNK/pack</div>
 <div class="line">scp sxphynh.cnrm.meteo.fr:/home/rodierq/MNH-V5-5-0_PHYEX.tar.gz .</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md101"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md91"></a>
 MESONH COMPILATION WITH PHYEX</h1>
 <p>To compile MESONH using the PHYEX package, some manipulation is needed. The easiest way is to use the check_commit_mesonh.sh script.</p>
-<h1><a class="anchor" id="autotoc_md102"></a>
+<h1><a class="anchor" id="autotoc_md92"></a>
 COMPARISON OF SOME COMMITS</h1>
 <p>Some commits doesn't reproduce the reference commit but are comparable to the b1e20 commit. If someone is interested in compiling this commit, the argument order of the functions DZM_MF, MZM_MF, GZ_M_W_MF must be reversed in compute_bl89_ml, tridiag_massflux.f90 and shuman_mf.f90 </p>
 </div></div><!-- contents -->

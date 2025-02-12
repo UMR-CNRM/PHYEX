@@ -81,7 +81,14 @@ ABOUT THIS DOCUMENT</h1>
 <h1><a class="anchor" id="autotoc_md85"></a>
 INSTALLATIONS</h1>
 <ol type="1">
-<li>IAL REFERENCE PACK The check_commit_ial.sh script, by default, build a pack on top of a precompiled pack. This precompiled pack must be build beforehand. Instructions can be found in <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2tools_2INSTALL__pack__ial.html">INSTALL_pack_ial</a></li>
+<li><p class="startli">IAL Some packages must be installed:</p><ul>
+<li>gmkpack</li>
+<li>fypp python module: pip3 install fypp</li>
+<li>ial-build python module: pip3 install ial-build</li>
+<li>ecbundle: pip install git+https://github.com/ecmwf/ecbundle</li>
+</ul>
+<p class="startli">Note that some of these tools can be pre-installed (eg. on belenos, module use ~mary/public/modulefiles; module load IAL-build)</p>
+</li>
 <li>MESONH REFERENCE PACK The reference pack for Meso-NH must be installed. Instructions can be found in <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2tools_2INSTALL__pack__mesonh.html">INSTALL_pack_mesonh</a></li>
 <li>AUTOMATIC INSTALLATION The script INSTALL.sh (INSTALL.sh -h for help) handles the installation of:<ul>
 <li>the pyfortool tool needed by the different check_commit_*.sh scripts, depending on options used at execution.</li>
