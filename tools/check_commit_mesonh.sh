@@ -34,9 +34,8 @@ separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allerg
 
 PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-MNHPACK=${MNHPACK:=$HOME/MESO-NH/PHYEX}
+MNHPACK=${MNHPACK:=$HOME/MesoNH/PHYEX}
 TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
-TARGZDIR=/cnrm/phynh/data1/rodierq/MESONH/
 
 ################################
 #### COMMAND LINE ARGUMENTS ####
@@ -207,7 +206,7 @@ else
   else
     urlcommit=$commit
   fi
-  content_mesonh_version=$(wget --no-proxy --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$mesonh_version_file -O - 2>/dev/null || echo "")
+  content_mesonh_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$mesonh_version_file -O - 2>/dev/null || echo "")
 fi
 if [ ! "${content_mesonh_version}" == "" ]; then
   testing=$(json_dictkey2value "$content_mesonh_version" 'testing' '')

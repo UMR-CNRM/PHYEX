@@ -326,15 +326,15 @@ if [ ! "${content_testprogs_version}" == "" ]; then
   testing=$(json_dictkey2value "$content_testprogs_version" 'testing' '')
   refALL=$(json_dictkey2value "$testing" "ALL" '')
   if [ ! "$testing" == "" ]; then
-#    ALLTests='' #We reset the list of tests
+    ALLTests='' #We reset the list of tests
     for t in $(echo $allowedTests | sed 's/,/ /g'); do
       ref=$(json_dictkey2value "$testing" "$t" "$refALL")
       if [ ! "$ref" == "" ]; then
-#        ALLTests="${ALLTests},$t"
+        ALLTests="${ALLTests},$t"
         refByTest[$t]=$ref
       fi
     done
-#    ALLTests="${ALLTests:1}" #Remove first character (',')
+    ALLTests="${ALLTests:1}" #Remove first character (',')
   fi
 fi
 
