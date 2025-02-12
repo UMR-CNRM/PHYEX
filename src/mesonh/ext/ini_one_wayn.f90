@@ -107,11 +107,12 @@ USE MODD_NSV,            only: NSV_A, NSV_C1R3BEG_A, NSV_C1R3_A, NSV_C2R2BEG_A, 
 #ifdef MNH_FOREFIRE
                                NSV_FFBEG_A, NSV_FF_A, &
 #endif                                              
-                               NSV_SLTBEG_A, NSV_SLTDEPBEG_A, NSV_SLTDEP_A, NSV_SLT_A, NSV_USER_A
+                               NSV_SLTBEG_A, NSV_SLTDEPBEG_A, NSV_SLTDEP_A, NSV_SLT_A, NSV_USER_A, TNSV
 
 USE MODD_PARAM_n,        only: CCLOUD
 USE MODD_REF,            ONLY: LCOUPLES
 USE MODD_REF_n,          only: XRHODJ, XRHODREF
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 !
 use mode_bikhardt
 use mode_ll,             only: GET_CHILD_DIM_ll, GET_DIM_EXT_ll, GO_TOMODEL_ll,         &
@@ -186,6 +187,7 @@ CHARACTER(LEN=4)                         :: ZINIT_TYPE ! type of C2R2 initialisa
 REAL,    DIMENSION(:,:,:,:), ALLOCATABLE :: ZCONCM  ! C2R2 concentrations
 REAL,    DIMENSION(:,:,:,:), ALLOCATABLE :: ZCHEMM  ! chemical concentrations
 REAL,    DIMENSION(:,:,:,:), ALLOCATABLE :: ZCHEMMI  ! chemical ice phase concentrations
+TYPE(DIMPHYEX_t)    :: D
 !-------------------------------------------------------------------------------
 !
 IF (LCOUPLES) THEN
@@ -212,6 +214,9 @@ IIB=1
 IIE=IIU
 IJB=1
 IJE=IJU
+
+D%NIJT=SIZE(XRT,1)*SIZE(XRT,2)
+D%NKT=SIZE(XRT,3)
 
 ALLOCATE(ZWORK(IIB:IIE,IJB:IJE,SIZE(PLBXTHM,3)))  ! can be smaller than child extended subdomain
 ! LS_FORCING routine can not correctly manage extra halo zone
@@ -372,7 +377,7 @@ IF (HCLOUD=="LIMA"  ) THEN
       ELSE
          ZINIT_TYPE = "NONE"
       END IF
-      CALL SET_CONC_LIMA (KMI,ZINIT_TYPE,XRHODREF,XRT,ZCONCM)
+      CALL SET_CONC_LIMA (TNSV, D, SIZE(XRT,4), KMI,ZINIT_TYPE,XRHODREF,XRT,ZCONCM)
       DO JSV=1,NSV_LIMA_A(KMI)
          CALL SET_LSFIELD_1WAY_ll(ZCONCM(:,:,:,JSV),&
               &ZTSVM(:,:,:,JSV-1+NSV_LIMA_BEG_A(KMI)),KMI)

@@ -910,7 +910,7 @@ ENDIF
 !
 IF (KMI == 1) THEN
   CALL PARAM_LIMA_INIT(CPROGRAM, TFILENAM, .FALSE., TLUOUT%NLU, &
-                      &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0)
+                      &ODDEFAULTVAL=.TRUE., ODREADNAM=.FALSE., ODCHECK=.FALSE., KPRINT=0)
 ENDIF
 !
 !-------------------------------------------------------------------------------
