@@ -4,7 +4,8 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
       SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,NEBN,D,TLES,            &
-              & KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,KHALO,           &
+              & KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTSLEO,              &
+              & KGRADIENTSGOG,KHALO,                                  &
               & KSPLIT, OCLOUDMODIFLM, KSV,KSV_LGBEG,KSV_LGEND,       &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
               & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,OIBM,OFLYER,    &
@@ -14,7 +15,7 @@
               & PTSTEP,TPFILE,                                        &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
-              & PRHODJ,PTHVREF,PHGRAD,PZS,                            &
+              & PRHODJ,PTHVREF,PHGRADLEO,PHGRADGOG,PZS,               &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
               & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
@@ -297,7 +298,8 @@ TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF        ! budget structure
 TYPE(TURB_t),           INTENT(IN)   :: TURBN         ! modn_turbn (turb namelist) structure
 TYPE(NEB_t),            INTENT(IN)   :: NEBN          ! modd_nebn structure
 TYPE(TLES_t),           INTENT(INOUT)   :: TLES          ! modd_les structure
-INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
+INTEGER,                INTENT(IN)   :: KGRADIENTSLEO ! Number of stored horizontal gradients for Moeng scheme
+INTEGER,                INTENT(IN)   :: KGRADIENTSGOG ! Number of stored horizontal gradients for Goger scheme
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
@@ -338,7 +340,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PRHODJ    ! dry density * Gri
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
-REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),   INTENT(IN) ::  PHGRAD      ! horizontal gradients
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTSLEO),   INTENT(IN) ::  PHGRADLEO  ! horizontal gradients in Moeng
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTSGOG),   INTENT(IN) ::  PHGRADGOG  ! horizontal gradients in Goger
 !
 REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of theta and Rv
@@ -504,6 +507,7 @@ REAL                :: ZALPHA       ! work coefficient :
 !                                   !   BL89 mixing length near the surface
 !
 REAL :: ZTIME1, ZTIME2
+REAL :: ZDUDX, ZDVDY, ZDUDY, ZDVDX, ZK ! work values for Göger
 TYPE(TFIELDMETADATA) :: TZFIELD
 !
 REAL, DIMENSION(D%NIJT,D%NKT,MERGE(KSV+KRR,KSV,TURBN%LTURB_PRECIP)) :: ZWORKT, ZWORKS
@@ -1018,7 +1022,7 @@ IF( BUCONF%LBUDGET_SV ) THEN
 END IF
 
 CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
-          KRR,KRRL,KRRI,KGRADIENTS,                      &
+          KRR,KRRL,KRRI,KGRADIENTSLEO,                   &
           OOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
           ISV,KSV_LGBEG,KSV_LGEND,                       &
           ZEXPL, O2D, ONOMIXLG, OFLAT,                   &
@@ -1033,9 +1037,9 @@ CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
           PTKET,ZLM,PLENGTHM,PLENGTHH,ZLEPS,MFMOIST,     &
           ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,     &
           ZFWTH,ZFWR,ZFTH2,ZFR2,ZFTHR,PBL_DEPTH,         &
-          PSBL_DEPTH,ZLMO,PHGRAD,PZS,                    &
+          PSBL_DEPTH,ZLMO,PHGRADLEO,PZS,                 &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,ZWORKS,             &
-          PDP,PTP,PSIGS,PWTH,PWRC,ZWORKWSV,                  &
+          PDP,PTP,PSIGS,PWTH,PWRC,ZWORKWSV,              &
           PSSTFL, PSSTFL_C, PSSRFL_C,PSSUFL_C,PSSVFL_C,  &
           PSSUFL,PSSVFL                                  )
 
@@ -1259,7 +1263,30 @@ ELSEIF(PRESENT(PDPMF)) THEN
   PDPMF(IIJB:IIJE,1:IKT)=0.
 ENDIF
 
-!  6.2 TKE evolution equation
+!  6.2 Horizontal gradients as in Göger et al. (2016)
+
+IF (TURBN%LGOGER) THEN
+ ! Add horizontal terms from Göger  et al. (2018)
+ ! Increase the Dyn. Prod.
+  DO JK=1,IKT
+    DO JIJ=IIJB,IIJE
+      !* Computation of the horizontal mixing length
+      ZK=TURBN%XSMAG**2*PDXX(JIJ,JK)*PDYY(JIJ,JK)
+      !* Add horizontal terms
+      ! DUDX=PHGRADGOG(JIJ,JK,1)
+      ! DUDY=PHGRADGOG(JIJ,JK,2)
+      ! DVDX=PHGRADGOG(JIJ,JK,3)
+      ! DVDY=PHGRADGOG(JIJ,JK,4)
+      PDP(JIJ,JK)=PDP(JIJ,JK)+ZK*&
+                  &(PHGRADGOG(JIJ,JK,1)*PHGRADGOG(JIJ,JK,1)           &
+                  &+PHGRADGOG(JIJ,JK,4)*PHGRADGOG(JIJ,JK,4)           &
+                  &+0.5*(PHGRADGOG(JIJ,JK,2)+PHGRADGOG(JIJ,JK,3))          &
+                  &*(PHGRADGOG(JIJ,JK,2)+PHGRADGOG(JIJ,JK,3)))**(3./2.)
+    ENDDO
+  ENDDO
+ENDIF
+
+!  6.3 TKE evolution equation
 
 IF (.NOT. TURBN%LHARAT) THEN
 !
@@ -1549,8 +1576,9 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
   !
   !*      1.3 saturation  mixing ratio at t
   !
-  ZRVSAT(IIJB:IIJE,1:IKT) =  ZRVSAT(IIJB:IIJE,1:IKT) &
-                                    * ZEPS / ( PPABST(IIJB:IIJE,1:IKT) - ZRVSAT(IIJB:IIJE,1:IKT) )
+  !YS Added protection (AROME 2024-03-12 crashs)
+    ZRVSAT(IIJB:IIJE,1:IKT) =  ZRVSAT(IIJB:IIJE,1:IKT) &
+                               * ZEPS / MAX(1.E-3, PPABST(IIJB:IIJE,1:IKT) - ZRVSAT(IIJB:IIJE,1:IKT) )
   !
   !*      1.4 compute the saturation mixing ratio derivative (rvs')
   !
@@ -2060,7 +2088,9 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     NGRID      = 1,                    &
     NTYPE      = TYPEREAL,             &
     NDIMS      = 3,                    &
-    LTIMEDEP   = .TRUE.                )
+    LTIMEDEP   = .TRUE.                &
+    )
+
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZLM)
 ENDIF
 !
@@ -2095,7 +2125,8 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     NGRID      = 1,                 &
     NTYPE      = TYPEREAL,          &
     NDIMS      = 3,                 &
-    LTIMEDEP   = .TRUE.             )
+    LTIMEDEP   = .TRUE.             &
+    )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZCOEF_AMPL)
   !
   TZFIELD = TFIELDMETADATA(        &
@@ -2108,7 +2139,8 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     NGRID      = 1,                &
     NTYPE      = TYPEREAL,         &
     NDIMS      = 3,                &
-    LTIMEDEP   = .TRUE.            )
+    LTIMEDEP   = .TRUE.            &
+    )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZLM_CLOUD)
   !
 ENDIF

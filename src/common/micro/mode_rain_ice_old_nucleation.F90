@@ -12,6 +12,7 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
   SUBROUTINE RAIN_ICE_OLD_NUCLEATION(D, CST, ICEP, KSIZE, OCND2, LMODICEDEP, KRR, PTSTEP, &
                                      PTHT, PPABST, PEXNREF, PICLDFR, PRHODJ, PRHODREF, &
                                      PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
+                                     OAERONRT, OAEIFN, PIFNNC, &
                                      PTHS, PRVS, PRIS, PCIT, &
                                      PICENU, PT, PZZZ, &
                                      PRHT)
@@ -52,6 +53,9 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
     REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PRIT     ! Pristine ice m.r. at t
     REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PRST     ! Snow/aggregate m.r. at t
     REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PRGT     ! Graupel/hail m.r. at t
+    LOGICAL, INTENT(IN)                       :: OAERONRT ! Switch for nrt aerosols
+    LOGICAL, INTENT(IN)                       :: OAEIFN   ! Switch to activate ice nuclei
+    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PIFNNC   ! Ice freezing nuclei concentration
 !
     REAL, DIMENSION(D%NIT, D%NKT), INTENT(INOUT) :: PTHS ! Theta source
     REAL, DIMENSION(D%NIT, D%NKT), INTENT(INOUT) :: PRVS ! Water vapor m.r. source
@@ -127,6 +131,9 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
           ZAM3(JL) = AM3(ICEP%TIWMX, MAX(ICEP%XFRMIN(27),ZZT(JL))) ! Avoid too high IN for very low temp.
           ZREDIN(JL) = REDIN(ICEP%TIWMX, ZZT(JL))
           ZSIFRC(JL) = PICLDFR(I1(JL),I2(JL))
+        ENDIF
+        IF (OAERONRT.AND.OAEIFN) THEN
+          ZZICENU(JL)=MAX(0.01,PIFNNC(I1(JL),I2(JL))*1.0E-6) ! convert m-3 to cm-3
         ENDIF
 
       ENDDO

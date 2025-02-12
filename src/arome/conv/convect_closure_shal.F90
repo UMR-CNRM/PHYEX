@@ -85,48 +85,47 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(CONVPAR_SHAL)                         ,INTENT(IN)     :: CVP_SHAL
-TYPE(CONVPAREXT)                           ,INTENT(IN)     :: CVPEXT
-TYPE(CST_T)                                ,INTENT(IN)     :: CST
-TYPE(DIMPHYEX_T)                           ,INTENT(IN)     :: D
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PPRES  ! pressure (P)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PDPRES ! pressure difference between
-                                                 ! bottom and top of layer (Pa)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PZ     ! height of model layer (m)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PLMASS ! mass of model layer (kg)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PTHL   ! grid scale enthalpy (J/kg)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PTH    ! grid scale theta
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PRW    ! grid scale total water
+TYPE(CONVPAR_SHAL),        INTENT(IN) :: CVP_SHAL
+TYPE(CONVPAREXT),          INTENT(IN) :: CVPEXT
+TYPE(CST_T),               INTENT(IN) :: CST
+TYPE(DIMPHYEX_T),          INTENT(IN) :: D
+INTEGER, DIMENSION(D%NIT),  INTENT(IN) :: KLCL   ! index lifting condens. level
+INTEGER, DIMENSION(D%NIT),  INTENT(IN) :: KCTL   ! index for cloud top level
+INTEGER, DIMENSION(D%NIT),  INTENT(IN) :: KDPL   ! index for departure level
+INTEGER, DIMENSION(D%NIT),  INTENT(IN) :: KPBL   ! index for top of source layer
+REAL, DIMENSION(D%NIT),  INTENT(INOUT) :: PTIMEC ! convection time step
+REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PTHL   ! grid scale enthalpy (J/kg)
+REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PTH    ! grid scale theta
+REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PRW    ! grid scale total water
                                                 ! mixing ratio
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PRC    ! grid scale r_c
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PRI    ! grid scale r_i
-LOGICAL            ,DIMENSION(D%NIT)       ,INTENT(IN)     :: OTRIG1 ! logical to keep trace of
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(OUT)    :: PTHC  ! conv. adj. grid scale theta
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(OUT)    :: PRWC  ! conv. adj. grid scale r_w
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(OUT)    :: PRCC  ! conv. adj. grid scale r_c
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(OUT)    :: PRIC  ! conv. adj. grid scale r_i
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(OUT)    :: PWSUB ! envir. compensating subsidence(Pa/s)
-INTEGER            ,DIMENSION(D%NIT)       ,INTENT(IN)     :: KLCL   ! index lifting condens. level
-INTEGER            ,DIMENSION(D%NIT)       ,INTENT(IN)     :: KDPL   ! index for departure level
-INTEGER            ,DIMENSION(D%NIT)       ,INTENT(IN)     :: KPBL   ! index for top of source layer
-INTEGER            ,DIMENSION(D%NIT)       ,INTENT(IN)     :: KCTL   ! index for cloud top level
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(INOUT)  :: PUMF  ! updraft mass flux (kg/s)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(INOUT)  :: PUER  ! updraft entrainment (kg/s)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(INOUT)  :: PUDR  ! updraft detrainment (kg/s)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PUTHL  ! updraft enthalpy (J/kg)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PURW   ! updraft total water (kg/kg)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PURC   ! updraft cloud water (kg/kg)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PURI   ! updraft cloud ice   (kg/kg)
-REAL               ,DIMENSION(D%NIT)       ,INTENT(IN)     :: PCAPE  ! available potent. energy
-REAL               ,DIMENSION(D%NIT)       ,INTENT(INOUT)  :: PTIMEC ! convection time step
+REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PRC    ! grid scale r_c
+REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PRI    ! grid scale r_i
+LOGICAL, DIMENSION(D%NIT),  INTENT(IN) :: OTRIG1 ! logical to keep trace of
                                                 ! convective arrays modified in UPDRAFT
 !
 !
-INTEGER                                    ,INTENT(OUT)    :: KFTSTEPS! maximum of fract time steps
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: PPRES  ! pressure (P)
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: PDPRES ! pressure difference between
+                                                 ! bottom and top of layer (Pa)
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: PLMASS ! mass of model layer (kg)
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: PZ     ! height of model layer (m)
+REAL, DIMENSION(D%NIT),     INTENT(IN)  :: PCAPE  ! available potent. energy
+INTEGER,                INTENT(OUT)   :: KFTSTEPS! maximum of fract time steps
                                                  ! only used for chemical tracers
 !
-!
-!
+
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT):: PUMF  ! updraft mass flux (kg/s)
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT):: PUER  ! updraft entrainment (kg/s)
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT):: PUDR  ! updraft detrainment (kg/s)
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PUTHL  ! updraft enthalpy (J/kg)
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PURW   ! updraft total water (kg/kg)
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PURC   ! updraft cloud water (kg/kg)
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PURI   ! updraft cloud ice   (kg/kg)
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)  :: PTHC  ! conv. adj. grid scale theta
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)  :: PRWC  ! conv. adj. grid scale r_w
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)  :: PRCC  ! conv. adj. grid scale r_c
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)  :: PRIC  ! conv. adj. grid scale r_i
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)  :: PWSUB ! envir. compensating subsidence(Pa/s)
 !
 !*       0.2   Declarations of local variables :
 !
@@ -137,6 +136,7 @@ INTEGER :: JI             ! horizontal loop index
 INTEGER :: JITER          ! iteration loop index
 INTEGER :: JSTEP          ! fractional time loop index
 REAL    :: ZCPORD, ZRDOCP ! C_pd / R_d, R_d / C_pd
+REAL    :: ZEPS  
 !
 REAL, DIMENSION(D%NIT,D%NKT) :: ZTHLC       ! convectively adjusted
                                           ! grid scale enthalpy
@@ -168,20 +168,21 @@ INTEGER, DIMENSION(D%NIT)  :: ITSTEP       ! fractional convective time step
 INTEGER, DIMENSION(D%NIT)  :: ICOUNT       ! timestep counter
 INTEGER, DIMENSION(D%NIT)  :: ILCL         ! index lifting condens. level
 INTEGER, DIMENSION(D%NIT)  :: IWORK1       ! work array
-REAL, DIMENSION(D%NIT)     :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5
+REAL, DIMENSION(D%NIT)     :: ZWORK1, ZWORK2, ZWORK3, ZWORK5
 LOGICAL, DIMENSION(D%NIT)  :: GWORK1, GWORK3! work arrays
 LOGICAL, DIMENSION(D%NIT,D%NKT) :: GWORK4    ! work array
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
+#include "convect_closure_adjust_shal.h"
+#include "convect_closure_thrvlcl.h"
 !-------------------------------------------------------------------------------
 !
 !*       0.2    Initialize  local variables
 !               ----------------------------
 !
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
-#include "convect_closure_adjust_shal.h"
 
 IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE_SHAL',0,ZHOOK_HANDLE)
 ZTIMC(:,:) = 0.
@@ -189,12 +190,12 @@ ZTHES2(:) = 0.
 ZWORK1(:) = 0.
 ZWORK2(:) = 0.
 ZWORK3(:) = 0.
-ZWORK4(:) = 0.
 GWORK1(:) = .FALSE.
 GWORK3(:) = .FALSE.
 GWORK4(:,:) = .FALSE.
 ILCL(:)   = KLCL(:)
 !
+ZEPS      = CST%XRD / CST%XRV
 ZCPORD    = CST%XCPD / CST%XRD
 ZRDOCP    = CST%XRD / CST%XCPD
 !
@@ -244,7 +245,7 @@ DO JK = JKP, IKE
 END DO
 !
 !
-GWORK1(D%NIB:D%NIE) = OTRIG1(D%NIB:D%NIE)  ! logical array to limit adjustment to not definitively
+GWORK1(:) = OTRIG1(:)  ! logical array to limit adjustment to not definitively
                                            ! adjusted columns
 !
 DO JK = IKB, IKE
@@ -262,18 +263,16 @@ END DO
 DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
                  ! removed within the advective time interval TIMEC
 !
-     ZTIMEC(D%NIB:D%NIE) = PTIMEC(D%NIB:D%NIE)
-     DO JI=1, D%NIE
+     ZTIMEC(:) = PTIMEC(:)
      DO JK=1, IKS
-       GWORK4(JI,JK) = GWORK1(JI)
-     ENDDO
+       GWORK4(1:D%NIE,JK) = GWORK1(1:D%NIE)
      ENDDO
      DO JK = IKB, IKE
        DO JI=D%NIB, D%NIE
-       IF(GWORK4(JI,JK))PWSUB(JI,JK) = 0.
+         IF(GWORK4(JI,JK)) PWSUB(JI,JK) = 0.
        ENDDO
      END DO
-     ZOMG(D%NIB:D%NIE,1:D%NKT)=0.
+     ZOMG(:,1:D%NKT)=0.
 !
      DO JK = IKB + 1, JKMAX
            JKP = MAX( IKB + 1, JK - 1 )
@@ -341,22 +340,18 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
     DO JK = IKB, IKE
         PWSUB(:,JK) = PWSUB(:,JK) * ZWORK5(:)
     END DO
-    GWORK4(D%NIB:D%NIE,1:IKB) = .FALSE.
-    GWORK4(D%NIB:D%NIE,IKE:IKS)   = .FALSE.
+    GWORK4(:,1:IKB) = .FALSE.
+    GWORK4(:,IKE:IKS)   = .FALSE.
 !
     DO JI=D%NIB,D%NIE
       ITSTEP(JI) = INT( PTIMEC(JI) / ZTIMEC(JI) ) + 1
-    ENDDO
-    DO JI=D%NIB,D%NIE
       ZTIMEC(JI) = PTIMEC(JI) / REAL( ITSTEP(JI) ) ! adjust  fractional time step
     ENDDO
                                            ! to be an integer multiple of PTIMEC
-    DO JI=1, D%NIE
     DO JK=1, IKS
-      ZTIMC(JI,JK) = ZTIMEC(JI)
+      ZTIMC(1:D%NIE,JK) = ZTIMEC(1:D%NIE)
     ENDDO
-    ENDDO
-    ICOUNT(D%NIB:D%NIE) = 0
+    ICOUNT(:) = 0
 !
 !
 !
@@ -366,63 +361,60 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
     ENDDO
     DO JSTEP = 1, KFTSTEPS ! Enter the fractional time step loop here
 !
-            ICOUNT(D%NIB:D%NIE) = ICOUNT(D%NIB:D%NIE) + 1
-!
-            GWORK3(D%NIB:D%NIE) =  ITSTEP(D%NIB:D%NIE) >= ICOUNT(D%NIB:D%NIE) .AND. GWORK1(D%NIB:D%NIE)
+      DO JI=D%NIB,D%NIE
+        ICOUNT(JI) = ICOUNT(JI) + 1
+        GWORK3(JI) = ITSTEP(JI) >= ICOUNT(JI) .AND. GWORK1(JI)
+      ENDDO
 !
 !
 !*       7.     Assign enthalpy and r_w values at the top and bottom of each
 !               layer based on the sign of w
 !               ------------------------------------------------------------
 !
-             ZTHMFIN(:,:)   = 0.
-             ZRWMFIN(:,:)   = 0.
-             ZRCMFIN(:,:)   = 0.
-             ZRIMFIN(:,:)   = 0.
-             ZTHMFOUT(:,:)  = 0.
-             ZRWMFOUT(:,:)  = 0.
-             ZRCMFOUT(:,:)  = 0.
-             ZRIMFOUT(:,:)  = 0.
+      DO JK = 1, D%NKT
+        ZTHMFIN(:,JK)   = 0.
+        ZRWMFIN(:,JK)   = 0.
+        ZRCMFIN(:,JK)   = 0.
+        ZRIMFIN(:,JK)   = 0.
+        ZTHMFOUT(:,JK)  = 0.
+        ZRWMFOUT(:,JK)  = 0.
+        ZRCMFOUT(:,JK)  = 0.
+        ZRIMFOUT(:,JK)  = 0.
+      ENDDO
 !
-         DO JK = IKB + 1, JKMAX
-           DO JI = D%NIB, D%NIE
-              GWORK4(JI,JK) = GWORK3(JI) .AND. JK <= KCTL(JI)
-           END DO
-           JKP = MAX( IKB + 1, JK - 1 )
-           DO JI = D%NIB, D%NIE
-           IF ( GWORK3(JI) ) THEN
-!
-               ZWORK1(JI)       = SIGN( 1., ZOMG(JI,JK) )
-               ZWORK2(JI)       = 0.5 * ( 1. + ZWORK1(JI) )
-               ZWORK1(JI)       = 0.5 * ( 1. - ZWORK1(JI) )
-               ZTHMFIN(JI,JK)   = - ZOMG(JI,JK) * ZTHLC(JI,JKP) * ZWORK1(JI)
-               ZTHMFOUT(JI,JK)  =   ZOMG(JI,JK) * ZTHLC(JI,JK)  * ZWORK2(JI)
-               ZRWMFIN(JI,JK)   = - ZOMG(JI,JK) * PRWC(JI,JKP) * ZWORK1(JI)
-               ZRWMFOUT(JI,JK)  =   ZOMG(JI,JK) * PRWC(JI,JK)  * ZWORK2(JI)
-               ZRCMFIN(JI,JK)   = - ZOMG(JI,JK) * PRCC(JI,JKP) * ZWORK1(JI)
-               ZRCMFOUT(JI,JK)  =   ZOMG(JI,JK) * PRCC(JI,JK)  * ZWORK2(JI)
-               ZRIMFIN(JI,JK)   = - ZOMG(JI,JK) * PRIC(JI,JKP) * ZWORK1(JI)
-               ZRIMFOUT(JI,JK)  =   ZOMG(JI,JK) * PRIC(JI,JK)  * ZWORK2(JI)
-           END IF
-           END DO
-           DO JI = D%NIB, D%NIE
-           IF ( GWORK3(JI) ) THEN
-               ZTHMFIN(JI,JKP)  = ZTHMFIN(JI,JKP)  + ZTHMFOUT(JI,JK) * ZWORK2(JI)
-               ZTHMFOUT(JI,JKP) = ZTHMFOUT(JI,JKP) + ZTHMFIN(JI,JK)  * ZWORK1(JI)
-               ZRWMFIN(JI,JKP)  = ZRWMFIN(JI,JKP)  + ZRWMFOUT(JI,JK) * ZWORK2(JI)
-               ZRWMFOUT(JI,JKP) = ZRWMFOUT(JI,JKP) + ZRWMFIN(JI,JK)  * ZWORK1(JI)
-               ZRCMFIN(JI,JKP)  = ZRCMFIN(JI,JKP)  + ZRCMFOUT(JI,JK) * ZWORK2(JI)
-               ZRCMFOUT(JI,JKP) = ZRCMFOUT(JI,JKP) + ZRCMFIN(JI,JK)  * ZWORK1(JI)
-               ZRIMFIN(JI,JKP)  = ZRIMFIN(JI,JKP)  + ZRIMFOUT(JI,JK) * ZWORK2(JI)
-               ZRIMFOUT(JI,JKP) = ZRIMFOUT(JI,JKP) + ZRIMFIN(JI,JK)  * ZWORK1(JI)
-!
-           END IF
-           END DO
-         END DO
-!
-         DO JK = IKB, IKE
-           DO JI=D%NIB, D%NIE
-             IF(GWORK4(JI,JK)) THEN
+      DO JK = IKB + 1, JKMAX
+        DO JI = D%NIB, D%NIE
+           GWORK4(JI,JK) = GWORK3(JI) .AND. JK <= KCTL(JI)
+        ENDDO
+        JKP = MAX( IKB + 1, JK - 1 )
+        DO JI = D%NIB, D%NIE
+          IF ( GWORK3(JI) ) THEN
+            ZWORK1(JI)       = SIGN( 1., ZOMG(JI,JK) )
+            ZWORK2(JI)       = 0.5 * ( 1. + ZWORK1(JI) )
+            ZWORK1(JI)       = 0.5 * ( 1. - ZWORK1(JI) )
+            ZTHMFIN(JI,JK)   = - ZOMG(JI,JK) * ZTHLC(JI,JKP) * ZWORK1(JI)
+            ZTHMFOUT(JI,JK)  =   ZOMG(JI,JK) * ZTHLC(JI,JK)  * ZWORK2(JI)
+            ZRWMFIN(JI,JK)   = - ZOMG(JI,JK) * PRWC(JI,JKP) * ZWORK1(JI)
+            ZRWMFOUT(JI,JK)  =   ZOMG(JI,JK) * PRWC(JI,JK)  * ZWORK2(JI)
+            ZRCMFIN(JI,JK)   = - ZOMG(JI,JK) * PRCC(JI,JKP) * ZWORK1(JI)
+            ZRCMFOUT(JI,JK)  =   ZOMG(JI,JK) * PRCC(JI,JK)  * ZWORK2(JI)
+            ZRIMFIN(JI,JK)   = - ZOMG(JI,JK) * PRIC(JI,JKP) * ZWORK1(JI)
+            ZRIMFOUT(JI,JK)  =   ZOMG(JI,JK) * PRIC(JI,JK)  * ZWORK2(JI)
+          ENDIF
+        ENDDO
+        DO JI = D%NIB, D%NIE
+          IF ( GWORK3(JI) ) THEN
+            ZTHMFIN(JI,JKP)  = ZTHMFIN(JI,JKP)  + ZTHMFOUT(JI,JK) * ZWORK2(JI)
+            ZTHMFOUT(JI,JKP) = ZTHMFOUT(JI,JKP) + ZTHMFIN(JI,JK)  * ZWORK1(JI)
+            ZRWMFIN(JI,JKP)  = ZRWMFIN(JI,JKP)  + ZRWMFOUT(JI,JK) * ZWORK2(JI)
+            ZRWMFOUT(JI,JKP) = ZRWMFOUT(JI,JKP) + ZRWMFIN(JI,JK)  * ZWORK1(JI)
+            ZRCMFIN(JI,JKP)  = ZRCMFIN(JI,JKP)  + ZRCMFOUT(JI,JK) * ZWORK2(JI)
+            ZRCMFOUT(JI,JKP) = ZRCMFOUT(JI,JKP) + ZRCMFIN(JI,JK)  * ZWORK1(JI)
+            ZRIMFIN(JI,JKP)  = ZRIMFIN(JI,JKP)  + ZRIMFOUT(JI,JK) * ZWORK2(JI)
+            ZRIMFOUT(JI,JKP) = ZRIMFOUT(JI,JKP) + ZRIMFIN(JI,JK)  * ZWORK1(JI)
+          ENDIF
+        ENDDO
+      ENDDO
 !
 !******************************************************************************
 !
@@ -430,6 +422,10 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
 !               NOTA: These are the MAIN EQUATIONS of the scheme
 !               -----------------------------------------------------------------
 !
+!
+      DO JK = IKB, IKE
+        DO JI=D%NIB, D%NIE
+          IF(GWORK4(JI,JK)) THEN
 !
            ZTHLC(JI,JK) = ZTHLC(JI,JK) + ZTIMC(JI,JK) / PLMASS(JI,JK) * (      &
                           ZTHMFIN(JI,JK) + PUDR(JI,JK) * PUTHL(JI,JK)        &
@@ -443,36 +439,36 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
            PRIC(JI,JK)  = PRIC(JI,JK) + ZTIMC(JI,JK) / PLMASS(JI,JK) *  (      &
                ZRIMFIN(JI,JK) + PUDR(JI,JK) * PURI(JI,JK) - ZRIMFOUT(JI,JK) -  &
                          PUER(JI,JK) * MAX(0., PRI(JI,JK))    )
+          ENDIF
+        ENDDO
+      ENDDO
 !
 !
 !******************************************************************************
 !
-             ENDIF
-           ENDDO
-         ENDDO
 !
-    END DO ! Exit the fractional time step loop
+    ENDDO ! Exit the fractional time step loop
 !
 !
 !*          10.    Compute final linearized value of theta envir.
 !                  ----------------------------------------------
 !
-      DO JK = IKB + 1, JKMAX
-         DO JI = D%NIB, D%NIE
-         IF( GWORK1(JI) .AND. JK <= KCTL(JI) ) THEN
-           ZPI(JI)    = ( CST%XP00 / PPRES(JI,JK) ) ** ZRDOCP
-           ZCPH(JI)   = CST%XCPD + PRWC(JI,JK) * CST%XCPV
-           ZWORK2(JI) = PTH(JI,JK) / ZPI(JI)  ! first temperature estimate
-           ZLV(JI)    = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZWORK2(JI) - CST%XTT )
-           ZLS(JI)    = CST%XLVTT + ( CST%XCPV - CST%XCI ) * ( ZWORK2(JI) - CST%XTT )
-             ! final linearized temperature
-           ZWORK2(JI) = ( ZTHLC(JI,JK) + ZLV(JI) * PRCC(JI,JK) + ZLS(JI) * PRIC(JI,JK) &
-                       - (1. + PRWC(JI,JK) ) * CST%XG * PZ(JI,JK) ) / ZCPH(JI)
-           ZWORK2(JI) = MAX( 180., MIN( 340., ZWORK2(JI) ) )
-           PTHC(JI,JK)= ZWORK2(JI) * ZPI(JI) ! final adjusted envir. theta
-         END IF
-         END DO
-      END DO
+    DO JK = IKB + 1, JKMAX
+      DO JI = D%NIB, D%NIE
+        IF( GWORK1(JI) .AND. JK <= KCTL(JI) ) THEN
+          ZPI(JI)    = ( CST%XP00 / PPRES(JI,JK) ) ** ZRDOCP
+          ZCPH(JI)   = CST%XCPD + PRWC(JI,JK) * CST%XCPV
+          ZWORK2(JI) = PTH(JI,JK) / ZPI(JI)  ! first temperature estimate
+          ZLV(JI)    = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZWORK2(JI) - CST%XTT )
+          ZLS(JI)    = CST%XLVTT + ( CST%XCPV - CST%XCI ) * ( ZWORK2(JI) - CST%XTT )
+          ! final linearized temperature
+          ZWORK2(JI) = ( ZTHLC(JI,JK) + ZLV(JI) * PRCC(JI,JK) + ZLS(JI) * PRIC(JI,JK) &
+                      - (1. + PRWC(JI,JK) ) * CST%XG * PZ(JI,JK) ) / ZCPH(JI)
+          ZWORK2(JI) = MAX( 180., MIN( 340., ZWORK2(JI) ) )
+          PTHC(JI,JK)= ZWORK2(JI) * ZPI(JI) ! final adjusted envir. theta
+        ENDIF
+      ENDDO
+    ENDDO
 !
 !
 !*         11.     Compute new cloud ( properties at new LCL )
@@ -480,105 +476,99 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
 !                           that in routine TRIGGER_FUNCT
 !                  ---------------------------------------------
 !
-      CALL CONVECT_CLOSURE_THRVLCL(  CVPEXT, CST, D,     &
+    CALL CONVECT_CLOSURE_THRVLCL(  CVPEXT, CST, D,     &
                                      PPRES, PTHC, PRWC, PZ, GWORK1,        &
                                      ZTHLCL, ZRVLCL, ZZLCL, ZTLCL, ZTELCL, &
                                      ILCL, KDPL, KPBL )
 !
 !
-       ZTLCL(D%NIB:D%NIE)  = MAX( 230., MIN( 335., ZTLCL(D%NIB:D%NIE) ) )  ! set some overflow bounds
-       ZTELCL(D%NIB:D%NIE) = MAX( 230., MIN( 335., ZTELCL(D%NIB:D%NIE) ) )
-       ZTHLCL(D%NIB:D%NIE) = MAX( 230., MIN( 345., ZTHLCL(D%NIB:D%NIE) ) )
-       ZRVLCL(D%NIB:D%NIE) = MAX(   0., MIN(   1., ZRVLCL(D%NIB:D%NIE) ) )
-!
+!DIR$ IVDEP
+    DO JI = D%NIB, D%NIE
+      ZTLCL (JI)  = MAX( 230., MIN( 335., ZTLCL(JI) ) )  ! set some overflow bounds
+      ZTELCL(JI) = MAX( 230., MIN( 335., ZTELCL(JI) ) )
+      ZTHLCL(JI) = MAX( 230., MIN( 345., ZTHLCL(JI) ) )
+      ZRVLCL(JI) = MAX(   0., MIN(   1., ZRVLCL(JI) ) )
+      ZCAPE (JI) = 0.
+      ZPI   (JI) = MAX( 0.95, MIN( 1.5, ZTHLCL(JI)/ZTLCL(JI) ) )
+      ZWORK1(JI) = CST%XP00 / ZPI(JI) ** ZCPORD ! pressure at LCL
+      CALL CONVECT_SATMIXRATIO( ZWORK1(JI), ZTELCL(JI), ZEPS, ZWORK3(JI), ZLV(JI), ZLS(JI), ZCPH(JI) )
 !
 !*         12.    Compute adjusted CAPE
 !                 ---------------------
+      ZWORK3(JI) = MIN(   .1, MAX(   0., ZWORK3(JI) ) )
+
+
+      ! compute theta_e updraft undilute
+      ZTHEUL(JI) = ZTLCL(JI) * ZPI(JI) ** ( 1. - 0.28 * ZRVLCL(JI) )            &
+       & * EXP( ( 3374.6525 / ZTLCL(JI) - 2.5403 ) * ZRVLCL(JI) * ( 1. + 0.81 * ZRVLCL(JI) ) )
+      ! compute theta_e saturated environment at LCL
+      ZTHES1(JI) = ZTELCL(JI) * ZPI(JI) ** ( 1. - 0.28 * ZWORK3(JI) )           &
+       & * EXP( ( 3374.6525 / ZTELCL(JI) - 2.5403 ) * ZWORK3(JI) * ( 1. + 0.81 * ZWORK3(JI) ) )
+    ENDDO
 !
-       ZCAPE(D%NIB:D%NIE)  = 0.
-       ZPI(D%NIB:D%NIE)    = ZTHLCL(D%NIB:D%NIE) / ZTLCL(D%NIB:D%NIE)
-       ZPI(D%NIB:D%NIE)    = MAX( 0.95, MIN( 1.5, ZPI(D%NIB:D%NIE) ) )
-       ZWORK1(D%NIB:D%NIE) = CST%XP00 / ZPI(D%NIB:D%NIE) ** ZCPORD ! pressure at LCL
-!
-       CALL CONVECT_SATMIXRATIO( CST, D, ZWORK1, ZTELCL, ZWORK3, ZLV, ZLS, ZCPH )
-       ZWORK3(D%NIB:D%NIE) = MIN(   .1, MAX(   0., ZWORK3(D%NIB:D%NIE) ) )
-!
-                ! compute theta_e updraft undilute
-       ZTHEUL(D%NIB:D%NIE) = ZTLCL(D%NIB:D%NIE) * ZPI(D%NIB:D%NIE) ** ( 1. - 0.28 * ZRVLCL(D%NIB:D%NIE) )            &
-                                  * EXP( ( 3374.6525 / ZTLCL(D%NIB:D%NIE) - 2.5403 )   &
-                                  * ZRVLCL(D%NIB:D%NIE) * ( 1. + 0.81 * ZRVLCL(D%NIB:D%NIE) ) )
-!
-                ! compute theta_e saturated environment at LCL
-       ZTHES1(D%NIB:D%NIE) = ZTELCL(D%NIB:D%NIE) * ZPI(D%NIB:D%NIE) ** ( 1. - 0.28 * ZWORK3(D%NIB:D%NIE) )           &
-                                  * EXP( ( 3374.6525 / ZTELCL(D%NIB:D%NIE) - 2.5403 )  &
-                                  * ZWORK3(D%NIB:D%NIE) * ( 1. + 0.81 * ZWORK3(D%NIB:D%NIE) ) )
-!
-      DO JK = IKB, JKMAX
-        JKP = JK - 1
-        DO JI = D%NIB, D%NIE
-          ZWORK4(JI) = 1.
-          IF ( JK == ILCL(JI) ) ZWORK4(JI) = 0.
-!
-           ! compute theta_e saturated environment and adjusted values
-           ! of theta
-!
-          GWORK3(JI)  = JK >= ILCL(JI) .AND. JK <= KCTL(JI) .AND. GWORK1(JI)
-!
-          ZPI(JI)     = ( CST%XP00 / PPRES(JI,JK) ) ** ZRDOCP
-          ZWORK2(JI)  = PTHC(JI,JK) / ZPI(JI)
-        END DO
-!
-        CALL CONVECT_SATMIXRATIO( CST, D, PPRES(:,JK), ZWORK2, ZWORK3, ZLV, ZLS, ZCPH )
-!
-!
-        DO JI = D%NIB, D%NIE
-          IF ( GWORK3(JI) ) THEN
-              ZTHES2(JI)  = ZWORK2(JI) * ZPI(JI) ** ( 1. - 0.28 * ZWORK3(JI) )   &
-                                   * EXP( ( 3374.6525 / ZWORK2(JI) - 2.5403 ) &
-                                   * ZWORK3(JI) * ( 1. + 0.81 * ZWORK3(JI) ) )
-!
-              ZWORK3(JI)  = PZ(JI,JK) - PZ(JI,JKP) * ZWORK4(JI) -                &
-                           ( 1. - ZWORK4(JI) ) * ZZLCL(JI)    ! level thickness
-              ZWORK1(JI)  = ( 2. * ZTHEUL(JI) ) / ( ZTHES1(JI) + ZTHES2(JI) ) - 1.
-              ZCAPE(JI)   = ZCAPE(JI) + CST%XG * ZWORK3(JI) * MAX( 0., ZWORK1(JI) )
-              ZTHES1(JI)  = ZTHES2(JI)
-          END IF
-        END DO
+    DO JK = IKB, JKMAX
+
+      JKP = JK - 1
+!DIR$ IVDEP
+      DO JI = D%NIB, D%NIE
+        ! compute theta_e saturated environment and adjusted values of theta
+        GWORK3(JI)  = JK >= ILCL(JI) .AND. JK <= KCTL(JI) .AND. GWORK1(JI)
+        ZPI(JI)     = ( CST%XP00 / PPRES(JI,JK) ) ** ZRDOCP
+        ZWORK2(JI)  = PTHC(JI,JK) / ZPI(JI)
+        CALL CONVECT_SATMIXRATIO( PPRES(JI,JK), ZWORK2(JI), ZEPS, ZWORK3(JI), ZLV(JI), ZLS(JI), ZCPH(JI) )
       END DO
+!
+      DO JI = D%NIB, D%NIE
+        IF ( GWORK3(JI) ) THEN
+          ZTHES2(JI)  = ZWORK2(JI) * ZPI(JI) ** ( 1. - 0.28 * ZWORK3(JI) )   &
+           & * EXP( ( 3374.6525 / ZWORK2(JI) - 2.5403 ) * ZWORK3(JI) * ( 1. + 0.81 * ZWORK3(JI) ) )
+          IF ( JK == ILCL(JI) ) THEN
+            ZWORK3(JI)  = PZ(JI,JK) - ZZLCL(JI)  ! level thickness
+          ELSE
+            ZWORK3(JI)  = PZ(JI,JK) - PZ(JI,JKP) ! level thickness
+          ENDIF
+          ZWORK1(JI)  = ( 2. * ZTHEUL(JI) ) / ( ZTHES1(JI) + ZTHES2(JI) ) - 1.
+          ZCAPE(JI)   = ZCAPE(JI) + CST%XG * ZWORK3(JI) * MAX( 0., ZWORK1(JI) )
+          ZTHES1(JI)  = ZTHES2(JI)
+        ENDIF
+      ENDDO
+
+    ENDDO
 !
 !
 !*         13.     Determine mass adjustment factor knowing how much
 !                  CAPE has been removed.
 !                  -------------------------------------------------
 !
-       DO JI=D%NIB,D%NIE
-         IF ( GWORK1(JI) ) THEN
-           ZWORK1(JI) = MAX( PCAPE(JI) - ZCAPE(JI), 0.2 * PCAPE(JI) )
-           ZWORK2(JI) = ZCAPE(JI) / ( PCAPE(JI) + 1.E-8 )
+    DO JI=D%NIB,D%NIE
+      IF ( GWORK1(JI) ) THEN
+        ZWORK1(JI) = MAX( PCAPE(JI) - ZCAPE(JI), 0.2 * PCAPE(JI) )
+        ZWORK2(JI) = ZCAPE(JI) / ( PCAPE(JI) + 1.E-8 )
 !
-           GWORK1(JI) = ZWORK2(JI) > 0.2 .OR. ZCAPE(JI) == 0. ! mask for adjustment
-         END IF
-       ENDDO
+        GWORK1(JI) = ZWORK2(JI) > 0.2 .OR. ZCAPE(JI) == 0. ! mask for adjustment
+      ENDIF
+    ENDDO
 !
-       DO JI=D%NIB,D%NIE
-         IF( ZCAPE(JI) == 0. .AND. GWORK1(JI) )  ZADJ(JI) = ZADJ(JI) * 0.5
-       ENDDO
-       DO JI=D%NIB,D%NIE
-         IF ( ZCAPE(JI) /= 0. .AND. GWORK1(JI) ) THEN
-               ZADJ(JI) = ZADJ(JI) * CVP_SHAL%XSTABC * PCAPE(JI) / ( ZWORK1(JI) + 1.E-8 )
-         ENDIF
-       ENDDO
-       DO JI=D%NIB,D%NIE
-         ZADJ(JI) = MIN( ZADJ(JI), ZADJMAX(JI) )
-       ENDDO
+    DO JI=D%NIB,D%NIE
+      IF( ZCAPE(JI) == 0. .AND. GWORK1(JI) ) THEN
+        ZADJ(JI) = ZADJ(JI) * 0.5
+      ENDIF
+    ENDDO
+    DO JI=D%NIB,D%NIE
+      IF ( ZCAPE(JI) /= 0. .AND. GWORK1(JI) ) THEN
+            ZADJ(JI) = ZADJ(JI) * CVP_SHAL%XSTABC * PCAPE(JI) / ( ZWORK1(JI) + 1.E-8 )
+      ENDIF
+    ENDDO
+    DO JI=D%NIB,D%NIE
+      ZADJ(JI) = MIN( ZADJ(JI), ZADJMAX(JI) )
+    ENDDO
 !
 !
 !*         13.     Adjust mass flux by the factor ZADJ to converge to
 !                  specified degree of stabilization
 !                 ----------------------------------------------------
 !
-       CALL CONVECT_CLOSURE_ADJUST_SHAL( CVPEXT, D, ZADJ,&
-                                         PUMF, ZUMF, PUER, ZUER, PUDR, ZUDR    )
+    CALL CONVECT_CLOSURE_ADJUST_SHAL( CVPEXT, D, ZADJ, PUMF, ZUMF, PUER, ZUER, PUDR, ZUDR    )
 !
 !
       !IF ( COUNT( GWORK1(:) ) == 0 ) EXIT ! exit big adjustment iteration loop
@@ -597,5 +587,7 @@ END DO
 !
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE_SHAL',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "convect_satmixratio.h"
+!
 END SUBROUTINE CONVECT_CLOSURE_SHAL
-

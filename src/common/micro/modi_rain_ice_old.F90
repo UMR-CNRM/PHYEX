@@ -15,6 +15,7 @@ INTERFACE
                                PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,        &
                                PINPRC, PINPRR, PEVAP3D,                               &
                                PINPRS, PINPRG, PSIGS, PSEA, PTOWN,                    &
+                               OAERONRT, OAEIFN, PCLDROP, PIFNNC,                     &
                                TBUDGETS, KBUDGETS,                                    &
                                PICENU, PKGN_ACON, PKGN_SBGR,                          &
                                PRHT, PRHS, PINPRH, PFPR)
@@ -100,6 +101,12 @@ REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRS! Snow instant precip
 REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRG! Graupel instant precip
 REAL, DIMENSION(D%NIT),       INTENT(IN)  :: PSEA ! Sea Mask
 REAL, DIMENSION(D%NIT),       INTENT(IN)  :: PTOWN! Fraction that is town
+! nrt aerosol
+LOGICAL,                          INTENT(IN)  :: OAERONRT ! Switch for nrt aerosols
+LOGICAL,                          INTENT(IN)  :: OAEIFN   ! Switch to activate ice nuclei
+REAL, DIMENSION(D%NIT,D%NKT),     INTENT(IN)  :: PCLDROP  ! Activated Condensation nuclei (CCN) 
+REAL, DIMENSION(D%NIT,D%NKT),     INTENT(IN)  :: PIFNNC   ! Ice freezing nuclei concentration
+!
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(D%NIT), INTENT(IN)            :: PICENU, PKGN_ACON, PKGN_SBGR
