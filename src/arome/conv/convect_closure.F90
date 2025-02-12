@@ -146,6 +146,7 @@ REAL, DIMENSION(KLON,KLEV), INTENT(OUT)  :: PWSUB ! envir. compensating subsiden
 REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PDTEVRF! downdraft evaporation rate
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)  :: PPRLFLX! liquid precip flux
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)  :: PPRSFLX! solid  precip flux
+
 !
 !*       0.2   Declarations of local variables :
 !
@@ -156,6 +157,7 @@ INTEGER :: JI             ! horizontal loop index
 INTEGER :: JITER          ! iteration loop index
 INTEGER :: JSTEP          ! fractional time loop index
 REAL    :: ZCPORD, ZRDOCP ! C_pd / R_d, R_d / C_pd
+REAL    :: ZEPS
 !
 REAL, DIMENSION(KLON,KLEV) :: ZTHLC       ! convectively adjusted
                                           ! grid scale enthalpy
@@ -203,14 +205,15 @@ REAL, DIMENSION(KLON,KLEV):: ZWORK6
 LOGICAL, DIMENSION(KLON)  :: GWORK1, GWORK3! work arrays
 LOGICAL, DIMENSION(KLON,KLEV) :: GWORK4    ! work array
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
+#include "convect_closure_thrvlcl.h"
 !-------------------------------------------------------------------------------
 !
 !*       0.2    Initialize  local variables
 !               ----------------------------
 !
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE',0,ZHOOK_HANDLE)
 PSPR(:)   = 0.
 ZTIMC(:,:) = 0.
@@ -225,6 +228,7 @@ GWORK3(:) = .FALSE.
 GWORK4(:,:) = .FALSE.
 ILCL(:)   = KLCL(:)
 !
+ZEPS      = XRD / XRV
 ZCPORD    = XCPD / XRD
 ZRDOCP    = XRD / XCPD
 !
@@ -545,10 +549,11 @@ DO JITER = 1, 6  ! Enter adjustment loop to assure that all CAPE is
 !                           that in routine TRIGGER_FUNCT
 !                  ---------------------------------------------
 !
-      CALL CONVECT_CLOSURE_THRVLCL(  KLON, KLEV,                           &
-                                     PPRES, PTHC, PRWC, PZ, GWORK1,        &
-                                     ZTHLCL, ZRVLCL, ZZLCL, ZTLCL, ZTELCL, &
-                                     ILCL, KDPL, KPBL )
+CALL ABOR1('FIXME: THE INTERFACE IS WRONG')
+      !CALL CONVECT_CLOSURE_THRVLCL(  KLON, KLEV,                           &
+                                     !PPRES, PTHC, PRWC, PZ, GWORK1,        &
+                                     !ZTHLCL, ZRVLCL, ZZLCL, ZTLCL, ZTELCL, &
+                                     !ILCL, KDPL, KPBL )
 !
 !
        ZTLCL(:)  = MAX( 230., MIN( 335., ZTLCL(:) ) )  ! set some overflow bounds
@@ -565,7 +570,9 @@ DO JITER = 1, 6  ! Enter adjustment loop to assure that all CAPE is
        ZPI(:)    = MAX( 0.95, MIN( 1.5, ZPI(:) ) )
        ZWORK1(:) = XP00 / ZPI(:) ** ZCPORD ! pressure at LCL
 !
-       CALL CONVECT_SATMIXRATIO( KLON, ZWORK1, ZTELCL, ZWORK3, ZLV, ZLS, ZCPH )
+       DO JI = 1, IIE
+         CALL CONVECT_SATMIXRATIO( ZWORK1(JI), ZTELCL(JI), ZEPS, ZWORK3(JI), ZLV(JI), ZLS(JI), ZCPH(JI) )
+       END DO
        ZWORK3(:) = MIN(   .1, MAX(   0., ZWORK3(:) ) )
 !
                 ! compute theta_e updraft undilute
@@ -593,7 +600,9 @@ DO JITER = 1, 6  ! Enter adjustment loop to assure that all CAPE is
           ZWORK2(JI)  = PTHC(JI,JK) / ZPI(JI)
         END DO
 !
-        CALL CONVECT_SATMIXRATIO( KLON, PPRES(:,JK), ZWORK2, ZWORK3, ZLV, ZLS, ZCPH )
+        DO JI = 1, IIE
+          CALL CONVECT_SATMIXRATIO( PPRES(JI,JK), ZWORK2(JI), ZEPS, ZWORK3(JI), ZLV(JI), ZLS(JI), ZCPH(JI) )
+        END DO
 !
 !
         DO JI = 1, IIE
@@ -659,4 +668,7 @@ PSPR(:) = MAX( 0., PSPR(:) )
 !
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "convect_satmixratio.h"
+!
 END SUBROUTINE CONVECT_CLOSURE

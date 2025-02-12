@@ -1,18 +1,21 @@
 !     ######spl
-      SUBROUTINE  ARO_TURB_MNH(PHYEX, &
-                KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV,              &
-                KGRADIENTS, CMICRO, PTSTEP,                           &
-                PZZ, PZZF, PZZTOP,                                    &
-                PRHODJ, PTHVREF,                                      &
-                PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
-                PPABSM,PUM,PVM,PWM,PTKEM,PEPSM,PSVM,PSRCM,            &
-                PTHM,PRM,                                &
-                PRUS,PRVS,PRWS,PRTHS,PRRS,PRSVSIN,PRSVS,PRTKES,PRTKES_OUT,PREPSS, &
-                PHGRAD,PSIGS,                                         &
-                PFLXZTHVMF,PFLXZUMF,PFLXZVMF,PLENGTHM,PLENGTHH,MFMOIST,                 &
-                PDRUS_TURB,PDRVS_TURB,                                &
-                PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,                 &
-                PDP,PTP,PDPMF,PTPMF,PTDIFF,PTDISS,PEDR,YDDDH,YDLDDH,YDMDDH)
+      SUBROUTINE ARO_TURB_MNH(PHYEX,                                         &
+                            & KKA,KKU,KKL,KLON,KLEV,                         &
+                            & KRR, KRRL, KRRI, KSV,                          &
+                            & KGRADIENTSLEO, KGRADIENTSGOG, CMICRO, PTSTEP,  &
+                            & PZZ, PZZF, PZS, PZZTOP,                        &
+                            & PRHODJ, PTHVREF,                               &
+                            & PSFTH, PSFRV, PSFSV, PSFU, PSFV,               &
+                            & PPABSM, PUM, PVM, PWM, PTKEM, PSVM, PSRCM,     &
+                            & PTHM, PRM,                                     &
+                            & PRUS, PRVS, PRWS, PRTHS, PRRS,                 &
+                            & PRSVSIN, PRSVS, PRTKES, PRTKES_OUT,            &
+                            & PHGRADLEO, PHGRADGOG, PDELTAX, PDELTAY, PSIGS, &
+                            & PFLXZTHVMF, PFLXZUMF, PFLXZVMF, PLENGTHM, PLENGTHH, MFMOIST,       &
+                            & PDRUS_TURB, PDRVS_TURB,                        &
+                            & PDRTHLS_TURB, PDRRTS_TURB, PDRSVS_TURB,        &
+                            & PDP, PTP, PDPMF, PTPMF, PTDIFF, PTDISS, PEDR,         &
+                            & YDDDH,YDLDDH,YDMDDH)
 
 
       USE PARKIND1, ONLY : JPRB
@@ -103,13 +106,15 @@ INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KRRL      ! Number of liquide water variables
 INTEGER,                  INTENT(IN)   :: KRRI      ! Number of ice variables
 INTEGER,                  INTENT(IN)   :: KSV     ! Number of passive scalar
-INTEGER,                  INTENT(IN)   :: KGRADIENTS  ! Number of stored horizontal gradients
+INTEGER,                  INTENT(IN)   :: KGRADIENTSLEO  ! Number of stored horizontal gradients
+INTEGER,                  INTENT(IN)   :: KGRADIENTSGOG  ! Number of stored horizontal gradients
 CHARACTER (LEN=4),        INTENT(IN)   :: CMICRO  ! Microphysics scheme
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 !
 !
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PZZ     ! Height of layer boundaries
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PZZF    ! Height of level
+REAL, DIMENSION(KLON),          INTENT(IN)   :: PZS     ! Orography
 REAL, DIMENSION(KLON),          INTENT(IN)   :: PZZTOP  ! Height of highest level
 
 REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(INOUT)   :: PRHODJ  !Dry density * Jacobian
@@ -129,8 +134,7 @@ REAL, DIMENSION(KLON,1,KSV), INTENT(INOUT)      ::  PSFSV
 REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(INOUT) ::  PPABSM      ! Pressure at time t-1
 REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(INOUT) ::  PUM,PVM,PWM ! wind components
 REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(INOUT) ::  PTKEM       ! TKE
-REAL, DIMENSION(0,0,0),   INTENT(INOUT) ::  PEPSM       ! dissipation of TKE
-REAL, DIMENSION(KLON,1,KLEV,KSV), INTENT(INOUT) ::  PSVM        ! passive scal. var.
+REAL, DIMENSION(KLON,1,KLEV,KSV), INTENT(IN)    ::  PSVM        ! passive scal. var.
 REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(INOUT) ::  PSRCM       ! Second-order flux
                       ! s'rc'/2Sigma_s2 at time t-1 multiplied by Lambda_3
 !
@@ -148,7 +152,6 @@ REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(INOUT) ::  PRUS,PRVS,PRWS
 REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(INOUT) :: PRTHS
 REAL, DIMENSION(KLON,1,KLEV),     INTENT(IN)  ::  PRTKES
 REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(OUT) ::  PRTKES_OUT
-REAL, DIMENSION(0,0,0)        , INTENT(INOUT) ::PREPSS
 ! Source terms for all water kinds, PRRS(:,:,:,1) is used for the conservative
 ! mixing ratio
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT) ::  PRRS
@@ -164,7 +167,8 @@ REAL, DIMENSION(KLON,1,KLEV+2), INTENT(OUT)     ::  PDRTHLS_TURB ! evolution of 
 REAL, DIMENSION(KLON,1,KLEV+2), INTENT(OUT)     ::  PDRRTS_TURB  ! evolution of rhoJ*rt  by turbulence only
 REAL, DIMENSION(KLON,1,KLEV,KSV), INTENT(OUT)   ::  PDRSVS_TURB  ! evolution of rhoJ*Sv  by turbulence only
 REAL, DIMENSION(KLON,1,KLEV+2), INTENT(INOUT)      ::  PFLXZTHVMF
-REAL, DIMENSION(KLON,1,KLEV+2), INTENT(INOUT)      ::  PFLXZUMF,PFLXZVMF
+REAL, DIMENSION(KLON,1,KLEV+2), INTENT(INOUT)      ::  PFLXZUMF
+REAL, DIMENSION(KLON,1,KLEV+2), INTENT(INOUT)      ::  PFLXZVMF
 REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(OUT) ::  PEDR       ! EDR
 !
 REAL, DIMENSION(KLON,1,KLEV+2),  INTENT(OUT)   :: PDP, PTP, PDPMF, PTPMF, PTDIFF, PTDISS
@@ -175,7 +179,7 @@ TYPE(TLDDH),   INTENT(IN), TARGET      :: YDLDDH
 TYPE(TMDDH),   INTENT(IN), TARGET      :: YDMDDH
 !
 !
-TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET !NBUDGET_RH is the one with the highest number needed for turb
+TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET !NBUDGET_RI is the one with the highest number needed for turb
 TYPE(TFILEDATA) :: ZTFILE !I/O for MesoNH
 !*       0.2   Declarations of local variables :
 !
@@ -190,7 +194,6 @@ INTEGER   :: KSV_LGBEG, KSV_LGEND ! number of scalar variables
 REAL, DIMENSION(KLON,1,KLEV+2)   :: ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY
                                         ! metric coefficients
 INTEGER :: NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH ! TODO LIMA integration : to be sent from above aro_turb_mnh
-REAL, DIMENSION(KLON,1) :: PZS ! TODO: to be sent from above aro_turb_mnh
 REAL, POINTER ::  ZDIRCOSXW(:,:), ZDIRCOSYW(:,:), ZDIRCOSZW(:,:)
 ! Director Cosinus along x, y and z directions at surface w-point
 REAL, POINTER    ::  ZCOSSLOPE(:,:)   ! cosinus of the anglebetween i and the slope vector
@@ -203,14 +206,17 @@ REAL,DIMENSION(KLON,1,KLEV+2)         :: ZWRC       ! cloud water flux
 REAL,DIMENSION(KLON,1,KLEV+2,KSV)     :: ZWSV,ZSVM,ZRSVS,ZDRSVS_TURB       ! scalar flux
 REAL,DIMENSION(KLON,1,KLEV+2)         :: ZZZ        ! Local value of PZZ
 REAL,DIMENSION(KLON,1,KLEV+2,KRR)     :: ZRM,ZRRS
-REAL,DIMENSION(KLON,1,KLEV+2,KGRADIENTS), INTENT(INOUT) :: PHGRAD    ! Horizontal Gradients
+REAL,DIMENSION(KLON,1,KLEV+2,KGRADIENTSLEO), INTENT(INOUT) :: PHGRADLEO  ! Horizontal Gradients
+REAL,DIMENSION(KLON,1,KLEV+2,KGRADIENTSGOG), INTENT(INOUT) :: PHGRADGOG  ! Horizontal Gradients
+REAL,                                        INTENT(IN   ) :: PDELTAX
+REAL,                                        INTENT(IN   ) :: PDELTAY
 !
 REAL, DIMENSION(KLON,1), TARGET     ::  ZERO, ZONE
 REAL :: ZTWOTSTEP
 !
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 TYPE(TLES_t) :: YLTLES
-!
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 #include "wrarom.intfb.h"
 !
 !------------------------------------------------------------------------------
@@ -218,7 +224,6 @@ TYPE(TLES_t) :: YLTLES
 !*       1.     PRELIMINARY COMPUTATIONS
 !               ------------------------
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ARO_TURB_MNH',0,ZHOOK_HANDLE)
 CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV+2, JPVEXT_TURB, KLON)
 YLTLES%LLES=.FALSE.
@@ -250,10 +255,14 @@ KSV_LGEND=0
 ZZZ(YLDIMPHYEX%NIB:YLDIMPHYEX%NIE,1,2:KLEV+1)=PZZ(YLDIMPHYEX%NIB:YLDIMPHYEX%NIE,1,1:KLEV)
 ZZZ(YLDIMPHYEX%NIB:YLDIMPHYEX%NIE,1,1) = PZZTOP(YLDIMPHYEX%NIB:YLDIMPHYEX%NIE)
 ZDZZ(YLDIMPHYEX%NIB:YLDIMPHYEX%NIE,1,KLEV+2)=-999.
+ZDXX(YLDIMPHYEX%NIB:YLDIMPHYEX%NIE,1,KLEV+2)=-999.
+ZDYY(YLDIMPHYEX%NIB:YLDIMPHYEX%NIE,1,KLEV+2)=-999.
 
 DO JK = 2 , KLEV
   DO JL = YLDIMPHYEX%NIB,YLDIMPHYEX%NIE
     ZDZZ(JL,1,JK)=PZZF(JL,1,JK-1)-PZZF(JL,1,JK)
+    ZDXX(JL,1,JK)=PDELTAX ! For LLEONARD option
+    ZDYY(JL,1,JK)=PDELTAY ! For LLEONARD option
   ENDDO
 ENDDO
 
@@ -369,22 +378,23 @@ DO JRR=1, NBUDGET_RH
   YLBUDGET(JRR)%YDMDDH=>YDMDDH
 ENDDO
 CALL TURB (PHYEX%CST,PHYEX%CSTURB,TBUCONF,PHYEX%TURBN, PHYEX%NEBN, YLDIMPHYEX,YLTLES,&
-   & KRR, KRRL, KRRI, PHYEX%MISC%HLBCX, PHYEX%MISC%HLBCY, KGRADIENTS, PHYEX%MISC%KHALO, &
-   & PHYEX%TURBN%NTURBSPLIT,PHYEX%TURBN%LCLOUDMODIFLM, KSV, KSV_LGBEG, KSV_LGEND, &
+   & KRR, KRRL, KRRI, PHYEX%MISC%HLBCX, PHYEX%MISC%HLBCY,KGRADIENTSLEO,&
+   & KGRADIENTSGOG, PHYEX%MISC%KHALO, &
+   & PHYEX%TURBN%NTURBSPLIT, PHYEX%TURBN%LCLOUDMODIFLM, KSV, KSV_LGBEG, KSV_LGEND, &
    & NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,   &
    & PHYEX%MISC%O2D, PHYEX%MISC%ONOMIXLG, PHYEX%MISC%OFLAT, PHYEX%MISC%OCOUPLES, PHYEX%MISC%OBLOWSNOW,& 
    & PHYEX%MISC%OIBM, PHYEX%MISC%OFLYER, PHYEX%MISC%OCOMPUTE_SRC, PHYEX%MISC%XRSNOW, &
    & PHYEX%MISC%OOCEAN,PHYEX%MISC%ODEEPOC, PHYEX%MISC%ODIAG_IN_RUN,   &
-   & PHYEX%TURBN%CTURBLEN_CLOUD, CMICRO, PHYEX%MISC%CELEC,  &
+   & PHYEX%TURBN%CTURBLEN_CLOUD, CMICRO, PHYEX%MISC%CELEC, &
    & ZTWOTSTEP,ZTFILE,                                      &
    & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
    & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
-   & PRHODJ,PTHVREF,PHGRAD,PZS,                            &
+   & PRHODJ,PTHVREF,PHGRADLEO,PHGRADGOG,PZS,&
    & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
    & PPABSM,PUM,PVM,PWM,PTKEM,ZSVM,PSRCM,                  &
    & PLENGTHM,PLENGTHH,MFMOIST,                            &
    & ZBL_DEPTH,ZSBL_DEPTH,                                 &
-   & ZCEI, PHYEX%TURBN%XCEI_MIN, PHYEX%TURBN%XCEI_MAX, PHYEX%TURBN%XCOEF_AMPL_SAT,    &
+   & ZCEI, PHYEX%TURBN%XCEI_MIN, PHYEX%TURBN%XCEI_MAX, PHYEX%TURBN%XCOEF_AMPL_SAT, &
    & PTHM,ZRM, &
    & PRUS,PRVS,PRWS,PRTHS,ZRRS,ZRSVS,PRTKES_OUT,         &
    & PSIGS,                                         &

@@ -54,6 +54,7 @@ REAL, ALLOCATABLE, DIMENSION(:,:,:) :: PICLDFR ! Ice cloud fraction
 REAL, ALLOCATABLE, DIMENSION(:,:,:) :: PIFR    ! Ratio cloud ice moist part to dry part
 REAL, ALLOCATABLE, DIMENSION(:,:,:) :: PSSIO   ! Super-saturation with respect to ice in the supersaturated fraction
 REAL, ALLOCATABLE, DIMENSION(:,:,:) :: PSSIU   ! Sub-saturation with respect to ice in the subsaturated fraction
+REAL, ALLOCATABLE, DIMENSION(:,:,:) :: PCLDROP, PIFNNC
 
 LOGICAL, ALLOCATABLE, DIMENSION(:,:,:) :: LLMICRO
 
@@ -96,6 +97,7 @@ LOGICAL :: OSEDIC
 LOGICAL :: OCND2
 LOGICAL :: LKOGAN
 LOGICAL :: LMODICEDEP
+LOGICAL :: OAERONRT, OAEIFN
 CHARACTER(LEN=4) :: C_SEDIM
 CHARACTER(LEN=4) :: CSUBG_AUCV_RC
 LOGICAL :: OWARM
@@ -150,6 +152,7 @@ CALL GETDATA_RAIN_ICE_OLD(NPROMA, NGPBLKS, NFLEVG, KRR, &
                           PTHT, PRT, PTHS, PTHS_OUT, &
                           PRS, PRS_OUT, &
                           PSIGS, PSEA, PTOWN,     &
+                          PCLDROP, PIFNNC, &
                           ZINPRC, ZINPRC_OUT, &
                           PINPRR, PINPRR_OUT, &
                           PEVAP, PEVAP_OUT,        &
@@ -159,6 +162,8 @@ CALL GETDATA_RAIN_ICE_OLD(NPROMA, NGPBLKS, NFLEVG, KRR, &
                           PICENU, PKGN_ACON, PKGN_SBGR, &
                           PFPR, PFPR_OUT, LLMICRO, LLVERBOSE)
 KLEV = SIZE (PRS, 2)
+OAERONRT = .FALSE.
+OAEIFN = .FALSE.
 
 IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
   
@@ -239,6 +244,7 @@ DO ITIME = 1, NTIME
 !$acc data &
 !$acc      & copyin  (D0, TLES, LKOGAN, LMODICEDEP, KKA, KKU, KKL, KSPLITR, PTSTEP, KRR, ISIZEMICRO, &
 !$acc      &          LLMICRO, PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABSM, PCLDFR, PICLDFR, PSSIO, PSSIU, &
+!$acc      &          OAERONRT, OAEIFN, &
 !$acc      &          PTHT, PRT, PSIGS, PSEA, PTOWN, PICENU, PKGN_ACON, PKGN_SBGR) &
 !$acc      & copy    (PCIT, PIFR, PTHS, PRS) &
 !$acc      & copyout (ZINPRC, PINPRR, PEVAP, PINPRS, PINPRG, PFPR) &
@@ -322,6 +328,8 @@ DO ITIME = 1, NTIME
                         PINPRC=ZINPRC(:,IBL), PINPRR=PINPRR(:,IBL), PEVAP3D=PEVAP(:,:,IBL),      &
                         PINPRS=PINPRS(:,IBL), PINPRG=PINPRG(:,IBL), PSIGS=PSIGS(:,:,IBL),        &
                         PSEA=PSEA(:,IBL), PTOWN=PTOWN(:,IBL),                                  &
+                        OAERONRT=OAERONRT, OAEIFN=OAEIFN, &
+                        PCLDROP=PCLDROP(:,:,IBL), PIFNNC=PIFNNC(:,:,IBL), &
                         TBUDGETS=PHYEX%MISC%YLBUDGET, KBUDGETS=PHYEX%MISC%NBUDGET,                        &
                         PICENU=PICENU(:,IBL),                                                &
                         PKGN_ACON=PKGN_ACON(:,IBL), PKGN_SBGR=PKGN_SBGR(:,IBL),                &

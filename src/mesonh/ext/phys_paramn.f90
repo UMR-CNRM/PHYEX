@@ -342,6 +342,7 @@ USE MODE_MODELN_HANDLER
 USE MODE_MPPDB
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 USE MODE_SALT_PSD
+USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 
 USE MODI_AEROZON          ! Ajout PP
 USE MODI_CONDSAMP
@@ -472,7 +473,8 @@ LOGICAL :: GCLD                     ! conditionnal call for dust wet deposition
 !  calls
 INTEGER           :: IMODSON        ! Number of son models of IMI with XWAY=2
 INTEGER           :: IKIDM          ! index loop                                 
-INTEGER           :: IGRADIENTS     ! Number of horizontal gradients in turb
+INTEGER           :: IGRADIENTSLEO  ! Number of horizontal gradients in turb
+INTEGER           :: IGRADIENTSGOG
 REAL, DIMENSION(:,:,:),   ALLOCATABLE  :: ZSAVE_INPRR,ZSAVE_INPRS,ZSAVE_INPRG,ZSAVE_INPRH
 REAL, DIMENSION(:,:,:),   ALLOCATABLE  :: ZSAVE_INPRC,ZSAVE_PRCONV,ZSAVE_PRSCONV
 REAL, DIMENSION(:,:,:,:), ALLOCATABLE  :: ZSAVE_DIRFLASWD, ZSAVE_SCAFLASWD,ZSAVE_DIRSRFSWD
@@ -489,7 +491,8 @@ REAL, DIMENSION(:),ALLOCATABLE  :: ZXHAT_ll,ZYHAT_ll  !  Position x/y in the con
                                                  ! plane (array on the complete domain)
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZDIST ! distance from the center of the cooling 
 !
-REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZHGRAD ! horizontal gradient used in turb
+REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZHGRADLEO ! horizontal gradient used in turb
+REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZHGRADGOG
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 LOGICAL :: GCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables 
 !-----------------------------------------------------------------------------
@@ -1626,17 +1629,23 @@ IF (LOCEAN .AND. LDEEPOC) THEN
 END IF !END DEEP OCEAN CONV CASE
 !
 IF(LLEONARD) THEN
-  IGRADIENTS=6
-  ALLOCATE(ZHGRAD(IIU,IJU,IKU,IGRADIENTS))
-  ZHGRAD(:,:,:,1) = GX_W_UW(XWT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
-  ZHGRAD(:,:,:,2) = GY_W_VW(XWT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
-  ZHGRAD(:,:,:,3) = GX_M_M(XTHT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
-  ZHGRAD(:,:,:,4) = GY_M_M(XTHT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
-  ZHGRAD(:,:,:,5) = GX_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
-  ZHGRAD(:,:,:,6) = GY_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
+  IGRADIENTSLEO=6
+  ALLOCATE(ZHGRADLEO(IIU,IJU,IKU,IGRADIENTSLEO))
+  ZHGRADLEO(:,:,:,1) = GX_W_UW(XWT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
+  ZHGRADLEO(:,:,:,2) = GY_W_VW(XWT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
+  ZHGRADLEO(:,:,:,3) = GX_M_M(XTHT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
+  ZHGRADLEO(:,:,:,4) = GY_M_M(XTHT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
+  ZHGRADLEO(:,:,:,5) = GX_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
+  ZHGRADLEO(:,:,:,6) = GY_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
+END IF
+IF(LGOGER) THEN
+  !IGRADIENTSGOG=
+  !ALLOCATE(ZHGRADGOG(IIU,IJU,IKU,IGRADIENTSGOG))
+  !ZHGRADGOG(:,:,:,1) = 
+  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'PHYS_PARAMN', 'LGOGER option not yet implemented')
 END IF
    CALL TURB( CST,CSTURB, TBUCONF, TURBN, NEBN, YLDIMPHYEX, TLES,                    &
-              NRR, NRRL, NRRI, CLBCX, CLBCY, IGRADIENTS, NHALO, NTURBSPLIT,          &
+              NRR, NRRL, NRRI, CLBCX, CLBCY, IGRADIENTSLEO, IGRADIENTSGOG, NHALO, NTURBSPLIT,          &
               LCLOUDMODIFLM, NSV, NSV_LGBEG, NSV_LGEND,                              &
               NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,                    &
               L2D, LNOMIXLG,LFLAT,                                                   &
@@ -1647,7 +1656,7 @@ END IF
               XTSTEP, TPFILE,                                                        &
               XDXX, XDYY, XDZZ, XDZX, XDZY, XZZ,                                     &
               XDIRCOSXW, XDIRCOSYW, XDIRCOSZW, XCOSSLOPE, XSINSLOPE,                 &
-              XRHODJ, XTHVREF, ZHGRAD, XZS,                                          &
+              XRHODJ, XTHVREF, ZHGRADLEO, ZHGRADGOG, XZS,                            &
               ZSFTH, ZSFRV, ZSFSV, ZSFU, ZSFV,                                       &
               XPABST, XUT, XVT, XWT, XTKET, XSVT, XSRCT,                             &
               ZLENGTHM, ZLENGTHH, ZMFMOIST,                                          &
@@ -1665,7 +1674,8 @@ END IF
 !
 DEALLOCATE(ZTDIFF)
 DEALLOCATE(ZTDISS)
-IF(LLEONARD) DEALLOCATE(ZHGRAD)
+IF(LLEONARD) DEALLOCATE(ZHGRADLEO)
+IF(LGOGER) DEALLOCATE(ZHGRADGOG)
 !
 IF (LRMC01) THEN
   CALL ADD2DFIELD_ll( TZFIELDS_ll, XSBL_DEPTH, 'PHYS_PARAM_n::XSBL_DEPTH' )

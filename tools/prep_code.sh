@@ -324,9 +324,11 @@ if [ "$pyfortool_opts_env" != "" -o -n "${pyfortool_options-}" ]; then
       for rep in $reps; do
         if [ -d $rep ]; then
           find $rep -type f -not -name '.*.swp'  -not -name '.*.swo' | while read file; do
-            if [ "$(echo $file | grep '\.')" != '' -a $(echo $file | rev | cut -d. -f1 | rev) != 'fypp' ]; then
+            if [ "$(echo $file | grep '\.')" != '' -a \
+                 $(echo $file | rev | cut -d. -f1 | rev) != 'fypp' -a \
+                 $(echo $file | rev | cut -d. -f1 | rev) != 'yaml' ]; then
               #Files without extension are certainly not source code files
-              #.fypp files cannot be read by pyfortool
+              #.fypp and .yaml files cannot be read by pyfortool
               cmd="pyfortool --wrapH $pyfortool_options $extra_opts" #--wrapH allows to deal with h files
               [ $verbose -gt 1 ] && echo $cmd "$file"
               $cmd "$file"

@@ -60,7 +60,7 @@ CONTAINS
 !!     S. Riette Apr 2013: improvement of continuity at the condensation level
 !!     R.Honnert Oct 2016 : Add ZSURF and Update with AROME
 !!     Q.Rodier  01/2019 : support RM17 mixing length
-!!     R.Honnert 01/2019 : add LGZ (reduction of the mass-flux surface closure with the resolution)
+!!     R.Honnert 01/2019 : remove ZSURF add LGZ (reduction of the MF surf closure with resolution)
 !!     S. Riette 06/2022: compute_entr_detr is inlined
 !!     A. Marcel Jan 2025: Wet mixing according to Lapp and Randall 2001
 !!     A. Marcel Jan 2025: TKE mixing
