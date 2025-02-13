@@ -71,7 +71,7 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, TNSV%NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
 !

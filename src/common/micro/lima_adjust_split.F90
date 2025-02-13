@@ -175,7 +175,6 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC), &
                 MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(OUT)   :: PSRCS     ! Second-order flux
                                                                          ! s'rc'/2Sigma_s2 at time t+1
                                                                          ! multiplied by Lambda_3
-<<<<<<< HEAD
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(OUT) :: PCLDFR    ! Cloud fraction          
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(OUT) :: PICEFR    ! Cloud fraction          
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(IN)  :: PRC_MF! Convective Mass Flux liquid mixing ratio
@@ -449,7 +448,7 @@ IF (OSUBG_COND .AND. LIMAP%NMOM_C.GE.2 .AND. LIMAP%LACTI) THEN
    ZW_MF=0.
    ZRV2=ZRVT
    ZRC2=ZRCT
-   CALL LIMA_CCN_ACTIVATION (LIMAP, LIMAW, D, CST, NEBN,      &
+   CALL LIMA_CCN_ACTIVATION (LIMAP, LIMAW, TNSV, D, CST, NEBN,&
         KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,              &
         PRHODREF, PEXNREF, PPABST, ZT2, PDTHRAD, PW_NU+ZW_MF, &
         PAERO,PSOLORG, PMI,  HACTCCN,                         &

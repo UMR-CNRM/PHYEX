@@ -228,7 +228,6 @@ DO ITIME = 1, NTIME
     INUMPIN = 0
 #endif
 
-<<<<<<< HEAD
 #ifdef _OPENACC
     ! Code is not yet ready for GPU
     PSRCS(JLON, :, IBL)=0.

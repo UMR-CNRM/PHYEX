@@ -7,7 +7,7 @@ MODULE MODE_LIMA_CCN_ACTIVATION
   IMPLICIT NONE
 CONTAINS
 !     ##############################################################################
-    SUBROUTINE LIMA_CCN_ACTIVATION (LIMAP, LIMAW, D, CST, NEBN,                    &
+    SUBROUTINE LIMA_CCN_ACTIVATION (LIMAP, LIMAW, TNSV, D, CST, NEBN,              &
                                     KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,       &
                                     PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU, &
                                     PAERO,PSOLORG, PMI,  HACTCCN,                  &
@@ -75,6 +75,7 @@ USE MODD_CST,            ONLY: CST_T
 !USE MODD_LUNIT_n,         ONLY: TLUOUT
 USE MODD_NEB_N,           ONLY: NEB_T
 USE MODD_NEB_n,           ONLY: LSUBG_COND
+USE MODD_NSV,        ONLY : NSV_T
 USE MODI_CH_AER_ACTIVATION
 
 !USE MODE_IO_FIELD_WRITE,  only: IO_Field_write
@@ -90,6 +91,7 @@ IMPLICIT NONE
 !
 TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
 TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(NSV_T),              INTENT(IN)    :: TNSV
 TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
 TYPE(CST_T),              INTENT(IN)    :: CST
 TYPE(NEB_T),              INTENT(IN)    :: NEBN
@@ -246,9 +248,9 @@ IF( INUCT >= 1 ) THEN
    ALLOCATE(ZRHODREF(INUCT)) 
    ALLOCATE(ZEXNREF(INUCT)) 
    ALLOCATE(ZPABST(INUCT))
-   ALLOCATE(ZAERO(INUCT,SIZE(PAERO,4)))
-   ALLOCATE(ZSOLORG(INUCT,SIZE(PSOLORG,4)))
-   ALLOCATE(ZMI(INUCT,SIZE(PMI,4)))
+   ALLOCATE(ZAERO(INUCT,SIZE(PAERO,3)))
+   ALLOCATE(ZSOLORG(INUCT,SIZE(PSOLORG,3)))
+   ALLOCATE(ZMI(INUCT,SIZE(PMI,3)))
    DO IL=1,INUCT
       ZRCT(IL) = PRCT(I1(IL),I3(IL))/ZCLDFR(I1(IL),I3(IL))
       ZCCT(IL) = PCCT(I1(IL),I3(IL))/ZCLDFR(I1(IL),I3(IL))
@@ -259,19 +261,19 @@ IF( INUCT >= 1 ) THEN
       ZSW(IL)  = PRVT(I1(IL),I3(IL))/ZRVSAT(I1(IL),I3(IL)) - 1.
       ZRHODREF(IL) = PRHODREF(I1(IL),I3(IL))
       ZEXNREF(IL)  = PEXNREF(I1(IL),I3(IL))
-      ZPABST(JL)  = PPABST(I1(JL),I3(JL))
+      ZPABST(IL)  = PPABST(I1(IL),I3(IL))
       IF ((OORILAM).OR.(ODUST).OR.(OSALT)) THEN
-         ZAERO(JL,:)  = PAERO(I1(JL),I3(JL),:)
+         ZAERO(IL,:)  = PAERO(I1(IL),I3(IL),:)
       ELSE
-         ZAERO(JL,:) = 0.
+         ZAERO(IL,:) = 0.
       END IF
 
       IF (OORILAM) THEN
-         ZSOLORG(JL,:) = PSOLORG(I1(JL),I3(JL),:)
-         ZMI(JL,:) = PMI(I1(JL),I3(JL),:)
+         ZSOLORG(IL,:) = PSOLORG(I1(IL),I3(IL),:)
+         ZMI(IL,:) = PMI(I1(IL),I3(IL),:)
       ELSE
-         ZSOLORG(JL,:) = 0.
-         ZMI(JL,:) = 0.
+         ZSOLORG(IL,:) = 0.
+         ZMI(IL,:) = 0.
       END IF
       
       DO IMOD = 1,LIMAP%NMOD_CCN

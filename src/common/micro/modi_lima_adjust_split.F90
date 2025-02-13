@@ -68,7 +68,7 @@ REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &
                 MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! Radiative temperature tendency
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PW_NU     ! updraft velocity used for
 !
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
 CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation

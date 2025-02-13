@@ -158,7 +158,7 @@ IF ( LIMAP%LACTI .AND. LIMAP%NMOD_CCN >=1 .AND. LIMAP%NMOM_C.GE.2) THEN
       END IF
     END IF
 
-    CALL LIMA_CCN_ACTIVATION( LIMAP, LIMAW, D, CST, NEBN,                       &
+    CALL LIMA_CCN_ACTIVATION( LIMAP, LIMAW, TNSV, D, CST, NEBN,                 &
                               KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,          &
                               PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,    &
                               PAERO, PSOLORG, PMI, HACTCCN,               & 
