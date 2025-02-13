@@ -229,8 +229,8 @@ if [ $packcreation -eq 1 ]; then
   cd $LMDZPACK/$name
 
   #Populate with arch files
-  touch arch-local.env
-  cat - <<EOF > arch-local.fcm
+  touch arch-mylocal.env
+  cat - <<EOF > arch-mylocal.fcm
 %COMPILER            gfortran
 %LINK                gfortran
 %AR                  ar
@@ -249,7 +249,7 @@ if [ $packcreation -eq 1 ]; then
 %OMP_LD   
 EOF
 
-  cat - <<EOF > arch-local.path
+  cat - <<EOF > arch-mylocal.path
 NETCDF_INCDIR="-I/usr/include"
 NETCDF_LIBDIR=""
 NETCDF_LIB="-lnetcdff -lnetcdf"
@@ -280,7 +280,7 @@ EOF
 
   #Compilation
   wget https://lmdz.lmd.jussieu.fr/pub/install_lmdz.sh -O install_lmdz.sh
-  bash install_lmdz.sh -v $version $install_arg -bench 0 -rad $rad -name LMDZ -arch_dir $PWD -arch local 2>&1 | tee Install.log
+  bash install_lmdz.sh -v $version $install_arg -bench 0 -rad $rad -name LMDZ -arch_dir $PWD -arch mylocal 2>&1 | tee Install.log
 
   #Populate with test cases (1D directory needed for compilation)
   cd $lmdzdir
