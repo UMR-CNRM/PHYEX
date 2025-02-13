@@ -118,8 +118,10 @@ context="continuous-integration/${contextHostname}"
 #Interactions with github
 if [ "${PHYEXREPOprotocol}" == 'ssh' ]; then
   PHYEXREPOgiturl="git@github.com:${PHYEXREPOuser}/${PHYEXREPOrepo}.git"
+  INSTALLopt='--ssh'
 else
   PHYEXREPOgiturl="https://github.com/${PHYEXREPOuser}/${PHYEXREPOrepo}.git"
+  INSTALLopt=''
 fi
 TOKEN=$(python3 -c "import netrc, socket; print(netrc.netrc().authenticators('github.com')[2])")
 
@@ -277,7 +279,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
       fi
     fi
     log 1 "Installing/updating PHYEX"
-    ${WORKDIR}/PHYEX/tools/INSTALL.sh --ALL
+    ${WORKDIR}/PHYEX/tools/INSTALL.sh --ALL $INSTALLopt
   fi
   . "${WORKDIR}/PHYEX/tools/env.sh"
 

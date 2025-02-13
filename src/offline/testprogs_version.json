@@ -1,9 +1,11 @@
 {
 "testing": {
-            "ice_adjust":"e62373b",
-            "rain_ice":"e62373b",
-            "rain_ice_old":"e62373b",
-            "turb":"e62373b",
-            "shallow":"e62373b"
+            "ice_adjust":"b6080e5",
+            "rain_ice":"b6080e5",
+            "rain_ice_old":"b6080e5",
+            "turb":"b6080e5",
+            "shallow":"b6080e5",
+            "lima":"b6080e5",
+            "lima_adjust":"b6080e5"
            }
 }

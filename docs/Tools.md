@@ -22,7 +22,7 @@ The check\_commit\_ial script compiles, executes IAL test cases and compare the 
 
 Script options can be displayed with the -h option.
 
-Before being usable, the AROME model must be installed following the [tools/INSTALL\_pack\_ial.md file](../tools/INSTALL_pack\_ial.md).
+Before being usable, some packages must be installed following the [tools/INSTALL.md file](../tools/INSTALL.md).
 
 ### check\_commit\_mesonh.sh
 

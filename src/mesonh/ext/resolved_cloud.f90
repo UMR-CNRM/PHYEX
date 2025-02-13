@@ -18,7 +18,8 @@ INTERFACE
                                   PICEFR,                                              &
                                   PCIT, OSEDIC, OACTIT, OSEDC, OSEDI,                  &
                                   ORAIN, OWARM, OHHONI, OCONVHG,                       &
-                                  PCF_MF,PRC_MF, PRI_MF,                               &
+                                  PCF_MF,PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,             &
+                                  PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,  &
                                   PINPRC,PINPRC3D,PINPRR,PINPRR3D, PEVAP3D,            &
                                   PINPRS,PINPRS3D,PINPRG,PINPRG3D,PINPRH,PINPRH3D,     &
                                   PSOLORG,PMI,                                         &
@@ -111,6 +112,8 @@ LOGICAL,                  INTENT(IN)    :: OCONVHG! Switch for conversion from
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction 
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRI_MF! Convective Mass Flux solid mixing ratio
+REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
+REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF
 !
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRC   ! Cloud instant precip
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRR   ! Rain instant precip
@@ -159,7 +162,8 @@ END MODULE MODI_RESOLVED_CLOUD
                                   PICEFR,                                              &
                                   PCIT, OSEDIC, OACTIT, OSEDC, OSEDI,                  &
                                   ORAIN, OWARM, OHHONI, OCONVHG,                       &
-                                  PCF_MF,PRC_MF, PRI_MF,                               &
+                                  PCF_MF,PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,             &
+                                  PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,  &
                                   PINPRC,PINPRC3D,PINPRR,PINPRR3D, PEVAP3D,            &
                                   PINPRS,PINPRS3D,PINPRG,PINPRG3D,PINPRH,PINPRH3D,     &
                                   PSOLORG,PMI,                                         &
@@ -288,13 +292,14 @@ END MODULE MODI_RESOLVED_CLOUD
 !  C. Barthe   20/03/2023: to avoid duplicating sources, cloud electrification is integrated in the microphysics
 !                          CELLS can be used with rain_ice with LRED=T and with LIMA with LPTSPLIT=T
 !                          the adjustement for cloud electricity is also externalized
+!  A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 USE MODD_BUDGET,           ONLY: TBUDGETS, TBUCONF
-USE MODD_CH_AEROSOL,       ONLY: LORILAM
-USE MODD_DUST,             ONLY: LDUST
+USE MODD_CH_AEROSOL,       ONLY: LORILAM, NSP, NCARB, NSOA
 USE MODD_CST,              ONLY: CST
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 USE MODD_DUST,             ONLY: LDUST
@@ -434,6 +439,8 @@ LOGICAL,                  INTENT(IN)    :: OCONVHG! Switch for conversion from
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction 
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRI_MF! Convective Mass Flux solid mixing ratio
+REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PWEIGHT_MF_CLOUD
+REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF
 !
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRC   ! Cloud instant precip
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRR   ! Rain instant precip
@@ -878,7 +885,7 @@ SELECT CASE ( HCLOUD )
                       'ADJU',                                                  &
                       PTSTEP, ZSIGQSAT2D,                                      &
                       PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV,PMFCONV, PPABST, ZZZ,  &
-                      ZEXN, PCF_MF, PRC_MF, PRI_MF,                            &
+                      ZEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,          &
                       ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                            &
                       PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,        &
                       PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                    &
@@ -890,7 +897,9 @@ SELECT CASE ( HCLOUD )
                       PRG=PRS(:,:,:,6)*PTSTEP,                                 &
                       TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),               &
                       PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                    &
-                      PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                     )
+                      PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,                    &
+                      PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF,       &
+                      PHLI_HRI_MF=PHLI_HRI_MF, PHLI_HCF_MF=PHLI_HCF_MF)
       !
       IF (HELEC == 'ELE4') THEN
         ! Compute the condensation and sublimation rates
@@ -1054,7 +1063,7 @@ SELECT CASE ( HCLOUD )
                       PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),                     &
                       PINPRC,PINPRR, PINPRR3D, PEVAP3D,                             &
                       PINPRS, PINPRG, PSIGS,PINDEP, PRAINFR,                        &
-                      PSEA, PTOWN, PFPR=ZFPR                                        )
+                      PSEA, PTOWN, PFPR=ZFPR)
       END IF
     END IF
 
@@ -1093,7 +1102,7 @@ SELECT CASE ( HCLOUD )
                          PARAM_ICEN, TBUCONF, KRR, 'DEPI',                               &
                          PTSTEP, ZSIGQSAT2D,                                             &
                          PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
-                         ZEXN, PCF_MF, PRC_MF, PRI_MF,                                   &
+                         ZEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,                 &
                          ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                                   &
                          PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,               &
                          PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                           &
@@ -1105,7 +1114,10 @@ SELECT CASE ( HCLOUD )
                          PRG=PRS(:,:,:,6)*PTSTEP,                                        &
                          TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),                      &
                          PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                           &
-                         PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                            )
+                         PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,                           &
+                         PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF,               &
+                         PHLI_HRI_MF=PHLI_HRI_MF, PHLI_HCF_MF=PHLI_HCF_MF                )
+
         !
         IF (HELEC == 'ELE4') THEN
           ! Compute the condensation and sublimation rates
@@ -1155,7 +1167,7 @@ SELECT CASE ( HCLOUD )
                        'ADJU',                                                 &
                        PTSTEP, ZSIGQSAT2D,                                     &
                        PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV,PMFCONV, PPABST, ZZZ, &
-                       ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
+                       ZEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,         &
                        ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                           &
                        PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
                        PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                   &
@@ -1168,7 +1180,9 @@ SELECT CASE ( HCLOUD )
                        TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),              &
                        PRH=PRS(:,:,:,7)*PTSTEP,                                &
                        PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                   &
-                       PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                    )
+                       PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,                   &
+                       PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF,       &
+                       PHLI_HRI_MF=PHLI_HRI_MF, PHLI_HCF_MF=PHLI_HCF_MF        )
       !
       IF (HELEC == 'ELE4') THEN
         ! Compute the condensation and sublimation rates
@@ -1318,7 +1332,7 @@ SELECT CASE ( HCLOUD )
                     PINPRC, PINPRR, PINPRR3D, PEVAP3D,                    &
                     PINPRS, PINPRG, PSIGS,PINDEP, PRAINFR,                &
                     PSEA, PTOWN,                                          &
-                    PRT(:,:,:,7), PRS(:,:,:,7), PINPRH, PFPR=ZFPR         )
+                    PRT(:,:,:,7), PRS(:,:,:,7), PINPRH, PFPR=ZFPR)
     END IF
 !
 !
@@ -1336,7 +1350,7 @@ SELECT CASE ( HCLOUD )
                       PARAM_ICEN, TBUCONF, KRR, 'DEPI',                               &
                       PTSTEP, ZSIGQSAT2D,                                             &
                       PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
-                      ZEXN, PCF_MF, PRC_MF, PRI_MF,                                   &
+                      ZEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,                 &
                       ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                                   &
                       PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,               &
                       PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                           &
@@ -1349,7 +1363,10 @@ SELECT CASE ( HCLOUD )
                       TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),                      &
                       PRH=PRS(:,:,:,7)*PTSTEP,                                        &
                       PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                           &
-                      PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                            )
+                      PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,                           &
+                      PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF,               &
+                      PHLI_HRI_MF=PHLI_HRI_MF, PHLI_HCF_MF=PHLI_HCF_MF                )
+
       !
       IF (HELEC == 'ELE4') THEN
         ! Compute the condensation and sublimation rates
@@ -1395,12 +1412,14 @@ SELECT CASE ( HCLOUD )
          CALL LIMA (PARAM_LIMA, PARAM_LIMA_WARM, PARAM_LIMA_COLD, PARAM_LIMA_MIXED,&
                    TNSV, YLDIMPHYEX,CST, NEBN, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
                    ELEC_DESCR, ELEC_PARAM,                                 &
-                   TBUCONF,TBUDGETS, SIZE(TBUDGETS), KRR,                  &
+                   TBUCONF,TBUDGETS, HACTCCN,SIZE(TBUDGETS), KRR,          &
                    PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
+                   NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                &
                    LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
                    PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
+                   PSVT, PSOLORG, PMI,                                     &
                    PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),       &
                    PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, &
                    PEVAP3D, PCLDFR, PICEFR, PRAINFR, ZFPR,                 &
@@ -1411,38 +1430,41 @@ SELECT CASE ( HCLOUD )
         CALL LIMA (PARAM_LIMA, PARAM_LIMA_WARM, PARAM_LIMA_COLD, PARAM_LIMA_MIXED,&
                    TNSV, YLDIMPHYEX,CST, NEBN, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
                    ELEC_DESCR, ELEC_PARAM,                                 &
-                   TBUCONF,TBUDGETS, SIZE(TBUDGETS), KRR,                  &
+                   TBUCONF, TBUDGETS, HACTCCN, SIZE(TBUDGETS), KRR,        &
                    PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
+                   NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                &
                    LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
                    PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
+                   PSVT, PSOLORG, PMI,                                     &
                    PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),       &
                    PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, &
                    PEVAP3D, PCLDFR, PICEFR, PRAINFR, ZFPR,                 &
                    ZLATHAM_IAGGS                                           )
       END IF
     ELSE
-!!$      IF (OWARM) CALL LIMA_WARM(OACTIT, OSEDC, ORAIN, KSPLITR, PTSTEP, KMI,       &
-!!$                                TPFILE, KRR, PZZ, PRHODJ,                         &
-!!$                                PRHODREF, PEXNREF, PW_ACT, PPABST,                &
-!!$                                PDTHRAD,                                          &
-!!$                                PTHT, PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
-!!$                                PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
-!!$                                PINPRC, PINPRR, PINDEP, PINPRR3D, PEVAP3D         )
-!!$!
-!!$      IF (NMOM_I.GE.1) CALL LIMA_COLD(CST, OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,         &
-!!$                                      KRR, PZZ, PRHODJ,                                 &
-!!$                                      PRHODREF, PEXNREF, PPABST, PW_ACT,                &
-!!$                                      PTHT, PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
-!!$                                      PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
-!!$                                      PINPRS, PINPRG, PINPRH                            )
-!!$!
-!!$      IF (OWARM .AND. NMOM_I.GE.1) CALL LIMA_MIXED(OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,              &
-!!$                                                   KRR, PZZ, PRHODJ,                                 &
-!!$                                                   PRHODREF, PEXNREF, PPABST, PW_ACT,                &
-!!$                                                   PTHT, PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
-!!$                                                   PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END)  )
+      IF (OWARM) CALL LIMA_WARM(OACTIT, HACTCCN, OSEDC, ORAIN, KSPLITR, PTSTEP,   &
+                                KMI, TPFILE, KRR, PZZ, PRHODJ,                    &
+                                PRHODREF, PEXNREF, PW_ACT, PPABST,                &
+                                PDTHRAD,                                          &
+                                PTHT, PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
+                                PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
+                                PSVT, PSOLORG, PMI,                               &
+                                PINPRC, PINPRR, PINDEP, PINPRR3D, PEVAP3D         )
+!
+      IF (NMOM_I.GE.1) CALL LIMA_COLD(CST, OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,         &
+                                      KRR, PZZ, PRHODJ,                                 &
+                                      PRHODREF, PEXNREF, PPABST, PW_ACT,                &
+                                      PTHT, PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
+                                      PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
+                                      PINPRS, PINPRG, PINPRH                            )
+!
+      IF (OWARM .AND. NMOM_I.GE.1) CALL LIMA_MIXED(OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,              &
+                                                   KRR, PZZ, PRHODJ,                                 &
+                                                   PRHODREF, PEXNREF, PPABST, PW_ACT,                &
+                                                   PTHT, PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
+                                                   PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END)  )
     ENDIF
 !
 !*       12.2   Perform the saturation adjustment
@@ -1460,15 +1482,17 @@ SELECT CASE ( HCLOUD )
                            PTHS,PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),         &
                            PCLDFR, PICEFR, PRAINFR, PSRCS                           )
     ELSE IF (LPTSPLIT) THEN
-       CALL LIMA_ADJUST_SPLIT(PARAM_LIMA, PARAM_LIMA_WARM, &
+<<<<<<< HEAD
                              TNSV, YLDIMPHYEX, CST, NEBN, TURBN, TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
                              KRR, CCONDENS, CLAMBDA3,                                        &
+                             NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                        &
                              OSUBG_COND, OSIGMAS, PTSTEP, ZSIGQSAT2D,                        &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS,                               &
                              SIZE(PMFCONV)/=0, PMFCONV, PPABST, ZZZ,                         &
                              LLDTHRAD, PDTHRAD, PW_ACT,                                      &
                              PRT, PRS, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                &
                              PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                          &
+                             HACTCCN, PSVT, PSOLORG, PMI,                                    &
                              PTHS, SIZE(PSRCS, 3)/=0, PSRCS, PCLDFR, PICEFR,                 &
                              PRC_MF, PRI_MF, PCF_MF             )
     ELSE

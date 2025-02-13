@@ -9,6 +9,7 @@
                                   PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR,  &
                                   LKOGAN, LMODICEDEP,&
                                   PINPRR,PINPRS,PINPRG,PINPRH,PFPR,     &
+                                  OAERONRT, OAEIFN, PCLDROP, PIFNNC, &
                                   YDDDH, YDLDDH, YDMDDH, &
                                   YSPP_ICENU,YSPP_KGN_ACON,YSPP_KGN_SBGR)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
@@ -80,6 +81,7 @@
 !!      2020-12 U. Andrae : Introduce SPP for HARMONIE-AROME
 !!      2018-02 K.I: Ivarsson: More inputs to OCND2-option for saving computing time.
 !!     R. El Khatib 24-Aug-2021 Specific cache-blocking factor for microphysics
+!!      2021-01 D. Martin-Perez: n.r.t. aerosoles
 !!
 !-------------------------------------------------------------------------------
 !
@@ -167,6 +169,11 @@ REAL, DIMENSION(KLON,1), INTENT(OUT)       :: PINPRS! Snow instant precip
 REAL, DIMENSION(KLON,1), INTENT(OUT)       :: PINPRG! Graupel instant precip
 REAL, DIMENSION(KLON,1), INTENT(OUT)       :: PINPRH! Hail instant precip
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT) :: PFPR ! upper-air precip
+!
+LOGICAL,                      INTENT(IN) :: OAERONRT ! Switch for Near-Real-Time aerosol
+LOGICAL,                      INTENT(IN) :: OAEIFN   ! Switch to activate ice nuclei
+REAL, DIMENSION(KLON,1,KLEV), INTENT(IN) :: PCLDROP  ! Cloud droplet number concentration
+REAL, DIMENSION(KLON,1,KLEV), INTENT(IN) :: PIFNNC   ! Ice Forming Nuclei number concentration
 !
 TYPE(TYP_DDH), INTENT(INOUT), TARGET :: YDDDH
 TYPE(TLDDH), INTENT(IN), TARGET :: YDLDDH
@@ -462,6 +469,7 @@ ELSEIF (CMICRO=='ICE4' .AND. .NOT. PHYEX%PARAM_ICEN%LRED) THEN
                  &  PINPRC=ZINPRC,PINPRR=PINPRR,PEVAP3D=PEVAP,&
                  &  PINPRS=PINPRS, PINPRG=PINPRG, &
                  &  PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, &
+                 &  OAERONRT=OAERONRT, OAEIFN=OAEIFN, PCLDROP=PCLDROP, PIFNNC=PIFNNC, &
                  &  TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
                  &  PRHT=PRT(:,:,:,7),&
                  &  PRHS=PRS(:,:,:,7), PINPRH=PINPRH, PFPR=PFPR, &
@@ -521,6 +529,7 @@ ELSE
                  &  PINPRC=ZINPRC,PINPRR=PINPRR,PEVAP3D=PEVAP,&
                  &  PINPRS=PINPRS, PINPRG=PINPRG, &
                  &  PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, &
+                 &  OAERONRT=OAERONRT, OAEIFN=OAEIFN, PCLDROP=PCLDROP, PIFNNC=PIFNNC, &
                  &  TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
                  &  PFPR=PFPR, &
                  &  PICENU=ZICENU, &

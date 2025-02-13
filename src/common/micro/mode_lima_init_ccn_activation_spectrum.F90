@@ -39,6 +39,8 @@ USE MODI_HYPGEO
 USE MODI_HYPSER
 USE MODD_CST, ONLY:CST_T
 USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
+USE MODD_PRECISION, ONLY: MNHREAL64
+USE MODI_MINPACK
 !
 IMPLICIT NONE
 !
@@ -56,13 +58,13 @@ REAL,             INTENT(OUT) :: PKAPPA         ! kappa
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER, PARAMETER            :: IM = 1000        ! Number of points (S,Nccn) used to fit the spectra
-INTEGER, PARAMETER            :: IN = 3          ! Number of parameters to adjust
-REAL, DIMENSION(IN)           :: ZPARAMS         ! Parameters to adjust by the LM algorithm (k, mu, beta)
-REAL, DIMENSION(IM)           :: ZFVEC           ! Array to store the distance between theoretical and fitted spectra
-INTEGER                       :: IFLAG          ! 
-INTEGER                       :: IINFO           ! 
-REAL                          :: ZTOL = 1.E-16   ! Fit precision required
+INTEGER(KIND=4), PARAMETER            :: IM = 1000        ! Number of points (S,Nccn) used to fit the spectra
+INTEGER(KIND=4), PARAMETER            :: IN = 3          ! Number of parameters to adjust
+REAL(KIND=MNHREAL64), DIMENSION(IN)   :: ZPARAMS         ! Parameters to adjust by the LM algorithm (k, mu, beta)
+REAL(KIND=MNHREAL64), DIMENSION(IM)   :: ZFVEC           ! Array to store the distance between theoretical and fitted spectra
+INTEGER                               :: IFLAG          ! 
+INTEGER(KIND=4)                       :: IINFO           ! 
+REAL(KIND=MNHREAL64)                  :: ZTOL = 1.E-16   ! Fit precision required
 !
 INTEGER                       :: II, IJ         ! Loop indices
 !
@@ -154,7 +156,7 @@ DO IJ=1, SIZE(ZT)
 !*       3.     Compute C, k, mu, beta, using the Levenberg-Marquardt algorithm
 !	        ---------------------------------------------------------------
 !
-   ZPARAMS(1:3) = (/ 1., 1., 1000. /)
+   ZPARAMS(1:3) = (/ 1._MNHREAL64, 1._MNHREAL64, 1000._MNHREAL64 /)
    IFLAG = 1
    CALL LMDIF1 ( DISTANCE, IM, IN, ZPARAMS, ZFVEC, ZTOL, IINFO )
 !
@@ -340,6 +342,8 @@ END FUNCTION ZRIDDR
 !*       0. DECLARATIONS
 !
 USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
+USE MODD_CST, ONLY : XMV, XAVOGADRO, XBOLTZ, XRHOLW
+USE MODD_PRECISION, ONLY: MNHREAL64
 !
     IMPLICIT NONE
 !
@@ -356,11 +360,13 @@ USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
     REAL              :: ZA     ! factor inside the exponential
+    REAL(KIND=MNHREAL64)      :: Z
 !    
     IF (LHOOK) CALL DR_HOOK('DSDD', 0, ZHOOK_HANDLE)
     ZA = 4 * 0.072 * CST%XMV / CST%XAVOGADRO / CST%XBOLTZ / PT / CST%XRHOLW
-    ZDS = (PD**3-PDDRY**3) * (PD**3-(1-PKAPPA)*PDDRY**3) * ZA - 3. * PKAPPA * PD**4 * PDDRY**3
+    ZDS = (PD**3-PDDRY**3) * (PD**3-(1_MNHREAL64-PKAPPA)*PDDRY**3) * ZA - 3._MNHREAL64 * PKAPPA * DBLE(PD)**4 * DBLE(PDDRY)**3
     ZDS = ZDS * EXP(ZA/PD) / (PD**3-(1-PKAPPA)*PDDRY**3)**2
+    ZDS = Z
 !
 IF (LHOOK) CALL DR_HOOK('DSDD', 1, ZHOOK_HANDLE)
 END FUNCTION DSDD
@@ -407,11 +413,12 @@ USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 !*       0.1 declarations of arguments and result
 !
-    INTEGER, INTENT(IN) :: KM
-    INTEGER, INTENT(IN) :: KN
-    REAL, INTENT(IN) ::    PX(KN)
-    REAL, INTENT(OUT) ::    PFVEC(KM)
-    INTEGER, INTENT(INOUT) :: IFLAG
+    !DISTANCE must use KIND 8 reals and KIND 4 integers to be used by LMDIF1
+    INTEGER(KIND=4), INTENT(IN) :: KM
+    INTEGER(KIND=4), INTENT(IN) :: KN
+    REAL(KIND=MNHREAL64), INTENT(IN) ::    PX(KN)
+    REAL(KIND=MNHREAL64), INTENT(OUT) ::    PFVEC(KM)
+    INTEGER(KIND=4), INTENT(INOUT) :: IFLAG
 !
 !*       0.2 declarations of local variables
 !
@@ -429,7 +436,7 @@ USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
        DO II=1, KM
           ! ZS in "no units", ie ZS=0.01 for a 1% suersaturation
           !       ZW= C * (ZS(I)/100)**X(1) * HYPGEO(X(2),X(1)/2,X(1)/2+1,X(3),ZS(I)/100)
-          ZW= ZC * (ZS(II))**PX(1) * HYPGEO(PX(2),PX(1)/2,PX(1)/2+1,PX(3),ZS(II))
+          ZW= ZC * (ZS(II))**PX(1) * HYPGEO(REAL(PX(2)),REAL(PX(1)/2),REAL(PX(1)/2+1),REAL(PX(3)),REAL(ZS(II)))
 !!$       IF (X(3)*(ZS(I)/100)**2 .LT. 0.98) THEN
 !!$          CALL HYPSER(X(2),X(1)/2,X(1)/2+1,-X(3)*(ZS(I)/100)**2,ZW2)
 !!$          print *, "args= ", X(2), X(1)/2, X(1)/2+1, -X(3)*(ZS(I)/100)**2, " hypser = ", ZW2

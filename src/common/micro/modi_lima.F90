@@ -4,12 +4,13 @@ IMPLICIT NONE
 INTERFACE
 !
    SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV,                    &
-                  D, CST, NEBN, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS, KRR, &
+                  D, CST, NEBN, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, HACTCCN, KBUDGETS, KRR, &
                   PTSTEP, OELEC,                                          &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
+                  KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,                &
                   ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
-                  PTHS, PRS, PSVS,                                        &
+                  PAERO,PSOLORG, PMI, PTHS, PRS, PSVS,                    &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
                   PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
                   PLATHAM_IAGGS, PEFIELDW, PSV_ELEC_T, PSV_ELEC_S         )
@@ -43,6 +44,7 @@ TYPE(RAIN_ICE_PARAM_T),   INTENT(IN)    :: ICEP
 TYPE(ELEC_PARAM_T),       INTENT(IN)    :: ELECP   ! electrical parameters
 TYPE(ELEC_DESCR_T),       INTENT(IN)    :: ELECD   ! electrical descriptive csts
 TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER,                  INTENT(IN)    :: KBUDGETS
 INTEGER,                  INTENT(IN)    :: KRR
@@ -58,6 +60,9 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PDZZ       ! Layer thik
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PRHODJ     ! Dry density * Jacobian
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PPABST     ! absolute pressure at t
 !
+INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
+LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
+!
 LOGICAL,                                 INTENT(IN)   :: ODTHRAD    ! Use radiative temperature tendency
 REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &
                 MERGE(D%NJT,0,ODTHRAD), &
@@ -66,6 +71,9 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, TNSV%NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT)    :: PTHS       ! Theta source
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(INOUT) :: PRS        ! Mixing ratios sources

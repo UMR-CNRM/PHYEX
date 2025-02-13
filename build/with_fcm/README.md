@@ -18,7 +18,7 @@ The make\_fcm.sh script will:
   - populate the fcm and fiat directories on first call
   - create the arch\_$ARCH directory, poulate it with arch specific files and a compilation script
   - populate the compilation directory with source code (using the prep\_code.sh script). Source code
-    transformation can occur during this step (in particular using the PYFT_OPTS variable set
+    transformation can occur during this step (in particular using the PYFT\_OPTS variable set
     in the architecture env file).
   - execute the newly created compilation script
 
@@ -37,7 +37,7 @@ Such a file can be build using a gmkfile with the command:
   make\_fcm.sh --gmkfile \<GMKFILE\> --arch \<new arch name\>
 The env file is sourced several times:
  - before populating the build directory with the source code.
-   Indeed, during this second step, the source code is copied or cloned and transformed by the pyft\_tool.py script.
+   Indeed, during this second step, the source code is copied or cloned and transformed by the pyfortool script.
    The active transformations are controlled by the --noexpand/--expand options given to the
    different check\_commit\_\* scripts and by the PYFT\_OPTS that can be set in the env file (only for testprogs).
    The syntax is given below.
@@ -57,10 +57,10 @@ A line can take one of these two forms:
     If the line doesn't contain the FILE\_DESCRIPTOR part, it applies to all source code.
 
 For example, to transform all source code in lower case:
-> export OPTS='--lowerCase'; pyft\_tool.py --pyft\_opts\_env OPTS ...
+> export OPTS='--lowerCase'; pyfortool --pyfortool\_opts\_env OPTS ...
 
 To transform all source code in lower case, except routines in turb directory which must be
 in upper case but keeping the turb.F90 in lower case:
 > export OPTS='--lowerCase 
 > ^turb/:=:--upperCase 
-> ^turb/turb\..90:=:--lowerCase'; pyft\_tool.py --pyft\_opts\_env OPTS ...
+> ^turb/turb\..90:=:--lowerCase'; pyfortool --pyfortool\_opts\_env OPTS ...

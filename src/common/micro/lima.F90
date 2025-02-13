@@ -4,12 +4,15 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     #####################################################################
-SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV, D, CST, NEBN, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS, KRR, &
+SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV, D, CST, NEBN,         &
+                  ICED, ICEP, ELECD, ELECP,                               &
+                  BUCONF, TBUDGETS, HACTCCN, KBUDGETS, KRR,               &
                   PTSTEP, OELEC,                                          &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
+                  KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,                &
                   ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
-                  PTHS, PRS, PSVS,                         &
+                  PAERO,PSOLORG, PMI, PTHS, PRS, PSVS,                    &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
                   PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
                   PLATHAM_IAGGS, PEFIELDW, PSV_ELEC_T, PSV_ELEC_S         )
@@ -62,7 +65,6 @@ USE MODD_BUDGET,          ONLY: TBUDGETDATA, TBUDGETCONF_T, NBUDGET_TH, NBUDGET_
 USE MODD_CST,             ONLY: CST_T
 USE MODD_NSV,             ONLY: NSV_T
 USE MODD_NEB_N,           ONLY: NEB_T
-
 USE MODE_BUDGET_PHY,      ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 USE MODE_TOOLS,           only: COUNTJV
 
@@ -93,6 +95,7 @@ TYPE(RAIN_ICE_PARAM_T),   INTENT(IN)    :: ICEP
 TYPE(ELEC_PARAM_T),       INTENT(IN)    :: ELECP   ! electrical parameters
 TYPE(ELEC_DESCR_T),       INTENT(IN)    :: ELECD   ! electrical descriptive csts
 TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER,                  INTENT(IN)    :: KBUDGETS
 INTEGER,                  INTENT(IN)    :: KRR
@@ -107,6 +110,8 @@ REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PDZZ       ! Layer thikness (
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PRHODJ     ! Dry density * Jacobian
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PPABST     ! absolute pressure at t
+INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
+LOGICAL, INTENT(IN) :: ODUST, OSALT, OORILAM
 !
 LOGICAL,                                 INTENT(IN)   :: ODTHRAD    ! Use radiative temperature tendency
 REAL, DIMENSION(MERGE(D%NIJT,0,ODTHRAD), &
@@ -115,6 +120,9 @@ REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
 REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
+REAL, DIMENSION(D%NIJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(D%NIJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(D%NIJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT)    :: PTHS       ! Theta source
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(INOUT) :: PRS        ! Mixing ratios sources
@@ -1151,10 +1159,11 @@ CALL LIMA_COMPUTE_CLOUD_FRACTIONS (LIMAP, D,                          &
 !               --------------------
 !
 CALL LIMA_NUCLEATION_PROCS (LIMAP, LIMAW, LIMAC, TNSV, D, CST, NEBN, BUCONF, TBUDGETS, KBUDGETS,  &
+                            KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,            &
                             PTSTEP, PRHODJ,                                     &
                             PRHODREF, ZEXN, PPABST, ZT, PDTHRAD, PW_NU,         &
                             ZTHT, ZRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, ZRHT,     &
-                            ZCCT, ZCRT, ZCIT, ZCIT_SHAPE,                       &
+                            ZCCT, ZCRT, ZCIT, ZCIT_SHAPE, PAERO,PSOLORG, PMI, HACTCCN, &
                             ZCCNFT, ZCCNAT, ZIFNFT, ZIFNNT, ZIMMNT, ZHOMFT,     &
                             PCLDFR, PICEFR, PPRCFR,                             &
                             ZTOT_RV_HENU, ZTOT_RC_HINC, ZTOT_RI_HIND, ZTOT_RV_HONH)

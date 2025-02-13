@@ -377,19 +377,25 @@ def comp_ncdump(f1, f2, nbytes):
         print(diff)
     return 0 if ncdumps[0] == ncdumps[1] else 1
 
+
 def comp_testprogs(f1, f2):
+    """
+    Comparison function for testprogs output files
+    """
     def read(f):
-        with open(f, 'r') as fd:
+        with open(f, 'r', encoding='utf-8') as fd:
             s = fd.read()
-            for p in ('\.\.', '~=', '!='): s = re.sub(p, '', s)
-            s = re.sub(r'\-0.00000E\+00([|\- ])', r' 0.00000E+00\1', s)  
+            for p in (r'\.\.', r'~=', r'!='):
+                s = re.sub(p, '', s)
+            s = re.sub(r'\-0.00000E\+00([|\- ])', r' 0.00000E+00\1', s)
             s = re.sub(r'\n\sTotal time:.*\n', '\n', s)
             s = re.sub(r'IBL =[ ]*', 'IBL = ', s)
         return s[s.index('IBL'):]
     r = read(f1) == read(f2)
     if not r:
-        print("{f1} {f2} differ".format(f1=f1, f2=f2))
+        print(f"{f1} {f2} differ")
     return 0 if r else 1
+
 
 if __name__ == "__main__":
    import argparse

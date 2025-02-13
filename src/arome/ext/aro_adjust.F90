@@ -5,10 +5,11 @@
                                   PTSTEP, &
                                   PZZF, PRHODJ, PEXNREF, PRHODREF,&
                                   PPABSM, PTHT, PRT, PSIGS, &
-                                  PMFCONV, PRC_MF, PRI_MF, PCF_MF, &
+                                  PMFCONV, PRC_MF, PRI_MF, PCF_MF, PWEIGHT_MF_CLOUD, &
                                   PTHS, PRS,  PSRCS, PCLDFR,&
                                   PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, &
                                   PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
+                                  PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,&
                                   YDDDH,YDLDDH,YDMDDH,&
                                   YSPP_PSIGQSAT,YSPP_ICE_CLD_WGT)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
@@ -78,6 +79,8 @@
 !!      2018-02 K.I Ivarsson : More outputs from OCND2 option
 !!      2020-12 U. Andrae : Introduce SPP for HARMONIE-AROME
 !!     R. El Khatib 24-Aug-2021 Optimizations
+!!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !!
 !-------------------------------------------------------------------------------
 !
@@ -125,7 +128,7 @@ REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PTHT    ! Theta at time t
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT) :: PRT     ! Moist variables at time t
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PSIGS   ! Sigma_s at time t
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PMFCONV ! convective mass flux
-REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PRC_MF, PRI_MF, PCF_MF
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PRC_MF, PRI_MF, PCF_MF, PWEIGHT_MF_CLOUD ! Mass flux cloud
 !
 !
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT) :: PTHS  ! Theta source
@@ -148,6 +151,10 @@ REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLC_HRC
 REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLC_HCF
 REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLI_HRI
 REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLI_HCF
+REAL, DIMENSION(KLON,1,KLEV), INTENT(IN)    :: PHLC_HRC_MF
+REAL, DIMENSION(KLON,1,KLEV), INTENT(IN)    :: PHLC_HCF_MF
+REAL, DIMENSION(KLON,1,KLEV), INTENT(IN)    :: PHLI_HRI_MF
+REAL, DIMENSION(KLON,1,KLEV), INTENT(IN)    :: PHLI_HCF_MF
 !
 TYPE(TYP_DDH), INTENT(INOUT), TARGET :: YDDDH
 TYPE(TLDDH), INTENT(IN), TARGET :: YDLDDH
@@ -375,7 +382,7 @@ IF (KRR==6) THEN
     & PTSTEP=ZTWOTSTEP,PSIGQSAT=ZSIGQSAT, &
     & PRHODJ=PRHODJ ,PEXNREF=PEXNREF, PRHODREF=PRHODREF,   &
     & PSIGS=PSIGS, LMFCONV=PHYEX%MISC%LMFCONV, PMFCONV=PMFCONV, PPABST=PPABSM, PZZ=ZZZ,    &
-    & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, &
+    & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD, &
     & PICLDFR=PICLDFR, PWCLDFR=PWCLDFR, & 
     & PSSIO=PSSIO, PSSIU=PSSIU, PIFR=PIFR, &
     & PRV=ZRS(:,:,:,1), PRC=ZRS(:,:,:,2),  &
@@ -388,7 +395,9 @@ IF (KRR==6) THEN
     & TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
     & PICE_CLD_WGT=ZICE_CLD_WGT(:,:), &
     & PHLC_HRC=PHLC_HRC(:,:,:), PHLC_HCF=PHLC_HCF(:,:,:), &
-    & PHLI_HRI=PHLI_HRI(:,:,:), PHLI_HCF=PHLI_HCF(:,:,:))
+    & PHLI_HRI=PHLI_HRI(:,:,:), PHLI_HCF=PHLI_HCF(:,:,:), &
+    & PHLC_HRC_MF=PHLC_HRC_MF(:,:,:), PHLC_HCF_MF=PHLC_HCF_MF(:,:,:), &
+    & PHLI_HRI_MF=PHLI_HRI_MF(:,:,:), PHLI_HCF_MF=PHLI_HCF_MF(:,:,:))
 ELSE
   CALL ICE_ADJUST ( YLDIMPHYEX, CST=PHYEX%CST, ICEP=PHYEX%RAIN_ICE_PARAMN, NEBN=PHYEX%NEBN, TURBN=PHYEX%TURBN, &
     & PARAMI=PHYEX%PARAM_ICEN, BUCONF=PHYEX%MISC%TBUCONF, KRR=KRR,&
@@ -396,7 +405,7 @@ ELSE
     & PTSTEP=ZTWOTSTEP,PSIGQSAT=ZSIGQSAT, &
     & PRHODJ=PRHODJ ,PEXNREF=PEXNREF, PRHODREF=PRHODREF,   &
     & PSIGS=PSIGS, LMFCONV=PHYEX%MISC%LMFCONV, PMFCONV=PMFCONV, PPABST=PPABSM, PZZ=ZZZ,    &
-    & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, &
+    & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD,&
     & PICLDFR=PICLDFR, PWCLDFR=PWCLDFR, & 
     & PSSIO=PSSIO, PSSIU=PSSIU, PIFR=PIFR, &
     & PRV=ZRS(:,:,:,1), PRC=ZRS(:,:,:,2), &
@@ -410,7 +419,10 @@ ELSE
     & PICE_CLD_WGT=ZICE_CLD_WGT(:,:), &
     & PRH=ZRS(:,:,:,7), &
     & PHLC_HRC=PHLC_HRC(:,:,:), PHLC_HCF=PHLC_HCF(:,:,:), & 
-    & PHLI_HRI=PHLI_HRI(:,:,:), PHLI_HCF=PHLI_HCF(:,:,:))
+    & PHLI_HRI=PHLI_HRI(:,:,:), PHLI_HCF=PHLI_HCF(:,:,:), &
+    & PHLC_HRC_MF=PHLC_HRC_MF(:,:,:), PHLC_HCF_MF=PHLC_HCF_MF(:,:,:), &
+    & PHLI_HRI_MF=PHLI_HRI_MF(:,:,:), PHLI_HCF_MF=PHLI_HCF_MF(:,:,:))
+
 ENDIF
 
 CALL CLEAR_SPP_TYPE(YSPP_PSIGQSAT)

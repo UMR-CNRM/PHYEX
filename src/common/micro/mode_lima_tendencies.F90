@@ -642,8 +642,6 @@ IF ((.NOT. LIMAP%LKHKO) .AND. LIMAP%NMOM_R.GE.2) THEN
                                     P_CR_SCBU            )
    !
    P_CR_SCBU(:) = P_CR_SCBU(:) * ZPF1D(:)
-   ! process limited until checks on concentrations are added to the time-splitting loop
-   P_CR_SCBU(:) = MAX(P_CR_SCBU(:),-0.5*ZCRT(:)/PTSTEP)
    !
    PA_CR(:) = PA_CR(:) + P_CR_SCBU(:)
 END IF

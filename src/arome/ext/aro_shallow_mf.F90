@@ -9,9 +9,11 @@
                 PSFTH,PSFRV,                                          &
                 PTHM,PRM,                                             &
                 PUM,PVM,PTKEM,PSVM,                                   &
-                PDUDT_MF,PDVDT_MF,                                    &
+                PDUDT_MF,PDVDT_MF,PDTKEDT_MF,                         &
                 PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,                       &
-                PSIGMF,PRC_MF,PRI_MF,PCF_MF,PFLXZTHVMF,               &
+                PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
+                PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,   &
+                PWEIGHT_MF_CLOUD, PFLXZTHVMF, PFLXZUMF, PFLXZVMF,     &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF,         &
                 YDDDH,YDLDDH,YDMDDH                                   )
@@ -57,6 +59,10 @@
 !!      Y. Seity : new arguments for EDMF scheme 04/2009
 !!      S. Riette 18 May 2010: aro_shallow_mf and shallow_mf interfaces changed
 !!      S. Riette Jan 2012: support for both order of vertical levels
+!!      A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
+!!      A. Marcel Jan 2025: TKE mixing
+!!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !!
 !-------------------------------------------------------------------------------
 !
@@ -74,6 +80,8 @@ USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 USE DDH_MIX, ONLY  : TYP_DDH
 USE YOMLDDH, ONLY  : TLDDH
 USE YOMMDDH, ONLY  : TMDDH
+!
+USE YOMLSFORC, ONLY: LMUSCLFA, NMUSCLFA
 !
 IMPLICIT NONE
 !
@@ -122,12 +130,17 @@ REAL, DIMENSION(KLON,KLEV,KSV), INTENT(IN) ::  PSVM         ! passive scalar
                                                              ! variables for EDMF scheme
 REAL, DIMENSION(KLON,KLEV),   INTENT(OUT)::  PDUDT_MF     ! tendency of U   by massflux scheme
 REAL, DIMENSION(KLON,KLEV),   INTENT(OUT)::  PDVDT_MF     ! tendency of V   by massflux scheme
+REAL, DIMENSION(KLON,KLEV),   INTENT(OUT)::  PDTKEDT_MF   ! tendency of TKE by massflux scheme
 REAL, DIMENSION(KLON,KLEV),   INTENT(OUT)::  PDTHLDT_MF   ! tendency of thl by massflux scheme
 REAL, DIMENSION(KLON,KLEV),   INTENT(OUT)::  PDRTDT_MF    ! tendency of rt  by massflux scheme
 REAL, DIMENSION(KLON,KLEV,KSV), INTENT(OUT)::  PDSVDT_MF    ! tendency of Sv  by massflux scheme
 
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
+REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF ! high/low cloud diagnostics
+REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PFLXZTHVMF           ! Thermal production for TKE scheme
+REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PFLXZUMF             ! Dynamic production for TKE scheme
+REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PFLXZVMF             ! Dynamic production for TKE scheme
 REAL, DIMENSION(KLON,KLEV), INTENT(INOUT) ::  PTHL_UP   ! Thl updraft characteristics
 REAL, DIMENSION(KLON,KLEV), INTENT(INOUT) ::  PRT_UP    ! Rt  updraft characteristics
 REAL, DIMENSION(KLON,KLEV), INTENT(INOUT) ::  PRV_UP    ! Vapor updraft characteristics
@@ -148,12 +161,16 @@ TYPE(TMDDH),   INTENT(IN), TARGET      :: YDMDDH
 !*       0.2   Declarations of local variables :
 !
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_SV1) :: YLBUDGET !NBUDGET_SV1 is the one with the highest number needed for shallow_mf
-INTEGER, DIMENSION(size(PRHODJ,1)) :: IKLCL,IKETL,IKCTL
-REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF
-REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZDETR,ZENTR
+INTEGER, DIMENSION(KLON) :: IKLCL,IKETL,IKCTL
+REAL,DIMENSION(KLON,KLEV) :: ZFLXZTHMF,ZFLXZRMF,ZFLXZTKEMF
+REAL,DIMENSION(KLON,KLEV) :: ZDETR,ZENTR
+REAL,DIMENSION(KLON,KLEV) :: ZTKE_UP
+REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZW
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: JBU ! Loop index for budgets
+!
+#include "wrarom.intfb.h"
 !
 !
 !
@@ -205,7 +222,7 @@ ENDDO
 !
 !         ---------------------------------
 !
-  CALL SHALLOW_MF(YLDIMPHYEX, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB, &
+  CALL SHALLOW_MF(YLDIMPHYEX, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB, PHYEX%RAIN_ICE_PARAMN, &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
      &ONOMIXLG=PHYEX%MISC%ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND, &
      &PTSTEP=PTSTEP,                                                                      &
@@ -214,12 +231,14 @@ ENDDO
      &PPABSM=PPABSM,PEXNM=PEXNM,                                                          &
      &PSFTH=PSFTH,PSFRV=PSFRV,                                                            &
      &PTHM=PTHM,PRM=PRM,PUM=PUM,PVM=PVM,PTKEM=PTKEM,PSVM=PSVM,                            &
-     &PDUDT_MF=PDUDT_MF,PDVDT_MF=PDVDT_MF,                                                &
+     &PDUDT_MF=PDUDT_MF,PDVDT_MF=PDVDT_MF,PDTKEDT_MF=PDTKEDT_MF,                          &
      &PDTHLDT_MF=PDTHLDT_MF,PDRTDT_MF=PDRTDT_MF,PDSVDT_MF=PDSVDT_MF,                      &
-     &PSIGMF=PSIGMF,PRC_MF=PRC_MF,PRI_MF=PRI_MF,PCF_MF=PCF_MF,PFLXZTHVMF=PFLXZTHVMF,      &
-     &PFLXZTHMF=ZFLXZTHMF,PFLXZRMF=ZFLXZRMF,PFLXZUMF=ZFLXZUMF,PFLXZVMF=ZFLXZVMF,          &
+     &PSIGMF=PSIGMF,PRC_MF=PRC_MF,PRI_MF=PRI_MF,PCF_MF=PCF_MF,                            &
+     &PHLC_HRC=PHLC_HRC_MF, PHLC_HCF=PHLC_HCF_MF, PHLI_HRI=PHLI_HRI_MF, PHLI_HCF=PHLI_HCF_MF,&
+     &PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD, PFLXZTHVMF=PFLXZTHVMF,      &
+     &PFLXZTHMF=ZFLXZTHMF,PFLXZRMF=ZFLXZRMF,PFLXZUMF=PFLXZUMF,PFLXZVMF=PFLXZVMF,PFLXZTKEMF=ZFLXZTKEMF, &
      &PTHL_UP=PTHL_UP,PRT_UP=PRT_UP,PRV_UP=PRV_UP,PRC_UP=PRC_UP,PRI_UP=PRI_UP,            &
-     &PU_UP=PU_UP, PV_UP=PV_UP, PTHV_UP=PTHV_UP, PW_UP=PW_UP,                             &
+     &PU_UP=PU_UP, PV_UP=PV_UP, PTKE_UP=ZTKE_UP, PTHV_UP=PTHV_UP, PW_UP=PW_UP,            &
      &PFRAC_UP=PFRAC_UP,PEMF=PEMF,PDETR=ZDETR,PENTR=ZENTR,                                &
      &KKLCL=IKLCL,KKETL=IKETL,KKCTL=IKCTL,PDX=PDX,PDY=PDY,                                &
      &BUCONF=PHYEX%MISC%TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET)               )
@@ -232,6 +251,45 @@ ENDDO
 !             (on obtient des termes homog�nes � des tendances)
 !
 !             -----------------------------------------------
+!
+IF (LMUSCLFA) THEN
+  !Some updraft variables are initialised with environmental values.
+  !ZW mask must be used to suppress those values, for variables on flux levels
+  ZW=1.
+  WHERE(PFRAC_UP==0.) ZW=0.
+
+  !Variables on flux levels
+  CALL WRAROM(NMUSCLFA, 'MF',         PEMF*ZW,               &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .TRUE.)
+  CALL WRAROM(NMUSCLFA, 'CF_MF',      PCF_MF,                &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .FALSE.)
+  CALL WRAROM(NMUSCLFA, 'ZWU',        PW_UP*ZW,              &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .TRUE.)
+  CALL WRAROM(NMUSCLFA, 'PUDAL',      PFRAC_UP*ZW,           &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .TRUE.)
+  CALL WRAROM(NMUSCLFA, 'ZEPSILON_U', ZENTR,                 &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .FALSE.)
+  CALL WRAROM(NMUSCLFA, 'ZDELTA_U',   ZDETR,                 &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .FALSE.)
+  CALL WRAROM(NMUSCLFA, 'PQLSHCONV',  PRC_UP/(1.+PRT_UP)*ZW, &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .TRUE.)
+  CALL WRAROM(NMUSCLFA, 'PQISHCONV',  PRI_UP/(1.+PRT_UP)*ZW, &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .TRUE.)
+  CALL WRAROM(NMUSCLFA, 'PQU',        PRV_UP/(1.+PRT_UP)*ZW, &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .TRUE.)
+  CALL WRAROM(NMUSCLFA, 'THV_UP',     PTHV_UP*ZW,            &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .TRUE.)
+  CALL WRAROM(NMUSCLFA, 'RT_UP',      PRT_UP*ZW,             &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .TRUE.)
+  CALL WRAROM(NMUSCLFA, 'TKE_UP',     ZTKE_UP*ZW,            &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .TRUE.)
+  CALL WRAROM(NMUSCLFA, 'WE_UP',      ZFLXZTKEMF*ZW,         &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .TRUE.)
+  CALL WRAROM(NMUSCLFA, 'WRT_UP',     ZFLXZRMF*ZW,           &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .TRUE.)
+  CALL WRAROM(NMUSCLFA, 'WTHL_UP',    ZFLXZTHMF*ZW,          &
+              KLON, YLDIMPHYEX%NKT, YLDIMPHYEX%NKB, YLDIMPHYEX%NKE, YLDIMPHYEX%NKL, .TRUE.)
+ENDIF
 !
 IF (LHOOK) CALL DR_HOOK('ARO_SHALLOW_MF',1,ZHOOK_HANDLE)
 END SUBROUTINE ARO_SHALLOW_MF

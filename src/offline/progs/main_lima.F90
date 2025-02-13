@@ -59,6 +59,9 @@ REAL, ALLOCATABLE   :: PINPRS       (:,:)
 REAL, ALLOCATABLE   :: PINPRG       (:,:)
 REAL, ALLOCATABLE   :: PINPRH       (:,:)
 REAL, ALLOCATABLE   :: PEVAP        (:,:,:)
+REAL, ALLOCATABLE   :: PAERO        (:,:,:,:)
+REAL, ALLOCATABLE   :: PSOLORG        (:,:,:,:)
+REAL, ALLOCATABLE   :: PMI        (:,:,:,:)
 
 INTEGER :: NPROMA, NGPBLKS, NFLEVG
 INTEGER :: JLON, JLEV
@@ -75,6 +78,9 @@ INTEGER                  :: NTID, ITID
 INTEGER                  :: JRR
 REAL                     :: ZTHVREFZIKB! for electricity use only
 INTEGER                  :: NMOD_CCN, NMOD_IFN, NMOD_IMM
+INTEGER                  :: NSP, NCARB, NSOA
+LOGICAL                  :: LDUST, LSALT, LORILAM 
+CHARACTER(LEN=4)         :: HACTCCN ! kind of CCN activation
 
 REAL, ALLOCATABLE, TARGET :: PSTACK8(:,:)
 REAL(KIND=4), ALLOCATABLE, TARGET :: PSTACK4(:,:)
@@ -109,6 +115,11 @@ CALL GETOPTION ("--bind", LLBIND)
 CALL CHECKOPTIONS ()
 
 LLDIFF = .FALSE.
+! En attendant un init d'ORILAM externalisé
+HACTCCN='   '
+LDUST = .FALSE.
+LSALT = .FALSE.
+LORILAM = .FALSE.
 
 IRANK = 0
 ISIZE = 1
@@ -117,13 +128,14 @@ IF (LLBIND) THEN
   CALL LINUX_BIND_DUMP (IRANK, ISIZE)
 ENDIF
 
-CALL GETDATA_LIMA (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, NMOD_CCN, NMOD_IFN, NMOD_IMM, ZTHVREFZIKB, &
-                  &PRHODREF, PEXNREF, PDZZ, PRHODJ, PPABSM, PDTHRAD, PTHT, &
+CALL GETDATA_LIMA (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, NMOD_CCN, NMOD_IFN, NMOD_IMM, NSP, NCARB, NSOA, &
+                  &ZTHVREFZIKB, PRHODREF, PEXNREF, PDZZ, PRHODJ, PPABSM, PDTHRAD, PTHT, &
                   &PRT, PSVT, PW_NU, PTHS, PRS, PSVS, PCLDFR, PICEFR, PPRCFR, PFPR, &
                   &PTHS_OUT, PRS_OUT, PSVS_OUT, ZINPRC_OUT, ZINDEP_OUT, PINPRR_OUT, ZINPRI_OUT, &
                   &PINPRS_OUT, PINPRG_OUT, PINPRH_OUT, PEVAP_OUT, PCLDFR_OUT, PICEFR_OUT, &
                   &PPRCFR_OUT, PFPR_OUT, &
                   &ZINPRC, ZINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, PEVAP, &
+                  &PAERO, PSOLORG, PMI, &
                   &LLVERBOSE)
 
 KLEV = SIZE (PRS, 2)
@@ -132,7 +144,10 @@ IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
 
 PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
+#ifndef _OPENACC
+! Code is not yet ready for GPU
 CALL INIT_PHYEX(KRR, PHYEX)
+#endif
 
 D0%NIT  = NPROMA
 D0%NIB  = 1
@@ -230,15 +245,28 @@ DO ITIME = 1, NTIME
     INUMPIN = 0
 #endif
 
+#ifdef _OPENACC
+    ! Code is not yet ready for GPU
+    ZINPRC(JLON, IBL)=0.
+    ZINDEP(JLON, IBL)=0.
+    PINPRR(JLON, IBL)=0.
+    ZINPRI(JLON, IBL)=0.
+    PINPRS(JLON, IBL)=0.
+    PINPRG(JLON, IBL)=0.
+    PINPRH(JLON, IBL)=0.
+    PEVAP(JLON, :, IBL)=0.
+#else
     CALL LIMA (PHYEX%PARAM_LIMA, PHYEX%PARAM_LIMA_WARM, PHYEX%PARAM_LIMA_COLD, PHYEX%PARAM_LIMA_MIXED, PHYEX%TNSV, &
                D, PHYEX%CST, PHYEX%NEBN, PHYEX%RAIN_ICE_DESCRN, PHYEX%RAIN_ICE_PARAMN,   &
                PHYEX%ELEC_DESCR, PHYEX%ELEC_PARAM, &
-               PHYEX%MISC%TBUCONF, PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET, KRR, &
+               PHYEX%MISC%TBUCONF, PHYEX%MISC%YLBUDGET, HACTCCN,PHYEX%MISC%NBUDGET, KRR, &
                PTSTEP=2*PHYEX%MISC%PTSTEP, OELEC=PHYEX%MISC%OELEC,                 &
                PRHODREF=PRHODREF(:, :, IBL), PEXNREF=PEXNREF(:, :, IBL), PDZZ=PDZZ(:, :, IBL), PTHVREFZIKB=ZTHVREFZIKB,       &
                PRHODJ=PRHODJ(:, :, IBL), PPABST=PPABSM(:, :, IBL),                                 &
+               KCARB=NCARB, KSOA=NSOA, KSP=NSP, ODUST=LDUST, OSALT=LSALT, OORILAM=LORILAM,  &
                ODTHRAD=.TRUE., PDTHRAD=PDTHRAD(:, :, IBL), PTHT=PTHT(:, :, IBL), PRT=PRT(:, :, :, IBL), PSVT=PSVT(:, :, :, IBL), &
                PW_NU=PW_NU(:, :, IBL),                  &
+               PAERO=PAERO(:,:,:, IBL), PSOLORG=PSOLORG(:,:,:,IBL), PMI=PMI(:,:,:,IBL), &
                PTHS=PTHS(:, :, IBL), PRS=PRS(:, :, :, IBL), PSVS=PSVS(:, :, :, IBL),                                &
                PINPRC=ZINPRC(:, IBL), PINDEP=ZINDEP(:, IBL), PINPRR=PINPRR(:, IBL), PINPRI=ZINPRI(:, IBL), PINPRS=PINPRS(:, IBL), &
                PINPRG=PINPRG(:, IBL), PINPRH=PINPRH(:, IBL), &
@@ -249,6 +277,7 @@ DO ITIME = 1, NTIME
     & , YDSTACK=YLSTACK &
 #endif
     & )
+#endif
 
 #ifdef USE_COLCALL
     ENDDO

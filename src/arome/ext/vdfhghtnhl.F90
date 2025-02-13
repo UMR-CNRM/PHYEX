@@ -1,5 +1,5 @@
 !OPTIONS XOPT(HSFUN)
-SUBROUTINE VDFHGHTNHL (YDVDF,YDEPHLI,YDECUMF,YDEPHY,YDPARAR,KIDIA   , KFDIA   , KLON    , KLEV   , KDRAFT, PTMST, KSTEP, &
+SUBROUTINE VDFHGHTNHL (YDVDF,YDEPHLI,YDECUMF,YDEPHY,YDPARAR,YDEGEO, KIDIA   , KFDIA   , KLON    , KLEV   , KDRAFT, PTMST, KSTEP, &
                    & PUM1    , PVM1    , PTM1    , PQM1    , PLM1    , PIM1   , PAM1,&
                    & PAPHM1  , PAPM1   , PGEOM1  , PGEOH  , &
                    & PKMFL   , PKHFL   , PKQFL   , PMFLX  , PEXNF , PEXNH, &
@@ -35,6 +35,8 @@ SUBROUTINE VDFHGHTNHL (YDVDF,YDEPHLI,YDECUMF,YDEPHY,YDPARAR,KIDIA   , KFDIA   , 
 !     Karl-Ivar Ivarsson           April /2020 Introduce LTOTPRECL option
 !     U. Andrae Dec 2020                       Introduce SPP for HARMONIE-AROME
 !      R. El Khatib 08-Jul-2022 Contribution to the encapsulation of YOMCST and YOETHF
+!     Wim de Rooy                  09/2022     Scale adaptive shallow convection scheme along
+!                                              the lines of Rachel Honnert
 
 
 !     PURPOSE
@@ -143,6 +145,7 @@ USE YOECUMF  , ONLY : TECUMF
 USE YOMPARAR , ONLY : TPARAR
 USE YOEPHY   , ONLY : TEPHY
 USE YOEVDF   , ONLY : TVDF
+USE YEMGEO   , ONLY : TEGEO
 
 !for optimation
 USE MODD_CST
@@ -163,6 +166,7 @@ TYPE(TECUMF)      ,INTENT(IN)    :: YDECUMF
 TYPE(TEPHLI)      ,INTENT(IN)    :: YDEPHLI
 TYPE(TEPHY)       ,INTENT(IN)    :: YDEPHY
 TYPE(TPARAR)      ,INTENT(IN)    :: YDPARAR
+TYPE(TEGEO)       ,INTENT(IN)    :: YDEGEO                  ! Geometry instance
 INTEGER(KIND=JPIM),INTENT(IN)    :: KLON
 INTEGER(KIND=JPIM),INTENT(IN)    :: KLEV
 INTEGER(KIND=JPIM),INTENT(IN)    :: KDRAFT
@@ -290,15 +294,16 @@ REAL(KIND=JPRB) ::    ZQEXC   , ZTEXC   , ZDZ     , &
 REAL(KIND=JPRB) ::    ZTAUEPS(KLON) , ZCLDDEPTH  , &
                     & ZW2THRESH         , ZSTABTHRESH       , ZBIRTHRESH , &
                     & ZCLDDEPTHDP       , ZDZCLOUD(KLON), &
-                    & ZREPUST, ZGHM1
-    
+                    & ZREPUST, ZGHM1, ZMFDRYCON, ZMBCLOSURECON
+
 REAL(KIND=JPRB) ::    ZZI(KLON),ZB1(KLON),ZCOUNT(KLON), &
-                    & ZFRMIN(KLON,2),ZMU,ZVAL
+                    & ZFRMIN(KLON,2),ZMU,ZVAL,ZMFDRY(KLON),ZMBCLOSURE(KLON)
 INTEGER(KIND=JPIM) :: ITOP, IBASE, JKO,JKE
 
 !cstep 30082007: introduce two parcel time scales, one for the test parcel (ZTAUEPS_TEST) and one
 !              : for the actual parcels (ZTAUEPS)
 REAL(KIND=JPRB) :: ZTAUEPS_TEST
+REAL(KIND=JPRB) :: ZGRIDSIZE
 
 INTEGER(KIND=JPIM) :: IZI(KLON,KDRAFT)
 
@@ -330,7 +335,11 @@ ASSOCIATE(RTAUMEL=>YDECUMF%RTAUMEL, &
  & RTWAT=>YDTHF%RTWAT, RTICE=>YDTHF%RTICE, RTICECU=>YDTHF%RTICECU, RTWAT_RTICE_R=>YDTHF%RTWAT_RTICE_R, &
  & RTWAT_RTICECU_R=>YDTHF%RTWAT_RTICECU_R, &
  & YSURF=>YDEPHY%YSURF,LHARATU=>YDPARAR%PHYEX%TURBN%LHARAT, &
- & LTOTPREC=>YDPARAR%LTOTPREC,LTOTPRECL=>YDPARAR%LTOTPRECL)
+ & EDELX=>YDEGEO%EDELX, EDELY=>YDEGEO%EDELY, &
+ & LTOTPREC=>YDPARAR%LTOTPREC,LTOTPRECL=>YDPARAR%LTOTPRECL, &
+ & LDUALMF=>YDPARAR%LDUALMF, LSCAWAREMF=>YDPARAR%LSCAWAREMF)
+
+ZGRIDSIZE = EDELX*0.5_JPRB + EDELY*0.5_JPRB
 
 ZWL= 200._JPRB
 ZWT= 400._JPRB
@@ -368,6 +377,10 @@ IF(XFRMIN(20)>0.)ZCLDDEPTHDP = XFRMIN(20)
 
 ZSTABTHRESH = 20._JPRB     ! threshold stability (Klein & Hartmann criteria) [K]
 ZBIRTHRESH  = 0.1_JPRB     ! threshold BIR (TKE decoupling criteria) [1]
+
+ZMFDRYCON = 1.0_JPRB       ! constant for dry mass convection spp
+
+ZMBCLOSURECON = 0.35_JPRB  ! constant for mass balance closure spp
 
 CALL SURF_INQ(YSURF,PREPUST=ZREPUST)
 
@@ -467,6 +480,9 @@ ELSE
   ENDDO
 ENDIF
 
+! Prepare SPP support for ZMFDRY and ZMBCLOSURE, but set parameters to original constant values
+ZMFDRY(JL) = ZMFDRYCON
+ZMBCLOSURE(JL) = ZMBCLOSURECON
 
 
 !     -----------------------------------------------------------------
@@ -602,7 +618,7 @@ DO JL=KIDIA,KFDIA
    ZKHVFL(JL)  = ( 1.0_JPRB + RETV *  ZQTM1(JL,KLEV) ) * PKHFL(JL) +&
         & ( RETV * ZSLGM1(JL,KLEV) / RCPD )     * PKQFL(JL)
 
-   IF ( ZKHVFL(JL) >= 0.0_JPRB ) THEN
+   IF ( (ZKHVFL(JL) >= 0.0_JPRB) .OR. (.NOT.LDUALMF) ) THEN
 
       ! stable BL (no updrafts expected/needed)
       KPBLTYPE(JL)  = 0
@@ -1038,14 +1054,37 @@ DO JD = 2,KDRAFT
 
             ZWUH = ZWU2H(JL,JK,JD)**0.5_JPRB
 
-            PMFLX(JL,JK,JD)  = ZFRACB(JL,JD) * ZWUH * ZRHOH(JL,JK)
+            IF (LSCAWAREMF) THEN
+               PMFLX(JL,JK,JD)  = TANH(1.86_JPRB*(ZGRIDSIZE/PZPTOP(JL,JD)))* &
+                   & ZFRACB(JL,JD) * ZWUH * ZRHOH(JL,JK)
+            ELSE
+               PMFLX(JL,JK,JD)  = ZFRACB(JL,JD) * ZWUH * ZRHOH(JL,JK)
+            ENDIF
 
+!wc
+!   Introduce SPP parameter to control dry updraft: ZMFDRY. This controls the mass
+!   flux (note that modifying the area fraction would also modify the excess,
+!   counteracting the impact)
+            IF (JD == 2 ) THEN
+                PMFLX(JL,JK,JD)  = ZMFDRY(JL) *  PMFLX(JL,JK,JD) 
+            ENDIF
             IF (JD == 3 .AND. JK >= KPLCL(JL,3) ) THEN
                ! do only below LCL !!
-
-               PMFLX(JL,JK,JD)  = 0.35_JPRB * 0.1_JPRB * ZWSTAR(JL) *  &
-                    &         ZRHOH(JL,JK)*(PGEOH(JL,JK)-PGEOH(JL,KLEV))/ &
-                    &        (PGEOH(JL,KPLCL(JL,3))-PGEOH(JL,KLEV))
+!wc
+!   Introduce SPP parameter to control the moist updraft activity (by Grant closure
+!   massflux at cloud base.
+!   Parameter is called ZMBCLOSURE and should be constant 0.35 for deterministic
+!   run.
+               IF (LSCAWAREMF) THEN
+                  PMFLX(JL,JK,JD)  = TANH(1.86_JPRB*(ZGRIDSIZE/PZPTOP(JL,JD)))* &
+                     &         ZMBCLOSURE(JL) * 0.1_JPRB * ZWSTAR(JL) *  &
+                     &         ZRHOH(JL,JK)*(PGEOH(JL,JK)-PGEOH(JL,KLEV))/ &
+                     &        (PGEOH(JL,KPLCL(JL,3))-PGEOH(JL,KLEV))
+               ELSE
+                  PMFLX(JL,JK,JD)  = ZMBCLOSURE(JL) * 0.1_JPRB * ZWSTAR(JL) *  &
+                     &         ZRHOH(JL,JK)*(PGEOH(JL,JK)-PGEOH(JL,KLEV))/ &
+                     &        (PGEOH(JL,KPLCL(JL,3))-PGEOH(JL,KLEV))
+               ENDIF
 
                !CGL cloud depth correction, if cloud thin then limit
                ZDZCLOUD(JL) = MAX(PGEOH(JL,KPTOP(JL,3))*ZRG-PGEOH(JL,KPLCL(JL,3))*ZRG,0._JPRB)

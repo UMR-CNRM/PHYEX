@@ -6,10 +6,12 @@
 !     ###########################################################################
 SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, TNSV, D, CST, NEBN, TURBN, BUCONF, TBUDGETS, KBUDGETS,  &
                              KRR, HCONDENS, HLAMBDA3,                           &
+                             KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,           &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS, OMFCONV, PMFCONV,&
                              PPABST, PZZ, ODTHRAD, PDTHRAD, PW_NU,              &
                              PRT, PRS, PSVT, PSVS,                              &
+                             HACTCCN, PAERO,PSOLORG, PMI,                       &
                              PTHS, OCOMPUTE_SRC, PSRCS, PCLDFR, PICEFR,         &
                              PRC_MF, PRI_MF, PCF_MF)
 !     ###########################################################################
@@ -151,6 +153,12 @@ LOGICAL,                                INTENT(IN)   :: ODTHRAD    ! Use radiati
 REAL, DIMENSION(MERGE(D%NIJT,0,ODTHRAD), &
                 MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! Radiative temperature tendency
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PW_NU     ! updraft velocity used for
+INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
+LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
+REAL, DIMENSION(D%NIJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(D%NIJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(D%NIJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 !
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(IN)    :: PRT       ! m.r. at t
 !
@@ -167,6 +175,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC), &
                 MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(OUT)   :: PSRCS     ! Second-order flux
                                                                          ! s'rc'/2Sigma_s2 at time t+1
                                                                          ! multiplied by Lambda_3
+<<<<<<< HEAD
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(OUT) :: PCLDFR    ! Cloud fraction          
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(OUT) :: PICEFR    ! Cloud fraction          
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(IN)  :: PRC_MF! Convective Mass Flux liquid mixing ratio
@@ -183,9 +192,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) &
                             ZRCT,        & ! Cloud water m.r. at t
                             ZRRT,        & ! Rain water m.r. at t
                             ZRIT,        & ! Cloud ice  m.r. at t
-                            ZRST,        & ! Aggregate  m.r. at t
-                            ZRGT,        & ! Graupel    m.r. at t
-                            ZRHT,        & ! Hail       m.r. at t
 !
                             ZRVS,        & ! Water vapor m.r. source
                             ZRCS,        & ! Cloud water m.r. source
@@ -206,11 +212,6 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE &
                             ZNAS,        & ! Activated CCN C. source
                             ZNFT,        & ! Free      CCN C.
                             ZNAT           ! Activated CCN C.
-!                             ZIFS,        & ! Free      IFN C. source
-!                             ZINS,        & ! Nucleated IFN C. source
-!                             ZNIS           ! Acti. IMM. nuclei C. source
-!
-!
 !
 REAL, DIMENSION(D%NIJT,D%NKT) &
                          :: ZEXNS,&      ! guess of the Exner function at t+1
@@ -230,11 +231,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) &
                             ZCND, ZS, ZVEC1, ZDUM
 !
 INTEGER, DIMENSION(D%NIJT,D%NKT) :: IVEC1
-!
-!INTEGER                  :: IRESP      ! Return code of FM routines
-INTEGER                  :: IITER,ITERMAX  ! iterative loop for first order adjustment
-!INTEGER                  :: ILUOUT     ! Logical unit of output listing 
-!
 INTEGER                           :: ISIZE
 LOGICAL                           :: G_SIGMAS, GUSERI
 REAL, DIMENSION(:), ALLOCATABLE   :: ZRTMIN
@@ -244,8 +240,6 @@ INTEGER :: IDX
 INTEGER :: II, IK, IL
 INTEGER                           :: IMOD
 !
-!!$TYPE(TFIELDMETADATA)     :: TZFIELD
-!
 INTEGER :: ISV_LIMA_NC
 INTEGER :: ISV_LIMA_CCN_FREE
 INTEGER :: ISV_LIMA_CCN_ACTI
@@ -254,6 +248,7 @@ INTEGER :: ISV_LIMA_NI
 INTEGER :: ISV_LIMA_IFN_FREE
 INTEGER :: ISV_LIMA_IFN_NUCL
 INTEGER :: ISV_LIMA_IMM_NUCL
+!
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
@@ -267,8 +262,6 @@ ISV_LIMA_NC       = TNSV%NSV_LIMA_NC       - TNSV%NSV_LIMA_BEG + 1
 ISV_LIMA_CCN_FREE = TNSV%NSV_LIMA_CCN_FREE - TNSV%NSV_LIMA_BEG + 1
 ISV_LIMA_CCN_ACTI = TNSV%NSV_LIMA_CCN_ACTI - TNSV%NSV_LIMA_BEG + 1
 ISV_LIMA_SCAVMASS = TNSV%NSV_LIMA_SCAVMASS - TNSV%NSV_LIMA_BEG + 1
-!
-!ILUOUT = TLUOUT%NLU
 !
 ISIZE = SIZE(LIMAP%XRTMIN)
 ALLOCATE(ZRTMIN(ISIZE))
@@ -457,7 +450,9 @@ IF (OSUBG_COND .AND. LIMAP%NMOM_C.GE.2 .AND. LIMAP%LACTI) THEN
    ZRV2=ZRVT
    ZRC2=ZRCT
    CALL LIMA_CCN_ACTIVATION (LIMAP, LIMAW, D, CST, NEBN,      &
+        KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,              &
         PRHODREF, PEXNREF, PPABST, ZT2, PDTHRAD, PW_NU+ZW_MF, &
+        PAERO,PSOLORG, PMI,  HACTCCN,                         &
         ZTHT, ZRV2, ZRC2, ZCCT, ZRRT, ZNFT, ZNAT,             &
         PCLDFR                                                )      
 END IF

@@ -4,7 +4,7 @@
 set -e
 set -o pipefail #abort if left command on a pipe fails
 
-pyft_version=76f61bcd9eae523ced16e8d854e0f065fa82078e
+pyfortool_version=tags/0.2.1
 
 #This script installs PHYEX
 #Call the script with the -h option to get more information.
@@ -14,14 +14,14 @@ pyft_version=76f61bcd9eae523ced16e8d854e0f065fa82078e
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [--ALL] [--dataset] [--pyft] [--clean]"
+  echo "Usage: $0 [-h] [--ALL] [--dataset] [--pyfortool] [--clean]"
   echo "  --ALL              Install or clean everything"
   echo "  --dataset          Install or clean a reduced dataset for the test programs"
-  echo "  --pyft             Install or clean the pyft tool"
+  echo "  --pyfortool        Install or clean the pyfortool tool"
   echo "  --fiatfcm          Install or clean the fiat and fcm tools"
   echo "  --clean            Clean instead of installing"
   echo "  --test             Perform a test"
-  echo "  --ssh              Use the ssh protocol to clone the pyft, fxtran, fiat and fcm"
+  echo "  --ssh              Use the ssh protocol to clone the pyfortool, fxtran, fiat and fcm"
   echo "                     repositories instead of https"
   echo ""
   echo "If the installation has already been done, calling again this script will update"
@@ -30,7 +30,7 @@ function usage {
 
 ALL=0
 dataset=0
-pyft=0
+pyfortool=0
 clean=0
 dotest=0
 ssh=0
@@ -40,7 +40,7 @@ while [ -n "$1" ]; do
   case "$1" in
     '--ALL') ALL=1;;
     '--dataset') dataset=1;;
-    '--pyft') pyft=1;;
+    '--pyfortool') pyfortool=1;;
     '--fiatfcm') fiatfcm=1;;
     '--clean') clean=1;;
     '--test') dotest=1;;
@@ -53,7 +53,7 @@ done
 
 if [ $ALL == 1 ]; then
   dataset=1
-  pyft=1
+  pyfortool=1
   fiatfcm=1
 fi
 
@@ -83,39 +83,35 @@ if [ $dataset -eq 1 ]; then
   done
 fi
 
-if [ $pyft -eq 1 ]; then
+if [ $pyfortool -eq 1 ]; then
   cd $PHYEXTOOLSDIR/site
   if [ $clean -eq 1 ]; then
-    rm -rf pyft
+    rm -rf pyfortool
   else
-    if [ ! -d pyft ]; then
+    if [ ! -d pyfortool ]; then
       #Install
       if [ $ssh -eq 1 ]; then
-        git clone git@github.com:UMR-CNRM/pyft.git
+        git clone git@github.com:UMR-CNRM/pyfortool.git
       else
-        git clone https://github.com/UMR-CNRM/pyft.git
+        git clone https://github.com/UMR-CNRM/pyfortool.git
       fi
-      cd pyft
+      cd pyfortool
     else
       #Update
-      cd pyft
-      if ! git rev-parse ${pyft_version}^{commit} > /dev/null 2>&1; then
-        if [ $ssh -eq 1 ]; then
-          git fetch git@github.com:UMR-CNRM/pyft.git
-        else
-          git fetch https://github.com/UMR-CNRM/pyft.git
-        fi
+      cd pyfortool
+      if [ $ssh -eq 1 ]; then
+        git fetch --tags git@github.com:UMR-CNRM/pyfortool.git
+      else
+        git fetch --tags https://github.com/UMR-CNRM/pyfortool.git
       fi
     fi
-    if [ $(git rev-parse HEAD^{commit}) != $(git rev-parse ${pyft_version}^{commit}) ]; then
-      git checkout ${pyft_version}
-    fi
+    git checkout ${pyfortool_version}
     cd ..
     #Install/update
     if [ $ssh -eq 1 ]; then
-      ./pyft/bin/INSTALL.sh --ssh
+      ./pyfortool/bin/INSTALL.sh --ssh
     else
-      ./pyft/bin/INSTALL.sh
+      ./pyfortool/bin/INSTALL.sh
     fi
     echo ""
     echo "To use PHYEX, you only need to source the file $PHYEXTOOLSDIR/env.sh"

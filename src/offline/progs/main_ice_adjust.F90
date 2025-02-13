@@ -41,6 +41,7 @@ REAL,    ALLOCATABLE   :: ZRS            (:,:,:,:)
 REAL,    ALLOCATABLE   :: ZZZ            (:,:,:)   
 REAL,    ALLOCATABLE   :: ZSIGQSAT       (:,:)   
 REAL,    ALLOCATABLE   :: ZICE_CLD_WGT   (:,:)   
+REAL,    ALLOCATABLE   :: PWEIGHT_MF_CLOUD(:,:,:)
 REAL,    ALLOCATABLE   :: ZDUM1          (:,:,:)
 REAL,    ALLOCATABLE   :: ZDUM2          (:,:,:)
 REAL,    ALLOCATABLE   :: ZDUM3          (:,:,:)
@@ -109,7 +110,7 @@ IF (LLBIND) THEN
 ENDIF
 
 CALL GETDATA_ICE_ADJUST (NPROMA, NGPBLKS, NFLEVG, PRHODJ, PEXNREF, PRHODREF, PPABSM, PTHT, ZICE_CLD_WGT,     &
-& ZSIGQSAT, PSIGS, PMFCONV, PRC_MF, PRI_MF, PCF_MF, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, &
+& ZSIGQSAT, PSIGS, PMFCONV, PRC_MF, PRI_MF, PCF_MF, PWEIGHT_MF_CLOUD, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, &
 & PTHS, PRS, PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, &
 & PHLI_HRI, PHLI_HCF, ZRS, ZZZ, PRS_OUT, PSRCS_OUT, PCLDFR_OUT, PHLC_HRC_OUT, PHLC_HCF_OUT,       &
 & PHLI_HRI_OUT, PHLI_HCF_OUT, LLVERBOSE)
@@ -169,7 +170,7 @@ DO ITIME = 1, NTIME
 !$acc data &
 !$acc      & copyin  (D0, &
 !$acc      &          ZSIGQSAT, PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, &
-!$acc      &          ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, ZRS, ZICE_CLD_WGT) &
+!$acc      &          PWEIGHT_MF_CLOUD, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, ZRS, ZICE_CLD_WGT) &
 !$acc      & copy    (PRS, PTHS) &
 !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
 !$acc      & create  (PSTACK4, PSTACK8) 
@@ -224,7 +225,7 @@ DO ITIME = 1, NTIME
     & PEXNREF=PEXNREF (:, :, IBL),                                                                                           &
     & PRHODREF=PRHODREF (:, :, IBL), PSIGS=PSIGS (:, :, IBL), LMFCONV=PHYEX%MISC%LMFCONV, PMFCONV=PMFCONV (:, :, IBL), &
     & PPABST=PPABSM (:, :, IBL), PZZ=ZZZ (:, :, IBL), PEXN=PEXNREF (:, :, IBL), PCF_MF=PCF_MF (:, :, IBL),          &
-    & PRC_MF=PRC_MF (:, :, IBL), PRI_MF=PRI_MF  (:, :, IBL),                                                              &
+    & PRC_MF=PRC_MF (:, :, IBL), PRI_MF=PRI_MF  (:, :, IBL), PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD (:, :, IBL),               &
     & PICLDFR=ZDUM1(:, :, IBL), PWCLDFR=ZDUM2(:, :, IBL), PSSIO=ZDUM3(:, :, IBL),                                      &
     & PSSIU=ZDUM4(:, :, IBL), PIFR=ZDUM5(:, :, IBL),                                                                      &
     & PRV=ZRS(:, :, 1, IBL), PRC=ZRS(:, :, 2, IBL),                                                                       &

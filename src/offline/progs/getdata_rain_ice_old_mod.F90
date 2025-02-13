@@ -19,6 +19,7 @@ SUBROUTINE GETDATA_RAIN_ICE_OLD(NPROMA, NGPBLKS, NFLEVG, KRR,             &
                               PTHT_B, PRT_B, PTHS_B, PTHS_OUT_B,        &
                               PRS_B, PRS_OUT_B,                         &
                               PSIGS_B, PSEA_B, PTOWN_B,                 &
+                              PCLDROP_B, PIFNNC_B,                      &
                               ZINPRC_B, ZINPRC_OUT_B,                   &
                               PINPRR_B, PINPRR_OUT_B,                   &
                               PEVAP_B, PEVAP_OUT_B,                     &
@@ -73,6 +74,8 @@ REAL, ALLOCATABLE, DIMENSION(:,:),     INTENT(OUT) :: PINPRS_B, PINPRS_OUT_B
 REAL, ALLOCATABLE, DIMENSION(:,:),     INTENT(OUT) :: PINPRG_B, PINPRG_OUT_B
 REAL, ALLOCATABLE, DIMENSION(:,:),     INTENT(OUT) :: PINPRH_B, PINPRH_OUT_B
 
+REAL, ALLOCATABLE, DIMENSION(:,:,:),   INTENT(OUT) :: PCLDROP_B
+REAL, ALLOCATABLE, DIMENSION(:,:,:),   INTENT(OUT) :: PIFNNC_B
 REAL, ALLOCATABLE, DIMENSION(:,:,:),   INTENT(OUT) :: PSIGS_B
 REAL, ALLOCATABLE, DIMENSION(:,:),     INTENT(OUT) :: PSEA_B
 REAL, ALLOCATABLE, DIMENSION(:,:),     INTENT(OUT) :: PTOWN_B
@@ -185,6 +188,8 @@ ALLOCATE (PSIGS_B         (NPROMA, NFLEVG, NGPBLKS))
 ALLOCATE (PSEA_B          (NPROMA, NGPBLKS))
 ALLOCATE (PTOWN_B         (NPROMA, NGPBLKS))
 
+ALLOCATE (PCLDROP_B       (NPROMA, NFLEVG, NGPBLKS))
+ALLOCATE (PIFNNC_B        (NPROMA, NFLEVG, NGPBLKS))
 ALLOCATE (PICENU_B        (NPROMA, NGPBLKS))
 ALLOCATE (PKGN_ACON_B     (NPROMA, NGPBLKS))
 ALLOCATE (PKGN_SBGR_B     (NPROMA, NGPBLKS))
@@ -248,6 +253,9 @@ IF (KRR .EQ. 7) THEN
 ENDIF
 
 !CALL SET (ODMICRO)
+
+PCLDROP_B = 0.
+PIFNNC_B = 0.
 
 IOFF = 0
 IBL = 0

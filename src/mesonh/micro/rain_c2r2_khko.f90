@@ -223,10 +223,10 @@ END MODULE MODI_RAIN_C2R2_KHKO
 use modd_budget,               only: lbudget_th, lbudget_rv, lbudget_rc, lbudget_rr, lbudget_sv,  &
                                      NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RR, NBUDGET_SV1, &
                                      tbudgets
-USE MODD_CH_AEROSOL
+USE MODD_CH_AEROSOL, ONLY: LORILAM
 USE MODD_CONF
 USE MODD_CST
-USE MODD_DUST
+USE MODD_DUST, ONLY: LDUST
 use modd_field,                only: tfieldmetadata, TYPEREAL
 USE MODD_IO,                   ONLY: TFILEDATA
 USE MODD_NSV,                  ONLY : NSV_C2R2BEG
@@ -234,7 +234,7 @@ USE MODD_PARAM_C2R2
 USE MODD_PARAMETERS
 USE MODD_RAIN_C2R2_DESCR
 USE MODD_RAIN_C2R2_KHKO_PARAM
-USE MODD_SALT
+USE MODD_SALT, ONLY: LSALT
 
 use mode_budget,               only: Budget_store_init, Budget_store_end
 USE MODE_IO_FIELD_WRITE,       only: IO_Field_write
