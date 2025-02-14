@@ -235,26 +235,14 @@ DO JLBDAR = 1,SIZE(PRSCOLRG(:,:),1)
           ZDDCOLLR = (ZDRMAX-ZDRMIN) / REAL(INR)
           DO JDR = 1,INR-1
             ZDR = ZDDCOLLR * REAL(JDR) + ZDRMIN
-#ifdef REPRO48
-            ZCOLLR = ZCOLLR + (ZDS+ZDR)**2                                     &
-                       * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)                &
-                         * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDR**PEXFALLR)
-#else
             ZCOLLR = ZCOLLR + (ZDS+ZDR)**2                                     &
                        * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)                &
                          * PESR * ABS(PFALLS*ZDS**PEXFALLS*EXP(-(ZDS*PFALLEXPS)**PALPHAS)-PFALLR*ZDR**PEXFALLR)
-#endif
           END DO
           IF( ZDRMIN>0.0 ) THEN
-#ifdef REPRO48
-            ZCOLLDRMIN = (ZDS+ZDRMIN)**2                                       &
-                      * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDRMIN)              &
-                      * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDRMIN**PEXFALLR)
-#else
             ZCOLLDRMIN = (ZDS+ZDRMIN)**2                                       &
                       * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDRMIN)              &
                       * PESR * ABS(PFALLS*ZDS**PEXFALLS*EXP(-(ZDS*PFALLEXPS)**PALPHAS)-PFALLR*ZDRMIN**PEXFALLR)
-#endif
             ELSE
             ZCOLLDRMIN = 0.0
           END IF 
