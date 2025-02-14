@@ -144,8 +144,8 @@ USE MODD_PARAM_LIMA_COLD, ONLY : XMNU0
 use mode_budget,          only: Budget_store_init, Budget_store_end
 use mode_tools,           only: Countjv
 
-USE MODE_LIMA_PHILLIPS_INTEG, ONLY: LIMA_PHILLIPS_INTEG
-USE MODE_LIMA_PHILLIPS_REF_SPECTRUM, ONLY: LIMA_PHILLIPS_REF_SPECTRUM
+USE MODE_LIMA_PHILLIPS_INTEG_OLD, ONLY: LIMA_PHILLIPS_INTEG_OLD
+USE MODE_LIMA_PHILLIPS_REF_SPECTRUM_OLD, ONLY: LIMA_PHILLIPS_REF_SPECTRUM_OLD
 
 IMPLICIT NONE
 !
@@ -428,12 +428,12 @@ END IF
 !
 ! Computation of the reference activity spectrum ( ZZY = N_{IN,1,*} )
 !
-CALL LIMA_PHILLIPS_REF_SPECTRUM(CST, ZZT, ZSI, ZSI_W, ZZY)
+CALL LIMA_PHILLIPS_REF_SPECTRUM_OLD(CST, ZZT, ZSI, ZSI_W, ZZY)
 !
 ! For each aerosol species (DM1, DM2, BC, O), compute the fraction that may be activated
 ! Z_FRAC_ACT(INEGT,NSPECIE) = fraction of each species that may be activated
 !
-CALL LIMA_PHILLIPS_INTEG(CST, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
+CALL LIMA_PHILLIPS_INTEG_OLD(CST, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
 !
 !
 !-------------------------------------------------------------------------------

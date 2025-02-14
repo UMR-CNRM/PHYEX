@@ -340,12 +340,12 @@ USE MODI_ICE_ADJUST_ELEC
 USE MODI_ION_SOURCE_ELEC
 USE MODI_KHKO_NOTADJUST
 USE MODI_LIMA
-!USE MODI_LIMA_ADJUST
+USE MODI_LIMA_ADJUST
 USE MODI_LIMA_ADJUST_SPLIT
-!USE MODI_LIMA_COLD
-!USE MODI_LIMA_MIXED
+USE MODI_LIMA_COLD
+USE MODI_LIMA_MIXED
 USE MODI_LIMA_NOTADJUST
-!USE MODI_LIMA_WARM
+USE MODI_LIMA_WARM
 USE MODI_RAIN_C2R2_KHKO
 USE MODI_RAIN_ICE
 USE MODI_RAIN_ICE_ELEC
@@ -1482,7 +1482,7 @@ SELECT CASE ( HCLOUD )
                            PTHS,PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),         &
                            PCLDFR, PICEFR, PRAINFR, PSRCS                           )
     ELSE IF (LPTSPLIT) THEN
-<<<<<<< HEAD
+       CALL LIMA_ADJUST_SPLIT(PARAM_LIMA, PARAM_LIMA_WARM, &
                              TNSV, YLDIMPHYEX, CST, NEBN, TURBN, TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
                              KRR, CCONDENS, CLAMBDA3,                                        &
                              NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                        &
@@ -1496,12 +1496,12 @@ SELECT CASE ( HCLOUD )
                              PTHS, SIZE(PSRCS, 3)/=0, PSRCS, PCLDFR, PICEFR,                 &
                              PRC_MF, PRI_MF, PCF_MF             )
     ELSE
-!!$      CALL LIMA_ADJUST(KRR, KMI, TPFILE,                                &
-!!$                       OSUBG_COND, PTSTEP,                              &
-!!$                       PRHODREF, PRHODJ, PEXNREF, PPABST, PPABSTT,      &
-!!$                       PRT, PRS, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
-!!$                       PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),           &
-!!$                       PTHS, PSRCS, PCLDFR, PICEFR, PRAINFR             )
+      CALL LIMA_ADJUST(KRR, KMI, TPFILE,                                &
+                       OSUBG_COND, PTSTEP,                              &
+                       PRHODREF, PRHODJ, PEXNREF, PPABST, PPABSTT,      &
+                       PRT, PRS, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
+                       PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),           &
+                       PTHS, PSRCS, PCLDFR, PICEFR, PRAINFR             )
     ENDIF
     !
     IF (HELEC == 'ELE4') THEN

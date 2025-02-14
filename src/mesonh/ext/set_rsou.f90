@@ -273,6 +273,7 @@ USE MODD_NETCDF
 USE MODD_OCEANH
 USE MODD_PARAMETERS, ONLY: JPHEXT
 USE MODD_TYPE_DATE
+USE MODD_TIME_n,     ONLY : TDTCUR
 !
 USE MODE_ll
 USE MODE_MSG
@@ -404,6 +405,7 @@ REAL, DIMENSION(:),     ALLOCATABLE :: ZOC_SW_DOWN,ZOC_SW_UP,ZOC_LW_DOWN,ZOC_LW_
 REAL, DIMENSION(:),     ALLOCATABLE :: ZOC_TAUX,ZOC_TAUY
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 
+REAL  :: ZJZTIME ! TIME(HOUR) READ in PRE_IDEA1.NAM
 !--------------------------------------------------------------------------------
 !
 !*	 1.     PROLOGUE : INITIALIZE SOME CONSTANTS, RETRIEVE LOGICAL
@@ -569,8 +571,9 @@ SELECT CASE(YKIND)
       XSSUFL_T(JKT)=ZSSUFL_T(JKT)/XRH00OCEAN
       XSSVFL_T(JKT)=ZSSVFL_T(JKT)/XRH00OCEAN
       ! working in SI
-      XSSTFL_T(JKT)=ZSSTFL_T(JKT) /(3900.*XRH00OCEAN)
-      XSSOLA_T(JKT)=ZSSOLA_T(JKT) /(3900.*XRH00OCEAN)
+    ! working in SI
+      XSSTFL_T(JKT)=ZSSTFL_T(JKT) /(XCL*XRH00OCEAN)
+      XSSOLA_T(JKT)=ZSSOLA_T(JKT) /(XCL*XRH00OCEAN)
     END DO   
     DEALLOCATE(ZFRCLT)
     DEALLOCATE(ZSSUFL_T)
@@ -584,8 +587,9 @@ SELECT CASE(YKIND)
 !--------------------------------------------------------------------------------   
 !
   CASE ('STANDOCE')
-!   
     XP00=XP00OCEAN
+! HOUR OF FIRST FORCING on 14/11 TO USE AS READ in PRE_IDEA1.NAM
+    ZJZTIME= INT(TDTCUR%xtime)
     READ(ILUPRE,*) ZPTOP           ! P_atmosphere at sfc =P top domain
     READ(ILUPRE,*) YINFILE, YINFISF
     WRITE(ILUOUT,FMT=*) 'Netcdf files to read:', YINFILE, YINFISF
@@ -673,6 +677,8 @@ SELECT CASE(YKIND)
       ! ZHEIGHT used only in set_ rsou, defined as such ZHEIGHT(ILEVELM)=H_model
       ! Z oriented in same time to have a model domain axis going
       ! from 0m (ocean bottom/model bottom) towards H (ocean sfc/model top)
+      WRITE(ILUOUT,FMT=*) 'End gridmodel comput in trans domain: JKM  U V ZHEIGHTU', &
+      JKM,ZU(JKM),ZV(JKM),ZHEIGHTU(JKM)
     END DO
 !
     DEALLOCATE(ZOC_TEMPERATURE)
@@ -732,28 +738,34 @@ SELECT CASE(YKIND)
                           ZOC_LW_DOWN(JKM),ZOC_LW_UP(JKM),ZOC_TAUX(JKM),ZOC_TAUY(JKM)   
     ENDDO
     ! IFRCLT FORCINGS at sea surface
-    IFRCLT=idimlen
+! start at ZJZTIME read in PRE_IDEA1.nam; skip forcings given from 13/11 22LT
+ZJZTIME=(ZJZTIME+2)*6
+   IFRCLT=idimlen-ZJZTIME
+WRITE(ILUOUT,FMT=*) 'FORCINGS GIVEN FROM 13/11/11 22LT;  FORCING Number USED ZJZTIME=', ZJZTIME
+WRITE(ILUOUT,FMT=*) idimlen,'NB of given forcing', 'nb of first used forcing= ',IFRCLT
     ALLOCATE(ZFRCLT(IFRCLT)) 
     ALLOCATE(ZSSUFL_T(IFRCLT)); ZSSUFL_T = 0.0
     ALLOCATE(ZSSVFL_T(IFRCLT)); ZSSVFL_T = 0.0
     ALLOCATE(ZSSTFL_T(IFRCLT)); ZSSTFL_T = 0.0
     ALLOCATE(ZSSOLA_T(IFRCLT)); ZSSOLA_T = 0.0
-    DO JKT=1,IFRCLT
+    DO JKM=1,IFRCLT
+    JKT=JKM +ZJZTIME
       ! Initial file for CINDY-DYNAMO: all fluxes correspond to the absolute value (>0)
       ! modele ocean: axe z dirigé du bas vers la sfc de l'océan
       ! => flux dirigé vers le haut (positif ocean vers l'atmopshere i.e. bas vers le haut)
-      ZSSOLA_T(JKT)=ZOC_SW_DOWN(JKT)-ZOC_SW_UP(JKT)
-      ZSSTFL_T(JKT)=(ZOC_LW_DOWN(JKT)-ZOC_LW_UP(JKT)-ZOC_LE(JKT)-ZOC_H(JKT))
+      ZSSOLA_T(JKM)=ZOC_SW_DOWN(JKT)-ZOC_SW_UP(JKT)
+      ZSSTFL_T(JKM)=-(ZOC_LW_DOWN(JKT)-ZOC_LW_UP(JKT)-ZOC_LE(JKT)-ZOC_H(JKT))
       ! assume that Tau given on file is along Ox
       ! rho_air UW_air = rho_ocean UW_ocean= N/m2
       ! uw_ocean
-      ZSSUFL_T(JKT)=ZOC_TAUX(JKT)
-      ZSSVFL_T(JKT)=ZOC_TAUY(JKT)
+      ZSSUFL_T(JKM)=ZOC_TAUX(JKT)
+      ZSSVFL_T(JKM)=ZOC_TAUY(JKT) 
       WRITE(ILUOUT,FMT=*) 'Forcing Nb Sol NSol UW_oc VW',&
-                          JKT,ZSSOLA_T(JKT),ZSSTFL_T(JKT),ZSSUFL_T(JKT),ZSSVFL_T(JKT) 
+                          JKM,ZSSOLA_T(JKM),ZSSTFL_T(JKM),ZSSUFL_T(JKM),ZSSVFL_T(JKM) 
     ENDDO
     ! Allocate and Writing the corresponding variables in module MODD_OCEAN_FRC
     NFRCLT=IFRCLT
+    ! value to read later on file ? 
     ! value to read later on file ? 
     NINFRT=600
     ALLOCATE(TFRCLT(NFRCLT))
@@ -763,13 +775,12 @@ SELECT CASE(YKIND)
     ALLOCATE(XSSOLA_T(NFRCLT));XSSOLA_T(:)=0.
     ! on passe en unités SI, signe, etc pour le modele ocean
     !  W/m2 => SI :  /(CP_mer * rho_mer)
-    ! a revoir dans tt le code pour mettre de svaleurs plus exactes
     DO JKT=1,NFRCLT
       TFRCLT(JKT)= ZFRCLT(JKT)
       XSSUFL_T(JKT)=ZSSUFL_T(JKT)/XRH00OCEAN
       XSSVFL_T(JKT)=ZSSVFL_T(JKT)/XRH00OCEAN
-      XSSTFL_T(JKT)=ZSSTFL_T(JKT) /(3900.*XRH00OCEAN)
-      XSSOLA_T(JKT)=ZSSOLA_T(JKT) /(3900.*XRH00OCEAN)
+      XSSTFL_T(JKT)=ZSSTFL_T(JKT) /(XCL  *XRH00OCEAN)
+      XSSOLA_T(JKT)=ZSSOLA_T(JKT) /(XCL  *XRH00OCEAN)
     END DO   
     DEALLOCATE(ZFRCLT)
     DEALLOCATE(ZSSUFL_T)
