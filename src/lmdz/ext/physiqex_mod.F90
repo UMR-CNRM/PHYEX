@@ -147,7 +147,8 @@ REAL, DIMENSION(klon)         ::  PCOSSLOPE       ! cosinus of the angle between
 REAL, DIMENSION(klon)         ::  PSINSLOPE       ! sinus of the angle   between i and the slope vector
 REAL, DIMENSION(klon,klev+2)  ::  PRHODJ   ! dry density * Grid size
 REAL, DIMENSION(0,0)          ::  MFMOIST  ! moist mass flux dual scheme
-REAL, DIMENSION(0,0,0)        ::  PHGRAD      ! horizontal gradients
+REAL, DIMENSION(0,0,0)        ::  PHGRADLEO      ! horizontal gradients
+REAL, DIMENSION(0,0,0)        ::  PHGRADGOG
 REAL, DIMENSION(klon)         ::  PSFTH,PSFRV,PSFU,PSFV ! normal surface fluxes of theta, Rv, (u,v) parallel to the orography
 REAL, DIMENSION(klon,0)       ::  PSFSV ! normal surface fluxes of Scalar var. KSV=0
 REAL, DIMENSION(klon)         ::  ZBL_DEPTH  ! BL height for TOMS
@@ -291,7 +292,8 @@ ZDIRCOSYW(:) = 1.
 ZDIRCOSZW(:) = 1.
 ZCOSSLOPE(:) = 0.
 ZSINSLOPE(:) = 1.
-PHGRAD(:,:,:) = 0.
+PHGRADLEO(:,:,:) = 0.
+PHGRADGOG(:,:,:) = 0.
 ZBL_DEPTH(:) = 0. ! needed only with LRMC01 key (correction in the surface boundary layer)
 ZSBL_DEPTH(:) = 0.
 ZCEI(:,:) = 0.  ! needed only if HTURBLEN_CL /= 'NONE' modification of mixing lengh inside clouds
@@ -492,7 +494,8 @@ DO JRR=1, KRR
 ENDDO
 ZRTHS(:,:) = ZTHETAS(:,:) * PRHODJ(:,:)
 CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, D, PHYEX%MISC%TLES,               &
-   & KRR, KRRL, KRRI, PHYEX%MISC%HLBCX, PHYEX%MISC%HLBCY, PHYEX%MISC%KGRADIENTS, PHYEX%MISC%KHALO,                &
+   & KRR, KRRL, KRRI, PHYEX%MISC%HLBCX, PHYEX%MISC%HLBCY, PHYEX%MISC%KGRADIENTSLEO, &
+   & PHYEX%MISC%KGRADIENTSGOG, PHYEX%MISC%KHALO, &
    & PHYEX%TURBN%NTURBSPLIT, PHYEX%TURBN%LCLOUDMODIFLM, KSV, PHYEX%MISC%KSV_LGBEG, PHYEX%MISC%KSV_LGEND,          &
    & PHYEX%MISC%KSV_LIMA_NR, PHYEX%MISC%KSV_LIMA_NS, PHYEX%MISC%KSV_LIMA_NG, PHYEX%MISC%KSV_LIMA_NH,              &
    & PHYEX%MISC%O2D, PHYEX%MISC%ONOMIXLG, PHYEX%MISC%OFLAT, PHYEX%MISC%OCOUPLES,                                  &
@@ -504,7 +507,7 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, 
    & ZDXX(:,:),ZDYY(:,:),zdzm(:,:),                                                             &
    & ZDZX(:,:),ZDZY(:,:),zz_flux(:,:),                                                          &
    & ZDIRCOSXW(:),ZDIRCOSYW(:),ZDIRCOSZW(:),ZCOSSLOPE(:),ZSINSLOPE(:),                          &
-   & PRHODJ(:,:),PTHVREF(:,:), PHGRAD(:,:,:), zs(:),                                            &
+   & PRHODJ(:,:),PTHVREF(:,:), PHGRADLEO(:,:,:), PHGRADGOG(:,:,:), zs(:), &
    & PSFTH(:),PSFRV(:),PSFSV(:,:),PSFU(:),PSFV(:),                                              &
    & ZPABST(:,:),ZUT(:,:),ZVT(:,:),PWT(:,:),PTKEM(:,:),ZSVT(:,:,:),ZSRC(:,:),                   &
    & PLENGTHM(:,:),PLENGTHH(:,:),MFMOIST(:,:),                                                  &

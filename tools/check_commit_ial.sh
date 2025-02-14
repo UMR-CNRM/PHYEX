@@ -22,6 +22,7 @@ set -o pipefail #abort if left command on a pipe fails
 #small_3D_lima: LIMA scheme
 #small_3D_alt11: same as small_3D but with a different value for NPROMICRO (must give exactly the same results)
 #small_3D_alt12: same as small_3D but with LPACK_MICRO=.F. (must give exactly the same results)
+#small_3D_xfrmin: same as small_3D_alt2 but with specified values for XFRMIN(16:17)
 
 #When running in 49t0 after the f065e64 commit (23 June 2023) all configurations must be compared to this same commit.
 #79fe47e (previous commit) is identical to the different references for all the test cases.
@@ -76,7 +77,7 @@ specialPack="ori split split_48t1 split_48t3 recompil split_49t0"
 # - defaultTest is the list of tests to perform when no '-t' option is provided on the command line.
 ALLTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7"
 defaultTest="small_3D"
-allowedTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7,small_3D_alt8,small_3D_alt9,small_3D_alt10,small_3D_alt11,small_3D_alt12,small_3D_lima"
+allowedTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7,small_3D_alt8,small_3D_alt9,small_3D_alt10,small_3D_alt11,small_3D_alt12,small_3D_lima,small_3D_xfrmin"
 
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator

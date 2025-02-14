@@ -139,6 +139,7 @@ INTEGER :: J1,J2              ! Internal loop indexes
 REAL :: ZT                    ! Work variable
 REAL :: ZVTRMAX               ! Raindrop maximal fall velocity
 REAL :: ZRHO00                ! Surface reference air density
+REAL :: ZRHO00_SNOW
 REAL :: ZE, ZRV               ! Work array for ZRHO00 computation
 REAL :: ZRATE                 ! Geometrical growth of Lbda in the tabulated
                               ! functions and kernels
@@ -179,6 +180,7 @@ REAL     :: PDRYLBDAR_MAX,PDRYLBDAR_MIN
 REAL     :: PWETLBDAS_MAX,PWETLBDAG_MAX,PWETLBDAS_MIN,PWETLBDAG_MIN
 REAL     :: PWETLBDAR_MAX,PWETLBDAH_MAX,PWETLBDAR_MIN,PWETLBDAH_MIN
 !
+LOGICAL  :: LUPDATE_SNOW
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
@@ -193,6 +195,12 @@ IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
 !
 !
 !
+!          1.0   Constants for possible modifying some processes related to 
+!                graupeln in XFRMIN(1:8),  IN - concentration in XFRMIN(9) and Kogan 
+!                autoconversion in XFRMIN(10:11). May be used for e.g. ensemble spread
+XFRMIN=XFRMIN_NAM
+LUPDATE_SNOW=XFRMIN(16) > 0.
+
 !        1.     COMPUTE KSPLTR FOR EACH MODEL
 !               ---------------------------------------------------------
 !
@@ -313,6 +321,10 @@ END IF
 IF (.NOT. LSNOW_T) THEN
   XCCS = 5.0
   XCXS = 1.0
+ENDIF
+IF(LUPDATE_SNOW)THEN
+  XCCS = XFRMIN(16)
+  XCXS = XFRMIN(17)
 END IF
 !
 XF0S = 0.86
@@ -467,6 +479,11 @@ XCEXVT = 0.4
 ZE = (50./100.) * EXP(XALPW-XBETAW/293.15-XGAMW*LOG(293.15))
 ZRV = (XRD/XRV) * ZE / (101325.-ZE)
 ZRHO00 = 101325.*(1.+ZRV)/(XRD+ZRV*XRV)/293.15
+IF(LUPDATE_SNOW)THEN
+  ZRHO00_SNOW = XP00/(XRD*300.0)
+ELSE
+  ZRHO00_SNOW = ZRHO00
+ENDIF
 !
 !*       4.2    Constants for sedimentation
 !
@@ -501,16 +518,16 @@ WRITE (KLUOUT,FMT=*)' PRISTINE ICE SEDIMENTATION for columns XFSEDI =',XFSEDI
 #ifdef REPRO48
 XEXSEDS = (XBS+XDS-XCXS)/(XBS-XCXS)
 XFSEDS  = XCS*XAS*XCCS*MOMG(XALPHAS,XNUS,XBS+XDS)*                         &
-         (XAS*XCCS*MOMG(XALPHAS,XNUS,XBS))**(-XEXSEDS)*(ZRHO00)**XCEXVT
+         (XAS*XCCS*MOMG(XALPHAS,XNUS,XBS))**(-XEXSEDS)*(ZRHO00_SNOW)**XCEXVT
 #else
 IF (LRED) THEN
    XEXSEDS = -XDS-XBS
    XFSEDS  = XCS*MOMG(XALPHAS,XNUS,XBS+XDS)/(MOMG(XALPHAS,XNUS,XBS))    &
-            *(ZRHO00)**XCEXVT
+            *(ZRHO00_SNOW)**XCEXVT
 ELSE
    XEXSEDS = (XBS+XDS-XCXS)/(XBS-XCXS)
    XFSEDS  = XCS*XAS*XCCS*MOMG(XALPHAS,XNUS,XBS+XDS)*                         &
-            (XAS*XCCS*MOMG(XALPHAS,XNUS,XBS))**(-XEXSEDS)*(ZRHO00)**XCEXVT
+            (XAS*XCCS*MOMG(XALPHAS,XNUS,XBS))**(-XEXSEDS)*(ZRHO00_SNOW)**XCEXVT
 END IF
 #endif
 !
@@ -653,7 +670,7 @@ END IF
 XCOLIS   = 0.25 ! Collection efficiency of I+S
 XCOLEXIS = 0.05 ! Temperature factor of the I+S collection efficiency
 #ifdef REPRO48
-XFIAGGS  = (XPI/4.0)*XCOLIS*XCCS*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
+XFIAGGS  = (XPI/4.0)*XCOLIS*XCCS*XCS*(ZRHO00_SNOW**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
 XEXIAGGS = XCXS-XDS-2.0
 #else
 XFIAGGS  = XNS*(XPI/4.0)*XCOLIS*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
@@ -711,10 +728,10 @@ XDCSLIM  = 0.007 ! D_cs^lim = 7 mm as suggested by Farley et al. (1989)
 XCOLCS   = 1.0
 #ifdef REPRO48
 XEXCRIMSS= XCXS-XDS-2.0
-XCRIMSS  = (XPI/4.0)*XCOLCS*XCCS*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
+XCRIMSS  = (XPI/4.0)*XCOLCS*XCCS*XCS*(ZRHO00_SNOW**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
 #else
 XEXCRIMSS= -XDS-2.0
-XCRIMSS  = XNS * (XPI/4.0)*XCOLCS*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
+XCRIMSS  = XNS * (XPI/4.0)*XCOLCS*XCS*(ZRHO00_SNOW**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
 #endif
 XEXCRIMSG= XEXCRIMSS
 XCRIMSG  = XCRIMSS
@@ -761,9 +778,9 @@ RAIN_ICE_PARAMN%XRIMINTP2 = 1.0 + RAIN_ICE_PARAMN%XRIMINTP1*LOG( XDCSLIM/(RAIN_I
 !*       7.2    Constants for the accretion of raindrops onto aggregates
 !
 #ifdef REPRO48
-XFRACCSS = ((XPI**2)/24.0)*XCCS*XCCR*XRHOLW*(ZRHO00**XCEXVT)
+XFRACCSS = ((XPI**2)/24.0)*XCCS*XCCR*XRHOLW*(ZRHO00_SNOW**XCEXVT)
 #else
-XFRACCSS = XNS*((XPI**2)/24.0)*XCCR*XRHOLW*(ZRHO00**XCEXVT)
+XFRACCSS = XNS*((XPI**2)/24.0)*XCCR*XRHOLW*(ZRHO00_SNOW**XCEXVT)
 #endif
 !
 XLBRACCS1   =    MOMG(XALPHAS,XNUS,2.)*MOMG(XALPHAR,XNUR,3.)
@@ -771,9 +788,9 @@ XLBRACCS2   = 2.*MOMG(XALPHAS,XNUS,1.)*MOMG(XALPHAR,XNUR,4.)
 XLBRACCS3   =                          MOMG(XALPHAR,XNUR,5.)
 !
 #ifdef REPRO48
-XFSACCRG = (XPI/4.0)*XAS*XCCS*XCCR*(ZRHO00**XCEXVT)
+XFSACCRG = (XPI/4.0)*XAS*XCCS*XCCR*(ZRHO00_SNOW**XCEXVT)
 #else
-XFSACCRG = XNS*(XPI/4.0)*XAS*XCCR*(ZRHO00**XCEXVT)
+XFSACCRG = XNS*(XPI/4.0)*XAS*XCCR*(ZRHO00_SNOW**XCEXVT)
 #endif
 !
 XLBSACCR1   =    MOMG(XALPHAR,XNUR,2.)*MOMG(XALPHAS,XNUS,XBS)
@@ -971,9 +988,9 @@ XCOLEXSG = 0.1  ! Temperature factor of the S+G collection efficiency
 WRITE (KLUOUT, FMT=*) ' NEW Constants for the aggregate collection by the graupeln'
 WRITE (KLUOUT, FMT=*) ' XCOLSG, XCOLEXSG  = ',XCOLSG,XCOLEXSG
 #ifdef REPRO48
-XFSDRYG = (XPI/4.0)*XCOLSG*XCCG*XCCS*XAS*(ZRHO00**XCEXVT)
+XFSDRYG = (XPI/4.0)*XCOLSG*XCCG*XCCS*XAS*(ZRHO00_SNOW**XCEXVT)
 #else
-XFSDRYG = XNS*(XPI/4.0)*XCOLSG*XCCG*XAS*(ZRHO00**XCEXVT)
+XFSDRYG = XNS*(XPI/4.0)*XCOLSG*XCCG*XAS*(ZRHO00_SNOW**XCEXVT)
 #endif
 !
 XLBSDRYG1   =    MOMG(XALPHAG,XNUG,2.)*MOMG(XALPHAS,XNUS,XBS)
@@ -1152,10 +1169,6 @@ IF( (KDRYLBDAG/=RAIN_ICE_PARAMN%NDRYLBDAG) .OR. (KDRYLBDAR/=RAIN_ICE_PARAMN%NDRY
   WRITE(UNIT=KLUOUT,FMT='(" Read XKER_RDRYG")')
 END IF
          
-!          8.2.6 Constants for possible modifying some processes related to 
-!                graupeln in XFRMIN(1:8),  IN - concentration in XFRMIN(9) and Kogan 
-!                autoconversion in XFRMIN(10:11). May be used for e.g. ensemble spread
-  XFRMIN=XFRMIN_NAM
 !
 !
 !-------------------------------------------------------------------------------
@@ -1178,9 +1191,9 @@ XFWETH = (XPI/4.0)*XCCH*XCH*(ZRHO00**XCEXVT)*MOMG(XALPHAH,XNUH,XDH+2.0)
 XCOLSH   = 0.01 ! Collection efficiency of S+H
 XCOLEXSH = 0.1  ! Temperature factor of the S+H collection efficiency
 #ifdef REPRO48
-XFSWETH = (XPI/4.0)*XCCH*XCCS*XAS*(ZRHO00**XCEXVT)
+XFSWETH = (XPI/4.0)*XCCH*XCCS*XAS*(ZRHO00_SNOW**XCEXVT)
 #else
-XFSWETH = XNS*(XPI/4.0)*XCCH*XAS*(ZRHO00**XCEXVT) ! Wurtz
+XFSWETH = XNS*(XPI/4.0)*XCCH*XAS*(ZRHO00_SNOW**XCEXVT) ! Wurtz
 #endif
 !
 XLBSWETH1   =    MOMG(XALPHAH,XNUH,2.)*MOMG(XALPHAS,XNUS,XBS)
