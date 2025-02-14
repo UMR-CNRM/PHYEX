@@ -175,8 +175,10 @@ REAL      :: XFCDRYG,                          & ! Constants for the dry growth
              XDRYLBDAG_MAX,                    & ! Max val. of Lbda_g for DRY
              XDRYINTP1R,XDRYINTP2R,            & ! Csts for bilin. interpol. of
              XDRYINTP1S,XDRYINTP2S,            & ! Lbda_r, Lbda_s and Lbda_g in
-             XDRYINTP1G,XDRYINTP2G               ! the XKER_SDRYG and XKER_RDRYG
-                                                 !            tables
+             XDRYINTP1G,XDRYINTP2G,            & ! the XKER_SDRYG and XKER_RDRYG tables
+             XMINDG,XMAXLBDG                     ! Minimum graupel diameter for
+                                                 ! graupel growth limitation and
+                                                 ! corresponding max lambda
 INTEGER      :: NDRYLBDAR,                     & ! Number of Lbda_r,
                 NDRYLBDAS,                     & !        of Lbda_s and
                 NDRYLBDAG                        !        of Lbda_g values in
@@ -423,7 +425,9 @@ REAL, POINTER :: XAG => NULL(), &
                  XWETINTP1G => NULL(), &
                  XWETINTP2G => NULL(), &
                  XWETINTP1H => NULL(), &
-                 XWETINTP2H => NULL()
+                 XWETINTP2H => NULL(), &
+                 XMINDG => NULL(),     &
+                 XMAXLBDG => NULL()
 
 INTEGER, POINTER :: NGAMINC => NULL(), &
                     NACCLBDAS => NULL(), &
@@ -658,6 +662,8 @@ IF(.NOT. ASSOCIATED(XAG)) THEN
   XWETINTP2G               => PARAM_LIMA_MIXED%XWETINTP2G
   XWETINTP1H               => PARAM_LIMA_MIXED%XWETINTP1H
   XWETINTP2H               => PARAM_LIMA_MIXED%XWETINTP2H
+  XMINDG                   => PARAM_LIMA_MIXED%XMINDG
+  XMAXLBDG                 => PARAM_LIMA_MIXED%XMAXLBDG
 
   NGAMINC                  => PARAM_LIMA_MIXED%NGAMINC
   NACCLBDAS                => PARAM_LIMA_MIXED%NACCLBDAS

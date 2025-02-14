@@ -59,6 +59,10 @@ TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
 TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RG_DEPG
 !
+!
+!*       0.2   Declarations of local variables :
+!
+REAL,    DIMENSION(SIZE(PRGT))   :: ZSIGMOIDE
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
@@ -76,6 +80,11 @@ WHERE ( PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:)
    P_TH_DEPG(:) = P_RG_DEPG(:)*PLSFACT(:)
 END WHERE
 !
+IF (LIMAP%LSIGMOIDE_G) THEN
+     ZSIGMOIDE(:)      =  1/(1 +  exp(-LIMAP%XSIGMOIDE_G*(PRGT(:)-LIMAM%XMINDG/PRHODREF(:))))
+     P_TH_DEPG(:) = P_TH_DEPG(:) * ZSIGMOIDE(:)
+     P_RG_DEPG(:) = P_RG_DEPG(:) * ZSIGMOIDE(:)
+END IF
 !
 !-------------------------------------------------------------------------------
 !

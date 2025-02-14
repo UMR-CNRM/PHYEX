@@ -147,6 +147,7 @@ REAL,    DIMENSION(SIZE(PRCT))  :: Z1, Z2, Z3, Z4
 REAL,    DIMENSION(SIZE(PRCT))  :: ZZX, ZZW, ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6, ZZW7
 REAL,    DIMENSION(SIZE(PRCT))  :: ZZW3N, ZZW4N, ZZW6N 
 REAL,    DIMENSION(SIZE(PRCT))  :: ZRDRYG, ZRWETG
+REAL,    DIMENSION(SIZE(PRCT))  :: ZSIGMOIDE
 !
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC1,IVEC2        ! Vectors of indices
 REAL,    DIMENSION(SIZE(PRCT))  :: ZVEC1,ZVEC2, ZVEC3 ! Work vectors
@@ -431,6 +432,37 @@ WHERE( ODCOMPUTE(:) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) 
    !
    P_TH_DRYG(:) = (ZZW1(:) + ZZW4(:)) * (PLSFACT(:)-PLVFACT(:))
 END WHERE
+!
+!            1.h Prevent graupel growth for too small graupel diameter
+!            --------------------------------------------------------
+!
+IF (LIMAP%LSIGMOIDE_G) THEN
+!
+   ZSIGMOIDE(:) = 1/(1 + exp(-LIMAP%XSIGMOIDE_G*(PRGT(:)-LIMAM%XMINDG/PRHODREF(:))))
+!
+   P_RC_DRYG(:) = P_RC_DRYG(:) * ZSIGMOIDE(:)
+   P_CC_DRYG(:) = P_CC_DRYG(:) * ZSIGMOIDE(:)
+   P_RI_DRYG(:) = P_RI_DRYG(:) * ZSIGMOIDE(:)
+   P_CI_DRYG(:) = P_CI_DRYG(:) * ZSIGMOIDE(:)
+   P_RR_DRYG(:) = P_RR_DRYG(:) * ZSIGMOIDE(:)
+   P_CR_DRYG(:) = P_CR_DRYG(:) * ZSIGMOIDE(:)
+   P_RS_DRYG(:) = P_RS_DRYG(:) * ZSIGMOIDE(:)
+   P_CS_DRYG(:) = P_CS_DRYG(:) * ZSIGMOIDE(:)
+   P_RG_DRYG(:) = P_RG_DRYG(:) * ZSIGMOIDE(:)
+   P_TH_DRYG(:) = P_TH_DRYG(:) * ZSIGMOIDE(:)
+!
+   P_RC_WETG(:) = P_RC_WETG(:) * ZSIGMOIDE(:)
+   P_CC_WETG(:) = P_CC_WETG(:) * ZSIGMOIDE(:)
+   P_RI_WETG(:) = P_RI_WETG(:) * ZSIGMOIDE(:)
+   P_CI_WETG(:) = P_CI_WETG(:) * ZSIGMOIDE(:)
+   P_RR_WETG(:) = P_RR_WETG(:) * ZSIGMOIDE(:)
+   P_CR_WETG(:) = P_CR_WETG(:) * ZSIGMOIDE(:)
+   P_RS_WETG(:) = P_RS_WETG(:) * ZSIGMOIDE(:)
+   P_CS_WETG(:) = P_CS_WETG(:) * ZSIGMOIDE(:)
+   P_RG_WETG(:) = P_RG_WETG(:) * ZSIGMOIDE(:)
+   P_TH_WETG(:) = P_TH_WETG(:) * ZSIGMOIDE(:)
+!
+END IF 
 !
 !
 !*       2.  Hallett-Mossop process (HMG)
