@@ -84,14 +84,18 @@ IF(.NOT. LDSOFT) THEN
   !
   IF(IGRIM>0) THEN
     !$mnh_expand_where(JL=1:KSIZE)
+    IF(.NOT. ICEP%LNEWCOEFF) THEN
+      WHERE(GRIM(1:KSIZE))
+        PRSRIMCG_MR(1:KSIZE) = ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG   & ! RSRIMCG
+                                 * (1.0 - ZZW(1:KSIZE) )/PRHODREF(1:KSIZE)
+      END WHERE
+    ELSE
+      WHERE(GRIM(1:KSIZE))
+        PRSRIMCG_MR(1:KSIZE) = ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG   & ! RSRIMCG
+                                 * (1.0 - ZZW(1:KSIZE) )*PRST(1:KSIZE)
+      END WHERE
+    ENDIF
     WHERE(GRIM(1:KSIZE))
-#ifdef REPRO48
-      PRSRIMCG_MR(1:KSIZE) = ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG   & ! RSRIMCG
-                               * (1.0 - ZZW(1:KSIZE) )/PRHODREF(1:KSIZE)
-#else
-      PRSRIMCG_MR(1:KSIZE) = ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG   & ! RSRIMCG
-                               * (1.0 - ZZW(1:KSIZE) )*PRST(1:KSIZE)
-#endif
       PRSRIMCG_MR(1:KSIZE)=MIN(PRST(1:KSIZE), PRSRIMCG_MR(1:KSIZE))
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
