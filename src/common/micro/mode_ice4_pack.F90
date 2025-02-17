@@ -321,8 +321,10 @@ IF(PARAMI%LPACK_MICRO) THEN
             !$acc end atomic
                   ENDIF
                 ENDIF
-            !    IC=0 ! this re-init is useless, because we leave the loop
-             !  EXIT OUTER_LOOP ! This must be suppressed for openACC use
+#ifndef MNH_OPENACC
+                IC=0
+                EXIT OUTER_LOOP
+#endif
               ENDIF
             ENDIF
           ENDDO
