@@ -817,11 +817,12 @@ END IF
   CALL LES_MEAN_ll ( ZRR_LES, LLES_CURRENT_CART_MASK,               &
                      XLES_MEAN_Rr(:,NLES_CURRENT_TCOUNT,1)     )
 !
-  IF (LUSERI) &
+  IF (LUSERI) THEN
   CALL LES_MEAN_ll ( ZRI_LES, LLES_CURRENT_CART_MASK,               &
                      XLES_MEAN_Ri(:,NLES_CURRENT_TCOUNT,1)     )
   CALL LES_MEAN_ll ( ZICEFR_LES, LLES_CURRENT_CART_MASK,            &
                     XLES_MEAN_If(:,NLES_CURRENT_TCOUNT,1)        )
+  END IF
 !
   IF (LUSERS) &
   CALL LES_MEAN_ll ( ZRS_LES, LLES_CURRENT_CART_MASK,               &

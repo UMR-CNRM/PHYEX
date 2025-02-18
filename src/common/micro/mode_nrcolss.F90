@@ -7,7 +7,7 @@ MODULE MODE_NRCOLSS
   IMPLICIT NONE
 CONTAINS
 !     ########################################################################
-  SUBROUTINE NRCOLSS( KND, PALPHAS, PNUS, PALPHAR, PNUR,                  &
+  SUBROUTINE NRCOLSS( KSIZE1, KSIZE2, KND, PALPHAS, PNUS, PALPHAR, PNUR,  &
                       PESR, PFALLS, PEXFALLS, PFALLEXPS, PFALLR, PEXFALLR,&
                       PLBDASMAX, PLBDARMAX, PLBDASMIN, PLBDARMIN,         &
                       PDINFTY, PNRCOLSS, PAG, PBS, PAS                    )
@@ -86,8 +86,8 @@ CONTAINS
 !
 USE MODI_GENERAL_GAMMA
 !
-USE MODD_CST
-USE MODD_RAIN_ICE_DESCR_n
+USE MODD_CST, ONLY:XPI, XRHOLW
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -96,6 +96,8 @@ IMPLICIT NONE
 !              ------------------------------- 
 !
 !
+INTEGER, INTENT(IN) :: KSIZE1 !
+INTEGER, INTENT(IN) :: KSIZE2 !
 INTEGER, INTENT(IN) :: KND    ! Number of discrete size intervals in DS and DR  
 !
 REAL, INTENT(IN) :: PALPHAS   ! First shape parameter of the aggregates 
@@ -120,9 +122,9 @@ REAL, INTENT(IN) :: PDINFTY   ! Factor to define the largest diameter up to
                               ! which the diameter integration is performed
 REAL, INTENT(IN) :: PAG, PBS, PAS
 !
-REAL, DIMENSION(:,:), INTENT(INOUT) :: PNRCOLSS! Scaled fall speed difference in
-                                               ! the mass collection kernel as a
-                                               ! function of LAMBDAX and LAMBDAZ
+REAL, DIMENSION(KSIZE1,KSIZE2), INTENT(OUT) :: PNRCOLSS! Scaled fall speed difference in
+                                             ! the mass collection kernel as a
+                                             ! function of LAMBDAX and LAMBDAZ
 !
 !
 !*       0.2   Declarations of local variables
@@ -158,6 +160,7 @@ REAL :: ZSCALSR ! Double integral of the scaling factor over
                 ! the spectra of aggregates and rain 
 REAL :: ZFUNC   ! Ancillary function
 REAL :: ZCST1
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 !-------------------------------------------------------------------------------
@@ -171,6 +174,7 @@ REAL :: ZCST1
 !
 !*       1.0     Initialization
 !
+IF (LHOOK) CALL DR_HOOK('NRCOLSS', 0, ZHOOK_HANDLE)
 PNRCOLSS(:,:) = 0.0
 ZCST1 = (3.0/XPI)/XRHOLW
 !
@@ -267,5 +271,6 @@ DO JLBDAS = 1,SIZE(PNRCOLSS(:,:),1)
   END DO
 END DO
 !
+IF (LHOOK) CALL DR_HOOK('NRCOLSS', 1, ZHOOK_HANDLE)
 END SUBROUTINE NRCOLSS
 END MODULE MODE_NRCOLSS

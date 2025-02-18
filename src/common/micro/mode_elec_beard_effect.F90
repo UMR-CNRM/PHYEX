@@ -70,7 +70,7 @@ REAL,    DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRX         ! m.r. source
 REAL,    DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PQX         ! Elec. charge density source
 REAL,    DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PEFIELDW    ! Vertical component of the electric field
 REAL,    DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PLBDA       ! Slope param. of the distribution
-REAL,    DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PBEARDCOEF  ! Beard coefficient
+REAL,    DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PBEARDCOEF  ! Beard coefficient
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
 !
 REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity

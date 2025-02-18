@@ -702,6 +702,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
         file=$EXT/arp_shallow_mf.F90; [ -f $file ] && mvdiff $file ../arpifs/phys_dmn/
       fi
       #Special mpa case
+      [ -f $EXT/modd_ch_aerosol.F90 ] && mvdiff $EXT/modd_ch_aerosol.F90 ../mpa/chem/module/modd_ch_aerosol.F90
       for file in modd_spp_type.F90 spp_mod_type.F90 aroini_conf.h aroini_conf.F90; do
         if [ -f $EXT/$file ]; then
           [ ! -d ../mpa/aux ] && mkdir ../mpa/aux

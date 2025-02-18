@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -285,6 +285,7 @@ END MODULE MODI_MODEL_n
 !                          (useful to close them in reverse model order (child before parent, needed by WRITE_BALLOON_n)
 !  J. Wurtz       01/2023: correction for mean in SURFEX outputs
 !  C. Barthe   03/02/2022: cloud electrification is now called from resolved_cloud to avoid duplicated routines
+!  P. Wautelet 02/02/2024: restructure backups/outputs lists
 !!      A. Marcel Jan 2025: relaxation of the small fraction assumption
 !!-------------------------------------------------------------------------------
 !
@@ -385,11 +386,13 @@ USE MODE_AIRCRAFT_BALLOON
 use mode_budget,           only: Budget_store_init, Budget_store_end
 USE MODE_DATETIME
 USE MODE_ELEC_ll
+USE MODE_FILL_DIMPHYEX,    ONLY: FILL_DIMPHYEX
 USE MODE_GRIDCART
 USE MODE_GRIDPROJ
 USE MODE_IO_FIELD_WRITE,   only: IO_Field_user_write, IO_Fieldlist_write, IO_Header_write
 USE MODE_IO_FILE,          only: IO_File_close, IO_File_open
-USE MODE_IO_MANAGE_STRUCT, only: IO_File_add2list
+USE MODE_IO_MANAGE_STRUCT, only: IO_File_add2list, IO_File_remove_from_list, &
+                                 IO_Is_backup_time, IO_Is_output_time, IO_BakOut_file_create
 USE MODE_ll
 #ifdef MNH_IOLFI
 use mode_menu_diachro,     only: MENU_DIACHRO
@@ -505,6 +508,8 @@ INTEGER :: ISYNCHRO          ! model synchronic index relative to its father
                              ! = 1  for the first time step in phase with DAD
                              ! = 0  for the last  time step (out of phase)
 INTEGER      :: IMI ! Current model index
+INTEGER      :: INUMBAK ! Current backup number
+INTEGER      :: INUMOUT ! Current output number
 REAL, DIMENSION(:,:),ALLOCATABLE          :: ZSEA
 REAL, DIMENSION(:,:),ALLOCATABLE          :: ZTOWN
 ! Dummy pointers needed to correct an ifort Bug
@@ -629,6 +634,8 @@ ILUOUT = TLUOUT%NLU
 CALL GET_DIM_EXT_ll('B',IIU,IJU)
 IKU=NKMAX+2*JPVEXT
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
+!
+CALL FILL_DIMPHYEX(YLDIMPHYEX, SIZE(XWT,1), SIZE(XWT,2), SIZE(XWT,3))
 !
 IF (IMI==1) THEN
   GSTEADY_DMASS=LSTEADYLS
@@ -1012,80 +1019,68 @@ IF (CSURF=='EXTE') CALL GOTO_SURFEX(IMI)
 !
 ZTIME1 = ZTIME2
 !
-IF ( nfile_backup_current < NBAK_NUMB ) THEN
-  IF ( KTCOUNT == TBACKUPN(nfile_backup_current + 1)%NSTEP ) THEN
-    nfile_backup_current = nfile_backup_current + 1
-    !
-    TPBAKFILE => TBACKUPN(nfile_backup_current)%TFILE
-    IVERB    = TPBAKFILE%NLFIVERB
-    !
-    CALL IO_File_open(TPBAKFILE)
-    !
-    CALL WRITE_DESFM_n(IMI,TPBAKFILE)
-    CALL IO_Header_write( TBACKUPN(nfile_backup_current)%TFILE )
-    IF ( ASSOCIATED( TBACKUPN(nfile_backup_current)%TFILE%TDADFILE ) ) THEN
-      YDADNAME = TBACKUPN(nfile_backup_current)%TFILE%TDADFILE%CNAME
-    ELSE
-      ! Set a dummy name for the dad file. Its non-zero size will allow the writing of some data in the backup file
-      YDADNAME = 'DUMMY'
-    END IF
-    CALL WRITE_LFIFM_n( TBACKUPN(nfile_backup_current)%TFILE, TRIM( YDADNAME ) )
-    TOUTDATAFILE => TPBAKFILE
-    CALL MNHWRITE_ZS_DUMMY_n(TPBAKFILE)
-    IF (CSURF=='EXTE') THEN
-      TFILE_SURFEX => TPBAKFILE
-      CALL GOTO_SURFEX(IMI)
-      CALL WRITE_SURF_ATM_n(YSURF_CUR,'MESONH','ALL')
-      IF ( KTCOUNT > 1) THEN
-        CALL DIAG_SURF_ATM_n(YSURF_CUR,'MESONH')
-        IF ( NFILE_BACKUP_CURRENT == 1 ) THEN
-          IBAKSTEP = KTCOUNT - 1
-        ELSE
-          IBAKSTEP = KTCOUNT - TBACKUPN(NFILE_BACKUP_CURRENT - 1)%NSTEP
-        END IF
-        CALL WRITE_DIAG_SURF_ATM_n( YSURF_CUR, 'MESONH', 'ALL', IBAKSTEP )
-      END IF
-      NULLIFY(TFILE_SURFEX)
-    END IF
-    !
-    ! Reinitialize Lagragian variables at every model backup
-    IF (LLG .AND. LINIT_LG .AND. CINIT_LG=='FMOUT') THEN
-      CALL INI_LG( XXHATM, XYHATM, XZZ, XSVT, XLBXSVM, XLBYSVM )
-      IF (IVERB>=5) THEN
-        WRITE(UNIT=ILUOUT,FMT=*) '************************************'
-        WRITE(UNIT=ILUOUT,FMT=*) '*** Lagrangian variables refreshed after ',TRIM(TPBAKFILE%CNAME),' backup'
-        WRITE(UNIT=ILUOUT,FMT=*) '************************************'
-      END IF
-    END IF
-    ! Reinitialise mean variables
-    IF (LMEAN_FIELD) THEN
-       CALL INI_MEAN_FIELD
-    END IF
-!
+IF ( IO_IS_BACKUP_TIME( IMI, KTCOUNT, INUMBAK ) ) THEN
+  CALL IO_BAKOUT_FILE_CREATE( TPBAKFILE, 'MNHBACKUP', IMI, KTCOUNT, INUMBAK )
+  !
+  IVERB    = TPBAKFILE%NLFIVERB
+  !
+  CALL IO_File_open(TPBAKFILE)
+  !
+  CALL WRITE_DESFM_n(IMI,TPBAKFILE)
+  CALL IO_Header_write( TPBAKFILE )
+  IF ( ASSOCIATED( TPBAKFILE%TDADFILE ) ) THEN
+    YDADNAME = TPBAKFILE%TDADFILE%CNAME
   ELSE
-    !Necessary to have a 'valid' CNAME when calling some subroutines
-    TPBAKFILE => TFILE_DUMMY
+    ! Set a dummy name for the dad file. Its non-zero size will allow the writing of some data in the backup file
+    YDADNAME = 'DUMMY'
+  END IF
+  CALL WRITE_LFIFM_n( TPBAKFILE, TRIM( YDADNAME ) )
+  TOUTDATAFILE => TPBAKFILE
+  CALL MNHWRITE_ZS_DUMMY_n(TPBAKFILE)
+  IF (CSURF=='EXTE') THEN
+    TFILE_SURFEX => TPBAKFILE
+    CALL GOTO_SURFEX(IMI)
+    CALL WRITE_SURF_ATM_n(YSURF_CUR,'MESONH','ALL')
+    IF ( KTCOUNT > 1) THEN
+      CALL DIAG_SURF_ATM_n(YSURF_CUR,'MESONH')
+      ! Determine number of timestep since previous backup
+      IBAKSTEP = KTCOUNT - NBAK_PREV_STEP
+      NBAK_PREV_STEP = KTCOUNT
+
+      CALL WRITE_DIAG_SURF_ATM_n( YSURF_CUR, 'MESONH', 'ALL', IBAKSTEP )
+    END IF
+    NULLIFY(TFILE_SURFEX)
+  END IF
+  !
+  ! Reinitialize Lagragian variables at every model backup
+  IF (LLG .AND. LINIT_LG .AND. CINIT_LG=='FMOUT') THEN
+    CALL INI_LG( XXHATM, XYHATM, XZZ, XSVT, XLBXSVM, XLBYSVM )
+    IF (IVERB>=5) THEN
+      WRITE(UNIT=ILUOUT,FMT=*) '************************************'
+      WRITE(UNIT=ILUOUT,FMT=*) '*** Lagrangian variables refreshed after ',TRIM(TPBAKFILE%CNAME),' backup'
+      WRITE(UNIT=ILUOUT,FMT=*) '************************************'
+    END IF
+  END IF
+  ! Reinitialise mean variables
+  IF (LMEAN_FIELD) THEN
+     CALL INI_MEAN_FIELD
   END IF
 ELSE
   !Necessary to have a 'valid' CNAME when calling some subroutines
   TPBAKFILE => TFILE_DUMMY
 END IF
 !
-IF ( nfile_output_current < NOUT_NUMB ) THEN
-  IF ( KTCOUNT == TOUTPUTN(nfile_output_current + 1)%NSTEP ) THEN
-    nfile_output_current = nfile_output_current + 1
-    !
-    TZOUTFILE => TOUTPUTN(nfile_output_current)%TFILE
-    !
-    CALL IO_File_open(TZOUTFILE)
-    !
-    CALL IO_Header_write(TZOUTFILE)
-    CALL IO_Fieldlist_write(  TOUTPUTN(nfile_output_current) )
-    CALL IO_Field_user_write( TOUTPUTN(nfile_output_current) )
-    !
-    CALL IO_File_close(TZOUTFILE)
-    !
-  END IF
+IF ( IO_IS_OUTPUT_TIME( IMI, KTCOUNT, INUMOUT ) ) THEN
+  CALL IO_BAKOUT_FILE_CREATE( TZOUTFILE, 'MNHOUTPUT', IMI, KTCOUNT, INUMOUT )
+  !
+  CALL IO_File_open(TZOUTFILE)
+  !
+  CALL IO_Header_write(TZOUTFILE)
+  CALL IO_Fieldlist_write( TZOUTFILE )
+  CALL IO_Field_user_write( TZOUTFILE )
+  !
+  CALL IO_File_close(TZOUTFILE)
+  CALL IO_File_remove_from_list( TZOUTFILE )
 END IF
 !
 CALL SECOND_MNH2(ZTIME2)
@@ -2019,7 +2014,8 @@ IF (CCLOUD /= 'NONE') THEN
 ! Lessivage des CCN et IFN nucléables par Slinn
 !
     IF (LSCAV .AND. (CCLOUD == 'LIMA')) THEN
-       CALL LIMA_PRECIP_SCAVENGING( YLDIMPHYEX,CST,TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
+       CALL FILL_DIMPHYEX( YLDIMPHYEX, SIZE(XTHT,1), SIZE(XTHT,2), SIZE(XTHT,3) )
+       CALL LIMA_PRECIP_SCAVENGING( TNSV, YLDIMPHYEX,CST,TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
                                     CCLOUD, CCONF, ILUOUT, KTCOUNT,XTSTEP,XRT(:,:,:,3),    &
                                     XRHODREF, XRHODJ, XZZ, XPABST, XTHT,            &
                                     XSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),          &
@@ -2365,7 +2361,7 @@ IF (OEXIT) THEN
   END IF
   !
   CALL IO_File_close(TINIFILE)
-  IF (CSURF=="EXTE") CALL IO_File_close(TINIFILEPGD)
+  IF ( CSURF == "EXTE" .AND. ASSOCIATED( TINIFILEPGD ) ) CALL IO_File_close( TINIFILEPGD )
 !
 !*       28.1   print statistics!
 !

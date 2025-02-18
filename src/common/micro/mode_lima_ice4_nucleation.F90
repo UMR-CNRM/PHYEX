@@ -6,7 +6,7 @@
 MODULE MODE_LIMA_ICE4_NUCLEATION
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE LIMA_ICE4_NUCLEATION(CST, KSIZE, &
+SUBROUTINE LIMA_ICE4_NUCLEATION(LIMAP, LIMAC, CST, KSIZE, &
                            PTHT, PPABST, PRHODREF, PEXN, PLSFACT, PT, &
                            PRVT, &
                            PCIT, PRVHENI_MR)
@@ -28,16 +28,16 @@ SUBROUTINE LIMA_ICE4_NUCLEATION(CST, KSIZE, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST,            ONLY: CST_t
+USE MODD_CST,            ONLY: CST_T
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
-USE MODD_PARAM_LIMA_COLD, ONLY : XALPHA1, XBETA1, XALPHA2, XBETA2, XNU10, XNU20, XMNU0
-USE MODD_PARAM_LIMA, ONLY: LFEEDBACKT, XRTMIN
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(CST_T),              INTENT(IN)    :: CST
 INTEGER,                  INTENT(IN)    :: KSIZE
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PTHT    ! Theta at t
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PPABST  ! absolute pressure at t
@@ -57,27 +57,29 @@ LOGICAL, DIMENSION(KSIZE) :: GNEGT  ! Test where to compute the HEN process
 REAL, DIMENSION(KSIZE)  :: ZZW,      & ! Work array
                            ZUSW,     & ! Undersaturation over water
                            ZSSI        ! Supersaturation over ice
-INTEGER :: JI
+TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+INTEGER :: II
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('LIMA_ICE4_NUCLEATION', 0, ZHOOK_HANDLE)!
 !
-!$mnh_expand_where(JI=1:KSIZE)
-GNEGT(:)=PT(:)<CST%XTT .AND. PRVT(:)>XRTMIN(1)
-!$mnh_end_expand_where(JI=1:KSIZE)
+!$mnh_expand_where(II=1:KSIZE)
+GNEGT(:)=PT(:)<CST%XTT .AND. PRVT(:)>LIMAP%XRTMIN(1)
+!$mnh_end_expand_where(II=1:KSIZE)
 
 ZUSW(:)=0.
 ZZW(:)=0.
-!$mnh_expand_where(JI=1:KSIZE)
+!$mnh_expand_where(II=1:KSIZE)
 WHERE(GNEGT(:))
   ZZW(:)=ALOG(PT(:))
   ZUSW(:)=EXP(CST%XALPW - CST%XBETAW/PT(:) - CST%XGAMW*ZZW(:))          ! es_w
   ZZW(:)=EXP(CST%XALPI - CST%XBETAI/PT(:) - CST%XGAMI*ZZW(:))           ! es_i
 END WHERE
-!$mnh_end_expand_where(JI=1:KSIZE)
+!$mnh_end_expand_where(II=1:KSIZE)
 
 ZSSI(:)=0.
-!$mnh_expand_where(JI=1:KSIZE)
+!$mnh_expand_where(II=1:KSIZE)
 WHERE(GNEGT(:))
   ZZW(:)=MIN(PPABST(:)/2., ZZW(:))             ! safety limitation
   ZSSI(:)=PRVT(:)*(PPABST(:)-ZZW(:)) / (CST%XEPSILO*ZZW(:)) - 1.0
@@ -92,40 +94,40 @@ WHERE(GNEGT(:))
   !
   ZSSI(:)=MIN(ZSSI(:), ZUSW(:)) ! limitation of SSi according to SSw=0
 END WHERE
-!$mnh_end_expand_where(JI=1:KSIZE)
+!$mnh_end_expand_where(II=1:KSIZE)
 
 ZZW(:)=0.
-DO JI=1,KSIZE
-  IF(GNEGT(JI)) THEN
-    IF(PT(JI)<CST%XTT-5.0 .AND. ZSSI(JI)>0.0) THEN
-      ZZW(JI)=XNU20*EXP(XALPHA2*ZSSI(JI)-XBETA2)
-    ELSEIF(PT(JI)<=CST%XTT-2.0 .AND. PT(JI)>=CST%XTT-5.0 .AND. ZSSI(JI)>0.0) THEN
-      ZZW(JI)=MAX(XNU20*EXP(-XBETA2 ), &                                                                                       
-                  XNU10*EXP(-XBETA1*(PT(JI)-CST%XTT))*(ZSSI(JI)/ZUSW(JI))**XALPHA1)
+DO II=1,KSIZE
+  IF(GNEGT(II)) THEN
+    IF(PT(II)<CST%XTT-5.0 .AND. ZSSI(II)>0.0) THEN
+      ZZW(II)=LIMAC%XNU20*EXP(LIMAC%XALPHA2*ZSSI(II)-LIMAC%XBETA2)
+    ELSEIF(PT(II)<=CST%XTT-2.0 .AND. PT(II)>=CST%XTT-5.0 .AND. ZSSI(II)>0.0) THEN
+      ZZW(II)=MAX(LIMAC%XNU20*EXP(-LIMAC%XBETA2 ), &                                                                                       
+                  LIMAC%XNU10*EXP(-LIMAC%XBETA1*(PT(II)-CST%XTT))*(ZSSI(II)/ZUSW(II))**LIMAC%XALPHA1)
     ENDIF
   ENDIF
 ENDDO
-!$mnh_expand_where(JI=1:KSIZE)
+!$mnh_expand_where(II=1:KSIZE)
 WHERE(GNEGT(:))
   ZZW(:)=ZZW(:)-PCIT(:)
   ZZW(:)=MIN(ZZW(:), 50.E3) ! limitation provisoire a 50 l^-1
 END WHERE
-!$mnh_end_expand_where(JI=1:KSIZE)
+!$mnh_end_expand_where(II=1:KSIZE)
 
 PRVHENI_MR(:)=0.
-!$mnh_expand_where(JI=1:KSIZE)
+!$mnh_expand_where(II=1:KSIZE)
 WHERE(GNEGT(:))
   !
   !*       3.1.2   update the r_i and r_v mixing ratios
   !
-  PRVHENI_MR(:)=MAX(ZZW(:), 0.0)*XMNU0/PRHODREF(:)
+  PRVHENI_MR(:)=MAX(ZZW(:), 0.0)*LIMAC%XMNU0/PRHODREF(:)
   PRVHENI_MR(:)=MIN(PRVT(:), PRVHENI_MR(:))
 END WHERE
-!$mnh_end_expand_where(JI=1:KSIZE)
+!$mnh_end_expand_where(II=1:KSIZE)
 !Limitation due to 0 crossing of temperature
-IF(LFEEDBACKT) THEN
+IF(LIMAP%LFEEDBACKT) THEN
   ZW(:)=0.
-  !$mnh_expand_where(JI=1:KSIZE)
+  !$mnh_expand_where(II=1:KSIZE)
   WHERE(GNEGT(:))
     ZW(:)=MIN(PRVHENI_MR(:), &
               MAX(0., (CST%XTT/PEXN(:)-PTHT(:))/PLSFACT(:))) / &
@@ -133,13 +135,13 @@ IF(LFEEDBACKT) THEN
   END WHERE
   PRVHENI_MR(:)=PRVHENI_MR(:)*ZW(:)
   ZZW(:)=ZZW(:)*ZW(:)
-  !$mnh_end_expand_where(JI=1:KSIZE)
+  !$mnh_end_expand_where(II=1:KSIZE)
 ENDIF
-!$mnh_expand_where(JI=1:KSIZE)
+!$mnh_expand_where(II=1:KSIZE)
 WHERE(GNEGT(:))
   PCIT(:)=MAX(ZZW(:)+PCIT(:), PCIT(:))
 END WHERE
-!$mnh_end_expand_where(JI=1:KSIZE)
+!$mnh_end_expand_where(II=1:KSIZE)
 !
 IF (LHOOK) CALL DR_HOOK('LIMA_ICE4_NUCLEATION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_ICE4_NUCLEATION
