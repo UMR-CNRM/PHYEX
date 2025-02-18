@@ -500,7 +500,7 @@ END WHERE
 !            2.bis  Prevent Hallett-Mossop mechanism if graupel too small (no collection)
 !            ----------------------------------------------------------------------------
 !
-IF (LSIGMOIDE_G) THEN
+IF (LIMAP%LSIGMOIDE_G) THEN
    P_CI_HMG(:) = P_CI_HMG(:) * ZSIGMOIDE(:)
    P_RI_HMG(:) = P_RI_HMG(:) * ZSIGMOIDE(:)
    P_RG_HMG(:) = P_RG_HMG(:) * ZSIGMOIDE(:)
