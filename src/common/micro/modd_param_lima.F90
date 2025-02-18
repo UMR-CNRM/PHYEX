@@ -99,7 +99,8 @@ INTEGER          :: NNB_CRYSTAL_SHAPE  ! nb of ice crystal shapes if lcrystal_sh
 CHARACTER(LEN=4), DIMENSION(NNBCRYSTALMAX) :: HTYPE_CRYSTAL_SHAPE     ! name of ice crystal shapes if lcrystal_shape=t 
 LOGICAL :: LSIGMOIDE_G,  &  ! if true limit graupel growth false by default
            LSIGMOIDE_NG     ! if true force lambda to be < lambda(Dmin)
-REAL    :: XSIGMOIDE_G   ! sigmoide parameter for graupel growth limitation
+REAL    :: XSIGMOIDE_G, &  ! sigmoide parameter for graupel growth limitation
+           XMVDMIN_G      ! minimum MVD for graupel growth lim or lambda(Dmin) calculation
 !
 ! 1.4 Phillips (2013) nucleation parameterization
 !
@@ -323,7 +324,8 @@ REAL, POINTER :: XMRSTEP => NULL(), &
                  XVISCW => NULL(), &
                  XRHO00 => NULL(), &
                  XCEXVT => NULL(), &
-                 XSIGMOIDE_G => NULL()
+                 XSIGMOIDE_G => NULL(), &
+                 XMVDMIN_G => NULL()
 
 REAL, DIMENSION(:), POINTER :: XIFN_CONC => NULL(), &
                                XMDIAM_IFN => NULL(), &
@@ -391,8 +393,7 @@ NAMELIST/NAM_PARAM_LIMA/LNUCL, LSEDI, LHHONI, LMEYERS,                     &
                         XFSOLUB_CCN, XACTEMP_CCN, XAERDIFF, XAERHEIGHT,    &                                         
                         LSCAV, LAERO_MASS, LDEPOC, XVDEPOC, LACTTKE,       &                                         
                         LPTSPLIT, LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS,&
-                        
-                        LSIGMOIDE_NG, LSIGMOIDE_G, XSIGMOIDE_G
+                        LSIGMOIDE_NG, LSIGMOIDE_G, XSIGMOIDE_G, XMVDMIN_G
 
 CONTAINS
 SUBROUTINE PARAM_LIMA_ASSOCIATE()
@@ -499,6 +500,7 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   XFSEDR             => PARAM_LIMA%XFSEDR
   XFSEDC             => PARAM_LIMA%XFSEDC
   XSIGMOIDE_G        => PARAM_LIMA%XSIGMOIDE_G
+  XMVDMIN_G        => PARAM_LIMA%XMVDMIN_G
 
   NSPLITSED          => PARAM_LIMA%NSPLITSED
 
@@ -764,6 +766,7 @@ IF(GLDEFAULTVAL) THEN
   LSIGMOIDE_G = .FALSE.
   LSIGMOIDE_NG = .FALSE.
   XSIGMOIDE_G = 1.E8
+  XMVDMIN_G = 125.E-6
 ENDIF
 !
 !*      2. NAMELIST

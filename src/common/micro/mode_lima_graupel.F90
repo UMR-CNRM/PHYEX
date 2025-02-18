@@ -497,6 +497,15 @@ WHERE ( GDRY(:) .AND. ZZX(:)<0.99 ) ! Dry case
    P_RG_HMG(:) = - P_RI_HMG(:)
 END WHERE
 !
+!            2.bis  Prevent Hallett-Mossop mechanism if graupel too small (no collection)
+!            ----------------------------------------------------------------------------
+!
+IF (LSIGMOIDE_G) THEN
+   P_CI_HMG(:) = P_CI_HMG(:) * ZSIGMOIDE(:)
+   P_RI_HMG(:) = P_RI_HMG(:) * ZSIGMOIDE(:)
+   P_RG_HMG(:) = P_RG_HMG(:) * ZSIGMOIDE(:)
+END IF 
+!
 !
 !*       3.  Graupel Melting
 !        -------------------

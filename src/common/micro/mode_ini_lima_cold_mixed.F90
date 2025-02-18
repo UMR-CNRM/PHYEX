@@ -1573,9 +1573,9 @@ XICFRR    = (XPI/4.0)*XCOLIR*XCR*(ZRHO00**XCEXVT)                  &
 !*       8.2    Constants for the dry growth of the graupeln
 !
 ! Min val. of R for dry and wet for D = 125 mum
-XMINDG  =  XAG*XCCG*0.000125**(XBG-XCXG)*MOMG(XALPHAG,XNUG,XBG)**(XCXG/XBG)
+XMINDG  =  XAG*XCCG*XMVDMIN_G**(XBG-XCXG)*MOMG(XALPHAG,XNUG,XBG)**(XCXG/XBG)
 ! Max val of lambda for D = 125 mum
-XMAXLBDG = MOMG(XALPHAG,XNUG,XBG)**(1./XBG)/0.000125
+XMAXLBDG = MOMG(XALPHAG,XNUG,XBG)**(1./XBG)/XMVDMIN_G
 !
 !*       8.2.1  Constants for the cloud droplet collection by the graupeln
 !               and for the Hallett-Mossop process
