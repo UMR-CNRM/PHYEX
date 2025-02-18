@@ -64,7 +64,7 @@ USE MODD_NSV,             ONLY: NSV_LIMA_NC, NSV_LIMA_NR, NSV_LIMA_CCN_FREE, NSV
                                 NSV_LIMA_BEG, NSV_ELECBEG, NSV
 USE MODD_PARAM_LIMA,      ONLY: LHHONI, LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS,NMOD_IFN,      &
                                 LSEDC, LSEDI, XRTMIN, XCTMIN, LDEPOC, XVDEPOC,                  &
-                                NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
+                                NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H, NMOD_CCN, NMOD_IMM
 USE MODE_BUDGET_PHY,      ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 use mode_tools,           only: Countjv
 

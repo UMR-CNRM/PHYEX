@@ -161,8 +161,8 @@ INTEGER :: JIJ, JK, JKP, JKM                    ! loop index
 INTEGER :: IKTB, IKTE, IKB, IKE, IKL, IIJB, IIJE
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZTLK, ZRT     ! work arrays for T_l and total water mixing ratio
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZL            ! length scale
-INTEGER, DIMENSION(D%NIJT,D%NKT)  :: ITPL            ! top levels of troposphere
-REAL,    DIMENSION(D%NIJT,D%NKT)  :: ZTMIN           ! minimum Temp. related to ITPL
+INTEGER, DIMENSION(D%NIJT)  :: ITPL            ! top levels of troposphere
+REAL,    DIMENSION(D%NIJT)  :: ZTMIN           ! minimum Temp. related to ITPL
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZLV, ZLS, ZCPD
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZGCOND, ZAUTC, ZAUTI, ZGAUV, ZGAUC, ZGAUI, ZGAUTC, ZGAUTI, ZCRIAUTI   ! Used for Gaussian PDF integration
@@ -251,10 +251,13 @@ PRC_OUT(:,:)= 0. ! Initialize values
 PRI_OUT(:,:)= 0. ! Initialize values
 ZPRIFACT(:,:) = 1.    ! Initialize value
 ZARDUM2(:,:) = 0.  ! Initialize values
+ZARDUM(:,:) = 0.  ! Initialize values
 ZCLDINI(:,:) = -1. ! Dummy Initialized cloud input to icecloud routine
 PIFR(:,:) = 10. ! ratio of cloud ice water mixing ratio wet to dry
            ! part of a gridbox
 ZDZREF(:,:) = ICEP%XFRMIN(25) ! Thickness for unchanged vqsigsat (only used for LHGT_QS)
+!
+IF(OCND2) ZRSW(:,:) = -9999 ! This variable was never initialized !
 !
 IF(OCND2)ZPRIFACT(:,:) = 0.
 !$acc end kernels
@@ -320,16 +323,16 @@ IF ( .NOT. OSIGMAS ) THEN
 !$acc end kernels
   ! Determine tropopause/inversion  height from minimum temperature
 !$acc kernels
-  ITPL(:,:)  = IKB+IKL
-  ZTMIN(:,:) = 400.
+  ITPL(:)  = IKB+IKL
+  ZTMIN(:) = 400.
 !$acc end kernels
 !$acc kernels
 !$acc loop independent collapse(2)
   DO JK = IKTB+1,IKTE-1
     DO JIJ=IIJB,IIJE
-      IF ( PT(JIJ,JK) < ZTMIN(JIJ,JK) ) THEN
-        ZTMIN(JIJ,JK) = PT(JIJ,JK)
-        ITPL(JIJ,JK) = JK
+      IF ( PT(JIJ,JK) < ZTMIN(JIJ) ) THEN
+        ZTMIN(JIJ) = PT(JIJ,JK)
+        ITPL(JIJ) = JK
       ENDIF
     END DO
   END DO
@@ -343,7 +346,7 @@ IF ( .NOT. OSIGMAS ) THEN
       ! free troposphere
       ZL(JIJ,JK) = ZL0
       ZZZ(JIJ,JK) =  PZZ(JIJ,JK) -  PZZ(JIJ,IKB)
-      JKP = ITPL(JIJ,JK)
+      JKP = ITPL(JIJ)
       ! approximate length for boundary-layer
       IF ( ZL0 > ZZZ(JIJ,JK) ) ZL(JIJ,JK) = ZZZ(JIJ,JK)
       ! gradual decrease of length-scale near and above tropopause
@@ -368,20 +371,16 @@ END DO
 DO JK=IKTB,IKTE
   DO JIJ = IIJB, IIJE
   IF (OCND2) THEN
-     DO JIJ = IIJB, IIJE
-       ZDZ(JIJ) = PZZ(JIJ,JKP) - PZZ(JIJ,JKP-IKL)
-     ENDDO
-     CALL ICECLOUD(D,CST,ICEP,PPABS(:,JK),PZZ(:,JK),ZDZ(:), &
-          & PT(:,JK),PRV_IN(:,JK),1.,-1., &
-          & ZCLDINI(:),PIFR(IIJB,JK),PICLDFR(:,JK), &
-          & PSSIO(:,JK),PSSIU(:,JK),ZARDUM2(:),ZARDUM(:))
+      ZDZ(JIJ,JK) = PZZ(JIJ,JKPK(JK)) - PZZ(JIJ,JKPK(JK)-IKL)
+      CALL ICECLOUD(CST, ICEP, PPABS(JIJ,JK),PZZ(JIJ,JK),ZDZ(JIJ,JK), &
+          & PT(JIJ,JK),PRV_IN(JIJ,JK),1.,-1., &
+          & ZCLDINI(JIJ,JK),PIFR(IIJB,JK),PICLDFR(JIJ,JK), &
+          & PSSIO(JIJ,JK),PSSIU(JIJ,JK),ZARDUM2(JIJ,JK),ZARDUM(JIJ,JK))
      ! latent heats
      ! saturated water vapor mixing ratio over liquid water and ice
-     DO JIJ=IIJB,IIJE
-       ESATW_T(JIJ)=ESATW(ICEP%TIWMX, PT(JIJ,JK))
-       ZPV(JIJ)  = MIN(ESATW_T(JIJ), .99*PPABS(JIJ,JK))
-       ZPIV(JIJ) = MIN(ESATI(ICEP%TIWMX, PT(JIJ,JK)), .99*PPABS(JIJ,JK))
-     END DO
+       ESATW_T(JIJ,JK)=ESATW(ICEP%TIWMX, PT(JIJ,JK))
+       ZPV(JIJ,JK)  = MIN(ESATW_T(JIJ,JK), .99*PPABS(JIJ,JK))
+       ZPIV(JIJ,JK) = MIN(ESATI(ICEP%TIWMX, PT(JIJ,JK)), .99*PPABS(JIJ,JK))
   ELSE
      ! latent heats
      ! saturated water vapor mixing ratio over liquid water and ice
@@ -548,24 +547,24 @@ DO JK=IKTB,IKTE
       !
 !     This check is mainly for noise reduction :
 !     -------------------------
-      IF(ABS(ZLWINC)>1.0E-12  .AND.  ESATW(ICEP%TIWMX, PT(JIJ,JK)) < PPABS(JIJ,JK)*0.5 )THEN
-         ZRCOLD = PRC_OUT(JIJ,JK)
-         ZRFRAC = PRV_IN(JIJ,JK) - ZLWINC
-         IF( PRV_IN(JIJ,JK) < ZRSW )THEN ! sub - saturation over water:
+      IF(ABS(ZLWINC(JIJ,JK))>1.0E-12  .AND.  ESATW(ICEP%TIWMX, PT(JIJ,JK)) < PPABS(JIJ,JK)*0.5 )THEN
+         ZRCOLD(JIJ,JK) = PRC_OUT(JIJ,JK)
+         ZRFRAC(JIJ,JK) = PRV_IN(JIJ,JK) - ZLWINC(JIJ,JK)
+         IF( PRV_IN(JIJ,JK) < ZRSW(JIJ,JK) )THEN ! sub - saturation over water:
             ! Avoid drying of cloudwater leading to supersaturation with
             ! respect to water
-            ZRSDIF= MIN(0.,ZRSP-ZRFRAC)
+            ZRSDIF(JIJ,JK)= MIN(0.,ZRSP(JIJ,JK)-ZRFRAC(JIJ,JK))
          ELSE  ! super - saturation over water:
             ! Avoid deposition of water leading to sub-saturation with
             ! respect to water
-            !            ZRSDIF= MAX(0.,ZRSP-ZRFRAC)
-            ZRSDIF= 0. ! t7
+            !            ZRSDIF(JIJ,JK)= MAX(0.,ZRSP(JIJ,JK)-ZRFRAC(JIJ,JK))
+            ZRSDIF(JIJ,JK)= 0. ! t7
          ENDIF
-         PRC_OUT(JIJ,JK) = ZCOND(JIJ)  - ZRSDIF
+         PRC_OUT(JIJ,JK) = ZCOND(JIJ,JK)  - ZRSDIF(JIJ,JK)
       ELSE
-        ZRCOLD = PRC_IN(JIJ,JK)
+        ZRCOLD(JIJ,JK) = PRC_IN(JIJ,JK)
       ENDIF
- !    end check
+ !   end check
 
  !    compute separate ice cloud:
       PWCLDFR(JIJ,JK) = PCLDFR(JIJ,JK)
