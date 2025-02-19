@@ -26,6 +26,7 @@ aux/modd_dust.f90
 aux/modd_salt.f90
 aux/modd_ch_aerosol.f90
 aux/ch_aer_activation.f90
+aux/mode_openacc_set_device.F90
 
 #old version of rain_ice
 micro/mode_rain_ice_old_fast_rg.f90

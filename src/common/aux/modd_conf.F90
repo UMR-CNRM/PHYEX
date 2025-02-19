@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2018 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -53,6 +53,8 @@
 !*       0.   DECLARATIONS
 !             ------------
 !
+USE MODD_PARAMETERS, ONLY: NEXPNAMELGTMAX, NSEGNAMELGTMAX
+!
 IMPLICIT NONE
 !
 CHARACTER (LEN=5),SAVE :: CCONF  ! Configuration of models
@@ -82,8 +84,8 @@ INTEGER,SAVE      :: NVERB       ! Level of informations on output-listing
                                  !  0 for minimum of prints
                                  ! 5 for intermediate level of prints
                                  ! 10 for maximum of prints
-CHARACTER (LEN=5),SAVE :: CEXP   !  Experiment name
-CHARACTER (LEN=5),SAVE :: CSEG   ! name of segment
+CHARACTER (LEN=NEXPNAMELGTMAX), SAVE :: CEXP   !  Experiment name
+CHARACTER (LEN=NSEGNAMELGTMAX), SAVE :: CSEG   ! name of segment
 LOGICAL,SAVE :: LFORCING         ! Logical for forcing sources
                                  ! .TRUE.  = add forcing sources
                                  ! .FALSE. = no forcing fields
