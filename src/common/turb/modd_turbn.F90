@@ -42,6 +42,7 @@
 !!      D. Ricard     May 2021      add the switches for Leonard terms
 !!    JL Redelsperger  03/2021   Add O-A flux for auto-coupled LES case
 !!      S. Riette June 2023: add LSMOOTH_PRANDTL, XMINSIGS and XBL89EXP/XUSRBL89
+!!      A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !!
 !-------------------------------------------------------------------------------
 !
@@ -77,6 +78,7 @@ TYPE TURB_t
   LOGICAL            :: LSIG_CONV   !< Switch for computing Sigma_s due to convection
 !
   LOGICAL            :: LHARAT      !< if true RACMO turbulence is used
+  LOGICAL            :: LBL89TOP    !< if true modification in BL89 at PBL top   
   LOGICAL            :: LRMC01      !< Switch for computing separate mixing and dissipative length in the SBL
                                     !! according to Redelsperger, Mahe & Carlotti 2001
   CHARACTER(LEN=4)   :: CTOM        !< type of Third Order Moments:
@@ -99,6 +101,8 @@ TYPE TURB_t
   REAL               :: XCOEFHGRADTHL !< coeff applied to thl contribution
   REAL               :: XCOEFHGRADRM  !< coeff applied to mixing ratio contribution
   REAL               :: XALTHGRAD  !< altitude from which to apply the Leonard terms
+  LOGICAL            :: LGOGER ! < logical switch for the computation of the Goger Terms
+  REAL               :: XSMAG  ! < dimensionless Smagorinsky constant
   REAL               :: XCLDTHOLD  !< cloud threshold to apply the Leonard terms:
                                    !!  negative value to apply everywhere;
                                    !!  0.000001 applied only inside the clouds ri+rc > 10**-6 kg/kg
@@ -123,6 +127,8 @@ REAL               :: XCEI_MAX  !< maximum threshold for the instability index C
 REAL, DIMENSION(:,:,:), POINTER  :: XCEI !< Cloud Entrainment instability index to emphasize localy 
                                          ! turbulent fluxes
   LOGICAL            :: LTURB_PRECIP ! switch to apply turbulence to precipitating hydrometeor mixing ratios
+  LOGICAL            :: LDYNMF       ! true to take into account a dynamical TKE production from EDMF
+  LOGICAL            :: LTHERMMF     ! true to take into account a buoyancy TKE production from EDMF
 
 !  
 END TYPE TURB_t
@@ -149,10 +155,13 @@ LOGICAL, POINTER :: LTURB_DIAG=>NULL()
 LOGICAL, POINTER :: LSIG_CONV=>NULL()
 LOGICAL, POINTER :: LRMC01=>NULL()
 LOGICAL, POINTER :: LHARAT=>NULL()
+LOGICAL, POINTER :: LBL89TOP=>NULL()
 CHARACTER(LEN=4),POINTER :: CTOM=>NULL()
 REAL, DIMENSION(:,:), POINTER :: XBL_DEPTH=>NULL()
 REAL, DIMENSION(:,:), POINTER :: XSBL_DEPTH=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XWTHVMF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER :: XWUMF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER :: XWVMF=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XDYP=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XTHP=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XTR=>NULL()
@@ -166,6 +175,8 @@ LOGICAL, POINTER :: LLEONARD=>NULL()
 REAL, POINTER :: XCOEFHGRADTHL=>NULL()
 REAL, POINTER :: XCOEFHGRADRM=>NULL()
 REAL, POINTER :: XALTHGRAD=>NULL()
+LOGICAL, POINTER :: LGOGER=>NULL()
+REAL, POINTER :: XSMAG=>NULL()
 REAL, POINTER :: XCLDTHOLD=>NULL()
 REAL, POINTER :: XLINI=>NULL()
 LOGICAL, POINTER   :: LROTATE_WIND=>NULL()
@@ -182,15 +193,18 @@ REAL, POINTER :: XCEI_MIN=>NULL()
 REAL, POINTER :: XCEI_MAX =>NULL()
 REAL, DIMENSION(:,:,:), POINTER  :: XCEI=>NULL()
 LOGICAL, POINTER :: LTURB_PRECIP=>NULL()
+LOGICAL, POINTER :: LDYNMF=>NULL()
+LOGICAL, POINTER :: LTHERMMF=>NULL()
 !
 NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
                    LSIG_CONV,LRMC01,CTOM,&
                    XTKEMIN,XCED,XCTP,XCADAP,&
                    LLEONARD,XCOEFHGRADTHL, XCOEFHGRADRM, &
-                   XALTHGRAD, XCLDTHOLD, XLINI, LHARAT, &
+                   XALTHGRAD, LGOGER, XSMAG, XCLDTHOLD, XLINI, LHARAT, & 
                    LPROJQITURB, LSMOOTH_PRANDTL, XMINSIGS, NTURBSPLIT, &
                    LCLOUDMODIFLM, CTURBLEN_CLOUD, &
-                   XCOEF_AMPL_SAT, XCEI_MIN, XCEI_MAX, LTURB_PRECIP
+                   XCOEF_AMPL_SAT, XCEI_MIN, XCEI_MAX, LTURB_PRECIP, &
+                   LDYNMF, LTHERMMF,LBL89TOP
 !
 !-------------------------------------------------------------------------------
 !
@@ -242,6 +256,7 @@ CTURBLEN=>TURB_MODEL(KTO)%CTURBLEN
 CTURBDIM=>TURB_MODEL(KTO)%CTURBDIM
 LTURB_FLX=>TURB_MODEL(KTO)%LTURB_FLX
 LHARAT=>TURB_MODEL(KTO)%LHARAT
+LBL89TOP=>TURB_MODEL(KTO)%LBL89TOP
 LTURB_DIAG=>TURB_MODEL(KTO)%LTURB_DIAG
 LSIG_CONV=>TURB_MODEL(KTO)%LSIG_CONV
 LRMC01=>TURB_MODEL(KTO)%LRMC01
@@ -262,6 +277,8 @@ LLEONARD=>TURB_MODEL(KTO)%LLEONARD
 XCOEFHGRADTHL=>TURB_MODEL(KTO)%XCOEFHGRADTHL
 XCOEFHGRADRM=>TURB_MODEL(KTO)%XCOEFHGRADRM
 XALTHGRAD=>TURB_MODEL(KTO)%XALTHGRAD
+LGOGER=>TURB_MODEL(KTO)%LGOGER
+XSMAG=>TURB_MODEL(KTO)%XSMAG
 XCLDTHOLD=>TURB_MODEL(KTO)%XCLDTHOLD
 XLINI=>TURB_MODEL(KTO)%XLINI
 LROTATE_WIND=>TURB_MODEL(KTO)%LROTATE_WIND
@@ -279,6 +296,8 @@ XCEI_MIN=>TURB_MODEL(KTO)%XCEI_MIN
 XCEI_MAX =>TURB_MODEL(KTO)%XCEI_MAX
 XCEI=>TURB_MODEL(KTO)%XCEI
 LTURB_PRECIP=>TURB_MODEL(KTO)%LTURB_PRECIP
+LDYNMF=>TURB_MODEL(KTO)%LDYNMF
+LTHERMMF=>TURB_MODEL(KTO)%LTHERMMF
 !
 ENDIF
 !
@@ -375,9 +394,12 @@ IF(LLDEFAULTVAL) THEN
   XCOEFHGRADTHL = 1.0
   XCOEFHGRADRM = 1.0
   XALTHGRAD = 2000.0
+  LGOGER=.FALSE.
+  XSMAG=0.20 
   XCLDTHOLD = -1.0
   XLINI=0.1 !old value: 10.
   LHARAT=.FALSE.
+  LBL89TOP=.FALSE.
   LROTATE_WIND=.FALSE.
   LTKEMINTURB=.TRUE.
   LPROJQITURB=.TRUE.
@@ -390,6 +412,8 @@ IF(LLDEFAULTVAL) THEN
   XCEI_MIN = 0.001E-06
   XCEI_MAX = 0.01E-06
   LTURB_PRECIP =.FALSE.
+  LDYNMF = .FALSE.
+  LTHERMMF = .TRUE.
   !
   IF(HPROGRAM=='AROME') THEN
     XTKEMIN=1.E-6

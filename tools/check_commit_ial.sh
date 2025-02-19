@@ -22,6 +22,7 @@ set -o pipefail #abort if left command on a pipe fails
 #small_3D_lima: LIMA scheme
 #small_3D_alt11: same as small_3D but with a different value for NPROMICRO (must give exactly the same results)
 #small_3D_alt12: same as small_3D but with LPACK_MICRO=.F. (must give exactly the same results)
+#small_3D_xfrmin: same as small_3D_alt2 but with specified values for XFRMIN(16:17)
 
 #When running in 49t0 after the f065e64 commit (23 June 2023) all configurations must be compared to this same commit.
 #79fe47e (previous commit) is identical to the different references for all the test cases.
@@ -76,7 +77,7 @@ specialPack="ori split split_48t1 split_48t3 recompil split_49t0"
 # - defaultTest is the list of tests to perform when no '-t' option is provided on the command line.
 ALLTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7"
 defaultTest="small_3D"
-allowedTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7,small_3D_alt8,small_3D_alt9,small_3D_alt10,small_3D_alt11,small_3D_alt12,small_3D_lima"
+allowedTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7,small_3D_alt8,small_3D_alt9,small_3D_alt10,small_3D_alt11,small_3D_alt12,small_3D_lima,small_3D_xfrmin"
 
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
@@ -93,8 +94,10 @@ if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taran
   HPC=1
   gmkpack_l[default]=MIMPIIFC1805
   gmkpack_l[49t0]=IMPIIFC2018
+  gmkpack_l[49t2]=IMPIIFCI2302DP
   gmkpack_o[default]=2y
   gmkpack_o[49t0]=x
+  gmkpack_o[49t2]=y
   defaultMainPackVersion=01
   defaultRef='split_${cycle}'
   ALLTests="${ALLTests},big_3D"
@@ -103,8 +106,10 @@ else
   HPC=0
   gmkpack_l[default]=MPIGFORTRAN920DBL
   gmkpack_l[49t0]=OMPIGFORT920DBL
+  gmkpack_l[49t2]=OMPIGFORT920DBL
   gmkpack_o[default]=xfftw
   gmkpack_o[49t0]=x
+  gmkpack_o[49t2]=x
   defaultMainPackVersion=01
   defaultRef='split_${cycle}'
 fi
@@ -163,6 +168,9 @@ function usage {
   echo "The cycle will be guessed from the source code"
   echo
   echo "The -f flag (full recompilation) is active only at pack creation"
+  echo
+  echo "The PHYEXROOTPACK environment variable, if set, is used as the argument"
+  echo "of the --rootpack option of ial-git2pack, for incremental packs."
 }
 
 packcreation=0
@@ -442,13 +450,71 @@ if [ $packcreation -eq 1 ]; then
 
     export GMKTMP=/dev/shm
 
-    if [ $fullcompilation == 0 ]; then
+    if [ $cycle == '49t2' ]; then
+      if ! which ial-git2pack > /dev/null 2>&1; then
+        echo "ial-git2pack not found, please install it"
+        exit 7
+      fi
+      #Pack creation using ial-git2pack
+      tmpbuilddir=$(mktemp -d)
+      trap "\rm -rf $tmpbuilddir" EXIT
+      cd $tmpbuilddir
+      git clone $(json_dictkey2value "$content_ial_version" 'IALrepo' 'git@github.com:ACCORD-NWP/IAL.git')
+      cd IAL
+      git checkout $(json_dictkey2value "$content_ial_version" 'IALcommit' 'XXXXXXX')
+      IALbundle_tag=$(json_dictkey2value "$content_ial_version" 'IALbundle_tag' '')
+      [ "$IALbundle_tag" != "" ] && IALbundle_tag="--hub_bundle_tag $IALbundle_tag"
+      ROOTPACKopt=""
+      if [ $fullcompilation == 0 ]; then
+        kind=incr
+        if [ "$PHYEXROOTPACK" != "" ]; then
+          ROOTPACKopt="--rootpack $PHYEXROOTPACK"
+        fi
+      else
+        kind=main
+      fi
+      echo y | ial-git2pack -l ${gmkpack_l} -o ${gmkpack_o} -t $kind -n 10 \
+                            -r $tmpbuilddir/IAL -p masterodb \
+                            $ROOTPACKopt \
+                            --homepack $tmpbuilddir/pack $IALbundle_tag
+
+      #Moving
+      oldname=$(echo $tmpbuilddir/pack/*)
+      mv $oldname $HOMEPACK/$name
+      for file in $HOMEPACK/$name/ics_*; do
+        sed -i "s*$oldname*$HOMEPACK/$name*g" $file
+      done
+      rm -rf $tmpbuilddir
+
+      #Workarounds for 49t2 compilation
+      cd $HOMEPACK/$name
+      rm -rf src/local/obstat src/local/oopsifs
+      rm -rf hub/local/src/Atlas hub/local/src/OOPS hub/local/src/ecSDK/?ckit
+      if [ $fullcompilation != 0 ]; then
+        gmkfile=$HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
+        for key in REPRO48 WITH_ODB WITHOUT_ECFLOW; do
+          if ! grep "^MACROS_FRT" $gmkfile | grep -e -D$key; then
+            sed -i "/^MACROS_FRT/s/$/ -D$key/" $gmkfile
+          fi
+        done
+        if ! grep "^GMK_CMAKE_ectrans" $gmkfile | grep -e -DENABLE_ETRANS=ON; then
+          sed -i "/^GMK_CMAKE_ectrans/s/$/ -DENABLE_ETRANS=ON/" $gmkfile
+        fi
+      fi
+
+      #Prepare PHYEX inclusion
+      rm -rf src/local/phyex
+      mkdir src/local/phyex
+
+    elif [ $fullcompilation == 0 ]; then
+      #Incremental compilation old style
       basepack=${cycle}_main.01.${gmkpack_l}.${gmkpack_o}
       #[ $HPC -eq 0 -a ! -d $ROOTPACK/$basepack ] &&  getpack $basepack
       gmkpack -r ${cycle} -b phyex -v $mainPackVersion -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb \
               -f $dirpack/ \
               -u $name
     else
+      #Main pack creation old style
       if [ $(echo $cycle | cut -c 1-2) -ne 48 ]; then
         hub='-K'
       else
@@ -578,6 +644,10 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
         mv PHYEX/gmkpack_ignored_files_new PHYEX/gmkpack_ignored_files
       fi
     fi
+    #shuman_phy.F90 has been renamed and gmkpack is lost in case a different version exists in main
+    if [ -f ../../main/phyex/aux/shuman_phy.F90 -a -f aux/mode_shuman_phy.F90 ]; then
+      mv aux/mode_shuman_phy.F90 aux/shuman_phy.F90
+    fi
     if [ -f PHYEX/gmkpack_ignored_files ]; then
       #gmkpack_ignored_files contains a list of file, present in the reference pack, that is not used anymore
       #and must be excluded from compilation (in case of a full comilation) or from re-compilation (in case of a non-full
@@ -585,14 +655,18 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       if [ $fullcompilation == 0 ]; then
         #Content is added in the ics_masterodb script
         if [ $packupdate -eq 0 ]; then
-          sed -i "/^end_of_ignored_files/i $(first=1; for line in $(cat PHYEX/gmkpack_ignored_files); do echo -n $(test $first -ne 1 && echo \\n)${line}; first=0; done)" $HOMEPACK/$name/ics_masterodb
+          if [ $(cat PHYEX/gmkpack_ignored_files | wc -l) != 0 ]; then
+            sed -i "/^end_of_ignored_files/i $(first=1; for line in $(cat PHYEX/gmkpack_ignored_files); do echo -n $(test $first -ne 1 && echo \\n)${line}; first=0; done)" $HOMEPACK/$name/ics_masterodb
+          fi
         fi
       else
         #Files must be suppressed (non phyex files)
         for file in $(cat PHYEX/gmkpack_ignored_files); do
           [ -f $HOMEPACK/$name/src/local/$file ] && rm -f $HOMEPACK/$name/src/local/$file
         done
-        [ ! "$(ls -A $HOMEPACK/$name/src/local/mpa/dummy)" ] && rmdir $HOMEPACK/$name/src/local/mpa/dummy
+        if [ -d $HOMEPACK/$name/src/local/mpa/dummy ]; then
+          [ ! "$(ls -A $HOMEPACK/$name/src/local/mpa/dummy)" ] && rmdir $HOMEPACK/$name/src/local/mpa/dummy
+        fi
       fi
     fi
 
@@ -600,24 +674,33 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     [ ! -d $EXT ] && EXT=PHYEX/externals #old name for ext/aux
     if [ -d $EXT ]; then
       #Move manually files outside of mpa (a find on the whole repository would take too much a long time)
-      [ -f $EXT/yomparar.F90 ] && mvdiff $EXT/yomparar.F90 ../arpifs/module/
-      [ -f $EXT/namparar.nam.h ] && mvdiff $EXT/namparar.nam.h ../arpifs/namelist
-      [ -f $EXT/namlima.nam.h ] && mvdiff $EXT/namlima.nam.h ../arpifs/namelist
-      [ -f $EXT/suparar.F90 ] && mvdiff $EXT/suparar.F90 ../arpifs/phys_dmn/
-      [ -f $EXT/apl_arome.F90 ] && mvdiff $EXT/apl_arome.F90 ../arpifs/phys_dmn/
-      [ -f $EXT/suphmpa.F90 ] && mvdiff $EXT/suphmpa.F90 ../arpifs/phys_dmn/
-      [ -f $EXT/suphmse.F90 ] && mvdiff $EXT/suphmse.F90 ../arpifs/phys_dmn/
-      [ -f $EXT/vdfhghtnhl.F90 ] && mvdiff $EXT/vdfhghtnhl.F90 ../arpifs/phys_dmn/
-      [ -f $EXT/cpg_opts_type_mod.fypp ] && mvdiff $EXT/cpg_opts_type_mod.fypp ../arpifs/module/
-      file=$EXT/cpg_pt_ulp_expl.fypp; [ -f $file ] && mvdiff $file ../arpifs/adiab/
-      file=$EXT/field_variables_mod.fypp; [ -f $file ] && mvdiff $file ../arpifs/module/
-      file=$EXT/cpg_type_mod.fypp; [ -f $file ] && mvdiff $file ../arpifs/module/
-      file=$EXT/field_registry_mod.fypp; [ -f $file ] && mvdiff $file ../arpifs/module/
-      file=$EXT/mf_phys_next_state_type_mod.fypp; [ -f $file ] && mvdiff $file ../arpifs/module/
-      file=$EXT/yemlbc_model.F90; [ -f $file ] && mvdiff $file ../arpifs/module/
-      [ -f $EXT/aplpar.F90 ] && mvdiff $EXT/aplpar.F90 ../arpifs/phys_dmn/
-      [ -f $EXT/su0yomb.F90 ] && mvdiff $EXT/su0yomb.F90 ../arpifs/setup/
-      [ -f $EXT/acvppkf.F90 ] && mvdiff $EXT/acvppkf.F90 ../arpifs/phys_dmn/
+      for file in yomparar.F90 cpg_opts_type_mod.fypp field_variables_mod.fypp cpg_type_mod.fypp \
+                  field_registry_mod.fypp mf_phys_next_state_type_mod.fypp yemlbc_model.F90 \
+                  field_config.yaml field_definitions.F90 field_gfl_wrapper.F90 \
+                  yomfa.F90 yom_ygfl.F90 type_gflflds.F90 mf_phys_base_state_type_mod.fypp; do
+        [ -f $EXT/$file ] && mvdiff $EXT/$file ../arpifs/module/
+      done
+      for file in namparar.nam.h namlima.nam.h namgfl.nam.h; do
+        [ -f $EXT/$file ] && mvdiff $EXT/$file ../arpifs/namelist/
+      done
+      for file in aplpar.F90 acvppkf.F90 writemusc.F90 vdfhghtnhl.F90 suphmse.F90 suphmpa.F90 \
+                  suparar.F90 apl_arome.F90 apl_arome_adjust.F90 apl_arome_micro.F90 \
+                  apl_arome_shallow.F90 apl_arome_turbulence.F90; do
+        [ -f $EXT/$file ] && mvdiff $EXT/$file ../arpifs/phys_dmn/
+      done
+      for file in cpg_pt_ulp_expl.fypp cpg_gp.F90; do
+        [ -f $EXT/$file ] && mvdiff $EXT/$file ../arpifs/adiab/
+      done
+      for file in su0yomb.F90 suctrl_gflattr.F90 sudefo_gflattr.F90 sufa.F90 sugfl1.F90 sugfl2.F90 \
+                  sugfl3.F90; do
+        [ -f $EXT/$file ] && mvdiff $EXT/$file ../arpifs/setup/
+      done
+      for file in vpos_prep.F90; do
+        [ -f $EXT/$file ] && mvdiff $EXT/$file ../arpifs/fullpos/
+      done
+      if [ $cycle == '49t2' ]; then
+        file=$EXT/arp_shallow_mf.F90; [ -f $file ] && mvdiff $file ../arpifs/phys_dmn/
+      fi
       #Special mpa case
       for file in modd_spp_type.F90 spp_mod_type.F90 aroini_conf.h aroini_conf.F90; do
         if [ -f $EXT/$file ]; then
@@ -630,11 +713,11 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
         mv $EXT .
       else
         #Move automatically all codes under mpa
-        if [ -f $HOMEPACK/$name/src/main ]; then
+        if [ -d $HOMEPACK/$name/src/main ]; then
           #if main exists this is not a main pack (because it references a main pack)
-          reftree='local'
-        else
           reftree='main'
+        else
+          reftree='local'
         fi
         for file in $EXT/*; do
           extname=`basename $file`
@@ -730,18 +813,19 @@ if [ $run -ge 1 ]; then
         fi
 
         #Profiling
-        firstfile=1
-        for file in drhook.prof.*; do
-          if [ $firstfile -eq 1 ]; then
-            cp $file drhook.prof.concat
-            firstfile=0
-          else
-            #append only relevant lines
-            grep -e '^ *[0-9]' $file >> drhook.prof.concat
-          fi
-        done
-        firstLine=$(grep -m 1 -n "^ *1" drhook.prof.concat | cut -d: -f1)
-        python3 -c "import numpy, pandas
+        if ls drhook.prof.* > /dev/null 2>&1; then
+          firstfile=1
+          for file in drhook.prof.*; do
+            if [ $firstfile -eq 1 ]; then
+              cp $file drhook.prof.concat
+              firstfile=0
+            else
+              #append only relevant lines
+              grep -e '^ *[0-9]' $file >> drhook.prof.concat
+            fi
+          done
+          firstLine=$(grep -m 1 -n "^ *1" drhook.prof.concat | cut -d: -f1)
+          python3 -c "import numpy, pandas
 d = {'time': ('<f4', ('mean', )), 'self': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
      'total': ('<f4', ('mean', 'max', 'min', 'std', 'sum')), 'calls': ('<i4', ('sum', )),
      'self_per_call': ('<f4', ('mean', )), 'total_per_call': ('<f4', ('mean', )), 'routine': ('U256', '')}
@@ -755,6 +839,7 @@ df = pandas.DataFrame(arraynp).groupby('routine').agg(
 df.index.name += ' ordered by self_sum'
 with open('drhook.prof.agg', 'w') as f: f.write(df.to_string())
 "
+        fi
       fi
     else
       echo "The test $t is not allowed"
@@ -781,7 +866,11 @@ if [ $check -eq 1 ]; then
 
       #Files to compare
       if echo $t | grep 'small' > /dev/null; then
-        filestocheck="$filestocheck ${t},conf_tests/$t/ICMSHFPOS+0002:00 ${t},conf_tests/$t/DHFDLFPOS+0002"
+        if [ $cycle == '49t2' ]; then
+          filestocheck="$filestocheck ${t},conf_tests/$t/ICMSHFPOS+0002:00"
+        else
+          filestocheck="$filestocheck ${t},conf_tests/$t/ICMSHFPOS+0002:00 ${t},conf_tests/$t/DHFDLFPOS+0002"
+        fi
       else
         filestocheck="$filestocheck ${t},conf_tests/$t/NODE.001_01"
       fi

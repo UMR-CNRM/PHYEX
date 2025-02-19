@@ -33,6 +33,7 @@
 !!    -  Original      14/12/95
 !!    -  Jan 2015 S. Riette: new ICE3/ICE4 parameters
 !!    -  01/10/16 (C.Lac)  Add droplet deposition for fog
+!!       A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !!
 !-------------------------------------------------------------------------------
 !
@@ -409,7 +410,7 @@ IF(LLCHECK) THEN
                                                                 'HLCQUADRAPDF', 'HLCISOTRIPDF')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CSUBG_AUCV_RC', CSUBG_AUCV_RC, 'PDF ', 'CLFR', 'NONE', 'ADJU', 'SIGM')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CSUBG_AUCV_RI', CSUBG_AUCV_RI, 'NONE', 'CLFR', 'ADJU')
-  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CSUBG_MF_PDF', CSUBG_MF_PDF, 'NONE', 'TRIANGLE')
+  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CSUBG_MF_PDF', CSUBG_MF_PDF, 'NONE', 'TRIANGLE', 'BIGA')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CSNOWRIMING', CSNOWRIMING, 'OLD ', 'M90 ')
   CALL CHECK_NAM_VAL_REAL(KLUOUT, 'XTSTEP_TS', XTSTEP_TS, '>=', 0.)
   CALL CHECK_NAM_VAL_REAL(KLUOUT, 'XSPLIT_MAXCFL', XSPLIT_MAXCFL, '>', 0., '<=', 1.)

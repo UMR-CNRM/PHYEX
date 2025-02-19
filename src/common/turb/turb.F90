@@ -4,7 +4,8 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
       SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,NEBN,D,TLES,            &
-              & KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,KHALO,           &
+              & KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTSLEO,              &
+              & KGRADIENTSGOG,KHALO,                                  &
               & KSPLIT, OCLOUDMODIFLM, KSV,KSV_LGBEG,KSV_LGEND,       &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
               & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,OIBM,OFLYER,    &
@@ -14,7 +15,7 @@
               & PTSTEP,TPFILE,                                        &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
-              & PRHODJ,PTHVREF,PHGRAD,PZS,                            &
+              & PRHODJ,PTHVREF,PHGRADLEO,PHGRADGOG,PZS,               &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
               & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
@@ -23,9 +24,10 @@
               & PTHLT,PRT,                                            &
               & PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,              &
               & PSIGS,                                                &
-              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTDIFF,PTDISS,      &
+              & PFLXZTHVMF, PFLXZUMF, PFLXZVMF,                       &
+              & PWTH,PWRC,PWSV,PDP,PTP,PTDIFF,PTDISS,      &
               & TBUDGETS, KBUDGETS,                                   &
-              & PEDR,PLEM,PRTKEMS,PTPMF,                              &
+              & PEDR,PLEM,PRTKEMS,PDPMF,PTPMF,                        &
               & PDRUS_TURB,PDRVS_TURB,                                &
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS,       &
               & PIBM_LS, PIBM_XMUT,                                   &
@@ -235,6 +237,7 @@
 !  R. Honnert/V. Masson 02/2021: new mixing length in the grey zone
 !  J.L. Redelsperger 03/2021: add Ocean LES case
 !  C. Barthe   08/02/2022: add helec in arguments of Sources_neg_correct
+!  A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 ! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -300,7 +303,8 @@ TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF        ! budget structure
 TYPE(TURB_t),           INTENT(IN)   :: TURBN         ! modn_turbn (turb namelist) structure
 TYPE(NEB_t),            INTENT(IN)   :: NEBN          ! modd_nebn structure
 TYPE(TLES_t),           INTENT(INOUT)   :: TLES          ! modd_les structure
-INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
+INTEGER,                INTENT(IN)   :: KGRADIENTSLEO ! Number of stored horizontal gradients for Moeng scheme
+INTEGER,                INTENT(IN)   :: KGRADIENTSGOG ! Number of stored horizontal gradients for Goger scheme
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
@@ -322,7 +326,6 @@ LOGICAL,                INTENT(IN)   ::  OIBM         ! switch to modity mixing 
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
 CHARACTER (LEN=4),      INTENT(IN)   ::  HELEC        ! Kind of cloud electricity scheme
-
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep
 TYPE(TFILEDATA),        INTENT(INOUT)   ::  TPFILE       ! Output file
@@ -342,7 +345,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PRHODJ    ! dry density * Gri
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
-REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),   INTENT(IN) ::  PHGRAD      ! horizontal gradients
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTSLEO),   INTENT(IN) ::  PHGRADLEO  ! horizontal gradients in Moeng
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTSGOG),   INTENT(IN) ::  PHGRADGOG  ! horizontal gradients in Goger
 !
 REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of theta and Rv
@@ -401,11 +405,12 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PFLXZTHVMF
 REAL, DIMENSION(MERGE(D%NIJT,0,OFLYER),MERGE(D%NKT,0,OFLYER)), INTENT(OUT)  :: PWTH       ! heat flux
 REAL, DIMENSION(MERGE(D%NIJT,0,OFLYER),MERGE(D%NKT,0,OFLYER)), INTENT(OUT)  :: PWRC       ! cloud water flux
 REAL, DIMENSION(MERGE(D%NIJT,0,OFLYER),MERGE(D%NKT,0,OFLYER),MERGE(KSV,0,OFLYER)),INTENT(OUT) :: PWSV       ! scalar flux
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTP        ! Thermal TKE production
-                                                   ! MassFlux + turb
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL  :: PTPMF      ! Thermal TKE production
-                                                   ! MassFlux Only
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PDP        ! Dynamic TKE production
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PFLXZUMF   ! MF contribution for vert. turb. transport (dyn prod)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PFLXZVMF   ! MF contribution for vert. turb. transport (dyn prod)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTP        ! Thermal TKE production MassFlux + turb
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL  :: PTPMF      ! Thermal TKE production MassFlux Only
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PDP        ! Dynamic TKE production MassFlux + turb
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL  :: PDPMF      ! Dynamic TKE production MassFlux Only
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
 !
@@ -1107,7 +1112,7 @@ END IF
 !$acc update_crm device(PRUS,PRVS,PRWS,PRSVS)
 
 CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
-          KRR,KRRL,KRRI,KGRADIENTS,                      &
+          KRR,KRRL,KRRI,KGRADIENTSLEO,                   &
           OOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
           ISV,KSV_LGBEG,KSV_LGEND,                       &
           ZEXPL, O2D, ONOMIXLG, OFLAT,                   &
@@ -1122,9 +1127,9 @@ CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
           PTKET,ZLM,PLENGTHM,PLENGTHH,ZLEPS,MFMOIST,     &
           ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,     &
           ZFWTH,ZFWR,ZFTH2,ZFR2,ZFTHR,PBL_DEPTH,         &
-          PSBL_DEPTH,ZLMO,PHGRAD,PZS,                    &
+          PSBL_DEPTH,ZLMO,PHGRADLEO,PZS,                 &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,ZWORKS,             &
-          PDP,PTP,PSIGS,PWTH,PWRC,ZWORKWSV,                  &
+          PDP,PTP,PSIGS,PWTH,PWRC,ZWORKWSV,              &
           PSSTFL, PSSTFL_C, PSSRFL_C,PSSUFL_C,PSSVFL_C,  &
           PSSUFL,PSSVFL                                  )
 !$acc update_crm self(PWTH,PWRC,PWSV)
@@ -1373,24 +1378,101 @@ END IF
 !*      6. EVOLUTION OF THE TKE AND ITS DISSIPATION
 !          ----------------------------------------
 !
-!  6.1 Contribution of mass-flux in the TKE buoyancy production if
+!  6.1 Contribution of mass-flux in the TKE buoyancy and dynamical production if
 !      cloud computation is not statistical
-CALL MZF_PHY(D,PFLXZTHVMF,ZWORK1)
+IF(TURBN%LTHERMMF) THEN
+  CALL MZF_PHY(D,PFLXZTHVMF,ZWORK1)
 !$acc kernels present_crm(PTP)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-PTP(IIJB:IIJE,1:IKT) = PTP(IIJB:IIJE,1:IKT) &
-                             + CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * ZWORK1(IIJB:IIJE,1:IKT)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-!
-IF(PRESENT(PTPMF))  THEN
-  !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  PTPMF(IIJB:IIJE,1:IKT)=CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * ZWORK1(IIJB:IIJE,1:IKT)
+  PTP(IIJB:IIJE,1:IKT) = PTP(IIJB:IIJE,1:IKT) &
+                               + CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * ZWORK1(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  !$acc end kernels
-END IF
-!  6.2 TKE evolution equation
+!$acc end kernels
+  IF(PRESENT(PTPMF)) THEN
+!$acc kernels present_crm(PTPMF)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    PTPMF(IIJB:IIJE,1:IKT)=CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * ZWORK1(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
+  ENDIF
+ELSEIF(PRESENT(PTPMF))  THEN
+!$acc kernels
+  PTPMF(IIJB:IIJE,1:IKT)=0.
+!$acc end kernels
+ENDIF
+
+IF(TURBN%LDYNMF) THEN
+  CALL GZ_U_UW_PHY(D,PUT,PDZZ,ZWORK1)
+  CALL MXF_PHY(D,ZWORK1,ZWORK2)
+!$acc kernels
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK1(IIJB:IIJE,1:IKT)=ZWORK2(IIJB:IIJE,1:IKT)*PFLXZUMF(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
+  CALL MZF_PHY(D,ZWORK1,ZWORK2)
+!$acc kernels
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PDP(IIJB:IIJE,1:IKT)=PDP(IIJB:IIJE,1:IKT)-ZWORK2(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
+  IF(PRESENT(PDPMF)) THEN
+!$acc kernels
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    PDPMF(IIJB:IIJE,1:IKT)=-ZWORK2(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
+  ENDIF
+!
+  CALL GZ_V_VW_PHY(D,PVT,PDZZ,ZWORK1)
+  CALL MXF_PHY(D,ZWORK1,ZWORK2)
+!$acc kernels
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK1(IIJB:IIJE,1:IKT)=ZWORK2(IIJB:IIJE,1:IKT)*PFLXZVMF(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
+  CALL MZF_PHY(D,ZWORK1,ZWORK2)
+!$acc kernels
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PDP(IIJB:IIJE,1:IKT)=PDP(IIJB:IIJE,1:IKT)-ZWORK2(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
+  IF(PRESENT(PDPMF)) THEN
+!$acc kernels
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    PDPMF(IIJB:IIJE,1:IKT)=PDPMF(IIJB:IIJE,1:IKT)-ZWORK2(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
+  ENDIF
+ELSEIF(PRESENT(PDPMF)) THEN
+!$acc kernels
+  PDPMF(IIJB:IIJE,1:IKT)=0.
+!$acc end kernels
+ENDIF
+
+!  6.2 Horizontal gradients as in Göger et al. (2016)
+
+IF (TURBN%LGOGER) THEN
+  ! Add horizontal terms from Göger  et al. (2018)
+  ! Increase the Dyn. Prod.
+!$acc kernels
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !* Computation of the horizontal mixing length
+  !ZK=TURBN%XSMAG**2*PDXX(IIJB:IIJE,1:IKT)*PDYY(IIJB:IIJE,1:IKT)
+  !* Add horizontal terms
+  ! DUDX=PHGRADGOG(IIJB:IIJE,1:IKT,1)
+  ! DUDY=PHGRADGOG(IIJB:IIJE,1:IKT,2)
+  ! DVDX=PHGRADGOG(IIJB:IIJE,1:IKT,3)
+  ! DVDY=PHGRADGOG(IIJB:IIJE,1:IKT,4)
+  PDP(IIJB:IIJE,1:IKT)=PDP(IIJB:IIJE,1:IKT)+TURBN%XSMAG**2*PDXX(IIJB:IIJE,1:IKT)*PDYY(IIJB:IIJE,1:IKT)* &
+                   &(PHGRADGOG(IIJB:IIJE,1:IKT,1)*PHGRADGOG(IIJB:IIJE,1:IKT,1)           &
+                   &+PHGRADGOG(IIJB:IIJE,1:IKT,4)*PHGRADGOG(IIJB:IIJE,1:IKT,4)           &
+                   &+0.5*(PHGRADGOG(IIJB:IIJE,1:IKT,2)+PHGRADGOG(IIJB:IIJE,1:IKT,3))     &
+                   &*(PHGRADGOG(IIJB:IIJE,1:IKT,2)+PHGRADGOG(IIJB:IIJE,1:IKT,3)))**(3./2.)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
+ENDIF
+
+!  6.3 TKE evolution equation
 
 IF (.NOT. TURBN%LHARAT) THEN
 !
@@ -1740,8 +1822,9 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
   !
   !*      1.3 saturation  mixing ratio at t
   !
-  ZRVSAT(IIJB:IIJE,1:IKT) =  ZRVSAT(IIJB:IIJE,1:IKT) &
-                                    * ZEPS / ( PPABST(IIJB:IIJE,1:IKT) - ZRVSAT(IIJB:IIJE,1:IKT) )
+  !YS Added protection (AROME 2024-03-12 crashs)
+    ZRVSAT(IIJB:IIJE,1:IKT) =  ZRVSAT(IIJB:IIJE,1:IKT) &
+                               * ZEPS / MAX(1.E-3, PPABST(IIJB:IIJE,1:IKT) - ZRVSAT(IIJB:IIJE,1:IKT) )
   !
   !*      1.4 compute the saturation mixing ratio derivative (rvs')
   !

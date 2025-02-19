@@ -145,7 +145,7 @@ ELSEIF(HSUBG_AUCV_RC=='ADJU') THEN
   ELSEWHERE
     ZSUMRC(:)=0.
   ENDWHERE
-  WHERE(ZSUMRC(:) .GT. 0. .AND. LDMICRO(:))
+  WHERE(ZSUMRC(:) .GT. 1.E-20 .AND. LDMICRO(:))
     PHLC_LRC(:)=PHLC_LRC(:)*PRCT(:)/ZSUMRC(:)
     PHLC_HRC(:)=PHLC_HRC(:)*PRCT(:)/ZSUMRC(:)
   ELSEWHERE
@@ -154,7 +154,7 @@ ELSEIF(HSUBG_AUCV_RC=='ADJU') THEN
   ENDWHERE
   !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
-ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
+ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
   !Cloud water is split between high and low part according to a PDF
   !    'HLCRECTPDF'    : rectangular PDF form
   !    'HLCTRIANGPDF'  : triangular PDF form
@@ -366,7 +366,7 @@ ELSEIF(HSUBG_AUCV_RI=='ADJU') THEN
   ELSEWHERE
     ZSUMRI(:)=0.
   ENDWHERE
-  WHERE(ZSUMRI(:) .GT. 0. .AND. LDMICRO(:))
+  WHERE(ZSUMRI(:) .GT. 1.E-20 .AND. LDMICRO(:))
     PHLI_LRI(:)=PHLI_LRI(:)*PRIT(:)/ZSUMRI(:)
     PHLI_HRI(:)=PHLI_HRI(:)*PRIT(:)/ZSUMRI(:)
   ELSEWHERE

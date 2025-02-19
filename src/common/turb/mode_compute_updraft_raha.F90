@@ -16,7 +16,7 @@ CONTAINS
                                  PSFTH,PSFRV,                        &
                                  PPABSM,PRHODREF,PUM,PVM, PTKEM,     &
                                  PEXNM,PTHM,PRVM,PTHLM,PRTM,         &
-                                 PSVM,PTHL_UP,PRT_UP,                &
+                                 PSVM,PTH_UP,PTHL_UP,PRT_UP,         &
                                  PRV_UP,PRC_UP,PRI_UP,PTHV_UP,       &
                                  PW_UP,PU_UP, PV_UP, PSV_UP,         &
                                  PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,     &
@@ -102,7 +102,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHLM,PRTM     ! cons. var. at
 
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)   ::  PSVM           ! scalar var. at t-dt
 
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTHL_UP,PRT_UP   ! updraft properties
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTH_UP,PTHL_UP,PRT_UP   ! updraft properties
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PU_UP, PV_UP     ! updraft wind components
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PRV_UP,PRC_UP    ! updraft rv, rc
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PRI_UP,PTHV_UP   ! updraft ri, THv
@@ -128,7 +128,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZPRES_F,ZTHVM_F,ZTHVM         ! interpolated at
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZG_O_THVREF                   ! g*ThetaV ref
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZW_UP2                        ! w**2  of the updraft
 
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZTH_UP                        ! updraft THETA 
 REAL, DIMENSION(D%NIJT)              :: ZT_UP                         ! updraft T
 REAL, DIMENSION(D%NIJT)              :: ZLVOCPEXN                     ! updraft L
 REAL, DIMENSION(D%NIJT)              :: ZCP                           ! updraft cp
@@ -218,7 +217,7 @@ PRV_UP(:,:)=0.
 PRC_UP(:,:)=0.
 
 PW_UP(:,:)=0.
-ZTH_UP(:,:)=0.
+PTH_UP(:,:)=0.
 PFRAC_UP(:,:)=0.
 PTHV_UP(:,:)=0.
 
@@ -301,13 +300,13 @@ PRI_UP(IIJB:IIJE,IKB)=0.
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
 CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, PFRAC_ICE_UP(:,IKB), ZPRES_F(:,IKB), &
-             PTHL_UP(:,IKB),PRT_UP(:,IKB),ZTH_UP(:,IKB), &
+             PTHL_UP(:,IKB),PRT_UP(:,IKB),PTH_UP(:,IKB), &
              PRV_UP(:,IKB),PRC_UP(:,IKB),PRI_UP(:,IKB),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
              PBUF=ZBUF)
 
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ! compute updraft thevav and buoyancy term at KKB level             
-PTHV_UP(IIJB:IIJE,IKB) = ZTH_UP(IIJB:IIJE,IKB)*((1+ZRVORD*PRV_UP(IIJB:IIJE,IKB))/(1+PRT_UP(IIJB:IIJE,IKB))) 
+PTHV_UP(IIJB:IIJE,IKB) = PTH_UP(IIJB:IIJE,IKB)*((1+ZRVORD*PRV_UP(IIJB:IIJE,IKB))/(1+PRT_UP(IIJB:IIJE,IKB))) 
 ! compute mean rsat in updraft
 PRSAT_UP(IIJB:IIJE,IKB) = ZRSATW(IIJB:IIJE)*(1-PFRAC_ICE_UP(IIJB:IIJE,IKB)) + &
                             & ZRSATI(IIJB:IIJE)*PFRAC_ICE_UP(IIJB:IIJE,IKB)
@@ -497,12 +496,12 @@ DO JK=IKB,IKE-IKL,IKL
   ZRV_UP(IIJB:IIJE)=PRV_UP(IIJB:IIJE,JK)
   !$mnh_end_expand_where(JIJ=IIJB:IIJE)
   CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, PFRAC_ICE_UP(:,JK+IKL), ZPRES_F(:,JK+IKL), &
-          PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),ZTH_UP(:,JK+IKL),              &
+          PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),PTH_UP(:,JK+IKL),              &
           ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
           PBUF=ZBUF)
   !$mnh_expand_where(JIJ=IIJB:IIJE)
   WHERE(GTEST(IIJB:IIJE))
-    ZT_UP(IIJB:IIJE) = ZTH_UP(IIJB:IIJE,JK+IKL)*PEXNM(IIJB:IIJE,JK+IKL)
+    ZT_UP(IIJB:IIJE) = PTH_UP(IIJB:IIJE,JK+IKL)*PEXNM(IIJB:IIJE,JK+IKL)
     ZCP(IIJB:IIJE) = CST%XCPD + CST%XCL * ZRC_UP(IIJB:IIJE)
     ZLVOCPEXN(IIJB:IIJE)=(CST%XLVTT + (CST%XCPV-CST%XCL) *  (ZT_UP(IIJB:IIJE)-CST%XTT) ) / &
                           &ZCP(IIJB:IIJE) / PEXNM(IIJB:IIJE,JK+IKL)
@@ -519,8 +518,8 @@ DO JK=IKB,IKE-IKL,IKL
 
   ! Compute the updraft theta_v, buoyancy and w**2 for level JK+1   
   WHERE(GTEST(IIJB:IIJE))
-    !PTHV_UP(IIJB:IIJE,JK+KKL) = ZTH_UP(IIJB:IIJE,JK+KKL)*((1+ZRVORD*PRV_UP(IIJB:IIJE,JK+KKL))/(1+PRT_UP(IIJB:IIJE,JK+KKL)))
-    PTHV_UP(IIJB:IIJE,JK+IKL) = ZTH_UP(IIJB:IIJE,JK+IKL)* &
+    !PTHV_UP(IIJB:IIJE,JK+KKL) = PTH_UP(IIJB:IIJE,JK+KKL)*((1+ZRVORD*PRV_UP(IIJB:IIJE,JK+KKL))/(1+PRT_UP(IIJB:IIJE,JK+KKL)))
+    PTHV_UP(IIJB:IIJE,JK+IKL) = PTH_UP(IIJB:IIJE,JK+IKL)* &
                                   & (1.+0.608*PRV_UP(IIJB:IIJE,JK+IKL) - PRC_UP(IIJB:IIJE,JK+IKL))
   ENDWHERE
 

@@ -15,12 +15,12 @@ CONTAINS
                                  ONOMIXLG,KSV_LGBEG,KSV_LGEND,    &
                                  PZZ,PDZZ,                        &
                                  PSFTH,PSFRV,                     &
-                                 PPABSM,PRHODREF,PUM,PVM, PTKEM,  &
+                                 PEXNM, PPABSM,PRHODREF,PUM,PVM, PTKEM,  &
                                  PTHM,PRVM,PTHLM,PRTM,            &
-                                 PSVM,PTHL_UP,PRT_UP,             &
+                                 PSVM,PTH_UP,PTHL_UP,PRT_UP,      &
                                  PRV_UP,PRC_UP,PRI_UP,PTHV_UP,    &
                                  PW_UP,PU_UP, PV_UP, PSV_UP,      &
-                                 PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,  &
+                                 PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,PTKE_UP, &
                                  PEMF,PDETR,PENTR,                &
                                  PBUO_INTEG,KKLCL,KKETL,KKCTL,    &
                                  PDEPTH, PDX, PDY     )
@@ -60,8 +60,17 @@ CONTAINS
 !!     S. Riette Apr 2013: improvement of continuity at the condensation level
 !!     R.Honnert Oct 2016 : Add ZSURF and Update with AROME
 !!     Q.Rodier  01/2019 : support RM17 mixing length
-!!     R.Honnert 01/2019 : add LGZ (reduction of the mass-flux surface closure with the resolution)
+!!     R.Honnert 01/2019 : remove ZSURF add LGZ (reduction of the MF surf closure with resolution)
 !!     S. Riette 06/2022: compute_entr_detr is inlined
+!!     A. Marcel Jan 2025: Wet mixing according to Lapp and Randall 2001
+!!     A. Marcel Jan 2025: TKE mixing
+!!     A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!     S. Riette Jan 2025: exp/log during dP/dZ conversion
+!!     A. Marcel Jan 2025: KIC formulation from Rooy and Siebesma (2008)
+!!     A. Marcel Jan 2025: minimum dry detrainment computed with LUP in updraft
+!!     A. Marcel Jan 2025: w_up equation update (XBRIO and XAADVEC)
+!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
+!!     S. Riette Jan 2025: BF in weighting of ZMIX2_CLD and ZMIX3_CLD
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -103,6 +112,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PDZZ      !  Metrics coefficient
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTH,PSFRV
 ! normal surface fluxes of theta,rv,(u,v) parallel to the orography
 !
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PEXNM      ! Exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABSM     ! Pressure at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PRHODREF   ! dry density of the
                                                   ! reference state
@@ -116,8 +126,9 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHLM,PRTM     ! cons. var. at
 
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)   ::  PSVM           ! scalar var. at t-dt
 
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTHL_UP,PRT_UP   ! updraft properties
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTH_UP,PTHL_UP,PRT_UP   ! updraft properties
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PU_UP, PV_UP     ! updraft wind components
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTKE_UP          ! updraft TKE
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PRV_UP,PRC_UP, & ! updraft rv, rc
                                          PRI_UP,PTHV_UP,& ! updraft ri, THv
                                          PW_UP,PFRAC_UP,& ! updraft w, fraction
@@ -146,15 +157,14 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::    &
                         ZG_O_THVREF,             &    ! g*ThetaV ref
                         ZW_UP2,                  &    ! w**2  of the updraft
                         ZBUO_INTEG_DRY, ZBUO_INTEG_CLD,&! Integrated Buoyancy
-                        ZENTR_CLD,ZDETR_CLD           ! wet entrainment and detrainment
+                        ZENTR_CLD,ZDETR_CLD,     &    ! wet entrainment and detrainment
+                        ZG_O_THVREF_UP, ZEXN_F
 
 REAL, DIMENSION(D%NIJT,D%NKT,KSV) :: &
                         ZSVM_F ! scalar variables 
 
                         
-REAL, DIMENSION(D%NIJT,D%NKT) ::  &
-                        ZTH_UP,                  &    ! updraft THETA 
-                        ZRC_MIX, ZRI_MIX              ! guess of Rc and Ri for KF mixture
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZRC_MIX, ZRI_MIX     ! guess of Rc and Ri for KF mixture
 
 REAL, DIMENSION(D%NIJT,D%NKT) ::  ZCOEF  ! diminution coefficient for too high clouds 
                         
@@ -166,7 +176,8 @@ REAL  :: ZRVORD       ! RV/RD
 
 REAL, DIMENSION(D%NIJT) :: ZMIX1,ZMIX2,ZMIX3_CLD,ZMIX2_CLD
 
-REAL, DIMENSION(D%NIJT) :: ZLUP         ! Upward Mixing length from the ground
+REAL, DIMENSION(D%NIJT) :: ZLUPSURF         ! Upward Mixing length from the ground
+REAL, DIMENSION(D%NIJT) :: ZLUP, ZLDOWN     ! Upward and downward mixing length
 
 INTEGER  :: JK,JIJ,JSV          ! loop counters
 
@@ -190,8 +201,10 @@ REAL  :: ZTMAX,ZRMAX  ! control value
 REAL, DIMENSION(D%NIJT) :: ZSURF
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZSHEAR,ZDUDZ,ZDVDZ ! vertical wind shear
 !
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZWK, KDEPTH
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZWK, ZWK2, KDEPTH
 REAL, DIMENSION(D%NIJT,16) :: ZBUF
+REAL  :: ZGAMMA_WUP, ZDELTA_WUP, ZLVERT
+REAL, DIMENSION(D%NIJT) :: ZRELAX_ALPHA_COEFF ! 1/(1-fraction)
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
@@ -219,15 +232,20 @@ REAL                   :: ZT                   ! Temperature
 REAL                   :: ZWK0D                ! Work array
 
 ! Variables for dry and cloudy parts
-REAL, DIMENSION(D%NIJT) :: ZCOEFF_MINUS_HALF,&  ! Variation of Thv between mass points kk-kkl and kk
-                                  ZCOEFF_PLUS_HALF     ! Variation of Thv between mass points kk and kk+kkl
+REAL, DIMENSION(D%NIJT) :: ZCOEFF_MINUS_HALF_THV,&  ! Variation of Thv between mass points kk-kkl and kk
+                           ZCOEFF_PLUS_HALF_THV, &  ! Variation of Thv between mass points kk and kk+kkl
+                           ZCOEFF_MINUS_HALF_RT, &  ! Variation of rt between mass points kk-kkl and kk
+                           ZCOEFF_PLUS_HALF_RT,  &  ! Variation of rt between mass points kk and kk+kkl
+                           ZCOEFF_MINUS_HALF_THL,&  ! Variation of Thl between mass points kk-kkl and kk
+                           ZCOEFF_PLUS_HALF_THL     ! Variation of Thl between mass points kk and kk+kkl
 REAL, DIMENSION(D%NIJT) :: ZPRE                 ! pressure at the bottom of the cloudy part
 REAL, DIMENSION(D%NIJT) :: ZG_O_THVREF_ED
 REAL, DIMENSION(D%NIJT) :: ZFRAC_ICE            ! fraction of ice
 REAL, DIMENSION(D%NIJT) :: ZDZ_STOP,&           ! Exact Height of the LCL above flux level KK
-                          ZTHV_MINUS_HALF,&    ! Thv at flux point(kk)  
-                          ZTHV_PLUS_HALF       ! Thv at flux point(kk+kkl)
-REAL                   :: ZDZ                  ! Delta Z used in computations
+                           ZTHV_MINUS_HALF,&    ! Thv at flux point(kk)  
+                           ZTHV_PLUS_HALF       ! Thv at flux point(kk+kkl)
+REAL                    :: ZDZ                  ! Delta Z used in computations
+REAL                    :: ZTHL, ZRT, ZLV, ZLVS, ZLS, ZDRSATDT, ZGAMMA, ZALPHA, ZLAMBDA, ZBETA
 INTEGER :: JKLIM
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
 INTEGER :: IKT,IKB,IKE,IKL
@@ -277,7 +295,7 @@ IF (OENTR_DETR) THEN
   PRC_UP(:,:)=0.
   PRI_UP(:,:)=0.
   PW_UP(:,:)=0.
-  ZTH_UP(:,:)=0.
+  PTH_UP(:,:)=0.
   PFRAC_UP(:,:)=0.
   PTHV_UP(:,:)=0.
 
@@ -313,6 +331,7 @@ PTHL_UP(IIJB:IIJE,1:IKT)=ZTHLM_F(IIJB:IIJE,1:IKT)
 PRT_UP(IIJB:IIJE,1:IKT)=ZRTM_F(IIJB:IIJE,1:IKT)
 PU_UP(IIJB:IIJE,1:IKT)=ZUM_F(IIJB:IIJE,1:IKT)
 PV_UP(IIJB:IIJE,1:IKT)=ZVM_F(IIJB:IIJE,1:IKT)
+PTKE_UP(IIJB:IIJE,1:IKT)=ZTKEM_F(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT,JSV=1:KSV)
 PSV_UP(IIJB:IIJE,1:IKT,:)=ZSVM_F(IIJB:IIJE,1:IKT,:)
@@ -329,7 +348,19 @@ PRT_UP(IIJB:IIJE,IKB) = ZRTM_F(IIJB:IIJE,IKB)+ &
 
 IF (OENTR_DETR) THEN
   CALL MZM_MF(D, PTHM (:,:), ZTHM_F (:,:))
-  CALL MZM_MF(D, PPABSM(:,:), ZPRES_F(:,:))
+  CALL MZM_MF(D, PEXNM(:,:), ZEXN_F(:,:))
+  IF(PARAMMF%LPZ_EXP_LOG) THEN
+    !Using a z-like interpolation to be consistent with computed heights
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWK(IIJB:IIJE,1:IKT)=LOG(PPABSM(IIJB:IIJE,1:IKT))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    CALL MZM_MF(D, ZWK(:,:), ZPRES_F(:,:))
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZPRES_F(IIJB:IIJE,1:IKT)=EXP(ZPRES_F(IIJB:IIJE,1:IKT))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ELSE
+    CALL MZM_MF(D, PPABSM(:,:), ZPRES_F(:,:))
+  ENDIF
   CALL MZM_MF(D, PRHODREF(:,:), ZRHO_F (:,:))
   CALL MZM_MF(D, PRVM(:,:), ZRVM_F (:,:))
 
@@ -353,13 +384,13 @@ IF (OENTR_DETR) THEN
   PRI_UP(:,IKB)=0.
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, PFRAC_ICE_UP(:,IKB), ZPRES_F(:,IKB), &
-             PTHL_UP(:,IKB),PRT_UP(:,IKB),ZTH_UP(:,IKB), &
+             PTHL_UP(:,IKB),PRT_UP(:,IKB),PTH_UP(:,IKB), &
              PRV_UP(:,IKB),PRC_UP(:,IKB),PRI_UP(:,IKB),ZRSATW(:),ZRSATI(:), OOCEAN=.FALSE., &
              PBUF=ZBUF(:,:))
 
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ! compute updraft thevav and buoyancy term at KKB level
-  PTHV_UP(IIJB:IIJE,IKB) = ZTH_UP(IIJB:IIJE,IKB)*&
+  PTHV_UP(IIJB:IIJE,IKB) = PTH_UP(IIJB:IIJE,IKB)*&
                                & ((1+ZRVORD*PRV_UP(IIJB:IIJE,IKB))/(1+PRT_UP(IIJB:IIJE,IKB)))
   ! compute mean rsat in updraft
   PRSAT_UP(IIJB:IIJE,IKB) = ZRSATW(IIJB:IIJE)*(1-PFRAC_ICE_UP(IIJB:IIJE,IKB)) + &
@@ -370,6 +401,7 @@ IF (OENTR_DETR) THEN
 
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZG_O_THVREF(IIJB:IIJE,1:IKT)=CST%XG/ZTHVM_F(IIJB:IIJE,1:IKT)
+  ZG_O_THVREF_UP(IIJB:IIJE,1:IKT)=CST%XG/PTHV_UP(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
   ! compute L_up
@@ -391,9 +423,9 @@ IF (OENTR_DETR) THEN
   END IF
   !
   CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ,ZTKEM_F(:,IKB),&
-                      &ZG_O_THVREF(:,IKB),ZTHVM,IKB,GLMIX,.TRUE.,ZSHEAR,ZLUP)
+                      &ZG_O_THVREF(:,IKB),ZTHVM,IKB,GLMIX,.TRUE.,ZSHEAR,ZLUPSURF)
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZLUP(IIJB:IIJE)=MAX(ZLUP(IIJB:IIJE),1.E-10)
+  ZLUPSURF(IIJB:IIJE)=MAX(ZLUPSURF(IIJB:IIJE),1.E-10)
 
   ! Compute Buoyancy flux at the ground
   ZWTHVSURF(IIJB:IIJE) = (ZTHVM_F(IIJB:IIJE,IKB)/ZTHM_F(IIJB:IIJE,IKB))*PSFTH(IIJB:IIJE)+     &
@@ -406,7 +438,7 @@ IF (OENTR_DETR) THEN
       CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'COMPUTE_UPDRAFT', 'PDX or PDY is NULL with option LGZ!')                                  
     ENDIF
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    ZSURF(IIJB:IIJE)=TANH(PARAMMF%XGZ*SQRT(PDX*PDY)/ZLUP(IIJB:IIJE))
+    ZSURF(IIJB:IIJE)=TANH(PARAMMF%XGZ*SQRT(PDX*PDY)/ZLUPSURF(IIJB:IIJE))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   ELSE
     ZSURF(IIJB:IIJE)=1.
@@ -414,7 +446,7 @@ IF (OENTR_DETR) THEN
   !$mnh_expand_where(JIJ=IIJB:IIJE)
   WHERE (ZWTHVSURF(IIJB:IIJE)>0.)
     PEMF(IIJB:IIJE,IKB) = PARAMMF%XCMF * ZSURF(IIJB:IIJE) * ZRHO_F(IIJB:IIJE,IKB) *  &
-            ((ZG_O_THVREF(IIJB:IIJE,IKB))*ZWTHVSURF(IIJB:IIJE)*ZLUP(IIJB:IIJE))**(1./3.)
+            ((ZG_O_THVREF(IIJB:IIJE,IKB))*ZWTHVSURF(IIJB:IIJE)*ZLUPSURF(IIJB:IIJE))**(1./3.)
     PFRAC_UP(IIJB:IIJE,IKB)=MIN(PEMF(IIJB:IIJE,IKB)/(SQRT(ZW_UP2(IIJB:IIJE,IKB))*ZRHO_F(IIJB:IIJE,IKB)), &
                                    &PARAMMF%XFRAC_UP_MAX)
     ZW_UP2(IIJB:IIJE,IKB)=(PEMF(IIJB:IIJE,IKB)/(PFRAC_UP(IIJB:IIJE,IKB)*ZRHO_F(IIJB:IIJE,IKB)))**2
@@ -472,11 +504,28 @@ DO JK=IKB,IKE-IKL,IKL
       ZRI_MIX(IIJB:IIJE,JK) = ZRI_MIX(IIJB:IIJE,JK-IKL) ! guess of Ri of mixture
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     ENDIF
+
+    IF (PARAMMF%CWET_MIXING == 'LR01' .OR. PARAMMF%CDETR_DRY_LUP == 'UPDR') THEN
+      CALL MZF_MF(D, PTHV_UP(:,:), ZWK(:,:))
+      CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ, ZTKEM_F(:,JK), ZG_O_THVREF_UP(:,JK), ZWK, JK, .TRUE., .TRUE., ZSHEAR, ZLUP)
+      !$mnh_expand_where(JIJ=IIJB:IIJE)
+      ZLUP(:) = MAX(ZLUP(:), 1.)
+      !$mnh_end_expand_where(JIJ=IIJB:IIJE)
+    ENDIF
+    IF (PARAMMF%CWET_MIXING == 'LR01') THEN
+      CALL MZF_MF(D, ZTHVM_F(:,:), ZWK(:,:))
+      CALL MZF_MF(D, PTHV_UP(:,:), ZWK2(:,:))
+      ZWK(:,JK) = ZWK2(:,JK)
+      CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ, ZTKEM_F(:,JK), ZG_O_THVREF_UP(:,JK), ZWK, JK, .FALSE., .FALSE., ZSHEAR, ZLDOWN)
+      !$mnh_expand_where(JIJ=IIJB:IIJE)
+      ZLDOWN(:) = MAX(ZLDOWN(:), 1.)
+      !$mnh_end_expand_where(JIJ=IIJB:IIJE)
+    ENDIF
     CALL COMPUTE_ENTR_DETR(D, CST, NEBN, PARAMMF, JK,IKB,IKE,IKL,GTEST,GTESTLCL,PFRAC_ICE_UP(:,JK),&
-                           PRHODREF(:,JK),ZPRES_F(:,JK),ZPRES_F(:,JK+IKL),&
+                           PRHODREF(:,JK),ZPRES_F(:,JK),ZPRES_F(:,JK+IKL),ZEXN_F(:,JK),&
                            PZZ(:,:),PDZZ(:,:),ZTHVM(:,:),  &
-                           PTHLM(:,:),PRTM(:,:),ZW_UP2(:,:),ZTH_UP(:,JK),   &
-                           PTHL_UP(:,JK),PRT_UP(:,JK),ZLUP(:),         &
+                           PTHLM(:,:),PRTM(:,:),ZW_UP2(:,:),PTH_UP(:,JK),   &
+                           PTHL_UP(:,JK),PRT_UP(:,JK),ZLUPSURF(:), ZLUP(:), ZLDOWN(:), &
                            PRC_UP(:,JK),PRI_UP(:,JK),PTHV_UP(:,JK),&
                            PRSAT_UP(:,JK),ZRC_MIX(:,JK),ZRI_MIX(:,JK),                 &
                            PENTR(:,JK),PDETR(:,JK),ZENTR_CLD(:,JK),ZDETR_CLD(:,JK),&
@@ -514,16 +563,28 @@ DO JK=IKB,IKE-IKL,IKL
   ENDWHERE
   !$mnh_end_expand_where(JIJ=IIJB:IIJE)
 
+  ! Coefficient to relax the small fraction assumption
+  IF(PARAMMF%LRELAX_ALPHA_MF) THEN
+    !$mnh_expand_array(JIJ=IIJB:IIJE)
+    ZRELAX_ALPHA_COEFF(IIJB:IIJE)=1./(1.-PFRAC_UP(IIJB:IIJE,JK))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  ELSE
+    ZRELAX_ALPHA_COEFF(IIJB:IIJE)=1.
+  ENDIF
+
   ! If the updraft did not stop, compute cons updraft characteritics at jk+KKL
   DO JIJ=IIJB,IIJE
     IF(GTEST(JIJ)) THEN
       ZMIX2(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*PENTR(JIJ,JK) !&
-      ZMIX3_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1.-ZPART_DRY(JIJ))*ZDETR_CLD(JIJ,JK) !&                   
-      ZMIX2_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1.-ZPART_DRY(JIJ))*ZENTR_CLD(JIJ,JK)
-      PTHL_UP(JIJ,JK+IKL)=(PTHL_UP(JIJ,JK)*(1.-0.5*ZMIX2(JIJ)) + PTHLM(JIJ,JK)*ZMIX2(JIJ)) &
-                            /(1.+0.5*ZMIX2(JIJ))   
-      PRT_UP(JIJ,JK+IKL) =(PRT_UP (JIJ,JK)*(1.-0.5*ZMIX2(JIJ)) + PRTM(JIJ,JK)*ZMIX2(JIJ))  &
-                            /(1.+0.5*ZMIX2(JIJ))
+      !multiplication by (1-part_dry) already done in compute_entr_detr
+      ZMIX3_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*ZDETR_CLD(JIJ,JK) !&                   
+      ZMIX2_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*ZENTR_CLD(JIJ,JK)
+      PTHL_UP(JIJ,JK+IKL)=(PTHL_UP(JIJ,JK)*(1.-0.5*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ)) + &
+                           PTHLM(JIJ,JK)*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ)) &
+                          /(1.+0.5*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ))   
+      PRT_UP(JIJ,JK+IKL) =(PRT_UP (JIJ,JK)*(1.-0.5*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ)) + &
+                           PRTM(JIJ,JK)*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ))  &
+                          /(1.+0.5*ZRELAX_ALPHA_COEFF(JIJ)*ZMIX2(JIJ))
     ENDIF
   ENDDO
   
@@ -531,43 +592,55 @@ DO JK=IKB,IKE-IKL,IKL
     IF(JK/=IKB) THEN
       !$mnh_expand_where(JIJ=IIJB:IIJE)
       WHERE(GTEST(IIJB:IIJE))
-        PU_UP(IIJB:IIJE,JK+IKL) = (PU_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
-                                        &PUM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)+ &
+        PU_UP(IIJB:IIJE,JK+IKL) = (PU_UP(IIJB:IIJE,JK)*(1-0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) + &
+                                        &PUM(IIJB:IIJE,JK)*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)+ &
                           0.5*PARAMMF%XPRES_UV*(PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*&
                           ((PUM(IIJB:IIJE,JK+IKL)-PUM(IIJB:IIJE,JK))/PDZZ(IIJB:IIJE,JK+IKL)+&
                            (PUM(IIJB:IIJE,JK)-PUM(IIJB:IIJE,JK-IKL))/PDZZ(IIJB:IIJE,JK))        )   &
-                          /(1+0.5*ZMIX2(IIJB:IIJE))
-        PV_UP(IIJB:IIJE,JK+IKL) = (PV_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
-                                        &PVM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)+ &
+                          /(1+0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE))
+        PV_UP(IIJB:IIJE,JK+IKL) = (PV_UP(IIJB:IIJE,JK)*(1-0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) + &
+                                        &PVM(IIJB:IIJE,JK)*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)+ &
                           0.5*PARAMMF%XPRES_UV*(PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*&
                           ((PVM(IIJB:IIJE,JK+IKL)-PVM(IIJB:IIJE,JK))/PDZZ(IIJB:IIJE,JK+IKL)+&
                            (PVM(IIJB:IIJE,JK)-PVM(IIJB:IIJE,JK-IKL))/PDZZ(IIJB:IIJE,JK))    )   &
-                          /(1+0.5*ZMIX2(IIJB:IIJE))
+                          /(1+0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE))
       ENDWHERE
       !$mnh_end_expand_where(JIJ=IIJB:IIJE)
     ELSE
       !$mnh_expand_where(JIJ=IIJB:IIJE)
       WHERE(GTEST(IIJB:IIJE))
-        PU_UP(IIJB:IIJE,JK+IKL) = (PU_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
-                                        &PUM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)+ &
+        PU_UP(IIJB:IIJE,JK+IKL) = (PU_UP(IIJB:IIJE,JK)*(1-0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) + &
+                                        &PUM(IIJB:IIJE,JK)*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)+ &
                           0.5*PARAMMF%XPRES_UV*(PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*&
                           ((PUM(IIJB:IIJE,JK+IKL)-PUM(IIJB:IIJE,JK))/PDZZ(IIJB:IIJE,JK+IKL))        )   &
-                          /(1+0.5*ZMIX2(IIJB:IIJE))
-        PV_UP(IIJB:IIJE,JK+IKL) = (PV_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
-                                        &PVM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)+ &
+                          /(1+0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE))
+        PV_UP(IIJB:IIJE,JK+IKL) = (PV_UP(IIJB:IIJE,JK)*(1-0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) + &
+                                        &PVM(IIJB:IIJE,JK)*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)+ &
                           0.5*PARAMMF%XPRES_UV*(PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*&
                           ((PVM(IIJB:IIJE,JK+IKL)-PVM(IIJB:IIJE,JK))/PDZZ(IIJB:IIJE,JK+IKL))    )   &
-                          /(1+0.5*ZMIX2(IIJB:IIJE))
+                          /(1+0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE))
       ENDWHERE
       !$mnh_end_expand_where(JIJ=IIJB:IIJE)
     ENDIF
   ENDIF !PARAMMF%LMIXUV
+
+  IF(PARAMMF%LMIXTKE) THEN
+    !$mnh_expand_where(JIJ=IIJB:IIJE)
+    WHERE(GTEST(IIJB:IIJE))
+      PTKE_UP(IIJB:IIJE,JK+IKL) = (PTKE_UP(IIJB:IIJE,JK)*(1-0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) + &
+                                   ZTKEM_F(IIJB:IIJE,JK)*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) &
+                                  /(1+0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE))
+    ENDWHERE
+    !$mnh_end_expand_where(JIJ=IIJB:IIJE)
+  ENDIF
+
   DO JSV=1,KSV 
     IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
     !$mnh_expand_where(JIJ=IIJB:IIJE)
     WHERE(GTEST(IIJB:IIJE)) 
-      PSV_UP(IIJB:IIJE,JK+IKL,JSV) = (PSV_UP(IIJB:IIJE,JK,JSV)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
-                   PSVM(IIJB:IIJE,JK,JSV)*ZMIX2(IIJB:IIJE))  /(1+0.5*ZMIX2(IIJB:IIJE))
+      PSV_UP(IIJB:IIJE,JK+IKL,JSV) = (PSV_UP(IIJB:IIJE,JK,JSV)*(1-0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) + &
+                                      PSVM(IIJB:IIJE,JK,JSV)*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE)) &
+                                     /(1+0.5*ZRELAX_ALPHA_COEFF(IIJB:IIJE)*ZMIX2(IIJB:IIJE))
     ENDWHERE
     !$mnh_end_expand_where(JIJ=IIJB:IIJE)
   END DO  
@@ -580,7 +653,7 @@ DO JK=IKB,IKE-IKL,IKL
     ZRI_UP(IIJB:IIJE)=PRI_UP(IIJB:IIJE,JK) ! guess = level just below
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, PFRAC_ICE_UP(:,JK+IKL), ZPRES_F(:,JK+IKL), &
-            PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),ZTH_UP(:,JK+IKL),              &
+            PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),PTH_UP(:,JK+IKL),              &
             ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:), OOCEAN=.FALSE., &
             PBUF=ZBUF(:,:))
     !$mnh_expand_where(JIJ=IIJB:IIJE)
@@ -593,23 +666,32 @@ DO JK=IKB,IKE-IKL,IKL
     ENDWHERE
     !$mnh_end_expand_where(JIJ=IIJB:IIJE)
     ! Compute the updraft theta_v, buoyancy and w**2 for level JK+KKL
-  DO JIJ=IIJB,IIJE
-    IF(GTEST(JIJ)) THEN
-      PTHV_UP(JIJ,JK+IKL) = ZTH_UP(JIJ,JK+IKL)* &
-                                    & ((1+ZRVORD*PRV_UP(JIJ,JK+IKL))/(1+PRT_UP(JIJ,JK+IKL)))
-      IF (ZBUO_INTEG_DRY(JIJ,JK)>0.) THEN
-        ZW_UP2(JIJ,JK+IKL)  = ZW_UP2(JIJ,JK) + 2.*(PARAMMF%XABUO-PARAMMF%XBENTR*PARAMMF%XENTR_DRY)* &
-                                                                &ZBUO_INTEG_DRY(JIJ,JK)
-      ELSE
-        ZW_UP2(JIJ,JK+IKL)  = ZW_UP2(JIJ,JK) + 2.*PARAMMF%XABUO* ZBUO_INTEG_DRY(JIJ,JK)
+    DO JIJ=IIJB,IIJE
+      IF(GTEST(JIJ)) THEN
+        PTHV_UP(JIJ,JK+IKL) = PTH_UP(JIJ,JK+IKL)*((1+ZRVORD*PRV_UP(JIJ,JK+IKL))/(1+PRT_UP(JIJ,JK+IKL)))
+        ZLVERT=MAX(10., SQRT(PFRAC_UP(JIJ, JK)*PDX*PDY/CST%XPI))
+        ZGAMMA_WUP=1.+PARAMMF%XBRIO*ZRELAX_ALPHA_COEFF(JIJ)**2/((1-PARAMMF%XAADVEC)*ZLVERT)* &
+                  &(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*ZPART_DRY(JIJ)
+        ZDELTA_WUP=1.-PARAMMF%XBRIO*ZRELAX_ALPHA_COEFF(JIJ)**2/((1-PARAMMF%XAADVEC)*ZLVERT)* &
+                  &(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*ZPART_DRY(JIJ)
+        IF (ZBUO_INTEG_DRY(JIJ,JK)>0.) THEN
+          ZW_UP2(JIJ,JK+IKL)=ZW_UP2(JIJ,JK)*ZDELTA_WUP/ZGAMMA_WUP + &
+                            &2./((1.-PARAMMF%XAADVEC)*ZGAMMA_WUP)*&
+                            &(PARAMMF%XABUO-PARAMMF%XBENTR*PARAMMF%XENTR_DRY*ZRELAX_ALPHA_COEFF(JIJ))*ZBUO_INTEG_DRY(JIJ,JK)
+        ELSE
+          ZW_UP2(JIJ,JK+IKL)=ZW_UP2(JIJ,JK)*ZDELTA_WUP/ZGAMMA_WUP + &
+                            &2./((1.-PARAMMF%XAADVEC)*ZGAMMA_WUP)*PARAMMF%XABUO*ZBUO_INTEG_DRY(JIJ,JK)
+        END IF
+        ZGAMMA_WUP=1.+ZRELAX_ALPHA_COEFF(JIJ)/(1.-PARAMMF%XAADVEC)*(PARAMMF%XBRIO/ZLVERT*ZRELAX_ALPHA_COEFF(JIJ)* &
+                  &(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1. - ZPART_DRY(JIJ)) + &
+                  &PARAMMF%XBDETR*ZMIX3_CLD(JIJ) + PARAMMF%XBENTR*ZMIX2_CLD(JIJ))
+        ZDELTA_WUP=1.-ZRELAX_ALPHA_COEFF(JIJ)/(1.-PARAMMF%XAADVEC)*(PARAMMF%XBRIO/ZLVERT*ZRELAX_ALPHA_COEFF(JIJ)* &
+                  &(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1. - ZPART_DRY(JIJ)) + &
+                  &PARAMMF%XBDETR*ZMIX3_CLD(JIJ) + PARAMMF%XBENTR*ZMIX2_CLD(JIJ))
+        ZW_UP2(JIJ,JK+IKL)=ZW_UP2(JIJ,JK+IKL)*ZDELTA_WUP/ZGAMMA_WUP + &
+                          &2.*PARAMMF%XABUO*ZBUO_INTEG_CLD(JIJ,JK)/((1-PARAMMF%XAADVEC)*ZGAMMA_WUP)
       END IF
-      ZW_UP2(JIJ,JK+IKL)  = ZW_UP2(JIJ,JK+IKL)*(1.-(PARAMMF%XBDETR*ZMIX3_CLD(JIJ)+ &
-                                                                       &PARAMMF%XBENTR*ZMIX2_CLD(JIJ)))&
-              /(1.+(PARAMMF%XBDETR*ZMIX3_CLD(JIJ)+PARAMMF%XBENTR*ZMIX2_CLD(JIJ))) &
-              +2.*(PARAMMF%XABUO)*ZBUO_INTEG_CLD(JIJ,JK)/ &
-              &(1.+(PARAMMF%XBDETR*ZMIX3_CLD(JIJ)+PARAMMF%XBENTR*ZMIX2_CLD(JIJ)))
-    END IF
-  END DO
+    END DO
 
     ! Test if the updraft has reach the ETL
     !$mnh_expand_where(JIJ=IIJB:IIJE)
@@ -723,9 +805,9 @@ CONTAINS
                             KK,KKB,KKE,KKL,OTEST,OTESTLCL,&
                             PFRAC_ICE,PRHODREF,&
                             PPRE_MINUS_HALF,&
-                            PPRE_PLUS_HALF,PZZ,PDZZ,&
+                            PPRE_PLUS_HALF,PEXN_F,PZZ,PDZZ,&
                             PTHVM,PTHLM,PRTM,PW_UP2,PTH_UP,&
-                            PTHL_UP,PRT_UP,PLUP,&
+                            PTHL_UP,PRT_UP,PLUPSURF,PLUP,PLDOWN,&
                             PRC_UP,PRI_UP,PTHV_UP,&
                             PRSAT_UP,PRC_MIX,PRI_MIX,      &
                             PENTR,PDETR,PENTR_CLD,PDETR_CLD,&
@@ -779,6 +861,8 @@ CONTAINS
 !!                          eventually breaking tests with NaN initializations at compile time.
 !!                          Replace by IF conditions and traditional DO loops can only improve the performance.
 !  P. Wautelet 10/02/2021: bugfix: initialized PPART_DRY everywhere
+!!      S. Riette Jan 2025: exp/log during dP/dZ conversion
+!!      S. Riette Jan 2025: BF in the computation of the upper part of PBUO_INTEG_CLD
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -813,6 +897,7 @@ REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PFRAC_ICE ! fraction of ice
 REAL, DIMENSION(D%NIJT),     INTENT(IN) ::  PRHODREF  !rhodref
 REAL, DIMENSION(D%NIJT),     INTENT(IN) ::  PPRE_MINUS_HALF ! Pressure at flux level KK
 REAL, DIMENSION(D%NIJT),     INTENT(IN) ::  PPRE_PLUS_HALF ! Pressure at flux level KK+KKL
+REAL, DIMENSION(D%NIJT),     INTENT(IN) ::  PEXN_F ! Exner function at flux level KK
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PZZ       !  Height at the flux point
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PDZZ       !  metrics coefficient
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTHVM      ! ThetaV environment 
@@ -824,15 +909,16 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PTHLM     ! Thetal
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PRTM      ! total mixing ratio 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PW_UP2    ! Vertical velocity^2
 REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PTH_UP,PTHL_UP,PRT_UP  ! updraft properties
-REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PLUP      ! LUP compute from the ground
+REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PLUPSURF      ! LUP compute from the ground
+REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PLUP, PLDOWN  ! LUP and LDOWN mixing length
 REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PRC_UP,PRI_UP   ! Updraft cloud content
 REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PTHV_UP ! Thetav of updraft
 REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PRSAT_UP ! Mixing ratio at saturation in updraft
 REAL, DIMENSION(D%NIJT),   INTENT(INOUT)  ::  PRC_MIX, PRI_MIX      ! Mixture cloud content
 REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PENTR     ! Mass flux entrainment of the updraft
 REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PDETR     ! Mass flux detrainment of the updraft
-REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PENTR_CLD ! Mass flux entrainment of the updraft in cloudy part
-REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PDETR_CLD ! Mass flux detrainment of the updraft in cloudy part
+REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PENTR_CLD ! Mass flux entrainment of the updraft in cloudy part (multiplied by (1-part_dry))
+REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PDETR_CLD ! Mass flux detrainment of the updraft in cloudy part (multiplied by (1-part_dry))
 REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PBUO_INTEG_DRY, PBUO_INTEG_CLD! Integral Buoyancy
 REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PPART_DRY ! ratio of dry part at the transition level
 !
@@ -848,7 +934,6 @@ REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PPART_DRY ! ratio of dry part at t
 !                1.3 Initialisation
 !                ------------------
   
-ZCOEFFMF_CLOUD=PARAMMF%XENTR_MF * CST%XG / PARAMMF%XCRAD_MF
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZG_O_THVREF_ED(IIJB:IIJE)=CST%XG/PTHVM(IIJB:IIJE,KK)
 
@@ -879,10 +964,15 @@ DO JIJ=IIJB,IIJE
     !Use of d.Rsat / dP and pressure at flux level KK to find pressure (ZPRE)
     !where Rsat is equal to PRT_UP
     ZPRE(JIJ)=PPRE_MINUS_HALF(JIJ)+(PRT_UP(JIJ)-PRSAT_UP(JIJ))/ZDRSATODP
-    !Fraction of dry part (computed with pressure and used with heights, no
-    !impact found when using log function here and for pressure on flux levels
-    !computation)
-    PPART_DRY(JIJ)=MAX(0., MIN(1., (PPRE_MINUS_HALF(JIJ)-ZPRE(JIJ))/(PPRE_MINUS_HALF(JIJ)-PPRE_PLUS_HALF(JIJ))))
+    IF(PARAMMF%LPZ_EXP_LOG) THEN
+      PPART_DRY(JIJ)=MAX(0., MIN(1., (LOG(PPRE_MINUS_HALF(JIJ))-LOG(ZPRE(JIJ)))/ &
+                                     (LOG(PPRE_MINUS_HALF(JIJ))-LOG(PPRE_PLUS_HALF(JIJ)))))
+    ELSE
+      !Fraction of dry part (computed with pressure and used with heights, no
+      !impact found when using log function here and for pressure on flux levels
+      !computation)
+      PPART_DRY(JIJ)=MAX(0., MIN(1., (PPRE_MINUS_HALF(JIJ)-ZPRE(JIJ))/(PPRE_MINUS_HALF(JIJ)-PPRE_PLUS_HALF(JIJ))))
+    ENDIF
     !Height above flux level KK of the cloudy part
     ZDZ_STOP(JIJ) = (PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))*PPART_DRY(JIJ)
   ELSE
@@ -893,16 +983,16 @@ END DO
 !               1.5 Gradient and flux values of thetav
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 IF(KK/=KKB)THEN
-  ZCOEFF_MINUS_HALF(IIJB:IIJE)=((PTHVM(IIJB:IIJE,KK)-PTHVM(IIJB:IIJE,KK-KKL))/PDZZ(IIJB:IIJE,KK))
+  ZCOEFF_MINUS_HALF_THV(IIJB:IIJE)=((PTHVM(IIJB:IIJE,KK)-PTHVM(IIJB:IIJE,KK-KKL))/PDZZ(IIJB:IIJE,KK))
   ZTHV_MINUS_HALF(IIJB:IIJE) = PTHVM(IIJB:IIJE,KK) - &
-                               & ZCOEFF_MINUS_HALF(IIJB:IIJE)*0.5*(PZZ(IIJB:IIJE,KK+KKL)-PZZ(IIJB:IIJE,KK))
+                               & ZCOEFF_MINUS_HALF_THV(IIJB:IIJE)*0.5*(PZZ(IIJB:IIJE,KK+KKL)-PZZ(IIJB:IIJE,KK))
 ELSE
-  ZCOEFF_MINUS_HALF(IIJB:IIJE)=0.
+  ZCOEFF_MINUS_HALF_THV(IIJB:IIJE)=0.
   ZTHV_MINUS_HALF(IIJB:IIJE) = PTHVM(IIJB:IIJE,KK)
 ENDIF
-ZCOEFF_PLUS_HALF(IIJB:IIJE)  = ((PTHVM(IIJB:IIJE,KK+KKL)-PTHVM(IIJB:IIJE,KK))/PDZZ(IIJB:IIJE,KK+KKL))
+ZCOEFF_PLUS_HALF_THV(IIJB:IIJE)  = ((PTHVM(IIJB:IIJE,KK+KKL)-PTHVM(IIJB:IIJE,KK))/PDZZ(IIJB:IIJE,KK+KKL))
 ZTHV_PLUS_HALF(IIJB:IIJE)  = PTHVM(IIJB:IIJE,KK) + &
-                             & ZCOEFF_PLUS_HALF(IIJB:IIJE)*0.5*(PZZ(IIJB:IIJE,KK+KKL)-PZZ(IIJB:IIJE,KK))
+                             & ZCOEFF_PLUS_HALF_THV(IIJB:IIJE)*0.5*(PZZ(IIJB:IIJE,KK+KKL)-PZZ(IIJB:IIJE,KK))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
 !               2  Dry part computation:
@@ -915,13 +1005,13 @@ DO JIJ=IIJB,IIJE
     !Between flux level KK and min(mass level, bottom of cloudy part)
     ZDZ=MIN(ZDZ_STOP(JIJ),(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))*0.5)
     PBUO_INTEG_DRY(JIJ) = ZG_O_THVREF_ED(JIJ)*ZDZ*&
-                (0.5 * (  - ZCOEFF_MINUS_HALF(JIJ))*ZDZ  &
+                (0.5 * (  - ZCOEFF_MINUS_HALF_THV(JIJ))*ZDZ  &
                   - ZTHV_MINUS_HALF(JIJ) + PTHV_UP(JIJ) )
 
     !Between mass flux KK and bottom of cloudy part (if above mass flux)
     ZDZ=MAX(0., ZDZ_STOP(JIJ)-(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))*0.5)
     PBUO_INTEG_DRY(JIJ) = PBUO_INTEG_DRY(JIJ) + ZG_O_THVREF_ED(JIJ)*ZDZ*&
-                (0.5 * (  - ZCOEFF_PLUS_HALF(JIJ))*ZDZ &
+                (0.5 * (  - ZCOEFF_PLUS_HALF_THV(JIJ))*ZDZ &
                   - PTHVM(JIJ,KK) + PTHV_UP(JIJ) )
 
     !Entr//Detr. computation
@@ -936,11 +1026,18 @@ DO JIJ=IIJB,IIJE
                  LOG(1.+ (2.*(PARAMMF%XABUO)/PW_UP2(JIJ,KK))* &
                  (-PBUO_INTEG_DRY(JIJ)))
     ENDIF
+    !division by (Z(KK+KKL)-Z(KK)) whereas integration is computed only on the dry part
+    !result is an average over the entire layer
     PENTR(JIJ) = PARAMMF%XENTR_DRY*PENTR(JIJ)/(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))    
     PDETR(JIJ) = PARAMMF%XDETR_DRY*PDETR(JIJ)/(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))
     !Minimum value of detrainment
-    ZWK0D=PLUP(JIJ)-0.5*(PZZ(JIJ,KK)+PZZ(JIJ,KK+KKL))
+    IF(PARAMMF%CDETR_DRY_LUP == 'SURF') THEN
+      ZWK0D=PLUPSURF(JIJ)-0.5*(PZZ(JIJ,KK)+PZZ(JIJ,KK+KKL))
+    ELSEIF(PARAMMF%CDETR_DRY_LUP == 'UPDR') THEN
+      ZWK0D=PLUP(JIJ)
+    ENDIF
     ZWK0D=SIGN(MAX(1., ABS(ZWK0D)), ZWK0D) ! ZWK0D must not be zero
+    !multiplication by PPART_DRY to get a mean value over the entire layer
     PDETR(JIJ) = MAX(PPART_DRY(JIJ)*PARAMMF%XDETR_LUP/ZWK0D, PDETR(JIJ))
   ELSE
     !No dry part, condensation reached (OTESTLCL)
@@ -982,108 +1079,152 @@ DO JIJ=IIJB,IIJE
     !Between bottom of cloudy part (if under mass level) and mass level KK
     ZDZ=MAX(0., 0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))-ZDZ_STOP(JIJ))
     PBUO_INTEG_CLD(JIJ) = ZG_O_THVREF_ED(JIJ)*ZDZ*&
-            (0.5*( ZCOTHVU - ZCOEFF_MINUS_HALF(JIJ))*ZDZ &
-              - (PTHVM(JIJ,KK)-ZDZ*ZCOEFF_MINUS_HALF(JIJ)) + PTHV_UP(JIJ) )
+            (0.5*( ZCOTHVU - ZCOEFF_MINUS_HALF_THV(JIJ))*ZDZ &
+              - (PTHVM(JIJ,KK)-ZDZ*ZCOEFF_MINUS_HALF_THV(JIJ)) + PTHV_UP(JIJ) )
 
     !Between max(mass level, bottom of cloudy part) and flux level KK+KKL
+    !Bottom of integration could be LCL or already inside the cloud
     ZDZ=(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))-MAX(ZDZ_STOP(JIJ),0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK)))
     PBUO_INTEG_CLD(JIJ) = PBUO_INTEG_CLD(JIJ)+ZG_O_THVREF_ED(JIJ)*ZDZ*&
-                      (0.5*( ZCOTHVU - ZCOEFF_PLUS_HALF(JIJ))*ZDZ&
-              - (PTHVM(JIJ,KK)+(0.5*((PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK)))-ZDZ)*ZCOEFF_PLUS_HALF(JIJ)) +&
-              PTHV_UP(JIJ) )
-
+                      (0.5*( ZCOTHVU - ZCOEFF_PLUS_HALF_THV(JIJ))*ZDZ&
+              - (PTHVM(JIJ,KK)+(0.5*((PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK)))-ZDZ)*ZCOEFF_PLUS_HALF_THV(JIJ)) +&
+              (ZTHV_UP_F2(JIJ) - ZDZ*ZCOTHVU))
   ELSE
     !No cloudy part
     PBUO_INTEG_CLD(JIJ)=0.
   END IF
 END DO
 
-!               3.2 Critical mixed fraction for KK+KKL flux level (ZKIC_F2) and
-!                   for bottom of cloudy part (ZKIC), then a mean for the cloudy part
-!                   (put also in ZKIC)
-!
-!                   computation by estimating unknown  
-!                   T^mix r_c^mix and r_i^mix from enthalpy^mix and r_w^mix
-!                   We determine the zero crossing of the linear curve
-!                   evaluating the derivative using ZMIXF=0.1
-                
-ZKIC_INIT=0.1  ! starting value for critical mixed fraction for CLoudy Part
-ZMIXTHL(:) = 300.
-ZMIXRT(:) = 0.1
-
-
-
-!  Compute thetaV of environment at the bottom of cloudy part
-!    and cons then non cons. var. of mixture at the bottom of cloudy part
-
-!   JKLIM computed to avoid KKL(KK-KKL) being < KKL*KKB
-JKLIM=KKL*MAX(KKL*(KK-KKL),KKL*KKB)
-DO JIJ=IIJB,IIJE
-  IF(OTEST(JIJ) .AND. PPART_DRY(JIJ)>0.5) THEN
-    ZDZ=ZDZ_STOP(JIJ)-0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))
-    ZTHV(JIJ)= PTHVM(JIJ,KK)+ZCOEFF_PLUS_HALF(JIJ)*ZDZ
-    ZMIXTHL(JIJ) = ZKIC_INIT * &
-               (PTHLM(JIJ,KK)+ZDZ*(PTHLM(JIJ,KK+KKL)-PTHLM(JIJ,KK))/PDZZ(JIJ,KK+KKL)) + &
-               (1. - ZKIC_INIT)*PTHL_UP(JIJ)
-    ZMIXRT(JIJ)  = ZKIC_INIT * &
-               (PRTM(JIJ,KK)+ZDZ*(PRTM(JIJ,KK+KKL)-PRTM(JIJ,KK))/PDZZ(JIJ,KK+KKL)) +   &
-               (1. - ZKIC_INIT)*PRT_UP(JIJ)
-  ELSEIF(OTEST(JIJ)) THEN
-    ZDZ=0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))-ZDZ_STOP(JIJ)
-    ZTHV(JIJ)= PTHVM(JIJ,KK)-ZCOEFF_MINUS_HALF(JIJ)*ZDZ
-    ZMIXTHL(JIJ) = ZKIC_INIT * &
-               (PTHLM(JIJ,KK)-ZDZ*(PTHLM(JIJ,KK)-PTHLM(JIJ,JKLIM))/PDZZ(JIJ,KK)) + &
-               (1. - ZKIC_INIT)*PTHL_UP(JIJ)
-    ZMIXRT(JIJ)  = ZKIC_INIT * &
-               (PRTM(JIJ,KK)-ZDZ*(PRTM(JIJ,KK)-PRTM(JIJ,JKLIM))/PDZZ(JIJ,KK)) + &
-               (1. - ZKIC_INIT)*PRT_UP(JIJ)
-  END IF
-ENDDO
-CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, ZFRAC_ICE,&
-             ZPRE,ZMIXTHL,ZMIXRT,&
-             ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
-             ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
-             PBUF=ZBUF)
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-ZTHVMIX(IIJB:IIJE) = ZTHMIX(IIJB:IIJE)*(1.+ZRVORD*ZRVMIX(IIJB:IIJE))/(1.+ZMIXRT(IIJB:IIJE))
-
-!  Compute cons then non cons. var. of mixture at the flux level KK+KKL  with initial ZKIC
-ZMIXTHL(IIJB:IIJE) = ZKIC_INIT * 0.5*(PTHLM(IIJB:IIJE,KK)+PTHLM(IIJB:IIJE,KK+KKL))+&
-                       & (1. - ZKIC_INIT)*PTHL_UP(IIJB:IIJE)
-ZMIXRT(IIJB:IIJE)  = ZKIC_INIT * 0.5*(PRTM(IIJB:IIJE,KK)+PRTM(IIJB:IIJE,KK+KKL))+&
-                       & (1. - ZKIC_INIT)*PRT_UP(IIJB:IIJE)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
-CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, ZFRAC_ICE,&
-             PPRE_PLUS_HALF,ZMIXTHL,ZMIXRT,&
-             ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
-             ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
-             PBUF=ZBUF)
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-ZTHVMIX_F2(IIJB:IIJE) = ZTHMIX(IIJB:IIJE)*(1.+ZRVORD*ZRVMIX(IIJB:IIJE))/(1.+ZMIXRT(IIJB:IIJE))
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
-
-!Computation of mean ZKIC over the cloudy part
-DO JIJ=IIJB,IIJE
-  IF (OTEST(JIJ)) THEN
-    ! Compute ZKIC at the bottom of cloudy part
-    ! Thetav_up at bottom is equal to Thetav_up at flux level KK
-    IF (ABS(PTHV_UP(JIJ)-ZTHVMIX(JIJ))<1.E-10) THEN
-      ZKIC(JIJ)=1.
+IF(PARAMMF%CKIC_COMPUTE=='KFB') THEN
+  !               3.2.a Critical mixed fraction for KK+KKL flux level (ZKIC_F2) and
+  !                   for bottom of cloudy part (ZKIC), then a mean for the cloudy part
+  !                   (put also in ZKIC)
+  !
+  !                   computation by estimating unknown  
+  !                   T^mix r_c^mix and r_i^mix from enthalpy^mix and r_w^mix
+  !                   We determine the zero crossing of the linear curve
+  !                   evaluating the derivative using ZMIXF=0.1
+                  
+  ZKIC_INIT=0.1  ! starting value for critical mixed fraction for CLoudy Part
+  ZMIXTHL(:) = 300.
+  ZMIXRT(:) = 0.1
+  
+  !  Compute thetaV of environment at the bottom of cloudy part
+  !    and cons then non cons. var. of mixture at the bottom of cloudy part
+  
+  !   JKLIM computed to avoid KKL(KK-KKL) being < KKL*KKB
+  JKLIM=KKL*MAX(KKL*(KK-KKL),KKL*KKB)
+  DO JIJ=IIJB,IIJE
+    IF(OTEST(JIJ) .AND. PPART_DRY(JIJ)>0.5) THEN
+      ZDZ=ZDZ_STOP(JIJ)-0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))
+      ZTHV(JIJ)= PTHVM(JIJ,KK)+ZCOEFF_PLUS_HALF_THV(JIJ)*ZDZ
+      ZMIXTHL(JIJ) = ZKIC_INIT * &
+                 (PTHLM(JIJ,KK)+ZDZ*(PTHLM(JIJ,KK+KKL)-PTHLM(JIJ,KK))/PDZZ(JIJ,KK+KKL)) + &
+                 (1. - ZKIC_INIT)*PTHL_UP(JIJ)
+      ZMIXRT(JIJ)  = ZKIC_INIT * &
+                 (PRTM(JIJ,KK)+ZDZ*(PRTM(JIJ,KK+KKL)-PRTM(JIJ,KK))/PDZZ(JIJ,KK+KKL)) +   &
+                 (1. - ZKIC_INIT)*PRT_UP(JIJ)
+    ELSEIF(OTEST(JIJ)) THEN
+      ZDZ=0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))-ZDZ_STOP(JIJ)
+      ZTHV(JIJ)= PTHVM(JIJ,KK)-ZCOEFF_MINUS_HALF_THV(JIJ)*ZDZ
+      ZMIXTHL(JIJ) = ZKIC_INIT * &
+                 (PTHLM(JIJ,KK)-ZDZ*(PTHLM(JIJ,KK)-PTHLM(JIJ,JKLIM))/PDZZ(JIJ,KK)) + &
+                 (1. - ZKIC_INIT)*PTHL_UP(JIJ)
+      ZMIXRT(JIJ)  = ZKIC_INIT * &
+                 (PRTM(JIJ,KK)-ZDZ*(PRTM(JIJ,KK)-PRTM(JIJ,JKLIM))/PDZZ(JIJ,KK)) + &
+                 (1. - ZKIC_INIT)*PRT_UP(JIJ)
     ELSE
-      ZKIC(JIJ) = MAX(0.,PTHV_UP(JIJ)-ZTHV(JIJ))*ZKIC_INIT /  &  
-                 (PTHV_UP(JIJ)-ZTHVMIX(JIJ))
+      ZMIXTHL(JIJ) = 300.
+      ZMIXRT(JIJ) = 0.1
+    ENDIF
+  ENDDO
+  CALL TH_R_FROM_THL_RT(D,CST,NEBN,NEBN%CFRAC_ICE_SHALLOW_MF,ZFRAC_ICE,&
+               ZPRE,ZMIXTHL,ZMIXRT,&
+               ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
+               ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
+               PBUF=ZBUF)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZTHVMIX(IIJB:IIJE) = ZTHMIX(IIJB:IIJE)*(1.+ZRVORD*ZRVMIX(IIJB:IIJE))/(1.+ZMIXRT(IIJB:IIJE))
+  
+  !  Compute cons then non cons. var. of mixture at the flux level KK+KKL  with initial ZKIC
+  ZMIXTHL(IIJB:IIJE) = ZKIC_INIT * 0.5*(PTHLM(IIJB:IIJE,KK)+PTHLM(IIJB:IIJE,KK+KKL))+&
+                         & (1. - ZKIC_INIT)*PTHL_UP(IIJB:IIJE)
+  ZMIXRT(IIJB:IIJE)  = ZKIC_INIT * 0.5*(PRTM(IIJB:IIJE,KK)+PRTM(IIJB:IIJE,KK+KKL))+&
+                         & (1. - ZKIC_INIT)*PRT_UP(IIJB:IIJE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  CALL TH_R_FROM_THL_RT(D,CST,NEBN,NEBN%CFRAC_ICE_SHALLOW_MF,ZFRAC_ICE,&
+               PPRE_PLUS_HALF,ZMIXTHL,ZMIXRT,&
+               ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
+               ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
+               PBUF=ZBUF)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZTHVMIX_F2(IIJB:IIJE) = ZTHMIX(IIJB:IIJE)*(1.+ZRVORD*ZRVMIX(IIJB:IIJE))/(1.+ZMIXRT(IIJB:IIJE))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  
+  !Computation of mean ZKIC over the cloudy part
+  DO JIJ=IIJB,IIJE
+    IF (OTEST(JIJ)) THEN
+      ! Compute ZKIC at the bottom of cloudy part
+      ! Thetav_up at bottom is equal to Thetav_up at flux level KK
+      IF (ABS(PTHV_UP(JIJ)-ZTHVMIX(JIJ))<1.E-10) THEN
+        ZKIC(JIJ)=1.
+      ELSE
+        ZKIC(JIJ) = MAX(0.,PTHV_UP(JIJ)-ZTHV(JIJ))*ZKIC_INIT /  &  
+                   (PTHV_UP(JIJ)-ZTHVMIX(JIJ))
+      END IF
+      ! Compute ZKIC_F2 at flux level KK+KKL
+      IF (ABS(ZTHV_UP_F2(JIJ)-ZTHVMIX_F2(JIJ))<1.E-10) THEN
+        ZKIC_F2(JIJ)=1.
+      ELSE
+        ZKIC_F2(JIJ) = MAX(0.,ZTHV_UP_F2(JIJ)-ZTHV_PLUS_HALF(JIJ))*ZKIC_INIT /  &  
+                   (ZTHV_UP_F2(JIJ)-ZTHVMIX_F2(JIJ))
+      END IF
+      !Mean ZKIC over the cloudy part
+      ZKIC(JIJ)=MAX(MIN(0.5*(ZKIC(JIJ)+ZKIC_F2(JIJ)),1.),0.)
     END IF
-    ! Compute ZKIC_F2 at flux level KK+KKL
-    IF (ABS(ZTHV_UP_F2(JIJ)-ZTHVMIX_F2(JIJ))<1.E-10) THEN
-      ZKIC_F2(JIJ)=1.
-    ELSE
-      ZKIC_F2(JIJ) = MAX(0.,ZTHV_UP_F2(JIJ)-ZTHV_PLUS_HALF(JIJ))*ZKIC_INIT /  &  
-                 (ZTHV_UP_F2(JIJ)-ZTHVMIX_F2(JIJ))
-    END IF
-    !Mean ZKIC over the cloudy part
-    ZKIC(JIJ)=MAX(MIN(0.5*(ZKIC(JIJ)+ZKIC_F2(JIJ)),1.),0.)
-  END IF
-END DO
+  END DO
+ELSEIF(PARAMMF%CKIC_COMPUTE=='RS08') THEN
+  !               3.2.b Critical mixed fraction using the analytical formulation from Rooy and Siebesma (2008)
+  DO JIJ=IIJB,IIJE
+    IF (OTEST(JIJ)) THEN
+      IF(KK/=KKB)THEN
+        ZCOEFF_MINUS_HALF_RT(JIJ)=((PRTM(JIJ,KK)-PRTM(JIJ,KK-KKL))/PDZZ(JIJ,KK))
+        ZCOEFF_MINUS_HALF_THL(JIJ)=((PTHLM(JIJ,KK)-PTHLM(JIJ,KK-KKL))/PDZZ(JIJ,KK))
+      ELSE
+        ZCOEFF_MINUS_HALF_RT(JIJ)=0.
+        ZCOEFF_MINUS_HALF_THL(JIJ)=0.
+      ENDIF
+      ZCOEFF_PLUS_HALF_RT(JIJ)  = ((PRTM(JIJ,KK+KKL)-PRTM(JIJ,KK))/PDZZ(JIJ,KK+KKL))
+      ZCOEFF_PLUS_HALF_THL(JIJ)  = ((PTHLM(JIJ,KK+KKL)-PTHLM(JIJ,KK))/PDZZ(JIJ,KK+KKL))
+
+      IF(PPART_DRY(JIJ)>0.5) THEN
+        ZDZ=ZDZ_STOP(JIJ)-0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))
+        ZTHV(JIJ)= PTHVM(JIJ,KK)+ZCOEFF_PLUS_HALF_THV(JIJ)*ZDZ
+        ZTHL= PTHLM(JIJ,KK)+ZCOEFF_PLUS_HALF_THL(JIJ)*ZDZ
+        ZRT= PRTM(JIJ,KK)+ZCOEFF_PLUS_HALF_RT(JIJ)*ZDZ
+      ELSE
+        ZDZ=0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))-ZDZ_STOP(JIJ)
+        ZTHV(JIJ)= PTHVM(JIJ,KK)-ZCOEFF_MINUS_HALF_THV(JIJ)*ZDZ
+        ZTHL= PTHLM(JIJ,KK)-ZCOEFF_MINUS_HALF_THL(JIJ)*ZDZ
+        ZRT= PRTM(JIJ,KK)-ZCOEFF_MINUS_HALF_RT(JIJ)*ZDZ
+      ENDIF
+      ZT = PTH_UP(JIJ)*PEXN_F(JIJ)
+      ZLV = (CST%XLVTT + (CST%XCPV-CST%XCL) * (ZT-CST%XTT))
+      ZLS = (CST%XLSTT + (CST%XCPV-CST%XCI) * (ZT-CST%XTT))
+      ZLVS = (1. - ZFRAC_ICE(JIJ)) * ZLV + ZFRAC_ICE(JIJ) * ZLS
+      ZDRSATDT = ZLVS * PRSAT_UP(JIJ) / ( CST%XRV * ZT**2 ) * (1. + (CST%XRV * PRSAT_UP(JIJ) / CST%XRD))
+
+      ZGAMMA = (ZLVS/CST%XCPD)*ZDRSATDT
+      ZALPHA = (CST%XCPD/ZLVS)*PEXN_F(JIJ)*PTHL_UP(JIJ)
+      ZLAMBDA = CST%XRV/CST%XRD - 1.
+      ZBETA = 1./(1 + ZGAMMA)*(1.+ (1+ZLAMBDA)*ZGAMMA*ZALPHA)
+
+      ZKIC(JIJ) = (PTHV_UP(JIJ) - ZTHV(JIJ))/(ZBETA*(PTHL_UP(JIJ) - ZTHL) + &
+                & (ZBETA - ZALPHA)*ZLVS/(CST%XCPD*PEXN_F(JIJ))*(PRT_UP(JIJ)-ZRT))
+      ZKIC(JIJ) = MAX(MIN(ZKIC(JIJ),1.),0.)
+    ENDIF
+  ENDDO
+ENDIF
 
 !               3.3 Integration of PDF
 !                   According to Kain and Fritsch (1990), we replace delta Mt
@@ -1115,11 +1256,21 @@ ENDDO
 !ENDWHERE
 
 !               3.4 Computation of PENTR and PDETR
+IF (PARAMMF%CWET_MIXING == 'PKFB') THEN
+  ZCOEFFMF_CLOUD=PARAMMF%XENTR_MF * CST%XG / PARAMMF%XCRAD_MF
+ENDIF
 DO JIJ=IIJB,IIJE
   IF(OTEST(JIJ)) THEN
-    ZEPSI_CLOUD=MIN(ZDELTA(JIJ), ZEPSI(JIJ))
-    PENTR_CLD(JIJ) = (1.-PPART_DRY(JIJ))*ZCOEFFMF_CLOUD*PRHODREF(JIJ)*ZEPSI_CLOUD
-    PDETR_CLD(JIJ) = (1.-PPART_DRY(JIJ))*ZCOEFFMF_CLOUD*PRHODREF(JIJ)*ZDELTA(JIJ)
+    IF (PARAMMF%CWET_MIXING == 'LR01') THEN
+      ! E + D from Lappen and Randall 2001 with Bougeault lenght scale
+      ZCOEFFMF_CLOUD = PARAMMF%XENTR_MF/(2.*(PLUP(JIJ)*PLDOWN(JIJ))/(PLUP(JIJ)+PLDOWN(JIJ)))
+      PENTR_CLD(JIJ) = (1.-PPART_DRY(JIJ))*ZCOEFFMF_CLOUD*ZEPSI(JIJ)    ! KFB
+      PDETR_CLD(JIJ) = (1.-PPART_DRY(JIJ))*ZCOEFFMF_CLOUD*ZDELTA(JIJ)   ! KFB
+    ELSEIF (PARAMMF%CWET_MIXING == 'PKFB') THEN
+      ZEPSI_CLOUD=MIN(ZDELTA(JIJ), ZEPSI(JIJ))
+      PENTR_CLD(JIJ) = (1.-PPART_DRY(JIJ))*ZCOEFFMF_CLOUD*PRHODREF(JIJ)*ZEPSI_CLOUD
+      PDETR_CLD(JIJ) = (1.-PPART_DRY(JIJ))*ZCOEFFMF_CLOUD*PRHODREF(JIJ)*ZDELTA(JIJ)
+    ENDIF
     PENTR(JIJ) = PENTR(JIJ)+PENTR_CLD(JIJ)
     PDETR(JIJ) = PDETR(JIJ)+PDETR_CLD(JIJ)
   ELSE

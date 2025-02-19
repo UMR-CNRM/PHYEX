@@ -6,8 +6,9 @@ IMPLICIT NONE
 INTERFACE
 !
       SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,NEBN,D,TLES,            &
-              & KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,KHALO,           &
-              & KSPLIT,OCLOUDMODIFLM,KSV,KSV_LGBEG,KSV_LGEND,         &
+              & KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTSLEO,              &
+              & KGRADIENTSGOG,KHALO,                                  &
+              & KSPLIT, OCLOUDMODIFLM, KSV,KSV_LGBEG,KSV_LGEND,       &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
               & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,OIBM,OFLYER,    &
               & OCOMPUTE_SRC, PRSNOW,                                 &
@@ -16,7 +17,7 @@ INTERFACE
               & PTSTEP,TPFILE,                                        &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
-              & PRHODJ,PTHVREF,PHGRAD,PZS,                            &
+              & PRHODJ,PTHVREF,PHGRADLEO,PHGRADGOG,PZS,               &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
               & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
@@ -25,9 +26,10 @@ INTERFACE
               & PTHLT,PRT,                                            &
               & PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,              &
               & PSIGS,                                                &
-              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTDIFF,PTDISS,      &
+              & PFLXZTHVMF, PFLXZUMF, PFLXZVMF,                       &
+              & PWTH,PWRC,PWSV,PDP,PTP,PTDIFF,PTDISS,      &
               & TBUDGETS, KBUDGETS,                                   &
-              & PEDR,PLEM,PRTKEMS,PTPMF,                              &
+              & PEDR,PLEM,PRTKEMS,PDPMF,PTPMF,                        &
               & PDRUS_TURB,PDRVS_TURB,                                &
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS,       &
               & PIBM_LS, PIBM_XMUT,                                   &
@@ -51,7 +53,8 @@ TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF        ! budget structure
 TYPE(TURB_t),           INTENT(IN)   :: TURBN         ! modn_turbn (turb namelist) structure
 TYPE(NEB_t),            INTENT(IN)   :: NEBN          ! modd_nebn structure
 TYPE(TLES_t),           INTENT(INOUT)   :: TLES          ! modd_les structure
-INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
+INTEGER,                INTENT(IN)   :: KGRADIENTSLEO ! Number of stored horizontal gradients
+INTEGER,                INTENT(IN)   :: KGRADIENTSGOG ! Number of stored horizontal gradients
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
@@ -92,7 +95,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PRHODJ    ! dry density * Gri
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
-REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),   INTENT(IN) ::  PHGRAD      ! horizontal gradients
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTSLEO),   INTENT(IN) ::  PHGRADLEO  ! horizontal gradients
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTSGOG),   INTENT(IN) ::  PHGRADGOG  ! horizontal gradients
 !
 REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of theta and Rv
@@ -151,11 +155,12 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PFLXZTHVMF
 REAL, DIMENSION(MERGE(D%NIJT,0,OFLYER),MERGE(D%NKT,0,OFLYER)), INTENT(OUT)  :: PWTH       ! heat flux
 REAL, DIMENSION(MERGE(D%NIJT,0,OFLYER),MERGE(D%NKT,0,OFLYER)), INTENT(OUT)  :: PWRC       ! cloud water flux
 REAL, DIMENSION(MERGE(D%NIJT,0,OFLYER),MERGE(D%NKT,0,OFLYER),MERGE(KSV,0,OFLYER)),INTENT(OUT) :: PWSV       ! scalar flux
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTP        ! Thermal TKE production
-                                                   ! MassFlux + turb
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL  :: PTPMF      ! Thermal TKE production
-                                                   ! MassFlux Only
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PDP        ! Dynamic TKE production
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PFLXZUMF   ! MF contribution for vert. turb. transport (dyn prod)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PFLXZVMF   ! MF contribution for vert. turb. transport (dyn prod)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTP        ! Thermal TKE production MassFlux + turb
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL  :: PTPMF      ! Thermal TKE production MassFlux Only
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PDP        ! Dynamic TKE production MassFlux + turb
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL  :: PDPMF      ! Dynamic TKE production MassFlux Only
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
 !

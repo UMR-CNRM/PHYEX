@@ -46,6 +46,9 @@ SUBROUTINE SUPHMPA(YDGEOMETRY,YDLDDH,YDML_GCONF,YDDYNA,YDML_PHY_MF,KULOUT)
 !        Y.Seity: 9 Feb 2014 : add autoconversion setup (*CRIAUT*)
 !        Y.Seity: 12 Nov  2014 : add test on NGFL_EZDIAG
 !        S. Riette (Jan 2015): new ICE3 and ICE4 parameters with new aroini_micro interface
+!        Y.Seity: 7 Jul  2023 : remove test on NGFL_EZDIAG (as these GFL fields
+!        are no longer used, replaced by IMF LMF and AMF)
+!        R. Honnert (sept 2023) : GOGER and LEONARD key in INI_PHYEX 
 !     ------------------------------------------------------------------
 
 USE MODEL_GENERAL_CONF_MOD , ONLY : MODEL_GENERAL_CONF_TYPE
@@ -62,6 +65,7 @@ USE YOMCT0 ,ONLY : LELAM
 USE MODD_BUDGET, ONLY : TBUCONF_ASSOCIATE, TBUCONF
 USE MODI_INI_PHYEX, ONLY: INI_PHYEX
 USE MODD_IO, ONLY : TFILEDATA
+
 !     ------------------------------------------------------------------
 
 IMPLICIT NONE
@@ -72,7 +76,9 @@ TYPE(MODEL_GENERAL_CONF_TYPE),INTENT(INOUT):: YDML_GCONF
 TYPE(TDYNA), INTENT(IN)          :: YDDYNA
 TYPE(MODEL_PHYSICS_MF_TYPE),INTENT(INOUT):: YDML_PHY_MF
 INTEGER(KIND=JPIM),INTENT(IN)    :: KULOUT
+INTEGER, SAVE                    :: PHYEX_NUM = 0
 TYPE(TFILEDATA) :: TPFILE
+
 !     ------------------------------------------------------------------
 
 
@@ -95,7 +101,7 @@ ASSOCIATE(CMICRO=>YDPARAR%CMICRO, CTURB=>YDPARAR%CTURB, NSV=>YDPARAR%NSV, &
  & LAROBU_ENABLE=>YDPARAR%LAROBU_ENABLE, &
  & NRR=>YDPARAR%NRR,&
  & LMPA=>YDARPHY%LMPA, LKFBCONV=>YDARPHY%LKFBCONV, LMFSHAL=>YDARPHY%LMFSHAL, &
- & LGRADHPHY=>YDARPHY%LGRADHPHY, &
+ & LLEONARD=>YDARPHY%LLEONARD,LGOGER=>YDARPHY%LGOGER,&
  & NPROMA=>YDDIM%NPROMA, &
  & LEDKF=>YDPHY%LEDKF, LCVPPKF=>YDPHY%LCVPPKF, &
  & NFLEVG=>YDDIMV%NFLEVG, &
@@ -115,14 +121,26 @@ IF(LMFSHAL.OR.LEDKF) THEN
 ELSE
   CSCONV='NONE'
 ENDIF
+
+!          Initialisation of Turbulence scheme
+!          Test of constistancy between NAMPARAR and NAMARPHY
+!       
+
+!INCREMENTING KTO
+PHYEX_NUM=PHYEX_NUM+1
 TPFILE%NLU = NULNAM
-CALL INI_PHYEX(PHYEX%MISC%CPROGRAM, TPFILE, .TRUE., KULOUT, 0, 1, &
-               ZTSTEP, ZDZMIN, &
-               CMICRO, CSCONV, CTURB, &
-               KPRINT=2, &
-               PHYEX_OUT=PHYEX)
+
+CALL INI_PHYEX(HPROGRAM=PHYEX%MISC%CPROGRAM, TPFILE=TPFILE, &
+             & LDNEEDNAM=.TRUE., KLUOUT=KULOUT, KFROM=0, KTO=PHYEX_NUM, &
+             & PTSTEP=ZTSTEP, PDZMIN=ZDZMIN, &
+             & CMICRO=CMICRO, CSCONV=CSCONV, CTURB=CTURB, &
+             & KPRINT=2, &
+             & PHYEX_OUT=PHYEX)
 
 ! Ensure consistency
+IF (.NOT. PHYEX%TURBN%LGOGER .EQV. LGOGER .OR. .NOT. PHYEX%TURBN%LLEONARD .EQV. LLEONARD) THEN
+  CALL ABOR1 ("LLEONARD or LGOGER are not consistent in NAM_TURBn and NAMARPHY.")
+ENDIF
 IF (.NOT. PHYEX%PARAM_ICEN%LOCND2) THEN
    RADGR=0._JPRB
    RADSN=0._JPRB
@@ -148,10 +166,6 @@ ELSE
   PHYEX%MISC%OFLAT=.TRUE.
 ENDIF
 
-IF (LMFSHAL.AND.YDML_GCONF%YGFL%NGFL_EZDIAG < 3) THEN
-  CALL ABOR1 ("With LMFSHAL NGFL_EZDIAG should be >= 3 !")
-ENDIF
-
 IF (PHYEX%TURBN%LHARAT .AND. PHYEX%PARAM_MFSHALLN%CMF_UPDRAFT == 'EDKF') THEN
   CALL ABOR1('Combination LHARATU and EDKF not valid!')
 ENDIF
@@ -160,17 +174,12 @@ IF (PHYEX%TURBN%CTURBDIM == '3DIM') THEN
   CALL ABOR1('TURBDIM cannot be 3DIM with AROME')
 ENDIF
 
-!       6. Initialisation of Convection scheme
+!       5. Initialisation of Convection scheme
 
 IF(LKFBCONV.OR.LCVPPKF) THEN
   CALL SUCVMNH(YDML_PHY_MF,KULOUT)
 ENDIF
 
-!       8. Initialisation of The Horizontal Gradient on Z levels for 3D turbulence 
-!       Quand il y aura des initialisations 
-IF (LGRADHPHY .AND. .NOT. LELAM) THEN
-  CALL ABOR1 ("With LGRADHPHY, LELAM should be TRUE !")
-ENDIF
 
 ! -----------------------------------------------------------------------
 END ASSOCIATE

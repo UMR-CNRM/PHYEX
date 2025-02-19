@@ -6,6 +6,7 @@
                                      PUMF, PUER, PUDR, PUTHL, PUTHV, PURW,           &
                                      PURC, PURI, PCAPE, KCTL, KETL,GTRIG1 )
     USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
+
 !    ###############################################################################
 !
 !!**** Compute updraft properties from DPL to CTL.
@@ -208,13 +209,16 @@ GWORK4(:)  = .FALSE.
 !               Define accurate enthalpy for updraft
 !               -----------------------------------------------------
 !
-ZTHEUL(D%NIB:D%NIE) = PTLCL(D%NIB:D%NIE) * ( PTHLCL(D%NIB:D%NIE) / PTLCL(D%NIB:D%NIE) ) ** ( 1. - 0.28 * PRVLCL(D%NIB:D%NIE) )  &
-            * EXP( ( 3374.6525 / PTLCL(D%NIB:D%NIE) - 2.5403 ) *                        &
-                                   PRVLCL(D%NIB:D%NIE) * ( 1. + 0.81 * PRVLCL(D%NIB:D%NIE) ) )
+
+DO JI = D%NIB, D%NIE
+  ZTHEUL(JI) = PTLCL(JI) * ( PTHLCL(JI) / PTLCL(JI) ) ** ( 1. - 0.28 * PRVLCL(JI) )  &
+              * EXP( ( 3374.6525 / PTLCL(JI) - 2.5403 ) *                        &
+                                     PRVLCL(JI) * ( 1. + 0.81 * PRVLCL(JI) ) )
 !
 !
-ZWORK1(D%NIB:D%NIE) = ( CST%XCPD + PRVLCL(D%NIB:D%NIE) * CST%XCPV ) * PTLCL(D%NIB:D%NIE)                            &
-            + ( 1. + PRVLCL(D%NIB:D%NIE) ) * CST%XG * PZLCL(D%NIB:D%NIE)
+  ZWORK1(JI) = ( CST%XCPD + PRVLCL(JI) * CST%XCPV ) * PTLCL(JI)                            &
+              + ( 1. + PRVLCL(JI) ) * CST%XG * PZLCL(JI)
+ENDDO
 !
 !
 !*       2.     Set updraft properties between DPL and LCL
@@ -242,10 +246,13 @@ END DO
 DO JK = IKB + 1, IKE - 1
   ZWORK6(:) = 1.
   JKP = JK + 1
+  
 !
-  GWORK4(D%NIB:D%NIE) = JK >= KLCL(D%NIB:D%NIE) - 1
-  GWORK1(D%NIB:D%NIE) = GWORK4(D%NIB:D%NIE) .AND. GWORK2(D%NIB:D%NIE) ! this mask is used to confine
-                           ! updraft computations between the LCL and the CTL
+  DO JI = D%NIB, D%NIE
+    GWORK4(JI) = JK >= KLCL(JI) - 1
+    GWORK1(JI) = GWORK4(JI) .AND. GWORK2(JI) ! this mask is used to confine
+                             ! updraft computations between the LCL and the CTL
+  ENDDO
 !
   DO JI=D%NIB, D%NIE
     IF( JK == KLCL(JI) - 1 ) ZWORK6(JI) = 0. ! factor that is used in buoyancy
@@ -255,16 +262,19 @@ DO JK = IKB + 1, IKE - 1
 !*       4.     Estimate condensate, L_v L_i, Cph and theta_v at level k+1
 !               ----------------------------------------------------------
 !
-    ZWORK1(D%NIB:D%NIE) = PURC(D%NIB:D%NIE,JK)
-    ZWORK2(D%NIB:D%NIE) = PURI(D%NIB:D%NIE,JK)
-    CALL CONVECT_CONDENS(CST, D, CONVPAR, KICE, PPRES(D%NIB:D%NIE,JKP),&
-                         PUTHL(D%NIB:D%NIE,JK), PURW(D%NIB:D%NIE,JK),  &
-                         ZWORK1, ZWORK2, PZ(D%NIB:D%NIE,JKP), ZUT,ZURV,&
-                         PURC(D%NIB:D%NIE,JKP), PURI(D%NIB:D%NIE,JKP), &
-                         ZLV, ZLS, ZCPH )
+  ZWORK1(:) = PURC(:,JK)
+  ZWORK2(:) = PURI(:,JK)
+  CALL CONVECT_CONDENS(CST, D, CONVPAR, KICE, PPRES(:,JKP),&
+                       PUTHL(:,JK), PURW(:,JK),  &
+                       ZWORK1, ZWORK2, PZ(:,JKP), ZUT,ZURV,&
+                       PURC(:,JKP), PURI(:,JKP), &
+                       ZLV, ZLS, ZCPH )
 !
 !
-  ZPI(D%NIB:D%NIE) = ( CST%XP00 / PPRES(D%NIB:D%NIE,JKP) ) ** ZRDOCP
+  DO JI = D%NIB, D%NIE
+    ZPI(JI) = ( CST%XP00 / PPRES(JI,JKP) ) ** ZRDOCP
+  ENDDO
+
   DO JI=D%NIB, D%NIE
     IF ( GWORK1(JI) ) THEN
 !
@@ -320,26 +330,30 @@ DO JK = IKB + 1, IKE - 1
 !               evaluating the derivative using ZMIXF=0.1.
 !               -----------------------------------------------------
 !
-    ZMIXF(D%NIB:D%NIE)  = 0.1   ! starting value for critical mixed fraction
-    ZWORK1(D%NIB:D%NIE) = ZMIXF(D%NIB:D%NIE) * PTHL(D%NIB:D%NIE,JKP)                                     &
-                     + ( 1. - ZMIXF(D%NIB:D%NIE) ) * PUTHL(D%NIB:D%NIE,JKP) ! mixed enthalpy
-    ZWORK2(D%NIB:D%NIE) = ZMIXF(D%NIB:D%NIE) * PRW(D%NIB:D%NIE,JKP)                                      &
-                     + ( 1. - ZMIXF(D%NIB:D%NIE) ) * PURW(D%NIB:D%NIE,JKP)  ! mixed r_w
+  DO JI = D%NIB, D%NIE
+    ZMIXF(JI)  = 0.1   ! starting value for critical mixed fraction
+    ZWORK1(JI) = ZMIXF(JI) * PTHL(JI,JKP)                                     &
+                     + ( 1. - ZMIXF(JI) ) * PUTHL(JI,JKP) ! mixed enthalpy
+    ZWORK2(JI) = ZMIXF(JI) * PRW(JI,JKP)                                      &
+                     + ( 1. - ZMIXF(JI) ) * PURW(JI,JKP)  ! mixed r_w
+  ENDDO
 !
-    CALL CONVECT_CONDENS(CST, D, CONVPAR, KICE, PPRES(D%NIB:D%NIE,JKP),&
-                         ZWORK1, ZWORK2, PURC(D%NIB:D%NIE,JKP),        &
-                         PURI(D%NIB:D%NIE,JKP), PZ(D%NIB:D%NIE,JKP),   &
-                         ZUT, ZWORK3, ZWORK4, ZWORK5, ZLV, ZLS, ZCPH)
+  CALL CONVECT_CONDENS(CST, D, CONVPAR, KICE, PPRES(:,JKP),&
+                       ZWORK1, ZWORK2, PURC(:,JKP),        &
+                       PURI(:,JKP), PZ(:,JKP),   &
+                       ZUT, ZWORK3, ZWORK4, ZWORK5, ZLV, ZLS, ZCPH)
 !        put in enthalpy and r_w and get T r_c, r_i (ZUT, ZWORK4-5)
 !
      ! compute theta_v of mixture
-    ZWORK3(D%NIB:D%NIE) = ZUT(D%NIB:D%NIE) * ZPI(D%NIB:D%NIE) * ( 1. + ZEPSA * (                         &
-                ZWORK2(D%NIB:D%NIE) - ZWORK4(D%NIB:D%NIE) - ZWORK5(D%NIB:D%NIE) ) ) / ( 1. + ZWORK2(D%NIB:D%NIE) )
+  DO JI = D%NIB, D%NIE
+    ZWORK3(JI) = ZUT(JI) * ZPI(JI) * ( 1. + ZEPSA * (                         &
+                ZWORK2(JI) - ZWORK4(JI) - ZWORK5(JI) ) ) / ( 1. + ZWORK2(JI) )
      ! compute final value of critical mixed fraction using theta_v
      ! of mixture, grid-scale and updraft
-    ZMIXF(D%NIB:D%NIE) = MAX( 0., PUTHV(D%NIB:D%NIE,JKP) - PTHV(D%NIB:D%NIE,JKP) ) * ZMIXF(D%NIB:D%NIE) /          &
-                              ( PUTHV(D%NIB:D%NIE,JKP) - ZWORK3(D%NIB:D%NIE) + 1.E-10 )
-    ZMIXF(D%NIB:D%NIE) = MAX( 0., MIN( 1., ZMIXF(D%NIB:D%NIE) ) )
+    ZMIXF(JI) = MAX( 0., PUTHV(JI,JKP) - PTHV(JI,JKP) ) * ZMIXF(JI) /          &
+                              ( PUTHV(JI,JKP) - ZWORK3(JI) + 1.E-10 )
+    ZMIXF(JI) = MAX( 0., MIN( 1., ZMIXF(JI) ) )
+  ENDDO
 !
 !
 !*       8.2     Compute final midlevel values for entr. and detrainment
@@ -354,7 +368,9 @@ DO JK = IKB + 1, IKE - 1
 !
 ! ZWORK1(D%NIB:D%NIE) = XENTR * PMFLCL * PDPRES(D%NIB:D%NIE,JKP) / XCRAD ! rate of env. inflow
 !*MOD
-  zwork1(D%NIB:D%NIE) = CVP_SHAL%xentr * CST%xg / CVP_SHAL%xcrad * pumf(D%NIB:D%NIE,jk) * ( pz(D%NIB:D%NIE,jkp) - pz(D%NIB:D%NIE,jk) )
+  DO JI = D%NIB, D%NIE
+    zwork1(JI) = CVP_SHAL%xentr * CST%xg / CVP_SHAL%xcrad * pumf(JI,jk) * ( pz(JI,jkp) - pz(JI,jk) )
+  ENDDO
 ! ZWORK1(D%NIB:D%NIE) = XENTR * pumf(D%NIB:D%NIE,jk) * PDPRES(D%NIB:D%NIE,JKP) / XCRAD ! rate of env. inflow
 !*MOD
   ZWORK2(:) = 0.
@@ -394,7 +410,10 @@ DO JK = IKB + 1, IKE - 1
   DO JI=D%NIB, D%NIE
     IF ( GWORK2(JI) ) KCTL(JI) = JKP   ! cloud top level
   ENDDO
-  GWORK1(D%NIB:D%NIE) = GWORK2(D%NIB:D%NIE) .AND. GWORK4(D%NIB:D%NIE)
+  
+  DO JI=D%NIB, D%NIE
+    GWORK1(JI) = GWORK2(JI) .AND. GWORK4(JI)
+  ENDDO
 !
   !IF ( COUNT( GWORK2(:) ) == 0 ) EXIT        
 !
@@ -453,8 +472,12 @@ END DO
     DO JI = D%NIB, D%NIE
     IF( .NOT. OTRIG(JI) ) KCTL(JI) = IKB
     ENDDO
-KETL(D%NIB:D%NIE) = MAX( KETL(D%NIB:D%NIE), KLCL(D%NIB:D%NIE) + 2 )
-KETL(D%NIB:D%NIE) = MIN( KETL(D%NIB:D%NIE), KCTL(D%NIB:D%NIE) )
+
+
+DO JI = D%NIB, D%NIE
+  KETL(JI) = MAX( KETL(JI), KLCL(JI) + 2 )
+  KETL(JI) = MIN( KETL(JI), KCTL(JI) )
+ENDDO
 !
 !
 !*       12.2    If the ETL and CTL are the same detrain updraft mass
@@ -520,7 +543,7 @@ END DO
 !                -------------------------------------------------------
 !
 !IWORK(:) = MIN( KPBL(:), KLCL(:) - 1 )
-IWORK(D%NIB:D%NIE) = KPBL(D%NIB:D%NIE)
+IWORK(:) = KPBL(:)
 DO JI = D%NIB, D%NIE
      JK  = KDPL(JI)
      JKP = IWORK(JI)

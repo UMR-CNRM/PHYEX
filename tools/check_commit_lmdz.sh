@@ -227,8 +227,60 @@ if [ $packcreation -eq 1 ]; then
   #Create directory
   mkdir -p $LMDZPACK/$name
   cd $LMDZPACK/$name
+
+  #Populate with arch files
+  touch arch-mylocal.env
+  cat - <<EOF > arch-mylocal.fcm
+%COMPILER            gfortran
+%LINK                gfortran
+%AR                  ar
+%ARFLAGS             rU
+%MAKE                make
+%FPP_FLAGS           -P -traditional
+%FPP_DEF             NC_DOUBLE
+%BASE_FFLAGS          -cpp -ffree-line-length-0 -fdefault-real-8 -DNC_DOUBLE
+%PROD_FFLAGS         -O3 -fallow-argument-mismatch
+%DEV_FFLAGS          -Wall -fbounds-check  -fallow-argument-mismatch
+%DEBUG_FFLAGS        -g3 -Wall -fbounds-check -ffpe-trap=invalid,zero,overflow -O0 -fstack-protector-all -fbacktrace -finit-real=snan  -fallow-argument-mismatch
+%MPI_FFLAGS
+%OMP_FFLAGS          
+%BASE_LD              
+%MPI_LD
+%OMP_LD   
+EOF
+
+  cat - <<EOF > arch-mylocal.path
+NETCDF_INCDIR="-I/usr/include"
+NETCDF_LIBDIR=""
+NETCDF_LIB="-lnetcdff -lnetcdf"
+
+NETCDF95_INCDIR=-I\$LMDGCM/../../include/
+NETCDF95_LIBDIR=-L\$LMDGCM/../../lib
+NETCDF95_LIB=-lnetcdf95
+
+IOIPSL_INCDIR="-I\$LMDGCM/../../lib -I\$LMDGCM/../IOIPSL/inc"
+IOIPSL_LIBDIR="-L\$LMDGCM/../../lib -L\$LMDGCM/../IOIPSL/lib"
+IOIPSL_LIB="-lioipsl"
+
+XIOS_INCDIR="-I\$LMDGCM/../XIOS/inc"
+XIOS_LIBDIR="-L\$LMDGCM/../XIOS/lib"
+XIOS_LIB="-lxios -lstdc++"
+
+ORCH_INCDIR="-I\$LMDGCM/../../lib"
+ORCH_LIBDIR="-L\$LMDGCM/../../lib"
+
+OASIS_INCDIR="-I\$LMDGCM/../../oasis3-mct/BLD/build/lib/psmile.MPI1"
+OASIS_LIBDIR="-L\$LMDGCM/../../oasis3-mct/BLD/lib"
+OASIS_LIB="-lpsmile.MPI1 -lscrip -lmct -lmpeu"
+
+INCA_INCDIR="-I\$LMDGCM/../INCA/build/inc"
+INCA_LIBDIR="-L\$LMDGCM/../INCA/build/lib"
+INCA_LIB="-lchimie"
+EOF
+
+  #Compilation
   wget https://lmdz.lmd.jussieu.fr/pub/install_lmdz.sh -O install_lmdz.sh
-  bash install_lmdz.sh -v $version $install_arg -bench 0 -rad $rad -name LMDZ 2>&1 | tee Install.log
+  bash install_lmdz.sh -v $version $install_arg -bench 0 -rad $rad -name LMDZ -arch_dir $PWD -arch mylocal 2>&1 | tee Install.log
 
   #Populate with test cases (1D directory needed for compilation)
   cd $lmdzdir
