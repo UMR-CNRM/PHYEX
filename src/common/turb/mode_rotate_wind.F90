@@ -198,14 +198,14 @@ END DO
 !
 !
 !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-    PUSLOPE(JI,JJ) = PCOSSLOPE(JI,JJ) * PDIRCOSZW(JI,JJ) * ZUFIN(JI,JJ) +   &
-                     PSINSLOPE(JI,JJ) * PDIRCOSZW(JI,JJ) * ZVFIN(JI,JJ) +   &
-                            SQRT(1.-PDIRCOSZW(JI,JJ)**2) * ZWFIN(JI,JJ)
+    PUSLOPE(IIB:IIE,IJB:IJE) = PCOSSLOPE(IIB:IIE,IJB:IJE) * PDIRCOSZW(IIB:IIE,IJB:IJE) * ZUFIN(IIB:IIE,IJB:IJE) +   &
+                     PSINSLOPE(IIB:IIE,IJB:IJE) * PDIRCOSZW(IIB:IIE,IJB:IJE) * ZVFIN(IIB:IIE,IJB:IJE) +   &
+                            SQRT(1.-PDIRCOSZW(IIB:IIE,IJB:IJE)**2) * ZWFIN(IIB:IIE,IJB:IJE)
     !              
-    PVSLOPE(JI,JJ) =-PSINSLOPE(JI,JJ)                    * ZUFIN(JI,JJ) +   &
-                     PCOSSLOPE(JI,JJ)                    * ZVFIN(JI,JJ)
+    PVSLOPE(IIB:IIE,IJB:IJE) =-PSINSLOPE(IIB:IIE,IJB:IJE)                    * ZUFIN(IIB:IIE,IJB:IJE) +   &
+                     PCOSSLOPE(IIB:IIE,IJB:IJE)                    * ZVFIN(IIB:IIE,IJB:IJE)
     !
-!$mnh_end_expand_array()
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 !
 !$acc end kernels
 !
