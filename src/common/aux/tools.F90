@@ -167,15 +167,15 @@ subroutine Countjv1d_device(ltab, i1,ic)
 
   integer :: idx
   integer :: ji
-
+  logical :: latomic
 !$acc data present( ltab, i1 )
 
 #ifndef _FAKEOPENACC
-if ( (.not. mppdb_initialized ) .and. (mnh_idevice_type_current .ne. acc_device_host ) ) then
+latomic = ( (.not. mppdb_initialized ) .and. (mnh_idevice_type_current .ne. acc_device_host ) )
 #else
-if (.not. mppdb_initialized ) then
+latomic = (.not. mppdb_initialized )
 #endif
-
+if (latomic) then
 ic = 0
    
 ! acc kernels
@@ -237,15 +237,15 @@ subroutine Countjv2d_device(ltab, i1, i2, ic)
 
   integer :: idx
   integer :: ji, jj
-
+  logical :: LATOMIC
 !$acc data present( ltab, i1, i2 )
 
 #ifndef _FAKEOPENACC
-if ( (.not. mppdb_initialized ) .and. (mnh_idevice_type_current .ne. acc_device_host ) ) then
+latomic = ( (.not. mppdb_initialized ) .and. (mnh_idevice_type_current .ne. acc_device_host ) )
 #else
-if (.not. mppdb_initialized ) then
+latomic = (.not. mppdb_initialized )
 #endif
-
+if (latomic) then
 ic = 0   
      
 ! acc kernels
@@ -314,15 +314,15 @@ subroutine Countjv3d_device(ltab, i1, i2, i3, ic)
 
   integer :: idx
   integer :: ji, jj, jk
-
+  logical :: latomic
 !$acc data present( ltab, i1, i2, i3 )
 
 #ifndef _FAKEOPENACC
-if ( (.not. mppdb_initialized ) .and. (mnh_idevice_type_current .ne. acc_device_host ) ) then
+latomic = ( (.not. mppdb_initialized ) .and. (mnh_idevice_type_current .ne. acc_device_host ) )
 #else
-if (.not. mppdb_initialized ) then
+latomic = (.not. mppdb_initialized )
 #endif
-
+if (latomic) then
 ic = 0
    
 ! acc kernels
