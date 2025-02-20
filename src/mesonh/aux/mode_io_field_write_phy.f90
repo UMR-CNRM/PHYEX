@@ -23,8 +23,8 @@ CONTAINS
     !*      0.1   Declarations of arguments
     !
     TYPE(DIMPHYEX_t),                     INTENT(IN)  :: D
-    TYPE(TFILEDATA),                      INTENT(IN)  :: TPFILE
-    TYPE(TFIELDMETADATA),                 INTENT(IN)  :: TPFIELD
+    TYPE(TFILEDATA),                      INTENT(INOUT)  :: TPFILE
+    TYPE(TFIELDMETADATA),                 INTENT(INOUT)  :: TPFIELD
     REAL,DIMENSION(D%NIJT,D%NKT),TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
     integer, dimension(3),      optional, intent(in)  :: koffset
@@ -42,8 +42,8 @@ CONTAINS
     !*      0.1   Declarations of arguments
     !
     TYPE(DIMPHYEX_t),                     INTENT(IN)  :: D
-    TYPE(TFILEDATA),                      INTENT(IN)  :: TPFILE
-    TYPE(TFIELDMETADATA),                 INTENT(IN)  :: TPFIELD
+    TYPE(TFILEDATA),                      INTENT(INOUT)  :: TPFILE
+    TYPE(TFIELDMETADATA),                 INTENT(INOUT)  :: TPFIELD
     REAL,DIMENSION(D%NIT,D%NJT,D%NKT),TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
     integer, dimension(3),      optional, intent(in)  :: koffset
@@ -60,8 +60,8 @@ CONTAINS
     !*      0.1   Declarations of arguments
     !
     TYPE(DIMPHYEX_t),                     INTENT(IN)  :: D
-    TYPE(TFILEDATA),                      INTENT(IN)  :: TPFILE
-    TYPE(TFIELDMETADATA),                 INTENT(IN)  :: TPFIELD
+    TYPE(TFILEDATA),                      INTENT(INOUT)  :: TPFILE
+    TYPE(TFIELDMETADATA),                 INTENT(INOUT)  :: TPFIELD
     REAL,DIMENSION(D%NIJT),TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
     integer, dimension(3),      optional, intent(in)  :: koffset
@@ -79,8 +79,8 @@ CONTAINS
     !*      0.1   Declarations of arguments
     !
     TYPE(DIMPHYEX_t),                    INTENT(IN)  :: D
-    TYPE(TFILEDATA),                     INTENT(IN)  :: TPFILE
-    TYPE(TFIELDMETADATA),                INTENT(IN)  :: TPFIELD
+    TYPE(TFILEDATA),                     INTENT(INOUT)  :: TPFILE
+    TYPE(TFIELDMETADATA),                INTENT(INOUT)  :: TPFIELD
     REAL,DIMENSION(D%NIT,D%NJT),TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
     integer, dimension(3),      optional, intent(in)  :: koffset

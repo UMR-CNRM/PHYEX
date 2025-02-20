@@ -161,6 +161,7 @@ INTEGER             :: IKL
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TRIDIAG_THERMO',0,ZHOOK_HANDLE)
+!$acc data present( zrhodj_dfddtdz_o_dz2, zmzm_rhodj, za, zb, zc, zy, zgam, zbet, zmzm_rhodj )
 IKT=D%NKT  
 IKTB=D%NKTB          
 IKTE=D%NKTE
@@ -173,20 +174,27 @@ IIJB=D%NIJB
 IIJE=D%NIJE
 !
 CALL MZM_PHY(D,PRHODJ,ZMZM_RHODJ)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,1:IKT) = ZMZM_RHODJ(IIJB:IIJE,1:IKT)*PDFDDTDZ(IIJB:IIJE,1:IKT) &
-                                                /PDZZ(IIJB:IIJE,1:IKT)**2
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc kernels present_cr(ZRHODJ_DFDDTDZ_O_DZ2)
+!$acc_nv loop independent collapse(2)
+!$acc_cr loop independent
+DO CONCURRENT(JK=1:IKT,JIJ=IIJB:IIJE)
+ZRHODJ_DFDDTDZ_O_DZ2(JIJ,JK) = ZMZM_RHODJ(JIJ,JK)*PDFDDTDZ(JIJ,JK) &
+                                                /PDZZ(JIJ,JK)**2
+END DO
+!$acc end kernels
 !
-ZA=0.
-ZB=0.
-ZC=0.
-ZY=0.
+!$acc kernels
+ZA(:,:)=0.
+ZB(:,:)=0.
+ZC(:,:)=0.
+ZY(:,:)=0.
+!$acc end kernels
 !
 !
 !*      2.  COMPUTE THE RIGHT HAND SIDE
 !           ---------------------------
 !
+!$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZY(IIJB:IIJE,IKB) = PRHODJ(IIJB:IIJE,IKB)*PVARM(IIJB:IIJE,IKB)/PTSTEP                  &
     - ZMZM_RHODJ(IIJB:IIJE,IKB+IKL) * PF(IIJB:IIJE,IKB+IKL)/PDZZ(IIJB:IIJE,IKB+IKL)    &
@@ -194,7 +202,9 @@ ZY(IIJB:IIJE,IKB) = PRHODJ(IIJB:IIJE,IKB)*PVARM(IIJB:IIJE,IKB)/PTSTEP           
     + ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKB+IKL) * PIMPL * PVARM(IIJB:IIJE,IKB+IKL) &
     - ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKB+IKL) * PIMPL * PVARM(IIJB:IIJE,IKB  )
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
 !
+!$acc kernels
 DO JK=IKTB+1,IKTE-1
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZY(IIJB:IIJE,JK) = PRHODJ(IIJB:IIJE,JK)*PVARM(IIJB:IIJE,JK)/PTSTEP                 &
@@ -206,7 +216,9 @@ DO JK=IKTB+1,IKTE-1
     + ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,JK    ) * PIMPL * PVARM(IIJB:IIJE,JK-IKL)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
+!$acc end kernels
 ! 
+!$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZY(IIJB:IIJE,IKE) = PRHODJ(IIJB:IIJE,IKE)*PVARM(IIJB:IIJE,IKE)/PTSTEP               &
     - ZMZM_RHODJ(IIJB:IIJE,IKE+IKL) * PF(IIJB:IIJE,IKE+IKL)/PDZZ(IIJB:IIJE,IKE+IKL) &
@@ -214,6 +226,7 @@ ZY(IIJB:IIJE,IKE) = PRHODJ(IIJB:IIJE,IKE)*PVARM(IIJB:IIJE,IKE)/PTSTEP           
     - ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKE ) * PIMPL * PVARM(IIJB:IIJE,IKE  )   &
     + ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKE ) * PIMPL * PVARM(IIJB:IIJE,IKE-IKL)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
 !
 !
 !*       3.  INVERSION OF THE TRIDIAGONAL SYSTEM
@@ -224,12 +237,15 @@ IF ( PIMPL > 1.E-10 ) THEN
 !*       3.1 arrays A, B, C
 !            --------------
 !
+!$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZB(IIJB:IIJE,IKB) =   PRHODJ(IIJB:IIJE,IKB)/PTSTEP                   &
                 - ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKB+IKL) * PIMPL
   ZC(IIJB:IIJE,IKB) =   ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKB+IKL) * PIMPL
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
 !
+!$acc kernels
   DO JK=IKTB+1,IKTE-1
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZA(IIJB:IIJE,JK) =   ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,JK) * PIMPL
@@ -239,20 +255,29 @@ IF ( PIMPL > 1.E-10 ) THEN
     ZC(IIJB:IIJE,JK) =   ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,JK+IKL) * PIMPL
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END DO
+!$acc end kernels
 !
+!$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZA(IIJB:IIJE,IKE) =   ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKE  ) * PIMPL
   ZB(IIJB:IIJE,IKE) =   PRHODJ(IIJB:IIJE,IKE)/PTSTEP                   &
                 - ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKE  ) * PIMPL
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
 !
 !*       3.2 going up
 !            --------
+!$acc kernels
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
 !
   ZBET(IIJB:IIJE) = ZB(IIJB:IIJE,IKB)  ! bet = b(ikb)
   PVARP(IIJB:IIJE,IKB) = ZY(IIJB:IIJE,IKB) / ZBET(IIJB:IIJE)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
 
   !
+!$acc parallel
+!$acc loop seq
   DO JK = IKB+IKL,IKE-IKL,IKL
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZGAM(IIJB:IIJE,JK) = ZC(IIJB:IIJE,JK-IKL) / ZBET(IIJB:IIJE)  
@@ -263,7 +288,9 @@ IF ( PIMPL > 1.E-10 ) THEN
                                / ZBET(IIJB:IIJE)
                                         ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  END DO 
+  END DO
+!$acc end parallel
+!$acc kernels
   ! special treatment for the last level
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZGAM(IIJB:IIJE,IKE) = ZC(IIJB:IIJE,IKE-IKL) / ZBET(IIJB:IIJE) 
@@ -274,23 +301,29 @@ IF ( PIMPL > 1.E-10 ) THEN
                               / ZBET(IIJB:IIJE)
                                        ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
 !
 !*       3.3 going down
 !            ----------
 !
+!$acc parallel
+!$acc loop seq
   DO JK = IKE-IKL,IKB,-1*IKL
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     PVARP(IIJB:IIJE,JK) = PVARP(IIJB:IIJE,JK) - ZGAM(IIJB:IIJE,JK+IKL) * PVARP(IIJB:IIJE,JK+IKL)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END DO
+!$acc end parallel
 !
 ELSE
 ! 
+!$acc kernels
   DO JK=IKTB,IKTE
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     PVARP(IIJB:IIJE,JK) = ZY(IIJB:IIJE,JK) * PTSTEP / PRHODJ(IIJB:IIJE,JK)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END DO
+!$acc end kernels
 !
 END IF 
 !
@@ -298,10 +331,14 @@ END IF
 !*       4.  FILL THE UPPER AND LOWER EXTERNAL VALUES
 !            ----------------------------------------
 !
+!$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 PVARP(IIJB:IIJE,IKA)=PVARP(IIJB:IIJE,IKB)
 PVARP(IIJB:IIJE,IKU)=PVARP(IIJB:IIJE,IKE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
+!
+!$acc end data
 !
 !-------------------------------------------------------------------------------
 !

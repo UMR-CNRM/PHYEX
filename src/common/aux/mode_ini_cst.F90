@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -36,7 +36,7 @@ CONTAINS
 !!
 !!    AUTHOR
 !!    ------
-!!  	V. Ducrocq       * Meteo France *
+!!         V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -72,7 +72,7 @@ IF (LHOOK) CALL DR_HOOK('INI_CST',0,ZHOOK_HANDLE)
 CALL CST_ASSOCIATE()
 !
 !*       1.     FUNDAMENTAL CONSTANTS
-!	        ---------------------
+!               ---------------------
 !
 XPI         = 2.*ASIN(1.)
 XKARMAN     = 0.4
@@ -84,7 +84,7 @@ XAVOGADRO   = 6.0221367E+23
 !-------------------------------------------------------------------------------
 !
 !*       2.     ASTRONOMICAL CONSTANTS
-!	        ----------------------
+!               ----------------------
 !
 XDAY   = 86400.
 XSIYEA = 365.25*XDAY*2.*XPI/ 6.283076
@@ -96,7 +96,7 @@ NDAYSEC = 24*3600 ! Number of seconds in a day
 !
 !
 !*       3.     TERRESTRIAL GEOIDE CONSTANTS
-!	        ----------------------------
+!               ----------------------------
 !
 XRADIUS = 6371229.
 XG      = 9.80665
@@ -104,7 +104,7 @@ XG      = 9.80665
 !-------------------------------------------------------------------------------
 !
 !*       4.     REFERENCE PRESSURE
-!	        -------------------
+!               -------------------
 !
 ! Ocean model cst same as in 1D/CMO SURFEX
 ! values used in ini_cst to overwrite XP00 and XTH00
@@ -118,7 +118,7 @@ XTH00 = 300.
 !-------------------------------------------------------------------------------
 !
 !*       5.     RADIATION CONSTANTS
-!	        -------------------
+!               -------------------
 !
 ! Original: XSTEFAN = 2.* XPI**5 * XBOLTZ**4 / (15.* XLIGHTSPEED**2 * XPLANCK**3)
 ! Juan: XSTEFAN = ( 2.* XPI**5 / 15. ) * ( (XBOLTZ / XPLANCK) * XBOLTZ ) * (XBOLTZ/(XLIGHTSPEED*XPLANCK))**2
@@ -130,7 +130,7 @@ XI0     = 1370.
 !-------------------------------------------------------------------------------
 !
 !*       6.     THERMODYNAMIC CONSTANTS
-!	        -----------------------
+!               -----------------------
 !
 XMD    = 28.9644E-3
 XMV    = 18.0153E-3
@@ -162,14 +162,14 @@ XALPHAOC = 1.9E-4
 XBETAOC= 7.7475E-4
 !
 !*       7.     PRECOMPUTED CONSTANTS
-!	        ---------------------
+!               ---------------------
 !
 RDSRV = XRD/XRV
 RDSCPD = XRD/XCPD
 RINVXP00 =  1./XP00
 !
 !*       8.     MACHINE PRECISION VALUE DEPENDING of REAL4/8 USE
-!	        ---------------------
+!               ---------------------
 !
 XMNH_EPSILON = EPSILON (XMNH_EPSILON )
 XMNH_HUGE    = HUGE    (XMNH_HUGE )

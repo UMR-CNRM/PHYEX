@@ -75,7 +75,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PWEIGHT_MF_CLOUD ! weight coeff
 !*                    0.1  Declaration of local variables
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER  :: JI,JK, JK0, IKB,IKE,IKL,IKT,IIJB,IIJE
+INTEGER  :: JIJ,JK, JK0, IKB,IKE,IKL,IKT,IIJB,IIJE
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZFRAC_UP_M
 !
 !*                    0.2 Initialisation
@@ -100,23 +100,23 @@ PCF_MF(:,:)=0.
 
 IF(PARAMMF%LRELAX_ALPHA_MF) THEN
   CALL MZF_MF(D, PFRAC_UP(:,:), ZFRAC_UP_M(:,:))
-  !$mnh_expand_array(JI=IIJB:IIJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   PWEIGHT_MF_CLOUD(IIJB:IIJE, 1:IKT) = ZFRAC_UP_M(IIJB:IIJE, 1:IKT)*PARAMMF%XALPHA_MF
   PWEIGHT_MF_CLOUD(IIJB:IIJE, 1:IKT) = MAX(0., MIN(PWEIGHT_MF_CLOUD(IIJB:IIJE, 1:IKT), 1.))
-  !$mnh_end_expand_array(JI=IIJB:IIJE,JK=1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ENDIF
 
-DO JI=IIJB,IIJE
-  JK0=KKLCL(JI)-IKL ! first mass level with cloud
+DO JIJ=IIJB,IIJE
+  JK0=KKLCL(JIJ)-IKL ! first mass level with cloud
   JK0=MAX(JK0, MIN(IKB,IKE)) !protection if KKL=1
   JK0=MIN(JK0, MAX(IKB,IKE)) !protection if KKL=-1
   DO JK=JK0,IKE-IKL,IKL
-    PCF_MF(JI,JK ) = MAX( 0., MIN(1.,PARAMMF%XKCF_MF *0.5* (       &
-                &    PFRAC_UP(JI,JK) +  PFRAC_UP(JI,JK+IKL) ) ))
-    PRC_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRC_UP(JI,JK)  &
-                         + PFRAC_UP(JI,JK+IKL)*PRC_UP(JI,JK+IKL) )
-    PRI_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRI_UP(JI,JK)  &
-                         + PFRAC_UP(JI,JK+IKL)*PRI_UP(JI,JK+IKL) )
+    PCF_MF(JIJ,JK ) = MAX( 0., MIN(1.,PARAMMF%XKCF_MF *0.5* (       &
+                &    PFRAC_UP(JIJ,JK) +  PFRAC_UP(JIJ,JK+IKL) ) ))
+    PRC_MF(JIJ,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JIJ,JK)*PRC_UP(JIJ,JK)  &
+                         + PFRAC_UP(JIJ,JK+IKL)*PRC_UP(JIJ,JK+IKL) )
+    PRI_MF(JIJ,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JIJ,JK)*PRI_UP(JIJ,JK)  &
+                         + PFRAC_UP(JIJ,JK+IKL)*PRI_UP(JIJ,JK+IKL) )
   END DO
 END DO
 

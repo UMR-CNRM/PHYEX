@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2018-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2018-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -58,7 +58,7 @@ REAL, DIMENSION(SIZE(PCCT)) :: ZW ! work arrays
 !
 !
 !*       1.     Cloud droplets self collection
-!	        ------------------------------
+!               ------------------------------
 !
 !
 P_CC_SELF(:)=0.

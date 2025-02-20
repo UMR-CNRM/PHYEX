@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2018-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2018-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -60,7 +60,7 @@ REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_DEPG
 !
 !
 !*       1.     Deposition of vapour on graupel
-!	        -------------------------------
+!               -------------------------------
 !
 P_TH_DEPG(:) = 0.0
 P_RG_DEPG(:) = 0.0

@@ -10,6 +10,15 @@
 IMPLICIT NONE
 INTERFACE
 !
+!
+SUBROUTINE GZ_W_M_DEVICE(PA,PDZZ,PGZ_W_M_DEVICE)
+!
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PA       ! variable at the W point
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZZ     ! metric coefficient dzz
+!
+REAL, DIMENSION(:,:,:),  INTENT(OUT) :: PGZ_W_M_DEVICE ! result mass point
+!
+END SUBROUTINE GZ_W_M_DEVICE
 !            
 FUNCTION GZ_W_M(PA,PDZZ, KKA, KKU, KL)      RESULT(PGZ_W_M)
 IMPLICIT NONE
@@ -135,6 +144,72 @@ PGZ_W_M(:,:,:)= DZF(PA(:,:,:))/(MZF(PDZZ(:,:,:)))
 !----------------------------------------------------------------------------
 !
 END FUNCTION GZ_W_M
+!
+!
+#ifdef MNH_OPENACC
+!     #######################################################
+      SUBROUTINE GZ_W_M_DEVICE(PA,PDZZ,PGZ_W_M_DEVICE)
+!     #######################################################
+!
+!*       0.    DECLARATIONS
+!
+!
+USE MODI_SHUMAN_DEVICE
+USE MODI_SHUMAN
+USE MODE_MNH_ZWORK, ONLY: MNH_MEM_GET, MNH_MEM_POSITION_PIN, MNH_MEM_RELEASE
+!
+IMPLICIT NONE
+!
+!
+!*       0.1   declarations of arguments and result
+!
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PA       ! variable at the W point
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZZ     ! metric coefficient dzz
+!
+REAL, DIMENSION(:,:,:),  INTENT(OUT) :: PGZ_W_M_DEVICE ! result mass point
+!
+!*       0.2   declaration of local variables
+!
+REAL, DIMENSION(:,:,:), pointer , contiguous ::  ZTMP1_DEVICE, ZTMP2_DEVICE
+!
+INTEGER  :: JIU,JJU,JKU
+!----------------------------------------------------------------------------
+
+!$acc data present( PA, PDZZ, PGZ_W_M_DEVICE )
+
+JIU =  size(pa, 1 )
+JJU =  size(pa, 2 )
+JKU =  size(pa, 3 )
+
+!Pin positions in the pools of MNH memory
+CALL MNH_MEM_POSITION_PIN( 'GZ_W_M' )
+
+CALL MNH_MEM_GET( ztmp1_device, JIU, JJU, JKU )
+CALL MNH_MEM_GET( ztmp2_device, JIU, JJU, JKU )
+
+!$acc data present( ztmp1_device, ztmp2_device )
+
+!
+!*       1.    DEFINITION of GZ_W_M_DEVICE
+!              --------------------
+!
+CALL DZF_DEVICE( PA(:,:,:), ZTMP1_DEVICE )
+CALL MZF_DEVICE( PDZZ(:,:,:), ZTMP2_DEVICE )
+!$acc kernels
+PGZ_W_M_DEVICE(:,:,:)= ZTMP1_DEVICE(:,:,:)/ZTMP2_DEVICE(:,:,:)
+!$acc end kernels
+
+!$acc end data
+
+!Release all memory allocated with MNH_MEM_GET calls since last call to MNH_MEM_POSITION_PIN
+CALL MNH_MEM_RELEASE( 'GZ_W_M' )
+
+!$acc end data
+
+!----------------------------------------------------------------------------
+!
+END SUBROUTINE GZ_W_M_DEVICE
+#endif
 !
 !
 !     #########################################################

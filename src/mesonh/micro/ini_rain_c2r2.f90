@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1996-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1996-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -154,7 +154,7 @@ LOGICAL  :: GFLAG   ! Logical flag for printing the constatnts on the output
 !
 !
 !*       0.     FUNCTION STATEMENTS
-!   	        -------------------
+!                 -------------------
 !
 !
 !*       0.1    G(p) for p_moment of the Generalized GAMMA function
@@ -187,7 +187,7 @@ IF (ALLOCATED(XRTMIN)) RETURN     ! In case of nesting microphysics constants of
 !-------------------------------------------------------------------------------
 !
 !*       2.     CHARACTERISTICS OF THE SPECIES
-!	        ------------------------------
+!              ------------------------------
 !
 !
 !*       2.1    Cloud droplet characteristics
@@ -280,7 +280,7 @@ XLBEXR = 1.0/XBR
 !-------------------------------------------------------------------------------
 !
 !*       4.     CONSTANTS FOR THE SEDIMENTATION
-!   	        -------------------------------
+!                 -------------------------------
 !
 !*       4.1    Exponent of the fall-speed air density correction
 !
@@ -304,10 +304,10 @@ XFSEDCC  = XCC*GAMMA(XNUC+XDC/XALPHAC)/GAMMA(XNUC)*     &
 !-------------------------------------------------------------------------------
 !
 !*       5.     CONSTANTS FOR THE NUCLEATION PROCESS
-!      	        -------------------------------------
+!                    -------------------------------------
 !
 !               
-!		Compute CCN spectra parameters from CCN characteristics
+!            Compute CCN spectra parameters from CCN characteristics
 !
 IF (HPARAM_CCN == 'CPB' .AND. HINI_CCN == 'AER') THEN
   SELECT CASE (HTYPE_CCN)
@@ -345,7 +345,7 @@ XTHCO = 24.3E-3 ! Air thermal conductivity
 ZSURF_TEN = 76.1E-3  ! Surface tension of a water drop at T=0 C
 XCSTDCRIT = (XPI/6.)*XRHOLW*( (8.0*ZSURF_TEN )/( 3.0*XRV*XRHOLW ) )**3
 !
-!		Tabulation of the hypergeometric functions
+!            Tabulation of the hypergeometric functions
 !
 !               F(mu,k/2, k/2+1 ,-Beta s**2) and
 !               F(mu,k/2,(k+3)/2,-Beta s**2) as a function of s
@@ -378,13 +378,13 @@ ELSE                          ! other cases (but not used)
                    ! defined by CPB98, are unbounded
 END IF
 !
-!		Compute the tabulation of function of T :
+!            Compute the tabulation of function of T :
 !
 !                              (Psi1)**(3/2)
 !               XAHENG = -----------------------
 !                                G**(3/2)
 !
-!    		XAHENY = a2 C**p k**q            as given by Feingold
+!                XAHENY = a2 C**p k**q            as given by Feingold
 !
 NAHEN = 81 ! Tabulation for each Kelvin degree in the range XTT-40 to XTT+40
 XAHENINTP1 = 1.0
@@ -538,7 +538,7 @@ XEX2EVAR = -0.5*XCEXVT
 !
 X0EVAR = (2.0*XPI)*XF0R*GAMMA(XNUR+1./XALPHAR)/GAMMA(XNUR)
 X1EVAR = (2.0*XPI)*XF1R*((ZRHO00)**(XCEXVT)*(XCR/0.15E-4))**0.5*    &
-	   GAMMA(XNUR+(XDR+3.0)/(2.0*XALPHAR))/GAMMA(XNUR)
+         GAMMA(XNUR+(XDR+3.0)/(2.0*XALPHAR))/GAMMA(XNUR)
 !
 XEX0EVAR = 2.0
 XEX1EVAR = 2.0 - (XDR+1.0)*0.5
@@ -546,7 +546,7 @@ XEX2EVAR = -0.5*XCEXVT
 !
 X0EVAR = (12.0)*XF0R*GAMMA(XNUR+1./XALPHAR)/GAMMA(XNUR+3./XALPHAR)
 X1EVAR = (12.0)*XF1R*((ZRHO00)**(XCEXVT)*(XCR/0.15E-4))**0.5*    &
-	   GAMMA(XNUR+(XDR+3.0)/(2.0*XALPHAR))/GAMMA(XNUR+3./XALPHAR)
+         GAMMA(XNUR+(XDR+3.0)/(2.0*XALPHAR))/GAMMA(XNUR+3./XALPHAR)
 !
 !-------------------------------------------------------------------------------
 !

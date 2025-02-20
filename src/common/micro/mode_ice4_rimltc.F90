@@ -59,6 +59,8 @@ IF (LHOOK) CALL DR_HOOK('ICE4_RIMLTC',0,ZHOOK_HANDLE)
 !
 !*       7.1    cloud ice melting
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(PRIT(JL)>0. .AND. PT(JL)>CST%XTT .AND. LDCOMPUTE(JL)) THEN
     PRIMLTC_MR(JL)=PRIT(JL)
@@ -70,7 +72,7 @@ DO JL=1, KSIZE
     PRIMLTC_MR(JL)=0.
   ENDIF
 ENDDO
-
+!$acc end kernels
 IF (LHOOK) CALL DR_HOOK('ICE4_RIMLTC', 1, ZHOOK_HANDLE)
 !
 END SUBROUTINE ICE4_RIMLTC

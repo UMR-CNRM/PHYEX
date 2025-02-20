@@ -1,12 +1,7 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2000-2019 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
-!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-!-----------------------------------------------------------------
-!--------------- special set of characters for RCS information
-!-----------------------------------------------------------------
-! $Source$ $Revision$
-! MASDEV4_7 les 2006/08/30 18:41:10
 !-----------------------------------------------------------------
 !      #####################
 MODULE MODI_LES_MEAN_SUBGRID
@@ -26,7 +21,6 @@ LOGICAL, OPTIONAL,         INTENT(IN)    :: OSUM
 !
 END SUBROUTINE LES_MEAN_SUBGRID_3D
 !
-
       SUBROUTINE LES_MEAN_SUBGRID_SURF(PA, PA_MEAN, OSUM)
 IMPLICIT NONE
 
@@ -71,6 +65,7 @@ END MODULE MODI_LES_MEAN_SUBGRID
 !!      Original         07/02/00
 !!      V. Masson        06/11/02 use of 2D masks
 !!       C.Lac           10/2014 : Correction on user masks
+!!       M.Moge          04/2016 Use openACC directives to port the TURB part of Meso-NH on GPU
 !!
 !! --------------------------------------------------------------------------
 !       
@@ -78,9 +73,13 @@ END MODULE MODI_LES_MEAN_SUBGRID
 !          ------------
 !
 USE MODD_LES
-!
-USE MODI_LES_VER_INT
+
+#ifdef MNH_OPENACC
+use mode_msg
+#endif
+
 USE MODI_LES_MEAN_1PROC
+USE MODI_LES_VER_INT
 !
 IMPLICIT NONE
 !
@@ -107,15 +106,30 @@ INTEGER, DIMENSION(SIZE(PA_MEAN,1)) :: IUND_PTS
 INTEGER                             :: IMASK     ! mask counter
 INTEGER                             :: JI        ! loop control
 !-------------------------------------------------------------------------------
-!
+
+
 IF (.NOT. LLES_CALL) RETURN
+
+!$acc data present( PA, PA_MEAN ) &
+!$acc &    create ( ZA_LES, ZA_MEAN, ZA_MEAN_OLD, GMASK, IAVG_PTS, IUND_PTS )
+
+#ifdef MNH_OPENACC
+call Print_msg( NVERB_WARNING, 'GEN', 'LES_MEAN_SUBGRID_3D', 'OpenACC: not yet tested' )
+#endif
+
 !
+!$acc kernels
 ZA_MEAN_OLD(:) = 0.
+!$acc end kernels
 !-------------------------------------------------------------------------------
 !
 !* interpolation on LES vertical levels.
 !
+#ifndef MNH_OPENACC
 CALL LES_VER_INT(PA,ZA_LES)
+#else
+CALL LES_VER_INT_DEVICE(PA,ZA_LES)
+#endif
 !
 !* subgrid computations on cartesian mask
 !  --------------------------------------
@@ -124,12 +138,18 @@ IMASK = 1
 !
 !* averaging on the current processor domain of the subgrid variable
 !
+#ifndef MNH_OPENACC
 CALL LES_MEAN_1PROC(ZA_LES, LLES_CURRENT_CART_MASK(:,:,:), ZA_MEAN, IAVG_PTS, IUND_PTS)
+#else
+CALL LES_MEAN_1PROC_DEVICE(ZA_LES, LLES_CURRENT_CART_MASK(:,:,:), ZA_MEAN, IAVG_PTS, IUND_PTS)
+#endif
 !
+!$acc kernels
 IF (PRESENT(OSUM)) THEN
   IF (OSUM) ZA_MEAN_OLD(:) = PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK)
 END IF
 PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK) = ZA_MEAN_OLD(:) + ZA_MEAN(:)
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -143,32 +163,48 @@ IF (LLES_NEB_MASK) THEN
 !
   IMASK = IMASK + 1
 !
+!$acc kernels
   GMASK(:,:,:) = LLES_CURRENT_NEB_MASK (:,:,:) .AND.  LLES_CURRENT_CART_MASK(:,:,:)
+!$acc end kernels
 !
 !* averaging on the current processor domain of the subgrid variable
 !
+#ifndef MNH_OPENACC
   CALL LES_MEAN_1PROC(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#else
+  CALL LES_MEAN_1PROC_DEVICE(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#endif
 !
+!$acc kernels
   IF (PRESENT(OSUM)) THEN
     IF (OSUM) ZA_MEAN_OLD(:) = PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK)
   END IF
   PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK) = ZA_MEAN_OLD(:) + ZA_MEAN(:)
+!$acc end kernels
 !
 !* on clear-sky mask
 !  -----------------
 !
   IMASK = IMASK + 1
 !
+!$acc kernels
   GMASK(:,:,:) = (.NOT. LLES_CURRENT_NEB_MASK (:,:,:)) .AND. LLES_CURRENT_CART_MASK(:,:,:)
+!$acc end kernels
 !
 !* averaging on the current processor domain of the subgrid variable
 !
+#ifndef MNH_OPENACC
   CALL LES_MEAN_1PROC(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#else
+  CALL LES_MEAN_1PROC_DEVICE(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#endif
 !
+!$acc kernels
   IF (PRESENT(OSUM)) THEN
     IF (OSUM) ZA_MEAN_OLD(:) = PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK)
   END IF
   PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK) = ZA_MEAN_OLD(:) + ZA_MEAN(:)
+!$acc end kernels
 !
 END IF
 !
@@ -184,32 +220,48 @@ IF (LLES_CORE_MASK) THEN
 !
   IMASK = IMASK + 1
 !
+!$acc kernels
   GMASK(:,:,:) = LLES_CURRENT_CORE_MASK(:,:,:) .AND. LLES_CURRENT_CART_MASK(:,:,:)
+!$acc end kernels
 !
 !* averaging on the current processor domain of the subgrid variable
 !
+#ifndef MNH_OPENACC
   CALL LES_MEAN_1PROC(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#else
+  CALL LES_MEAN_1PROC_DEVICE(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#endif
 !
+!$acc kernels
   IF (PRESENT(OSUM)) THEN
     IF (OSUM) ZA_MEAN_OLD(:) = PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK)
   END IF
   PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK) = ZA_MEAN_OLD(:) + ZA_MEAN(:)
+!$acc end kernels
 !
 !* on NO core mask
 !  ------------------------
 !
   IMASK = IMASK + 1
 !
+!$acc kernels
   GMASK(:,:,:) = (.NOT. LLES_CURRENT_CORE_MASK(:,:,:)) .AND. LLES_CURRENT_CART_MASK(:,:,:)
+!$acc end kernels
 !
 !* averaging on the current processor domain of the subgrid variable
 !
+#ifndef MNH_OPENACC
   CALL LES_MEAN_1PROC(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#else
+  CALL LES_MEAN_1PROC_DEVICE(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#endif
 !
+!$acc kernels
   IF (PRESENT(OSUM)) THEN
     IF (OSUM) ZA_MEAN_OLD(:) = PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK)
   END IF
   PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK) = ZA_MEAN_OLD(:) + ZA_MEAN(:)
+!$acc end kernels
 END IF
 !
 !-------------------------------------------------------------------------------
@@ -220,42 +272,66 @@ END IF
 IF (LLES_CS_MASK) THEN
   IMASK = IMASK + 1
 !
+!$acc kernels
   GMASK(:,:,:) = LLES_CURRENT_CS1_MASK(:,:,:)
+!$acc end kernels
 !
 !* averaging on the current processor domain of the subgrid variable
 !
+#ifndef MNH_OPENACC
   CALL LES_MEAN_1PROC(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#else
+  CALL LES_MEAN_1PROC_DEVICE(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#endif
 !
+!$acc kernels
   IF (PRESENT(OSUM)) THEN
     IF (OSUM) ZA_MEAN_OLD(:) = PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK)
   END IF
   PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK) = ZA_MEAN_OLD(:) + ZA_MEAN(:)
+!$acc end kernels
 !
   IMASK = IMASK + 1
 !
+!$acc kernels
   GMASK(:,:,:) = LLES_CURRENT_CS2_MASK(:,:,:)
+!$acc end kernels
 !
 !* averaging on the current processor domain of the subgrid variable
 !
+#ifndef MNH_OPENACC
   CALL LES_MEAN_1PROC(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#else
+  CALL LES_MEAN_1PROC_DEVICE(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#endif
 !
+!$acc kernels
   IF (PRESENT(OSUM)) THEN
     IF (OSUM) ZA_MEAN_OLD(:) = PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK)
   END IF
   PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK) = ZA_MEAN_OLD(:) + ZA_MEAN(:)
+!$acc end kernels
 !
   IMASK = IMASK + 1
 !
+!$acc kernels
   GMASK(:,:,:) = LLES_CURRENT_CS3_MASK(:,:,:)
+!$acc end kernels
 !
 !* averaging on the current processor domain of the subgrid variable
 !
+#ifndef MNH_OPENACC
   CALL LES_MEAN_1PROC(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#else
+  CALL LES_MEAN_1PROC_DEVICE(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#endif
 !
+!$acc kernels
   IF (PRESENT(OSUM)) THEN
     IF (OSUM) ZA_MEAN_OLD(:) = PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK)
   END IF
   PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK) = ZA_MEAN_OLD(:) + ZA_MEAN(:)
+!$acc end kernels
 END IF
 !
 !-------------------------------------------------------------------------------
@@ -267,22 +343,33 @@ IF (LLES_MY_MASK) THEN
  DO JI=1,NLES_MASKS_USER
   IMASK = IMASK + 1
 !
+!$acc kernels
   GMASK(:,:,:) = LLES_CURRENT_MY_MASKS(:,:,:,JI)
+!$acc end kernels
 !
 !* averaging on the current processor domain of the subgrid variable
 !
+#ifndef MNH_OPENACC
   CALL LES_MEAN_1PROC(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#else
+  CALL LES_MEAN_1PROC_DEVICE(ZA_LES, GMASK, ZA_MEAN, IAVG_PTS, IUND_PTS)
+#endif
 !
+!$acc kernels
   IF (PRESENT(OSUM)) THEN
     IF (OSUM) ZA_MEAN_OLD(:) = PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK)
   END IF
   PA_MEAN(:,NLES_CURRENT_TCOUNT,IMASK) = ZA_MEAN_OLD(:) + ZA_MEAN(:)
+!$acc end kernels
  END DO
 END IF
-!
+
+!$acc end data
+
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE LES_MEAN_SUBGRID_3D
+!
 !
 !     ##############################################
       SUBROUTINE LES_MEAN_SUBGRID_SURF(PA, PA_MEAN, OSUM)
@@ -311,6 +398,7 @@ END SUBROUTINE LES_MEAN_SUBGRID_3D
 !!    MODIFICATIONS
 !!    -------------
 !!      Original         07/02/00
+!!       M.Moge          04/2016 Use openACC directives to port the TURB part of Meso-NH on GPU
 !!
 !! --------------------------------------------------------------------------
 !       
@@ -318,7 +406,11 @@ END SUBROUTINE LES_MEAN_SUBGRID_3D
 !          ------------
 !
 USE MODD_LES
-!
+
+#ifdef MNH_OPENACC
+use mode_msg
+#endif
+
 USE MODI_LES_MEAN_1PROC
 !
 IMPLICIT NONE
@@ -342,12 +434,23 @@ INTEGER :: IAVG_PTS
 INTEGER :: IUND_PTS
 !
 !-------------------------------------------------------------------------------
-!
+
 IF (.NOT. LLES_CALL) RETURN
-!
+
+!$acc data present( PA, PA_MEAN )
+
+#ifdef MNH_OPENACC
+call Print_msg( NVERB_WARNING, 'GEN', 'LES_MEAN_SUBGRID_SURF', 'OpenACC: not yet tested' )
+#endif
+
 ZA_MEAN_OLD = 0.
 IF (PRESENT(OSUM)) THEN
+!TODO : verifier que ca se passe bien sur GPU, qu'on va bien chercher la bonne valeur dans le PA_MEAN sur GPU
+!       sinon il faudra faire un update self(PA_MEAN(NLES_CURRENT_TCOUNT))
+! !$acc kernels
+!$acc update self(PA_MEAN(NLES_CURRENT_TCOUNT))
   IF (OSUM) ZA_MEAN_OLD = PA_MEAN(NLES_CURRENT_TCOUNT)
+! !$acc end kernels
 END IF
 !-------------------------------------------------------------------------------
 !
@@ -356,10 +459,21 @@ END IF
 !
 !* averaging on the current processor domain of the subgrid variable
 !
+#ifndef MNH_OPENACC
 CALL LES_MEAN_1PROC(PA, LLES_CURRENT_CART_MASK(:,:,1), ZA_MEAN, IAVG_PTS, IUND_PTS)
+#else
+CALL LES_MEAN_1PROC_DEVICE(PA, LLES_CURRENT_CART_MASK(:,:,1), ZA_MEAN, IAVG_PTS, IUND_PTS)
+#endif
 !
+!TODO : verifier que ca se passe bien sur GPU, qu'on va bien chercher la bonne valeur dans le PA_MEAN sur GPU
+!       sinon il faudra faire un update device(PA_MEAN(NLES_CURRENT_TCOUNT))
+! !$acc kernels
 PA_MEAN(NLES_CURRENT_TCOUNT) = ZA_MEAN_OLD + ZA_MEAN
-!
+!$acc update device(PA_MEAN(NLES_CURRENT_TCOUNT))
+! !$acc end kernels
+
+!$acc end data
+
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE LES_MEAN_SUBGRID_SURF

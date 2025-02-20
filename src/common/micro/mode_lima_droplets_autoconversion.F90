@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2018-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2018-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -77,7 +77,7 @@ IF (NMOM_C.EQ.1 .AND. LKESSLERAC) THEN
 ELSE IF (LKHKO) THEN
 !
 !        1. Autoconversion of cloud droplets
-!   	 -----------------------------------
+!        -----------------------------------
 !
    WHERE ( PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. LDCOMPUTE(:) )
 !
@@ -96,7 +96,7 @@ ELSE IF (LKHKO) THEN
 ELSE
 !
 !        2. Autoconversion of cloud droplets (Berry-Reinhardt parameterization)
-!   	 ----------------------------------------------------------------------
+!        ----------------------------------------------------------------------
 !
    WHERE( PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. PLBDC(:)>0. .AND. LDCOMPUTE(:) )
       ZW2(:) = MAX( 0.0, &

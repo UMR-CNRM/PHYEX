@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2002-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2002-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -9,23 +9,23 @@
 !
 !!****  *MODD_ELEC_DESCR* - declaration of the electrical descriptive constants
 !!
-!!	PURPOSE
-!!	-------
+!!   PURPOSE
+!!   -------
 !
-!!**	IMPLICIT ARGUMENTS
-!!	------------------
-!!	  None
+!!**   IMPLICIT ARGUMENTS
+!!   ------------------
+!!     None
 !!
-!!	REFERENCE
-!!	---------
+!!   REFERENCE
+!!   ---------
 !!
-!!	AUTHOR
-!!	------
+!!   AUTHOR
+!!   ------
 !!       Gilles Molinie    * Laboratoire d'Aerologie *
 !!
-!!	MODIFICATIONS
-!!	-------------
-!!	  Original	14/11/02
+!!   MODIFICATIONS
+!!   -------------
+!!     Original   14/11/02
 !!        M. Chong      26/01/10  Small ions parameters
 !!                               +Option for Fair weather field from
 !!                               Helsdon-Farley (JGR, 1987, 5661-5675)
@@ -36,8 +36,8 @@
 !!
 !-------------------------------------------------------------------------------
 !
-!*	0.	DECLARATIONS
-!		------------
+!*   0.   DECLARATIONS
+!      ------------
 !
 USE MODD_PARAMETERS, ONLY: JPSVNAMELGTMAX
 

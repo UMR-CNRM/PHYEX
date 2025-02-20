@@ -1,8 +1,9 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
-!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-!     #################### 
+!-----------------------------------------------------------------
+!     ####################
       MODULE MODD_CLOUD_MF_n
 !     ####################
 !
@@ -26,7 +27,7 @@
 !!
 !!    AUTHOR
 !!    ------
-!!      J. Pergaud * Meteo-France *	
+!!      J. Pergaud * Meteo-France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -42,27 +43,27 @@ IMPLICIT NONE
 
 TYPE CLOUD_MF_t
 !
-REAL, DIMENSION(:,:,:), POINTER :: XCF_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XRC_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XRI_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XHLC_HRC_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XHLC_HCF_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XHLI_HRI_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XHLI_HCF_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XWEIGHT_MF_CLOUD=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XCF_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XRC_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XRI_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XHLC_HRC_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XHLC_HCF_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XHLI_HRI_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XHLI_HCF_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XWEIGHT_MF_CLOUD=>NULL()
 !
 END TYPE CLOUD_MF_t
 
 TYPE(CLOUD_MF_t), DIMENSION(JPMODELMAX), TARGET, SAVE :: CLOUD_MF_MODEL
 
-REAL, DIMENSION(:,:,:), POINTER :: XCF_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XRC_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XRI_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XHLC_HRC_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XHLC_HCF_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XHLI_HRI_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XHLI_HCF_MF=>NULL()
-REAL, DIMENSION(:,:,:), POINTER :: XWEIGHT_MF_CLOUD=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XCF_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XRC_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XRI_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XHLC_HRC_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XHLC_HCF_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XHLI_HRI_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XHLI_HCF_MF=>NULL()
+REAL, DIMENSION(:,:,:), POINTER, contiguous :: XWEIGHT_MF_CLOUD=>NULL()
 
 CONTAINS
 

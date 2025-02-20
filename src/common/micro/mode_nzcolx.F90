@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -101,13 +101,13 @@ INTEGER, INTENT(IN) :: KND    ! Number of discrete size intervals in DX and DZ
 !
 !
 REAL, INTENT(IN) :: PALPHAX   ! First shape parameter of the specy X 
-			      ! size distribution (generalized gamma law)
+                              ! size distribution (generalized gamma law)
 REAL, INTENT(IN) :: PNUX      ! Second shape parameter of the specy X
-			      ! size distribution (generalized gamma law)
+                              ! size distribution (generalized gamma law)
 REAL, INTENT(IN) :: PALPHAZ   ! First shape parameter of the specy Z 
-			      ! size distribution (generalized gamma law)
+                              ! size distribution (generalized gamma law)
 REAL, INTENT(IN) :: PNUZ      ! Second shape parameter of the specy Z
-			      ! size distribution (generalized gamma law)
+                              ! size distribution (generalized gamma law)
 REAL, INTENT(IN) :: PEXZ      ! Efficiency of specy X collecting specy Z
 REAL, INTENT(IN) :: PFALLX    ! Fall speed constant of specy X
 REAL, INTENT(IN) :: PEXFALLX  ! Fall speed exponent of specy X
@@ -120,11 +120,11 @@ REAL, INTENT(IN) :: PLBDAZMAX ! Maximun slope of size distribution of specy Z
 REAL, INTENT(IN) :: PLBDAXMIN ! Minimun slope of size distribution of specy X
 REAL, INTENT(IN) :: PLBDAZMIN ! Minimun slope of size distribution of specy Z
 REAL, INTENT(IN) :: PDINFTY   ! Factor to define the largest diameter up to
-			      ! which the diameter integration is performed
+                              ! which the diameter integration is performed
 !
 REAL, DIMENSION(:,:), INTENT(INOUT) :: PNZCOLX ! Scaled fall speed difference in
-				               ! the mass collection kernel as a
-					       ! function of LAMBDAX and LAMBDAZ
+                                               ! the mass collection kernel as a
+                                               ! function of LAMBDAX and LAMBDAZ
 !
 !
 !*       0.2   Declarations of local variables
@@ -146,13 +146,13 @@ REAL    :: ZDDZ    ! Integration step of the diameter of specy Z
 REAL    :: ZDX     ! Current diameter of the particle specy X
 REAL    :: ZDZ     ! Current diameter of the particle specy Z
 REAL    :: ZCOLLZ  ! Single integral of the mass weighted fall speed difference 
-		   ! over the spectrum of specy Z
+                   ! over the spectrum of specy Z
 REAL    :: ZCOLLXZ ! Double integral of the mass weighted fall speed difference
-		   ! over the spectra of specy X and specy Z
+                   ! over the spectra of specy X and specy Z
 REAL    :: ZSCALZ  ! Single integral of the scaling factor over 
-		   ! the spectrum of specy Z
+                   ! the spectrum of specy Z
 REAL    :: ZSCALXZ ! Double integral of the scaling factor over
-		   ! the spectra of specy X and specy Z
+                   ! the spectra of specy X and specy Z
 REAL    :: ZFUNC   ! Ancillary function
 !
 !
@@ -200,8 +200,8 @@ DO JLBDAX = 1,SIZE(PNZCOLX(:,:),1)
 !*       1.6     Compute the normalization factor by integration over the
 !                dimensional spectrum of specy Z  
 !
-	ZFUNC  = (ZDX+ZDZ)**2 * GENERAL_GAMMA(PALPHAZ,PNUZ,ZLBDAZ,ZDZ)
-	ZSCALZ = ZSCALZ + ZFUNC
+        ZFUNC  = (ZDX+ZDZ)**2 * GENERAL_GAMMA(PALPHAZ,PNUZ,ZLBDAZ,ZDZ)
+        ZSCALZ = ZSCALZ + ZFUNC
 !
 !*       1.7     Compute the scaled fall speed difference by integration over
 !                the dimensional spectrum of specy Z

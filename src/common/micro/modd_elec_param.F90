@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2002-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2002-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -8,16 +8,16 @@
 !      #######################
 !
 !!****  *MODD_ELEC_PARAM* - declaration of some electrical factors
-!!			    extensively used in the electrical scheme.
+!!             extensively used in the electrical scheme.
 !!
 !!      PURPOSE
 !!      -------
-!	  The purpose of this declarative module is to declare some precomputed
-!	electrical parameters directly used in routines related to cloud electricity
+!     The purpose of this declarative module is to declare some precomputed
+!   electrical parameters directly used in routines related to cloud electricity
 !!
 !!**    IMPLICIT ARGUMENTS
 !!      ------------------
-!!	  None
+!!     None
 !!
 !!      REFERENCE
 !!      ---------
@@ -37,8 +37,8 @@
 !!
 !-------------------------------------------------------------------------------
 !
-!*	0.	DECLARATIONS
-!		------------
+!*   0.   DECLARATIONS
+!      ------------
 !
 USE MODD_PARAMETERS, ONLY: JPMODELMAX
 !

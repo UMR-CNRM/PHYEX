@@ -19,7 +19,7 @@ USE MODD_NSV,   only: NSV_LIMA_BEG
 IMPLICIT NONE
 !
 INTEGER,                  INTENT(IN)    :: KMI        ! Model index
-TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE   ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT) :: TPFILE   ! Output file
 CHARACTER(len=4),         INTENT(IN)    :: HRAD     ! Radiation scheme name
 REAL,                     INTENT(IN)    :: PTSTEP   ! Double Time step
                                                     ! (single if cold start)
@@ -109,7 +109,7 @@ IMPLICIT NONE
 !
 !
 INTEGER,                  INTENT(IN)    :: KMI        ! Model index
-TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE   ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT) :: TPFILE   ! Output file
 CHARACTER(len=4),              INTENT(IN)    :: HRAD     ! Radiation scheme name
 REAL,                     INTENT(IN)    :: PTSTEP   ! Double Time step
                                                     ! (single if cold start)

@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -33,7 +33,7 @@ REAL, DIMENSION(KLON),      INTENT(IN) :: PMIXF ! critical mixed fraction at LCL
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KLCL  ! contains vert. index of LCL
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KCTL  ! contains vert. index of CTL
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KETL  ! contains vert. index of equilibrium 
-						! (zero buoyancy) level 
+                                                ! (zero buoyancy) level 
 INTEGER, DIMENSION(KLON),  INTENT(INOUT) :: KLFS ! contains vert. index of LFS
 INTEGER, DIMENSION(KLON),  INTENT(INOUT) :: KDBL ! contains vert. index of DBL
 !
@@ -136,7 +136,7 @@ REAL, DIMENSION(KLON),      INTENT(IN) :: PMIXF ! critical mixed fraction at LCL
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KLCL  ! contains vert. index of LCL
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KCTL  ! contains vert. index of CTL
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KETL  ! contains vert. index of equilibrium 
-						! (zero buoyancy) level 
+                                                ! (zero buoyancy) level 
 INTEGER, DIMENSION(KLON),  INTENT(INOUT) :: KLFS ! contains vert. index of LFS
 INTEGER, DIMENSION(KLON),  INTENT(INOUT) :: KDBL ! contains vert. index of DBL
 !
@@ -164,7 +164,7 @@ INTEGER :: JI                   ! horizontal loop index
 !
 INTEGER, DIMENSION(KLON) :: IPRL
 REAL, DIMENSION(KLON)    :: ZWORK1, ZWORK2, ZWORK3,     &
-				    ZWORK4, ZWORK5, ZWORK6 ! work arrays
+                                    ZWORK4, ZWORK5, ZWORK6 ! work arrays
 !
 !
 !-------------------------------------------------------------------------------
@@ -189,7 +189,7 @@ PTPR(:) = 0.
 !
 WHERE ( PDTEVR(:) == 0. )
      PTPR(:)    = PUTPR(:)  ! no downdraft evaporation => no downdraft, all
-			    ! precipitation occurs in updraft
+                            ! precipitation occurs in updraft
 END WHERE
 IF ( COUNT( PDTEVR(:) > 0. ) == 0 )  THEN  ! exit routine if no downdraft exists
   RETURN
@@ -228,8 +228,8 @@ END DO
 PTPR(:) = 0.
 DO JK = JKT3, JKT2
     WHERE ( JK >= KLCL(:) .AND. PPRES(:,JK) >= ZWORK5(:) - XUSRDPTH )
-	PTPR(:) = PTPR(:) + PUPR(:,JK)
-	IPRL(:) = JK
+        PTPR(:) = PTPR(:) + PUPR(:,JK)
+        IPRL(:) = JK
     END WHERE
 END DO
 IPRL(:) = MIN( KETL(:), IPRL(:) )
@@ -251,7 +251,7 @@ ZWORK4(:) = PUTPR(:) - PTPR(:)
 ZWORK5(:) = 0.
 DO JK = JKT3, JKT1
      WHERE ( JK >= KLCL(:) .AND. JK <= KLFS(:) )
-	   ZWORK5(:) = ZWORK5(:) +  PUPR(:,JK)
+           ZWORK5(:) = ZWORK5(:) +  PUPR(:,JK)
      END WHERE
 END DO
 !
@@ -304,8 +304,8 @@ ZWORK4(:) = ZWORK2(:)
 DO JI = 1, IIE
     JK = KLFS(JI)
     ZWORK2(JI) = ( 1. - ZWORK6(JI) ) + ZWORK6(JI) *                   &
-		  ( PUMF(JI,JK) - ( 1. - PMIXF(JI) ) * ZWORK1(JI) ) / &
-		  MAX( 1.E-1, PUMF(JI,JK) )
+                  ( PUMF(JI,JK) - ( 1. - PMIXF(JI) ) * ZWORK1(JI) ) / &
+                  MAX( 1.E-1, PUMF(JI,JK) )
 END DO
 !
 !
@@ -313,10 +313,10 @@ JKT1  = MAXVAL( KLFS(:) )  ! value of KLFS might have been reset to IKB above
 DO JK = IKB, JKT1
     DO JI = 1, IIE
       IF ( JK <= KLFS(JI) ) THEN
-	PUMF(JI,JK)  = PUMF(JI,JK)  * ZWORK2(JI) 
-	PUER(JI,JK)  = PUER(JI,JK)  * ZWORK2(JI)
-	PUDR(JI,JK)  = PUDR(JI,JK)  * ZWORK2(JI)
-	PUPR(JI,JK)  = PUPR(JI,JK)  * ZWORK2(JI)
+        PUMF(JI,JK)  = PUMF(JI,JK)  * ZWORK2(JI) 
+        PUER(JI,JK)  = PUER(JI,JK)  * ZWORK2(JI)
+        PUDR(JI,JK)  = PUDR(JI,JK)  * ZWORK2(JI)
+        PUPR(JI,JK)  = PUPR(JI,JK)  * ZWORK2(JI)
       END IF
     END DO
 END DO

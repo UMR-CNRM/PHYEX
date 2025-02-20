@@ -59,25 +59,44 @@ IIJB=D%NIJB
 IIJE=D%NIJE
 !
 !-------------------------------------------------------------------------------
-DO JIJ = IIJB,IIJE
-   PPRFR(JIJ,IKE)=0.
-   DO JK=IKE-IKL, IKB, -IKL
-      IF(PRESENT(PRH)) THEN
-         MASK=PRR(JIJ,JK) .GT. ICED%XRTMIN(3) .OR. PRS(JIJ,JK) .GT. ICED%XRTMIN(5) &
-         .OR. PRG(JIJ,JK) .GT. ICED%XRTMIN(6) .OR. PRH(JIJ,JK) .GT. ICED%XRTMIN(7)
-      ELSE
-         MASK=PRR(JIJ,JK) .GT. ICED%XRTMIN(3) .OR. PRS(JIJ,JK) .GT. ICED%XRTMIN(5) &
-         .OR. PRG(JIJ,JK) .GT. ICED%XRTMIN(6) 
-      END IF
+!
+!$acc kernels
+PPRFR(IIJB:IIJE,IKE)=0.
+!$acc end kernels
+DO JK=IKE-IKL, IKB, -IKL
+  IF(PRESENT(PRH)) THEN
+!$acc kernels
+!$acc loop independent
+    DO JIJ = IIJB, IIJE
+      MASK=PRR(JIJ,JK) .GT. ICED%XRTMIN(3) .OR. PRS(JIJ,JK) .GT. ICED%XRTMIN(5) &
+      .OR. PRG(JIJ,JK) .GT. ICED%XRTMIN(6) .OR. PRH(JIJ,JK) .GT. ICED%XRTMIN(7)
       IF (MASK) THEN
-         PPRFR(JIJ,JK)=MAX(PPRFR(JIJ,JK),PPRFR(JIJ,JK+IKL))
-         IF (PPRFR(JIJ,JK)==0.) THEN
-            PPRFR(JIJ,JK)=1.
-         END IF
+        PPRFR(JIJ,JK)=MAX(PPRFR(JIJ,JK),PPRFR(JIJ,JK+IKL))
+        IF (PPRFR(JIJ,JK)==0) THEN
+          PPRFR(JIJ,JK)=1.
+        END IF
       ELSE
-         PPRFR(JIJ,JK)=0.
+        PPRFR(JIJ,JK)=0.
       END IF
-   END DO
+    END DO
+!$acc end kernels
+  ELSE
+!$acc kernels
+!$acc loop independent
+    DO JIJ = IIJB, IIJE
+      MASK=PRR(JIJ,JK) .GT. ICED%XRTMIN(3) .OR. PRS(JIJ,JK) .GT. ICED%XRTMIN(5) &
+      .OR. PRG(JIJ,JK) .GT. ICED%XRTMIN(6)
+      IF (MASK) THEN
+        PPRFR(JIJ,JK)=MAX(PPRFR(JIJ,JK),PPRFR(JIJ,JK+IKL))
+        IF (PPRFR(JIJ,JK)==0) THEN
+          PPRFR(JIJ,JK)=1.
+        END IF
+      ELSE
+        PPRFR(JIJ,JK)=0.
+      END IF
+    END DO
+!$acc end kernels
+  END IF
 END DO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_RAINFR_VERT',1,ZHOOK_HANDLE)

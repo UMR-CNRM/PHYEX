@@ -199,6 +199,27 @@ END IF
 IF (LHOOK) CALL DR_HOOK('GY_U_UV',1,ZHOOK_HANDLE)
 END FUNCTION GY_U_UV
 !     ######spl
+!     #########################################################
+      SUBROUTINE GY_U_UV_DEVICE(PA,PDYY,PDZZ,PDZY,PGY_U_UV_DEVICE)
+!     #########################################################
+!
+!*       0.    DECLARATIONS
+!
+!
+IMPLICIT NONE
+!
+!
+!*       0.1   declarations of arguments and result
+!
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PA       ! variable at the U point
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDYY     ! metric coefficient dyy
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZZ     ! metric coefficient dzz
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZY     ! metric coefficient dzy
+!
+REAL, DIMENSION(:,:,:), INTENT(OUT) :: PGY_U_UV_DEVICE ! result UV point
+!
+CALL ABORT
+END SUBROUTINE GY_U_UV_DEVICE
       FUNCTION GZ_U_UW(PA,PDZZ, KKA, KKU, KL)      RESULT(PGZ_U_UW)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################

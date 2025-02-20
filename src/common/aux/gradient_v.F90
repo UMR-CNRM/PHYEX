@@ -1,3 +1,26 @@
+!     #########################################################
+      SUBROUTINE GX_V_UV_DEVICE(PA,PDXX,PDZZ,PDZX,PGX_V_UV_DEVICE)
+!     #########################################################
+!
+!*       0.    DECLARATIONS
+!
+!
+!
+IMPLICIT NONE
+!
+!
+!*       0.1   declarations of arguments and result
+!
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PA       ! variable at the V point
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDXX     ! metric coefficient dxx
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZZ     ! metric coefficient dzz
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZX     ! metric coefficient dzx
+!
+REAL, DIMENSION(:,:,:), INTENT(OUT) :: PGX_V_UV_DEVICE ! result UV point
+!
+CALL ABORT
+END SUBROUTINE GX_V_UV_DEVICE
+!
 !     ######spl
       FUNCTION GX_V_UV(PA,PDXX,PDZZ,PDZX, KKA, KKU, KL)      RESULT(PGX_V_UV)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK

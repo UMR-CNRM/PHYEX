@@ -1,11 +1,11 @@
-!MNH_LIC Copyright 1994-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-!     	##########################
+!           ##########################
         MODULE MODI_INI_PARAM_ELEC
-!      	##########################
+!            ##########################
 !
 IMPLICIT NONE
 INTERFACE
@@ -41,7 +41,7 @@ END MODULE MODI_INI_PARAM_ELEC
 !!    PURPOSE
 !!    -------
 !!        The purpose of this routine is to initialize the constants used to 
-!!	resolve the electrical scheme.
+!!      resolve the electrical scheme.
 !!
 !!**  METHOD
 !!    ------
@@ -56,19 +56,19 @@ END MODULE MODI_INI_PARAM_ELEC
 !!
 !!    REFERENCE
 !!    ---------
-!!	Helsdon and Farley, 1987: A numerical study of a Montana thunderstorm: 
-!!	  2. Model results versus observations involving electrical aspects.
-!!	  J. Geophys. Res., 92, 5661-5675.
+!!      Helsdon and Farley, 1987: A numerical study of a Montana thunderstorm: 
+!!        2. Model results versus observations involving electrical aspects.
+!!        J. Geophys. Res., 92, 5661-5675.
 !!
-!!	Takahashi, 1978: Riming electrification as a charge generation 
-!!	  mechanism in thunderstorms. J. Atmos. Sci., 35, 1536-1548.
+!!      Takahashi, 1978: Riming electrification as a charge generation 
+!!        mechanism in thunderstorms. J. Atmos. Sci., 35, 1536-1548.
 !!
-!!	Gardiner et al., 1985: Measurements of initial potential gradient and
-!!	  particles charges in a Montana supercell thunderstorm.
-!!	  J. Geophys. Res., 90, 6079-6086.
+!!      Gardiner et al., 1985: Measurements of initial potential gradient and
+!!        particles charges in a Montana supercell thunderstorm.
+!!        J. Geophys. Res., 90, 6079-6086.
 !!
-!!	Saunders et al., 1991: The effect of liquid water on thunderstorm
-!!	  charging. J. Geophys. Res., 96, 11007-11017.
+!!      Saunders et al., 1991: The effect of liquid water on thunderstorm
+!!        charging. J. Geophys. Res., 96, 11007-11017.
 !!
 !!    AUTHOR
 !!    ------
@@ -97,8 +97,8 @@ END MODULE MODI_INI_PARAM_ELEC
 !
 !-------------------------------------------------------------------------------
 !
-!*	0.	DECLARATIONS
-!		------------
+!*      0.      DECLARATIONS
+!            ------------
 !
 USE MODD_CST
 USE MODD_ELEC_n
@@ -158,7 +158,7 @@ USE MODI_VQZCOLX
 !
 IMPLICIT NONE
 !
-!*	0.1	 Declaration of dummy arguments
+!*      0.1       Declaration of dummy arguments
 !
 TYPE(TFILEDATA),                INTENT(IN) :: TPINIFILE ! Initial file
 CHARACTER (LEN=*), DIMENSION(:),INTENT(IN) :: HGETSVT
@@ -170,7 +170,7 @@ INTEGER, INTENT(IN) :: IIU      ! Upper dimension in x direction (local)
 INTEGER, INTENT(IN) :: IJU      ! Upper dimension in y direction (local)
 INTEGER, INTENT(IN) :: IKU      ! Upper dimension in z direction
 !
-!*	0.2	 Declaration of local variables
+!*      0.2       Declaration of local variables
 !
 INTEGER :: IND                ! Number of intervals to integrate kernels
 INTEGER :: J1, JLWC, JTEMP
@@ -205,8 +205,8 @@ REAL, DIMENSION(:),   ALLOCATABLE :: ZT, ZLWCC, ZEW
 !
 !-------------------------------------------------------------------------------
 !
-!*	1.	PRELIMINARIES
-!		-------------
+!*      1.      PRELIMINARIES
+!            -------------
 !
 !*      1.1     Constants for electricity
 !
@@ -361,8 +361,8 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-!*	2.	SHAPE PARAMETERS
-!		----------------
+!*      2.      SHAPE PARAMETERS
+!            ----------------
 !
 XCXR = -1.0 ! Raindrop characteristic : XCXR (not initialized in ini_rain_ice.f90)
 !
@@ -421,8 +421,8 @@ XJCURR_FW = -2.7E-12
 !
 !-------------------------------------------------------------------------------
 !
-!*	3.	COEFFICIENTS FOR CHARGE TRANSFERS
-!		---------------------------------
+!*      3.      COEFFICIENTS FOR CHARGE TRANSFERS
+!            ---------------------------------
 !
 ! proportionality coefficient between mass transfer and charge transfer rates
 ! the mixing ratio is proportional to the volume of the particle
@@ -439,8 +439,8 @@ XCOEF_RQ_H = XFH / ZBH
 !
 !-------------------------------------------------------------------------------
 !
-!*	3.	HOMOGENEOUS NUCLEATION
-!		----------------------
+!*      3.      HOMOGENEOUS NUCLEATION
+!            ----------------------
 !
 XALPHACQ = 3.         !>
 XNUCQ    = 1.         ! >--- generic values
@@ -454,8 +454,8 @@ XQHON = XQHON / (XLBDACQ**XFC)
 !
 !-------------------------------------------------------------------------------
 !
-!*	4.	SEDIMENTATION
-!		-------------
+!*      4.      SEDIMENTATION
+!            -------------
 !
 IF (ALLOCATED(XQTMIN)) DEALLOCATE(XQTMIN)       
 IF (ALLOCATED(XRTMIN_ELEC)) DEALLOCATE(XRTMIN_ELEC)
@@ -555,8 +555,8 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-!*	5.	EVAPORATION OF RAINDROPS
-!		------------------------
+!*      5.      EVAPORATION OF RAINDROPS
+!            ------------------------
 !
 !XQREVAV1 = (2. / XPI) * MOMG(ZALPHAR,ZNUR,XFR) / MOMG(ZALPHAR,ZNUR,2.)
 !XQREVAV2 = (XPI / ZAR) * (MOMG(ZALPHAR,ZNUR,2.) / MOMG(ZALPHAR,ZNUR,ZBR)) * &
@@ -565,8 +565,8 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-!*	6.	RIMING OF CLOUD DROPLETS ON SNOW
-!		--------------------------------
+!*      6.      RIMING OF CLOUD DROPLETS ON SNOW
+!            --------------------------------
 !
 IF (HELEC == 'ELE4') THEN
   XEXQSRIMCG = -XFS
@@ -588,8 +588,8 @@ END DO
 !
 !-------------------------------------------------------------------------------
 !
-!*	7.	CONTACT FREEZING BETWEEN RAINDROPS AND PRISTINE ICE
-!		---------------------------------------------------
+!*      7.      CONTACT FREEZING BETWEEN RAINDROPS AND PRISTINE ICE
+!            ---------------------------------------------------
 !
 IF (HELEC == 'ELE4') THEN
   XEXQRCFRIG = - ZDR - XFR - 2.0
@@ -604,8 +604,8 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-!*	8.	INITIALIZATIONS FOR THE NON INDUCTIVE PROCESSES
-!		-----------------------------------------------
+!*      8.      INITIALIZATIONS FOR THE NON INDUCTIVE PROCESSES
+!            -----------------------------------------------
 !
 ! arrays allocation for NI charging rate
 !
@@ -1062,8 +1062,8 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-!*	9.	NON_INDUCTIVE PROCESS: AGGREGATION OF ICE ON SNOW
-!		-------------------------------------------------
+!*      9.      NON_INDUCTIVE PROCESS: AGGREGATION OF ICE ON SNOW
+!            -------------------------------------------------
 !
 !*      9.1     Helsdon and Farley (1987) parameterization
 !
@@ -1109,8 +1109,8 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-!*	10.	ACCRETION OF RAINDROPS ON SNOW
-!		------------------------------
+!*      10.      ACCRETION OF RAINDROPS ON SNOW
+!            ------------------------------
 !
 IF( .NOT.ALLOCATED(XKER_Q_RACCSS)) ALLOCATE( XKER_Q_RACCSS(IACCLBDAS,IACCLBDAR) )
 IF( .NOT.ALLOCATED(XKER_Q_RACCS)) ALLOCATE( XKER_Q_RACCS (IACCLBDAS,IACCLBDAR) )
@@ -1152,8 +1152,8 @@ CALL RSCOLRG (IND, ZALPHAS, ZNUS, ZALPHAR, ZNUR,                          &
 !
 !-------------------------------------------------------------------------------
 !
-!*	11.	DRY GROWTH OF GRAUPELN BY CAPTURE OF SNOW OR ICE
-!		------------------------------------------------
+!*      11.      DRY GROWTH OF GRAUPELN BY CAPTURE OF SNOW OR ICE
+!            ------------------------------------------------
 !
 !*      11.1    charge transfer associated to mass transfer
 !
@@ -1325,8 +1325,8 @@ ENDIF
 !
 !-------------------------------------------------------------------------------
 !
-!*	12.	DRY GROWTH OF GRAUPELN BY CAPTURE OF RAINDROP
-!		---------------------------------------------
+!*      12.      DRY GROWTH OF GRAUPELN BY CAPTURE OF RAINDROP
+!            ---------------------------------------------
 !
 IF( .NOT.ALLOCATED(XKER_Q_RDRYG)) ALLOCATE( XKER_Q_RDRYG(IDRYLBDAG,IDRYLBDAR) ) 
 !
@@ -1350,8 +1350,8 @@ CALL RZCOLX (IND, ZALPHAG, ZNUG, ZALPHAR, ZNUR,                            &
 !
 !-------------------------------------------------------------------------------
 !
-!*	13.	UPDATE THE Q=f(D) RELATION
-!		--------------------------
+!*      13.      UPDATE THE Q=f(D) RELATION
+!            --------------------------
 !
 IF (HCLOUD(1:3) == 'ICE') THEN
   XFQUPDC   = 400.E6 * MOMG(XALPHACQ,XNUCQ,XFC) / XLBDACQ**XFC ! Nc~400E6 m-3 as 

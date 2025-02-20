@@ -87,5 +87,7 @@ INTEGER, PARAMETER :: JPLIMACCNMAX = 10 ! Maximum allowed number of CCN modes in
 INTEGER, PARAMETER :: JPLIMAIFNMAX = 10 ! Maximum allowed number of IFN modes in LIMA
 !
 INTEGER, PARAMETER :: NGRIDUNKNOWN = -1 ! Unknown Arakawa grid number
+INTEGER, PARAMETER :: NEXPNAMELGTMAX    = 32 ! should be at least 5
+INTEGER, PARAMETER :: NSEGNAMELGTMAX    = 32 ! should be at least 5
 !
 END MODULE MODD_PARAMETERS

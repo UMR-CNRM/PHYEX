@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2000-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2000-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -37,7 +37,7 @@
 !!          
 !!    AUTHOR
 !!    ------
-!!	J.-P. Pinty  *Laboratoire d'Aerologie*
+!!        J.-P. Pinty  *Laboratoire d'Aerologie*
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -54,14 +54,14 @@ IMPLICIT NONE
 REAL,SAVE :: XCEXVT                    ! air density fall speed correction
 !
 REAL,SAVE :: XAR,XBR,XCR,XDR,XF0R,XF1R,     & ! Raindrop       charact.
-	     XAC,XBC,XCC,XDC,XF0C,XF2C,XC1C   ! Cloud droplet  charact.
+             XAC,XBC,XCC,XDC,XF0C,XF2C,XC1C   ! Cloud droplet  charact.
 !
 REAL,DIMENSION(:),SAVE,ALLOCATABLE :: XRTMIN
                                        ! Min values of the mixing ratios
 REAL,DIMENSION(:),SAVE,ALLOCATABLE :: XCTMIN
                                        ! Min values of the drop concentrations
 REAL,SAVE ::  XLBC, XLBEXC,          & ! shape parameters of the cloud droplets
-	      XLBR, XLBEXR             ! shape parameters of the raindrops
+              XLBR, XLBEXR             ! shape parameters of the raindrops
 !
 CHARACTER(LEN=JPSVNAMELGTMAX),DIMENSION(4),PARAMETER &
                                    :: C2R2NAMES=(/'CCCN  ','CCLOUD','CRAIN ','SUPSAT'/)

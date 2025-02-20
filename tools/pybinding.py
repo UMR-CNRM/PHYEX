@@ -230,13 +230,15 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             if replvar['i'] in ('OUT', 'INOUT'):
                 docstringOUT.append(docstr)
             argList2.append(localvar['n'])
-            for d in replvar['as']:
+            for d in replvar['as']: # The following code handles MERGE() in declaration
                 if 'NIT' in d[1] or 'NIJT' in d[1]:
                     d[1] = 'NIT'
                 elif 'NJT' in d[1]:
                     d[1] = '1'
                 elif 'NKT' in d[1]:
                     d[1] = 'NKT'
+                elif 'KSV' in d[1]:
+                    d[1] = 'KSV'
             declList.append(pftin.varSpec2stmt(replvar))
             if vartype.startswith('LOGICAL'):
                 declList.append(pftin.varSpec2stmt(localvar))

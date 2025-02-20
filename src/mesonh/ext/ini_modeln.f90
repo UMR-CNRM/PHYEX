@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -13,8 +13,8 @@ INTERFACE
 !
 USE MODD_IO, ONLY: TFILEDATA
 !
-INTEGER,          INTENT(IN)   :: KMI       ! Model Index
-TYPE(TFILEDATA),  INTENT(IN)   :: TPINIFILE ! Initial file
+INTEGER,                  INTENT(IN)   :: KMI       ! Model Index
+TYPE(TFILEDATA), POINTER, INTENT(IN)   :: TPINIFILE ! Initial file
 !
 END SUBROUTINE INI_MODEL_n
 !
@@ -275,33 +275,35 @@ END MODULE MODI_INI_MODEL_n
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!                   V. Vionnet : 18/07/2017 : add blowing snow scheme
 !!                   01/18 J.Colin Add DRAG
-!  P. Wautelet 29/01/2019: bug: add missing zero-size allocations
-!  P. Wautelet 07/02/2019: force TYPE to a known value for IO_File_add2list
-!  P. Wautelet 13/02/2019: initialize XALBUV even if no radiation (needed in CH_INTERP_JVALUES)
-!  P. Wautelet 13/02/2019: removed PPABSM and PTSTEP dummy arguments of READ_FIELD
-!  P. Wautelet 14/02/2019: remove CLUOUT/CLUOUT0 and associated variables
-!  P. Wautelet 14/02/2019: remove HINIFILE dummy argument from INI_RADIATIONS_ECMWF/ECRAD
-!!                   02/2019 C.Lac add rain fraction as an output field
-!!      Bielli S. 02/2019  Sea salt : significant sea wave height influences salt emission; 5 salt modes
-!  P. Wautelet 14/03/2019: correct ZWS when variable not present in file (set to XZWS_DEFAULT)
-!  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
-!  P. Wautelet 19/04/2019: removed unused dummy arguments and variables
-!  P. Wautelet 07/06/2019: allocate lookup tables for optical properties only when needed
-!  P. Wautelet 13/09/2019: budget: simplify and modernize date/time management
-!  C. Lac         11/2019: correction in the drag formula and application to building in addition to tree
-!  S. Riette      04/2020: XHL* fields
+!  P. Wautelet  29/01/2019: bug: add missing zero-size allocations
+!  P. Wautelet  07/02/2019: force TYPE to a known value for IO_File_add2list
+!  P. Wautelet  13/02/2019: initialize XALBUV even if no radiation (needed in CH_INTERP_JVALUES)
+!  P. Wautelet  13/02/2019: removed PPABSM and PTSTEP dummy arguments of READ_FIELD
+!  P. Wautelet  14/02/2019: remove CLUOUT/CLUOUT0 and associated variables
+!  P. Wautelet  14/02/2019: remove HINIFILE dummy argument from INI_RADIATIONS_ECMWF/ECRAD
+!  C. Lac          02/2019: add rain fraction as an output field
+!  S. Bielli       02/2019: Sea salt : significant sea wave height influences salt emission; 5 salt modes
+!  P. Wautelet  14/03/2019: correct ZWS when variable not present in file (set to XZWS_DEFAULT)
+!  P. Wautelet  10/04/2019: replace ABORT and STOP calls by Print_msg
+!  P. Wautelet  19/04/2019: removed unused dummy arguments and variables
+!  P. Wautelet  07/06/2019: allocate lookup tables for optical properties only when needed
+!  P. Wautelet  13/09/2019: budget: simplify and modernize date/time management
+!  C. Lac          11/2019: correction in the drag formula and application to building in addition to tree
+!  S. Riette       04/2020: XHL* fields
 !  PA. Joulin     10/2020: add wind tubrines (EOL)
-!  F. Auguste     02/2021: add IBM
-!  T.Nigel        02/2021: add turbulence recycling
-!  J.L.Redelsperger 06/2011: OCEAN case
+!  F. Auguste      02/2021: add IBM
+!  T. Nigel        02/2021: add turbulence recycling
+!J.L. Redelsperger 06/2011: OCEAN case
 !  R. Schoetter   12/2021: multi-level coupling between MesoNH and SURFEX
 !  R. Schoetter   12/2021: adds humidity and other mean diagnostics
-!  A. Costes      12/2021: Blaze fire model
-!  H. Toumi       09/2022: add EOL/ADR
-!  C. Barthe      03/2023: if cloud electricity is activated, both ini_micron and ini_elecn are called
+!  A. Costes       12/2021: Blaze fire model
+!  H. Toumi        09/2022: add EOL/ADR
+!  C. Barthe       03/2023: if cloud electricity is activated, both ini_micron and ini_elecn are called
+!  V. Masson       01/2024: aggregation of columns for radiation
+!  M. Mandement    01/2024: add max 10 m wind gust speed formulations
 !  A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !  A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
-!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
+!  A. Marcel Jan 2025: relaxation of the small fraction assumption
 !---------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -365,8 +367,7 @@ USE MODD_GET_n
 USE MODD_GRID_n
 USE MODD_GRID,              only: XLONORI,XLATORI
 USE MODD_IBM_PARAM_n,       only: LIBM, XIBM_IEPS, XIBM_LS, XIBM_XMUT
-USE MODD_IO,                only: CIO_DIR, TFILEDATA, TFILE_DUMMY
-USE MODD_IO_SURF_MNH,       only: IO_SURF_MNH_MODEL
+USE MODD_IO,                only: CIO_DIR, NFILE_NUM_MAX, TFILEDATA, TFILE_DUMMY
 USE MODD_LATZ_EDFLX
 USE MODD_LBC_n,             only: CLBCX, CLBCY
 use modd_les
@@ -382,7 +383,7 @@ USE MODD_NSV
 USE MODD_NSV
 USE MODD_NUDGING_n,         only: LNUDGING
 USE MODD_OCEANH
-USE MODD_OUT_n
+USE MODD_OUT_n,             ONLY: NBAK_NUMB, NOUT_NUMB
 USE MODD_PARAMETERS
 USE MODD_PARAM_KAFR_n
 USE MODD_PARAM_MFSHALL_n
@@ -497,8 +498,8 @@ IMPLICIT NONE
 !*       0.1   declarations of arguments
 !
 !
-INTEGER,          INTENT(IN)   :: KMI       ! Model Index
-TYPE(TFILEDATA),  INTENT(IN)   :: TPINIFILE ! Initial file
+INTEGER,                  INTENT(IN)   :: KMI       ! Model Index
+TYPE(TFILEDATA), POINTER, INTENT(IN)   :: TPINIFILE ! Initial file
 !
 !*       0.2   declarations of local variables
 !
@@ -507,7 +508,8 @@ REAL, PARAMETER :: NALBUV_DEFAULT = 0.01 ! Arbitrary low value for XALBUV
 INTEGER             :: JSV     ! Loop index
 INTEGER             :: IRESP   ! Return code of FM routines
 INTEGER             :: ILUOUT  ! Logical unit number of output-listing
-CHARACTER(LEN=28)   :: YNAME
+CHARACTER(LEN=6)    :: YNUM
+CHARACTER(LEN=NFILENAMELGTMAX) :: YNAME
 INTEGER             :: IIU     ! Upper dimension in x direction (local)
 INTEGER             :: IJU     ! Upper dimension in y direction (local)
 INTEGER             :: IIU_ll  ! Upper dimension in x direction (global)
@@ -606,18 +608,19 @@ ILUOUT = TLUOUT%NLU
 !             --------------
 !*       2.1  Read number of forcing fields
 !
-IF (LFORCING) THEN ! Retrieve the number of time-dependent forcings.
+IF (.NOT. LOCEAN) THEN
+ IF (LFORCING) THEN ! Retrieve the number of time-dependent forcings.
   CALL IO_Field_read(TPINIFILE,'FRC',NFRC,IRESP)
   IF ( (IRESP /= 0) .OR. (NFRC <=0) ) THEN
     WRITE(ILUOUT,'(A/A)') &
      "INI_MODEL_n ERROR: you want to read forcing variables from FMfile", &
      "                   but no fields have been found by IO_Field_read"
-!callabortstop
+ !callabortstop
     CALL PRINT_MSG(NVERB_FATAL,'GEN','INI_MODEL_n','')
   END IF
-END IF
-!
-! Modif PP for time evolving adv forcing
+ END IF
+ !
+ ! Modif PP for time evolving adv forcing
   IF ( L2D_ADV_FRC ) THEN ! Retrieve the number of time-dependent forcings.
     WRITE(ILUOUT,FMT=*) "INI_MODEL_n ENTER ADV_FORCING"
     CALL IO_Field_read(TPINIFILE,'NADVFRC1',NADVFRC,IRESP)
@@ -629,9 +632,9 @@ END IF
       CALL PRINT_MSG(NVERB_FATAL,'GEN','INI_MODEL_n','')
     END IF
     WRITE(ILUOUT,*) 'NADVFRC = ', NADVFRC
-END IF
-!
-IF ( L2D_REL_FRC ) THEN ! Retrieve the number of time-dependent forcings.
+ END IF
+ !
+ IF ( L2D_REL_FRC ) THEN ! Retrieve the number of time-dependent forcings.
     WRITE(ILUOUT,FMT=*) "INI_MODEL_n ENTER REL_FORCING"
     CALL IO_Field_read(TPINIFILE,'NRELFRC1',NRELFRC,IRESP)
     IF ( (IRESP /= 0) .OR. (NRELFRC <=0) ) THEN
@@ -642,6 +645,7 @@ IF ( L2D_REL_FRC ) THEN ! Retrieve the number of time-dependent forcings.
       CALL PRINT_MSG(NVERB_FATAL,'GEN','INI_MODEL_n','')
     END IF
     WRITE(ILUOUT,*) 'NRELFRC = ', NRELFRC
+ END IF
 END IF
 !*       2.2  Checks the position of vertical absorbing layer
 !
@@ -780,10 +784,19 @@ IF (LMEAN_FIELD) THEN
   ALLOCATE(XTEMPM_MEAN(IIU,IJU,IKU))   ; XTEMPM_MEAN = 0.0
   ALLOCATE(XSVT_MEAN(IIU,IJU,IKU))     ; XSVT_MEAN  = 0.0
   IF (CTURB/='NONE') THEN
-    ALLOCATE(XTKEM_MEAN(IIU,IJU,IKU))
-    XTKEM_MEAN = 0.0
+    ALLOCATE(XTKEM_MEAN(IIU,IJU,IKU)) ; XTKEM_MEAN = 0.0
+    ALLOCATE(XTKEM_MAX(IIU,IJU,IKU))  ; XTKEM_MAX = 0.0
+    IF (LMINMAX_WINDFFTKE) THEN
+      ALLOCATE(XTKEMAX_MAX(IIU,IJU))  ;  XTKEMAX_MAX = 0.0
+      ALLOCATE(XTKE10MAX_MAX(IIU,IJU)) ;  XTKE10MAX_MAX = 0.0
+      ALLOCATE(XTKE20MAX_MAX(IIU,IJU)) ;  XTKE20MAX_MAX = 0.0
+    END IF
   ELSE
     ALLOCATE(XTKEM_MEAN(0,0,0))
+    ALLOCATE(XTKEM_MAX(0,0,0))
+    ALLOCATE(XTKEMAX_MAX(0,0))
+    ALLOCATE(XTKE10MAX_MAX(0,0))
+    ALLOCATE(XTKE20MAX_MAX(0,0))
   END IF
   ALLOCATE(XPABSM_MEAN(IIU,IJU,IKU))   ; XPABSM_MEAN = 0.0
   ALLOCATE(XQ_MEAN(IIU,IJU,IKU))       ; XQ_MEAN = 0.0
@@ -820,15 +833,44 @@ IF (LMEAN_FIELD) THEN
   ALLOCATE(XUM_MAX(IIU,IJU,IKU))      ; XUM_MAX  = -1.E20
   ALLOCATE(XVM_MAX(IIU,IJU,IKU))      ; XVM_MAX  = -1.E20
   ALLOCATE(XWM_MAX(IIU,IJU,IKU))      ; XWM_MAX  = -1.E20
+  ALLOCATE(XWM_MIN(IIU,IJU,IKU))      ; XWM_MIN  = 1.E20 ! 
   ALLOCATE(XTHM_MAX(IIU,IJU,IKU))     ; XTHM_MAX = 0.0
   ALLOCATE(XTEMPM_MAX(IIU,IJU,IKU))   ; XTEMPM_MAX = 0.0
-  IF (CTURB/='NONE') THEN
-    ALLOCATE(XTKEM_MAX(IIU,IJU,IKU))
-    XTKEM_MAX = 0.0
+  ALLOCATE(XPABSM_MAX(IIU,IJU,IKU))    ; XPABSM_MAX = 0.0
+!
+  IF (LMINMAX_VORT) THEN
+    ALLOCATE(XUM1_MAX(IIU,IJU,IKU))      ; XUM1_MAX = -1.E20 ! 
+    ALLOCATE(XVM1_MAX(IIU,IJU,IKU))      ; XVM1_MAX = -1.E20 ! 
+    ALLOCATE(XWM1_MAX(IIU,IJU,IKU))      ; XWM1_MAX = -1.E20 ! 
+    ALLOCATE(XUM1_MIN(IIU,IJU,IKU))      ; XUM1_MIN = 1.E20 ! 
+    ALLOCATE(XVM1_MIN(IIU,IJU,IKU))      ; XVM1_MIN = 1.E20 ! 
+    ALLOCATE(XWM1_MIN(IIU,IJU,IKU))      ; XWM1_MIN = 1.E20 !
   ELSE
-    ALLOCATE(XTKEM_MAX(0,0,0))
+    ALLOCATE(XUM1_MAX(0,0,0))
+    ALLOCATE(XVM1_MAX(0,0,0))
+    ALLOCATE(XWM1_MAX(0,0,0))
+    ALLOCATE(XUM1_MIN(0,0,0))
+    ALLOCATE(XVM1_MIN(0,0,0))
+    ALLOCATE(XWM1_MIN(0,0,0))
   END IF
-  ALLOCATE(XPABSM_MAX(IIU,IJU,IKU))   ; XPABSM_MAX = 0.0
+!
+  IF (LMINMAX_MSLP) THEN
+    ALLOCATE(XMSLP_MAX(IIU,IJU))      ; XMSLP_MAX = -1.E20 ! 
+    ALLOCATE(XMSLP_MIN(IIU,IJU))      ; XMSLP_MIN = 1.E20 ! 
+  ELSE
+    ALLOCATE(XMSLP_MAX(0,0))
+    ALLOCATE(XMSLP_MIN(0,0))
+  END IF
+!
+  IF (LUH_MAX) THEN
+    ALLOCATE(XUH_MAX(IIU,IJU))      ; XUH_MAX = -1.E20
+  ELSE
+    ALLOCATE(XUH_MAX(0,0))
+  END IF
+  ALLOCATE(XWMOD10MAX_MAX(IIU,IJU))     ; XWMOD10MAX_MAX = 0.0
+  ALLOCATE(XFF10MAX_MAX(IIU,IJU))     ; XFF10MAX_MAX = 0.0
+  ALLOCATE(XFF10MAX2_MAX(IIU,IJU))     ; XFF10MAX2_MAX = 0.0
+  ALLOCATE(XFF10MAX_AROME_MAX(IIU,IJU)); XFF10MAX_AROME_MAX = 0.0
 ELSE
 !
   ALLOCATE(XUM_MEAN(0,0,0))
@@ -866,10 +908,23 @@ ELSE
   ALLOCATE(XUM_MAX(0,0,0))
   ALLOCATE(XVM_MAX(0,0,0))
   ALLOCATE(XWM_MAX(0,0,0))
+  ALLOCATE(XWM_MIN(0,0,0)) ! 
   ALLOCATE(XTHM_MAX(0,0,0))
   ALLOCATE(XTEMPM_MAX(0,0,0))
   ALLOCATE(XTKEM_MAX(0,0,0))
   ALLOCATE(XPABSM_MAX(0,0,0))
+  ALLOCATE(XUM1_MAX(0,0,0)) ! 
+  ALLOCATE(XVM1_MAX(0,0,0)) ! 
+  ALLOCATE(XWM1_MAX(0,0,0)) ! 
+  ALLOCATE(XUM1_MIN(0,0,0)) ! 
+  ALLOCATE(XVM1_MIN(0,0,0)) ! 
+  ALLOCATE(XWM1_MIN(0,0,0)) ! 
+  ALLOCATE(XFF10MAX_MAX(0,0))
+  ALLOCATE(XWMOD10MAX_MAX(0,0))
+  ALLOCATE(XFF10MAX2_MAX(0,0))
+  ALLOCATE(XFF10MAX_AROME_MAX(0,0))
+  ALLOCATE(XMSLP_MAX(0,0)) ! 
+  ALLOCATE(XMSLP_MIN(0,0)) ! 
 END IF
 !
 IF ((CUVW_ADV_SCHEME(1:3)=='CEN') .AND. (CTEMP_SCHEME == 'LEFR') ) THEN
@@ -900,14 +955,19 @@ ALLOCATE(XUT(IIU,IJU,IKU))      ; XUT  = 0.0
 ALLOCATE(XVT(IIU,IJU,IKU))      ; XVT  = 0.0
 ALLOCATE(XWT(IIU,IJU,IKU))      ; XWT  = 0.0
 ALLOCATE(XTHT(IIU,IJU,IKU))     ; XTHT = 0.0
+!$acc enter data copyin(XTHT)
 ALLOCATE(XRUS(IIU,IJU,IKU))     ; XRUS = 0.0
 ALLOCATE(XRVS(IIU,IJU,IKU))     ; XRVS = 0.0
 ALLOCATE(XRWS(IIU,IJU,IKU))     ; XRWS = 0.0
+!$acc enter data copyin(XRUS,XRVS,XRWS)
 ALLOCATE(XRUS_PRES(IIU,IJU,IKU)); XRUS_PRES = 0.0
 ALLOCATE(XRVS_PRES(IIU,IJU,IKU)); XRVS_PRES = 0.0
 ALLOCATE(XRWS_PRES(IIU,IJU,IKU)); XRWS_PRES = 0.0
+!$acc enter data copyin( XRUS_PRES, XRVS_PRES, XRWS_PRES )
 ALLOCATE(XRTHS(IIU,IJU,IKU))    ; XRTHS = 0.0
+!$acc enter data copyin(XRTHS)
 ALLOCATE(XRTHS_CLD(IIU,IJU,IKU)); XRTHS_CLD = 0.0
+!$acc enter data copyin(XRTHS_CLD)
 
 IF ( LIBM ) THEN
   ALLOCATE(ZIBM_LS(IIU,IJU,IKU))  ; ZIBM_LS = 0.0
@@ -983,10 +1043,13 @@ END IF
 !
 ALLOCATE(XPABSM(IIU,IJU,IKU)) ; XPABSM = 0.0
 ALLOCATE(XPABST(IIU,IJU,IKU)) ; XPABST = 0.0
+!$acc enter data copyin(XPABST)
 !
 ALLOCATE(XRT(IIU,IJU,IKU,NRR)) ;     XRT = 0.0
+!$acc enter data copyin( XRT )
 ALLOCATE(XRRS(IIU,IJU,IKU,NRR)) ;    XRRS = 0.0
 ALLOCATE(XRRS_CLD(IIU,IJU,IKU,NRR)); XRRS_CLD = 0.0
+!$acc enter data copyin( XRRS, XRRS_CLD )
 !
 IF (CTURB /= 'NONE' .AND. NRR>1) THEN
   ALLOCATE(XSRCT(IIU,IJU,IKU))
@@ -1024,6 +1087,7 @@ END IF
 ALLOCATE(XSVT(IIU,IJU,IKU,NSV)) ;     XSVT  = 0.
 ALLOCATE(XRSVS(IIU,IJU,IKU,NSV));     XRSVS = 0.
 ALLOCATE(XRSVS_CLD(IIU,IJU,IKU,NSV)); XRSVS_CLD = 0.0
+!$acc enter data copyin( XRSVS, XRSVS_CLD )
 ALLOCATE(XZWS(IIU,IJU)) ;             XZWS(:,:) = XZWS_DEFAULT
 !
 IF (LPASPOL) THEN
@@ -1076,6 +1140,7 @@ ALLOCATE(XDYY(IIU,IJU,IKU))
 ALLOCATE(XDZX(IIU,IJU,IKU))
 ALLOCATE(XDZY(IIU,IJU,IKU))
 ALLOCATE(XDZZ(IIU,IJU,IKU))
+!$acc enter data create(XDXX,XDYY,XDZZ,XDZX,XDZY)
 !
 !*       3.3   Modules MODD_REF and  MODD_REF_n
 !
@@ -1095,12 +1160,15 @@ ALLOCATE(XPHIT(IIU,IJU,IKU))
 ALLOCATE(XRHODREF(IIU,IJU,IKU))
 ALLOCATE(XTHVREF(IIU,IJU,IKU))
 ALLOCATE(XEXNREF(IIU,IJU,IKU))
+!$acc enter data create( XPHIT, XRHODREF, XTHVREF, XEXNREF )
 ALLOCATE(XRHODJ(IIU,IJU,IKU))
+!$acc enter data create(XRHODJ)
 IF (CEQNSYS=='DUR' .AND. LUSERV) THEN
   ALLOCATE(XRVREF(IIU,IJU,IKU))
 ELSE
   ALLOCATE(XRVREF(0,0,0))
 END IF
+!$acc enter data create(XRVREF)
 !
 !*       3.4   Module MODD_CURVCOR_n
 !
@@ -1123,20 +1191,41 @@ END IF
 !*       3.5   Module MODD_DYN_n
 !
 CALL GET_DIM_EXT_ll('Y',IIY,IJY)
-IF (L2D) THEN
-  ALLOCATE(XBFY(IIY,IJY,IKU))
+IF ( CPRESOPT /= 'ZSOLV' ) THEN
+  IF (L2D) THEN
+    ALLOCATE(XBFY(IIY,IJY,IKU))
+  ELSE
+    ALLOCATE(XBFY(IJY,IIY,IKU)) ! transposition needed by the optimisation of the
+                                ! FFT solver
+  END IF
 ELSE
-  ALLOCATE(XBFY(IJY,IIY,IKU)) ! transposition needed by the optimisation of the
-                              ! FFT solver
+  ALLOCATE(XBFY(0,0,0))
 END IF
+
 CALL GET_DIM_EXT_ll('B',IIU_B,IJU_B)
-ALLOCATE(XBFB(IIU_B,IJU_B,IKU))
-CALL GET_DIM_EXTZ_ll('SXP2_YP1_Z',IIU_SXP2_YP1_Z_ll,IJU_SXP2_YP1_Z_ll,IKU_SXP2_YP1_Z_ll)
-ALLOCATE(XBF_SXP2_YP1_Z(IIU_SXP2_YP1_Z_ll,IJU_SXP2_YP1_Z_ll,IKU_SXP2_YP1_Z_ll))
-ALLOCATE(XAF(IKU),XCF(IKU))
-ALLOCATE(XTRIGSX(3*IIU_ll))
-ALLOCATE(XTRIGSY(3*IJU_ll))
+IF ( CPRESOPT == 'ZRESI' .OR. CPRESOPT == 'ZSOLV' ) THEN
+  ALLOCATE(XBFB(IIU_B,IJU_B,IKU))
+ELSE
+  ALLOCATE(XBFB(0,0,0))
+END IF
+
+IF ( CPRESOPT == 'ZRESI' ) THEN
+  CALL GET_DIM_EXTZ_ll('SXP2_YP1_Z',IIU_SXP2_YP1_Z_ll,IJU_SXP2_YP1_Z_ll,IKU_SXP2_YP1_Z_ll)
+  ALLOCATE(XBF_SXP2_YP1_Z(IIU_SXP2_YP1_Z_ll,IJU_SXP2_YP1_Z_ll,IKU_SXP2_YP1_Z_ll))
+ELSE
+  ALLOCATE(XBF_SXP2_YP1_Z(0,0,0))
+END IF
+IF ( CPRESOPT /= 'ZSOLV' ) THEN
+  ALLOCATE(XAF(IKU),XCF(IKU))
+  ALLOCATE(XTRIGSX(3*IIU_ll))
+  ALLOCATE(XTRIGSY(3*IJU_ll))
+ELSE
+  ALLOCATE(XAF(0),XCF(0))
+  ALLOCATE(XTRIGSX(0))
+  ALLOCATE(XTRIGSY(0))
+END IF
 ALLOCATE(XRHOM(IKU))
+!$acc enter data create( XRHOM, XAF, XBFY, XCF, XTRIGSX, XTRIGSY, NIFAXX, NIFAXY, XBFB, XBF_SXP2_YP1_Z )
 ALLOCATE(XALK(IKU))
 ALLOCATE(XALKW(IKU))
 ALLOCATE(XALKBAS(IKU))
@@ -1562,6 +1651,7 @@ IF (CRAD /= 'NONE') THEN
   ALLOCATE(XDTHRADSW(IIU,IJU,IKU))
   ALLOCATE(XDTHRADLW(IIU,IJU,IKU))
   ALLOCATE(XRADEFF(IIU,IJU,IKU))
+  ALLOCATE(NRAD_AGG_FLAG(IIU,IJU))
 ELSE
   ALLOCATE(XSLOPANG(0,0))
   ALLOCATE(XSLOPAZI(0,0))
@@ -1581,6 +1671,7 @@ ELSE
   ALLOCATE(XDTHRADSW(0,0,0))
   ALLOCATE(XDTHRADLW(0,0,0))
   ALLOCATE(XRADEFF(0,0,0))
+  ALLOCATE(NRAD_AGG_FLAG(0,0))
 END IF
 
 IF (CRAD == 'ECMW' .OR. CRAD == 'ECRA') THEN
@@ -1889,26 +1980,46 @@ CALL INI_BIKHARDT_n (NDXRATIO_ALL(KMI),NDYRATIO_ALL(KMI),KMI)
 !               ----------------------------
 !
 IF (KMI == 1) THEN
-  DO IMI = 1 , NMODEL
-    WRITE(IO_SURF_MNH_MODEL(IMI)%COUTFILE,'(A,".",I1,".",A)') CEXP,IMI,TRIM(ADJUSTL(CSEG))
-    WRITE(YNAME, '(A,".",I1,".",A)') CEXP,IMI,TRIM(ADJUSTL(CSEG))//'.000'
-    CALL IO_File_add2list(LUNIT_MODEL(IMI)%TDIAFILE,YNAME,'MNHDIACHRONIC','WRITE', &
-                          HDIRNAME=CIO_DIR,                                        &
-                          KLFINPRAR=INT(50,KIND=LFIINT),KLFITYPE=1,KLFIVERB=NVERB, &
-                          TPDADFILE=LUNIT_MODEL(NDAD(IMI))%TDIAFILE )
+  IF ( NFILE_NUM_MAX < 1000 ) THEN
+    YNUM= '000'
+  ELSE IF ( NFILE_NUM_MAX < 10000 ) THEN
+    YNUM= '0000'
+  ELSE IF ( NFILE_NUM_MAX < 100000 ) THEN
+    YNUM= '00000'
+  ELSE IF ( NFILE_NUM_MAX < 1000000 ) THEN
+    YNUM= '000000'
+  ELSE
+    CALL PRINT_MSG( NVERB_FATAL, 'IO', 'INI_MODEL_n', 'NFILE_NUM_MAX is too large' )
+  END IF
+
+  DO IMI = 1, NMODEL
+    IF ( NMODELNUMLGTMAX == 1 ) THEN
+      IF ( NMODEL > 9 ) CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'INI_MODEL_n', 'NMODEL>9 and NMODELNUMLGTMAX=1' )
+      WRITE( YNAME, '( A, ".", I1, ".", A )' ) TRIM(CEXP), IMI, TRIM(ADJUSTL(CSEG)) // '.' // TRIM(YNUM)
+    ELSE IF ( NMODELNUMLGTMAX == 2 ) THEN
+      IF ( NMODEL > 99 ) CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'INI_MODEL_n', 'NMODEL>99 and NMODELNUMLGTMAX=2' )
+      WRITE( YNAME, '( A, ".", I2.2, ".", A )' ) TRIM(CEXP), IMI, TRIM(ADJUSTL(CSEG)) // '.' // TRIM(YNUM)
+    ELSE
+      CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'INI_MODEL_n', 'NMODELNUMLGTMAX>2 not implemented' )
+    END IF
+    CALL IO_File_add2list( LUNIT_MODEL(IMI)%TDIAFILE, YNAME, 'MNHDIACHRONIC', 'WRITE', &
+                           HDIRNAME=CIO_DIR,                                           &
+                           KLFINPRAR=INT(50,KIND=LFIINT), KLFIVERB=NVERB,              &
+                           TPDADFILE=LUNIT_MODEL(NDAD(IMI))%TDIAFILE                   )
   END DO
   !
   TDIAFILE => LUNIT_MODEL(KMI)%TDIAFILE !Necessary because no call to GOTO_MODEL before needing it
   !
   IF (CPROGRAM=='MESONH') THEN
-    IF ( NDAD(KMI) == 1)  CDAD_NAME(KMI) = CEXP//'.1.'//CSEG
-    IF ( NDAD(KMI) == 2)  CDAD_NAME(KMI) = CEXP//'.2.'//CSEG
-    IF ( NDAD(KMI) == 3)  CDAD_NAME(KMI) = CEXP//'.3.'//CSEG
-    IF ( NDAD(KMI) == 4)  CDAD_NAME(KMI) = CEXP//'.4.'//CSEG
-    IF ( NDAD(KMI) == 5)  CDAD_NAME(KMI) = CEXP//'.5.'//CSEG
-    IF ( NDAD(KMI) == 6)  CDAD_NAME(KMI) = CEXP//'.6.'//CSEG
-    IF ( NDAD(KMI) == 7)  CDAD_NAME(KMI) = CEXP//'.7.'//CSEG
-    IF ( NDAD(KMI) == 8)  CDAD_NAME(KMI) = CEXP//'.8.'//CSEG
+    IF ( NMODELNUMLGTMAX == 1 ) THEN
+      IF ( NDAD(KMI) > 9 ) CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'INI_MODEL_n', 'NMODEL>9 and NMODELNUMLGTMAX=1' )
+      WRITE( CDAD_NAME(KMI), '( A, ".", I1, ".", A) ' ) TRIM(CEXP), NDAD(KMI), TRIM(ADJUSTL(CSEG))
+    ELSE IF ( NMODELNUMLGTMAX == 2 ) THEN
+      IF ( NDAD(KMI) > 99 ) CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'INI_MODEL_n', 'NMODEL>99 and NMODELNUMLGTMAX=2' )
+      WRITE( CDAD_NAME(KMI), '( A, ".", I2, ".", A) ' ) TRIM(CEXP), NDAD(KMI), TRIM(ADJUSTL(CSEG))
+    ELSE
+      CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'INI_MODEL_n', 'NMODELNUMLGTMAX>2 not implemented' )
+    END IF
   END IF
 END IF
 !
@@ -1917,15 +2028,15 @@ END IF
 !*       7.    INITIALIZE GRIDS AND METRIC COEFFICIENTS
 !              ----------------------------------------
 !
-CALL SET_GRID( KMI, TPINIFILE, IKU, NIMAX_ll, NJMAX_ll,                        &
-               XTSTEP, XSEGLEN,                                                &
-               XLONORI, XLATORI, XLON, XLAT,                                   &
-               XXHAT, XYHAT, XDXHAT, XDYHAT, XXHATM, XYHATM,                   &
-               XXHAT_ll, XYHAT_ll, XXHATM_ll, XYHATM_ll,                       &
-               XHAT_BOUND, XHATM_BOUND,                                        &
-               XMAP, XZS, XZZ, XZHAT, XZHATM, XZTOP, LSLEVE,                   &
-               XLEN1, XLEN2, XZSMT, ZJ,                                        &
-               TDTMOD, TDTCUR, NSTOP, NBAK_NUMB, NOUT_NUMB, TBACKUPN, TOUTPUTN )
+CALL SET_GRID( KMI, TPINIFILE, IKU, NIMAX_ll, NJMAX_ll,      &
+               XTSTEP, XSEGLEN,                              &
+               XLONORI, XLATORI, XLON, XLAT,                 &
+               XXHAT, XYHAT, XDXHAT, XDYHAT, XXHATM, XYHATM, &
+               XXHAT_ll, XYHAT_ll, XXHATM_ll, XYHATM_ll,     &
+               XHAT_BOUND, XHATM_BOUND,                      &
+               XMAP, XZS, XZZ, XZHAT, XZHATM, XZTOP, LSLEVE, &
+               XLEN1, XLEN2, XZSMT, ZJ,                      &
+               TDTMOD, TDTCUR, NSTOP                         )
 !
 CALL METRICS(XMAP,XDXHAT,XDYHAT,XZZ,XDXX,XDYY,XDZX,XDZY,XDZZ)
 !
@@ -2200,6 +2311,7 @@ CALL READ_FIELD(KMI,TPINIFILE,IIU,IJU,IKU,                                    &
                 XWMEANN,XUMEANE,XVMEANE,XWMEANE,XUMEANS,XVMEANS,XWMEANS,      &
                 XLSPHI, XBMAP, XFMASE, XFMAWC, XFMWINDU, XFMWINDV, XFMWINDW, XFMHWS )
 
+!$acc update device( XPABST, XRT, XRUS_PRES, XRVS_PRES, XRWS_PRES, XRRS_CLD, XRSVS_CLD )
 !
 !-------------------------------------------------------------------------------
 !
@@ -2442,20 +2554,20 @@ IF ( KMI > 1) THEN
   DPTR_XLBXSVM=>XLBXSVM
   DPTR_XLBYSVM=>XLBYSVM
   IF (CCONF=='START')  THEN
-  CALL INI_ONE_WAY_n(NDAD(KMI),KMI,                        &
-       DPTR_XBMX1,DPTR_XBMX2,DPTR_XBMX3,DPTR_XBMX4,DPTR_XBMY1,DPTR_XBMY2,DPTR_XBMY3,DPTR_XBMY4,        &
-       DPTR_XBFX1,DPTR_XBFX2,DPTR_XBFX3,DPTR_XBFX4,DPTR_XBFY1,DPTR_XBFY2,DPTR_XBFY3,DPTR_XBFY4,        &
-       NDXRATIO_ALL(KMI),NDYRATIO_ALL(KMI),      &
-       DPTR_CLBCX,DPTR_CLBCY,NRIMX,NRIMY,                                &
-       DPTR_NKLIN_LBXU,DPTR_XCOEFLIN_LBXU,DPTR_NKLIN_LBYU,DPTR_XCOEFLIN_LBYU,      &
-       DPTR_NKLIN_LBXV,DPTR_XCOEFLIN_LBXV,DPTR_NKLIN_LBYV,DPTR_XCOEFLIN_LBYV,      &
-       DPTR_NKLIN_LBXW,DPTR_XCOEFLIN_LBXW,DPTR_NKLIN_LBYW,DPTR_XCOEFLIN_LBYW,      &
-       DPTR_NKLIN_LBXM,DPTR_XCOEFLIN_LBXM,DPTR_NKLIN_LBYM,DPTR_XCOEFLIN_LBYM,      &
-       CCLOUD, LUSECHAQ, LUSECHIC,                                                 &
-       DPTR_XLBXUM,DPTR_XLBYUM,DPTR_XLBXVM,DPTR_XLBYVM,DPTR_XLBXWM,DPTR_XLBYWM,    &
-       DPTR_XLBXTHM,DPTR_XLBYTHM,                                                  &
-       DPTR_XLBXTKEM,DPTR_XLBYTKEM,                                                &
-       DPTR_XLBXRM,DPTR_XLBYRM,DPTR_XLBXSVM,DPTR_XLBYSVM                           )
+  CALL INI_ONE_WAY_n(NDAD(KMI),KMI,                                                             &
+       DPTR_XBMX1,DPTR_XBMX2,DPTR_XBMX3,DPTR_XBMX4,DPTR_XBMY1,DPTR_XBMY2,DPTR_XBMY3,DPTR_XBMY4, &
+       DPTR_XBFX1,DPTR_XBFX2,DPTR_XBFX3,DPTR_XBFX4,DPTR_XBFY1,DPTR_XBFY2,DPTR_XBFY3,DPTR_XBFY4, &
+       NDXRATIO_ALL(KMI),NDYRATIO_ALL(KMI),                                                     &
+       DPTR_CLBCX,DPTR_CLBCY,NRIMX,NRIMY,                                                       &
+       DPTR_NKLIN_LBXU,DPTR_XCOEFLIN_LBXU,DPTR_NKLIN_LBYU,DPTR_XCOEFLIN_LBYU,                   &
+       DPTR_NKLIN_LBXV,DPTR_XCOEFLIN_LBXV,DPTR_NKLIN_LBYV,DPTR_XCOEFLIN_LBYV,                   &
+       DPTR_NKLIN_LBXW,DPTR_XCOEFLIN_LBXW,DPTR_NKLIN_LBYW,DPTR_XCOEFLIN_LBYW,                   &
+       DPTR_NKLIN_LBXM,DPTR_XCOEFLIN_LBXM,DPTR_NKLIN_LBYM,DPTR_XCOEFLIN_LBYM,                   &
+       CCLOUD, LUSECHAQ, LUSECHIC,                                                              &
+       DPTR_XLBXUM,DPTR_XLBYUM,DPTR_XLBXVM,DPTR_XLBYVM,DPTR_XLBXWM,DPTR_XLBYWM,                 &
+       DPTR_XLBXTHM,DPTR_XLBYTHM,                                                               &
+       DPTR_XLBXTKEM,DPTR_XLBYTKEM,                                                             &
+       DPTR_XLBXRM,DPTR_XLBYRM,DPTR_XLBXSVM,DPTR_XLBYSVM                                        )
    ENDIF
 END IF
 !
@@ -2475,7 +2587,7 @@ IF (LLG .AND. LINIT_LG .AND. CPROGRAM=='MESONH') &
 !               ------------------------------------------
 !
 CALL INI_DYNAMICS(XLON,XLAT,XRHODJ,XTHVREF,XMAP,XZZ,XDXHAT,XDYHAT,            &
-             XZHAT,XZHATM,CLBCX,CLBCY,XTSTEP,                                 &
+             XZHAT,XZHATM,CLBCX,CLBCY,CPRESOPT,XTSTEP,                        &
              LVE_RELAX,LVE_RELAX_GRD,LHORELAX_UVWTH,LHORELAX_RV,              &
              LHORELAX_RC,LHORELAX_RR,LHORELAX_RI,LHORELAX_RS,LHORELAX_RG,     &
              LHORELAX_RH,LHORELAX_TKE,LHORELAX_SV,                            &
@@ -2495,6 +2607,9 @@ CALL INI_DYNAMICS(XLON,XLAT,XRHODJ,XTHVREF,XMAP,XZZ,XDXHAT,XDYHAT,            &
              XDK2U,XDK4U,XDK2TH,XDK4TH,XDK2SV,XDK4SV,                         &
              LZDIFFU,XZDIFFU_HALO2,                                           &
              XBFB,XBF_SXP2_YP1_Z                                              )
+
+!$acc update device( XRHOM, XAF, XBFY, XCF, XTRIGSX, XTRIGSY, NIFAXX, NIFAXY, XBFB, XBF_SXP2_YP1_Z )
+
 !
 !
 !*      16.1 Initialize the XDRAG array
@@ -2508,6 +2623,8 @@ IF (LIBM) THEN
   ALLOCATE(XIBM_LS(IIU,IJU,IKU,4)) ; XIBM_LS  = -XIBM_IEPS
   XIBM_LS(:,:,:,1)=ZIBM_LS(:,:,:)
   DEALLOCATE(ZIBM_LS)
+ELSE
+  ALLOCATE( XIBM_LS(0,0,0,1) ) !Last dimension should be at least 1 because it is passed in phys_param_n
 ENDIF
 !-------------------------------------------------------------------------------
 !
@@ -2535,7 +2652,8 @@ IF (CRAD   /= 'NONE') THEN
                       XRADEFF,XSWU,XSWD,XLWU,             &
                       XLWD,XDTHRADSW,XDTHRADLW,           &
                       NRAD_AGG,NI_RAD_AGG,NJ_RAD_AGG,     &
-                      NIOR_RAD_AGG,NJOR_RAD_AGG           )
+                      NIOR_RAD_AGG,NJOR_RAD_AGG,          &
+                      NRAD_AGG_FLAG                       )
   !
   IF (GINIRAD) CALL SUNPOS_n(XZENITH,PAZIMSOL=XAZIM)
   CALL SURF_SOLAR_GEOM    (XZS, XZS_XY)
@@ -2574,8 +2692,8 @@ RCCO2 = 360.0E-06 * 44.0E-03 / XMD
 IF ( CPROGRAM == 'MESONH' ) THEN
   ! Add sea salt fluxes
   IF ( LSALT ) THEN;
-    ALLOCATE( XFLXT_SLT(IIU, IJU, NMODE_SLT) ) ; XFLX_SLT( :,:,:) = 0.
-    ALLOCATE( XFLX_SLT (IIU, IJU, NMODE_SLT) ) ; XFLXT_SLT(:,:,:) = 0.
+    ALLOCATE( XFLX_SLT(IIU, IJU, NMODE_SLT) ) ; XFLX_SLT( :,:,:) = 0.
+    ALLOCATE( XFLXT_SLT (IIU, IJU, NMODE_SLT) ) ; XFLXT_SLT(:,:,:) = 0.
   ELSE
     ALLOCATE( XFLXT_SLT(0, 0, 0) )
     ALLOCATE( XFLX_SLT (0, 0, 0) )
@@ -2625,18 +2743,18 @@ END IF
 IF (CSURF=='EXTE' .AND. (CPROGRAM=='MESONH' .OR. CPROGRAM=='DIAG  ')) THEN
   ! ouverture du fichier PGD
   IF  ( LEN_TRIM(CINIFILEPGD) > 0 ) THEN
-    CALL IO_File_add2list(TINIFILEPGD,TRIM(CINIFILEPGD),'PGD','READ',KLFITYPE=2,KLFIVERB=NVERB)
+    CALL IO_File_add2list( TINIFILEPGD, TRIM(CINIFILEPGD), 'PGD', 'READ', KLFIVERB=NVERB )
     CALL IO_File_open(TINIFILEPGD,KRESP=IRESP)
     LUNIT_MODEL(KMI)%TINIFILEPGD => TINIFILEPGD
     IF (IRESP/=0) THEN
-      WRITE(ILUOUT,FMT=*) "INI_MODEL_n ERROR TO OPEN THE FILE CINIFILEPGD=",CINIFILEPGD
+      WRITE(ILUOUT,FMT=*) "INI_MODEL_n ERROR TO OPEN THE FILE CINIFILEPGD=",TRIM(CINIFILEPGD)
       WRITE(ILUOUT,FMT=*) "CHECK YOUR NAMELIST NAM_LUNITn"
     !callabortstop
       CALL PRINT_MSG(NVERB_FATAL,'GEN','INI_MODEL_n','')
     ENDIF
   ELSE
   ! case after a spawning
-    CINIFILEPGD = TPINIFILE%CNAME
+    TINIFILEPGD => TPINIFILE
   END IF
   !
   CALL GOTO_SURFEX(KMI)
@@ -2668,11 +2786,11 @@ ELSE
 END IF
 IF (CSURF=='EXTE' .AND. (CPROGRAM=='SPAWN ')) THEN
   ! ouverture du fichier PGD
-  CALL IO_File_add2list(TINIFILEPGD,TRIM(CINIFILEPGD),'PGD','READ',KLFITYPE=2,KLFIVERB=NVERB)
+  CALL IO_File_add2list( TINIFILEPGD, TRIM(CINIFILEPGD), 'PGD', 'READ', KLFIVERB=NVERB )
   CALL IO_File_open(TINIFILEPGD,KRESP=IRESP)
   LUNIT_MODEL(KMI)%TINIFILEPGD => TINIFILEPGD
   IF (IRESP/=0) THEN
-    WRITE(ILUOUT,FMT=*) "INI_MODEL_n ERROR TO OPEN THE FILE CINIFILEPGD=",CINIFILEPGD
+    WRITE(ILUOUT,FMT=*) "INI_MODEL_n ERROR TO OPEN THE FILE CINIFILEPGD=",TRIM(CINIFILEPGD)
     WRITE(ILUOUT,FMT=*) "CHECK YOUR NAMELIST NAM_LUNIT2_SPA"
     !callabortstop
     CALL PRINT_MSG(NVERB_FATAL,'GEN','INI_MODEL_n','')
@@ -2967,16 +3085,20 @@ END IF
 !
 !*     33.  Auto-coupling Atmos-Ocean LES NH
 !
-IF (LCOUPLES) THEN
- ALLOCATE(XSSUFL_C(IIU,IJU,1)); XSSUFL_C=0.0
- ALLOCATE(XSSVFL_C(IIU,IJU,1)); XSSVFL_C=0.0
- ALLOCATE(XSSTFL_C(IIU,IJU,1)); XSSTFL_C=0.0
- ALLOCATE(XSSRFL_C(IIU,IJU,1)); XSSRFL_C=0.
-ELSE
- ALLOCATE(XSSUFL_C(0,0,0))
- ALLOCATE(XSSVFL_C(0,0,0))
- ALLOCATE(XSSTFL_C(0,0,0))
- ALLOCATE(XSSRFL_C(0,0,0))
+! Atmos Flux at interface
+! Allocate to a non-zero size only if LCOUPLES=T. It must be allocated only once (=>IF KMI==1)
+IF ( KMI == 1 ) THEN
+  IF ( LCOUPLES ) THEN
+    ALLOCATE( XSSUFL(IIU,IJU) ); XSSUFL=0.0
+    ALLOCATE( XSSVFL(IIU,IJU) ); XSSVFL=0.0
+    ALLOCATE( XSSTFL(IIU,IJU) ); XSSTFL=0.0
+    ALLOCATE( XSSRFL(IIU,IJU) ); XSSRFL=0.0
+  ELSE
+    ALLOCATE( XSSVFL(0,0) )
+    ALLOCATE( XSSTFL(0,0) )
+    ALLOCATE( XSSRFL(0,0) )
+    ALLOCATE( XSSUFL(0,0) )
+  END IF
 END IF
 !
 END SUBROUTINE INI_MODEL_n

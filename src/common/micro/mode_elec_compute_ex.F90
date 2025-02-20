@@ -187,7 +187,7 @@ ELSE IF (KMOMENT == 1) THEN
   ELSE IF (KID == 4) THEN
     WHERE (PRX(:) > ZRTMIN .AND. PCX(:) > 0.0)
       PEX(:) = PDUM * PRHO(:) * PQX(:) /                      &
-               ((PCX**(1 - XEXFQUPDI)) * ZFQUPDX * (PRHO(:) * &
+               ((PCX(:)**(1 - XEXFQUPDI)) * ZFQUPDX * (PRHO(:) * &
                PDUM * PRX(:))**XEXFQUPDI)
       PEX(:) = SIGN( MIN(ABS(PEX(:)), ZEXMAX), PEX(:))
     ENDWHERE
