@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -269,6 +269,7 @@ END MODULE MODI_MODEL_n
 !  P. Wautelet 20/05/2019: add name argument to ADDnFIELD_ll + new ADD4DFIELD_ll subroutine
 !  J. Escobar  09/07/2019: norme Doctor -> Rename Module Type variable TZ -> T
 !  J. Escobar  09/07/2019: for bug in management of XLSZWSM variable, add/use specific 2D TLSFIELD2D_ll pointer
+!  P. Wautelet 23/07/2019: OpenACC: move data creations from resolved_cloud to modeln and optimize updates
 !  P. Wautelet 13/09/2019: budget: simplify and modernize date/time management
 !  J. Escobar  27/09/2019: add missing report timing of RESOLVED_ELEC
 !  P. Wautelet 02-03/2020: use the new data structures and subroutines for budgets
@@ -285,7 +286,7 @@ END MODULE MODI_MODEL_n
 !                          (useful to close them in reverse model order (child before parent, needed by WRITE_BALLOON_n)
 !  J. Wurtz       01/2023: correction for mean in SURFEX outputs
 !  C. Barthe   03/02/2022: cloud electrification is now called from resolved_cloud to avoid duplicated routines
-!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
+!  P. Wautelet 02/02/2024: restructure backups/outputs lists
 !!-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -295,7 +296,6 @@ USE MODD_2D_FRC
 USE MODD_ADV_n
 USE MODD_AIRCRAFT_BALLOON
 USE MODD_ARGSLIST_ll,     ONLY : LIST_ll
-USE MODD_BAKOUT
 USE MODD_BIKHARDT_n
 USE MODD_BLANK_n
 USE MODD_BLOWSNOW
@@ -345,7 +345,11 @@ USE MODD_MEAN_FIELD
 USE MODD_MEAN_FIELD_n
 USE MODD_METRICS_n
 USE MODD_MNH_SURFEX_n
+#ifndef MNH_COMPILER_CCE
 USE MODD_NEB_n,          ONLY: LSIGMAS, LSUBG_COND, VSIGQSAT
+#else
+USE MODD_NEB_n,          ONLY: LSIGMAS, LSUBG_COND, VSIGQSAT_MODD => VSIGQSAT
+#endif
 USE MODD_NESTING
 USE MODD_NSV
 USE MODD_NUDGING_n
@@ -375,7 +379,7 @@ USE MODD_SERIES_n,       ONLY: NFREQSERIES
 USE MODD_STATION_n
 USE MODD_SUB_MODEL_n
 USE MODD_TIME
-USE MODD_TIME_n 
+USE MODD_TIME_n
 USE MODD_TIMEZ
 USE MODD_TURB_n
 USE MODD_TYPE_DATE,      ONLY: DATE_TIME
@@ -385,16 +389,18 @@ USE MODE_AIRCRAFT_BALLOON
 use mode_budget,           only: Budget_store_init, Budget_store_end
 USE MODE_DATETIME
 USE MODE_ELEC_ll
+USE MODE_FILL_DIMPHYEX,    ONLY: FILL_DIMPHYEX
 USE MODE_GRIDCART
 USE MODE_GRIDPROJ
 USE MODE_IO_FIELD_WRITE,   only: IO_Field_user_write, IO_Fieldlist_write, IO_Header_write
 USE MODE_IO_FILE,          only: IO_File_close, IO_File_open
-USE MODE_IO_MANAGE_STRUCT, only: IO_File_add2list
+USE MODE_IO_MANAGE_STRUCT, only: IO_File_add2list, IO_File_remove_from_list, &
+                                 IO_Is_backup_time, IO_Is_output_time, IO_BakOut_file_create
 USE MODE_ll
-#ifdef MNH_IOLFI
-use mode_menu_diachro,     only: MENU_DIACHRO
-#endif
 USE MODE_MNH_TIMING
+#ifdef MNH_OPENACC
+USE MODE_MNH_ZWORK,      ONLY: MNH_MEM_GET, MNH_MEM_POSITION_PIN, MNH_MEM_RELEASE
+#endif
 USE MODE_MODELN_HANDLER
 USE MODE_MPPDB
 USE MODE_MSG
@@ -469,6 +475,9 @@ USE MODI_WRITE_DIAG_SURF_ATM_N
 USE MODI_WRITE_LFIFM_n
 USE MODI_WRITE_SERIES_n
 USE MODI_WRITE_SURF_ATM_N
+#ifdef MNH_BITREP_OMP
+USE MODI_BITREPZ
+#endif
 !
 IMPLICIT NONE
 !
@@ -482,6 +491,8 @@ TYPE(DATE_TIME),          INTENT(OUT)   :: TPDTMODELN ! Time of current model co
 LOGICAL,                  INTENT(INOUT) :: OEXIT      ! Switch for the end of the temporal loop
 !
 !*       0.2   declarations of local variables
+!
+LOGICAL, PARAMETER :: GFULLSTAT_PRESS_SLV = .FALSE. ! To write detailed stats of pressure solver in files
 !
 INTEGER :: ILUOUT      ! Logical unit number for the output listing
 INTEGER :: IIU,IJU,IKU ! array size in first, second and third dimensions
@@ -505,8 +516,10 @@ INTEGER :: ISYNCHRO          ! model synchronic index relative to its father
                              ! = 1  for the first time step in phase with DAD
                              ! = 0  for the last  time step (out of phase)
 INTEGER      :: IMI ! Current model index
-REAL, DIMENSION(:,:),ALLOCATABLE          :: ZSEA
-REAL, DIMENSION(:,:),ALLOCATABLE          :: ZTOWN
+REAL, DIMENSION(:,:), POINTER, CONTIGUOUS :: ZSEA
+REAL, DIMENSION(:,:), POINTER, CONTIGUOUS :: ZTOWN
+INTEGER      :: INUMBAK ! Current backup number
+INTEGER      :: INUMOUT ! Current output number
 ! Dummy pointers needed to correct an ifort Bug
 REAL, DIMENSION(:), POINTER :: DPTR_XZHAT
 REAL, DIMENSION(:), POINTER :: DPTR_XBMX1,DPTR_XBMX2,DPTR_XBMX3,DPTR_XBMX4
@@ -552,32 +565,71 @@ REAL, DIMENSION(SIZE(XTHT,1),SIZE(XTHT,2),SIZE(XTHT,3))           :: ZINPRS3D
 REAL, DIMENSION(SIZE(XTHT,1),SIZE(XTHT,2),SIZE(XTHT,3))           :: ZINPRG3D
 REAL, DIMENSION(SIZE(XTHT,1),SIZE(XTHT,2),SIZE(XTHT,3))           :: ZINPRH3D
 !
-LOGICAL :: KWARM        
-LOGICAL :: KRAIN        
-LOGICAL :: KSEDC  
+LOGICAL :: KWARM
+LOGICAL :: KRAIN
+LOGICAL :: KSEDC
 LOGICAL :: KACTIT
 LOGICAL :: KSEDI
 LOGICAL :: KHHONI
 !
-REAL, DIMENSION(SIZE(XTHT,1),SIZE(XTHT,2),SIZE(XTHT,3)) :: ZRUS,ZRVS,ZRWS
-REAL, DIMENSION(SIZE(XTHT,1),SIZE(XTHT,2),SIZE(XTHT,3)) :: ZPABST !To give pressure at t 
+#ifndef MNH_OPENACC
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZRUS,ZRVS
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZRWS
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZPABST !To give pressure at t
                                                      ! (and not t+1) to resolved_cloud
-REAL, DIMENSION(SIZE(XTHT,1),SIZE(XTHT,2),SIZE(XTHT,3)) :: ZJ
+#else
+REAL, DIMENSION(:,:,:), POINTER, CONTIGUOUS :: ZRUS,ZRVS
+REAL, DIMENSION(:,:,:), POINTER, CONTIGUOUS :: ZRWS
+REAL, DIMENSION(:,:,:), POINTER, CONTIGUOUS :: ZPABST !To give pressure at t
+                                                     ! (and not t+1) to resolved_cloud
+#endif
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZJ
 !
 TYPE(LIST_ll), POINTER :: TZFIELDC_ll   ! list of fields to exchange
 TYPE(HALO2LIST_ll), POINTER :: TZHALO2C_ll   ! list of fields to exchange
+#ifdef MNH_OPENACC
+TYPE(HALO2LIST_ll), SAVE , POINTER :: TZHALO2_UT,TZHALO2_VT,TZHALO2_WT
+LOGICAL , SAVE :: GFIRST_CALL_MODELN = .TRUE.
+#endif
 LOGICAL :: GCLD                     ! conditionnal call for dust wet deposition
 LOGICAL :: GCLOUD_ONLY              ! conditionnal radiation computations for
                                 !      the only cloudy columns
-REAL, DIMENSION(SIZE(XRSVS,1), SIZE(XRSVS,2), SIZE(XRSVS,3), NSV_AER)  :: ZWETDEPAER
+REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZWETDEPAER
+
+LOGICAL :: GNVS_NO_0
 !
 TYPE(TFILEDATA),POINTER :: TZOUTFILE
 ! TYPE(TFILEDATA),SAVE    :: TZDIACFILE
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !-------------------------------------------------------------------------------
 !
+!
+#ifdef MNH_COMPILER_CCE
+!Bypass cray bug with scalar pointer
+REAL :: VSIGQSAT
+VSIGQSAT = VSIGQSAT_MODD
+#endif
+
+!-------------------------------------------------------------------------------
+
 TPBAKFILE=> NULL()
 TZOUTFILE=> NULL()
+
+#ifndef MNH_OPENACC
+allocate( ZRUS  (SIZE(XTHT,1),SIZE(XTHT,2),SIZE(XTHT,3)) )
+allocate( ZRVS  (SIZE(XTHT,1),SIZE(XTHT,2),SIZE(XTHT,3)) )
+allocate( ZRWS  (SIZE(XTHT,1),SIZE(XTHT,2),SIZE(XTHT,3)) )
+allocate( ZPABST(SIZE(XTHT,1),SIZE(XTHT,2),SIZE(XTHT,3)) )
+#else
+!Pin positions in the pools of MNH memory
+CALL MNH_MEM_POSITION_PIN( 'MODEL_n 1')
+CALL MNH_MEM_GET( ZRUS,   SIZE( XTHT, 1 ), SIZE( XTHT, 2 ), SIZE( XTHT, 3 ) )
+CALL MNH_MEM_GET( ZRVS,   SIZE( XTHT, 1 ), SIZE( XTHT, 2 ), SIZE( XTHT, 3 ) )
+CALL MNH_MEM_GET( ZRWS,   SIZE( XTHT, 1 ), SIZE( XTHT, 2 ), SIZE( XTHT, 3 ) )
+CALL MNH_MEM_GET( ZPABST, SIZE( XTHT, 1 ), SIZE( XTHT, 2 ), SIZE( XTHT, 3 ) )
+#endif
+allocate( ZJ    (SIZE(XTHT,1),SIZE(XTHT,2),SIZE(XTHT,3)) )
+allocate( ZWETDEPAER(SIZE(XRSVS,1), SIZE(XRSVS,2), SIZE(XRSVS,3), NSV_AER) )
 !
 TPDTMODELN = TDTCUR
 !
@@ -593,8 +645,8 @@ CASE('C2R2','KHKO','C3R5')
   KSEDI  = NSEDI
   KHHONI = NHHONI
 CASE('LIMA')
-   KRAIN  = NMOM_R.GE.1
-   KWARM  = NMOM_C.GE.1
+  KRAIN  = NMOM_R.GE.1
+  KWARM  = NMOM_C.GE.1
   KSEDC  = MSEDC
   KACTIT = MACTIT
 !
@@ -608,6 +660,13 @@ CASE('ICE3','ICE4') !default values
 !
   KSEDI  = .TRUE.
   KHHONI = .FALSE.
+CASE DEFAULT
+  ! Set default values to prevent false positives with debugging tools
+  ! (ie KSEDC is used in an IF statement and could be correctly detected as not-initialised) (valgrind)
+  KWARM  = .FALSE.
+  KRAIN  = .FALSE.
+  KSEDC  = .FALSE.
+  KACTIT = .FALSE.
 END SELECT
 !
 !
@@ -620,6 +679,8 @@ IMI = GET_CURRENT_MODEL_INDEX()
 !
 CALL UPDATE_NSV(IMI)
 !
+GNVS_NO_0 = ( NSV /= 0 )
+!
 !*       1.1   RECOVER THE LOGICAL UNIT NUMBER FOR THE OUTPUT PRINTS
 !
 ILUOUT = TLUOUT%NLU
@@ -629,6 +690,8 @@ ILUOUT = TLUOUT%NLU
 CALL GET_DIM_EXT_ll('B',IIU,IJU)
 IKU=NKMAX+2*JPVEXT
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
+!
+CALL FILL_DIMPHYEX(YLDIMPHYEX, SIZE(XWT,1), SIZE(XWT,2), SIZE(XWT,3))
 !
 IF (IMI==1) THEN
   GSTEADY_DMASS=LSTEADYLS
@@ -672,8 +735,8 @@ IF (KTCOUNT == 1) THEN
   IF (SIZE(XRTKES,1) /= 0) CALL ADD3DFIELD_ll( TFIELDS_ll, XRTKES, 'MODEL_n::XRTKES' )
   CALL ADD4DFIELD_ll( TFIELDS_ll, XRRS     (:,:,:,1:NRR), 'MODEL_n::XRRS' )
   CALL ADD4DFIELD_ll( TFIELDS_ll, XRRS_CLD (:,:,:,1:NRR), 'MODEL_n::XRRS_CLD' )
-  CALL ADD4DFIELD_ll( TFIELDS_ll, XRSVS    (:,:,:,1:NSV), 'MODEL_n::XRSVS')
-  CALL ADD4DFIELD_ll( TFIELDS_ll, XRSVS_CLD(:,:,:,1:NSV), 'MODEL_n::XRSVS_CLD')
+  IF ( GNVS_NO_0 ) CALL ADD4DFIELD_ll( TFIELDS_ll, XRSVS    (:,:,:,1:NSV), 'MODEL_n::XRSVS')
+  IF ( GNVS_NO_0 ) CALL ADD4DFIELD_ll( TFIELDS_ll, XRSVS_CLD(:,:,:,1:NSV), 'MODEL_n::XRSVS_CLD')
   IF (SIZE(XSRCT,1) /= 0) CALL ADD3DFIELD_ll( TFIELDS_ll, XSRCT, 'MODEL_n::XSRCT' )
   ! Fire model parallel setup
   IF (LBLAZE) THEN
@@ -729,8 +792,8 @@ IF (KTCOUNT == 1) THEN
   !
     INBVAR = 4+NRR+NSV
     IF (SIZE(XRTKES,1) /= 0) INBVAR=INBVAR+1
-    CALL INIT_HALO2_ll(THALO2T_ll,INBVAR,IIU,IJU,IKU)
-    CALL INIT_HALO2_ll(TLSHALO2_ll,4+MIN(1,NRR),IIU,IJU,IKU)
+    CALL INIT_HALO2_ll (THALO2T_ll,  INBVAR,       IIU, IJU, IKU, 'MODEL_n::HALO2T'  )
+    CALL INIT_HALO2_ll (TLSHALO2_ll, 4+MIN(1,NRR), IIU, IJU, IKU, 'MODEL_n::LSHALO2' )
   !
   !*       1.6   Initialise the 2nd layer of the halo of the LS fields
   !
@@ -976,8 +1039,6 @@ ZTIME1=ZTIME2
 IF( LLG .AND. IMI==1 ) CALL SETLB_LG
 !
 IF (CCONF == "START" .OR. (CCONF == "RESTA" .AND. KTCOUNT /= 1 )) THEN
-CALL MPPDB_CHECK3DM("before BOUNDARIES:XUT, XVT, XWT, XTHT, XTKET",PRECISION,&
-                   &  XUT, XVT, XWT, XTHT, XTKET)
 CALL BOUNDARIES (                                                   &
             XTSTEP,CLBCX,CLBCY,NRR,NSV,KTCOUNT,                     &
             XLBXUM,XLBXVM,XLBXWM,XLBXTHM,XLBXTKEM,XLBXRM,XLBXSVM,   &
@@ -986,8 +1047,6 @@ CALL BOUNDARIES (                                                   &
             XLBYUS,XLBYVS,XLBYWS,XLBYTHS,XLBYTKES,XLBYRS,XLBYSVS,   &
             XRHODJ,XRHODREF,                                        &
             XUT, XVT, XWT, XTHT, XTKET, XRT, XSVT, XSRCT            )
-CALL MPPDB_CHECK3DM("after  BOUNDARIES:XUT, XVT, XWT, XTHT, XTKET",PRECISION,&
-                   &  XUT, XVT, XWT, XTHT, XTKET)
 END IF
 !
 CALL SECOND_MNH2(ZTIME2)
@@ -1012,80 +1071,68 @@ IF (CSURF=='EXTE') CALL GOTO_SURFEX(IMI)
 !
 ZTIME1 = ZTIME2
 !
-IF ( nfile_backup_current < NBAK_NUMB ) THEN
-  IF ( KTCOUNT == TBACKUPN(nfile_backup_current + 1)%NSTEP ) THEN
-    nfile_backup_current = nfile_backup_current + 1
-    !
-    TPBAKFILE => TBACKUPN(nfile_backup_current)%TFILE
-    IVERB    = TPBAKFILE%NLFIVERB
-    !
-    CALL IO_File_open(TPBAKFILE)
-    !
-    CALL WRITE_DESFM_n(IMI,TPBAKFILE)
-    CALL IO_Header_write( TBACKUPN(nfile_backup_current)%TFILE )
-    IF ( ASSOCIATED( TBACKUPN(nfile_backup_current)%TFILE%TDADFILE ) ) THEN
-      YDADNAME = TBACKUPN(nfile_backup_current)%TFILE%TDADFILE%CNAME
-    ELSE
-      ! Set a dummy name for the dad file. Its non-zero size will allow the writing of some data in the backup file
-      YDADNAME = 'DUMMY'
-    END IF
-    CALL WRITE_LFIFM_n( TBACKUPN(nfile_backup_current)%TFILE, TRIM( YDADNAME ) )
-    TOUTDATAFILE => TPBAKFILE
-    CALL MNHWRITE_ZS_DUMMY_n(TPBAKFILE)
-    IF (CSURF=='EXTE') THEN
-      TFILE_SURFEX => TPBAKFILE
-      CALL GOTO_SURFEX(IMI)
-      CALL WRITE_SURF_ATM_n(YSURF_CUR,'MESONH','ALL')
-      IF ( KTCOUNT > 1) THEN
-        CALL DIAG_SURF_ATM_n(YSURF_CUR,'MESONH')
-        IF ( NFILE_BACKUP_CURRENT == 1 ) THEN
-          IBAKSTEP = KTCOUNT - 1
-        ELSE
-          IBAKSTEP = KTCOUNT - TBACKUPN(NFILE_BACKUP_CURRENT - 1)%NSTEP
-        END IF
-        CALL WRITE_DIAG_SURF_ATM_n( YSURF_CUR, 'MESONH', 'ALL', IBAKSTEP )
-      END IF
-      NULLIFY(TFILE_SURFEX)
-    END IF
-    !
-    ! Reinitialize Lagragian variables at every model backup
-    IF (LLG .AND. LINIT_LG .AND. CINIT_LG=='FMOUT') THEN
-      CALL INI_LG( XXHATM, XYHATM, XZZ, XSVT, XLBXSVM, XLBYSVM )
-      IF (IVERB>=5) THEN
-        WRITE(UNIT=ILUOUT,FMT=*) '************************************'
-        WRITE(UNIT=ILUOUT,FMT=*) '*** Lagrangian variables refreshed after ',TRIM(TPBAKFILE%CNAME),' backup'
-        WRITE(UNIT=ILUOUT,FMT=*) '************************************'
-      END IF
-    END IF
-    ! Reinitialise mean variables
-    IF (LMEAN_FIELD) THEN
-       CALL INI_MEAN_FIELD
-    END IF
-!
+IF ( IO_IS_BACKUP_TIME( IMI, KTCOUNT, INUMBAK ) ) THEN
+  CALL IO_BAKOUT_FILE_CREATE( TPBAKFILE, 'MNHBACKUP', IMI, KTCOUNT, INUMBAK )
+  !
+  IVERB    = TPBAKFILE%NLFIVERB
+  !
+  CALL IO_File_open(TPBAKFILE)
+  !
+  CALL WRITE_DESFM_n(IMI,TPBAKFILE)
+  CALL IO_Header_write( TPBAKFILE )
+  IF ( ASSOCIATED( TPBAKFILE%TDADFILE ) ) THEN
+    YDADNAME = TPBAKFILE%TDADFILE%CNAME
   ELSE
-    !Necessary to have a 'valid' CNAME when calling some subroutines
-    TPBAKFILE => TFILE_DUMMY
+    ! Set a dummy name for the dad file. Its non-zero size will allow the writing of some data in the backup file
+    YDADNAME = 'DUMMY'
+  END IF
+  CALL WRITE_LFIFM_n( TPBAKFILE, TRIM( YDADNAME ) )
+  TOUTDATAFILE => TPBAKFILE
+  CALL MNHWRITE_ZS_DUMMY_n(TPBAKFILE)
+  IF (CSURF=='EXTE') THEN
+    TFILE_SURFEX => TPBAKFILE
+    CALL GOTO_SURFEX(IMI)
+    CALL WRITE_SURF_ATM_n(YSURF_CUR,'MESONH','ALL')
+    IF ( KTCOUNT > 1) THEN
+      CALL DIAG_SURF_ATM_n(YSURF_CUR,'MESONH')
+      ! Determine number of timestep since previous backup
+      IBAKSTEP = KTCOUNT - NBAK_PREV_STEP
+      NBAK_PREV_STEP = KTCOUNT
+
+      CALL WRITE_DIAG_SURF_ATM_n( YSURF_CUR, 'MESONH', 'ALL', IBAKSTEP )
+    END IF
+    NULLIFY(TFILE_SURFEX)
+  END IF
+  !
+  ! Reinitialize Lagragian variables at every model backup
+  IF (LLG .AND. LINIT_LG .AND. CINIT_LG=='FMOUT') THEN
+    CALL INI_LG( XXHATM, XYHATM, XZZ, XSVT, XLBXSVM, XLBYSVM )
+    IF (IVERB>=5) THEN
+      WRITE(UNIT=ILUOUT,FMT=*) '************************************'
+      WRITE(UNIT=ILUOUT,FMT=*) '*** Lagrangian variables refreshed after ',TRIM(TPBAKFILE%CNAME),' backup'
+      WRITE(UNIT=ILUOUT,FMT=*) '************************************'
+    END IF
+  END IF
+  ! Reinitialise mean variables
+  IF (LMEAN_FIELD) THEN
+     CALL INI_MEAN_FIELD
   END IF
 ELSE
   !Necessary to have a 'valid' CNAME when calling some subroutines
   TPBAKFILE => TFILE_DUMMY
 END IF
 !
-IF ( nfile_output_current < NOUT_NUMB ) THEN
-  IF ( KTCOUNT == TOUTPUTN(nfile_output_current + 1)%NSTEP ) THEN
-    nfile_output_current = nfile_output_current + 1
-    !
-    TZOUTFILE => TOUTPUTN(nfile_output_current)%TFILE
-    !
-    CALL IO_File_open(TZOUTFILE)
-    !
-    CALL IO_Header_write(TZOUTFILE)
-    CALL IO_Fieldlist_write(  TOUTPUTN(nfile_output_current) )
-    CALL IO_Field_user_write( TOUTPUTN(nfile_output_current) )
-    !
-    CALL IO_File_close(TZOUTFILE)
-    !
-  END IF
+IF ( IO_IS_OUTPUT_TIME( IMI, KTCOUNT, INUMOUT ) ) THEN
+  CALL IO_BAKOUT_FILE_CREATE( TZOUTFILE, 'MNHOUTPUT', IMI, KTCOUNT, INUMOUT )
+  !
+  CALL IO_File_open(TZOUTFILE)
+  !
+  CALL IO_Header_write(TZOUTFILE)
+  CALL IO_Fieldlist_write( TZOUTFILE )
+  CALL IO_Field_user_write( TZOUTFILE )
+  !
+  CALL IO_File_close(TZOUTFILE)
+  CALL IO_File_remove_from_list( TZOUTFILE )
 END IF
 !
 CALL SECOND_MNH2(ZTIME2)
@@ -1668,10 +1715,26 @@ XTIME_BU_PROCESS = 0.
 XTIME_LES_BU_PROCESS = 0.
 !
 !
+!$acc data create ( XUT, XVT, XWT )                                             &
+!$acc &    present( XTHT, XRT, XPABST, XTHVREF, XRHODJ )                        &
+!$acc &    present( XDXX, XDYY, XDZZ, XDZX, XDZY, XRUS, XRVS, XRWS, XRWS_PRES ) &
+!$acc &    present( XRRS, XRSVS, XRTHS_CLD, XRRS_CLD, XRSVS_CLD )               &
+!$acc &    copyin ( XTKET, XSVT )
 !
 CALL MPPDB_CHECK3DM("before ADVEC_METSV:XU/V/W/TH/TKE/T,XRHODJ",PRECISION,&
                    &  XUT, XVT, XWT, XTHT, XTKET,XRHODJ)
- CALL ADVECTION_METSV ( TPBAKFILE, CUVW_ADV_SCHEME,                    &
+!$acc update device( XRUS, XRVS, XRWS, XRRS, XRSVS )
+!$acc update device( XRUS_PRES, XRVS_PRES, XRWS_PRES )
+!$acc update device( XUT, XVT, XWT, XTHT, XRT, XRHODJ, XRTHS )
+!$acc update device( XRTHS_CLD, XRRS_CLD, XRSVS_CLD )
+!
+!$acc data copy   (XRTKES)  &
+!$acc &    copyout(XRTKEMS)
+#ifdef MNH_BITREP_OMP
+CALL SBR_FZ(XRRS_CLD)
+CALL SBR_FZ(XRT)
+#endif
+CALL ADVECTION_METSV ( TPBAKFILE, CUVW_ADV_SCHEME,                     &
                  CMET_ADV_SCHEME, CSV_ADV_SCHEME, CCLOUD, CELEC,       &
                  NSPLIT, LSPLIT_CFL, XSPLIT_CFL, LCFL_WRIT,            &
                  CLBCX, CLBCY, NRR, NSV, TDTCUR, XTSTEP,               &
@@ -1679,8 +1742,8 @@ CALL MPPDB_CHECK3DM("before ADVEC_METSV:XU/V/W/TH/TKE/T,XRHODJ",PRECISION,&
                  XTHVREF, XRHODJ, XDXX, XDYY, XDZZ, XDZX, XDZY,        &
                  XRTHS, XRRS, XRTKES, XRSVS,                           &
                  XRTHS_CLD, XRRS_CLD, XRSVS_CLD, XRTKEMS               )
-CALL MPPDB_CHECK3DM("after  ADVEC_METSV:XU/V/W/TH/TKE/T,XRHODJ ",PRECISION,&
-                   &  XUT, XVT, XWT, XTHT, XTKET,XRHODJ)
+!$acc end data
+!
 !
 CALL SECOND_MNH2(ZTIME2)
 !
@@ -1691,17 +1754,23 @@ ZTIME1 = ZTIME2
 XTIME_BU_PROCESS = 0.
 XTIME_LES_BU_PROCESS = 0.
 !
-ZRWS = XRWS
+!$acc kernels present( ZRWS )
+ZRWS(:,:,:) = XRWS(:,:,:)
+!$acc end kernels
 !
 CALL GRAVITY_IMPL ( CLBCX, CLBCY, NRR, NRRL, NRRI,XTSTEP,            &
                  XTHT, XRT, XTHVREF, XRHODJ, XRWS, XRTHS, XRRS,      &
-                 XRTHS_CLD, XRRS_CLD                                 )   
+                 XRTHS_CLD, XRRS_CLD                                 )
 !
-! At the initial instant the difference with the ref state creates a 
-! vertical velocity production that must not be advected as it is 
+! At the initial instant the difference with the ref state creates a
+! vertical velocity production that must not be advected as it is
 ! compensated by the pressure gradient
 !
-IF (KTCOUNT == 1 .AND. CCONF=='START') XRWS_PRES = - (XRWS - ZRWS) 
+IF (KTCOUNT == 1 .AND. CCONF=='START') THEN
+!$acc kernels present( ZRWS,XRWS_PRES )
+  XRWS_PRES(:,:,:) = ZRWS(:,:,:) - XRWS(:,:,:)
+!$acc end kernels
+END IF
 !
 CALL SECOND_MNH2(ZTIME2)
 !
@@ -1723,9 +1792,6 @@ ZTIME1 = ZTIME2
 XTIME_BU_PROCESS = 0.
 XTIME_LES_BU_PROCESS = 0.
 !
-!MPPDB_CHECK_LB=.TRUE.
-CALL MPPDB_CHECK3DM("before ADVEC_UVW:XU/V/W/TH/TKE/T,XRHODJ,XRU/V/Ws",PRECISION,&
-                   &  XUT, XVT, XWT, XTHT, XTKET,XRHODJ,XRUS,XRVS,XRWS)
 IF ((CUVW_ADV_SCHEME(1:3)=='CEN') .AND. (CTEMP_SCHEME == 'LEFR')) THEN
   IF (CUVW_ADV_SCHEME=='CEN4TH') THEN
     NULLIFY(TZFIELDC_ll)
@@ -1733,23 +1799,47 @@ IF ((CUVW_ADV_SCHEME(1:3)=='CEN') .AND. (CTEMP_SCHEME == 'LEFR')) THEN
       CALL ADD3DFIELD_ll( TZFIELDC_ll, XUT, 'MODEL_n::XUT' )
       CALL ADD3DFIELD_ll( TZFIELDC_ll, XVT, 'MODEL_n::XVT' )
       CALL ADD3DFIELD_ll( TZFIELDC_ll, XWT, 'MODEL_n::XWT' )
-      CALL INIT_HALO2_ll(TZHALO2C_ll,3,IIU,IJU,IKU)
+#ifndef MNH_OPENACC
+      CALL INIT_HALO2_ll( TZHALO2C_ll, 3, IIU, IJU, IKU, 'MODEL_n::HALO2C' )
       CALL UPDATE_HALO_ll(TZFIELDC_ll,IINFO_ll)
       CALL UPDATE_HALO2_ll(TZFIELDC_ll, TZHALO2C_ll, IINFO_ll)
+#else
+  IF (GFIRST_CALL_MODELN) THEN
+    GFIRST_CALL_MODELN = .FALSE.
+    NULLIFY(TZHALO2_UT,TZHALO2_VT,TZHALO2_WT)
+    CALL INIT_HALO2_ll( TZHALO2_UT, 1, IIU, IJU, IKU, 'MODEL_n::XUT' )
+    CALL INIT_HALO2_ll( TZHALO2_VT, 1, IIU, IJU, IKU, 'MODEL_n::XVT' )
+    CALL INIT_HALO2_ll( TZHALO2_WT, 1, IIU, IJU, IKU, 'MODEL_n::XWT' )
   END IF
- CALL ADVECTION_UVW_CEN(CUVW_ADV_SCHEME,                &
+
+  CALL GET_HALO2_DF(XUT,TZHALO2_UT,HNAME='XUT')
+  CALL GET_HALO2_DF(XVT,TZHALO2_VT,HNAME='XVT')
+  CALL GET_HALO2_DF(XWT,TZHALO2_WT,HNAME='XWT')
+#endif
+!$acc update device(XUT, XVT, XWT)
+  END IF
+!$acc data copyin(XUM, XVM, XWM)    &
+!$acc &    copy  (XDUM, XDVM, XDWM)
+ CALL ADVECTION_UVW_CEN(CUVW_ADV_SCHEME,                           &
                            CLBCX, CLBCY,                           &
                            XTSTEP, KTCOUNT,                        &
                            XUM, XVM, XWM, XDUM, XDVM, XDWM,        &
                            XUT, XVT, XWT,                          &
                            XRHODJ, XDXX, XDYY, XDZZ, XDZX, XDZY,   &
                            XRUS,XRVS, XRWS,                        &
+#ifndef MNH_OPENACC
                            TZHALO2C_ll                             )
+#else
+                           TZHALO2_UT,TZHALO2_VT,TZHALO2_WT        )
+#endif
+!$acc end data
   IF (CUVW_ADV_SCHEME=='CEN4TH') THEN
     CALL CLEANLIST_ll(TZFIELDC_ll)
     NULLIFY(TZFIELDC_ll)
+#ifndef MNH_OPENACC
     CALL  DEL_HALO2_ll(TZHALO2C_ll)
     NULLIFY(TZHALO2C_ll)
+#endif
   END IF
 ELSE
 
@@ -1762,9 +1852,6 @@ ELSE
                  XRUS_PRES, XRVS_PRES, XRWS_PRES                     )
 END IF
 !
-CALL MPPDB_CHECK3DM("after  ADVEC_UVW:XU/V/W/TH/TKE/T,XRHODJ,XRU/V/Ws",PRECISION,&
-                   &  XUT, XVT, XWT, XTHT, XTKET,XRHODJ,XRUS,XRVS,XRWS)
-!MPPDB_CHECK_LB=.FALSE.
 !
 CALL SECOND_MNH2(ZTIME2)
 !
@@ -1786,10 +1873,11 @@ END IF
 !
 ZTIME1 = ZTIME2
 !
-CALL MPPDB_CHECK3DM("before RAD_BOUND :XRU/V/WS",PRECISION,XRUS,XRVS,XRWS)
-ZRUS=XRUS
-ZRVS=XRVS
-ZRWS=XRWS
+!$acc kernels present(ZRUS,ZRVS,ZRWS)
+ZRUS(:,:,:)=XRUS(:,:,:)
+ZRVS(:,:,:)=XRVS(:,:,:)
+ZRWS(:,:,:)=XRWS(:,:,:)
+!$acc end kernels
 !
 if ( .not. l1d ) then
   if ( lbudget_u ) call Budget_store_init( tbudgets(NBUDGET_U), 'PRES', xrus(:, :, :) )
@@ -1803,22 +1891,28 @@ CALL MPPDB_CHECKLB(XLBYVM,"modeln XLBYVM",PRECISION,'LBYV',NRIMY)
 CALL MPPDB_CHECKLB(XLBXUS,"modeln XLBXUS",PRECISION,'LBXU',NRIMX)
 CALL MPPDB_CHECKLB(XLBYVS,"modeln XLBYVS",PRECISION,'LBYV',NRIMY)
 !
-  CALL RAD_BOUND (CLBCX,CLBCY,CTURB,XCARPKMAX,           &
+!$acc data copyin( XDXHAT, XDYHAT, XZHAT, XLBXUM, XLBYVM, XLBXUS, XLBYVS, &
+!$acc &            XFLUCTUNW, XFLUCTVNN, XFLUCTUNE, XFLUCTVNS )
+CALL RAD_BOUND (CLBCX,CLBCY,CTURB,XCARPKMAX,             &
                 XTSTEP,                                  &
                 XDXHAT, XDYHAT, XZHAT,                   &
                 XUT, XVT,                                &
                 XLBXUM, XLBYVM, XLBXUS, XLBYVS,          &
                 XFLUCTUNW,XFLUCTVNN,XFLUCTUNE,XFLUCTVNS, &
                 XCPHASE, XCPHASE_PBL, XRHODJ,            &
-                XTKET,XRUS, XRVS, XRWS                   )
-ZRUS=XRUS-ZRUS
-ZRVS=XRVS-ZRVS
-ZRWS=XRWS-ZRWS
+                XTKET, XRUS, XRVS, XRWS                  )
+!$acc end data
+!$acc kernels present(ZRUS,ZRVS,ZRWS)
+ZRUS(:,:,:)=XRUS(:,:,:)-ZRUS(:,:,:)
+ZRVS(:,:,:)=XRVS(:,:,:)-ZRVS(:,:,:)
+ZRWS(:,:,:)=XRWS(:,:,:)-ZRWS(:,:,:)
+!$acc end kernels
 !
 CALL SECOND_MNH2(ZTIME2)
 !
 XT_RAD_BOUND = XT_RAD_BOUND + ZTIME2 - ZTIME1
 !
+!$acc end data
 !-------------------------------------------------------------------------------
 !
 !*       19.    PRESSURE COMPUTATION
@@ -1828,27 +1922,39 @@ ZTIME1 = ZTIME2
 XTIME_BU_PROCESS = 0.
 XTIME_LES_BU_PROCESS = 0.
 !
-ZPABST = XPABST
+!$acc kernels present( XPABST, ZPABST )
+ZPABST(:,:,:) = XPABST(:,:,:)
+!$acc end kernels
 !
 IF(.NOT. L1D) THEN
 !
-CALL MPPDB_CHECK3DM("before pressurez:XRU/V/WS",PRECISION,XRUS,XRVS,XRWS)
-  XRUS_PRES = XRUS
-  XRVS_PRES = XRVS
-  XRWS_PRES = XRWS
+!$acc kernels
+  XRUS_PRES(:,:,:) = XRUS(:,:,:)
+  XRVS_PRES(:,:,:) = XRVS(:,:,:)
+  XRWS_PRES(:,:,:) = XRWS(:,:,:)
+!$acc end kernels
 !
+!$acc data present( XRHODJ, XDXX, XDYY, XDZZ, XDZX, XDZY )                    &
+!$acc &    present( XRHOM, XAF, XBFY, XCF, XTRIGSX, XTRIGSY, NIFAXX, NIFAXY ) &
+!$acc &    present( XTHT, XRT, XRHODREF, XTHVREF, XRVREF, XEXNREF )           &
+!$acc &    present( XRUS, XRVS, XRWS, XPABST, XBFB, XBF_SXP2_YP1_Z )
   CALL PRESSUREZ( CLBCX,CLBCY,CPRESOPT,NITR,LITRADJ,KTCOUNT, XRELAX,IMI, &
                   XRHODJ,XDXX,XDYY,XDZZ,XDZX,XDZY,XDXHATM,XDYHATM,XRHOM, &
                   XAF,XBFY,XCF,XTRIGSX,XTRIGSY,NIFAXX,NIFAXY,            &
                   NRR,NRRL,NRRI,XDRYMASST,XREFMASS,XMASS_O_PHI0,         &
                   XTHT,XRT,XRHODREF,XTHVREF,XRVREF,XEXNREF, XLINMASS,    &
                   XRUS, XRVS, XRWS, XPABST,                              &
-                  XBFB,&
+                  XBFB,                                                  &
                   XBF_SXP2_YP1_Z) !JUAN Z_SPLITING
+!$acc end data
+!$acc update self( XRUS, XRVS, XRWS, XPABST )
 !
-  XRUS_PRES = XRUS - XRUS_PRES + ZRUS
-  XRVS_PRES = XRVS - XRVS_PRES + ZRVS
-  XRWS_PRES = XRWS - XRWS_PRES + ZRWS
+!$acc kernels
+  XRUS_PRES(:,:,:) = XRUS(:,:,:) - XRUS_PRES(:,:,:) + ZRUS(:,:,:)
+  XRVS_PRES(:,:,:) = XRVS(:,:,:) - XRVS_PRES(:,:,:) + ZRVS(:,:,:)
+  XRWS_PRES(:,:,:) = XRWS(:,:,:) - XRWS_PRES(:,:,:) + ZRWS(:,:,:)
+!$acc end kernels
+!$acc update self( XRUS_PRES, XRVS_PRES, XRWS_PRES )
   CALL MPPDB_CHECK3DM("after pressurez:XRU/V/WS",PRECISION,XRUS,XRVS,XRWS)
 !
 END IF
@@ -1949,16 +2055,39 @@ IF (CCLOUD /= 'NONE') THEN
     XWT_ACT_NUC(:,:,:) = 0.
   END IF
 !
-  XRTHS_CLD  = XRTHS
-  XRRS_CLD   = XRRS
-  XRSVS_CLD  = XRSVS
+!$acc kernels present_cr(XRTHS_CLD,XRRS_CLD)
+  XRTHS_CLD(:, :, : )    = XRTHS(:, :, : )
+  XRRS_CLD (:, :, :, : ) = XRRS(:, :, :, : )
+!$acc end kernels
+  IF ( GNVS_NO_0 ) THEN
+!$acc kernels present_cr(XRSVS_CLD)
+     XRSVS_CLD(:, :, :, : ) = XRSVS(:, :, :, : )
+!$acc end kernels
+  END IF
+
+!$acc data present( XRHODJ, XRHODREF, XEXNREF, XRTHS, XRRS, XRSVS, ZPABST, XTHT )                &
+!$acc &    copyin (XZZ, XSIGS, VSIGQSAT, XMFCONV, XTHM, XPABSM,                                  &
+!$acc &            XRCM, XWT_ACT_NUC, XDTHRAD, XCF_MF, XRC_MF, XRI_MF,                           &
+!$acc &            XSOLORG, XMI)                                                                 &
+!$acc &    copy   (XSUPSAT, XNACT, XNPRO, XSSPRO,                                                &
+!$acc &            XRT, XSVT, XCLDFR, XCIT, XINPRR3D, XEVAP3D,                                   &
+!$acc &            XINPRC, XINPRR, XINPRS, XINPRG, XINPRH, XINDEP,                               &
+!$acc &            XHLC_HRC, XHLC_HCF, XHLI_HRI, XHLI_HCF)                                       &
+!$acc &    copyout(XSRCT, XRAINFR)
+
   IF (CSURF=='EXTE') THEN
+#ifndef MNH_OPENACC
     ALLOCATE (ZSEA(SIZE(XRHODJ,1),SIZE(XRHODJ,2)))
     ALLOCATE (ZTOWN(SIZE(XRHODJ,1),SIZE(XRHODJ,2)))
-    ZSEA(:,:) = 0.
-    ZTOWN(:,:)= 0.
+#else
+    CALL MNH_MEM_POSITION_PIN( 'MODEL_n 2')
+
+    CALL MNH_MEM_GET( ZSEA,  SIZE( XRHODJ, 1 ), SIZE( XRHODJ, 2 ) )
+    CALL MNH_MEM_GET( ZTOWN, SIZE( XRHODJ, 1 ), SIZE( XRHODJ, 2 ) )
+#endif
     CALL MNHGET_SURF_PARAM_n (PSEA=ZSEA(:,:),PTOWN=ZTOWN(:,:))
-    CALL RESOLVED_CLOUD ( CCLOUD, CELEC, CACTCCN, CSCONV, CMF_CLOUD, NRR, NSPLITR,  &
+!$acc update device( ZSEA, ZTOWN )
+    CALL RESOLVED_CLOUD ( CCLOUD, CELEC,CACTCCN, CSCONV, CMF_CLOUD, NRR, NSPLITR,   &
                           NSPLITG, IMI, KTCOUNT,                                    &
                           CLBCX,CLBCY,TPBAKFILE, CRAD, CTURBDIM,                    &
                           LSUBG_COND,LSIGMAS,CSUBG_AUCV_RC,XTSTEP,                  &
@@ -1975,9 +2104,13 @@ IF (CCLOUD /= 'NONE') THEN
                           XSOLORG, XMI,ZSPEEDC, ZSPEEDR, ZSPEEDS, ZSPEEDG, ZSPEEDH, &
                           XINDEP, XSUPSAT, XNACT, XNPRO,XSSPRO, XRAINFR,            &
                           XHLC_HRC, XHLC_HCF, XHLI_HRI, XHLI_HCF,                   &
-                          ZSEA, ZTOWN                                               )
+                          ZSEA, ZTOWN                                          )
+#ifndef MNH_OPENACC
     IF (CELEC == 'NONE') DEALLOCATE(ZTOWN)
     IF (CELEC == 'NONE') DEALLOCATE(ZSEA)
+#else
+    IF (CELEC == 'NONE') CALL MNH_MEM_RELEASE( 'MODEL_n 2' ) !Release ZSEA and ZTOWN
+#endif
   ELSE
     CALL RESOLVED_CLOUD ( CCLOUD, CELEC, CACTCCN, CSCONV, CMF_CLOUD, NRR, NSPLITR,  &
                           NSPLITG, IMI, KTCOUNT,                                    &
@@ -1997,9 +2130,19 @@ IF (CCLOUD /= 'NONE') THEN
                           XINDEP, XSUPSAT, XNACT, XNPRO,XSSPRO, XRAINFR,            &
                           XHLC_HRC, XHLC_HCF, XHLI_HRI, XHLI_HCF                    )
   END IF
-  XRTHS_CLD  = XRTHS - XRTHS_CLD
-  XRRS_CLD   = XRRS  - XRRS_CLD
-  XRSVS_CLD  = XRSVS - XRSVS_CLD
+!$acc end data
+
+!$acc kernels present_cr(XRTHS_CLD,XRRS_CLD)
+  XRTHS_CLD(:, :, : )    = XRTHS(:, :, : )    - XRTHS_CLD(:, :, : )
+  XRRS_CLD (:, :, :, : ) = XRRS (:, :, :, : ) - XRRS_CLD (:, :, :, : )
+!$acc end kernels
+  IF ( GNVS_NO_0 ) THEN
+!$acc kernels present_cr(XRSVS_CLD)  
+     XRSVS_CLD(:, :, :, : ) = XRSVS(:, :, :, : ) - XRSVS_CLD(:, :, :, : )
+!$acc end kernels
+  END IF
+!
+!$acc update host( XRTHS_CLD, XRRS_CLD, XRSVS_CLD )
 !
   IF (CCLOUD /= 'REVE' ) THEN
     XACPRR = XACPRR + XINPRR * XTSTEP
@@ -2019,6 +2162,7 @@ IF (CCLOUD /= 'NONE') THEN
 ! Lessivage des CCN et IFN nucléables par Slinn
 !
     IF (LSCAV .AND. (CCLOUD == 'LIMA')) THEN
+       CALL FILL_DIMPHYEX( YLDIMPHYEX, SIZE(XTHT,1), SIZE(XTHT,2), SIZE(XTHT,3) )
        CALL LIMA_PRECIP_SCAVENGING( YLDIMPHYEX,CST,TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
                                     CCLOUD, CCONF, ILUOUT, KTCOUNT,XTSTEP,XRT(:,:,:,3),    &
                                     XRHODREF, XRHODJ, XZZ, XPABST, XTHT,            &
@@ -2032,6 +2176,7 @@ IF (CCLOUD /= 'NONE') THEN
 ! It is necessary that SV_C2R2 and SV_C1R3 are contiguous in the preceeding CALL
 !
 END IF
+!$acc update host( XRTHS, XRRS, XRSVS )
 !
 CALL SECOND_MNH2(ZTIME2)
 !
@@ -2073,8 +2218,6 @@ IF (CELEC /= 'NONE') THEN  !++cb-- ATTENTION : le cas rain_ice_elec n'est pas tr
                               XCIT, XINPRR,                           &
                               PSEA=ZSEA, PTOWN=ZTOWN                  )
       END IF
-      DEALLOCATE(ZSEA)
-      DEALLOCATE(ZTOWN)
     ELSE
       IF (LLNOX_EXPLICIT) THEN
         CALL RESOLVED_ELEC_n (CCLOUD, NRR, IMI, KTCOUNT, OEXIT,       &
@@ -2169,6 +2312,15 @@ IF (CELEC /= 'NONE') THEN  !++cb-- ATTENTION : le cas rain_ice_elec n'est pas tr
       END IF
     END IF
   END IF
+  !
+  IF ( CSURF == 'EXTE' ) THEN
+#ifndef MNH_OPENACC
+    DEALLOCATE(ZTOWN)
+    DEALLOCATE(ZSEA)
+#else
+    CALL MNH_MEM_RELEASE( 'MODEL_n 2' ) !Release ZSEA and ZTOWN
+#endif
+  END IF
 END IF
 !
 CALL SECOND_MNH2(ZTIME2)
@@ -2253,13 +2405,23 @@ ZTIME1 = ZTIME2
 !
 IF (LFLYER) THEN
   IF (CSURF=='EXTE') THEN
+#ifndef MNH_OPENACC
     ALLOCATE(ZSEA(IIU,IJU))
+#else
+    CALL MNH_MEM_POSITION_PIN( 'MODEL_n 4' )
+
+    CALL MNH_MEM_GET( ZSEA, IIU, IJU )
+#endif
     ZSEA(:,:) = 0.
     CALL MNHGET_SURF_PARAM_n (PSEA=ZSEA(:,:))
     CALL AIRCRAFT_BALLOON( XTSTEP, XZZ, XMAP, XLONORI, XLATORI,                   &
                            XUT, XVT, XWT, XPABST, XTHT, XRT, XSVT, XTKET, XTSRAD, &
                            XRHODREF, XCIT, PSEA = ZSEA(:,:)                       )
+#ifndef MNH_OPENACC
     DEALLOCATE(ZSEA)
+#else
+    CALL MNH_MEM_RELEASE( 'MODEL_n 4' ) !Release ZSEA
+#endif
   ELSE
     CALL AIRCRAFT_BALLOON( XTSTEP, XZZ, XMAP, XLONORI, XLATORI,                   &
                            XUT, XVT, XWT, XPABST, XTHT, XRT, XSVT, XTKET, XTSRAD, &
@@ -2282,13 +2444,23 @@ IF ( LSTATION ) &
 !
 IF (LPROFILER)  THEN
   IF (CSURF=='EXTE') THEN
+#ifndef MNH_OPENACC
     ALLOCATE(ZSEA(IIU,IJU))
+#else
+    CALL MNH_MEM_POSITION_PIN( 'MODEL_n 5' )
+
+    CALL MNH_MEM_GET( ZSEA, IIU, IJU )
+#endif
     ZSEA(:,:) = 0.
     CALL MNHGET_SURF_PARAM_n (PSEA=ZSEA(:,:))
     CALL PROFILER_n( XZZ, XRHODREF,                             &
                      XUT, XVT, XWT, XTHT, XRT, XSVT, XTKET,     &
                      XTSRAD, XPABST, XAER, XCIT, PSEA=ZSEA(:,:) )
+#ifndef MNH_OPENACC
     DEALLOCATE(ZSEA)
+#else
+    CALL MNH_MEM_RELEASE( 'MODEL_n 5' ) !Release ZSEA
+#endif
   ELSE
     CALL PROFILER_n( XZZ, XRHODREF,                         &
                      XUT, XVT, XWT, XTHT, XRT, XSVT, XTKET, &
@@ -2296,7 +2468,6 @@ IF (LPROFILER)  THEN
   END IF
 END IF
 !
-IF (ALLOCATED(ZSEA)) DEALLOCATE (ZSEA)
 !
 CALL SECOND_MNH2(ZTIME2)
 !
@@ -2332,8 +2503,7 @@ XT_STEP_BUD = XT_STEP_BUD + ZTIME2 - ZTIME1 + XTIME_BU
 !*       27.    CURRENT TIME REFRESH
 !               --------------------
 !
-TDTCUR%xtime=TDTCUR%xtime + XTSTEP
-CALL DATETIME_CORRECTDATE(TDTCUR)
+TDTCUR = TDTCUR + XTSTEP
 !
 !-------------------------------------------------------------------------------
 !
@@ -2351,21 +2521,18 @@ END IF
 IF (OEXIT) THEN
 !
   IF ( .NOT. LIO_NO_WRITE ) THEN
-    IF (LSERIES) CALL WRITE_SERIES_n(TDIAFILE)
-    CALL WRITE_AIRCRAFT_BALLOON(TDIAFILE)
-    CALL WRITE_STATPROF_n( TDIAFILE, TSTATIONS )
-    CALL WRITE_STATPROF_n( TDIAFILE, TPROFILERS )
+    IF ( LSERIES )   CALL WRITE_SERIES_n(TDIAFILE)
+    IF ( LFLYER )    CALL WRITE_AIRCRAFT_BALLOON(TDIAFILE)
+    IF ( LSTATION )  CALL WRITE_STATPROF_n( TDIAFILE, TSTATIONS )
+    IF ( LPROFILER ) CALL WRITE_STATPROF_n( TDIAFILE, TPROFILERS )
     call Write_les_n( tdiafile )
-#ifdef MNH_IOLFI
-    CALL MENU_DIACHRO(TDIAFILE,'END')
-#endif
     CALL IO_File_close(TDIAFILE)
     ! Free memory of flyer that is not present on the master process of the file (was allocated in WRITE_AIRCRAFT_BALLOON)
-    CALL AIRCRAFT_BALLOON_FREE_NONLOCAL( TDIAFILE )
+    IF ( LFLYER ) CALL AIRCRAFT_BALLOON_FREE_NONLOCAL( TDIAFILE )
   END IF
   !
   CALL IO_File_close(TINIFILE)
-  IF (CSURF=="EXTE") CALL IO_File_close(TINIFILEPGD)
+  IF ( CSURF == "EXTE" .AND. ASSOCIATED( TINIFILEPGD ) ) CALL IO_File_close( TINIFILEPGD )
 !
 !*       28.1   print statistics!
 !
@@ -2428,16 +2595,16 @@ IF (OEXIT) THEN
   !
   CALL  TIMING_LEGEND()
   ! 
-  CALL TIME_STAT_ll(XT_PRESS,ZTOT,      ' PRESSURE ','=','F')
+  CALL TIME_STAT_ll( XT_PRESS, ZTOT,      ' PRESSURE ', '=', GFULLSTAT_PRESS_SLV )
   !JUAN Z_SPLITTING
-    CALL TIME_STAT_ll(TIMEZ%T_MAP_B_SX_YP2_ZP1,ZTOT,          '   REMAP       B=>FFTXZ'  ,'-','F')
-    CALL TIME_STAT_ll(TIMEZ%T_MAP_SX_YP2_ZP1_SXP2_Y_ZP1,ZTOT, '   REMAP   FFTXZ=>FFTYZ'  ,'-','F')
-    CALL TIME_STAT_ll(TIMEZ%T_MAP_SXP2_Y_ZP1_B,ZTOT,          '   REMAP   FTTYZ=>B'      ,'-','F')
-    CALL TIME_STAT_ll(TIMEZ%T_MAP_SXP2_Y_ZP1_SXP2_YP1_Z,ZTOT, '   REMAP   FFTYZ=>SUBZ'   ,'-','F')
-    CALL TIME_STAT_ll(TIMEZ%T_MAP_B_SXP2_Y_ZP1,ZTOT,          '   REMAP       B=>FFTYZ-1','-','F')
-    CALL TIME_STAT_ll(TIMEZ%T_MAP_SXP2_YP1_Z_SXP2_Y_ZP1,ZTOT, '   REMAP    SUBZ=>FFTYZ-1','-','F')
-    CALL TIME_STAT_ll(TIMEZ%T_MAP_SXP2_Y_ZP1_SX_YP2_ZP1,ZTOT, '   REMAP FFTYZ-1=>FFTXZ-1','-','F')
-    CALL TIME_STAT_ll(TIMEZ%T_MAP_SX_YP2_ZP1_B,ZTOT,          '   REMAP FFTXZ-1=>B     ' ,'-','F')
+    CALL TIME_STAT_ll( TIMEZ%T_MAP_B_SX_YP2_ZP1,          ZTOT, '   REMAP       B=>FFTXZ'  , '-', GFULLSTAT_PRESS_SLV )
+    CALL TIME_STAT_ll( TIMEZ%T_MAP_SX_YP2_ZP1_SXP2_Y_ZP1, ZTOT, '   REMAP   FFTXZ=>FFTYZ'  , '-', GFULLSTAT_PRESS_SLV )
+    CALL TIME_STAT_ll( TIMEZ%T_MAP_SXP2_Y_ZP1_B,          ZTOT, '   REMAP   FTTYZ=>B'      , '-', GFULLSTAT_PRESS_SLV )
+    CALL TIME_STAT_ll( TIMEZ%T_MAP_SXP2_Y_ZP1_SXP2_YP1_Z, ZTOT, '   REMAP   FFTYZ=>SUBZ'   , '-', GFULLSTAT_PRESS_SLV )
+    CALL TIME_STAT_ll( TIMEZ%T_MAP_B_SXP2_Y_ZP1,          ZTOT, '   REMAP       B=>FFTYZ-1', '-', GFULLSTAT_PRESS_SLV )
+    CALL TIME_STAT_ll( TIMEZ%T_MAP_SXP2_YP1_Z_SXP2_Y_ZP1, ZTOT, '   REMAP    SUBZ=>FFTYZ-1', '-', GFULLSTAT_PRESS_SLV )
+    CALL TIME_STAT_ll( TIMEZ%T_MAP_SXP2_Y_ZP1_SX_YP2_ZP1, ZTOT, '   REMAP FFTYZ-1=>FFTXZ-1', '-', GFULLSTAT_PRESS_SLV )
+    CALL TIME_STAT_ll( TIMEZ%T_MAP_SX_YP2_ZP1_B,          ZTOT, '   REMAP FFTXZ-1=>B     ' , '-', GFULLSTAT_PRESS_SLV )
   ! JUAN P1/P2
   CALL TIME_STAT_ll(XT_CLOUD,ZTOT,      ' RESOLVED_CLOUD','=')
   CALL TIME_STAT_ll(XT_ELEC,ZTOT,      ' RESOLVED_ELEC','=')
@@ -2492,5 +2659,12 @@ IF (OEXIT) THEN
   CALL  TIMING_SEPARATOR('=')
   !
 END IF
-!
+
+#ifndef MNH_OPENACC
+DEALLOCATE( ZRUS,ZRVS,ZRWS )
+DEALLOCATE( ZPABST )
+#else
+CALL MNH_MEM_RELEASE( 'MODEL_n 1' )
+#endif
+
 END SUBROUTINE MODEL_n
