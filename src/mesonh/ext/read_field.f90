@@ -466,6 +466,8 @@ GOLDFILEFORMAT = (        TPINIFILE%NMNHVERSION(1) < 5                          
 !
 CALL IO_Field_read( TPINIFILE, 'PROGRAM', YPROGRAMFILE )
 !-------------------------------------------------------------------------------
+CALL IO_Field_read( TPINIFILE, 'PROGRAM', YPROGRAMFILE )
+!-------------------------------------------------------------------------------
 !
 !*       2.    READ PROGNOSTIC VARIABLES
 !              -------------------------

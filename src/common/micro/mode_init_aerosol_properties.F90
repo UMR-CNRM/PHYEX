@@ -43,6 +43,7 @@ CONTAINS
 !              ------------
 !
 !USE MODD_LUNIT,           ONLY : TLUOUT0
+USE MODD_CST, ONLY:CST
 USE MODD_PARAM_LIMA,      ONLY : NMOD_CCN, HINI_CCN, HTYPE_CCN,        &
                                  XR_MEAN_CCN, XLOGSIG_CCN, XRHO_CCN,                 &
                                  XKHEN_MULTI, XMUHEN_MULTI, XBETAHEN_MULTI,          &
@@ -51,12 +52,22 @@ USE MODD_PARAM_LIMA,      ONLY : NMOD_CCN, HINI_CCN, HTYPE_CCN,        &
                                  XMDIAM_IFN, XSIGMA_IFN, XRHO_IFN, XFRAC, XFRAC_REF, &
                                  CINT_MIXING, NPHILLIPS,           &
                                  NIMM, NMOD_IMM, NINDICE_CCN_IMM, &
-                                 PARAM_LIMA_ALLOCATE, PARAM_LIMA_DEALLOCATE
+                                 PARAM_LIMA_ALLOCATE, PARAM_LIMA_DEALLOCATE, &
+                                 XGMULTI, XGINC_IFN
 !
+USE MODD_CH_AEROSOL, ONLY: LORILAM, XINISIGI, XINISIGJ, XINIRADIUSJ, CRGUNIT, XRHOI, &
+                           NCARB, NSOA, NSP, &
+                           JP_AER_OC, JP_AER_H2O, JP_AER_DST, JP_AER_BC, JP_AER_OC, JP_AER_SO4
+USE MODD_SALT, ONLY: LSALT, NMODE_SLT, XINISIG_SLT, CRGUNITS, XINIRADIUS_SLT
+USE MODD_CSTS_SALT, ONLY: XDENSITY_SALT
+USE MODD_DUST, ONLY: LDUST, JPDUSTORDER, XINIRADIUS, NMODE_DST, CRGUNITD, XINISIG
+USE MODD_CSTS_DUST, ONLY: XDENSITY_DUST
 use mode_msg
 !
 USE MODI_GAMMA
+USE MODI_GAMMA_INC
 USE MODE_LIMA_INIT_CCN_ACTIVATION_SPECTRUM, ONLY: LIMA_INIT_CCN_ACTIVATION_SPECTRUM
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -71,16 +82,16 @@ REAL, DIMENSION(3) :: RHOCCN
 !
 INTEGER            :: I,J,JMOD
 !
-!INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
-!INTEGER  :: IRESP   ! Return code of FM-routines
-!
 REAL :: X1, X2, X3, X4, X5
 ! REAL, DIMENSION(7) :: diameters=(/ 0.01E-6, 0.05E-6, 0.1E-6, 0.2E-6, 0.5E-6, 1.E-6, 2.E-6 /)
 ! REAL, DIMENSION(3) :: sigma=(/ 2., 2.5, 3. /)
 ! CHARACTER(LEN=7), DIMENSION(3) :: types=(/ 'NH42SO4', 'NaCl   ', '       ' /)
 !REAL, DIMENSION(1) :: diameters=(/ 0.25E-6 /)
 !CHARACTER(LEN=7), DIMENSION(1) :: types=(/ '       ' /)
+INTEGER :: IDX
+
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 !ILUOUT0 = TLUOUT0%NLU
@@ -89,6 +100,7 @@ REAL :: X1, X2, X3, X4, X5
 ! CCN properties
 !!!!!!!!!!!!!!!!
 !
+IF (LHOOK) CALL DR_HOOK('INIT_AEROSOL_PROPERTIES', 0, ZHOOK_HANDLE)
 IF ( NMOD_CCN .GE. 1 ) THEN
 !
    IF (.NOT.(ASSOCIATED(XR_MEAN_CCN))) CALL PARAM_LIMA_ALLOCATE('XR_MEAN_CCN', NMOD_CCN)
@@ -144,6 +156,40 @@ IF ( NMOD_CCN .GE. 1 ) THEN
                                                                  'CAMS_ACC, CAMS_AIT, SIRTA, CPS00, MOCAGE or FREETROP')
    ENDSELECT
 !
+IF (LORILAM) THEN   ! for sulphates and hydrophilic aerosols
+  IF (.NOT.(ALLOCATED(XRHOI))) ALLOCATE(XRHOI(NSP+NSOA+NCARB))
+  XRHOI(:)          = 1.8e3
+  XRHOI(JP_AER_H2O) = 1.0e3   ! water
+  XRHOI(JP_AER_DST) = XDENSITY_DUST   ! water
+
+  ! assumption: we choose to put sulfates and hydrophilics compounds in mode J (accumulation)
+  IF (CRGUNIT=="MASS") THEN
+  RCCN(2)   = XINIRADIUSJ * EXP(-3.*(LOG(XINISIGJ))**2) * 1E-6 ! Sulfates
+  RCCN(3)   = XINIRADIUSJ * EXP(-3.*(LOG(XINISIGJ))**2) * 1E-6 ! Hydrophilic
+  ELSE
+  RCCN(2)   = XINIRADIUSJ * 1E-6  ! Sulfates
+  RCCN(3)   = XINIRADIUSJ * 1E-6  ! Hydrophilic
+
+  END IF
+  LOGSIGCCN(2) = LOG(XINISIGJ)
+  LOGSIGCCN(3) = LOG(XINISIGJ)
+  RHOCCN(2)    = XRHOI(JP_AER_SO4) 
+  RHOCCN(3)    = XRHOI(JP_AER_OC)
+END IF
+IF (LSALT) THEN ! for sea salts
+  JMOD = 1
+  IF (NMODE_SLT >= 5) JMOD = 4  ! choose mode 4 of Ovadnevaite 2014 (r = 0.115 µm, sigma = 1.53)
+  IF (NMODE_SLT == 3) JMOD = 1  ! choose mode 1 of Vig01 (r = 0.2 µm, sigma = 1.9) or Sch04 (r = 0.14 µm, sigma = 1.59)
+  IF (CRGUNITS=="MASS") THEN
+  RCCN(1)   = XINIRADIUS_SLT(JMOD) * EXP(-3.*(LOG(XINISIG_SLT(JMOD)))**2) * 1E-6
+  ELSE
+  RCCN(1)   = XINIRADIUS_SLT(JMOD) * 1E-6
+  END IF
+  LOGSIGCCN(1) = LOG(XINISIG_SLT(JMOD))
+  RHOCCN(1) = XDENSITY_SALT
+END IF
+
+!
   DO I=1, MIN(NMOD_CCN,3)
     XR_MEAN_CCN(I) = RCCN(I)
     XLOGSIG_CCN(I) = LOGSIGCCN(I)
@@ -155,6 +201,15 @@ IF ( NMOD_CCN .GE. 1 ) THEN
     XR_MEAN_CCN(4) = 1.75E-6
     XLOGSIG_CCN(4) = 0.708
     XRHO_CCN(4)    = 2200.   
+    IF ((LSALT).AND.(NMODE_SLT > 5)) THEN
+      IF (CRGUNITS=="MASS") THEN
+       XR_MEAN_CCN(4) = XINIRADIUS_SLT(6) * EXP(-3.*(LOG(XINISIG_SLT(6)))**2) * 1E-6
+      ELSE
+       XR_MEAN_CCN(4) = XINIRADIUS_SLT(6) * 1E-6
+      END IF
+     XLOGSIG_CCN(4) = LOG(XINISIG_SLT(6))
+     XRHO_CCN(4)    = XDENSITY_SALT
+    END IF
   END IF
 !
 !
@@ -167,6 +222,7 @@ IF ( NMOD_CCN .GE. 1 ) THEN
   IF (.NOT.(ASSOCIATED(XMUHEN_MULTI)))   CALL PARAM_LIMA_ALLOCATE('XMUHEN_MULTI', NMOD_CCN)
   IF (.NOT.(ASSOCIATED(XBETAHEN_MULTI))) CALL PARAM_LIMA_ALLOCATE('XBETAHEN_MULTI', NMOD_CCN)
   IF (.NOT.(ASSOCIATED(XLIMIT_FACTOR)))  CALL PARAM_LIMA_ALLOCATE('XLIMIT_FACTOR', NMOD_CCN)
+  IF (.NOT.(ASSOCIATED(XGMULTI)))  CALL PARAM_LIMA_ALLOCATE('XGMULTI', NMOD_CCN)
 !
   IF (HINI_CCN == 'CCN') THEN
 !!$    IF (LSCAV) THEN
@@ -186,6 +242,8 @@ IF ( NMOD_CCN .GE. 1 ) THEN
            *GAMMA_X0D(XMUHEN_MULTI(JMOD)-0.5*XKHEN_MULTI(JMOD)) ) &
            /( XBETAHEN_MULTI(JMOD)**(0.5*XKHEN_MULTI(JMOD))       &
            *GAMMA_X0D(XMUHEN_MULTI(JMOD)) ) ! N/C
+      XGMULTI(JMOD)=GAMMA_X0D( XKHEN_MULTI(JMOD)/2.0) * GAMMA_X0D(3.0/2.0) &
+           / GAMMA_X0D((XKHEN_MULTI(JMOD)+3.0)/2.0)
     END DO
   ELSE IF (HINI_CCN == 'AER') THEN
 ! 
@@ -243,7 +301,7 @@ IF ( NMOD_CCN .GE. 1 ) THEN
 !!$           *GAMMA_X0D(XMUHEN_MULTI(JMOD)) )
 !!$
 !!$
-       CALL LIMA_INIT_CCN_ACTIVATION_SPECTRUM (HTYPE_CCN(JMOD),XR_MEAN_CCN(JMOD)*2.,EXP(XLOGSIG_CCN(JMOD)),X1,X2,X3,X4,X5)
+       CALL LIMA_INIT_CCN_ACTIVATION_SPECTRUM (CST,HTYPE_CCN(JMOD),XR_MEAN_CCN(JMOD)*2.,EXP(XLOGSIG_CCN(JMOD)),X1,X2,X3,X4,X5)
        !
        ! LIMA_INIT_CCN_ACTIVATION_SPECTRUM returns X1=C/Nccn (instead of XLIMIT_FACTOR), X2=k, X3=mu, X4=beta, X5=kappa
        ! So XLIMIT_FACTOR = 1/X1
@@ -253,6 +311,7 @@ IF ( NMOD_CCN .GE. 1 ) THEN
        XKHEN_MULTI(JMOD)   = X2
        XMUHEN_MULTI(JMOD)  = X3
        XBETAHEN_MULTI(JMOD)= X4
+       XGMULTI(JMOD)=GAMMA_X0D(X2/2.0)*GAMMA_X0D(3.0/2.0)/GAMMA_X0D((X2+3.0)/2.0)
     ENDDO
 !
 ! These parameters are correct for a nucleation spectra 
@@ -283,6 +342,14 @@ IF ( NMOD_IFN .GE. 1 ) THEN
          XMDIAM_IFN = (/ 0.05E-6 , 3.E-6 , 0.016E-6 , 0.016E-6 /)
          XSIGMA_IFN = (/ 2.4 , 1.6 , 2.5 , 2.5 /)
          XRHO_IFN   = (/ 2650. , 2650. , 1000. , 1000. /)
+   CASE ('CAMS_PT')
+      NSPECIE = 4 ! Dust, Hydrophilic mixture , BC, BIO+(O)
+      IF (.NOT.(ASSOCIATED(XMDIAM_IFN))) CALL PARAM_LIMA_ALLOCATE('XMDIAM_IFN', NSPECIE)
+      IF (.NOT.(ASSOCIATED(XSIGMA_IFN))) CALL PARAM_LIMA_ALLOCATE('XSIGMA_IFN', NSPECIE)
+      IF (.NOT.(ASSOCIATED(XRHO_IFN)))   CALL PARAM_LIMA_ALLOCATE('XRHO_IFN', NSPECIE)
+      XMDIAM_IFN = (/0.09E-6, 3.0E-6, 0.025E-6, 0.2E-6/)
+      XSIGMA_IFN = (/1.75, 2.15, 2.0, 1.6 /)
+      XRHO_IFN   = (/1800., 2600., 1000., 1500./) 
    CASE ('CAMS_JPP')
 ! sea-salt, sulfate, hydrophilic (GADS data)
 ! 2 species, dust-metallic and hydrophobic (as BC)
@@ -337,6 +404,43 @@ IF ( NMOD_IFN .GE. 1 ) THEN
          XRHO_IFN   = (/2300., 2300., 1860., 1000./)
       END IF
    ENDSELECT
+
+IF (LORILAM) THEN
+  IDX=1
+  IF ((IDX+1) .LE. NMOD_IFN) THEN
+  IF (CRGUNIT=="MASS") THEN
+   XMDIAM_IFN(IDX+1)   = 2 * XINIRADIUSJ * EXP(-3.*(LOG(XINISIGJ))**2) * 1E-6
+  ELSE
+   XMDIAM_IFN(IDX+1)   = 2 * XINIRADIUSJ * 1E-6
+  END IF
+  XRHO_IFN(IDX+1)    = XRHOI(JP_AER_BC)
+  XSIGMA_IFN(IDX+1)  = XINISIGI
+  END IF
+  IF ((IDX+2) .LE. NMOD_IFN) THEN
+    IF (CRGUNIT=="MASS") THEN
+     XMDIAM_IFN(IDX+2)   = 2 * XINIRADIUSJ * EXP(-3.*(LOG(XINISIGJ))**2) * 1E-6
+    ELSE
+     XMDIAM_IFN(IDX+2)   = 2 * XINIRADIUSJ * 1E-6
+    END IF
+  XRHO_IFN(IDX+2)    = XRHOI(JP_AER_OC)
+  XSIGMA_IFN(IDX+2)  = XINISIGJ
+  END IF
+END IF
+IF (LDUST) THEN
+   IF (CRGUNITD=="MASS") THEN
+     XMDIAM_IFN(1) = 2.*XINIRADIUS(JPDUSTORDER(3))*EXP(-3.*(LOG(XINISIG(JPDUSTORDER(3))))**2)
+    ELSE
+     XMDIAM_IFN(1) = 2.*XINIRADIUS(JPDUSTORDER(3))
+    END IF
+  XSIGMA_IFN(1)  = XINISIG(JPDUSTORDER(3))
+  XRHO_IFN(1) = XDENSITY_DUST
+END IF
+
+   IF (.NOT.(ASSOCIATED(XGINC_IFN))) CALL PARAM_LIMA_ALLOCATE('XGINC_IFN', NSPECIE)
+   DO I=1, NSPECIE
+      XGINC_IFN(I)=GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(I))- &
+           (LOG(0.1E-6/XMDIAM_IFN(I))/(SQRT(2.0)*LOG(XSIGMA_IFN(I)))))**2)
+   END DO
 !
 ! internal mixing
 !
@@ -351,6 +455,15 @@ IF ( NMOD_IFN .GE. 1 ) THEN
       XFRAC(3,:)=1.
    CASE ('O')
       XFRAC(4,:)=1.
+   CASE ('CAMS_PT')
+      XFRAC(1,1)=0.99
+      XFRAC(2,1)=0.01
+      XFRAC(3,1)=0.0
+      XFRAC(4,1)=0.0
+      XFRAC(1,2)=0.
+      XFRAC(2,2)=0.
+      XFRAC(3,2)=0.5
+      XFRAC(4,2)=0.5
    CASE ('CAMS')
       XFRAC(1,1)=0.99
       XFRAC(2,1)=0.01
@@ -435,6 +548,7 @@ IF ( NMOD_IFN .GE. 1 ) THEN
 !
 END IF ! NMOD_IFN > 0
 ! 
+IF (LHOOK) CALL DR_HOOK('INIT_AEROSOL_PROPERTIES', 1, ZHOOK_HANDLE)
 END SUBROUTINE INIT_AEROSOL_PROPERTIES
 !
 END MODULE MODE_INIT_AEROSOL_PROPERTIES

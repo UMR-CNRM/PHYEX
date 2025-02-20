@@ -287,6 +287,7 @@ END MODULE MODI_MODEL_n
 !  J. Wurtz       01/2023: correction for mean in SURFEX outputs
 !  C. Barthe   03/02/2022: cloud electrification is now called from resolved_cloud to avoid duplicated routines
 !  P. Wautelet 02/02/2024: restructure backups/outputs lists
+!  A. Marcel      01/2025: relaxation of the small fraction assumption
 !!-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -2163,7 +2164,7 @@ IF (CCLOUD /= 'NONE') THEN
 !
     IF (LSCAV .AND. (CCLOUD == 'LIMA')) THEN
        CALL FILL_DIMPHYEX( YLDIMPHYEX, SIZE(XTHT,1), SIZE(XTHT,2), SIZE(XTHT,3) )
-       CALL LIMA_PRECIP_SCAVENGING( YLDIMPHYEX,CST,TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
+       CALL LIMA_PRECIP_SCAVENGING( TNSV, YLDIMPHYEX,CST,TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
                                     CCLOUD, CCONF, ILUOUT, KTCOUNT,XTSTEP,XRT(:,:,:,3),    &
                                     XRHODREF, XRHODJ, XZZ, XPABST, XTHT,            &
                                     XSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),          &

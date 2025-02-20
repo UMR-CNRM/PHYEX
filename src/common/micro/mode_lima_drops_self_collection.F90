@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPS_SELF_COLLECTION
   IMPLICIT NONE
 CONTAINS
 !     #############################################################
-  SUBROUTINE LIMA_DROPS_SELF_COLLECTION (LDCOMPUTE,           &
+  SUBROUTINE LIMA_DROPS_SELF_COLLECTION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,    &
                                          PRHODREF,            &
                                          PCRT, PLBDR, PLBDR3, &
                                          P_CR_SCBU            )
@@ -34,32 +34,36 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,      ONLY : XCTMIN
-USE MODD_PARAM_LIMA_WARM, ONLY : XACCR1, XSCBUEXP1, XSCBU_EFF1, XSCBU_EFF2, &
-                                 XSCBU2, XSCBU3
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+INTEGER,              INTENT(IN)    :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF  ! Reference Exner function
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF  ! Reference Exner function
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PCRT      ! Rain drops C. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR     ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR3    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCRT      ! Rain drops C. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDR     ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDR3    ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_SCBU
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CR_SCBU
 !
 !*       0.2   Declarations of local variables :
 !
+TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PCRT)) :: &
                                            ZW1, & ! work arrays
                                            ZW2, &
                                            ZW3, &
                                            ZW4, &
                                            ZSCBU
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
@@ -68,29 +72,30 @@ REAL, DIMENSION(SIZE(PCRT)) :: &
 !               ---------------------------------------
 !
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPS_SELF_COLLECTION', 0, ZHOOK_HANDLE)
 P_CR_SCBU(:)=0.
 !
 ZW4(:) =0.
 !
-WHERE( PCRT(:)>XCTMIN(3) .AND. LDCOMPUTE(:) )
-   ZW4(:)  = XACCR1 / PLBDR(:)                ! Mean diameter
+WHERE( PCRT(:)>LIMAP%XCTMIN(3) .AND. ODCOMPUTE(:) )
+   ZW4(:)  = LIMAW%XACCR1 / PLBDR(:)                ! Mean diameter
 END WHERE
 ZSCBU(:)=1.
-WHERE (ZW4(:)>=XSCBU_EFF1 .AND. PCRT(:)>XCTMIN(3) .AND. LDCOMPUTE(:)) &
-     ZSCBU(:) = EXP(XSCBUEXP1*(ZW4(:)-XSCBU_EFF1))            ! coalescence efficiency
-WHERE (ZW4(:)>=XSCBU_EFF2 .AND. LDCOMPUTE(:)) ZSCBU(:) = 0.0  ! Break-up
+WHERE (ZW4(:)>=LIMAW%XSCBU_EFF1 .AND. PCRT(:)>LIMAP%XCTMIN(3) .AND. ODCOMPUTE(:)) &
+     ZSCBU(:) = EXP(LIMAW%XSCBUEXP1*(ZW4(:)-LIMAW%XSCBU_EFF1))            ! coalescence efficiency
+WHERE (ZW4(:)>=LIMAW%XSCBU_EFF2 .AND. ODCOMPUTE(:)) ZSCBU(:) = 0.0  ! Break-up
 !
 ZW1(:) = 0.0
 ZW2(:) = 0.0
 ZW3(:) = 0.0
 !
-WHERE ( PCRT(:)>XCTMIN(3) .AND. ZW4(:)>1.E-4 .AND. LDCOMPUTE(:))  ! analytical integration
-   ZW1(:) = XSCBU2 * PCRT(:)**2 / PLBDR3(:)                        ! D>100 10-6 m
+WHERE ( PCRT(:)>LIMAP%XCTMIN(3) .AND. ZW4(:)>1.E-4 .AND. ODCOMPUTE(:))  ! analytical integration
+   ZW1(:) = LIMAW%XSCBU2 * PCRT(:)**2 / PLBDR3(:)                        ! D>100 10-6 m
    ZW3(:) = ZW1(:)*ZSCBU(:)
 END WHERE
 !
-WHERE ( PCRT(:)>XCTMIN(3) .AND. ZW4(:)<=1.E-4 .AND. LDCOMPUTE(:))
-   ZW2(:) = XSCBU3 *(PCRT(:) / PLBDR3(:))**2                       ! D<100 10-6 m
+WHERE ( PCRT(:)>LIMAP%XCTMIN(3) .AND. ZW4(:)<=1.E-4 .AND. ODCOMPUTE(:))
+   ZW2(:) = LIMAW%XSCBU3 *(PCRT(:) / PLBDR3(:))**2                       ! D<100 10-6 m
    ZW3(:) = ZW2(:)
 END WHERE
 !
@@ -99,5 +104,6 @@ P_CR_SCBU(:) = - ZW3(:) * PRHODREF(:)
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPS_SELF_COLLECTION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_DROPS_SELF_COLLECTION
 END MODULE MODE_LIMA_DROPS_SELF_COLLECTION

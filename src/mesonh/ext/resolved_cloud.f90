@@ -312,11 +312,14 @@ USE MODD_NSV,              ONLY: NSV, NSV_C1R3END, NSV_C2R2BEG, NSV_C2R2END,    
                                  NSV_LIMA_BEG, NSV_LIMA_END, NSV_LIMA_CCN_FREE, NSV_LIMA_IFN_FREE, &
                                  NSV_LIMA_NC, NSV_LIMA_NI, NSV_LIMA_NR,                            &
                                  NSV_AEREND, NSV_DSTEND, NSV_SLTEND,                               &
-                                 NSV_ELECBEG, NSV_ELECEND
+                                 NSV_ELECBEG, NSV_ELECEND, TNSV
 USE MODD_PARAM_C2R2,       ONLY: LSUPSAT
 USE MODD_PARAMETERS,       ONLY: JPHEXT, JPVEXT
 USE MODD_PARAM_ICE_n,      ONLY: CSEDIM, LADJ_BEFORE, LADJ_AFTER, LRED, PARAM_ICEN
-USE MODD_PARAM_LIMA,       ONLY: LADJ, LPTSPLIT, LSPRO, NMOD_CCN, NMOD_IFN, NMOD_IMM, NMOM_I
+USE MODD_PARAM_LIMA,       ONLY: LADJ, LPTSPLIT, LSPRO, NMOD_CCN, NMOD_IFN, NMOD_IMM, NMOM_I, PARAM_LIMA
+USE MODD_PARAM_LIMA_WARM,  ONLY: PARAM_LIMA_WARM
+USE MODD_PARAM_LIMA_COLD,  ONLY: PARAM_LIMA_COLD
+USE MODD_PARAM_LIMA_MIXED, ONLY: PARAM_LIMA_MIXED
 USE MODD_RAIN_ICE_DESCR_n, ONLY: XRTMIN, RAIN_ICE_DESCRN
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAMN
 USE MODD_REF,              ONLY: XTHVREFZ
@@ -978,7 +981,7 @@ SELECT CASE ( HCLOUD )
         ZQSS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+4)
         ZQGS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+5)
         ZQNIS(:,:,:) = PSVS(:,:,:,NSV_ELECEND)
-        IF (LSEDIM_BEARD) THEN
+        IF (ELEC_DESCR%LSEDIM_BEARD) THEN
           ALLOCATE(ZEFIELDW(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
           ZEFIELDW(:,:,:) = XEFIELDW(:,:,:)
         ELSE
@@ -1006,7 +1009,7 @@ SELECT CASE ( HCLOUD )
       ALLOCATE(ZQHS(0,0,0))
       !
       CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN, &
-                    ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, LSEDIM_BEARD,       &
+                    ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, ELEC_DESCR%LSEDIM_BEARD,       &
                     XTHVREFZ(IKB),                                              &
                     PTSTEP, KRR, ZEXN,                                          &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
@@ -1270,7 +1273,7 @@ SELECT CASE ( HCLOUD )
         ZQGS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+5)
         ZQHS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+6)
         ZQNIS(:,:,:) = PSVS(:,:,:,NSV_ELECEND)
-        IF (LSEDIM_BEARD) THEN
+        IF (ELEC_DESCR%LSEDIM_BEARD) THEN
           ALLOCATE(ZEFIELDW(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
           ZEFIELDW(:,:,:) = XEFIELDW(:,:,:)
         ELSE
@@ -1298,7 +1301,7 @@ SELECT CASE ( HCLOUD )
       END IF
       !
       CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN, &
-                     ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, LSEDIM_BEARD,        &
+                     ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, ELEC_DESCR%LSEDIM_BEARD,        &
                      XTHVREFZ(IKB),                                              &
                      PTSTEP, KRR, ZEXN,                                          &
                      ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
@@ -1447,14 +1450,14 @@ SELECT CASE ( HCLOUD )
 #endif
     IF (LPTSPLIT) THEN 
       IF (GELEC) THEN
-        CALL LIMA (YLDIMPHYEX,CST, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
+         CALL LIMA (PARAM_LIMA, PARAM_LIMA_WARM, PARAM_LIMA_COLD, PARAM_LIMA_MIXED,&
+                   TNSV, YLDIMPHYEX,CST, NEBN, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
                    ELEC_DESCR, ELEC_PARAM,                                 &
                    TBUCONF,TBUDGETS, HACTCCN,SIZE(TBUDGETS), KRR,          &
                    PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
-                   NMOD_CCN, NMOD_IFN, NMOD_IMM,NCARB, NSOA, NSP,          &
-                   LDUST, LSALT, LORILAM,                                  &
+                   NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                &
                    LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
                    PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
                    PSVT, PSOLORG, PMI,                                     &
@@ -1465,14 +1468,14 @@ SELECT CASE ( HCLOUD )
                    PSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),                    &
                    PSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND)                     )
       ELSE
-        CALL LIMA (YLDIMPHYEX,CST, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
+        CALL LIMA (PARAM_LIMA, PARAM_LIMA_WARM, PARAM_LIMA_COLD, PARAM_LIMA_MIXED,&
+                   TNSV, YLDIMPHYEX,CST, NEBN, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
                    ELEC_DESCR, ELEC_PARAM,                                 &
                    TBUCONF, TBUDGETS, HACTCCN, SIZE(TBUDGETS), KRR,        &
                    PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
-                   NMOD_CCN, NMOD_IFN, NMOD_IMM,NCARB, NSOA, NSP,          &
-                   LDUST, LSALT, LORILAM,                                  &
+                   NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                &
                    LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
                    PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
                    PSVT, PSOLORG, PMI,                                     &
@@ -1520,12 +1523,13 @@ SELECT CASE ( HCLOUD )
                            PTHS,PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),         &
                            PCLDFR, PICEFR, PRAINFR, PSRCS                           )
     ELSE IF (LPTSPLIT) THEN
-      CALL LIMA_ADJUST_SPLIT(YLDIMPHYEX, CST, TBUCONF,TBUDGETS,SIZE(TBUDGETS),               &
-                             KRR, KMI, CCONDENS, CLAMBDA3,                                   &
+       CALL LIMA_ADJUST_SPLIT(PARAM_LIMA, PARAM_LIMA_WARM, &
+                             TNSV, YLDIMPHYEX, CST, NEBN, TURBN, TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
+                             KRR, CCONDENS, CLAMBDA3,                                        &
                              NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                        &
-                             OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,                          &
+                             OSUBG_COND, OSIGMAS, PTSTEP, ZSIGQSAT2D,                        &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS,                               &
-                             SIZE(PMFCONV)/=0, PMFCONV, PPABST, PPABSTT, ZZZ,                &
+                             SIZE(PMFCONV)/=0, PMFCONV, PPABST, ZZZ,                         &
                              LLDTHRAD, PDTHRAD, PW_ACT,                                      &
                              PRT, PRS, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                &
                              PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                          &

@@ -7,7 +7,7 @@ MODULE MODE_LIMA_SNOW_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_SNOW_DEPOSITION (LDCOMPUTE,                                &
+  SUBROUTINE LIMA_SNOW_DEPOSITION (LIMAP, LIMAC, KSIZE, ODCOMPUTE,                         &
                                    PRHODREF,  PSSI, PAI, PCJ, PLSFACT,       &
                                    PRST, PCST, PLBDS,                        &
                                    P_RI_CNVI, P_CI_CNVI,                     &
@@ -42,105 +42,100 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, XALPHAS, XNUS, NMOM_I
-USE MODD_PARAM_LIMA_COLD, ONLY : XDSCNVI_LIM, XLBDASCNVI_MAX,     &
-                                 XC0DEPSI, XC1DEPSI, XR0DEPSI, XR1DEPSI,      &
-                                 X1DEPS, X0DEPS, XEX1DEPS, XEX0DEPS,  &
-                                 XFVELOS
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(:),   INTENT(IN)    :: PSSI  ! abs. pressure at time t
-REAL, DIMENSION(:),   INTENT(IN)    :: PAI  ! abs. pressure at time t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCJ  ! abs. pressure at time t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF! Reference density
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PSSI  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PAI  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  ! abs. pressure at time t
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
-REAL, DIMENSION(:),   INTENT(IN)    :: PCST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCST    ! Snow/aggregate m.r. at t 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS    ! Graupel m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDS    ! Graupel m.r. at t 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_CNVI
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_CNVI
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DEPS
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_DEPS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RI_CNVI
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_CNVI
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_DEPS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_DEPS
 !
 !*       0.2   Declarations of local variables :
 !
 LOGICAL, DIMENSION(SIZE(PRHODREF)) :: GMICRO ! Computations only where necessary
+TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 REAL,    DIMENSION(SIZE(PRHODREF)) :: ZZW, ZZW2, ZZX ! Work array
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_SNOW_DEPOSITION', 0, ZHOOK_HANDLE)
 P_RI_CNVI(:) = 0.
 P_CI_CNVI(:) = 0.
 P_TH_DEPS(:) = 0.
 P_RS_DEPS(:) = 0.
 !
 ! Looking for regions where computations are necessary
-GMICRO(:) = LDCOMPUTE(:) .AND. PRST(:)>XRTMIN(5)
+GMICRO(:) = ODCOMPUTE(:) .AND. PRST(:)>LIMAP%XRTMIN(5)
+IF (LIMAP%NMOM_I.GE.2) GMICRO(:) = GMICRO(:) .AND. PCST(:)>LIMAP%XCTMIN(5)
 !
-IF (NMOM_I.EQ.1) THEN
-   WHERE( GMICRO )
+IF (LIMAP%NMOM_I.EQ.1) THEN
 !
 ! Deposition of water vapor on r_s: RVDEPS
 !
-      ZZW(:) = 0.0
-      WHERE ( PRST(:)>XRTMIN(5) )
-         ZZW(:) = PCST(:) * PSSI(:) / PAI(:) * &
-              ( X0DEPS*PLBDS(:)**XEX0DEPS +             &
-                X1DEPS*PLBDS(:)**XEX1DEPS *PCJ(:) *     &
-                     (1+0.5*(XFVELOS/PLBDS(:))**XALPHAS)**(-XNUS+XEX1DEPS/XALPHAS) )
-         ZZW(:) =    ZZW(:)*(0.5+SIGN(0.5,ZZW(:))) - ABS(ZZW(:))*(0.5-SIGN(0.5,ZZW(:)))
-      END WHERE
+   ZZW(:) = 0.0
+   WHERE( GMICRO )
+      ZZW(:) = PCST(:) * PSSI(:) / PAI(:) * &
+           ( LIMAC%X0DEPS*PLBDS(:)**LIMAC%XEX0DEPS +             &
+           LIMAC%X1DEPS*PLBDS(:)**LIMAC%XEX1DEPS *PCJ(:) *     &
+           (1+0.5*(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEX1DEPS/LIMAP%XALPHAS) )
+      ZZW(:) =    ZZW(:)*(0.5+SIGN(0.5,ZZW(:))) - ABS(ZZW(:))*(0.5-SIGN(0.5,ZZW(:)))
       P_RS_DEPS(:) = ZZW(:)
    END WHERE
 ELSE
-   WHERE( GMICRO )
 !
 !*       2.1    Conversion of snow to r_i: RSCNVI
 !        ----------------------------------------
 !
+   ZZW2(:) = 0.0
+   ZZW(:) = 0.0
+   WHERE ( GMICRO .AND. PLBDS(:)<LIMAC%XLBDASCNVI_MAX .AND. PSSI(:)<0.0 )
+      ZZW(:) = (PLBDS(:)*LIMAC%XDSCNVI_LIM)**(LIMAP%XALPHAS)
+      ZZX(:) = ( -PSSI(:)/PAI(:) ) * PCST(:) * (ZZW(:)**LIMAP%XNUS) * EXP(-ZZW(:))
 !
-      ZZW2(:) = 0.0
-      ZZW(:) = 0.0
-      WHERE ( PLBDS(:)<XLBDASCNVI_MAX .AND. PRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) &
-                                      .AND. PSSI(:)<0.0                               )
-         ZZW(:) = (PLBDS(:)*XDSCNVI_LIM)**(XALPHAS)
-         ZZX(:) = ( -PSSI(:)/PAI(:) ) * PCST(:) * (ZZW(:)**XNUS) * EXP(-ZZW(:))
+      ZZW(:) = ( LIMAC%XR0DEPSI+LIMAC%XR1DEPSI*PCJ(:) )*ZZX(:)
 !
-         ZZW(:) = ( XR0DEPSI+XR1DEPSI*PCJ(:) )*ZZX(:)
-!
-         ZZW2(:)= ( XC0DEPSI+XC1DEPSI*PCJ(:) )*ZZX(:)
-      END WHERE
-!
+      ZZW2(:)= ( LIMAC%XC0DEPSI+LIMAC%XC1DEPSI*PCJ(:) )*ZZX(:)
       P_RI_CNVI(:) = ZZW(:)
       P_CI_CNVI(:) = ZZW2(:)
-!
+   END WHERE
 !
 !*       2.2    Deposition of water vapor on r_s: RVDEPS
 !        -----------------------------------------------
 !
-!
       ZZW(:) = 0.0
-      WHERE ( PRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) )
+      WHERE ( GMICRO )
          ZZW(:) = ( PCST(:)*PSSI(:)/PAI(:) ) *     &
-              ( X0DEPS*PLBDS(:)**XEX0DEPS +        &
-              ( X1DEPS*PCJ(:)*PLBDS(:)**XEX1DEPS * &
-                   (1+0.5*(XFVELOS/PLBDS(:))**XALPHAS)**(-XNUS+XEX1DEPS/XALPHAS)) )
+              ( LIMAC%X0DEPS*PLBDS(:)**LIMAC%XEX0DEPS +        &
+              ( LIMAC%X1DEPS*PCJ(:)*PLBDS(:)**LIMAC%XEX1DEPS * &
+                   (1+0.5*(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEX1DEPS/LIMAP%XALPHAS)) )
          ZZW(:) =    ZZW(:)*(0.5+SIGN(0.5,ZZW(:))) - ABS(ZZW(:))*(0.5-SIGN(0.5,ZZW(:)))
+         P_RS_DEPS(:) = ZZW(:)
       END WHERE
-!
-      P_RS_DEPS(:) = ZZW(:)
 ! 
-   END WHERE
 END IF
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_SNOW_DEPOSITION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_SNOW_DEPOSITION
 END MODULE MODE_LIMA_SNOW_DEPOSITION

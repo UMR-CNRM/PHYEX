@@ -35,11 +35,11 @@
 !!
 !-------------------------------------------------------------------------------
 !
-USE MODD_PARAMETERS, ONLY : JPLIMACCNMAX, JPLIMAIFNMAX
+USE MODD_PARAMETERS, ONLY : JPLIMACCNMAX, JPLIMAIFNMAX, NNBCRYSTALMAX
 !
 IMPLICIT NONE
 !
-TYPE PARAM_LIMA_t
+TYPE PARAM_LIMA_T
 LOGICAL :: LLIMA_DIAG             ! Compute diagnostics for concentration /m3
 !
 LOGICAL :: LPTSPLIT               ! activate time-splitting technique by S. Riette
@@ -59,6 +59,8 @@ LOGICAL :: LHHONI                 ! TRUE to enable freezing of haze particules
 LOGICAL :: LMEYERS                ! TRUE to use Meyers nucleation
 LOGICAL :: LCIBU                  ! TRUE to use collisional ice breakup
 LOGICAL :: LRDSF                  ! TRUE to use rain drop shattering by freezing
+LOGICAL :: LCRYSTAL_SHAPE         ! TRUE to use several shapes for ice crystals
+LOGICAL :: LICE_ISC               ! TRUE to add ice crystals self collection process
 INTEGER :: NMOM_I                 ! Number of moments for pristine ice
 INTEGER :: NMOM_S                 ! Number of moments for snow
 INTEGER :: NMOM_G                 ! Number of moments for graupel
@@ -82,6 +84,7 @@ REAL, DIMENSION(:),    ALLOCATABLE :: XSIGMA_IFN      ! Sigma of IFN modes
 REAL, DIMENSION(:),    ALLOCATABLE :: XRHO_IFN        ! Density of IFN modes 
 REAL, DIMENSION(:,:),  ALLOCATABLE :: XFRAC           ! Composition of each IFN mode
 REAL, DIMENSION(:),    ALLOCATABLE :: XFRAC_REF       ! AP compostion in Phillips 08
+REAL, DIMENSION(:),    ALLOCATABLE :: XGINC_IFN       ! 
 !
 ! 1.3 Ice characteristics
 !
@@ -92,6 +95,12 @@ CHARACTER(LEN=4) :: CHEVRIMED_ICE_LIMA ! Heavily rimed type GRAU or HAIL
 REAL                   :: XALPHAI,XNUI,    & ! Pristine ice   distribution parameters
                           XALPHAS,XNUS,    & ! Snow/aggregate distribution parameters
                           XALPHAG,XNUG       ! Graupel        distribution parameters
+INTEGER          :: NNB_CRYSTAL_SHAPE  ! nb of ice crystal shapes if lcrystal_shape=t
+CHARACTER(LEN=4), DIMENSION(NNBCRYSTALMAX) :: HTYPE_CRYSTAL_SHAPE     ! name of ice crystal shapes if lcrystal_shape=t 
+LOGICAL :: LSIGMOIDE_G,  &  ! if true limit graupel growth false by default
+           LSIGMOIDE_NG     ! if true force lambda to be < lambda(Dmin)
+REAL    :: XSIGMOIDE_G, &  ! sigmoide parameter for graupel growth limitation
+           XMVDMIN_G      ! minimum MVD for graupel growth lim or lambda(Dmin) calculation
 !
 ! 1.4 Phillips (2013) nucleation parameterization
 !
@@ -125,6 +134,10 @@ REAL      :: XFACTNUC_DEP,XFACTNUC_CON  ! Amplification factor for IN conc.
 REAL      :: XNDEBRIS_CIBU              ! Number of ice crystal debris produced
                                         ! by the break up of aggregate particles
 !
+! 1.7 Raindrop Shattering Freezing parameterization
+!
+REAL      :: XPSH_MAX_RDSF              ! shattering probability normal distribution maximum
+!
 !-------------------------------------------------------------------------------
 !
 !
@@ -157,7 +170,8 @@ REAL, DIMENSION(:), ALLOCATABLE     :: XR_MEAN_CCN,   & ! Mean radius of CCN mod
                                        XRHO_CCN         ! Density of the CCN modes
 REAL, DIMENSION(:), ALLOCATABLE     :: XKHEN_MULTI,   & ! Parameters defining the CCN activation
                                        XMUHEN_MULTI,  & ! spectra for a multimodal aerosol distribution
-                                       XBETAHEN_MULTI   ! 
+                                       XBETAHEN_MULTI,& !
+                                       XGMULTI          !
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: XCONC_CCN_TOT    ! Total aerosol number concentration
 REAL, DIMENSION(:),     ALLOCATABLE :: XLIMIT_FACTOR    ! compute CHEN ????????????
 !
@@ -224,9 +238,9 @@ REAL,DIMENSION(7)      :: XLBEX
 REAL,DIMENSION(7)      :: XD
 REAL,DIMENSION(7)      :: XFSEDR
 REAL,DIMENSION(7)      :: XFSEDC
-END TYPE PARAM_LIMA_t
+END TYPE PARAM_LIMA_T
 !
-TYPE(PARAM_LIMA_t), TARGET, SAVE :: PARAM_LIMA
+TYPE(PARAM_LIMA_T), TARGET, SAVE :: PARAM_LIMA
 !
 LOGICAL, POINTER :: LLIMA_DIAG => NULL(), &
                     LPTSPLIT => NULL(), &
@@ -237,6 +251,8 @@ LOGICAL, POINTER :: LLIMA_DIAG => NULL(), &
                     LMEYERS => NULL(), &
                     LCIBU => NULL(), &
                     LRDSF => NULL(), &
+                    LCRYSTAL_SHAPE => NULL(), &
+                    LICE_ISC => NULL(), &
                     LIFN_HOM => NULL(), &
                     LSNOW_T => NULL(), &
                     LMURAKAMI => NULL(), &
@@ -251,13 +267,16 @@ LOGICAL, POINTER :: LLIMA_DIAG => NULL(), &
                     LKESSLERAC => NULL(), &
                     LCCN_HOM => NULL(), &
                     LSCAV => NULL(), &
-                    LAERO_MASS => NULL()
+                    LAERO_MASS => NULL(),&
+                    LSIGMOIDE_G => NULL(),&
+                    LSIGMOIDE_NG => NULL()
 
 INTEGER, POINTER :: NMAXITER => NULL(), &
                     NMOM_I => NULL(), &
                     NMOM_S => NULL(), &
                     NMOM_G => NULL(), &
                     NMOM_H => NULL(), &
+                    NNB_CRYSTAL_SHAPE => NULL(), &
                     NMOD_IFN => NULL(), &
                     NMOD_IMM => NULL(), &
                     NIND_SPECIE => NULL(), &
@@ -269,6 +288,8 @@ INTEGER, POINTER :: NMAXITER => NULL(), &
                     NMOD_CCN => NULL(), &
                     NDIAMR => NULL(), &
                     NDIAMP => NULL()
+
+CHARACTER(LEN=4), DIMENSION(:), POINTER :: HTYPE_CRYSTAL_SHAPE
 
 REAL, POINTER :: XMRSTEP => NULL(), &
                  XTSTEP_TS => NULL(), &
@@ -284,6 +305,7 @@ REAL, POINTER :: XMRSTEP => NULL(), &
                  XFACTNUC_DEP => NULL(), &
                  XFACTNUC_CON => NULL(), &
                  XNDEBRIS_CIBU => NULL(), &
+                 XPSH_MAX_RDSF => NULL(), &
                  XALPHAR => NULL(), &
                  XNUR => NULL(), &
                  XALPHAC => NULL(), &
@@ -301,11 +323,14 @@ REAL, POINTER :: XMRSTEP => NULL(), &
                  XMFPA0 => NULL(), &
                  XVISCW => NULL(), &
                  XRHO00 => NULL(), &
-                 XCEXVT => NULL()
+                 XCEXVT => NULL(), &
+                 XSIGMOIDE_G => NULL(), &
+                 XMVDMIN_G => NULL()
 
 REAL, DIMENSION(:), POINTER :: XIFN_CONC => NULL(), &
                                XMDIAM_IFN => NULL(), &
                                XSIGMA_IFN => NULL(), &
+                               XGINC_IFN => NULL(), &
                                XRHO_IFN => NULL(), &
                                XFRAC_REF => NULL(), &
                                XT0 => NULL(), &
@@ -325,6 +350,7 @@ REAL, DIMENSION(:), POINTER :: XIFN_CONC => NULL(), &
                                XMUHEN_MULTI => NULL(), &
                                XBETAHEN_MULTI => NULL(), &
                                XLIMIT_FACTOR => NULL(), &
+                               XGMULTI => NULL(), &
                                XRTMIN => NULL(), &
                                XCTMIN => NULL(), &
                                XLB => NULL(), &
@@ -356,7 +382,9 @@ NAMELIST/NAM_PARAM_LIMA/LNUCL, LSEDI, LHHONI, LMEYERS,                     &
                         LSNOW_T, CPRISTINE_ICE_LIMA, CHEVRIMED_ICE_LIMA,   &                                   
                         !XALPHAI, XNUI, XALPHAS, XNUS, XALPHAG, XNUG,       &    
                         XFACTNUC_DEP, XFACTNUC_CON, NPHILLIPS,             &    
-                        LCIBU, XNDEBRIS_CIBU, LRDSF, LMURAKAMI,            &                                         
+                        LCIBU, XNDEBRIS_CIBU, LRDSF, XPSH_MAX_RDSF, LMURAKAMI, &                                         
+                        LCRYSTAL_SHAPE, NNB_CRYSTAL_SHAPE,                 &
+                        HTYPE_CRYSTAL_SHAPE, LICE_ISC,                     &
                         LACTI, LSEDC, LACTIT, LSPRO,                       &                                         
                         LADJ, LKHKO, LKESSLERAC, NMOM_C, NMOM_R,           &                                         
                         NMOD_CCN, XCCN_CONC,                               &                                         
@@ -364,12 +392,16 @@ NAMELIST/NAM_PARAM_LIMA/LNUCL, LSEDI, LHHONI, LMEYERS,                     &
                         XALPHAC, XNUC, XALPHAR, XNUR,                      &                                         
                         XFSOLUB_CCN, XACTEMP_CCN, XAERDIFF, XAERHEIGHT,    &                                         
                         LSCAV, LAERO_MASS, LDEPOC, XVDEPOC, LACTTKE,       &                                         
-                        LPTSPLIT, LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS
+                        LPTSPLIT, LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS,&
+                        LSIGMOIDE_NG, LSIGMOIDE_G, XSIGMOIDE_G, XMVDMIN_G
 
 CONTAINS
 SUBROUTINE PARAM_LIMA_ASSOCIATE()
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 IMPLICIT NONE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
+IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_ASSOCIATE', 0, ZHOOK_HANDLE)
 IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   LLIMA_DIAG         => PARAM_LIMA%LLIMA_DIAG          
   LPTSPLIT           => PARAM_LIMA%LPTSPLIT
@@ -380,6 +412,8 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   LMEYERS            => PARAM_LIMA%LMEYERS
   LCIBU              => PARAM_LIMA%LCIBU
   LRDSF              => PARAM_LIMA%LRDSF
+  LCRYSTAL_SHAPE     => PARAM_LIMA%LCRYSTAL_SHAPE
+  LICE_ISC           => PARAM_LIMA%LICE_ISC
   LIFN_HOM           => PARAM_LIMA%LIFN_HOM
   LSNOW_T            => PARAM_LIMA%LSNOW_T
   LMURAKAMI          => PARAM_LIMA%LMURAKAMI
@@ -395,12 +429,16 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   LCCN_HOM           => PARAM_LIMA%LCCN_HOM
   LSCAV              => PARAM_LIMA%LSCAV
   LAERO_MASS         => PARAM_LIMA%LAERO_MASS
+  LSIGMOIDE_G        => PARAM_LIMA%LSIGMOIDE_G
+  LSIGMOIDE_NG       => PARAM_LIMA%LSIGMOIDE_NG
 
   NMAXITER           => PARAM_LIMA%NMAXITER
   NMOM_I             => PARAM_LIMA%NMOM_I
   NMOM_S             => PARAM_LIMA%NMOM_S
   NMOM_G             => PARAM_LIMA%NMOM_G
   NMOM_H             => PARAM_LIMA%NMOM_H
+  NNB_CRYSTAL_SHAPE  => PARAM_LIMA%NNB_CRYSTAL_SHAPE
+  HTYPE_CRYSTAL_SHAPE => PARAM_LIMA%HTYPE_CRYSTAL_SHAPE
   NMOD_IFN           => PARAM_LIMA%NMOD_IFN
   NMOD_IMM           => PARAM_LIMA%NMOD_IMM
   NIND_SPECIE        => PARAM_LIMA%NIND_SPECIE
@@ -427,6 +465,7 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   XFACTNUC_DEP       => PARAM_LIMA%XFACTNUC_DEP
   XFACTNUC_CON       => PARAM_LIMA%XFACTNUC_CON
   XNDEBRIS_CIBU      => PARAM_LIMA%XNDEBRIS_CIBU
+  XPSH_MAX_RDSF      => PARAM_LIMA%XPSH_MAX_RDSF
   XALPHAR            => PARAM_LIMA%XALPHAR
   XNUR               => PARAM_LIMA%XNUR
   XALPHAC            => PARAM_LIMA%XALPHAC
@@ -460,6 +499,8 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   XD                 => PARAM_LIMA%XD
   XFSEDR             => PARAM_LIMA%XFSEDR
   XFSEDC             => PARAM_LIMA%XFSEDC
+  XSIGMOIDE_G        => PARAM_LIMA%XSIGMOIDE_G
+  XMVDMIN_G        => PARAM_LIMA%XMVDMIN_G
 
   NSPLITSED          => PARAM_LIMA%NSPLITSED
 
@@ -472,25 +513,33 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   HINI_CCN           => PARAM_LIMA%HINI_CCN
   HTYPE_CCN          => PARAM_LIMA%HTYPE_CCN
 ENDIF
+IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_ASSOCIATE', 1, ZHOOK_HANDLE)
 END SUBROUTINE PARAM_LIMA_ASSOCIATE
 !
 SUBROUTINE PARAM_LIMA_DEALLOCATE(HNAME)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
   IMPLICIT NONE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
   CHARACTER(LEN=*), INTENT(IN) :: HNAME
+  IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_DEALLOCATE', 0, ZHOOK_HANDLE)
   SELECT CASE(TRIM(HNAME))
     CASE('NINDICE_CCN_IMM')
       DEALLOCATE(PARAM_LIMA%NINDICE_CCN_IMM)
       NINDICE_CCN_IMM => NULL()
   END SELECT
+IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_DEALLOCATE', 1, ZHOOK_HANDLE)
 END SUBROUTINE PARAM_LIMA_DEALLOCATE
 !
 SUBROUTINE PARAM_LIMA_ALLOCATE(HNAME, KDIM1, KDIM2, KDIM3)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
   IMPLICIT NONE
   CHARACTER(LEN=*), INTENT(IN)  :: HNAME
   INTEGER, INTENT(IN)           :: KDIM1
   INTEGER, OPTIONAL, INTENT(IN) :: KDIM2
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
   INTEGER, OPTIONAL, INTENT(IN) :: KDIM3
 
+  IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_ALLOCATE', 0, ZHOOK_HANDLE)
   SELECT CASE(TRIM(HNAME))
     !1D arrays
     CASE('NIMM')
@@ -505,6 +554,9 @@ SUBROUTINE PARAM_LIMA_ALLOCATE(HNAME, KDIM1, KDIM2, KDIM3)
     CASE('XSIGMA_IFN')
       ALLOCATE(PARAM_LIMA%XSIGMA_IFN(KDIM1))
       XSIGMA_IFN => PARAM_LIMA%XSIGMA_IFN
+    CASE('XGINC_IFN')
+      ALLOCATE(PARAM_LIMA%XGINC_IFN(KDIM1))
+      XGINC_IFN => PARAM_LIMA%XGINC_IFN
     CASE('XRHO_IFN')
       ALLOCATE(PARAM_LIMA%XRHO_IFN(KDIM1))
       XRHO_IFN => PARAM_LIMA%XRHO_IFN
@@ -538,6 +590,9 @@ SUBROUTINE PARAM_LIMA_ALLOCATE(HNAME, KDIM1, KDIM2, KDIM3)
     CASE('XLIMIT_FACTOR')
       ALLOCATE(PARAM_LIMA%XLIMIT_FACTOR(KDIM1))
       XLIMIT_FACTOR => PARAM_LIMA%XLIMIT_FACTOR
+    CASE('XGMULTI')
+      ALLOCATE(PARAM_LIMA%XGMULTI(KDIM1))
+      XGMULTI => PARAM_LIMA%XGMULTI
     CASE('XRTMIN')
       ALLOCATE(PARAM_LIMA%XRTMIN(KDIM1))
       XRTMIN => PARAM_LIMA%XRTMIN
@@ -555,10 +610,11 @@ SUBROUTINE PARAM_LIMA_ALLOCATE(HNAME, KDIM1, KDIM2, KDIM3)
 !      ALLOCATE(PARAM_LIMA%XCONC_CCN_TOT(KDIM1, KDIM2))
 !      XCONC_CCN_TOT => PARAM_LIMA%XCONC_CCN_TOT
   END SELECT
+IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_ALLOCATE', 1, ZHOOK_HANDLE)
 END SUBROUTINE PARAM_LIMA_ALLOCATE
 !
-SUBROUTINE PARAM_LIMA_INIT(HPROGRAM, TFILENAM, LDNEEDNAM, KLUOUT, &
-                          &LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT)
+SUBROUTINE PARAM_LIMA_INIT(HPROGRAM, TFILENAM, ODNEEDNAM, KLUOUT, &
+                          &ODDEFAULTVAL, ODREADNAM, ODCHECK, KPRINT)
 !!*** *PARAM_ICEN_INIT* - Code needed to initialize the MODD_PARAM_LIMA module
 !!
 !!*   PURPOSE
@@ -591,6 +647,8 @@ USE MODE_POSNAM_PHY, ONLY: POSNAM_PHY
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 USE MODE_CHECK_NAM_VAL, ONLY: CHECK_NAM_VAL_CHAR
 USE MODD_IO,  ONLY: TFILEDATA
+USE MODD_NEB_n,         ONLY: LCONDBORN
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -599,33 +657,36 @@ IMPLICIT NONE
 !
 CHARACTER(LEN=6),  INTENT(IN) :: HPROGRAM     !< Name of the calling program
 TYPE(TFILEDATA),   INTENT(IN) :: TFILENAM     !< Namelist file
-LOGICAL,           INTENT(IN) :: LDNEEDNAM    !< True to abort if namelist is absent
+LOGICAL,           INTENT(IN) :: ODNEEDNAM    !< True to abort if namelist is absent
 INTEGER,           INTENT(IN) :: KLUOUT       !< Logical unit for outputs
-LOGICAL, OPTIONAL, INTENT(IN) :: LDDEFAULTVAL !< Must we initialize variables with default values (defaults to .TRUE.)
-LOGICAL, OPTIONAL, INTENT(IN) :: LDREADNAM    !< Must we read the namelist (defaults to .TRUE.)
-LOGICAL, OPTIONAL, INTENT(IN) :: LDCHECK      !< Must we perform some checks on values (defaults to .TRUE.)
+LOGICAL, OPTIONAL, INTENT(IN) :: ODDEFAULTVAL !< Must we initialize variables with default values (defaults to .TRUE.)
+LOGICAL, OPTIONAL, INTENT(IN) :: ODREADNAM    !< Must we read the namelist (defaults to .TRUE.)
+LOGICAL, OPTIONAL, INTENT(IN) :: ODCHECK      !< Must we perform some checks on values (defaults to .TRUE.)
 INTEGER, OPTIONAL, INTENT(IN) :: KPRINT       !< Print level (defaults to 0): 0 for no print, 1 to safely print namelist,
                                               !! 2 to print informative messages
 !
 !* 0.2 Declaration of local variables
 !      ------------------------------
 !
-LOGICAL :: LLDEFAULTVAL, LLREADNAM, LLCHECK, LLFOUND
-INTEGER :: IPRINT 
+LOGICAL :: GLDEFAULTVAL, GLREADNAM, GLCHECK, GLFOUND
+INTEGER :: IPRINT
+INTEGER :: ISH
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
  
-LLDEFAULTVAL=.TRUE. 
-LLREADNAM=.TRUE. 
-LLCHECK=.TRUE. 
+IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_INIT', 0, ZHOOK_HANDLE)
+GLDEFAULTVAL=.TRUE. 
+GLREADNAM=.TRUE. 
+GLCHECK=.TRUE. 
 IPRINT=0 
-IF(PRESENT(LDDEFAULTVAL)) LLDEFAULTVAL=LDDEFAULTVAL 
-IF(PRESENT(LDREADNAM   )) LLREADNAM   =LDREADNAM 
-IF(PRESENT(LDCHECK     )) LLCHECK     =LDCHECK 
+IF(PRESENT(ODDEFAULTVAL)) GLDEFAULTVAL=ODDEFAULTVAL 
+IF(PRESENT(ODREADNAM   )) GLREADNAM   =ODREADNAM 
+IF(PRESENT(ODCHECK     )) GLCHECK     =ODCHECK 
 IF(PRESENT(KPRINT      )) IPRINT      =KPRINT 
 ! 
 !*      1. DEFAULT VALUES 
 !       ----------------- 
 ! 
-IF(LLDEFAULTVAL) THEN 
+IF(GLDEFAULTVAL) THEN 
   !NOTES ON GENERAL DEFAULTS AND MODEL-SPECIFIC DEFAULTS :
   !- General default values *MUST* remain unchanged.
   !- To change the default value for a given application,                                                 
@@ -661,6 +722,14 @@ IF(LLDEFAULTVAL) THEN
   LCIBU = .FALSE.
   XNDEBRIS_CIBU = 50.0
   LRDSF = .FALSE.
+  XPSH_MAX_RDSF = 0.2
+  LCRYSTAL_SHAPE = .FALSE.
+  NNB_CRYSTAL_SHAPE = 1
+  LICE_ISC = .FALSE.
+  HTYPE_CRYSTAL_SHAPE(1) = 'YPLA'
+  HTYPE_CRYSTAL_SHAPE(2) = 'YCOL'
+  HTYPE_CRYSTAL_SHAPE(3) = 'YBUR'
+  HTYPE_CRYSTAL_SHAPE(4) = 'YDRO'
   LMURAKAMI=.TRUE.
   LACTI  = .TRUE.
   LSEDC  = .TRUE.
@@ -695,22 +764,34 @@ IF(LLDEFAULTVAL) THEN
   NMAXITER  =  5
   XMRSTEP    = 0.005
   XTSTEP_TS  = 20.
+  LSIGMOIDE_G = .FALSE.
+  LSIGMOIDE_NG = .FALSE.
+  XSIGMOIDE_G = 1.E8
+  XMVDMIN_G = 125.E-6
 ENDIF
 !
 !*      2. NAMELIST
 !       -----------
 !
-IF(LLREADNAM) THEN
-  CALL POSNAM_PHY(TFILENAM, 'NAM_PARAM_LIMA', LDNEEDNAM, LLFOUND)
-  IF(LLFOUND) READ(UNIT=TFILENAM%NLU, NML=NAM_PARAM_LIMA)
+IF(GLREADNAM) THEN
+  CALL POSNAM_PHY(TFILENAM, 'NAM_PARAM_LIMA', ODNEEDNAM, GLFOUND)
+  IF(GLFOUND) READ(UNIT=TFILENAM%NLU, NML=NAM_PARAM_LIMA)
 ENDIF
 !
 !*      3. CHECKS
 !       ---------
 !
-IF(LLCHECK) THEN
+IF(GLCHECK) THEN
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CPRISTINE_ICE_LIMA', CPRISTINE_ICE_LIMA, &
-                                  'PLAT', 'COLU', 'BURO','YPLA','YCOL','YBUR','YDRO','YHCO','YHBU')
+                                  'PLAT', 'COLU', 'BURO', 'POIR', &
+                                  'YPLA', 'YCOL', 'YBUR','YDRO', 'YHCO', 'YHBU')
+  IF (LCRYSTAL_SHAPE) THEN
+    DO ISH = 1, NNB_CRYSTAL_SHAPE
+      CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'HTYPE_CRYSTAL_SHAPE', HTYPE_CRYSTAL_SHAPE(ISH), &
+                              'POIR', 'CCOL', 'CPLA', &
+                              'YPLA', 'YCOL', 'YBUR', 'YDRO', 'YHCO', 'YHBU')
+    ENDDO
+  ENDIF
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CHEVRIMED_ICE_LIMA', CHEVRIMED_ICE_LIMA, &
                                                 'GRAU', 'HAIL')
 
@@ -721,7 +802,7 @@ IF(LLCHECK) THEN
            &" YOU HAVE TO FILL HINI_CCN ")
   END IF
 
-  IF(LACTI .AND. NMOD_CCN == 0 .AND. NMOM_C >= 2) THEN
+  IF(LACTI .AND. NMOD_CCN == 0.AND. NMOM_C >= 2) THEN
     CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODD_PARAM_LIMA', &
            &"ACTIVATION OF AEROSOL PARTICLES IS NOT " // &
            &"POSSIBLE IF NMOD_CCN HAS VALUE ZERO. YOU HAVE TO SET AN UPPER " // &
@@ -735,14 +816,36 @@ IF(LLCHECK) THEN
            &"VALUE OF NMOD_IFN IN ORDER TO USE LIMA COLD NUCLEATION SCHEME.") 
   END IF
 
+  IF (.NOT. LPTSPLIT .AND. LCRYSTAL_SHAPE) THEN
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODD_PARAM_LIMA', &
+           &"YOU HAVE TO SET LPTSPLIT=T TO USE SEVERAL ICE CRYSTAL HABITS.")
+  END IF
+
+  IF (LCRYSTAL_SHAPE .AND. (NNB_CRYSTAL_SHAPE .LT. 3 .OR. NNB_CRYSTAL_SHAPE .GT. 4)) THEN
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODD_PARAM_LIMA', &
+           &"WHEN LCRYSTAL_SHAPE=T, IT IS POSSIBLE TO USE 3 OR 4 DIFFERENT SHAPES"// &
+           &"YOU HAVE TO SET NNB_CRYSTAL_SHAPE TO 3 OR 4.")
+  END IF
+
+  IF (LCRYSTAL_SHAPE .AND. LICE_ISC .AND. (NNB_CRYSTAL_SHAPE .LE. 3 .OR. NNB_CRYSTAL_SHAPE .GT. 4)) THEN
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODD_PARAM_LIMA', &
+           &"WHEN LCRYSTAL_SHAPE=T, AND LICE_ISC=T IT IS POSSIBLE TO USE DIFFERENT SHAPES"// &
+           &"YOU HAVE TO SET NNB_CRYSTAL_SHAPE TO 4.")
+  END IF 
+
+  IF(.NOT. LCONDBORN) THEN
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODD_PARAM_LIMA', &
+         &"LCONDBORN (MODD_NEB_n) must be .TRUE. with LIMA")
+  ENDIF
+
   IF(HPROGRAM=='AROME' .OR. HPROGRAM=='PHYEX') THEN
     IF(.NOT. LPTSPLIT) THEN
       CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODD_PARAM_LIMA', &
-           &"LPTSPLIT must be .TRUE. with this program: " // HPROGRAM)
+           &"LPTSPLIT MUST BE .TRUE. WITH THIS PROGRAM: " // HPROGRAM)
     ENDIF
     IF(LSPRO) THEN
       CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODD_PARAM_LIMA', &
-           &"LSPRO must be .FALSE. with this program: " // HPROGRAM)
+           &"LSPRO MUST BE .FALSE. WITH THIS PROGRAM: " // HPROGRAM)
     ENDIF
   ENDIF
 ENDIF
@@ -754,6 +857,7 @@ IF(IPRINT>=1) THEN
   WRITE(UNIT=KLUOUT, NML=NAM_PARAM_LIMA)
 ENDIF
 !
+IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_INIT', 1, ZHOOK_HANDLE)
 END SUBROUTINE PARAM_LIMA_INIT
 !
 END MODULE MODD_PARAM_LIMA

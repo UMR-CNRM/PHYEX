@@ -7,7 +7,7 @@ MODULE MODE_LIMA_GRAUPEL_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################
-  SUBROUTINE LIMA_GRAUPEL_DEPOSITION (LDCOMPUTE, PRHODREF,                        &
+  SUBROUTINE LIMA_GRAUPEL_DEPOSITION (LIMAP, LIMAM, KSIZE, ODCOMPUTE, PRHODREF,                 &
                                       PRGT, PCGT, PSSI, PLBDG, PAI, PCJ, PLSFACT, &
                                       P_TH_DEPG, P_RG_DEPG                        )
 !     ###########################################################################
@@ -34,27 +34,36 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN
-USE MODD_PARAM_LIMA_MIXED, ONLY : X0DEPG, XEX0DEPG, X1DEPG, XEX1DEPG
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! 
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF ! 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRGT     ! graupel mr
-REAL, DIMENSION(:),   INTENT(IN)    :: PCGT     ! graupel conc
-REAL, DIMENSION(:),   INTENT(IN)    :: PSSI     ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDG    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PAI      ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PCJ      ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT  ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRGT     ! graupel mr
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCGT     ! graupel conc
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PSSI     ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDG    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PAI      ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ      ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DEPG
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_DEPG
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_DEPG
+TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RG_DEPG
 !
+!
+!*       0.2   Declarations of local variables :
+!
+REAL,    DIMENSION(SIZE(PRGT))   :: ZSIGMOIDE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
@@ -62,16 +71,23 @@ REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_DEPG
 !*       1.     Deposition of vapour on graupel
 !               -------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_GRAUPEL_DEPOSITION', 0, ZHOOK_HANDLE)
 P_TH_DEPG(:) = 0.0
 P_RG_DEPG(:) = 0.0
-WHERE ( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. LDCOMPUTE(:) )
+WHERE ( PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:) )
    P_RG_DEPG(:) = PSSI(:) / PAI(:) * PCGT(:) *                      &
-                ( X0DEPG*PLBDG(:)**XEX0DEPG + X1DEPG*PCJ(:)*PLBDG(:)**XEX1DEPG )
+                ( LIMAM%X0DEPG*PLBDG(:)**LIMAM%XEX0DEPG + LIMAM%X1DEPG*PCJ(:)*PLBDG(:)**LIMAM%XEX1DEPG )
    P_TH_DEPG(:) = P_RG_DEPG(:)*PLSFACT(:)
 END WHERE
 !
+IF (LIMAP%LSIGMOIDE_G) THEN
+     ZSIGMOIDE(:)      =  1/(1 +  exp(-LIMAP%XSIGMOIDE_G*(PRGT(:)-LIMAM%XMINDG/PRHODREF(:))))
+     P_TH_DEPG(:) = P_TH_DEPG(:) * ZSIGMOIDE(:)
+     P_RG_DEPG(:) = P_RG_DEPG(:) * ZSIGMOIDE(:)
+END IF
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_GRAUPEL_DEPOSITION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_GRAUPEL_DEPOSITION
 END MODULE MODE_LIMA_GRAUPEL_DEPOSITION

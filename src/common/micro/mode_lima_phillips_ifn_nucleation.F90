@@ -7,12 +7,12 @@ MODULE MODE_LIMA_PHILLIPS_IFN_NUCLEATION
   IMPLICIT NONE
 CONTAINS
 !     #################################################################################
-  SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (CST, PTSTEP,                              &
+  SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (LIMAP, LIMAC, D, CST, PTSTEP,             &
                                            PRHODREF, PEXNREF, PPABST,                &
                                            PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
-                                           PCCT, PCIT, PNAT, PIFT, PINT, PNIT,       &
-                                           P_TH_HIND, P_RI_HIND, P_CI_HIND,          &
-                                           P_TH_HINC, P_RC_HINC, P_CC_HINC,          &
+                                           PCCT, PCIT, PCIT_SHAPE, PNAT, PIFT, PINT, PNIT, &
+                                           P_TH_HIND, P_RI_HIND, P_CI_HIND, P_SHCI_HIND, &
+                                           P_TH_HINC, P_RC_HINC, P_CC_HINC, P_SHCI_HINC, &
                                            PICEFR                                    )
 !     #################################################################################
 !!
@@ -71,65 +71,70 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,            ONLY: CST_t
-USE MODD_PARAMETERS,      ONLY : JPHEXT, JPVEXT
-USE MODD_PARAM_LIMA,      ONLY : NMOD_IFN, NSPECIE, XFRAC,                         &
-                                 NMOD_CCN, NMOD_IMM, NIND_SPECIE, NINDICE_CCN_IMM,  &
-                                 XDSI0, NPHILLIPS
-USE MODD_PARAM_LIMA_COLD, ONLY : XMNU0
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
+USE MODD_CST,            ONLY: CST_T
 
-use mode_tools,           only: Countjv
+USE MODE_TOOLS,           only: COUNTJV
 
 USE MODE_LIMA_PHILLIPS_INTEG, ONLY : LIMA_PHILLIPS_INTEG
 USE MODE_LIMA_PHILLIPS_REF_SPECTRUM, ONLY : LIMA_PHILLIPS_REF_SPECTRUM
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(CST_t),              INTENT(IN)    :: CST
-REAL,                     INTENT(IN)    :: PTSTEP 
+TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(DIMPHYEX_T),       INTENT(IN)    :: D
+TYPE(CST_T),            INTENT(IN)    :: CST
+REAL,                   INTENT(IN)    :: PTSTEP 
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF! Reference density
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXNREF ! Reference Exner function
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHT    ! Theta at time t
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRCT    ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHT    ! Theta at time t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRCT    ! Cloud water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCCT    ! Cloud water conc. at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIT    ! Cloud water conc. at t 
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNAT    ! CCN conc. used for immersion nucl.
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PIFT    ! Free IFN conc.
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PINT    ! Nucleated IFN conc.
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNIT    ! Nucleated (by immersion) CCN conc.
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCCT    ! Cloud water conc. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Cloud water conc. at t 
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE),   INTENT(INOUT) :: PCIT_SHAPE ! Cloud water conc. at t 
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_CCN), INTENT(INOUT) :: PNAT    ! CCN conc. used for immersion nucl.
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IFN), INTENT(INOUT) :: PIFT    ! Free IFN conc.
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IFN), INTENT(INOUT) :: PINT    ! Nucleated IFN conc.
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IMM), INTENT(INOUT) :: PNIT    ! Nucleated (by immersion) CCN conc.
 !
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_TH_HIND
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_RI_HIND
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_CI_HIND
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_TH_HINC
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_RC_HINC
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_CC_HINC
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_TH_HIND
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_RI_HIND
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_CI_HIND
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE),   INTENT(OUT)   :: P_SHCI_HIND
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_TH_HINC
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_RC_HINC
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_CC_HINC
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE),   INTENT(OUT)   :: P_SHCI_HINC
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PICEFR
 !
 !
 !*       0.2   Declarations of local variables :
 !
 !
-INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE               ! Physical domain
-INTEGER :: JL, JMOD_CCN, JMOD_IFN, JSPECIE, JMOD_IMM  ! Loop index
+INTEGER :: IIJB, IIJE, IKB, IKE               ! Physical domain
+INTEGER :: IL, IMOD_CCN, IMOD_IFN, ISPECIE, IMOD_IMM, ISH  ! Loop index
 INTEGER :: INEGT  ! Case number of sedimentation, nucleation,
 !
-LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
+LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) &
                        :: GNEGT  ! Test where to compute the nucleation
 !
-INTEGER, DIMENSION(SIZE(PRHODREF))  :: I1,I2,I3 ! Indexes for PACK replacement
+INTEGER, DIMENSION(SIZE(PRHODREF))  :: I1,I3 ! Indexes for PACK replacement
 !
 REAL, DIMENSION(:),   ALLOCATABLE :: ZRVT    ! Water vapor m.r. at t
 REAL, DIMENSION(:),   ALLOCATABLE :: ZRCT    ! Cloud water m.r. at t
@@ -162,43 +167,38 @@ REAL, DIMENSION(:), ALLOCATABLE &
                               ZSW,      &
                               ZSI_W
 !
-REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
+REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2))   &
                                   :: ZW, ZT ! work arrays
 !
 REAL,    DIMENSION(:,:), ALLOCATABLE :: ZSI0, &    ! Si threshold in H_X for X={DM,BC,O}
                                         Z_FRAC_ACT ! Activable frac. of each AP species
 REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS, ZZT_SI0_BC
+REAL, DIMENSION(:,:), ALLOCATABLE :: ZTC3D, & ! arrays of temperature and Si
+                                     ZSI3D    ! --> used if lcrystal_shape=t
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 !
 !*       1.     PRELIMINARY COMPUTATIONS
 !               ------------------------
 !
-P_TH_HIND(:,:,:) = 0.
-P_RI_HIND(:,:,:) = 0.
-P_CI_HIND(:,:,:) = 0.
-P_TH_HINC(:,:,:) = 0.
-P_RC_HINC(:,:,:) = 0.
-P_CC_HINC(:,:,:) = 0.
-!
-! Physical domain
-!
-IIB=1+JPHEXT
-IIE=SIZE(PTHT,1) - JPHEXT
-IJB=1+JPHEXT
-IJE=SIZE(PTHT,2) - JPHEXT
-IKB=1+JPVEXT
-IKE=SIZE(PTHT,3) - JPVEXT
+IF (LHOOK) CALL DR_HOOK('LIMA_PHILLIPS_IFN_NUCLEATION', 0, ZHOOK_HANDLE)
+P_TH_HIND(:,:) = 0.
+P_RI_HIND(:,:) = 0.
+P_CI_HIND(:,:) = 0.
+P_TH_HINC(:,:) = 0.
+P_RC_HINC(:,:) = 0.
+P_CC_HINC(:,:) = 0.
 !
 ! Temperature
 !
-ZT(:,:,:)  = PTHT(:,:,:) * ( PPABST(:,:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
+ZT(:,:)  = PTHT(:,:) * ( PPABST(:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
 !
 ! Saturation over ice
 !
-ZW(:,:,:) = EXP( CST%XALPI - CST%XBETAI/ZT(:,:,:) - CST%XGAMI*ALOG(ZT(:,:,:) ) )
-ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:,:,:) )
+ZW(:,:) = EXP( CST%XALPI - CST%XBETAI/ZT(:,:) - CST%XGAMI*ALOG(ZT(:,:) ) )
+ZW(:,:) = PRVT(:,:)*( PPABST(:,:)-ZW(:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:,:) )
 !
 !
 !-------------------------------------------------------------------------------
@@ -208,11 +208,11 @@ ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:
 !               ----------------------------------------
 !
 !
-GNEGT(:,:,:) = .FALSE.
-GNEGT(IIB:IIE,IJB:IJE,IKB:IKE) = ZT(IIB:IIE,IJB:IJE,IKB:IKE)<CST%XTT-2.0 .AND. &
-                                 ZW(IIB:IIE,IJB:IJE,IKB:IKE)>0.95 
+GNEGT(:,:) = .FALSE.
+GNEGT(D%NIJB:D%NIJE,D%NKB:D%NKE) = ZT(D%NIJB:D%NIJE,D%NKB:D%NKE)<CST%XTT-2.0 .AND. &
+                           ZW(D%NIJB:D%NIJE,D%NKB:D%NKE)>0.95 
 !
-INEGT = COUNTJV( GNEGT(:,:,:),I1(:),I2(:),I3(:))
+INEGT = COUNTJV( GNEGT(:,:),I1(:),I3(:))
 !
 IF (INEGT > 0) THEN
 !
@@ -225,40 +225,40 @@ IF (INEGT > 0) THEN
 !
    ALLOCATE(ZCCT(INEGT)) 
 !
-   ALLOCATE(ZNAT(INEGT,NMOD_CCN))
-   ALLOCATE(ZIFT(INEGT,NMOD_IFN))
-   ALLOCATE(ZINT(INEGT,NMOD_IFN))
-   ALLOCATE(ZNIT(INEGT,NMOD_IMM))
+   ALLOCATE(ZNAT(INEGT,LIMAP%NMOD_CCN))
+   ALLOCATE(ZIFT(INEGT,LIMAP%NMOD_IFN))
+   ALLOCATE(ZINT(INEGT,LIMAP%NMOD_IFN))
+   ALLOCATE(ZNIT(INEGT,LIMAP%NMOD_IMM))
 !
    ALLOCATE(ZRHODREF(INEGT)) 
    ALLOCATE(ZZT(INEGT)) 
    ALLOCATE(ZPRES(INEGT)) 
    ALLOCATE(ZEXNREF(INEGT))
 !
-   DO JL=1,INEGT
-      ZRVT(JL) = PRVT(I1(JL),I2(JL),I3(JL))
-      ZRCT(JL) = PRCT(I1(JL),I2(JL),I3(JL))
-      ZRRT(JL) = PRRT(I1(JL),I2(JL),I3(JL))
-      ZRIT(JL) = PRIT(I1(JL),I2(JL),I3(JL))
-      ZRST(JL) = PRST(I1(JL),I2(JL),I3(JL))
-      ZRGT(JL) = PRGT(I1(JL),I2(JL),I3(JL))
+   DO IL=1,INEGT
+      ZRVT(IL) = PRVT(I1(IL),I3(IL))
+      ZRCT(IL) = PRCT(I1(IL),I3(IL))
+      ZRRT(IL) = PRRT(I1(IL),I3(IL))
+      ZRIT(IL) = PRIT(I1(IL),I3(IL))
+      ZRST(IL) = PRST(I1(IL),I3(IL))
+      ZRGT(IL) = PRGT(I1(IL),I3(IL))
 !
-      ZCCT(JL) = PCCT(I1(JL),I2(JL),I3(JL))
+      ZCCT(IL) = PCCT(I1(IL),I3(IL))
 !
-      DO JMOD_CCN = 1, NMOD_CCN
-         ZNAT(JL,JMOD_CCN) = PNAT(I1(JL),I2(JL),I3(JL),JMOD_CCN)
+      DO IMOD_CCN = 1, LIMAP%NMOD_CCN
+         ZNAT(IL,IMOD_CCN) = PNAT(I1(IL),I3(IL),IMOD_CCN)
       ENDDO
-      DO JMOD_IFN = 1, NMOD_IFN
-         ZIFT(JL,JMOD_IFN) = PIFT(I1(JL),I2(JL),I3(JL),JMOD_IFN)
-         ZINT(JL,JMOD_IFN) = PINT(I1(JL),I2(JL),I3(JL),JMOD_IFN)
+      DO IMOD_IFN = 1, LIMAP%NMOD_IFN
+         ZIFT(IL,IMOD_IFN) = PIFT(I1(IL),I3(IL),IMOD_IFN)
+         ZINT(IL,IMOD_IFN) = PINT(I1(IL),I3(IL),IMOD_IFN)
       ENDDO
-      DO JMOD_IMM = 1, NMOD_IMM
-         ZNIT(JL,JMOD_IMM) = PNIT(I1(JL),I2(JL),I3(JL),JMOD_IMM)
+      DO IMOD_IMM = 1, LIMAP%NMOD_IMM
+         ZNIT(IL,IMOD_IMM) = PNIT(I1(IL),I3(IL),IMOD_IMM)
       ENDDO
-      ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
-      ZZT(JL)      = ZT(I1(JL),I2(JL),I3(JL))
-      ZPRES(JL)    = PPABST(I1(JL),I2(JL),I3(JL))
-      ZEXNREF(JL)  = PEXNREF(I1(JL),I2(JL),I3(JL))
+      ZRHODREF(IL) = PRHODREF(I1(IL),I3(IL))
+      ZZT(IL)      = ZT(I1(IL),I3(IL))
+      ZPRES(IL)    = PPABST(I1(IL),I3(IL))
+      ZEXNREF(IL)  = PEXNREF(I1(IL),I3(IL))
    ENDDO
 !
 ! PACK : done
@@ -270,14 +270,14 @@ IF (INEGT > 0) THEN
    ALLOCATE( ZTCELSIUS  (INEGT) )
    ALLOCATE( ZZT_SI0_BC (INEGT) )
    ALLOCATE( ZLBDAC     (INEGT) )
-   ALLOCATE( ZSI0       (INEGT,NSPECIE) )
-   ALLOCATE( Z_FRAC_ACT (INEGT,NSPECIE) ) ; Z_FRAC_ACT(:,:) = 0.0
+   ALLOCATE( ZSI0       (INEGT,LIMAP%NSPECIE) )
+   ALLOCATE( Z_FRAC_ACT (INEGT,LIMAP%NSPECIE) )
    ALLOCATE( ZSW        (INEGT) )
    ALLOCATE( ZSI_W      (INEGT) )
 !
    ALLOCATE( ZZW (INEGT) ) ; ZZW(:) = 0.0
    ALLOCATE( ZZX (INEGT) ) ; ZZX(:) = 0.0
-   ALLOCATE( ZZY (INEGT) ) ; ZZY(:) = 0.0
+   ALLOCATE( ZZY (INEGT) )
 !
 !
 !-------------------------------------------------------------------------------
@@ -309,13 +309,20 @@ IF (INEGT > 0) THEN
    ZSI0(:,2) = ZSI0(:,1) ! DM2 = DM1
    ZSI0(:,3) = 0.0       ! BC
    ZZT_SI0_BC(:) = MAX( 198.0, MIN( 239.0,ZZT(:) ) )
-   ZSI0(:,3) = (-3.118E-5*ZZT_SI0_BC(:)+1.085E-2)*ZZT_SI0_BC(:)+0.5652 - XDSI0(3)
-   IF (NPHILLIPS == 8) THEN
+   ZSI0(:,3) = (-3.118E-5*ZZT_SI0_BC(:)+1.085E-2)*ZZT_SI0_BC(:)+0.5652 - LIMAP%XDSI0(3)
+   IF (LIMAP%NPHILLIPS == 8) THEN
       ZSI0(:,4) = ZSI0(:,3) ! O = BC
-   ELSE IF (NPHILLIPS == 13) THEN
+   ELSE IF (LIMAP%NPHILLIPS == 13) THEN
       ZSI0(:,4) = 1.15      ! BIO
    END IF
 !
+! if lcrystal_shape=t, 3D array of temperature and supersaturation are needed
+   IF (LIMAP%LCRYSTAL_SHAPE) THEN
+     ALLOCATE(ZTC3D(SIZE(PRHODREF,1),SIZE(PRHODREF,2)))
+     ALLOCATE(ZSI3D(SIZE(PRHODREF,1),SIZE(PRHODREF,2)))
+     ZTC3D(:,:) = ZT(:,:) - CST%XTT
+     ZSI3D(:,:) = UNPACK( ZSI(:), MASK=GNEGT(:,:), FIELD=0. )
+   END IF
 !
 !-------------------------------------------------------------------------------
 !
@@ -326,12 +333,12 @@ IF (INEGT > 0) THEN
 !
 ! Computation of the reference activity spectrum ( ZZY = N_{IN,1,*} )
 !
-   CALL LIMA_PHILLIPS_REF_SPECTRUM(CST, ZZT, ZSI, ZSI_W, ZZY)
+   CALL LIMA_PHILLIPS_REF_SPECTRUM(LIMAP, CST, INEGT, ZZT, ZSI, ZSI_W, ZZY)
 !
 ! For each aerosol species (DM1, DM2, BC, O), compute the fraction that may be activated
-! Z_FRAC_ACT(INEGT,NSPECIE) = fraction of each species that may be activated
+! Z_FRAC_ACT(INEGT,LIMAP%NSPECIE) = fraction of each species that may be activated
 !
-   CALL LIMA_PHILLIPS_INTEG(CST, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
+   CALL LIMA_PHILLIPS_INTEG(LIMAP, CST, INEGT, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
 !
 !
 !-------------------------------------------------------------------------------
@@ -342,36 +349,59 @@ IF (INEGT > 0) THEN
 !
 !
 !
-   DO JMOD_IFN = 1,NMOD_IFN    ! IFN modes
+   DO IMOD_IFN = 1,LIMAP%NMOD_IFN    ! IFN modes
       ZZX(:)=0.
-      DO JSPECIE = 1, NSPECIE  ! Each IFN mode is mixed with DM1, DM2, BC, O
-         ZZX(:)=ZZX(:)+XFRAC(JSPECIE,JMOD_IFN)*(ZIFT(:,JMOD_IFN)+ZINT(:,JMOD_IFN))* &
-                                               Z_FRAC_ACT(:,JSPECIE)
+      DO ISPECIE = 1, LIMAP%NSPECIE  ! Each IFN mode is mixed with DM1, DM2, BC, O
+         ZZX(:)=ZZX(:)+LIMAP%XFRAC(ISPECIE,IMOD_IFN)*(ZIFT(:,IMOD_IFN)+ZINT(:,IMOD_IFN))* &
+                                               Z_FRAC_ACT(:,ISPECIE)
       END DO
 ! Now : ZZX(:) = number conc. of activable AP.
 ! Activated AP at this time step = activable AP - already activated AP 
-      ZZX(:) = MIN( ZIFT(:,JMOD_IFN), MAX( (ZZX(:)-ZINT(:,JMOD_IFN)),0.0 ))
-      ZZW(:) = MIN( XMNU0*ZZX(:), ZRVT(:) )
-! Now : ZZX(:) = number conc. of AP activated at this time step (#/kg) from IFN mode JMOD_IFN
-! Now : ZZW(:) = mmr of ice nucleated at this time step (kg/kg) from IFN mode JMOD_IFN
+      ZZX(:) = MIN( ZIFT(:,IMOD_IFN), MAX( (ZZX(:)-ZINT(:,IMOD_IFN)),0.0 ))
+      ZZW(:) = MIN( LIMAC%XMNU0*ZZX(:), ZRVT(:) )
+! Now : ZZX(:) = number conc. of AP activated at this time step (#/kg) from IFN mode IMOD_IFN
+! Now : ZZW(:) = mmr of ice nucleated at this time step (kg/kg) from IFN mode IMOD_IFN
 !
 ! Update the concentrations and MMR
 !
-      ZW(:,:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:,:), FIELD=0. )
-      PIFT(:,:,:,JMOD_IFN) = PIFT(:,:,:,JMOD_IFN) - ZW(:,:,:)
-      PINT(:,:,:,JMOD_IFN) = PINT(:,:,:,JMOD_IFN) + ZW(:,:,:)
+      ZW(:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:), FIELD=0. )
+      PIFT(:,:,IMOD_IFN) = PIFT(:,:,IMOD_IFN) - ZW(:,:)
+      PINT(:,:,IMOD_IFN) = PINT(:,:,IMOD_IFN) + ZW(:,:)
 !
-      P_CI_HIND(:,:,:) = P_CI_HIND(:,:,:) + ZW(:,:,:)
-      PCIT(:,:,:) = PCIT(:,:,:) + ZW(:,:,:)
+      P_CI_HIND(:,:) = P_CI_HIND(:,:) + ZW(:,:)
+      IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
+        PCIT(:,:) = PCIT(:,:) + ZW(:,:)
+      ELSE
+!NOTE : p_shci_hinX est utile uniquement pour les bilans --> peut-etre mettre une condition pour leur calcul ?
+        ! different crystal habits are generated depending on the temperature
+!++cb++ 18/04/24 la formation des cristaux produit uniquement des formes primaires
+! on se base sur la figure 5 de Bailey et Hallett (2009)
+! Plates: -1<T<-3, -9<T<-20, -20<T<-40, -40<T si SSI < 0.05
+        WHERE (((ZTC3D(:,:) .GT. -3.0)  .AND.  (ZTC3D(:,:) .LT. 0.0))   .OR. &
+               ((ZTC3D(:,:) .LE. -9.0)  .AND.  (ZTC3D(:,:) .GT. -40.0)) .OR. &
+               ((ZTC3D(:,:) .LE. -40.0) .AND. ((ZSI3D(:,:)-1.) .LT. 0.05)) )
+          P_SHCI_HIND(:,:,1) = P_SHCI_HIND(:,:,1) + ZW(:,:)
+          PCIT_SHAPE(:,:,1)  = PCIT_SHAPE(:,:,1)  + ZW(:,:)
+        END WHERE
 !
-      ZW(:,:,:) = UNPACK( ZZW(:), MASK=GNEGT(:,:,:), FIELD=0. )
-      P_RI_HIND(:,:,:) = P_RI_HIND(:,:,:) + ZW(:,:,:)
-      PRVT(:,:,:) = PRVT(:,:,:) - ZW(:,:,:)
-      PRIT(:,:,:) = PRIT(:,:,:) + ZW(:,:,:)
+! Columns: -3<T<-9, -40<T<-70 si SSI > 0.05
+        WHERE (((ZTC3D(:,:) .LE. -3.0)   .AND.  (ZTC3D(:,:) .GT. -9.0)) .OR. &
+               ((ZTC3D(:,:) .LE. -40.0)  .AND. ((ZSI3D(:,:)-1.) .GE. 0.05)))
+          P_SHCI_HIND(:,:,2) = P_SHCI_HIND(:,:,2) + ZW(:,:)
+          PCIT_SHAPE(:,:,2)  = PCIT_SHAPE(:,:,2)  + ZW(:,:)
+        END WHERE
+        !
+        PCIT(:,:) = SUM(PCIT_SHAPE, DIM=3)
+      END IF
 !
-      ZW(:,:,:) = UNPACK( ZZW(:)*ZLSFACT(:), MASK=GNEGT(:,:,:), FIELD=0. )
-      P_TH_HIND(:,:,:) = P_TH_HIND(:,:,:) + ZW(:,:,:)
-      PTHT(:,:,:) = PTHT(:,:,:) + ZW(:,:,:)
+      ZW(:,:) = UNPACK( ZZW(:), MASK=GNEGT(:,:), FIELD=0. )
+      P_RI_HIND(:,:) = P_RI_HIND(:,:) + ZW(:,:)
+      PRVT(:,:) = PRVT(:,:) - ZW(:,:)
+      PRIT(:,:) = PRIT(:,:) + ZW(:,:)
+!
+      ZW(:,:) = UNPACK( ZZW(:)*ZLSFACT(:), MASK=GNEGT(:,:), FIELD=0. )
+      P_TH_HIND(:,:) = P_TH_HIND(:,:) + ZW(:,:)
+      PTHT(:,:) = PTHT(:,:) + ZW(:,:)
    END DO
 !
 !
@@ -383,42 +413,66 @@ IF (INEGT > 0) THEN
 !
 !
 ! Heterogeneous nucleation by immersion of the activated CCN
-! Currently, we represent coated IFN as a pure aerosol type (NIND_SPECIE)
+! Currently, we represent coated IFN as a pure aerosol type (LIMAP%NIND_SPECIE)
 !
 !
-   DO JMOD_IMM = 1,NMOD_IMM  ! Coated IFN modes
-      JMOD_CCN = NINDICE_CCN_IMM(JMOD_IMM) ! Corresponding CCN mode
-      IF (JMOD_CCN .GT. 0) THEN
+   DO IMOD_IMM = 1,LIMAP%NMOD_IMM  ! Coated IFN modes
+      IMOD_CCN = LIMAP%NINDICE_CCN_IMM(IMOD_IMM) ! Corresponding CCN mode
+      IF (IMOD_CCN .GT. 0) THEN
 !
 ! OLD LIMA : Compute the appropriate mean diameter and sigma      
-!      XMDIAM_IMM = MIN( XMDIAM_IFN(NIND_SPECIE) , XR_MEAN_CCN(JMOD_CCN)*2. )
-!      XSIGMA_IMM = MIN( XSIGMA_IFN(JSPECIE) , EXP(XLOGSIG_CCN(JMOD_CCN)) )
+!      XMDIAM_IMM = MIN( LIMAP%XMDIAM_IFN(LIMAP%NIND_SPECIE) , LIMAP%XR_MEAN_CCN(IMOD_CCN)*2. )
+!      XSIGMA_IMM = MIN( LIMAP%XSIGMA_IFN(ISPECIE) , EXP(LIMAP%XLOGSIG_CCN(IMOD_CCN)) )
 !
-         ZZW(:) = MIN( ZCCT(:) , ZNAT(:,JMOD_CCN) )
-         ZZX(:)=  ( ZZW(:)+ZNIT(:,JMOD_IMM) ) * Z_FRAC_ACT(:,NIND_SPECIE)
+         ZZW(:) = MIN( ZCCT(:) , ZNAT(:,IMOD_CCN) )
+         ZZX(:)=  ( ZZW(:)+ZNIT(:,IMOD_IMM) ) * Z_FRAC_ACT(:,LIMAP%NIND_SPECIE)
 ! Now : ZZX(:) = number of activable AP.
 ! Activated AP at this time step = activable AP - already activated AP 
-         ZZX(:) = MIN( ZZW(:), MAX( (ZZX(:)-ZNIT(:,JMOD_IMM)),0.0 ) )
-         ZZY(:) = MIN( XMNU0*ZZX(:) , ZRVT(:), ZRCT(:) )
+         ZZX(:) = MIN( ZZW(:), MAX( (ZZX(:)-ZNIT(:,IMOD_IMM)),0.0 ) )
+         ZZY(:) = MIN( LIMAC%XMNU0*ZZX(:) , ZRVT(:), ZRCT(:) )
 !
 ! Update the concentrations and MMR
 !
-         ZW(:,:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:,:), FIELD=0. )
-         PNIT(:,:,:,JMOD_IMM) = PNIT(:,:,:,JMOD_IMM) + ZW(:,:,:)
-         PNAT(:,:,:,JMOD_CCN) = PNAT(:,:,:,JMOD_CCN) - ZW(:,:,:)
+         ZW(:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:), FIELD=0. )
+         PNIT(:,:,IMOD_IMM) = PNIT(:,:,IMOD_IMM) + ZW(:,:)
+         PNAT(:,:,IMOD_CCN) = PNAT(:,:,IMOD_CCN) - ZW(:,:)
 !
-         P_CC_HINC(:,:,:) = P_CC_HINC(:,:,:) - ZW(:,:,:) 
-         PCCT(:,:,:) = PCCT(:,:,:) - ZW(:,:,:)
-         PCIT(:,:,:) = PCIT(:,:,:) + ZW(:,:,:)
+         P_CC_HINC(:,:) = P_CC_HINC(:,:) - ZW(:,:) 
+         PCCT(:,:) = PCCT(:,:) - ZW(:,:)
+         IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
+           PCIT(:,:) = PCIT(:,:) + ZW(:,:)
+         ELSE
+           ! different crystal habits are generated depending on the temperature
+
+! Plates: -1<T<-3, -9<T<-20, -20<T<-40, -40<T si SSI < 0.05
+!           WHERE (((ZTC3D(:,:) .GT. -3.0) .AND.  (ZTC3D(:,:) .LT. 0.0))   .OR. &
+!                 ((ZTC3D(:,:) .LE. -9.0)  .AND.  (ZTC3D(:,:) .GT. -40.0)) .OR. &
+!                 ((ZTC3D(:,:) .LE. -40.0) .AND. ((ZSI3D(:,:)-1.) .LT. 0.05)) )
+!             P_SHCI_HINC(:,:,1) = P_SHCI_HINC(:,:,1) + ZW(:,:)
+!             PCIT_SHAPE(:,:,1)  = PCIT_SHAPE(:,:,1)  + ZW(:,:)
+!           END WHERE
 !
-         ZW(:,:,:) = UNPACK( ZZY(:), MASK=GNEGT(:,:,:), FIELD=0. )
-         P_RC_HINC(:,:,:) = P_RC_HINC(:,:,:) - ZW(:,:,:)
-         PRCT(:,:,:) = PRCT(:,:,:) - ZW(:,:,:)
-         PRIT(:,:,:) = PRIT(:,:,:) + ZW(:,:,:)
+! Columns: -3<T<-9, -40<T<-70 si SSI > 0.05
+!           WHERE (((ZTC3D(:,:) .LE. -3.0)   .AND.  (ZTC3D(:,:) .GT. -9.0)) .OR. &
+!                  ((ZTC3D(:,:) .LE. -40.0)  .AND. ((ZSI3D(:,:)-1.) .GE. 0.05)))
+!             P_SHCI_HINC(:,:,2) = P_SHCI_HINC(:,:,2) + ZW(:,:)
+!             PCIT_SHAPE(:,:,2)  = PCIT_SHAPE(:,:,2)  + ZW(:,:)
+!           END WHERE
+! Droxtals
+           P_SHCI_HINC(:,:,4) = P_SHCI_HINC(:,:,4) + ZW(:,:)
+           PCIT_SHAPE(:,:,4)  = PCIT_SHAPE(:,:,4)  + ZW(:,:)
+           !
+           PCIT(:,:) = SUM(PCIT_SHAPE, DIM=3)
+         END IF
 !
-         ZW(:,:,:) = UNPACK( ZZY(:)*ZLSFACT(:), MASK=GNEGT(:,:,:), FIELD=0. )
-         P_TH_HINC(:,:,:) = P_TH_HINC(:,:,:) + ZW(:,:,:)
-         PTHT(:,:,:) = PTHT(:,:,:) + ZW(:,:,:)
+         ZW(:,:) = UNPACK( ZZY(:), MASK=GNEGT(:,:), FIELD=0. )
+         P_RC_HINC(:,:) = P_RC_HINC(:,:) - ZW(:,:)
+         PRCT(:,:) = PRCT(:,:) - ZW(:,:)
+         PRIT(:,:) = PRIT(:,:) + ZW(:,:)
+!
+         ZW(:,:) = UNPACK( ZZY(:)*ZLSFACT(:), MASK=GNEGT(:,:), FIELD=0. )
+         P_TH_HINC(:,:) = P_TH_HINC(:,:) + ZW(:,:)
+         PTHT(:,:) = PTHT(:,:) + ZW(:,:)
       END IF
    END DO
 !
@@ -457,10 +511,13 @@ IF (INEGT > 0) THEN
    DEALLOCATE(ZZX)
    DEALLOCATE(ZZY)
    DEALLOCATE(ZSI_W)
+   IF (ALLOCATED(ZTC3D)) DEALLOCATE(ZTC3D)
+   IF (ALLOCATED(ZSI3D)) DEALLOCATE(ZSI3D)
 !
 END IF ! INEGT > 0
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_PHILLIPS_IFN_NUCLEATION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION
 END MODULE MODE_LIMA_PHILLIPS_IFN_NUCLEATION

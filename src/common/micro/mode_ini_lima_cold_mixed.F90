@@ -51,15 +51,15 @@ USE MODD_PARAM_LIMA_WARM
 USE MODD_PARAM_LIMA_COLD
 USE MODD_PARAM_LIMA_MIXED
 !
-use mode_msg
+USE MODE_MSG
 USE MODD_PRECISION, ONLY: MNHREAL64
 !
 USE MODE_LIMA_FUNCTIONS, ONLY: MOMG, GAUHER
 USE MODI_GAMMA
 USE MODI_GAMMA_INC
-USE MODE_RRCOLSS, ONLY: RRCOLSS
-USE MODE_RZCOLX, ONLY: RZCOLX
-USE MODE_RSCOLRG, ONLY: RSCOLRG
+USE MODE_LIMA_RRCOLSS, ONLY: LIMA_RRCOLSS
+USE MODE_LIMA_RZCOLX, ONLY: LIMA_RZCOLX
+USE MODE_LIMA_RSCOLRG, ONLY: LIMA_RSCOLRG
 USE MODE_NRCOLSS, ONLY: NRCOLSS
 USE MODE_NZCOLX, ONLY: NZCOLX 
 USE MODE_NSCOLRG, ONLY: NSCOLRG
@@ -68,6 +68,7 @@ USE MODE_LIMA_READ_XKER_SDRYG, ONLY: LIMA_READ_XKER_SDRYG
 USE MODE_LIMA_READ_XKER_RDRYG, ONLY: LIMA_READ_XKER_RDRYG
 USE MODE_LIMA_READ_XKER_SWETH, ONLY: LIMA_READ_XKER_SWETH
 USE MODE_LIMA_READ_XKER_GWETH, ONLY: LIMA_READ_XKER_GWETH
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -78,24 +79,25 @@ REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 !
 !*       0.2   Declarations of local variables :
 !
-character(len=13) :: yval     ! String for error message
+CHARACTER(LEN=13) :: YVAL     ! String for error message
 INTEGER :: IKB                ! Coordinates of the first  physical 
                               ! points along z
-INTEGER :: J1                 ! Internal loop indexes
+INTEGER :: I1, ISH, ISH2      ! Internal loop indexes
 !
 REAL, DIMENSION(8)  :: ZGAMI  ! parameters involving various moments
 REAL, DIMENSION(2)  :: ZGAMS  ! of the generalized gamma law
+REAL, DIMENSION(2,4) :: ZGAMI_SHAPE  ! replace ZGAMI(6) and ZGAMI(7)   !++cb--
 !
 REAL :: ZRHO00                ! Surface reference air density
 REAL :: ZRATE                 ! Geometrical growth of Lbda in the tabulated
                               ! functions and kernels
 REAL :: ZBOUND                ! XDCSLIM*Lbda_s: upper bound for the partial
                               ! integration of the riming rate of the aggregates
-REAL :: ZEGS, ZEGR, ZEHS, ZEHG! Bulk collection efficiencies
+REAL :: ZZEGS, ZZEGR, ZZEHS, ZZEHG! Bulk collection efficiencies
 !
 INTEGER :: IND                ! Number of interval to integrate the kernels
-REAL :: ZESR, ZESS            ! Mean efficiency of rain-aggregate collection, aggregate-aggregate collection
-REAL :: ZFDINFTY              ! Factor used to define the "infinite" diameter
+REAL :: ZZESR, ZZESS, ZZEII   ! Mean efficiency of rain-aggregate collection, aggregate-aggregate collection
+REAL :: ZZFDINFTY             ! Factor used to define the "infinite" diameter
 !
 !
 !INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
@@ -104,21 +106,21 @@ REAL :: ZFDINFTY              ! Factor used to define the "infinite" diameter
 REAL     :: ZCONC_MAX ! Maximal concentration for snow
 REAL     :: ZFACT_NUCL! Amplification factor for the minimal ice concentration
 !  
-INTEGER  :: KND
-INTEGER  :: KACCLBDAS,KACCLBDAR,KDRYLBDAG,KDRYLBDAS,KDRYLBDAR
-REAL     :: PALPHAR,PALPHAS,PALPHAG,PALPHAH
-REAL     :: PNUR,PNUS,PNUG,PNUH
-REAL     :: PBR,PBS,PBG
-REAL     :: PCR,PCS,PCG,PCH
-REAL     :: PDR,PDS,PFVELOS,PDG,PDH
-REAL     :: PESR,PEGS,PEGR,PEHS,PEHG
-REAL     :: PFDINFTY
-REAL     :: PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN
-REAL     :: PDRYLBDAG_MAX,PDRYLBDAS_MAX,PDRYLBDAG_MIN,PDRYLBDAS_MIN
-REAL     :: PDRYLBDAR_MAX,PDRYLBDAR_MIN
-REAL     :: PWETLBDAS_MAX,PWETLBDAG_MAX,PWETLBDAS_MIN,PWETLBDAG_MIN
-REAL     :: PWETLBDAH_MAX,PWETLBDAH_MIN
-INTEGER  :: KWETLBDAS,KWETLBDAG,KWETLBDAH
+INTEGER  :: IKND
+INTEGER  :: IACCLBDAS,IACCLBDAR,IDRYLBDAG,IDRYLBDAS,IDRYLBDAR
+REAL     :: ZALPHAR,ZALPHAS,ZALPHAG,ZALPHAH
+REAL     :: ZNUR,ZNUS,ZNUG,ZNUH
+REAL     :: ZBR,ZBS,ZBG
+REAL     :: ZCR,ZCS,ZCG,ZCH
+REAL     :: ZDR,ZDS,ZFVELOS,ZDG,ZDH
+REAL     :: ZESR,ZEGS,ZEGR,ZEHS,ZEHG
+REAL     :: ZFDINFTY
+REAL     :: ZACCLBDAS_MAX,ZACCLBDAR_MAX,ZACCLBDAS_MIN,ZACCLBDAR_MIN
+REAL     :: ZDRYLBDAG_MAX,ZDRYLBDAS_MAX,ZDRYLBDAG_MIN,ZDRYLBDAS_MIN
+REAL     :: ZDRYLBDAR_MAX,ZDRYLBDAR_MIN
+REAL     :: ZWETLBDAS_MAX,ZWETLBDAG_MAX,ZWETLBDAS_MIN,ZWETLBDAG_MIN
+REAL     :: ZWETLBDAH_MAX,ZWETLBDAH_MIN
+INTEGER  :: IWETLBDAS,IWETLBDAG,IWETLBDAH
 !
 REAL     :: ZFAC_ZRNIC ! Zrnic factor used to decrease Long Kernels
 !
@@ -130,6 +132,7 @@ REAL :: ZRATE_G             ! Geometrical growth of Lbda_g in the tabulated func
 REAL :: ZBOUND_RDSF_RMIN    ! XDCRLIM*Lbda_r : lower bound used in the tabulated function
 REAL :: ZRATE_R             ! Geometrical growth of Lbda_r in the tabulated function
 REAL :: ZKHI_LWM            ! Coefficient of Lawson et al. (2015)
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 REAL :: ZRHOIW ! ice density
 !
@@ -137,6 +140,7 @@ REAL :: ZRHOIW ! ice density
 !
 !
 !ILUOUT0 = TLUOUT0%NLU
+IF (LHOOK) CALL DR_HOOK('INI_LIMA_COLD_MIXED', 0, ZHOOK_HANDLE)
 CALL PARAM_LIMA_COLD_ASSOCIATE()
 CALL PARAM_LIMA_MIXED_ASSOCIATE()
 !
@@ -173,55 +177,161 @@ SELECT CASE (CPRISTINE_ICE_LIMA)
     XGAMMAI = 0.062
     XDELTAI = 1.81    
     XC1I = 0.5      ! Bullet rosettes
+  CASE('POIR')      ! polycristaux/irreguliers
+    XAI = 10.0
+    XBI = 2.7 
+    XC_I = 7000.0
+    XDI = 1.235
+    XC1I = 0.566
   CASE('YPLA')
-    XAI = 0.745      ! Plates_from Yang et al (2013)
+    XAI = 0.744      ! Plates_from Yang et al (2013)
     XBI = 2.47       ! Plates_from Yang et al (2013)
-    XC_I = 63.     ! Plates_from Yang et al (2013)
-    XDI = 0.68       ! Plates_from Yang et al (2013)
-    XGAMMAI = 0.096
-    XDELTAI = 1.83    
+    XC_I = 48.9     ! Plates_from Yang et al (2013)
+    XDI = 0.66       ! Plates_from Yang et al (2013)
+    XGAMMAI = 0.106
+    XDELTAI = 1.84    
     XC1I = 1./XPI   ! Plates_from Yang et al (2013)
   CASE('YCOL')
-    XAI = 261.102   ! Columns_from Yang et al (2013)
-    XBI = 2.99       ! Columns_from Yang et al (2013)
-    XC_I = 671   ! Columns_from Yang et al (2013)
+    XAI = 6.72   ! Columns_from Yang et al (2013)
+    XBI = 2.6       ! Columns_from Yang et al (2013)
+    XC_I = 99.3   ! Columns_from Yang et al (2013)
     XDI = 0.62     ! Columns_from Yang et al (2013)
-    XGAMMAI = 0.659
-    XDELTAI = 2.0    
+    XGAMMAI = 0.154
+    XDELTAI = 1.84    
     XC1I = 0.8      ! Columns_from Yang et al (2013)
   CASE('YBUR')
-    XAI = 1.268      ! Bullet rosettes_from Yang et al (2013)
-    XBI = 2.59       ! Bullet rosettes_from Yang et al (2013)
-    XC_I = 128     ! Bullet rosettes_from Yang et al (2013)
-    XDI = 0.72     ! Bullet rosettes_from Yang et al (2013)
-    XGAMMAI = 0.062
-    XDELTAI = 1.81    
+    XAI = 1.059      ! Bullet rosettes_from Yang et al (2013)
+    XBI = 2.57       ! Bullet rosettes_from Yang et al (2013)
+    XC_I = 99.1     ! Bullet rosettes_from Yang et al (2013)
+    XDI = 0.7     ! Bullet rosettes_from Yang et al (2013)
+    XGAMMAI = 0.057
+    XDELTAI = 1.8    
     XC1I = 0.5      ! Bullet rosettes_from Yang et al (2013)
   CASE('YDRO')
-    XAI = 1.268      ! Droxtals_from Yang et al (2013)
-    XBI = 2.59       ! Droxtals_from Yang et al (2013)
-    XC_I = 128     ! Droxtals_from Yang et al (2013)
-    XDI = 0.72     ! Droxtals_from Yang et al (2013)
+    XAI = 346.906      ! Droxtals_from Yang et al (2013)
+    XBI = 3       ! Droxtals_from Yang et al (2013)
+    XC_I = 695.83     ! Droxtals_from Yang et al (2013)
+    XDI = 0.61     ! Droxtals_from Yang et al (2013)
     XGAMMAI = 0.673
     XDELTAI = 2.0    
     XC1I = 0.5      ! Droxtals_from Yang et al (2013)
   CASE('YHCO')
-    XAI = 217.586   ! Hollow_Columns_from Yang et al (2013)
-    XBI = 2.99       ! Hollow_Columns_from Yang et al (2013)
-    XC_I = 641   ! Hollow_Columns_from Yang et al (2013)
+    XAI = 5.6   ! Hollow_Columns_from Yang et al (2013)
+    XBI = 2.6       ! Hollow_Columns_from Yang et al (2013)
+    XC_I = 97.7   ! Hollow_Columns_from Yang et al (2013)
     XDI = 0.63     ! Hollow_Columns_from Yang et al (2013)
-    XGAMMAI = 0.659
-    XDELTAI = 2.0    
+    XGAMMAI = 0.154
+    XDELTAI = 1.84    
     XC1I = 0.8      ! Hollow_Columns_from Yang et al (2013)
   CASE('YHBU')
-    XAI = 1.258      ! Hollow_Bullet rosettes_from Yang et al (2013)
-    XBI = 2.61       ! Hollow_Bullet rosettes_from Yang et al (2013)
-    XC_I = 147     ! Hollow_Bullet rosettes_from Yang et al (2013)
-    XDI = 0.73     ! Hollow_Bullet rosettes_from Yang et al (2013)
-    XGAMMAI = 0.061
-    XDELTAI = 1.81    
+    XAI = 1.033      ! Hollow_Bullet rosettes_from Yang et al (2013)
+    XBI = 2.59       ! Hollow_Bullet rosettes_from Yang et al (2013)
+    XC_I = 112.5     ! Hollow_Bullet rosettes_from Yang et al (2013)
+    XDI = 0.72     ! Hollow_Bullet rosettes_from Yang et al (2013)
+    XGAMMAI = 0.057
+    XDELTAI = 1.8    
     XC1I = 0.5      ! Hollow_Bullet rosettes_from Yang et al (2013)    
 END SELECT
+!
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XAI_SHAPE',  NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XBI_SHAPE',  NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XC_I_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XDI_SHAPE',  NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XC1I_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XGAMMAI_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XDELTAI_SHAPE', NNB_CRYSTAL_SHAPE)
+  !
+  ZRHOIW = 916.0 ! kg/m-3 : ice density
+! In order : plates, columns, irregulars, dendrites
+! a, b, c et d : Woods et al 2007
+! Irrreguliers : bullets de Woods et al 2007 (compris entre plates et columns)
+! capacitance : choisir un rapport d'aspect pour plates et columns issu de Westbrook et al
+!  Note that XCCI=N_i (a locally predicted value) and XCXI=0.0, implicitly
+!
+
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+  SELECT CASE (HTYPE_CRYSTAL_SHAPE(ISH))
+    CASE('CPLA')
+      XAI_SHAPE(ISH)  = 0.82    ! relation masse maxdim
+      XBI_SHAPE(ISH)  = 2.5     ! relation masse maxdim
+      XC_I_SHAPE(ISH) = 747.0   ! vitesse de chute maxdim
+      XDI_SHAPE(ISH)  = 1.0     ! vitesse de chute maxdim
+      XC1I_SHAPE(ISH) = 0.339
+      XGAMMAI_SHAPE(ISH) = 0.106 ! value from Yang et al. (2013)
+      XDELTAI_SHAPE(ISH) = 1.84  ! value from Yang et al. (2013)
+    CASE('CCOL')
+      XAI_SHAPE(ISH)  = 110.798 ! Mitchell 1(d < 100 um) 1996
+      XBI_SHAPE(ISH)  = 2.91    ! Mitchell 1(d < 100 um) 1996
+      XC_I_SHAPE(ISH) = 1.96E5
+      XDI_SHAPE(ISH)  = 1.585
+      XC1I_SHAPE(ISH) = 0.24
+      XGAMMAI_SHAPE(ISH) = 0.154 ! value from Yang et al. (2013)
+      XDELTAI_SHAPE(ISH) = 1.84  ! value from Yang et al. (2013)
+    CASE('POIR')
+      XAI_SHAPE(ISH)  = 10.0    ! moyenne entre plates et colonnes (jpp)
+      XBI_SHAPE(ISH)  = 2.7     ! relation masse diamètre des columns
+      XC_I_SHAPE(ISH) = 7000.0
+      XDI_SHAPE(ISH)  = 1.235
+      XC1I_SHAPE(ISH) = 0.566
+      XGAMMAI_SHAPE(ISH) = 0.057 ! value from Yang et al. (2013)
+      XDELTAI_SHAPE(ISH) = 1.8  ! value from Yang et al. (2013)
+    CASE('YPLA')
+      XAI_SHAPE(ISH)  = 0.744      ! Plates_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 2.47 
+      XC_I_SHAPE(ISH) = 48.9    
+      XDI_SHAPE(ISH)  = 0.66     
+      XGAMMAI_SHAPE(ISH) = 0.106
+      XDELTAI_SHAPE(ISH) = 1.84    
+      XC1I_SHAPE(ISH) = 1./XPI   ! values from LIMA
+    CASE('YCOL')
+      XAI_SHAPE(ISH)  = 6.72   ! Columns_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 2.6  
+      XC_I_SHAPE(ISH) = 99.3
+      XDI_SHAPE(ISH)  = 0.62 
+      XGAMMAI_SHAPE(ISH) = 0.154
+      XDELTAI_SHAPE(ISH) = 1.84    
+      XC1I_SHAPE(ISH) = 0.8      ! values from LIMA
+    CASE('YBUR')
+      XAI_SHAPE(ISH)  = 1.059      ! Bullet rosettes_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 2.57 
+      XC_I_SHAPE(ISH) = 99.1
+      XDI_SHAPE(ISH)  = 0.7  
+      XGAMMAI_SHAPE(ISH) = 0.057
+      XDELTAI_SHAPE(ISH) = 1.8    
+      XC1I_SHAPE(ISH) = 0.5      !  values from LIMA      
+    CASE('YDRO')
+      XAI_SHAPE(ISH)  = 346.906      ! Droxtals_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 3      
+      XC_I_SHAPE(ISH) = 695.83 
+      XDI_SHAPE(ISH)  = 0.61    
+      XGAMMAI_SHAPE(ISH) = 0.673
+      XDELTAI_SHAPE(ISH) = 2.0    
+      XC1I_SHAPE(ISH) = 0.5      !  values from LIMA
+    CASE('YHCO')
+      XAI_SHAPE(ISH)  = 5.6   ! Hollow_Columns_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 2.6   
+      XC_I_SHAPE(ISH) = 97.7 
+      XDI_SHAPE(ISH)  = 0.63  
+      XGAMMAI_SHAPE(ISH) = 0.154
+      XDELTAI_SHAPE(ISH) = 1.84    
+      XC1I_SHAPE(ISH) = 0.8      ! values from LIMA
+    CASE('YHBU')
+      XAI_SHAPE(ISH)  = 1.033      ! Hollow_Bullet rosettes_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 2.59  
+      XC_I_SHAPE(ISH) = 112.5  
+      XDI_SHAPE(ISH)  = 0.72   
+      XGAMMAI_SHAPE(ISH) = 0.057
+      XDELTAI_SHAPE(ISH) = 1.8    
+      XC1I_SHAPE(ISH) = 0.5      ! values from LIMA            
+  END SELECT
+  ENDDO
+!
+! capacitances calculees a partir de Westbrook et al. (2007) pour des
+! rapports d'aspect fixes : 
+! A(plate) = 0.1 ; A(columns) = 5. ; A(irr) = 1. ; A'(dendrites) = 0.2
+!
+END IF
 !
 !  Note that XCCI=N_i (a locally predicted value) and XCXI=0.0, implicitly
 !
@@ -314,8 +424,10 @@ XNUI    = 3.0  ! Gamma law with little dispersion
 !
 IF (LSNOW_T) THEN
 !Cas GAMMAGEN
-   XALPHAS = .214   ! Generalized gamma law
-   XNUS    = 43.7   ! Generalized gamma law
+!   XALPHAS = .214   ! Generalized gamma law
+!   XNUS    = 43.7   ! Generalized gamma law
+   XALPHAS = 1.   ! Generalized gamma law
+   XNUS    = 1.3   ! Generalized gamma law
    XTRANS_MP_GAMMAS = SQRT( ( GAMMA(DBLE(XNUS + 2._MNHREAL64/XALPHAS))*GAMMA(DBLE(XNUS + 4._MNHREAL64/XALPHAS)) ) / &
                             ( 8._MNHREAL64* GAMMA(DBLE(XNUS + 1._MNHREAL64/XALPHAS))*GAMMA(DBLE(XNUS + 3._MNHREAL64/XALPHAS)) ) )
 ELSE IF (NMOM_S.EQ.2) THEN
@@ -329,26 +441,35 @@ ELSE
    XTRANS_MP_GAMMAS = 1.
 END IF
 !
-if (NMOM_G.GE.2) then
+IF (NMOM_G.GE.2) then
    XALPHAG = 1.0  ! 
    XNUG    = 2.0  !
-else
+ELSE
    XALPHAG = 1.0  ! Exponential law
    XNUG    = 1.0  ! Exponential law
-end if
+END IF
 !
-if (NMOM_H.GE.2) then
+IF (NMOM_H.GE.2) then
    XALPHAH = 1.0  ! Gamma law
    XNUH    = 5.0  ! Gamma law with little dispersion
-else
+ELSE
    XALPHAH = 1.0  ! Gamma law
    XNUH    = 8.0  ! Gamma law with little dispersion
-end if
+END IF
 !
 !*       2.2    Constants for shape parameter
 !
 XLBEXI = 1.0/XBI
 XLBI   = XAI*MOMG(XALPHAI,XNUI,XBI)
+!
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XLBEXI_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XLBI_SHAPE', NNB_CRYSTAL_SHAPE)
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    XLBEXI_SHAPE(ISH) = 1.0 / XBI_SHAPE(ISH)
+    XLBI_SHAPE(ISH)   = XAI_SHAPE(ISH) * MOMG(XALPHAI,XNUI,XBI_SHAPE(ISH))
+  END DO
+END IF
 !
 XNS = 1.0/(XAS*MOMG(XALPHAS,XNUS,XBS))
 IF (NMOM_S.EQ.1) THEN
@@ -394,7 +515,7 @@ ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc
 !XLBDAG_MAX = ( ZCONC_MAX/XCCG )**(1./XCXG) 
 !XLBDAH_MAX = ( ZCONC_MAX/XCCH )**(1./XCXH) 
 !  
-!    constante for ecRad effective radius
+!    constants for ecRad effective radius
 ZRHOIW = 0.917
 XREFFI = (3*XAI/(2*ZRHOIW*10.**3*XGAMMAI)*MOMG(XALPHAI,XNUI,XBI)/MOMG(XALPHAI,XNUI,XDELTAI))*1E6
 !
@@ -435,6 +556,24 @@ XFSEDRI  = XC_I*GAMMA_X0D(XNUI+(XDI+XBI)/XALPHAI)/GAMMA_X0D(XNUI+XBI/XALPHAI)*  
             (ZRHO00)**XCEXVT
 XFSEDCI  = XC_I*GAMMA_X0D(XNUI+XDI/XALPHAI)/GAMMA_X0D(XNUI)*     &
             (ZRHO00)**XCEXVT
+!
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XFSEDCI_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XFSEDRI_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XFSEDRI_TOT_SHAPE', NNB_CRYSTAL_SHAPE)
+!
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    XFSEDCI_SHAPE(ISH) = XC_I_SHAPE(ISH) * GAMMA_X0D(XNUI+XDI_SHAPE(ISH)/XALPHAI) / &
+                         GAMMA_X0D(XNUI) * (ZRHO00)**XCEXVT
+    XFSEDRI_SHAPE(ISH) = XC_I_SHAPE(ISH) * GAMMA_X0D(XNUI+(XDI_SHAPE(ISH)+XBI_SHAPE(ISH))/XALPHAI) / &
+                         GAMMA_X0D(XNUI+XBI_SHAPE(ISH)/XALPHAI) * (ZRHO00)**XCEXVT
+! marine : correction de l'air ?
+    XFSEDRI_TOT_SHAPE(ISH) = XAI_SHAPE(ISH) * GAMMA_X0D(XNUI+XBI_SHAPE(ISH)/XALPHAI) / &
+                                              GAMMA_X0D(XNUI)
+!    XFSEDRI_TOT_SHAPE(ISH) = XAI_SHAPE(ISH) * GAMMA_X0D(XNUI+XBI_SHAPE(ISH)/XALPHAI) / &
+!                                              GAMMA_X0D(XNUI) * (ZRHO00)**XCEXVT
+  END DO
+END IF
 !
 IF (LSNOW_T) THEN
 !HOUZE/HAIC
@@ -537,7 +676,7 @@ ELSE IF (NPHILLIPS == 8) THEN
    XAREA1(3)  = 2.7E-7    !BC
    XAREA1(4)  = 9.1E-7    !BIO
 ELSE
-  call Print_msg( NVERB_FATAL, 'GEN', 'INI_LIMA_COLD_MIXED', 'NPHILLIPS should be equal to 8 or 13' )
+  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'INI_LIMA_COLD_MIXED', 'NPHILLIPS SHOULD BE EQUAL TO 8 OR 13' )
 END IF
 !
 !*               4.1.2  Constants for the computation of H_X (the fraction-redu-
@@ -696,9 +835,9 @@ IF (XALPHAC == 3.0) THEN
   XC_HONC   = XPI/6.0
   XR_HONC   = XPI/6.0
 ELSE
-  write ( yval, '( E13.6 )' ) xalphac
-  call Print_msg( NVERB_FATAL, 'GEN', 'INI_LIMA_COLD_MIXED', 'homogeneous nucleation: XALPHAC='//trim(yval)// &
-                  '/= 3. No algorithm developed for this case' )
+  WRITE ( YVAL, '( E13.6 )' ) XALPHAC
+  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'INI_LIMA_COLD_MIXED', 'HOMOGENEOUS NUCLEATION: XALPHAC='//TRIM(YVAL)// &
+                  '/= 3. NO ALGORITHM DEVELOPED FOR THIS CASE' )
 END IF
 !
 !!$GFLAG = .TRUE.
@@ -721,6 +860,17 @@ X0DEPI = (4.0*XPI)*XC1I*XF0I*MOMG(XALPHAI,XNUI,1.)
 X2DEPI = (4.0*XPI)*XC1I*XF2I*XC_I*MOMG(XALPHAI,XNUI,XDI+2.0)
 !
 ! Harrington parameterization for ice to snow conversion
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('X0DEPI_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('X2DEPI_SHAPE', NNB_CRYSTAL_SHAPE)
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    X0DEPI_SHAPE(ISH) = (4.0 * XPI) * XC1I_SHAPE(ISH) * XF0I * MOMG(XALPHAI,XNUI,1.)
+    X2DEPI_SHAPE(ISH) = (4.0 * XPI) * XC1I_SHAPE(ISH) * XF2I * XC_I_SHAPE(ISH) * &
+                        MOMG(XALPHAI,XNUI,XDI_SHAPE(ISH)+2.0)
+  END DO
+END IF
+!
+! Harrington parameterization for ice to snow conversion
 !
 XDICNVS_LIM = 125.E-6  ! size in microns
 XLBDAICNVS_LIM = (50.0**(1.0/(XALPHAI)))/XDICNVS_LIM  ! ZLBDAI Limitation
@@ -730,6 +880,26 @@ XC1DEPIS = ((4.0*XPI)/(XAI*XBI))*XC1I*XF1IS*SQRT(XC_I)*             &
            (XALPHAI/GAMMA_X0D(XNUI))*XDICNVS_LIM**(1.0-XBI+(XDI+1.0)/2.0)
 XR0DEPIS = XC0DEPIS *(XAI*XDICNVS_LIM**XBI)
 XR1DEPIS = XC1DEPIS *(XAI*XDICNVS_LIM**XBI)
+!
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XC0DEPIS_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XC1DEPIS_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XR0DEPIS_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XR1DEPIS_SHAPE', NNB_CRYSTAL_SHAPE)
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    XC0DEPIS_SHAPE(ISH) = ((4.0 * XPI) / (XAI_SHAPE(ISH) * XBI_SHAPE(ISH))) *     &
+                          XC1I_SHAPE(ISH) * XF0IS * (XALPHAI / GAMMA_X0D(XNUI)) * &
+                          XDICNVS_LIM**(1.0-XBI_SHAPE(ISH))
+    XC1DEPIS_SHAPE(ISH) = ((4.0 * XPI) / (XAI_SHAPE(ISH) * XBI_SHAPE(ISH))) *  &
+                          XC1I_SHAPE(ISH) * XF1IS * SQRT(XC_I_SHAPE(ISH)) *    &
+                          (XALPHAI / GAMMA_X0D(XNUI)) *                        &
+                          XDICNVS_LIM**(1.0-XBI_SHAPE(ISH)+(XDI_SHAPE(ISH)+1.0)/2.0)
+    XR0DEPIS_SHAPE(ISH) = XC0DEPIS_SHAPE(ISH) * &
+                         (XAI_SHAPE(ISH) * XDICNVS_LIM**XBI_SHAPE(ISH))
+    XR1DEPIS_SHAPE(ISH) = XC1DEPIS_SHAPE(ISH) * &
+                         (XAI_SHAPE(ISH) * XDICNVS_LIM**XBI_SHAPE(ISH))
+  END DO
+END IF
 !
 ! Harrington parameterization for snow to ice conversion
 !
@@ -779,6 +949,13 @@ ZGAMI(6) = MOMG(XALPHAI,XNUI,3.+XBI)
 ZGAMI(7) = MOMG(XALPHAI,XNUI,XBI)
 ZGAMI(8) = MOMG(XALPHAI,XNUI,3.)/MOMG(XALPHAI,XNUI,2.)
 !
+IF (LCRYSTAL_SHAPE) THEN
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    ZGAMI_SHAPE(1,ISH) = MOMG(XALPHAI,XNUI,3.+XBI_SHAPE(ISH))
+    ZGAMI_SHAPE(2,ISH) = MOMG(XALPHAI,XNUI,XBI_SHAPE(ISH))
+  END DO
+END IF
+!
 ZGAMS(1) = GAMMA_X0D(XNUS)
 ZGAMS(2) = MOMG(XALPHAS,XNUS,3.)
 !
@@ -826,6 +1003,15 @@ XAGGS_CLARGE2 = XKER_ZRNIC_A2*ZGAMS(2)
 XAGGS_RLARGE1 = XKER_ZRNIC_A2*ZGAMI(6)*XAI
 XAGGS_RLARGE2 = XKER_ZRNIC_A2*ZGAMI(7)*ZGAMS(2)*XAI
 !
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XAGGS_RLARGE1_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XAGGS_RLARGE2_SHAPE', NNB_CRYSTAL_SHAPE)
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    XAGGS_RLARGE1_SHAPE(ISH) = XKER_ZRNIC_A2 * ZGAMI_SHAPE(1,ISH) * XAI_SHAPE(ISH)
+    XAGGS_RLARGE2_SHAPE(ISH) = XKER_ZRNIC_A2 * ZGAMI_SHAPE(2,ISH) * ZGAMS(2) * XAI_SHAPE(ISH)
+  END DO
+END IF
+!
 !!$GFLAG = .TRUE.
 !!$IF (GFLAG) THEN
 !!$  WRITE(UNIT=ILUOUT0,FMT='("      snow aggregation")')
@@ -871,11 +1057,11 @@ CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_RIM1', NGAMINC)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_RIM2', NGAMINC)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_RIM4', NGAMINC)
 !
-DO J1=1,NGAMINC
-  ZBOUND = PARAM_LIMA_MIXED%XGAMINC_BOUND_MIN*ZRATE**(J1-1)
-  XGAMINC_RIM1(J1) = GAMMA_INC(XNUS+(2.0+XDS)/XALPHAS,ZBOUND)
-  XGAMINC_RIM2(J1) = GAMMA_INC(XNUS+XBS/XALPHAS      ,ZBOUND)
-  XGAMINC_RIM4(J1) = GAMMA_INC(XNUS+XBG/XALPHAS      ,ZBOUND) ! Pour Murakami 1990
+DO I1=1,NGAMINC
+  ZBOUND = PARAM_LIMA_MIXED%XGAMINC_BOUND_MIN*ZRATE**(I1-1)
+  XGAMINC_RIM1(I1) = GAMMA_INC(XNUS+(2.0+XDS)/XALPHAS,ZBOUND)
+  XGAMINC_RIM2(I1) = GAMMA_INC(XNUS+XBS/XALPHAS      ,ZBOUND)
+  XGAMINC_RIM4(I1) = GAMMA_INC(XNUS+XBG/XALPHAS      ,ZBOUND) ! Pour Murakami 1990
 END DO
 !
 XRIMINTP1 = XALPHAS / LOG(ZRATE)
@@ -900,9 +1086,9 @@ ZRATE = EXP(LOG(PARAM_LIMA_MIXED%XGAMINC_HMC_BOUND_MAX/PARAM_LIMA_MIXED%XGAMINC_
 !
 CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_HMC', NGAMINC)
 !
-DO J1=1,NGAMINC
-  ZBOUND = PARAM_LIMA_MIXED%XGAMINC_HMC_BOUND_MIN*ZRATE**(J1-1)
-  XGAMINC_HMC(J1) = GAMMA_INC(XNUC,ZBOUND)
+DO I1=1,NGAMINC
+  ZBOUND = PARAM_LIMA_MIXED%XGAMINC_HMC_BOUND_MIN*ZRATE**(I1-1)
+  XGAMINC_HMC(I1) = GAMMA_INC(XNUC,ZBOUND)
 END DO
 !
 XHMSINTP1 = XALPHAC / LOG(ZRATE)
@@ -954,8 +1140,8 @@ XACCINTP2R = 1.0 - LOG( PARAM_LIMA_MIXED%XACCLBDAR_MIN ) / ZRATE
 !*       7.2.2  Computations of the tabulated normalized kernels
 !
 IND      = 50    ! Interval number, collection efficiency and infinite diameter
-ZESR     = 1.0   ! factor used to integrate the dimensional distributions when
-ZFDINFTY = 20.0  ! computing the kernels XKER_RACCSS, XKER_RACCS and XKER_SACCRG
+ZZESR     = 1.0   ! factor used to integrate the dimensional distributions when
+ZZFDINFTY = 20.0  ! computing the kernels XKER_RACCSS, XKER_RACCS and XKER_SACCRG
 !
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_RACCSS', NACCLBDAS,NACCLBDAR)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_RACCS', NACCLBDAS,NACCLBDAR)
@@ -963,133 +1149,145 @@ CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_SACCRG', NACCLBDAR,NACCLBDAS)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_RACCSS', NACCLBDAS,NACCLBDAR)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_RACCS', NACCLBDAS,NACCLBDAR)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_SACCRG', NACCLBDAR,NACCLBDAS)
-CALL NRCOLSS ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                        & 
-               ZESR, XCS, XDS, XFVELOS, XCR, XDR,                        & 
+IF (NMOM_R.GE.2 .AND. .FALSE.) THEN 
+CALL NRCOLSS ( NACCLBDAS,NACCLBDAR,IND, XALPHAS, XNUS, XALPHAR, XNUR,     & 
+               ZZESR, XCS, XDS, XFVELOS, XCR, XDR,                        & 
                XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, & 
-               ZFDINFTY, XKER_N_RACCSS, XAG, XBS, XAS                      )
-CALL NZCOLX  ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          & 
-               ZESR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                      & ! 
+               ZZFDINFTY, XKER_N_RACCSS, XAG, XBS, XAS                      )
+ELSE
+   XKER_N_RACCSS(:,:)=0.
+END IF
+IF (NMOM_R.GE.2) THEN 
+CALL NZCOLX  ( NACCLBDAS,NACCLBDAR, IND, XALPHAS, XNUS, XALPHAR, XNUR,      & 
+               ZZESR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                      & ! 
                XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, & 
-               ZFDINFTY, XKER_N_RACCS                                      )
-CALL NSCOLRG ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          & 
-               ZESR, XCS, XDS, XFVELOS, XCR, XDR,                          & 
+               ZZFDINFTY, XKER_N_RACCS                                      )
+ELSE
+   XKER_N_RACCS(:,:)=0.
+END IF
+IF (NMOM_S.GE.2 .OR. NMOM_G.GE.2) THEN 
+CALL NSCOLRG ( NACCLBDAR,NACCLBDAS, IND, XALPHAS, XNUS, XALPHAR, XNUR,     & 
+               ZZESR, XCS, XDS, XFVELOS, XCR, XDR,                          & 
                XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, & 
-               ZFDINFTY, XKER_N_SACCRG,XAG, XBS, XAS                       )
+               ZZFDINFTY, XKER_N_SACCRG,XAG, XBS, XAS                       )
+ELSE
+   XKER_N_SACCRG(:,:)=0.
+END IF
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RACCSS) ) THEN")')          
-!!$DO J1 = 1 , NACCLBDAS                                                    
+!!$DO I1 = 1 , NACCLBDAS                                                    
 !!$  DO J2 = 1 , NACCLBDAR                                                  
 !!$  WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_RACCSS(",I3,",",I3,") = ",E13.6)') &
-!!$                    J1,J2,XKER_N_RACCSS(J1,J2)                          
+!!$                    I1,J2,XKER_N_RACCSS(I1,J2)                          
 !!$  END DO                                                                
 !!$END DO                                                                   
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")')                                           
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RACCS) ) THEN")')          
-!!$DO J1 = 1 , NACCLBDAS                                                    
+!!$DO I1 = 1 , NACCLBDAS                                                    
 !!$  DO J2 = 1 , NACCLBDAR                                                  
 !!$  WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_RACCS(",I3,",",I3,") = ",E13.6)') &
-!!$                    J1,J2,XKER_N_RACCS(J1,J2)                          
+!!$                    I1,J2,XKER_N_RACCS(I1,J2)                          
 !!$  END DO                                                                
 !!$END DO                                                                   
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SACCRG) ) THEN")')          
-!!$DO J1 = 1 , NACCLBDAR                                                    
+!!$DO I1 = 1 , NACCLBDAR                                                    
 !!$  DO J2 = 1 , NACCLBDAS                                                  
 !!$  WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SACCRG(",I3,",",I3,") = ",E13.6)') &
-!!$                    J1,J2,XKER_N_SACCRG(J1,J2)                          
+!!$                    I1,J2,XKER_N_SACCRG(I1,J2)                          
 !!$  END DO                                                                
 !!$END DO                                                                   
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")') 
 
 !
-CALL LIMA_READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                        &
-                           PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PFVELOS,PCR,PDR, &
-                           PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN,        &
-                           PFDINFTY                                                        )
-IF( (KACCLBDAS/=NACCLBDAS) .OR. (KACCLBDAR/=NACCLBDAR) .OR. (KND/=IND) .OR. &
-    (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
-    (PALPHAR/=XALPHAR) .OR. (PNUR/=XNUR)                               .OR. &
-    (PESR/=ZESR) .OR. (PBS/=XBS) .OR. (PBR/=XBR)                       .OR. &
-    (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. (PCR/=XCR) .OR. (PDR/=XDR)         .OR. &
-    (PACCLBDAS_MAX/=XACCLBDAS_MAX) .OR. (PACCLBDAR_MAX/=XACCLBDAR_MAX) .OR. &
-    (PACCLBDAS_MIN/=XACCLBDAS_MIN) .OR. (PACCLBDAR_MIN/=XACCLBDAR_MIN) .OR. &
-    (PFDINFTY/=ZFDINFTY)                                               ) THEN
-  CALL RRCOLSS ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-                 ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     &
+CALL LIMA_READ_XKER_RACCS (IACCLBDAS,IACCLBDAR,IKND,                                        &
+                           ZALPHAS,ZNUS,ZALPHAR,ZNUR,ZESR,ZBS,ZBR,ZCS,ZDS,ZFVELOS,ZCR,ZDR, &
+                           ZACCLBDAS_MAX,ZACCLBDAR_MAX,ZACCLBDAS_MIN,ZACCLBDAR_MIN,        &
+                           ZFDINFTY                                                        )
+IF( (IACCLBDAS/=NACCLBDAS) .OR. (IACCLBDAR/=NACCLBDAR) .OR. (IKND/=IND) .OR. &
+    (ZALPHAS/=XALPHAS) .OR. (ZNUS/=XNUS)                               .OR. &
+    (ZALPHAR/=XALPHAR) .OR. (ZNUR/=XNUR)                               .OR. &
+    (ZESR/=ZZESR) .OR. (ZBS/=XBS) .OR. (ZBR/=XBR)                       .OR. &
+    (ZCS/=XCS) .OR. (ZDS/=XDS) .OR. (ZFVELOS/=XFVELOS) .OR. (ZCR/=XCR) .OR. (ZDR/=XDR)         .OR. &
+    (ABS(ZACCLBDAS_MAX-XACCLBDAS_MAX).GE.(0.001*ZACCLBDAS_MAX)) .OR. (ZACCLBDAR_MAX/=XACCLBDAR_MAX) .OR. &
+    (ABS(ZACCLBDAS_MIN-XACCLBDAS_MIN).GE.(0.001*ZACCLBDAS_MIN)) .OR. (ZACCLBDAR_MIN/=XACCLBDAR_MIN) .OR. &
+    (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
+  CALL LIMA_RRCOLSS ( IACCLBDAS, IACCLBDAR, IND, XALPHAS, XNUS, XALPHAR, XNUR, &
+                 ZZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
-                 ZFDINFTY, XKER_RACCSS, XAG, XBS, XAS                        )
-  CALL RZCOLX  ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-                 ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                 &
+                 ZZFDINFTY, XKER_RACCSS, XAG, XBS, XAS                        )
+  CALL LIMA_RZCOLX  ( IACCLBDAS, IACCLBDAR, IND, XALPHAS, XNUS, XALPHAR, XNUR, &
+                 ZZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                 &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
-                 ZFDINFTY, XKER_RACCS                                        )
-  CALL RSCOLRG ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-                 ZESR, XBS, XCS, XDS, XFVELOS, XCR, XDR,                     &
+                 ZZFDINFTY, XKER_RACCS                                        )
+  CALL LIMA_RSCOLRG ( IACCLBDAS, IACCLBDAR, IND, XALPHAS, XNUS, XALPHAR, XNUR, &
+                 ZZESR, XBS, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
-                 ZFDINFTY, XKER_SACCRG,XAG, XBS, XAS                         )
+                 ZZFDINFTY, XKER_SACCRG,XAG, XBS, XAS                         )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF RACSS KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF RACS  KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SACRG KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KACCLBDAS=",I3)') NACCLBDAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KACCLBDAR=",I3)') NACCLBDAR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAR=",E13.6)') XALPHAR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUR=",E13.6)') XNUR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PESR=",E13.6)') ZESR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBR=",E13.6)') XBR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFVELOS=",E13.6)') XFVELOS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCR=",E13.6)') XCR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDR=",E13.6)') XDR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAS_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IKND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IACCLBDAS=",I3)') NACCLBDAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IACCLBDAR=",I3)') NACCLBDAR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAS=",E13.6)') XALPHAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUS=",E13.6)') XNUS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAR=",E13.6)') XALPHAR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUR=",E13.6)') XNUR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZESR=",E13.6)') ZZESR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBS=",E13.6)') XBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBR=",E13.6)') XBR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCS=",E13.6)') XCS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDS=",E13.6)') XDS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFVELOS=",E13.6)') XFVELOS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCR=",E13.6)') XCR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDR=",E13.6)') XDR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZACCLBDAS_MAX=",E13.6)') &
 !!$                                                    XACCLBDAS_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAR_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZACCLBDAR_MAX=",E13.6)') &
 !!$                                                    XACCLBDAR_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAS_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZACCLBDAS_MIN=",E13.6)') &
 !!$                                                    XACCLBDAS_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAR_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZACCLBDAR_MIN=",E13.6)') &
 !!$                                                    XACCLBDAR_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RACCSS) ) THEN")')
-!!$  DO J1 = 1 , NACCLBDAS
+!!$  DO I1 = 1 , NACCLBDAS
 !!$    DO J2 = 1 , NACCLBDAR
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_RACCSS(",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_RACCSS(J1,J2)
+!!$                        I1,J2,XKER_RACCSS(I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RACCS ) ) THEN")')
-!!$  DO J1 = 1 , NACCLBDAS
+!!$  DO I1 = 1 , NACCLBDAS
 !!$    DO J2 = 1 , NACCLBDAR
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_RACCS (",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_RACCS (J1,J2)
+!!$                        I1,J2,XKER_RACCS (I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SACCRG) ) THEN")')
-!!$  DO J1 = 1 , NACCLBDAR
+!!$  DO I1 = 1 , NACCLBDAR
 !!$    DO J2 = 1 , NACCLBDAS
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_SACCRG(",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_SACCRG(J1,J2)
+!!$                        I1,J2,XKER_SACCRG(I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
-  CALL LIMA_READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                        &
-                             PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PFVELOS,PCR,PDR, &
-                             PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN,        &
-                             PFDINFTY,XKER_RACCSS,XKER_RACCS,XKER_SACCRG                     )
+  CALL LIMA_READ_XKER_RACCS (IACCLBDAS,IACCLBDAR,IKND,                                        &
+                             ZALPHAS,ZNUS,ZALPHAR,ZNUR,ZESR,ZBS,ZBR,ZCS,ZDS,ZFVELOS,ZCR,ZDR, &
+                             ZACCLBDAS_MAX,ZACCLBDAR_MAX,ZACCLBDAS_MIN,ZACCLBDAR_MIN,        &
+                             ZFDINFTY,XKER_RACCSS,XKER_RACCS,XKER_SACCRG                     )
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_RACCSS")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_RACCS ")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_SACCRG")')
@@ -1119,39 +1317,43 @@ XSCINTP2S = 1.0 - LOG( XSCLBDAS_MIN ) / ZRATE
 !
 !
   IND      = 50    ! Interval number, collection efficiency and infinite diameter
-  ZESS     = 1.0   ! factor used to integrate the dimensional distributions when
-  ZFDINFTY = 20.0  ! computing the kernels XKER_SSCSS
+  ZZESS     = 1.0   ! factor used to integrate the dimensional distributions when
+  ZZFDINFTY = 20.0  ! computing the kernels XKER_SSCSS
 !
   CALL PARAM_LIMA_COLD_ALLOCATE('XKER_N_SSCS', NSCLBDAS,NSCLBDAS)
 !
-  CALL NZCOLX  ( IND, XALPHAS, XNUS, XALPHAS, XNUS,                          & 
-               ZESS, XCS, XDS, XFVELOS, XCS, XDS, XFVELOS,                   & 
+IF (NMOM_S.GE.2) THEN 
+  CALL NZCOLX  ( NSCLBDAS,NSCLBDAS,IND, XALPHAS, XNUS, XALPHAS, XNUS,      & 
+               ZZESS, XCS, XDS, XFVELOS, XCS, XDS, XFVELOS,                   & 
                XSCLBDAS_MAX, XSCLBDAS_MAX, XSCLBDAS_MIN, XSCLBDAS_MIN, & 
-               ZFDINFTY, XKER_N_SSCS                                      ) 
+               ZZFDINFTY, XKER_N_SSCS                                      ) 
+ELSE
+   XKER_N_SSCS(:,:)=0.
+END IF
 !
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SSCS  KERNELS ***")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IKND=",I3)') IND
 !!$  WRITE(UNIT=ILUOUT0,FMT='("KSCLBDAS=",I3)') NSCLBDAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PESS=",E13.6)') ZESS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAS=",E13.6)') XALPHAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUS=",E13.6)') XNUS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PESS=",E13.6)') ZZESS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBS=",E13.6)') XBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCS=",E13.6)') XCS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDS=",E13.6)') XDS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("PSCLBDAS_MAX=",E13.6)') &
 !!$                                                  XSCLBDAS_MAX
 !!$  WRITE(UNIT=ILUOUT0,FMT='("PSCLBDAS_MIN=",E13.6)') &
 !!$                                                  XSCLBDAS_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SSCS ) ) THEN")')           
-!!$  DO J1 = 1 , NSCLBDAS                                                     
+!!$  DO I1 = 1 , NSCLBDAS                                                     
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SSCS (",I3,",",I3,") = ",E13.6)') & 
-!!$                      J1,J1,XKER_N_SSCS (J1,J1)                          
+!!$                      I1,I1,XKER_N_SSCS (I1,I1)                          
 !!$  END DO                                                                    
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')  
 !
@@ -1164,6 +1366,69 @@ XSCINTP2S = 1.0 - LOG( XSCLBDAS_MIN ) / ZRATE
   XSPONCOEFS2 = ((XSPONBUDS3/XSPONBUDS2)**3 - 1.0)/(XSPONBUDS3-XSPONBUDS1)**2
 !
 !end if
+!
+!*       7.2TER  Computations of the tabulated normalized kernels ice Self Collection !! 
+!
+!
+IF (NMOM_S.GE.2) THEN
+XCOLII   = 0.005 ! Collection efficiency of I+I
+XCOLEXII = 0.1  ! Temperature factor of the I+I collection efficiency
+XFNISCI = (XPI/4.0)*(ZRHO00**XCEXVT)/2.0       
+!
+XLBNISCI1   = 2.0*MOMG(XALPHAI,XNUI,2.)                        
+XLBNISCI2   = 2.0*MOMG(XALPHAI,XNUI,1.)**2 
+!
+!
+!*       7.2TER.1  Defining the ranges for the computation of the kernels
+!
+!
+PARAM_LIMA_COLD%NSCLBDAI = 80
+PARAM_LIMA_COLD%XSCLBDAI_MIN = 1.0E0
+PARAM_LIMA_COLD%XSCLBDAI_MAX = 5.0E10
+ZRATE = LOG(PARAM_LIMA_COLD%XSCLBDAI_MAX/PARAM_LIMA_COLD%XSCLBDAI_MIN)/FLOAT(PARAM_LIMA_COLD%NSCLBDAI-1)
+XSCINTP1I = 1.0 / ZRATE
+XSCINTP2I = 1.0 - LOG( XSCLBDAI_MIN ) / ZRATE
+!
+!
+IND      = 50    ! Interval number, collection efficiency and infinite diameter
+ZZEII     = 1.0   ! factor used to integrate the dimensional distributions when
+ZZFDINFTY = 20.0  ! computing the kernels XKER_SSCSS
+!
+CALL PARAM_LIMA_COLD_ALLOCATE('XKER_N_ISCI', NSCLBDAI,NSCLBDAI)
+!
+CALL NZCOLX  ( NSCLBDAI, NSCLBDAI, IND, XALPHAI, XNUI, XALPHAI, XNUI,&
+             ZZEII, XC_I, XDI, 0., XC_I, XDI, 0.,                    &
+             XSCLBDAI_MAX, XSCLBDAI_MAX, XSCLBDAI_MIN, XSCLBDAI_MIN, &
+             ZZFDINFTY, XKER_N_ISCI                                  )
+!! 
+IF(LCRYSTAL_SHAPE) THEN
+    CALL PARAM_LIMA_COLD_ALLOCATE_1D('XLBISCS1',NNB_CRYSTAL_SHAPE)
+    CALL PARAM_LIMA_COLD_ALLOCATE_1D('XLBISCS2',NNB_CRYSTAL_SHAPE)
+    CALL PARAM_LIMA_COLD_ALLOCATE_1D('XLBISCS3',NNB_CRYSTAL_SHAPE)
+    CALL PARAM_LIMA_COLD_ALLOCATE_1D('XFISCS',NNB_CRYSTAL_SHAPE)
+   
+    CALL PARAM_LIMA_COLD_ALLOCATE_3D('XKER_R_ISCI_SHAPE',NNB_CRYSTAL_SHAPE, NSCLBDAI,NSCLBDAI)
+    CALL PARAM_LIMA_COLD_ALLOCATE_4D('XKER_N_ISCI_SHAPE',NNB_CRYSTAL_SHAPE,NNB_CRYSTAL_SHAPE, NSCLBDAI,NSCLBDAI)    
+    DO ISH = 1, NNB_CRYSTAL_SHAPE
+        XFISCS(ISH) = XAI_SHAPE(3)*(XPI/4.0)*(ZRHO00**XCEXVT)/(MOMG(XALPHAI,XNUI,XBI_SHAPE(ISH)))
+
+        XLBISCS1(ISH) =    MOMG(XALPHAI,XNUI,2.)*MOMG(XALPHAI,XNUI,XBI_SHAPE(ISH))
+        XLBISCS2(ISH) = 2.*MOMG(XALPHAI,XNUI,1.)*MOMG(XALPHAI,XNUI,XBI_SHAPE(ISH)+1.)
+        XLBISCS3(ISH) =                          MOMG(XALPHAI,XNUI,XBI_SHAPE(ISH)+2.)   
+
+        CALL LIMA_RZCOLX  ( NSCLBDAI, NSCLBDAI, IND, XALPHAI, XNUI, XALPHAI, XNUI,                       &
+               ZZEII, XBI_SHAPE(3), XC_I_SHAPE(ISH), XDI_SHAPE(ISH), 0., XC_I_SHAPE(3), XDI_SHAPE(3), 0., &
+               XSCLBDAI_MAX, XSCLBDAI_MAX, XSCLBDAI_MIN, XSCLBDAI_MIN,                                 &
+               ZZFDINFTY, XKER_R_ISCI_SHAPE(ISH,:,:)                                                    )
+        DO ISH2 = 1, NNB_CRYSTAL_SHAPE
+            CALL NZCOLX  ( NSCLBDAI, NSCLBDAI, IND, XALPHAI, XNUI, XALPHAI, XNUI,                 &
+               ZZEII, XC_I_SHAPE(ISH), XDI_SHAPE(ISH), 0., XC_I_SHAPE(ISH2), XDI_SHAPE(ISH2), 0., &
+               XSCLBDAI_MAX, XSCLBDAI_MAX, XSCLBDAI_MIN, XSCLBDAI_MIN,                         &
+               ZZFDINFTY, XKER_N_ISCI_SHAPE(ISH,ISH2,:,:)                                       )
+        ENDDO
+    ENDDO
+ENDIF
+ENDIF
 !
 !*       7.3    Constant for the conversion-melting rate
 !
@@ -1205,20 +1470,20 @@ ZRATE_G = EXP(LOG(PARAM_LIMA_MIXED%XGAMINC_BOUND_CIBU_GMAX/PARAM_LIMA_MIXED%XGAM
 CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_CIBU_S', 4,PARAM_LIMA_MIXED%NGAMINC)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_CIBU_G', 2,PARAM_LIMA_MIXED%NGAMINC)
 !
-DO J1 = 1, NGAMINC
-  ZBOUND_CIBU_SMIN = PARAM_LIMA_MIXED%XGAMINC_BOUND_CIBU_SMIN * ZRATE_S**(J1-1)
-  ZBOUND_CIBU_GMIN = PARAM_LIMA_MIXED%XGAMINC_BOUND_CIBU_GMIN * ZRATE_G**(J1-1)
+DO I1 = 1, NGAMINC
+  ZBOUND_CIBU_SMIN = PARAM_LIMA_MIXED%XGAMINC_BOUND_CIBU_SMIN * ZRATE_S**(I1-1)
+  ZBOUND_CIBU_GMIN = PARAM_LIMA_MIXED%XGAMINC_BOUND_CIBU_GMIN * ZRATE_G**(I1-1)
 !
 ! For ZNI_CIBU
-  XGAMINC_CIBU_S(1,J1) = GAMMA_INC(XNUS,ZBOUND_CIBU_SMIN)
-  XGAMINC_CIBU_S(2,J1) = GAMMA_INC(XNUS+(XDS/XALPHAS),ZBOUND_CIBU_SMIN)
+  XGAMINC_CIBU_S(1,I1) = GAMMA_INC(XNUS,ZBOUND_CIBU_SMIN)
+  XGAMINC_CIBU_S(2,I1) = GAMMA_INC(XNUS+(XDS/XALPHAS),ZBOUND_CIBU_SMIN)
 !
-  XGAMINC_CIBU_G(1,J1) = GAMMA_INC(XNUG+((2.0+XDG)/XALPHAG),ZBOUND_CIBU_GMIN)
-  XGAMINC_CIBU_G(2,J1) = GAMMA_INC(XNUG+(2.0/XALPHAG),ZBOUND_CIBU_GMIN)
+  XGAMINC_CIBU_G(1,I1) = GAMMA_INC(XNUG+((2.0+XDG)/XALPHAG),ZBOUND_CIBU_GMIN)
+  XGAMINC_CIBU_G(2,I1) = GAMMA_INC(XNUG+(2.0/XALPHAG),ZBOUND_CIBU_GMIN)
 !
 ! For ZRI_CIBU
-  XGAMINC_CIBU_S(3,J1) = GAMMA_INC(XNUS+(XBS/XALPHAS),ZBOUND_CIBU_SMIN)
-  XGAMINC_CIBU_S(4,J1) = GAMMA_INC(XNUS+((XBS+XDS)/XALPHAS),ZBOUND_CIBU_SMIN)
+  XGAMINC_CIBU_S(3,I1) = GAMMA_INC(XNUS+(XBS/XALPHAS),ZBOUND_CIBU_SMIN)
+  XGAMINC_CIBU_S(4,I1) = GAMMA_INC(XNUS+((XBS+XDS)/XALPHAS),ZBOUND_CIBU_SMIN)
 END DO
 !
 XCIBUINTP_S = XALPHAS / LOG(ZRATE_S)
@@ -1259,11 +1524,11 @@ ZRATE_R = EXP(LOG(PARAM_LIMA_MIXED%XGAMINC_BOUND_RDSF_RMAX/PARAM_LIMA_MIXED%XGAM
 !
 CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_RDSF_R', NGAMINC)
 !
-DO J1 = 1, NGAMINC
-  ZBOUND_RDSF_RMIN = PARAM_LIMA_MIXED%XGAMINC_BOUND_RDSF_RMIN * ZRATE_R**(J1-1)
+DO I1 = 1, NGAMINC
+  ZBOUND_RDSF_RMIN = PARAM_LIMA_MIXED%XGAMINC_BOUND_RDSF_RMIN * ZRATE_R**(I1-1)
 !
 ! For ZNI_RDSF
-  XGAMINC_RDSF_R(J1) = GAMMA_INC(XNUR+((6.0+XDR)/XALPHAR),ZBOUND_RDSF_RMIN)
+  XGAMINC_RDSF_R(I1) = GAMMA_INC(XNUR+((6.0+XDR)/XALPHAR),ZBOUND_RDSF_RMIN)
 END DO
 !
 XRDSFINTP_R = XALPHAR / LOG(ZRATE_R)
@@ -1274,6 +1539,9 @@ ZKHI_LWM = 2.5E13 ! Coeff. in Lawson-Woods-Morrison for the number of splinters
                   ! N_DF = XKHI_LWM * D_R**4
 XFACTOR_RDSF_NI = ZKHI_LWM * (XPI / 4.0) * XCR * (ZRHO00**XCEXVT)
 XMOMGR_RDSF = MOMG(XALPHAR,XNUR,6.0+XDR)
+!
+XTM_PSH = 258.     ! Mean Temperature of shattering probability normal distribution
+XSIG_PSH = 5.      ! SIGMA of shattering probability normal distribution
 !
 !-------------------------------------------------------------------------------
 !
@@ -1303,6 +1571,11 @@ XICFRR    = (XPI/4.0)*XCOLIR*XCR*(ZRHO00**XCEXVT)                  &
 !
 !
 !*       8.2    Constants for the dry growth of the graupeln
+!
+! Min val. of R for dry and wet for D = 125 mum
+XMINDG  =  XAG*XCCG*XMVDMIN_G**(XBG-XCXG)*MOMG(XALPHAG,XNUG,XBG)**(XCXG/XBG)
+! Max val of lambda for D = 125 mum
+XMAXLBDG = MOMG(XALPHAG,XNUG,XBG)**(1./XBG)/XMVDMIN_G
 !
 !*       8.2.1  Constants for the cloud droplet collection by the graupeln
 !               and for the Hallett-Mossop process
@@ -1391,166 +1664,174 @@ XDRYINTP2G = 1.0 - LOG( PARAM_LIMA_MIXED%XDRYLBDAG_MIN ) / ZRATE
 !*       8.2.5  Computations of the tabulated normalized kernels
 !
 IND      = 50    ! Interval number, collection efficiency and infinite diameter
-ZEGS     = 1.0   ! factor used to integrate the dimensional distributions when
-ZFDINFTY = 20.0  ! computing the kernels XKER_SDRYG
+ZZEGS     = 1.0   ! factor used to integrate the dimensional distributions when
+ZZFDINFTY = 20.0  ! computing the kernels XKER_SDRYG
 !
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_SDRYG', NDRYLBDAG,NDRYLBDAS)
 !if (NMOM_S.GE.2) then
   CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_SDRYG', NDRYLBDAG,NDRYLBDAS)
-  CALL NZCOLX  ( IND, XALPHAG, XNUG, XALPHAS, XNUS,                         & 
-              ZEGS, XCG, XDG, 0., XCS, XDS, XFVELOS,                        & 
+IF (NMOM_S.GE.2 ) THEN
+  CALL NZCOLX  ( NDRYLBDAG,NDRYLBDAS, IND, XALPHAG, XNUG, XALPHAS, XNUS,    & 
+              ZZEGS, XCG, XDG, 0., XCS, XDS, XFVELOS,                        & 
               XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, & 
-              ZFDINFTY, XKER_N_SDRYG                                      ) 
+              ZZFDINFTY, XKER_N_SDRYG                                      ) 
+ELSE
+   XKER_N_SDRYG(:,:)=0.
+END IF
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SDRYG) ) THEN")')          
-!!$  DO J1 = 1 , NDRYLBDAG                                                    
+!!$  DO I1 = 1 , NDRYLBDAG                                                    
 !!$    DO J2 = 1 , NDRYLBDAS                                                  
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SDRYG(",I3,",",I3,") = ",E13.6)') &
-!!$                      J1,J2,XKER_N_SDRYG(J1,J2)                          
+!!$                      I1,J2,XKER_N_SDRYG(I1,J2)                          
 !!$    END DO                                                                
 !!$  END DO                                                                   
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !end if
 !
-CALL LIMA_READ_XKER_SDRYG (KDRYLBDAG,KDRYLBDAS,KND,                                    &
-                           PALPHAG,PNUG,PALPHAS,PNUS,PEGS,PBS,PCG,PDG,PCS,PDS,PFVELOS, &
-                           PDRYLBDAG_MAX,PDRYLBDAS_MAX,PDRYLBDAG_MIN,PDRYLBDAS_MIN,    &
-                           PFDINFTY                                                    )
-IF( (KDRYLBDAG/=NDRYLBDAG) .OR. (KDRYLBDAS/=NDRYLBDAS) .OR. (KND/=IND) .OR. &
-    (PALPHAG/=XALPHAG) .OR. (PNUG/=XNUG)                               .OR. &
-    (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
-    (PEGS/=ZEGS) .OR. (PBS/=XBS)                                       .OR. &
-    (PCG/=XCG) .OR. (PDG/=XDG) .OR. (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. &
-    (PDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (PDRYLBDAS_MAX/=XDRYLBDAS_MAX) .OR. &
-    (PDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (PDRYLBDAS_MIN/=XDRYLBDAS_MIN) .OR. &
-    (PFDINFTY/=ZFDINFTY)                                               ) THEN
-  CALL RZCOLX ( IND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
-                ZEGS, XBS, XCG, XDG, 0., XCS, XDS, XFVELOS,                 &
+CALL LIMA_READ_XKER_SDRYG (IDRYLBDAG,IDRYLBDAS,IKND,                                    &
+                           ZALPHAG,ZNUG,ZALPHAS,ZNUS,ZEGS,ZBS,ZCG,ZDG,ZCS,ZDS,ZFVELOS, &
+                           ZDRYLBDAG_MAX,ZDRYLBDAS_MAX,ZDRYLBDAG_MIN,ZDRYLBDAS_MIN,    &
+                           ZFDINFTY                                                    )
+IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAS/=NDRYLBDAS) .OR. (IKND/=IND) .OR. &
+    (ZALPHAG/=XALPHAG) .OR. (ZNUG/=XNUG)                               .OR. &
+    (ZALPHAS/=XALPHAS) .OR. (ZNUS/=XNUS)                               .OR. &
+    (ZEGS/=ZZEGS) .OR. (ZBS/=XBS)                                       .OR. &
+    (ZCG/=XCG) .OR. (ZDG/=XDG) .OR. (ZCS/=XCS) .OR. (ZDS/=XDS) .OR. (ZFVELOS/=XFVELOS) .OR. &
+    (ZDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (ABS(ZDRYLBDAS_MAX-XDRYLBDAS_MAX).GE.(0.001*ZDRYLBDAS_MAX)) .OR. &
+    (ZDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (ABS(ZDRYLBDAS_MIN-XDRYLBDAS_MIN).GE.(0.001*ZDRYLBDAS_MIN)) .OR. &
+    (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
+  CALL LIMA_RZCOLX ( IDRYLBDAG, IDRYLBDAS, IND, XALPHAG, XNUG, XALPHAS, XNUS, &
+                ZZEGS, XBS, XCG, XDG, 0., XCS, XDS, XFVELOS,                 &
                 XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
-                ZFDINFTY, XKER_SDRYG                                        )
+                ZZFDINFTY, XKER_SDRYG                                        )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SDRYG KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAG=",I3)') NDRYLBDAG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAS=",I3)') NDRYLBDAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAG=",E13.6)') XALPHAG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUG=",E13.6)') XNUG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PEGS=",E13.6)') ZEGS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCG=",E13.6)') XCG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDG=",E13.6)') XDG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFVELOS=",E13.6)') XFVELOS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IKND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IDRYLBDAG=",I3)') NDRYLBDAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IDRYLBDAS=",I3)') NDRYLBDAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAG=",E13.6)') XALPHAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUG=",E13.6)') XNUG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAS=",E13.6)') XALPHAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUS=",E13.6)') XNUS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEGS=",E13.6)') ZZEGS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBS=",E13.6)') XBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCG=",E13.6)') XCG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDG=",E13.6)') XDG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCS=",E13.6)') XCS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDS=",E13.6)') XDS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFVELOS=",E13.6)') XFVELOS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAG_MAX=",E13.6)') &
 !!$                                                    XDRYLBDAG_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAS_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAS_MAX=",E13.6)') &
 !!$                                                    XDRYLBDAS_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAG_MIN=",E13.6)') &
 !!$                                                    XDRYLBDAG_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAS_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAS_MIN=",E13.6)') &
 !!$                                                    XDRYLBDAS_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SDRYG) ) THEN")')
-!!$  DO J1 = 1 , NDRYLBDAG
+!!$  DO I1 = 1 , NDRYLBDAG
 !!$    DO J2 = 1 , NDRYLBDAS
 !!$    WRITE(UNIT=ILUOUT0,FMT='("PKER_SDRYG(",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_SDRYG(J1,J2)
+!!$                        I1,J2,XKER_SDRYG(I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
-  CALL LIMA_READ_XKER_SDRYG (KDRYLBDAG,KDRYLBDAS,KND,                                    &
-                             PALPHAG,PNUG,PALPHAS,PNUS,PEGS,PBS,PCG,PDG,PCS,PDS,PFVELOS, &
-                             PDRYLBDAG_MAX,PDRYLBDAS_MAX,PDRYLBDAG_MIN,PDRYLBDAS_MIN,    &
-                             PFDINFTY,XKER_SDRYG                                         )
+  CALL LIMA_READ_XKER_SDRYG (IDRYLBDAG,IDRYLBDAS,IKND,                                    &
+                             ZALPHAG,ZNUG,ZALPHAS,ZNUS,ZEGS,ZBS,ZCG,ZDG,ZCS,ZDS,ZFVELOS, &
+                             ZDRYLBDAG_MAX,ZDRYLBDAS_MAX,ZDRYLBDAG_MIN,ZDRYLBDAS_MIN,    &
+                             ZFDINFTY,XKER_SDRYG                                         )
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_SDRYG")')
 END IF
 !
 !
 IND      = 50    ! Number of interval used to integrate the dimensional
-ZEGR     = 1.0   ! distributions when computing the kernel XKER_RDRYG
-ZFDINFTY = 20.0
+ZZEGR     = 1.0   ! distributions when computing the kernel XKER_RDRYG
+ZZFDINFTY = 20.0
 !
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_RDRYG', NDRYLBDAG,NDRYLBDAR)
 !if ( NMOM_R.GE.2 ) then
   CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_RDRYG', NDRYLBDAG,NDRYLBDAR)
-  CALL NZCOLX  ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          & 
-               ZEGR, XCG, XDG, 0., XCR, XDR, 0.,                            & 
+IF (NMOM_R.GE.2) THEN
+  CALL NZCOLX  ( NDRYLBDAG,NDRYLBDAR, IND, XALPHAS, XNUS, XALPHAR, XNUR,    & 
+               ZZEGR, XCG, XDG, 0., XCR, XDR, 0.,                            & 
                XDRYLBDAG_MAX, XDRYLBDAR_MAX, XDRYLBDAG_MIN, XDRYLBDAR_MIN, &
-               ZFDINFTY, XKER_N_RDRYG                                      )
+               ZZFDINFTY, XKER_N_RDRYG                                      )
+ELSE
+   XKER_N_RDRYG(:,:)=0.
+END IF
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RDRYG) ) THEN")')          
-!!$  DO J1 = 1 , NDRYLBDAG                                                    
+!!$  DO I1 = 1 , NDRYLBDAG                                                    
 !!$    DO J2 = 1 , NDRYLBDAR                                                  
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_RDRYG(",I3,",",I3,") = ",E13.6)') &
-!!$                      J1,J2,XKER_N_RDRYG(J1,J2)                          
+!!$                      I1,J2,XKER_N_RDRYG(I1,J2)                          
 !!$    END DO                                                                
 !!$  END DO                                                                   
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !end if
 !
-CALL LIMA_READ_XKER_RDRYG (KDRYLBDAG,KDRYLBDAR,KND,                                 &
-                           PALPHAG,PNUG,PALPHAR,PNUR,PEGR,PBR,PCG,PDG,PCR,PDR,      &
-                           PDRYLBDAG_MAX,PDRYLBDAR_MAX,PDRYLBDAG_MIN,PDRYLBDAR_MIN, &
-                           PFDINFTY                                                 )
-IF( (KDRYLBDAG/=NDRYLBDAG) .OR. (KDRYLBDAR/=NDRYLBDAR) .OR. (KND/=IND) .OR. &
-    (PALPHAG/=XALPHAG) .OR. (PNUG/=XNUG)                               .OR. &
-    (PALPHAR/=XALPHAR) .OR. (PNUR/=XNUR)                               .OR. &
-    (PEGR/=ZEGR) .OR. (PBR/=XBR)                                       .OR. &
-    (PCG/=XCG) .OR. (PDG/=XDG) .OR. (PCR/=XCR) .OR. (PDR/=XDR)         .OR. &
-    (PDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (PDRYLBDAR_MAX/=XDRYLBDAR_MAX) .OR. &
-    (PDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (PDRYLBDAR_MIN/=XDRYLBDAR_MIN) .OR. &
-    (PFDINFTY/=ZFDINFTY)                                               ) THEN
-  CALL RZCOLX ( IND, XALPHAG, XNUG, XALPHAR, XNUR,                          &
-                ZEGR, XBR, XCG, XDG, 0., XCR, XDR, 0.,                      &
+CALL LIMA_READ_XKER_RDRYG (IDRYLBDAG,IDRYLBDAR,IKND,                                 &
+                           ZALPHAG,ZNUG,ZALPHAR,ZNUR,ZEGR,ZBR,ZCG,ZDG,ZCR,ZDR,      &
+                           ZDRYLBDAG_MAX,ZDRYLBDAR_MAX,ZDRYLBDAG_MIN,ZDRYLBDAR_MIN, &
+                           ZFDINFTY                                                 )
+IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAR/=NDRYLBDAR) .OR. (IKND/=IND) .OR. &
+    (ZALPHAG/=XALPHAG) .OR. (ZNUG/=XNUG)                               .OR. &
+    (ZALPHAR/=XALPHAR) .OR. (ZNUR/=XNUR)                               .OR. &
+    (ZEGR/=ZZEGR) .OR. (ZBR/=XBR)                                       .OR. &
+    (ZCG/=XCG) .OR. (ZDG/=XDG) .OR. (ZCR/=XCR) .OR. (ZDR/=XDR)         .OR. &
+    (ZDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (ZDRYLBDAR_MAX/=XDRYLBDAR_MAX) .OR. &
+    (ZDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (ZDRYLBDAR_MIN/=XDRYLBDAR_MIN) .OR. &
+    (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
+  CALL LIMA_RZCOLX ( IDRYLBDAG, IDRYLBDAR, IND, XALPHAG, XNUG, XALPHAR, XNUR, &
+                ZZEGR, XBR, XCG, XDG, 0., XCR, XDR, 0.,                      &
                 XDRYLBDAG_MAX, XDRYLBDAR_MAX, XDRYLBDAG_MIN, XDRYLBDAR_MIN, &
-                ZFDINFTY, XKER_RDRYG                                        )
+                ZZFDINFTY, XKER_RDRYG                                        )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF RDRYG KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAG=",I3)') NDRYLBDAG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAR=",I3)') NDRYLBDAR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAG=",E13.6)') XALPHAG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUG=",E13.6)') XNUG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAR=",E13.6)') XALPHAR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUR=",E13.6)') XNUR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PEGR=",E13.6)') ZEGR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBR=",E13.6)') XBR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCG=",E13.6)') XCG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDG=",E13.6)') XDG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCR=",E13.6)') XCR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDR=",E13.6)') XDR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IKND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IDRYLBDAG=",I3)') NDRYLBDAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IDRYLBDAR=",I3)') NDRYLBDAR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAG=",E13.6)') XALPHAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUG=",E13.6)') XNUG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAR=",E13.6)') XALPHAR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUR=",E13.6)') XNUR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEGR=",E13.6)') ZZEGR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBR=",E13.6)') XBR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCG=",E13.6)') XCG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDG=",E13.6)') XDG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCR=",E13.6)') XCR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDR=",E13.6)') XDR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAG_MAX=",E13.6)') &
 !!$                                                    XDRYLBDAG_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAR_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAR_MAX=",E13.6)') &
 !!$                                                    XDRYLBDAR_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAG_MIN=",E13.6)') &
 !!$                                                    XDRYLBDAG_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAR_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAR_MIN=",E13.6)') &
 !!$                                                    XDRYLBDAR_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RDRYG) ) THEN")')
-!!$  DO J1 = 1 , NDRYLBDAG
+!!$  DO I1 = 1 , NDRYLBDAG
 !!$    DO J2 = 1 , NDRYLBDAR
 !!$    WRITE(UNIT=ILUOUT0,FMT='("PKER_RDRYG(",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_RDRYG(J1,J2)
+!!$                        I1,J2,XKER_RDRYG(I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
-  CALL LIMA_READ_XKER_RDRYG (KDRYLBDAG,KDRYLBDAR,KND,                                 &
-                             PALPHAG,PNUG,PALPHAR,PNUR,PEGR,PBR,PCG,PDG,PCR,PDR,      &
-                             PDRYLBDAG_MAX,PDRYLBDAR_MAX,PDRYLBDAG_MIN,PDRYLBDAR_MIN, &
-                             PFDINFTY,XKER_RDRYG                                      )
+  CALL LIMA_READ_XKER_RDRYG (IDRYLBDAG,IDRYLBDAR,IKND,                                 &
+                             ZALPHAG,ZNUG,ZALPHAR,ZNUR,ZEGR,ZBR,ZCG,ZDG,ZCR,ZDR,      &
+                             ZDRYLBDAG_MAX,ZDRYLBDAR_MAX,ZDRYLBDAG_MIN,ZDRYLBDAR_MIN, &
+                             ZFDINFTY,XKER_RDRYG                                      )
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_RDRYG")')
 END IF
 !  
@@ -1615,166 +1896,174 @@ XWETINTP2H = 1.0 - LOG( PARAM_LIMA_MIXED%XWETLBDAH_MIN ) / ZRATE
 !*       9.2.4  Computations of the tabulated normalized kernels
 !
 IND      = 50    ! Interval number, collection efficiency and infinite diameter
-ZEHS     = 1.0   ! factor used to integrate the dimensional distributions when
-ZFDINFTY = 20.0  ! computing the kernels XKER_SWETH
+ZZEHS     = 1.0   ! factor used to integrate the dimensional distributions when
+ZZFDINFTY = 20.0  ! computing the kernels XKER_SWETH
 !
 !if ( NMOM_S.GE.2 ) then
   IF( .NOT.ASSOCIATED(XKER_N_SWETH) ) CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_SWETH', NWETLBDAH,NWETLBDAS)
-  CALL NZCOLX ( IND, XALPHAH, XNUH, XALPHAS, XNUS,                          &  
-              ZEHS, XCH, XDH, 0., XCS, XDS, XFVELOS,                       &  ! 
+IF (NMOM_S.GE.2) THEN
+  CALL NZCOLX ( NWETLBDAH,NWETLBDAS,IND, XALPHAH, XNUH, XALPHAS, XNUS,     &  
+              ZZEHS, XCH, XDH, 0., XCS, XDS, XFVELOS,                       &  ! 
               XWETLBDAH_MAX, XWETLBDAS_MAX, XWETLBDAH_MIN, XWETLBDAS_MIN, &  ! 
-              ZFDINFTY, XKER_N_SWETH                                        )
+              ZZFDINFTY, XKER_N_SWETH                                        )
+ELSE
+   XKER_N_SWETH(:,:)=0.
+END IF
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SWETH) ) THEN")')          
-!!$  DO J1 = 1 , NWETLBDAH                                                    
+!!$  DO I1 = 1 , NWETLBDAH                                                    
 !!$    DO J2 = 1 , NWETLBDAS                                                  
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SWETH(",I3,",",I3,") = ",E13.6)') &
-!!$                      J1,J2,XKER_N_SWETH(J1,J2)                          
+!!$                      I1,J2,XKER_N_SWETH(I1,J2)                          
 !!$    END DO                                                                
 !!$  END DO                                                                   
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !end  if
 IF( .NOT.ASSOCIATED(XKER_SWETH) ) CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_SWETH', NWETLBDAH,NWETLBDAS)
 !
-CALL LIMA_READ_XKER_SWETH (KWETLBDAH,KWETLBDAS,KND,                                    &
-                           PALPHAH,PNUH,PALPHAS,PNUS,PEHS,PBS,PCH,PDH,PCS,PDS,PFVELOS, &
-                           PWETLBDAH_MAX,PWETLBDAS_MAX,PWETLBDAH_MIN,PWETLBDAS_MIN,    &
-                           PFDINFTY                                                    )
-IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAS/=NWETLBDAS) .OR. (KND/=IND) .OR. &
-    (PALPHAH/=XALPHAH) .OR. (PNUH/=XNUH)                               .OR. &
-    (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
-    (PEHS/=ZEHS) .OR. (PBS/=XBS)                                       .OR. &
-    (PCH/=XCH) .OR. (PDH/=XDH) .OR. (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. &
-    (PWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (PWETLBDAS_MAX/=XWETLBDAS_MAX) .OR. &
-    (PWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (PWETLBDAS_MIN/=XWETLBDAS_MIN) .OR. &
-    (PFDINFTY/=ZFDINFTY)                                               ) THEN
-  CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAS, XNUS,                          &
-                ZEHS, XBS, XCH, XDH, 0., XCS, XDS, XFVELOS,                 &
+CALL LIMA_READ_XKER_SWETH (IWETLBDAH,IWETLBDAS,IKND,                                    &
+                           ZALPHAH,ZNUH,ZALPHAS,ZNUS,ZEHS,ZBS,ZCH,ZDH,ZCS,ZDS,ZFVELOS, &
+                           ZWETLBDAH_MAX,ZWETLBDAS_MAX,ZWETLBDAH_MIN,ZWETLBDAS_MIN,    &
+                           ZFDINFTY                                                    )
+IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAS/=NWETLBDAS) .OR. (IKND/=IND) .OR. &
+    (ZALPHAH/=XALPHAH) .OR. (ZNUH/=XNUH)                               .OR. &
+    (ZALPHAS/=XALPHAS) .OR. (ZNUS/=XNUS)                               .OR. &
+    (ZEHS/=ZZEHS) .OR. (ZBS/=XBS)                                       .OR. &
+    (ZCH/=XCH) .OR. (ZDH/=XDH) .OR. (ZCS/=XCS) .OR. (ZDS/=XDS) .OR. (ZFVELOS/=XFVELOS) .OR. &
+    (ZWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (ABS(ZWETLBDAS_MAX-XWETLBDAS_MAX).GE.(0.001*ZWETLBDAS_MAX)) .OR. &
+    (ZWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (ABS(ZWETLBDAS_MIN-XWETLBDAS_MIN).GE.(0.001*ZWETLBDAS_MIN)) .OR. &
+    (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
+  CALL LIMA_RZCOLX ( IWETLBDAH, IWETLBDAS, IND, XALPHAH, XNUH, XALPHAS, XNUS, &
+                ZZEHS, XBS, XCH, XDH, 0., XCS, XDS, XFVELOS,                 &
                 XWETLBDAH_MAX, XWETLBDAS_MAX, XWETLBDAH_MIN, XWETLBDAS_MIN, &
-                ZFDINFTY, XKER_SWETH                                        )
+                ZZFDINFTY, XKER_SWETH                                        )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SWETH KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAH=",I3)') NWETLBDAH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAS=",I3)') NWETLBDAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAH=",E13.6)') XALPHAH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUH=",E13.6)') XNUH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PEHS=",E13.6)') ZEHS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCH=",E13.6)') XCH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDH=",E13.6)') XDH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFVELOS=",E13.6)') XFVELOS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IKND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IWETLBDAH=",I3)') NWETLBDAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IWETLBDAS=",I3)') NWETLBDAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAH=",E13.6)') XALPHAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUH=",E13.6)') XNUH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAS=",E13.6)') XALPHAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUS=",E13.6)') XNUS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEHS=",E13.6)') ZZEHS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBS=",E13.6)') XBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCH=",E13.6)') XCH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDH=",E13.6)') XDH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCS=",E13.6)') XCS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDS=",E13.6)') XDS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFVELOS=",E13.6)') XFVELOS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAH_MAX=",E13.6)') &
 !!$                                                    XWETLBDAH_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAS_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAS_MAX=",E13.6)') &
 !!$                                                    XWETLBDAS_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAH_MIN=",E13.6)') &
 !!$                                                    XWETLBDAH_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAS_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAS_MIN=",E13.6)') &
 !!$                                                    XWETLBDAS_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SWETH) ) THEN")')
-!!$  DO J1 = 1 , NWETLBDAH
+!!$  DO I1 = 1 , NWETLBDAH
 !!$    DO J2 = 1 , NWETLBDAS
 !!$    WRITE(UNIT=ILUOUT0,FMT='("PKER_SWETH(",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_SWETH(J1,J2)
+!!$                        I1,J2,XKER_SWETH(I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
-  CALL LIMA_READ_XKER_SWETH (KWETLBDAH,KWETLBDAS,KND,                                    &
-                             PALPHAH,PNUH,PALPHAS,PNUS,PEHS,PBS,PCH,PDH,PCS,PDS,PFVELOS, &
-                             PWETLBDAH_MAX,PWETLBDAS_MAX,PWETLBDAH_MIN,PWETLBDAS_MIN,    &
-                             PFDINFTY,XKER_SWETH                                         )
+  CALL LIMA_READ_XKER_SWETH (IWETLBDAH,IWETLBDAS,IKND,                                    &
+                             ZALPHAH,ZNUH,ZALPHAS,ZNUS,ZEHS,ZBS,ZCH,ZDH,ZCS,ZDS,ZFVELOS, &
+                             ZWETLBDAH_MAX,ZWETLBDAS_MAX,ZWETLBDAH_MIN,ZWETLBDAS_MIN,    &
+                             ZFDINFTY,XKER_SWETH                                         )
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_SWETH")')
 END IF
 !
 !
 IND      = 50    ! Number of interval used to integrate the dimensional
-ZEHG     = 1.0   ! distributions when computing the kernel XKER_GWETH
-ZFDINFTY = 20.0
+ZZEHG     = 1.0   ! distributions when computing the kernel XKER_GWETH
+ZZFDINFTY = 20.0
 !
 !if ( NMOM_G.GE.2 ) then
   IF( .NOT.ASSOCIATED(XKER_N_GWETH) ) CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_GWETH', NWETLBDAH,NWETLBDAG)
-  CALL NZCOLX ( IND, XALPHAH, XNUH, XALPHAG, XNUG,                          & 
-              ZEHG, XCH, XDH, 0., XCG, XDG, 0.,                            & 
+IF (NMOM_G.GE.2) THEN
+  CALL NZCOLX ( NWETLBDAH,NWETLBDAG,IND, XALPHAH, XNUH, XALPHAG, XNUG,   & 
+              ZZEHG, XCH, XDH, 0., XCG, XDG, 0.,                            & 
               XWETLBDAH_MAX, XWETLBDAG_MAX, XWETLBDAH_MIN, XWETLBDAG_MIN, & 
-              ZFDINFTY, XKER_N_GWETH                                      )
+              ZZFDINFTY, XKER_N_GWETH                                      )
+ELSE
+   XKER_N_GWETH(:,:)=0.
+END IF
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_GWETH) ) THEN")')          
-!!$  DO J1 = 1 , NWETLBDAH                                                    
+!!$  DO I1 = 1 , NWETLBDAH                                                    
 !!$    DO J2 = 1 , NWETLBDAG                                                  
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_GWETH(",I3,",",I3,") = ",E13.6)') &
-!!$                      J1,J2,XKER_N_GWETH(J1,J2)                          
+!!$                      I1,J2,XKER_N_GWETH(I1,J2)                          
 !!$    END DO                                                                
 !!$  END DO                                                                   
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !end if
 IF( .NOT.ASSOCIATED(XKER_GWETH) ) CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_GWETH', NWETLBDAH,NWETLBDAG)
 !
-CALL LIMA_READ_XKER_GWETH (KWETLBDAH,KWETLBDAG,KND,                                 &
-                           PALPHAH,PNUH,PALPHAG,PNUG,PEHG,PBG,PCH,PDH,PCG,PDG,      &
-                           PWETLBDAH_MAX,PWETLBDAG_MAX,PWETLBDAH_MIN,PWETLBDAG_MIN, &
-                           PFDINFTY                                                 )
-IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAG/=NWETLBDAG) .OR. (KND/=IND) .OR. &
-    (PALPHAH/=XALPHAH) .OR. (PNUH/=XNUH)                               .OR. &
-    (PALPHAG/=XALPHAG) .OR. (PNUG/=XNUG)                               .OR. &
-    (PEHG/=ZEHG) .OR. (PBG/=XBG)                                       .OR. &
-    (PCH/=XCH) .OR. (PDH/=XDH) .OR. (PCG/=XCG) .OR. (PDG/=XDG)         .OR. &
-    (PWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (PWETLBDAG_MAX/=XWETLBDAG_MAX) .OR. &
-    (PWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (PWETLBDAG_MIN/=XWETLBDAG_MIN) .OR. &
-    (PFDINFTY/=ZFDINFTY)                                               ) THEN
-  CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAG, XNUG,                          &
-                ZEHG, XBG, XCH, XDH, 0., XCG, XDG, 0.,                      &
+CALL LIMA_READ_XKER_GWETH (IWETLBDAH,IWETLBDAG,IKND,                                 &
+                           ZALPHAH,ZNUH,ZALPHAG,ZNUG,ZEHG,ZBG,ZCH,ZDH,ZCG,ZDG,      &
+                           ZWETLBDAH_MAX,ZWETLBDAG_MAX,ZWETLBDAH_MIN,ZWETLBDAG_MIN, &
+                           ZFDINFTY                                                 )
+IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAG/=NWETLBDAG) .OR. (IKND/=IND) .OR. &
+    (ZALPHAH/=XALPHAH) .OR. (ZNUH/=XNUH)                               .OR. &
+    (ZALPHAG/=XALPHAG) .OR. (ZNUG/=XNUG)                               .OR. &
+    (ZEHG/=ZZEHG) .OR. (ZBG/=XBG)                                       .OR. &
+    (ZCH/=XCH) .OR. (ZDH/=XDH) .OR. (ZCG/=XCG) .OR. (ZDG/=XDG)         .OR. &
+    (ZWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (ZWETLBDAG_MAX/=XWETLBDAG_MAX) .OR. &
+    (ZWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (ZWETLBDAG_MIN/=XWETLBDAG_MIN) .OR. &
+    (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
+  CALL LIMA_RZCOLX ( IWETLBDAH, IWETLBDAG, IND, XALPHAH, XNUH, XALPHAG, XNUG, &
+                ZZEHG, XBG, XCH, XDH, 0., XCG, XDG, 0.,                      &
                 XWETLBDAH_MAX, XWETLBDAG_MAX, XWETLBDAH_MIN, XWETLBDAG_MIN, &
-                ZFDINFTY, XKER_GWETH                                        )
+                ZZFDINFTY, XKER_GWETH                                        )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF GWETH KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAH=",I3)') NWETLBDAH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAG=",I3)') NWETLBDAG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAH=",E13.6)') XALPHAH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUH=",E13.6)') XNUH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAG=",E13.6)') XALPHAG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUG=",E13.6)') XNUG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PEHG=",E13.6)') ZEHG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBG=",E13.6)') XBG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCH=",E13.6)') XCH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDH=",E13.6)') XDH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCG=",E13.6)') XCG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDG=",E13.6)') XDG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IKND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IWETLBDAH=",I3)') NWETLBDAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IWETLBDAG=",I3)') NWETLBDAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAH=",E13.6)') XALPHAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUH=",E13.6)') XNUH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAG=",E13.6)') XALPHAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUG=",E13.6)') XNUG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEHG=",E13.6)') ZZEHG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBG=",E13.6)') XBG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCH=",E13.6)') XCH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDH=",E13.6)') XDH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCG=",E13.6)') XCG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDG=",E13.6)') XDG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAH_MAX=",E13.6)') &
 !!$                                                    XWETLBDAH_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAG_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAG_MAX=",E13.6)') &
 !!$                                                    XWETLBDAG_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAH_MIN=",E13.6)') &
 !!$                                                    XWETLBDAH_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAG_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAG_MIN=",E13.6)') &
 !!$                                                    XWETLBDAG_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_GWETH) ) THEN")')
-!!$  DO J1 = 1 , NWETLBDAH
+!!$  DO I1 = 1 , NWETLBDAH
 !!$    DO J2 = 1 , NWETLBDAG
 !!$    WRITE(UNIT=ILUOUT0,FMT='("PKER_GWETH(",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_GWETH(J1,J2)
+!!$                        I1,J2,XKER_GWETH(I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
-  CALL LIMA_READ_XKER_GWETH (KWETLBDAH,KWETLBDAG,KND,                                 &
-                             PALPHAH,PNUH,PALPHAG,PNUG,PEHG,PBG,PCH,PDH,PCG,PDG,      &
-                             PWETLBDAH_MAX,PWETLBDAG_MAX,PWETLBDAH_MIN,PWETLBDAG_MIN, &
-                             PFDINFTY,XKER_GWETH                                      )
+  CALL LIMA_READ_XKER_GWETH (IWETLBDAH,IWETLBDAG,IKND,                                 &
+                             ZALPHAH,ZNUH,ZALPHAG,ZNUG,ZEHG,ZBG,ZCH,ZDH,ZCG,ZDG,      &
+                             ZWETLBDAH_MAX,ZWETLBDAG_MAX,ZWETLBDAH_MIN,ZWETLBDAG_MIN, &
+                             ZFDINFTY,XKER_GWETH                                      )
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_GWETH")')
 END IF
 !
@@ -1791,6 +2080,12 @@ END IF
 XFREFFI = 0.5 * ZGAMI(8) * (1.0/XLBI)**XLBEXI
 !  
 !-------------------------------------------------------------------------------
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XFREFFI_SHAPE', NNB_CRYSTAL_SHAPE)
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    XFREFFI_SHAPE(ISH) = 0.5 * ZGAMI(8) * (1.0/XLBI_SHAPE(ISH))**XLBEXI_SHAPE(ISH)
+  END DO
+END IF
 !
 !
 !*      11.     SOME PRINTS FOR CONTROL
@@ -1829,6 +2124,7 @@ XFREFFI = 0.5 * ZGAMI(8) * (1.0/XLBI)**XLBEXI
 !
 !------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('INI_LIMA_COLD_MIXED', 1, ZHOOK_HANDLE)
 END SUBROUTINE INI_LIMA_COLD_MIXED
 !
 END MODULE MODE_INI_LIMA_COLD_MIXED

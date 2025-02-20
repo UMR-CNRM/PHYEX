@@ -7,7 +7,7 @@ MODULE MODE_NSCOLRG
   IMPLICIT NONE
 CONTAINS
 !     ########################################################################
-  SUBROUTINE NSCOLRG( KND, PALPHAS, PZNUS, PALPHAR, PNUR,                 &
+  SUBROUTINE NSCOLRG( KSIZE1, KSIZE2, KND, PALPHAS, PZNUS, PALPHAR, PNUR, &
                       PESR, PFALLS, PEXFALLS, PFALLEXPS, PFALLR, PEXFALLR,&
                       PLBDASMAX, PLBDARMAX, PLBDASMIN, PLBDARMIN,         &
                       PDINFTY, PNSCOLRG,PAG, PBS, PAS                     )
@@ -85,8 +85,8 @@ CONTAINS
 !
 USE MODI_GENERAL_GAMMA
 !
-USE MODD_CST
-USE MODD_RAIN_ICE_DESCR_n
+USE MODD_CST, ONLY:XPI, XRHOLW
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -94,6 +94,8 @@ IMPLICIT NONE
 !              ------------------------------- 
 !
 !
+INTEGER, INTENT(IN) :: KSIZE1 !
+INTEGER, INTENT(IN) :: KSIZE2 ! 
 INTEGER, INTENT(IN) :: KND    ! Number of discrete size intervals in DS and DR  
 !
 REAL, INTENT(IN) :: PALPHAS   ! First shape parameter of the aggregates 
@@ -118,9 +120,9 @@ REAL, INTENT(IN) :: PDINFTY   ! Factor to define the largest diameter up to
                               ! which the diameter integration is performed
 REAL, INTENT(IN) :: PAG, PBS, PAS
 !
-REAL, DIMENSION(:,:), INTENT(INOUT) :: PNSCOLRG! Scaled fall speed difference in
-                                               ! the mass collection kernel as a
-                                               ! function of LAMBDAX and LAMBDAZ
+REAL, DIMENSION(KSIZE1,KSIZE2), INTENT(OUT) :: PNSCOLRG! Scaled fall speed difference in
+                                             ! the mass collection kernel as a
+                                             ! function of LAMBDAX and LAMBDAZ
 !
 !
 !*       0.2   Declarations of local variables
@@ -155,6 +157,7 @@ REAL :: ZSCALR  ! Single integral of the scaling factor over
 REAL :: ZSCALSR ! Double integral of the scaling factor over
                 ! the spectra of the aggregates and rain 
 REAL :: ZFUNC   ! Ancillary function
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 REAL :: ZCST1
 !
 !
@@ -168,6 +171,7 @@ REAL :: ZCST1
 !
 !*       1.0     Initialization
 !
+IF (LHOOK) CALL DR_HOOK('NSCOLRG', 0, ZHOOK_HANDLE)
 PNSCOLRG(:,:) = 0.0
 ZCST1  = (3.0/XPI)/XRHOLW
 !
@@ -268,5 +272,6 @@ DO JLBDAR = 1,SIZE(PNSCOLRG(:,:),1)
   END DO
 END DO
 !
+IF (LHOOK) CALL DR_HOOK('NSCOLRG', 1, ZHOOK_HANDLE)
 END SUBROUTINE NSCOLRG
 END MODULE MODE_NSCOLRG

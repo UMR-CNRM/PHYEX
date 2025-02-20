@@ -57,7 +57,7 @@ REAL,                             INTENT(IN)    :: PRTMIN
 REAL, DIMENSION(KSIZE),           INTENT(IN)    :: PRHO     ! reference density
 REAL, DIMENSION(KSIZE),           INTENT(IN)    :: PQX      ! Electric charge
 REAL, DIMENSION(KSIZE),           INTENT(IN)    :: PRX      ! Mixing ratio
-REAL, DIMENSION(KSIZE),           INTENT(INOUT) :: PEX      ! e coef of the q-D relation
+REAL, DIMENSION(KSIZE),           INTENT(OUT)   :: PEX      ! e coef of the q-D relation
 REAL, DIMENSION(KSIZE), OPTIONAL, INTENT(IN)    :: PLBDX    ! Slope parameter of the distribution
 REAL, DIMENSION(KSIZE), OPTIONAL, INTENT(IN)    :: PCX      ! Nb concentration
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme

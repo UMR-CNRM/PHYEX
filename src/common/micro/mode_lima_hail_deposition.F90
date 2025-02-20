@@ -7,7 +7,7 @@ MODULE MODE_LIMA_HAIL_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################
-  SUBROUTINE LIMA_HAIL_DEPOSITION (LDCOMPUTE, PRHODREF,                        &
+  SUBROUTINE LIMA_HAIL_DEPOSITION (LIMAP, LIMAM, KSIZE, ODCOMPUTE, PRHODREF,                 &
                                    PRHT, PCHT, PSSI, PLBDH, PAI, PCJ, PLSFACT, &
                                    P_TH_DEPH, P_RH_DEPH                        )
 !     ###########################################################################
@@ -34,27 +34,32 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN
-USE MODD_PARAM_LIMA_MIXED, ONLY : X0DEPH, XEX0DEPH, X1DEPH, XEX1DEPH
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! 
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF ! 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHT     ! hail mr
-REAL, DIMENSION(:),   INTENT(IN)    :: PCHT     ! hail conc
-REAL, DIMENSION(:),   INTENT(IN)    :: PSSI     ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDH    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PAI      ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PCJ      ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT  ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHT     ! hail mr
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCHT     ! hail conc
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PSSI     ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDH    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PAI      ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ      ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  ! 
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_DEPH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RH_DEPH
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_DEPH
+TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RH_DEPH
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
@@ -62,16 +67,18 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: P_RH_DEPH
 !*       1.     Deposition of vapour on graupel
 !               -------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_HAIL_DEPOSITION', 0, ZHOOK_HANDLE)
 P_TH_DEPH(:) = 0.0
 P_RH_DEPH(:) = 0.0
-WHERE ( PRHT(:)>XRTMIN(7) .AND. PCHT(:)>XCTMIN(7) .AND. LDCOMPUTE(:) )
+WHERE ( PRHT(:)>LIMAP%XRTMIN(7) .AND. PCHT(:)>LIMAP%XCTMIN(7) .AND. ODCOMPUTE(:) )
    P_RH_DEPH(:) = PSSI(:) / PAI(:) * PCHT(:) *                      &
-                ( X0DEPH*PLBDH(:)**XEX0DEPH + X1DEPH*PCJ(:)*PLBDH(:)**XEX1DEPH )
+                ( LIMAM%X0DEPH*PLBDH(:)**LIMAM%XEX0DEPH + LIMAM%X1DEPH*PCJ(:)*PLBDH(:)**LIMAM%XEX1DEPH )
    P_TH_DEPH(:) = P_RH_DEPH(:)*PLSFACT(:)
 END WHERE
 !
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_HAIL_DEPOSITION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_HAIL_DEPOSITION
 END MODULE MODE_LIMA_HAIL_DEPOSITION

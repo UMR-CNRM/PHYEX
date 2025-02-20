@@ -107,7 +107,15 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             copyList.append('D%NIEC=NIT')
             copyList.append('D%NJEC=1')
             argList2.append('D')
-        elif vartype in ['TYPE(CST_T)', 'TYPE(ELEC_PARAM_T)', 'TYPE(ELEC_DESCR_T)']:
+        elif vartype in ['TYPE(NSV_T)',]:
+            moduleList.append('USE MODD_' + vartype[5:-3] + ', ONLY: T' + vartype[5:-3])
+            declList.append('INTEGER, INTENT(IN) :: NSV')
+            argList1.append(('NSV', 'INTEGER', False, 'IN', None))
+            docstringIN.append(f"    NSV (IN) to replace the FORTRAN TNSV structure")
+            copyList.append('TNSV%NSV=NSV')
+            argList2.append('T'+vartype[5:-3])
+        elif vartype in ['TYPE(CST_T)', 'TYPE(ELEC_PARAM_T)', 'TYPE(ELEC_DESCR_T)',
+                         'TYPE(PARAM_LIMA_T)','TYPE(PARAM_LIMA_WARM_T)','TYPE(PARAM_LIMA_COLD_T)','TYPE(PARAM_LIMA_MIXED_T)',]:
             moduleList.append('USE MODD_' + vartype[5:-3] + ', ONLY: ' + vartype[5:-3])
             argList2.append(vartype[5:-3])
         elif vartype in ['TYPE(NEB_T)', 'TYPE(RAIN_ICE_PARAM_T)', 'TYPE(PARAM_ICE_T)',
@@ -239,6 +247,8 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                     d[1] = 'NKT'
                 elif 'KSV' in d[1]:
                     d[1] = 'KSV'
+                elif 'NSV' in d[1]:
+                    d[1] = 'NSV'
             declList.append(pftin.varSpec2stmt(replvar))
             if vartype.startswith('LOGICAL'):
                 declList.append(pftin.varSpec2stmt(localvar))
@@ -247,11 +257,11 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                 extra.append('JPSVMAX')
                 moduleList.append('USE MODD_PARAMETERS, ONLY: JPSVMAX')
                 moduleListHelper.append('USE MODD_PARAMETERS, ONLY: JPSVMAX')
-            if 'NSV' not in extra and \
-               'NSV' in [elem for d in var['as'] for di in d for elem in findcomponents(di)]:
-                extra.append('NSV')
-                moduleList.append('USE MODD_NSV, ONLY: NSV')
-                moduleListHelper.append('USE MODD_NSV, ONLY: NSV')
+            #if 'NSV' not in extra and \
+            #   'NSV' in [elem for d in var['as'] for di in d for elem in findcomponents(di)]:
+            #    extra.append('NSV')
+            #    moduleList.append('USE MODD_NSV, ONLY: NSV')
+            #    moduleListHelper.append('USE MODD_NSV, ONLY: NSV')
             for vv in ('NSP', 'NCARB', 'NSOA'):
                 if vv not in extra and \
                    vv in [elem for d in var['as'] for di in d for elem in findcomponents(di)]:

@@ -53,10 +53,6 @@ REAL :: XCOEF_RQ_V, XCOEF_RQ_C, &   ! Constants for proportionality
 !
 REAL :: XQHON    ! Constant for spontaneous freezing of droplets if T<-35°
 !
-REAL, DIMENSION(:), ALLOCATABLE :: XFQSED  ! Constant for sedimentation of 
-                                           ! electric charge in LIMA
-REAL, DIMENSION(:), ALLOCATABLE :: XDQ     ! Exponent for sedimentation of
-                                           ! electric charge in LIMA
 REAL :: XFQUPDNCI ! constant used to update e_i for sedimentation where
                   ! N_i follows McFarquhar and Heysmfield (1997)
 !
@@ -182,9 +178,15 @@ TYPE ELEC_PARAM_t
   !
   REAL :: XFQUPDC, XFQUPDR, XFQUPDI,&         ! Update Q=f(D)
           XEXFQUPDI, XFQUPDS, XFQUPDG, XFQUPDH
+  !
+  REAL, DIMENSION(7) :: XFQSED  ! Constant for sedimentation of 
+                                             ! electric charge in LIMA
+  REAL, DIMENSION(7) :: XDQ     ! Exponent for sedimentation of
+                                             ! electric charge in LIMA
+
 END TYPE ELEC_PARAM_t
 !
-TYPE(ELEC_PARAM_t), SAVE, TARGET :: ELEC_PARAM
+TYPE(ELEC_PARAM_t), TARGET :: ELEC_PARAM
 !
 REAL, POINTER :: XFCI => NULL(),     &
                  XFQSEDC => NULL(),  &
@@ -218,6 +220,9 @@ REAL, POINTER :: XFCI => NULL(),     &
                  XFQUPDS => NULL(),  &
                  XFQUPDG => NULL(),  &
                  XFQUPDH => NULL()
+
+REAL, DIMENSION(:), POINTER :: XFQSED => NULL(),&
+                               XDQ => NULL()
 !
 CONTAINS
 !
@@ -256,6 +261,8 @@ SUBROUTINE ELEC_PARAM_ASSOCIATE()
   XFQUPDS => ELEC_PARAM%XFQUPDS
   XFQUPDG => ELEC_PARAM%XFQUPDG
   XFQUPDH => ELEC_PARAM%XFQUPDH
+  XFQSED => ELEC_PARAM%XFQSED
+  XDQ => ELEC_PARAM%XDQ
 END SUBROUTINE ELEC_PARAM_ASSOCIATE
 !
 END MODULE MODD_ELEC_PARAM

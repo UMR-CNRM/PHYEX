@@ -46,6 +46,7 @@ USE MODD_PARAMETERS
 USE MODE_LIMA_FUNCTIONS, ONLY: MOMG
 USE MODI_HYPGEO
 USE MODI_GAMMA
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -58,8 +59,8 @@ REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 !
 INTEGER :: IKB                ! Coordinates of the first and last physical 
                               ! points along z
-INTEGER :: J1                 ! Internal loop indexes
-INTEGER :: JMOD               ! Internal loop to index the CCN modes
+INTEGER :: I1                 ! Internal loop indexes
+INTEGER :: IMOD               ! Internal loop to index the CCN modes
 !
 REAL, DIMENSION(6)  :: ZGAMC, ZGAMR ! parameters involving various moments of
                               ! the generalized gamma law
@@ -72,6 +73,7 @@ REAL :: ZRHO00                ! Surface reference air density
 REAL :: ZSURF_TEN             ! Water drop surface tension
 REAL :: ZSMIN, ZSMAX          ! Minimal and maximal supersaturation used to
                               ! discretize the HYP functions
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 !INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
@@ -81,6 +83,7 @@ REAL :: ZSMIN, ZSMAX          ! Minimal and maximal supersaturation used to
 !  
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('INI_LIMA_WARM', 0, ZHOOK_HANDLE)
 CALL PARAM_LIMA_WARM_ASSOCIATE()
 !
 !*       1.     CHARACTERISTICS OF THE SPECIES
@@ -203,6 +206,7 @@ XD(3)     = XDR
 XFSEDR(3) = XFSEDRR
 XFSEDC(3) = XFSEDCR
 !
+XGCC      = 0.5*GAMMA_X0D(XNUC+1./XALPHAC)/GAMMA_X0D(XNUC)
 !------------------------------------------------------------------------------
 !
 !
@@ -247,13 +251,13 @@ ZSMAX = 5.0E-2  ! Maximum supersaturation set at 5 %
 XHYPINTP1 = REAL(NHYP-1)/LOG(ZSMAX/ZSMIN)
 XHYPINTP2 = REAL(NHYP)-XHYPINTP1*LOG(ZSMAX)
 !
-DO JMOD = 1,NMOD_CCN 
-   DO J1 = 1,NHYP
-      ZSS =ZSMAX*(ZSMIN/ZSMAX)**(REAL(NHYP-J1)/REAL(NHYP-1))
-      XHYPF12(J1,JMOD) = HYPGEO(XMUHEN_MULTI(JMOD),0.5*XKHEN_MULTI(JMOD),&
-                                0.5*XKHEN_MULTI(JMOD)+1.0,XBETAHEN_MULTI(JMOD),ZSS)
-      XHYPF32(J1,JMOD) = HYPGEO(XMUHEN_MULTI(JMOD),0.5*XKHEN_MULTI(JMOD),&
-                                0.5*XKHEN_MULTI(JMOD)+1.5,XBETAHEN_MULTI(JMOD),ZSS)
+DO IMOD = 1,NMOD_CCN 
+   DO I1 = 1,NHYP
+      ZSS =ZSMAX*(ZSMIN/ZSMAX)**(REAL(NHYP-I1)/REAL(NHYP-1))
+      XHYPF12(I1,IMOD) = HYPGEO(XMUHEN_MULTI(IMOD),0.5*XKHEN_MULTI(IMOD),&
+                                0.5*XKHEN_MULTI(IMOD)+1.0,XBETAHEN_MULTI(IMOD),ZSS)
+      XHYPF32(I1,IMOD) = HYPGEO(XMUHEN_MULTI(IMOD),0.5*XKHEN_MULTI(IMOD),&
+                                0.5*XKHEN_MULTI(IMOD)+1.5,XBETAHEN_MULTI(IMOD),ZSS)
    END DO
 ENDDO
 !
@@ -281,17 +285,17 @@ CALL PARAM_LIMA_WARM_ALLOCATE('XAHENG3', NAHEN)
 CALL PARAM_LIMA_WARM_ALLOCATE('XPSI1', NAHEN)
 CALL PARAM_LIMA_WARM_ALLOCATE('XPSI3', NAHEN)
 XCSTHEN = 1.0 / ( XRHOLW*2.0*XPI )
-DO J1 = 1,NAHEN
-   ZTT = XTT + REAL(J1-(NAHEN-1)/2)                                          ! T
+DO I1 = 1,NAHEN
+   ZTT = XTT + REAL(I1-(NAHEN-1)/2)                                          ! T
    ZLV = XLVTT+(XCPV-XCL)*(ZTT-XTT)                                          ! Lv
-   XPSI1(J1) = (XG/(XRD*ZTT))*(XMV*ZLV/(XMD*XCPD*ZTT)-1.)                    ! Psi1
-   XPSI3(J1) = -1*XMV*ZLV/(XMD*XRD*(ZTT**2))                                 ! Psi3
+   XPSI1(I1) = (XG/(XRD*ZTT))*(XMV*ZLV/(XMD*XCPD*ZTT)-1.)                    ! Psi1
+   XPSI3(I1) = -1*XMV*ZLV/(XMD*XRD*(ZTT**2))                                 ! Psi3
    ZG    = 1./( XRHOLW*( (XRV*ZTT)/                                        & ! G
                          (XDIVA*EXP(XALPW-(XBETAW/ZTT)-(XGAMW*ALOG(ZTT)))) &
                        + (ZLV/ZTT)**2/(XTHCO*XRV) ) )              
-   XAHENG(J1) = XCSTHEN/(ZG)**(3./2.)
-   XAHENG2(J1) = 1/(ZG)**(1./2.) * GAMMA_X0D(XNUC+1./XALPHAC)/GAMMA_X0D(XNUC)
-   XAHENG3(J1) = (ZG) * GAMMA_X0D(XNUC+1./XALPHAC)/GAMMA_X0D(XNUC)
+   XAHENG(I1) = XCSTHEN/(ZG)**(3./2.)
+   XAHENG2(I1) = 1/(ZG)**(1./2.) * GAMMA_X0D(XNUC+1./XALPHAC)/GAMMA_X0D(XNUC)
+   XAHENG3(I1) = (ZG) * GAMMA_X0D(XNUC+1./XALPHAC)/GAMMA_X0D(XNUC)
 END DO
 !-------------------------------------------------------------------------------
 !
@@ -464,6 +468,7 @@ XCRER = 1.0/ (ZGAMR(6) * XAR**(2.0/3.0))
 !
 !------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('INI_LIMA_WARM', 1, ZHOOK_HANDLE)
 END SUBROUTINE INI_LIMA_WARM
 !
 END MODULE MODE_INI_LIMA_WARM

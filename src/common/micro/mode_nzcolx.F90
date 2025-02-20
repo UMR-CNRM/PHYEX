@@ -7,7 +7,7 @@ MODULE MODE_NZCOLX
   IMPLICIT NONE
 CONTAINS
 !     ################################################################
-  SUBROUTINE NZCOLX( KND, PALPHAX, PNUX, PALPHAZ, PNUZ,          &
+  SUBROUTINE NZCOLX( KSIZE1, KSIZE2, KND, PALPHAX, PNUX, PALPHAZ, PNUZ, &
                      PEXZ, PFALLX, PEXFALLX, PFALLEXPX,          &
                      PFALLZ, PEXFALLZ, PFALLEXPZ,                &
                      PLBDAXMAX, PLBDAZMAX, PLBDAXMIN, PLBDAZMIN, &
@@ -89,6 +89,7 @@ CONTAINS
 !              ------------
 !
 USE MODI_GENERAL_GAMMA
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -97,6 +98,8 @@ IMPLICIT NONE
 !              ------------------------------- 
 !
 !
+INTEGER, INTENT(IN) :: KSIZE1 !  
+INTEGER, INTENT(IN) :: KSIZE2 !  
 INTEGER, INTENT(IN) :: KND    ! Number of discrete size intervals in DX and DZ  
 !
 !
@@ -122,9 +125,9 @@ REAL, INTENT(IN) :: PLBDAZMIN ! Minimun slope of size distribution of specy Z
 REAL, INTENT(IN) :: PDINFTY   ! Factor to define the largest diameter up to
                               ! which the diameter integration is performed
 !
-REAL, DIMENSION(:,:), INTENT(INOUT) :: PNZCOLX ! Scaled fall speed difference in
-                                               ! the mass collection kernel as a
-                                               ! function of LAMBDAX and LAMBDAZ
+REAL, DIMENSION(KSIZE1, KSIZE2), INTENT(OUT) :: PNZCOLX ! Scaled fall speed difference in
+                                             ! the mass collection kernel as a
+                                             ! function of LAMBDAX and LAMBDAZ
 !
 !
 !*       0.2   Declarations of local variables
@@ -154,6 +157,7 @@ REAL    :: ZSCALZ  ! Single integral of the scaling factor over
 REAL    :: ZSCALXZ ! Double integral of the scaling factor over
                    ! the spectra of specy X and specy Z
 REAL    :: ZFUNC   ! Ancillary function
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 !-------------------------------------------------------------------------------
@@ -164,9 +168,11 @@ REAL    :: ZFUNC   ! Ancillary function
 !                -------------------------------------------------
 !
 !
+PNZCOLX(:,:)=0.
 !
 !*       1.1     Compute the growth rate of the slope factors LAMBDA
 !
+IF (LHOOK) CALL DR_HOOK('NZCOLX', 0, ZHOOK_HANDLE)
 ZDLBDAX = EXP( LOG(PLBDAXMAX/PLBDAXMIN)/REAL(SIZE(PNZCOLX(:,:),1)-1) )
 ZDLBDAZ = EXP( LOG(PLBDAZMAX/PLBDAZMIN)/REAL(SIZE(PNZCOLX(:,:),2)-1) )
 !
@@ -228,5 +234,6 @@ DO JLBDAX = 1,SIZE(PNZCOLX(:,:),1)
   END DO
 END DO
 !
+IF (LHOOK) CALL DR_HOOK('NZCOLX', 1, ZHOOK_HANDLE)
 END SUBROUTINE NZCOLX
 END MODULE MODE_NZCOLX

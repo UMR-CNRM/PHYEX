@@ -433,6 +433,9 @@ DO JK=IKTB,IKTE
           ZSIGMA(JIJ,JK) = 2*PSIGS(JIJ,JK)
         ENDIF
       END IF
+      IF (NEBN%LCONDBORN) THEN
+        ZSIGMA(JIJ,JK)=MIN(ZSIGMA(JIJ,JK),ZRT(JIJ,JK)/2.) 
+      ENDIF
   ELSE
       ! parameterize Sigma_s with first_order closure
       DZZ(JIJ,JK)    =  PZZ(JIJ,JKPK(JK)) - PZZ(JIJ,JKMK(JK))
@@ -463,6 +466,9 @@ DO JK=IKTB,IKTE
       !Computation of condensate
       ZCOND(JIJ,JK) = (EXP(-ZGCOND(JIJ,JK)**2)-ZGCOND(JIJ,JK)*SQRT(CST%XPI)*ZGAUV(JIJ,JK))*ZSIGMA(JIJ,JK)/SQRT(2.*CST%XPI)
       ZCOND(JIJ,JK) = MAX(ZCOND(JIJ,JK), 0.)
+      IF (NEBN%LCONDBORN) THEN
+        ZCOND(JIJ,JK) = MIN(ZCOND(JIJ,JK),ZRT(JIJ,JK)-1.E-7)
+      ENDIF
 
       IF (ZCOND(JIJ,JK) < 1.E-12 .OR. PCLDFR(JIJ,JK) == 0.) THEN
         PCLDFR(JIJ,JK)=0.
@@ -520,6 +526,9 @@ DO JK=IKTB,IKTE
         ZCOND(JIJ,JK) = EXP( 1.2*ZQ1(JIJ,JK)-1. )
       ENDIF
       ZCOND(JIJ,JK) = ZCOND(JIJ,JK) * ZSIGMA(JIJ,JK)
+      IF (NEBN%LCONDBORN) THEN
+        ZCOND(JIJ,JK) = MIN(ZCOND(JIJ,JK),ZRT(JIJ,JK)-1.E-7)
+      ENDIF
 
       !Cloud fraction
       IF (ZCOND(JIJ,JK) < 1.E-12) THEN

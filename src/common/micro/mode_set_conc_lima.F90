@@ -4,15 +4,15 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !#######################################
-module mode_set_conc_lima
+MODULE MODE_SET_CONC_LIMA
 !#######################################
 
-implicit none
+IMPLICIT NONE
 
-contains
+CONTAINS
 
 !     ###########################################################################
-      SUBROUTINE SET_CONC_LIMA( kmi, HGETCLOUD, PRHODREF, PRT, PSVT, LDLBC )
+      SUBROUTINE SET_CONC_LIMA( TNSV, D, KRR, KMI, HGETCLOUD, PRHODREF, PRT, PSVT, ODLBC )
 !     ###########################################################################
 !
 !!****  *SET_CONC_LIMA * - initialize droplet, raindrop and ice
@@ -73,26 +73,33 @@ contains
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
 USE MODD_PARAM_LIMA,      ONLY : NMOD_CCN, NMOD_IFN, &
-                                 NMOM_C, NMOM_R, NMOM_I
-USE MODD_PARAM_LIMA_COLD, ONLY : XAS, XBS
+                                 NMOM_C, NMOM_R, NMOM_I, &
+                                 LCRYSTAL_SHAPE, NNB_CRYSTAL_SHAPE
+USE MODD_PARAM_LIMA_COLD, ONLY : XAS, XBS, &
+                                 XAI, XBI, &
+                                 XAI_SHAPE, XBI_SHAPE
 USE MODD_PARAM_LIMA_MIXED,ONLY : XAG, XBG, XAH, XBH
-USE MODD_NSV,             ONLY : NSV_LIMA_BEG, NSV_LIMA_NC, NSV_LIMA_NR, NSV_LIMA_CCN_ACTI, &
-                                 NSV_LIMA_NI, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH, NSV_LIMA_IFN_NUCL
+USE MODD_NSV,             ONLY : NSV_T
 USE MODD_CST,             ONLY : XPI, XRHOLW
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-integer,                   intent(in) :: kmi        ! Model number
+TYPE(NSV_T),              INTENT(IN)    :: TNSV
+TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
+INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
+INTEGER,                   INTENT(IN) :: KMI        ! Model number
 CHARACTER (LEN=4),         INTENT(IN) :: HGETCLOUD  ! Get indicator
-REAL, DIMENSION(:,:,:),    INTENT(IN) :: PRHODREF   ! Reference density
+REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN) :: PRHODREF   ! Reference density
 !
-REAL, DIMENSION(:,:,:,:),  INTENT(INOUT) :: PRT     ! microphysical mixing ratios
+REAL, DIMENSION(D%NIJT,D%NKT,KRR),  INTENT(INOUT) :: PRT     ! microphysical mixing ratios
 !
-REAL,  DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVT     ! microphys. concentrations
-LOGICAL, OPTIONAL,         INTENT(IN)    :: LDLBC    ! T to activate LBC mode
+REAL,  DIMENSION(D%NIJT,D%NKT,TNSV%NSV_LIMA), INTENT(INOUT) :: PSVT     ! microphys. concentrations
+LOGICAL, OPTIONAL,         INTENT(IN)    :: ODLBC    ! T to activate LBC mode
 !
 !
 !*       0.2   Declarations of local variables :
@@ -100,28 +107,32 @@ LOGICAL, OPTIONAL,         INTENT(IN)    :: LDLBC    ! T to activate LBC mode
 REAL       :: ZCONC
 INTEGER    :: ISV_LIMA_NC, ISV_LIMA_NR, ISV_LIMA_CCN_ACTI
 INTEGER    :: ISV_LIMA_NI, ISV_LIMA_NS, ISV_LIMA_NG, ISV_LIMA_NH, ISV_LIMA_IFN_NUCL
-LOGICAL    :: LLLBC
+LOGICAL    :: GLLBC
 REAL       :: ZSVTHR
+INTEGER    :: ISH     ! Loop index for ice crystal shapes 
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZNI_TOT  ! total ice crystal concentration
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !*       1.    RETRIEVE LOGICAL UNIT NUMBER
 !              ----------------------------
 !
-ISV_LIMA_NC       = NSV_LIMA_NC       - NSV_LIMA_BEG + 1
-ISV_LIMA_NR       = NSV_LIMA_NR       - NSV_LIMA_BEG + 1
-ISV_LIMA_CCN_ACTI = NSV_LIMA_CCN_ACTI - NSV_LIMA_BEG + 1
-ISV_LIMA_NI       = NSV_LIMA_NI       - NSV_LIMA_BEG + 1
-ISV_LIMA_NS       = NSV_LIMA_NS       - NSV_LIMA_BEG + 1
-ISV_LIMA_NG       = NSV_LIMA_NG       - NSV_LIMA_BEG + 1
-ISV_LIMA_NH       = NSV_LIMA_NH       - NSV_LIMA_BEG + 1
-ISV_LIMA_IFN_NUCL = NSV_LIMA_IFN_NUCL - NSV_LIMA_BEG + 1
+IF (LHOOK) CALL DR_HOOK('SET_CONC_LIMA', 0, ZHOOK_HANDLE)
+ISV_LIMA_NC       = TNSV%NSV_LIMA_NC       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NR       = TNSV%NSV_LIMA_NR       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_CCN_ACTI = TNSV%NSV_LIMA_CCN_ACTI - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NI       = TNSV%NSV_LIMA_NI       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NS       = TNSV%NSV_LIMA_NS       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NG       = TNSV%NSV_LIMA_NG       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NH       = TNSV%NSV_LIMA_NH       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_IFN_NUCL = TNSV%NSV_LIMA_IFN_NUCL - TNSV%NSV_LIMA_BEG + 1
 !
 !*       2.    INITIALIZATION
 !              --------------
 !
-LLLBC=.FALSE.
-IF(PRESENT(LDLBC)) LLLBC=LDLBC
-IF(LLLBC) THEN
+GLLBC=.FALSE.
+IF(PRESENT(ODLBC)) GLLBC=ODLBC
+IF(GLLBC) THEN
   ZSVTHR=1.E-11 ! valid value to check
 ELSE
   ZSVTHR=1.E20  ! to deactivate this test
@@ -132,20 +143,20 @@ IF (NMOM_C.GE.2) THEN
 !  droplets
 !
    ZCONC = 300.E6 ! droplet concentration set at 300 cm-3
-   WHERE ( PRT(:,:,:,2) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NC)<ZSVTHR)
-      PSVT(:,:,:,ISV_LIMA_NC) = ZCONC
+   WHERE ( PRT(:,:,2) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NC)<ZSVTHR)
+      PSVT(:,:,ISV_LIMA_NC) = ZCONC
    END WHERE
-   WHERE ( PRT(:,:,:,2) <= 1.E-11  .AND. PSVT(:,:,:,ISV_LIMA_NC)<ZSVTHR)
-      PRT(:,:,:,2)  = 0.0
-      PSVT(:,:,:,ISV_LIMA_NC) = 0.0
+   WHERE ( PRT(:,:,2) <= 1.E-11  .AND. PSVT(:,:,ISV_LIMA_NC)<ZSVTHR)
+      PRT(:,:,2)  = 0.0
+      PSVT(:,:,ISV_LIMA_NC) = 0.0
    END WHERE
    
    IF (NMOD_CCN .GE. 1) THEN
-      WHERE ( PRT(:,:,:,2) > 1.E-11  .AND. PSVT(:,:,:,ISV_LIMA_NC)<ZSVTHR)
-         PSVT(:,:,:,ISV_LIMA_CCN_ACTI) = ZCONC
+      WHERE ( PRT(:,:,2) > 1.E-11  .AND. PSVT(:,:,ISV_LIMA_NC)<ZSVTHR)
+         PSVT(:,:,ISV_LIMA_CCN_ACTI) = ZCONC
       END WHERE
-      WHERE ( PRT(:,:,:,2) <= 1.E-11  .AND. PSVT(:,:,:,ISV_LIMA_NC)<ZSVTHR)
-         PSVT(:,:,:,ISV_LIMA_CCN_ACTI) = 0.0
+      WHERE ( PRT(:,:,2) <= 1.E-11  .AND. PSVT(:,:,ISV_LIMA_NC)<ZSVTHR)
+         PSVT(:,:,ISV_LIMA_CCN_ACTI) = 0.0
       END WHERE
    END IF
    
@@ -157,15 +168,15 @@ IF (NMOM_R.GE.2) THEN
 !
    ZCONC = (1.E7)**3/(XPI*XRHOLW) ! cf XCONCR_PARAM_INI in ini_rain_c2r2.f90
    IF (HGETCLOUD == 'INI1') THEN ! init from REVE scheme
-      PSVT(:,:,:,ISV_LIMA_NR) = 0.0
+      PSVT(:,:,ISV_LIMA_NR) = 0.0
    ELSE ! init from KESS, ICE3...
-      WHERE ( PRT(:,:,:,3) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NR)<ZSVTHR )
-         PSVT(:,:,:,ISV_LIMA_NR) = MAX( SQRT(SQRT(PRHODREF(:,:,:)*PRT(:,:,:,3) &
+      WHERE ( PRT(:,:,3) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NR)<ZSVTHR )
+         PSVT(:,:,ISV_LIMA_NR) = MAX( SQRT(SQRT(PRHODREF(:,:)*PRT(:,:,3) &
               *ZCONC)),1. )
       END WHERE
-      WHERE ( PRT(:,:,:,3) <= 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NR)<ZSVTHR )
-         PRT(:,:,:,3)  = 0.0
-         PSVT(:,:,:,ISV_LIMA_NR) = 0.0
+      WHERE ( PRT(:,:,3) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NR)<ZSVTHR )
+         PRT(:,:,3)  = 0.0
+         PSVT(:,:,ISV_LIMA_NR) = 0.0
       END WHERE
    END IF
 END IF
@@ -175,25 +186,45 @@ IF (NMOM_I.GE.2) THEN
 ! ice crystals
 !
    ZCONC = 100.E3 ! maximum ice concentration set at 100/L
-   WHERE ( PRT(:,:,:,4) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NI)<ZSVTHR )
+   IF (.NOT. LCRYSTAL_SHAPE) THEN
+    WHERE ( PRT(:,:,4) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
 !
-!      PSVT(:,:,:,NSV_LIMA_NI_A(kmi)) = MIN( PRHODREF(:,:,:) /                                     &
-!           ( XRHOLI * XAI*(10.E-06)**XBI * PRT(:,:,:,4) ), &
+!      PSVT(:,:,TNSV%NSV_LIMA_NI_A(kmi)) = MIN( PRHODREF(:,:) /                                     &
+!           ( XRHOLI * XAI*(10.E-06)**XBI * PRT(:,:,4) ), &
 !           ZCONC )
 ! Correction
-      PSVT(:,:,:,ISV_LIMA_NI) = MIN(PRT(:,:,:,4)/(0.82*(10.E-06)**2.5),ZCONC )
-   END WHERE
-   WHERE ( PRT(:,:,:,4) <= 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NI)<ZSVTHR )
-      PRT(:,:,:,4)  = 0.0
-      PSVT(:,:,:,ISV_LIMA_NI) = 0.0
-   END WHERE
+!      PSVT(:,:,ISV_LIMA_NI) = MIN(PRT(:,:,4)/(0.82*(10.E-06)**2.5),ZCONC )
+      PSVT(:,:,ISV_LIMA_NI) = MIN(PRT(:,:,4)/(XAI*(10.E-06)**XBI),ZCONC )
+    END WHERE
+    WHERE ( PRT(:,:,4) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
+      PRT(:,:,4)  = 0.0
+      PSVT(:,:,ISV_LIMA_NI) = 0.0
+    END WHERE
+   ELSE
+      ZNI_TOT(:,:) = 0.
+      DO ISH = 1, NNB_CRYSTAL_SHAPE
+         WHERE ( PRT(:,:,4) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI+ISH-1) < ZSVTHR) 
+            PSVT(:,:,ISV_LIMA_NI+ISH-1) = MIN(PRT(:,:,4)/(XAI_SHAPE(ISH)*(10.E-06)**XBI_SHAPE(ISH)),ZCONC )
+         END WHERE
+         ZNI_TOT(:,:) = ZNI_TOT(:,:) + PSVT(:,:,ISV_LIMA_NI+ISH-1)
+      END DO
+      WHERE (PRT(:,:,4) <= 1.E-11 .AND. ZNI_TOT(:,:)<ZSVTHR )
+         PRT(:,:,4)  = 0.0
+!++cb-- il faudrait trouver une plus jolie solution, mais ca compile
+         !PSVT(:,:,:,ISV_LIMA_NI:ISV_LIMA_NI+NNB_CRYSTAL_SHAPE-1) = 0.0
+         PSVT(:,:,ISV_LIMA_NI)   = 0.0
+         PSVT(:,:,ISV_LIMA_NI+1) = 0.0
+         PSVT(:,:,ISV_LIMA_NI+2) = 0.0
+         PSVT(:,:,ISV_LIMA_NI+3) = 0.0
+      END WHERE
+   END IF
 
    IF (NMOD_IFN .GE. 1) THEN
-      WHERE ( PRT(:,:,:,4) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NI)<ZSVTHR )
-         PSVT(:,:,:,ISV_LIMA_IFN_NUCL) = PSVT(:,:,:,ISV_LIMA_NI)
+      WHERE ( PRT(:,:,4) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
+         PSVT(:,:,ISV_LIMA_IFN_NUCL) = PSVT(:,:,ISV_LIMA_NI)
       END WHERE
-      WHERE ( PRT(:,:,:,4) <= 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NI)<ZSVTHR )
-         PSVT(:,:,:,ISV_LIMA_IFN_NUCL) = 0.0
+      WHERE ( PRT(:,:,4) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
+         PSVT(:,:,ISV_LIMA_IFN_NUCL) = 0.0
       END WHERE
    END IF
 
@@ -204,12 +235,12 @@ IF (ISV_LIMA_NS.GE.1) THEN
 !  snow
 !
    ZCONC = 1./ (XAS*0.001**XBS) ! 1mm particle size
-   WHERE ( PRT(:,:,:,5) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NS)<ZSVTHR )
-      PSVT(:,:,:,ISV_LIMA_NS) = PRT(:,:,:,5) * ZCONC
+   WHERE ( PRT(:,:,5) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NS)<ZSVTHR )
+      PSVT(:,:,ISV_LIMA_NS) = PRT(:,:,5) * ZCONC
    END WHERE
-   WHERE ( PRT(:,:,:,5) <= 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NS)<ZSVTHR )
-      PRT(:,:,:,5)  = 0.0
-      PSVT(:,:,:,ISV_LIMA_NS) = 0.0
+   WHERE ( PRT(:,:,5) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NS)<ZSVTHR )
+      PRT(:,:,5)  = 0.0
+      PSVT(:,:,ISV_LIMA_NS) = 0.0
    END WHERE
 END IF
 !
@@ -218,12 +249,12 @@ IF (ISV_LIMA_NG.GE.1) THEN
 !  graupel
 !
    ZCONC = 1./ (XAG*0.001**XBG) ! 1mm particle size
-   WHERE ( PRT(:,:,:,6) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NG)<ZSVTHR )
-      PSVT(:,:,:,ISV_LIMA_NG) = PRT(:,:,:,6) * ZCONC
+   WHERE ( PRT(:,:,6) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NG)<ZSVTHR )
+      PSVT(:,:,ISV_LIMA_NG) = PRT(:,:,6) * ZCONC
    END WHERE
-   WHERE ( PRT(:,:,:,6) <= 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NG)<ZSVTHR )
-      PRT(:,:,:,6)  = 0.0
-      PSVT(:,:,:,ISV_LIMA_NG) = 0.0
+   WHERE ( PRT(:,:,6) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NG)<ZSVTHR )
+      PRT(:,:,6)  = 0.0
+      PSVT(:,:,ISV_LIMA_NG) = 0.0
    END WHERE
 END IF
 !
@@ -232,15 +263,16 @@ IF (ISV_LIMA_NH.GE.1) THEN
 !  hail
 !
    ZCONC = 1./ (XAH*0.001**XBH) ! 1mm particle size
-   WHERE ( PRT(:,:,:,7) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NH)<ZSVTHR )
-      PSVT(:,:,:,ISV_LIMA_NH) = PRT(:,:,:,7) * ZCONC
+   WHERE ( PRT(:,:,7) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NH)<ZSVTHR )
+      PSVT(:,:,ISV_LIMA_NH) = PRT(:,:,7) * ZCONC
    END WHERE
-   WHERE ( PRT(:,:,:,7) <= 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NH)<ZSVTHR )
-      PRT(:,:,:,7)  = 0.0
-      PSVT(:,:,:,ISV_LIMA_NH) = 0.0
+   WHERE ( PRT(:,:,7) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NH)<ZSVTHR )
+      PRT(:,:,7)  = 0.0
+      PSVT(:,:,ISV_LIMA_NH) = 0.0
    END WHERE
 END IF
 !
+IF (LHOOK) CALL DR_HOOK('SET_CONC_LIMA', 1, ZHOOK_HANDLE)
 END SUBROUTINE SET_CONC_LIMA
 
-end module mode_set_conc_lima
+END MODULE MODE_SET_CONC_LIMA
