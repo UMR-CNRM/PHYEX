@@ -213,12 +213,9 @@ IF(.NOT. LRED) THEN
   ! This cannot be done any other way
   LNEWCOEFF=HPROGRAM=='MESONH'
 ELSE
-  IF(LSNOW_T) THEN
-    LNEWCOEFF=.TRUE. ! LSNOW_T only available with NEW formulation
-  ELSE
-    ! This is a conservative choice reproducing old behaviour
-    LNEWCOEFF=HPROGRAM=='MESONH'
-  ENDIF
+  ! LSNOW_T=T only available with NEW formulation
+  ! Use conservative choice reproducing old behaviour when LSNOW_T=F
+  LNEWCOEFF=LSNOW_T .OR. HPROGRAM=='MESONH'
 ENDIF
 !
 !        1.     COMPUTE KSPLTR FOR EACH MODEL
