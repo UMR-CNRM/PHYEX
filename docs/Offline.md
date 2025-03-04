@@ -7,23 +7,28 @@ Some offline test programs are provided with the package and a library suitable 
 
 ## Compilation
 
-The build/with\_fcm directory in the master branch contains a build system.
-This build system has two dependencies (installation is done automatically by the compilation script):
+The compilation can be achieved using different build systems.
+In the following explanations, the build system name is replaced by \<bs\>.
 
-  - [fcm](https://metomi.github.io/fcm/doc/user_guide/)
-  - [fiat](https://github.com/ecmwf-ifs/fiat)
+The PHYEX source code needs the [fiat](https://github.com/ecmwf-ifs/fiat) package 
+installation is done automatically by the compilation script).
 
-The script build/with\_fcm/make\_fcm.sh uses configuration files and build the library and test programs.
+The different build/with\_\<bs\> directories in the master branch contains the build environments.
+
+The [fcm](https://metomi.github.io/fcm/doc/user_guide/) build system needs to be installed,
+this is done automatically by the compilation script.
+
+The script build/with\_\<bs\>/make\_\<bs\>.sh uses configuration files and build the library and test programs.
 These executables can be found in the build/bin subdirectory in the architecture specific directory arch\_\<architecture name\>.
 
-Some configuration files are stored in build/with\_fcm/arch but other can be maintained by the end users in their
-${HOME}/.phyex/fcm\_arch.
+Some configuration files are stored in build/with\_\<bs\>/arch but other can be maintained by the end users in their
+${HOME}/.phyex/\<bs\>\_arch.
 
-Some more details on the build system can be found in [build/with\_fcm/README.md file](../build/with_fcm/README.md).
+Some more details on the build system can be found in [build/README.md file](../build/README.md).
 
 ### Compilation directly in the repository without execution (or manual execution)
 
-When on a master commit, the build/with\_fcm/make\_fcm.sh script can be used to compile the offline tools.
+When on a master commit, the build/with\_\<bs\>/make\_\<bs\>.sh script can be used to compile the offline tools.
 
 ### Compilation and execution
 
