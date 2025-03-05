@@ -368,22 +368,39 @@ DO JK = IKTB, IKTE
 END DO
 !$acc end kernels
 !
+!
+IF (OCND2) THEN
+!$acc kernels
+!$acc loop independent collapse(2)
+  DO JK=IKTB,IKTE
+    DO JIJ = IIJB, IIJE
+      ZDZ(JIJ,JK) = PZZ(JIJ,JKPK(JK)) - PZZ(JIJ,JKPK(JK)-IKL)
+    END DO
+  END DO
+!$acc end kernels
+  CALL ICECLOUD(D, CST, ICEP, PPABS(:,:),PZZ(:,:),ZDZ(:,:), &
+       & PT(:,:),PRV_IN(:,:),1.,-1., &
+       & ZCLDINI(:,:),PIFR(IIJB,1),PICLDFR(:,:), &
+       & PSSIO(:,:),PSSIU(:,:),ZARDUM2(:,:),ZARDUM(:,:))
+  ! latent heats
+  ! saturated water vapor mixing ratio over liquid water and ice
+!$acc kernels
+!$acc loop independent collapse(2)
+  DO JK=IKTB,IKTE
+    DO JIJ = IIJB, IIJE
+      ESATW_T(JIJ,JK)=ESATW(ICEP%TIWMX, PT(JIJ,JK))
+      ZPV(JIJ,JK)  = MIN(ESATW_T(JIJ,JK), .99*PPABS(JIJ,JK))
+      ZPIV(JIJ,JK) = MIN(ESATI(ICEP%TIWMX, PT(JIJ,JK)), .99*PPABS(JIJ,JK))
+    END DO
+  END DO
+!$acc end kernels
+END IF
+
 !$acc kernels
 !$acc loop independent collapse(2)
 DO JK=IKTB,IKTE
   DO JIJ = IIJB, IIJE
-  IF (OCND2) THEN
-      ZDZ(JIJ,JK) = PZZ(JIJ,JKPK(JK)) - PZZ(JIJ,JKPK(JK)-IKL)
-      CALL ICECLOUD(CST, ICEP, PPABS(JIJ,JK),PZZ(JIJ,JK),ZDZ(JIJ,JK), &
-          & PT(JIJ,JK),PRV_IN(JIJ,JK),1.,-1., &
-          & ZCLDINI(JIJ,JK),PIFR(IIJB,JK),PICLDFR(JIJ,JK), &
-          & PSSIO(JIJ,JK),PSSIU(JIJ,JK),ZARDUM2(JIJ,JK),ZARDUM(JIJ,JK))
-     ! latent heats
-     ! saturated water vapor mixing ratio over liquid water and ice
-       ESATW_T(JIJ,JK)=ESATW(ICEP%TIWMX, PT(JIJ,JK))
-       ZPV(JIJ,JK)  = MIN(ESATW_T(JIJ,JK), .99*PPABS(JIJ,JK))
-       ZPIV(JIJ,JK) = MIN(ESATI(ICEP%TIWMX, PT(JIJ,JK)), .99*PPABS(JIJ,JK))
-  ELSE
+  IF (.NOT. OCND2) THEN
      ! latent heats
      ! saturated water vapor mixing ratio over liquid water and ice
       ZPV(JIJ,JK)  = MIN(EXP( CST%XALPW - CST%XBETAW / PT(JIJ,JK) - CST%XGAMW * LOG( PT(JIJ,JK) ) ), .99*PPABS(JIJ,JK))
