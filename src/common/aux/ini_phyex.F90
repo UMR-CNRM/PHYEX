@@ -298,6 +298,10 @@ IF(LLCHECK) THEN
       CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'INI_PHYEX', & 
                     &"YOU CANNOT USE LRELAX_ALPHA_MF when CMICRO is 'LIMA'")
     ENDIF
+    IF(.NOT. NEBN%LCONDBORN) THEN
+      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'INI_PHYEX', &
+                    &"LCONDBORN (MODD_NEB_n) must be .TRUE. with LIMA")
+    ENDIF
   ENDIF
 ENDIF
 
