@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2018-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2018-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -7,7 +7,7 @@ MODULE MODE_LIMA_SNOW_SELF_COLLECTION
   IMPLICIT NONE
 CONTAINS
 !     #############################################################
-  SUBROUTINE LIMA_SNOW_SELF_COLLECTION (LDCOMPUTE,          &
+  SUBROUTINE LIMA_SNOW_SELF_COLLECTION (CST, LIMAP, LIMAC, KSIZE, ODCOMPUTE,   &
                                         PRHODREF, PT,       &
                                         PRST, PCST, PLBDS,  &
                                         P_CS_SSC            )
@@ -34,25 +34,29 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,             ONLY : XTT
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, XCEXVT
-USE MODD_PARAM_LIMA_COLD, ONLY : NSCLBDAS, XSCINTP1S, XSCINTP2S, XKER_N_SSCS, XFNSSCS, XCOLEXSS, &
-                                 XLBNSSCS1, XLBNSSCS2
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE MODD_CST, ONLY:CST_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(CST_T),INTENT(IN)::CST
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! Reference Exner function
-REAL, DIMENSION(:),   INTENT(IN)    :: PT       ! Temperature
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF ! Reference Exner function
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT       ! Temperature
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! Snow mr at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCST    ! Snow C. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRST    ! Snow mr at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCST    ! Snow C. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDS   ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_SSC 
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CS_SSC 
 !
 !*       0.2   Declarations of local variables :
 !
@@ -60,23 +64,25 @@ REAL, DIMENSION(SIZE(PCST)) :: &
                                            ZW1, & ! work arrays
                                            ZW2
 LOGICAL, DIMENSION(SIZE(PCST)) :: GSSC
-INTEGER :: IGSSC, JL
+INTEGER :: IGSSC, IL
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1        ! Vectors of indices
 REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1, ZVEC3 ! Work vectors
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
 !
 !*       1.     Snow self-collection and break-up
-!	        ---------------------------------
+!               ---------------------------------
 !
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_SNOW_SELF_COLLECTION', 0, ZHOOK_HANDLE)
 P_CS_SSC(:)=0.
 !
 ZW1(:) =0.
 ZW2(:) =0.
 !
-GSSC(:) = PCST(:)>XCTMIN(5) .AND. PRST(:)>XRTMIN(5)
+GSSC(:) = PCST(:)>LIMAP%XCTMIN(5) .AND. PRST(:)>LIMAP%XRTMIN(5)
 IGSSC = COUNT(GSSC(:))
 !
 IF( IGSSC>0 ) THEN
@@ -94,8 +100,8 @@ IF( IGSSC>0 ) THEN
 !               in the geometrical set of (Lbda_s,Lbda_s) couplet use to
 !               tabulate the SACCS-kernel
 !
-   ZVEC1(1:IGSSC) = MAX( 1.0001, MIN( FLOAT(NSCLBDAS)-0.0001,           &
-        XSCINTP1S * LOG( ZVEC1(1:IGSSC) ) + XSCINTP2S ) )
+   ZVEC1(1:IGSSC) = MAX( 1.0001, MIN( FLOAT(LIMAC%NSCLBDAS)-0.0001,           &
+        LIMAC%XSCINTP1S * LOG( ZVEC1(1:IGSSC) ) + LIMAC%XSCINTP2S ) )
    IVEC1(1:IGSSC) = INT( ZVEC1(1:IGSSC) )
    ZVEC1(1:IGSSC) = ZVEC1(1:IGSSC) - FLOAT( IVEC1(1:IGSSC) )
 !
@@ -103,20 +109,20 @@ IF( IGSSC>0 ) THEN
 !               SSCS-kernel
 !
    ALLOCATE(ZVEC3(IGSSC))
-   DO JL = 1,IGSSC
-      ZVEC3(JL) =  (   XKER_N_SSCS(IVEC1(JL)+1,IVEC1(JL)+1)* ZVEC1(JL)          &
-                    -  XKER_N_SSCS(IVEC1(JL)+1,IVEC1(JL)  )*(ZVEC1(JL) - 1.0) ) &
-                                                                         * ZVEC1(JL) &
-                 - (   XKER_N_SSCS(IVEC1(JL)  ,IVEC1(JL)+1)* ZVEC1(JL)          &
-                    -  XKER_N_SSCS(IVEC1(JL)  ,IVEC1(JL)  )*(ZVEC1(JL) - 1.0) ) &
-                                                           * (ZVEC1(JL) - 1.0)
+   DO IL = 1,IGSSC
+      ZVEC3(IL) =  (   LIMAC%XKER_N_SSCS(IVEC1(IL)+1,IVEC1(IL)+1)* ZVEC1(IL)          &
+                    -  LIMAC%XKER_N_SSCS(IVEC1(IL)+1,IVEC1(IL)  )*(ZVEC1(IL) - 1.0) ) &
+                                                                         * ZVEC1(IL) &
+                 - (   LIMAC%XKER_N_SSCS(IVEC1(IL)  ,IVEC1(IL)+1)* ZVEC1(IL)          &
+                    -  LIMAC%XKER_N_SSCS(IVEC1(IL)  ,IVEC1(IL)  )*(ZVEC1(IL) - 1.0) ) &
+                                                           * (ZVEC1(IL) - 1.0)
    END DO
    ZW1(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GSSC(:),FIELD=0.0 ) !! NSACCS
    DEALLOCATE(ZVEC3)
 !
    WHERE( GSSC(:) )
-      P_CS_SSC(:) = - XFNSSCS * ZW1(:) * EXP( XCOLEXSS*(PT(:)-XTT) ) * PCST(:)**2 &  
-                    * PRHODREF(:)**(-XCEXVT-1.) * (XLBNSSCS1+XLBNSSCS2) / PLBDS(:)**2
+      P_CS_SSC(:) = - LIMAC%XFNSSCS * ZW1(:) * EXP( LIMAC%XCOLEXSS*(PT(:)-CST%XTT) ) * PCST(:)**2 &  
+                    * PRHODREF(:)**(-LIMAP%XCEXVT-1.) * (LIMAC%XLBNSSCS1+LIMAC%XLBNSSCS2) / PLBDS(:)**2
    END WHERE
    DEALLOCATE(IVEC1)
    DEALLOCATE(ZVEC1)
@@ -124,5 +130,6 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_SNOW_SELF_COLLECTION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_SNOW_SELF_COLLECTION
 END MODULE MODE_LIMA_SNOW_SELF_COLLECTION

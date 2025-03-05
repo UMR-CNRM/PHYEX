@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -218,7 +218,7 @@
 !!    
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq   *Meteo France*
+!!    V. Ducrocq   *Meteo France*
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -363,6 +363,7 @@ USE MODD_IO,        ONLY: TFILE_DUMMY, TFILE_OUTPUTLISTING
 USE MODD_CONF_n
 USE MODD_NSV,       ONLY: NSV, NSV_ASSOCIATE
 use modd_precision, only: LFIINT, MNHREAL_MPI, MNHTIME
+USE MODD_TYPE_DATE, ONLY: DATE, DATE_TIME
 !
 USE MODN_BLANK_n
 !
@@ -378,6 +379,9 @@ USE MODE_IO_FIELD_WRITE,   only: IO_Field_write, IO_Header_write
 USE MODE_IO_FILE,          only: IO_File_close, IO_File_open
 USE MODE_IO_MANAGE_STRUCT, only: IO_File_add2list
 USE MODE_ll
+#ifdef MNH_OPENACC
+USE MODE_MNH_ZWORK,        only: MNH_ALLOC_ZWORK
+#endif
 USE MODE_MODELN_HANDLER
 use mode_field,            only: Alloc_field_scalars, Ini_field_list, Ini_field_scalars
 USE MODE_MSG
@@ -448,6 +452,11 @@ USE MODE_MPPDB
 USE MODD_GET_n
 !
 USE MODN_CONFIO, ONLY : NAM_CONFIO
+!
+#ifdef MNH_OPENACC
+USE MODE_MNH_ZWORK
+USE MODD_HALO_D
+#endif
 !
 IMPLICIT NONE
 !
@@ -538,7 +547,7 @@ REAL,DIMENSION(:,:,:),ALLOCATABLE   :: XCORIOZ ! Coriolis parameter (this
 !              file is used :
 !
 INTEGER             :: JSV                      ! loop index on scalar var.
-CHARACTER(LEN=28)   :: CPGD_FILE=' '            ! Physio-Graphic Data file name
+CHARACTER(LEN=NFILENAMELGTMAX) :: CPGD_FILE=''  ! Physio-Graphic Data file name
 LOGICAL  :: LREAD_ZS = .TRUE.,                & ! switch to use orography 
                                                 ! coming from the PGD file
             LREAD_GROUND_PARAM = .TRUE.         ! switch to use soil parameters
@@ -547,7 +556,9 @@ LOGICAL  :: LREAD_ZS = .TRUE.,                & ! switch to use orography
 
 INTEGER           :: NSLEVE   =12         ! number of iteration for smooth orography
 REAL              :: XSMOOTH_ZS = XUNDEF  ! optional uniform smooth orography for SLEVE coordinate
-CHARACTER(LEN=28) :: YPGD_NAME, YPGD_DAD_NAME   ! general information
+CHARACTER(LEN=NFILENAMELGTMAX) :: YATMFILE
+CHARACTER(LEN=6)               :: YATMFILETYPE
+CHARACTER(LEN=NFILENAMELGTMAX) :: YPGD_NAME, YPGD_DAD_NAME   ! general information
 CHARACTER(LEN=2)  :: YPGD_TYPE
 !
 INTEGER           :: IINFO_ll                   ! return code of // routines
@@ -649,7 +660,7 @@ CALL INI_CST
 !-------------------------------------------------------------------------------
 !
 !
-!*  	 2.    SET DEFAULT VALUES  :  
+!*     2.    SET DEFAULT VALUES  :  
 !              --------------------
 !
 !
@@ -669,7 +680,7 @@ CSURF = "NONE"
 CALL DEFAULT_EXPRE
 !-------------------------------------------------------------------------------
 !
-!*  	 3.    READ THE EXPRE FILE :  
+!*     3.    READ THE EXPRE FILE :  
 !              --------------------
 !
 !*       3.1   initialize logical unit numbers (EXPRE and output-listing files)
@@ -729,7 +740,7 @@ CALL INIT_SALT
 !
 IF( LEN_TRIM(CPGD_FILE) /= 0 ) THEN 
   ! open the PGD_FILE
-  CALL IO_File_add2list(TPGDFILE,TRIM(CPGD_FILE),'PGD','READ',KLFINPRAR=NNPRAR,KLFITYPE=2,KLFIVERB=NVERB)
+  CALL IO_File_add2list( TPGDFILE, TRIM(CPGD_FILE), 'PGD', 'READ', KLFINPRAR=NNPRAR, KLFIVERB=NVERB )
   CALL IO_File_open(TPGDFILE)
 
   ! read the grid in the PGD file
@@ -739,17 +750,17 @@ IF( LEN_TRIM(CPGD_FILE) /= 0 ) THEN
 
   IF ( CPGD_FILE /= CINIFILEPGD) THEN
      WRITE(NLUOUT,FMT=*) ' WARNING : in PRE_IDEA1.nam, in NAM_LUNITn you&
-          & have CINIFILEPGD= ',CINIFILEPGD
+          & have CINIFILEPGD= ',TRIM(CINIFILEPGD)
      WRITE(NLUOUT,FMT=*) ' whereas in NAM_REAL_PGD you have CPGD_FILE = '&
-          ,CPGD_FILE
+          ,TRIM(CPGD_FILE)
      WRITE(NLUOUT,FMT=*) ' '
-     WRITE(NLUOUT,FMT=*) ' CINIFILEPGD HAS BEEN SET TO  ',CPGD_FILE        
+     WRITE(NLUOUT,FMT=*) ' CINIFILEPGD HAS BEEN SET TO  ',TRIM(CPGD_FILE)
      CINIFILEPGD=CPGD_FILE
   END IF
   IF ( IJPHEXT .NE. JPHEXT ) THEN
      WRITE(NLUOUT,FMT=*) ' PREP_IDEAL_CASE : JPHEXT in PRE_IDEA1.nam/NAM_CONF_PRE ( or default value )&
         & JPHEXT=',JPHEXT
-     WRITE(NLUOUT,FMT=*) ' different from PGD files=', CINIFILEPGD,' value JPHEXT=',IJPHEXT
+     WRITE(NLUOUT,FMT=*) ' different from PGD files=', TRIM(CINIFILEPGD),' value JPHEXT=',IJPHEXT
      WRITE(NLUOUT,FMT=*) '-> JOB ABORTED'
      CALL PRINT_MSG(NVERB_FATAL,'GEN','PREP_IDEAL_CASE','')
      !WRITE(NLUOUT,FMT=*) ' JPHEXT HAS BEEN SET TO ', IJPHEXT
@@ -910,7 +921,7 @@ IF(.NOT. L1D) LHORELAX_SV(1:NSV)=.TRUE.
 !-------------------------------------------------------------------------------
 !
 !*       4.    ALLOCATE MEMORY FOR ARRAYS :  
-!   	       ----------------------------
+!            ----------------------------
 !
 !*       4.1  Vertical Spatial grid 
 !
@@ -965,8 +976,11 @@ ALLOCATE(XUT(NIU,NJU,NKU))
 ALLOCATE(XVT(NIU,NJU,NKU))
 ALLOCATE(XWT(NIU,NJU,NKU))
 ALLOCATE(XTHT(NIU,NJU,NKU))
+!$acc enter data create(XTHT)
 ALLOCATE(XPABST(NIU,NJU,NKU))
+!$acc enter data create(XPABST)
 ALLOCATE(XRT(NIU,NJU,NKU,NRR))
+!$acc enter data create(XRT)
 ALLOCATE(XSVT(NIU,NJU,NKU,NSV))
 !
 !*       4.5   Grid variables (module MODD_GRID1 and MODD_METRICS1):
@@ -985,6 +999,7 @@ ALLOCATE(XDYY(NIU,NJU,NKU))
 ALLOCATE(XDZX(NIU,NJU,NKU))
 ALLOCATE(XDZY(NIU,NJU,NKU))
 ALLOCATE(XDZZ(NIU,NJU,NKU))
+!$acc enter data create(XDXX,XDYY,XDZZ,XDZX,XDZY)
 !
 !*       4.6   Reference state variables (modules MODD_REF and MODD_REF1):
 !
@@ -1000,8 +1015,11 @@ IF(CEQNSYS == 'DUR') THEN
 ELSE
   ALLOCATE(XRVREF(0,0,0))
 END IF
+!$acc enter data create( XRVREF )
 ALLOCATE(XRHODREF(NIU,NJU,NKU),XTHVREF(NIU,NJU,NKU),XEXNREF(NIU,NJU,NKU))
+!$acc enter data create( XRHODREF, XTHVREF, XEXNREF )
 ALLOCATE(XRHODJ(NIU,NJU,NKU))
+!$acc enter data create(XRHODJ)
 !
 !*       4.7   Larger Scale fields (modules MODD_LSFIELD1):
 !
@@ -1206,11 +1224,15 @@ ELSE                                   ! 3D case
   END IF
 END IF
 !
+#ifdef MNH_OPENACC
+CALL MNH_ALLOC_ZWORK(1)
+CALL INIT_HALO_D()
+#endif
 !
 !-------------------------------------------------------------------------------
 !
 !*       5.     INITIALIZE ALL THE MODEL VARIABLES
-!   	        ----------------------------------
+!             ----------------------------------
 !
 !
 !*       5.1    Grid variables and RS localization:
@@ -1367,8 +1389,8 @@ IF (    LEN_TRIM(CPGD_FILE) == 0  .OR. .NOT. LREAD_ZS) THEN
         ZDIST = XXHAT(JILOOP)-REAL(NIZS)*XDELTAX
           XZS(JILOOP,:) = XHMAX*(XAX**2)/(XAX**2+ZDIST**2)
       END DO
-		ELSE		! three dimensionnal case - infinite profile in y direction
-			DO JILOOP = 1, NIU
+    ELSE    ! three dimensionnal case - infinite profile in y direction
+      DO JILOOP = 1, NIU
         ZDIST = XXHAT(JILOOP)-REAL(NIZS)*XDELTAX
           XZS(JILOOP,:) = XHMAX*(XAX**2)/(XAX**2+ZDIST**2)
       END DO
@@ -1493,7 +1515,11 @@ IF (CIDEAL == 'RSOU') THEN
   WRITE(NLUOUT,FMT=*) 'CIDEAL="RSOU", attempt to read DATE'
   CALL POSKEY(NLUPRE,NLUOUT,'RSOU')
   READ(NLUPRE,FMT=*)  NYEAR,NMONTH,NDAY,XTIME
+#ifdef MNH_COMPILER_CCE
+  TDTCUR = DATE_TIME(NYEAR,NMONTH,NDAY, XTIME = XTIME )
+#else
   TDTCUR = DATE_TIME(NYEAR,NMONTH,NDAY,XTIME)
+#endif
   TDTEXP = TDTCUR
   TDTSEG = TDTCUR
   TDTMOD = TDTCUR
@@ -1512,7 +1538,11 @@ ELSE IF (CIDEAL == 'CSTN') THEN
   WRITE(NLUOUT,FMT=*) 'CIDEAL="CSTN", attempt to read DATE'
   CALL POSKEY(NLUPRE,NLUOUT,'CSTN')
   READ(NLUPRE,FMT=*)  NYEAR,NMONTH,NDAY,XTIME
+#ifdef MNH_COMPILER_CCE
+  TDTCUR = DATE_TIME(NYEAR,NMONTH,NDAY, XTIME = XTIME )
+#else
   TDTCUR = DATE_TIME(NYEAR,NMONTH,NDAY,XTIME)
+#endif
   TDTEXP = TDTCUR
   TDTSEG = TDTCUR
   TDTMOD = TDTCUR
@@ -1740,8 +1770,8 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-!*  	 6.    INITIALIZE SCALAR VARIABLES FOR CHEMISTRY
-!   	       -----------------------------------------
+!*     6.    INITIALIZE SCALAR VARIABLES FOR CHEMISTRY
+!            -----------------------------------------
 !
 !  before calling chemistry
 CCONF = 'START'
@@ -1755,8 +1785,8 @@ IF (CCLOUD == 'LIMA' .AND. ((LORILAM).OR.(LDUST).OR.(LSALT))) &
     CALL AER2LIMA(XSVT, XRHODREF, XRT(:,:,:,1), XPABST, XTHT, XZZ)
 !-------------------------------------------------------------------------------
 !
-!*  	 7.    INITIALIZE LEVELSET FOR IBM
-!   	       ---------------------------
+!*     7.    INITIALIZE LEVELSET FOR IBM
+!            ---------------------------
 !
 IF (LIBM_LSF) THEN
   !
@@ -1775,8 +1805,8 @@ ENDIF
 !
 !-------------------------------------------------------------------------------
 !
-!*   	 8.    WRITE THE FMFILE 
-!   	       ----------------
+!*      8.    WRITE THE FMFILE 
+!            ----------------
 !
 CALL SECOND_MNH2(ZTIME1)
 !
@@ -1786,7 +1816,7 @@ NNPRAR = 22 + 2*(NRR+NSV)   &    ! 22 = number of grid variables + reference
                                  ! variables at time t and t-dt
 NTYPE=1
 !
-CALL IO_File_add2list(TINIFILE,TRIM(CINIFILE),'MNH','WRITE',KLFINPRAR=NNPRAR,KLFITYPE=NTYPE,KLFIVERB=NVERB)
+CALL IO_File_add2list( TINIFILE, TRIM(CINIFILE), 'MNH', 'WRITE', KLFINPRAR=NNPRAR, KLFIVERB=NVERB )
 !
 CALL IO_File_open(TINIFILE)
 !
@@ -1826,13 +1856,15 @@ IF (CSURF =='EXTE') THEN
     TPGDFILE => TINIFILE
     CALL PGD_GRID_SURF_ATM(YSURF_CUR%UG, YSURF_CUR%U,YSURF_CUR%GCP,'MESONH',TINIFILE%CNAME,'MESONH',.TRUE.,HDIR='-')
     CALL PGD_SURF_ATM     (YSURF_CUR,'MESONH',TINIFILE%CNAME,'MESONH',.TRUE.)
-    CALL IO_File_add2list(TINIFILEPGD,TRIM(CINIFILEPGD),'PGD','WRITE',KLFINPRAR=NNPRAR,KLFITYPE=NTYPE,KLFIVERB=NVERB)
+    CALL IO_File_add2list( TINIFILEPGD, TRIM(CINIFILEPGD), 'PGD', 'WRITE', KLFINPRAR=NNPRAR, KLFIVERB=NVERB )
     CALL IO_File_open (TINIFILEPGD)
     TPGDFILE => TINIFILEPGD
   ELSE
   ! ... or read from file.
+    YATMFILE = ''
+    YATMFILETYPE = ''
     CALL INIT_PGD_SURF_ATM( YSURF_CUR, 'MESONH', 'PGD',               &
-                            '                            ', '      ', &
+                            YATMFILE, YATMFILETYPE,                   &
                             TDTCUR%nyear, TDTCUR%nmonth,              &
                             TDTCUR%nday, TDTCUR%xtime                 )
 !
@@ -1868,7 +1900,9 @@ IF (CSURF =='EXTE') THEN
   !* writing of all surface fields
   TOUTDATAFILE => TINIFILE
   TFILE_SURFEX => TINIFILE
-  CALL PREP_SURF_MNH('                            ','      ')
+  YATMFILE = ''
+  YATMFILETYPE = ''
+  CALL PREP_SURF_MNH( YATMFILE, YATMFILETYPE )
   NULLIFY(TFILE_SURFEX)
 ELSE
   CSURF = "NONE"

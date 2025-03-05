@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -170,7 +170,7 @@ IKE  = KLEV - JCVEXT
           PTPR(:)     = PZTPR(:)      * PADJ(:)
 !
      DO JK = IKB + 1, IKE
-	  PUMF(:,JK)  = PZUMF(:,JK)   * PADJ(:)
+          PUMF(:,JK)  = PZUMF(:,JK)   * PADJ(:)
           PUER(:,JK)  = PZUER(:,JK)   * PADJ(:)
           PUDR(:,JK)  = PZUDR(:,JK)   * PADJ(:)
           PDMF(:,JK)  = PZDMF(:,JK)   * PADJ(:)

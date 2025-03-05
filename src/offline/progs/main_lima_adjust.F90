@@ -10,6 +10,7 @@ USE STACK_MOD,       ONLY: STACK
 USE MODE_MNH_ZWORK,  ONLY: ZMNH_STACK, IMNH_BLOCK, YMNH_STACK, INUMPIN
 USE OMP_LIB
 USE YOMHOOK, ONLY : LHOOK, DR_HOOK, JPHOOK
+
 #ifdef _OPENACC
 USE MODD_UTIL_PHYEX_T, ONLY: COPY_PHYEX_T, WIPE_PHYEX_T
 #endif
@@ -26,6 +27,7 @@ REAL, ALLOCATABLE   :: PSIGS          (:,:,:)
 REAL, ALLOCATABLE   :: PMFCONV        (:,:,:)
 REAL, ALLOCATABLE   :: PPABSM         (:,:,:)
 REAL, ALLOCATABLE   :: ZZZ            (:,:,:)
+REAL, ALLOCATABLE   :: ZSIGQSAT       (:,:)   
 REAL, ALLOCATABLE   :: PDTHRAD        (:,:,:)
 REAL, ALLOCATABLE   :: PW_NU          (:,:,:)
 REAL, ALLOCATABLE   :: PRT            (:,:,:,:)
@@ -111,8 +113,8 @@ IF (LLBIND) THEN
   CALL LINUX_BIND_DUMP (IRANK, ISIZE)
 ENDIF
 
-CALL GETDATA_LIMA_ADJUST (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, NSP, NCARB, NSOA, &                                                                
-                         &PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV, PPABSM, ZZZ, &                             
+CALL GETDATA_LIMA_ADJUST (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, NSP, NCARB, NSOA, &
+                         &PRHODREF, PRHODJ, PEXNREF, ZSIGQSAT, PSIGS, PMFCONV, PPABSM, ZZZ, &                             
                          &PDTHRAD, PW_NU, PRT, PRS, PSVT, PSVS, PTHS, &                                         
                          &PRC_MF, PRI_MF, PCF_MF, PRS_OUT, PSVS_OUT, PTHS_OUT, &                                  
                          &PSRCS, PCLDFR, PICEFR, &
@@ -232,13 +234,14 @@ DO ITIME = 1, NTIME
     PCLDFR(JLON, :, IBL)=0.
     PICEFR(JLON, :, IBL)=0.
 #else
-    CALL LIMA_ADJUST_SPLIT(D, PHYEX%CST, PHYEX%MISC%TBUCONF, PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET, &
-                           KRR, 1, PHYEX%NEBN%CCONDENS, PHYEX%NEBN%CLAMBDA3, &
+    CALL LIMA_ADJUST_SPLIT(PHYEX%PARAM_LIMA, PHYEX%PARAM_LIMA_WARM, PHYEX%TNSV, &
+                           D, PHYEX%CST, PHYEX%NEBN, PHYEX%TURBN, PHYEX%MISC%TBUCONF, PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET, &
+                           KRR, PHYEX%NEBN%CCONDENS, PHYEX%NEBN%CLAMBDA3, &
                            NCARB, NSOA , NSP, LDUST, LSALT, LORILAM, &
-                           PHYEX%NEBN%LSUBG_COND, PHYEX%NEBN%LSIGMAS, PHYEX%MISC%PTSTEP, PHYEX%NEBN%VSIGQSAT, &
+                           PHYEX%NEBN%LSUBG_COND, PHYEX%NEBN%LSIGMAS, PHYEX%MISC%PTSTEP, ZSIGQSAT (:, IBL), &
                            PRHODREF(:, :, IBL), PRHODJ(:, :, IBL), PEXNREF(:, :, IBL), PSIGS(:, :, IBL), &
                            PHYEX%MISC%LMFCONV, PMFCONV(:, :, IBL), &
-                           PPABSM(:, :, IBL), PPABSM(:, :, IBL), ZZZ(:, :, IBL), .TRUE., PDTHRAD(:, :, IBL), PW_NU(:, :, IBL), &
+                           PPABSM(:, :, IBL), ZZZ(:, :, IBL), .TRUE., PDTHRAD(:, :, IBL), PW_NU(:, :, IBL), &
                            PRT(:, :, :, IBL), PRS(:, :, :, IBL), PSVT(:, :, :, IBL), PSVS(:, :, :, IBL), &
                            HACTCCN, PAERO(:,:,:, IBL), PSOLORG(:,:,:,IBL), PMI(:,:,:,IBL), &
                            PTHS(:, :, IBL), PHYEX%MISC%OCOMPUTE_SRC, PSRCS(:, :, IBL), PCLDFR(:, :, IBL), PICEFR(:, :, IBL), &
@@ -371,6 +374,7 @@ PHYEX%NEBN%LSIGMAS = .TRUE.
 PHYEX%NEBN%CFRAC_ICE_ADJUST='T'
 PHYEX%NEBN%CFRAC_ICE_SHALLOW_MF='T'
 PHYEX%NEBN%VSIGQSAT=0.02
+PHYEX%NEBN%LCONDBORN=.TRUE.
 
 !Param initialisation
 CALL INI_PHYEX(CPROGRAM, PHYEX%MISC%TPFILE, .TRUE., IULOUT, 0, 1, &

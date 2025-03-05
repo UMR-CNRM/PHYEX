@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -15,7 +15,7 @@ USE MODD_IO, ONLY: TFILEDATA
 !
 IMPLICIT NONE
 !
-TYPE(TFILEDATA), INTENT(IN) :: TPFILE   ! File characteristics
+TYPE(TFILEDATA), INTENT(INOUT) :: TPFILE   ! File characteristics
 CHARACTER(LEN=*),INTENT(IN) :: HDADFILE ! Corresponding FM-file name of its DAD model
 END SUBROUTINE WRITE_LFIFM_n
 !
@@ -87,7 +87,7 @@ END MODULE MODI_WRITE_LFIFM_n
 !!
 !!    AUTHOR
 !!    ------
-!!  	V. Ducrocq   *Meteo France* 
+!!    V. Ducrocq   *Meteo France* 
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -184,6 +184,7 @@ END MODULE MODI_WRITE_LFIFM_n
 !  E. Jezequel    11/2022: add covariances from MEAN fields
 !  H. Toumi       09/2022: add ADR
 !  PA. Joulin     04/2023: update EOL metadata management
+!  M. Mandement   01/2024: add max 10 m wind gust speed formulations
 !  A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !-------------------------------------------------------------------------------
 !
@@ -290,7 +291,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of arguments
 !
-TYPE(TFILEDATA), INTENT(IN) :: TPFILE   ! File characteristics
+TYPE(TFILEDATA), INTENT(INOUT) :: TPFILE   ! File characteristics
 CHARACTER(LEN=*),INTENT(IN) :: HDADFILE ! Corresponding FM-file name of its DAD model
 !
 !*       0.2   Declarations of local variables
@@ -320,7 +321,7 @@ INTEGER              :: IID
 TYPE(TFIELDMETADATA) :: TZFIELD
 !-------------------------------------------------------------------------------
 !
-!*	0. Initialization
+!*      0. Initialization
 !
 IMI = GET_CURRENT_MODEL_INDEX()
 !
@@ -508,18 +509,20 @@ IF (LIBM .OR. LIBM_LSF) THEN
   !
   CALL IO_Field_write(TPFILE,TZFIELD,XIBM_LS(:,:,:,1))
   !
-  TZFIELD = TFIELDMETADATA( &
-    CMNHNAME   = 'XMUT',    &
-    CLONGNAME  = 'XMUT',    &
-    CSTDNAME   = '',        &
-    CUNITS     = 'm2 s-1',  &
-    CDIR       = 'XY',      &
-    NGRID      = 1,         &
-    NTYPE      = TYPEREAL,  &
-    NDIMS      = 3,         &
-    LTIMEDEP   = .TRUE.     )
-   !
-   CALL IO_Field_write(TPFILE,TZFIELD,XIBM_XMUT)
+  IF ( CPROGRAM == 'MESONH' ) THEN
+    TZFIELD = TFIELDMETADATA( &
+      CMNHNAME   = 'XMUT',    &
+      CLONGNAME  = 'XMUT',    &
+      CSTDNAME   = '',        &
+      CUNITS     = 'm2 s-1',  &
+      CDIR       = 'XY',      &
+      NGRID      = 1,         &
+      NTYPE      = TYPEREAL,  &
+      NDIMS      = 3,         &
+      LTIMEDEP   = .TRUE.     )
+    !
+    CALL IO_Field_write(TPFILE,TZFIELD,XIBM_XMUT)
+  END IF
    !
 ENDIF
 !
@@ -790,7 +793,25 @@ IF (MEAN_COUNT /= 0) THEN
     CALL IO_Field_write(TPFILE,TZFIELD,ZWORK3D)
     !
   END IF
-!
+  !
+  IF (LMINMAX_VORT) THEN
+  ! Min and max vorticity
+  !
+    TZFIELD%CMNHNAME   = 'UM1_MAX'
+    TZFIELD%CLONGNAME  = 'UM1_MAX'
+    TZFIELD%CUNITS     = 's-1'
+    TZFIELD%CCOMMENT   = 'X_Y_Z_x_maximum relative vorticity'
+    CALL IO_Field_write(TPFILE,TZFIELD,XUM1_MAX)
+  !
+  !
+    TZFIELD%CMNHNAME   = 'UM1_MIN'
+    TZFIELD%CLONGNAME  = 'UM1_MIN'
+    TZFIELD%CUNITS     = 's-1'
+    TZFIELD%CCOMMENT   = 'X_Y_Z_x_maximum relative vorticity'
+    CALL IO_Field_write(TPFILE,TZFIELD,XUM1_MIN)
+  END IF
+  !
+  !
   TZFIELD = TFIELDMETADATA(                          &
     CMNHNAME   = 'generic for mean_count variables', & !Temporary name to ease identification
     CSTDNAME   = '',                                 &
@@ -820,6 +841,22 @@ IF (MEAN_COUNT /= 0) THEN
   TZFIELD%CCOMMENT   = 'X_Y_Z_V component of max wind'
   CALL IO_Field_write(TPFILE,TZFIELD,XVM_MAX)
 !
+  IF (LMINMAX_VORT) THEN
+  ! Min and max vorticity
+  !
+    TZFIELD%CMNHNAME   = 'VM1_MAX'
+    TZFIELD%CLONGNAME  = 'VM1_MAX'
+    TZFIELD%CUNITS     = 's-1'
+    TZFIELD%CCOMMENT   = 'X_Y_Z_y_maximum relative vorticity'
+    CALL IO_Field_write(TPFILE,TZFIELD,XVM1_MAX)
+!
+    TZFIELD%CMNHNAME   = 'VM1_MIN'
+    TZFIELD%CLONGNAME  = 'VM1_MIN'
+    TZFIELD%CUNITS     = 's-1'
+    TZFIELD%CCOMMENT   = 'X_Y_Z_y_minimum relative vorticity'
+    CALL IO_Field_write(TPFILE,TZFIELD,XVM1_MIN)
+  END IF
+!
   TZFIELD = TFIELDMETADATA(                          &
     CMNHNAME   = 'generic for mean_count variables', & !Temporary name to ease identification
     CSTDNAME   = '',                                 &
@@ -848,6 +885,28 @@ IF (MEAN_COUNT /= 0) THEN
   TZFIELD%CUNITS     = 'm s-1'
   TZFIELD%CCOMMENT   = 'X_Y_Z_vertical max wind'
   CALL IO_Field_write(TPFILE,TZFIELD,XWM_MAX)
+!
+  TZFIELD%CMNHNAME   = 'WMMI'
+  TZFIELD%CLONGNAME  = 'WMMI'
+  TZFIELD%CUNITS     = 'm s-1'
+  TZFIELD%CCOMMENT   = 'X_Y_Z_vertical min wind'
+  CALL IO_Field_write(TPFILE,TZFIELD,XWM_MIN)
+!
+  IF (LMINMAX_VORT) THEN
+  ! Min and max vorticity
+  !
+    TZFIELD%CMNHNAME   = 'WM1_MAX'
+    TZFIELD%CLONGNAME  = 'WM1_MAX'
+    TZFIELD%CUNITS     = 's-1'
+    TZFIELD%CCOMMENT   = 'X_Y_Z_z_maximum relative vorticity'
+    CALL IO_Field_write(TPFILE,TZFIELD,XWM1_MAX)
+!
+    TZFIELD%CMNHNAME   = 'WM1_MIN'
+    TZFIELD%CLONGNAME  = 'WM1_MIN'
+    TZFIELD%CUNITS     = 's-1'
+    TZFIELD%CCOMMENT   = 'X_Y_Z_z_maximum relative vorticity'
+    CALL IO_Field_write(TPFILE,TZFIELD,XWM1_MIN)
+  END IF
 !
   !
   ! Calculation of mean horizontal wind speed and
@@ -1028,6 +1087,96 @@ IF (MEAN_COUNT /= 0) THEN
     TZFIELD%CUNITS     = 'm2 s-2'
     TZFIELD%CCOMMENT   = 'X_Y_Z_max kinetic energy'
     CALL IO_Field_write(TPFILE,TZFIELD,XTKEM_MAX)
+  END IF
+!
+  IF (LMINMAX_WINDFFTKE) THEN
+    TZFIELD = TFIELDMETADATA(                          &
+      CMNHNAME   = 'generic for mean_count variables', & !Temporary name to ease identification
+      CSTDNAME   = '',                                 &
+      CDIR       = 'XY',                               &
+      NTYPE      = TYPEREAL,                           &
+      NGRID      = 1,                                  &
+      NDIMS      = 2,                                  &
+      LTIMEDEP   = .TRUE.                              )
+  !
+    TZFIELD%CMNHNAME   = 'WMOD10MAX_MA'
+    TZFIELD%CLONGNAME  = 'WMOD10MAX_MA'
+    TZFIELD%CUNITS     = 'm s-1'
+    TZFIELD%CCOMMENT   = 'X_Y_max WMOD10MAX'
+    CALL IO_Field_write(TPFILE,TZFIELD,XWMOD10MAX_MAX)
+  !
+    IF (CTURB /= 'NONE') THEN
+     TZFIELD%CMNHNAME   = 'XTKEMAX_MA'
+     TZFIELD%CLONGNAME  = 'XTKEMAX_MA'
+     TZFIELD%CUNITS     = 'm s-1'
+     TZFIELD%CCOMMENT   = 'X_Y_max XTKEMAX'
+     CALL IO_Field_write(TPFILE,TZFIELD,XTKEMAX_MAX)
+  !
+     TZFIELD%CMNHNAME   = 'XTKE10MAX_MA'
+     TZFIELD%CLONGNAME  = 'XTKE10MAX_MA'
+     TZFIELD%CUNITS     = 'm s-1'
+     TZFIELD%CCOMMENT   = 'X_Y_max XTKE10MAX'
+     CALL IO_Field_write(TPFILE,TZFIELD,XTKE10MAX_MAX)
+  !
+     TZFIELD%CMNHNAME   = 'XTKE20MAX_MA'
+     TZFIELD%CLONGNAME  = 'XTKE20MAX_MA'
+     TZFIELD%CUNITS     = 'm s-1'
+     TZFIELD%CCOMMENT   = 'X_Y_max XTKE20MAX'
+     CALL IO_Field_write(TPFILE,TZFIELD,XTKE20MAX_MAX)
+    END IF
+  !
+    TZFIELD%CMNHNAME   = 'FF10MAX_MA'
+    TZFIELD%CLONGNAME  = 'FF10MAX_MA'
+    TZFIELD%CUNITS     = 'm s-1'
+    TZFIELD%CCOMMENT   = 'X_Y_max FF10MAX'
+    CALL IO_Field_write(TPFILE,TZFIELD,XFF10MAX_MAX)
+  !
+    TZFIELD%CMNHNAME   = 'FF10MAX2_MA'
+    TZFIELD%CLONGNAME  = 'FF10MAX2_MA'
+    TZFIELD%CUNITS     = 'm s-1'
+    TZFIELD%CCOMMENT   = 'X_Y_max FF10MAX2'
+    CALL IO_Field_write(TPFILE,TZFIELD,XFF10MAX2_MAX)
+  !
+    TZFIELD%CMNHNAME   = 'FF10MAX_AROME_MA'
+    TZFIELD%CLONGNAME  = 'FF10MAX_AROME_MA'
+    TZFIELD%CUNITS     = 'm s-1'
+    TZFIELD%CCOMMENT   = 'X_Y_max FF10MAX_AROME'
+    CALL IO_Field_write(TPFILE,TZFIELD,XFF10MAX_AROME_MAX)
+  !
+  END IF
+
+  IF (LMINMAX_MSLP) THEN
+  ! Min and max sea level pressure
+    TZFIELD%CMNHNAME   = 'MSLP_MAX'
+    TZFIELD%CLONGNAME  = 'MSLP_MAX'
+    TZFIELD%CUNITS     = 'hPa'
+    TZFIELD%CCOMMENT   = 'X_Y_max Mean Sea Level Pressure'
+    CALL IO_Field_write(TPFILE,TZFIELD,XMSLP_MAX)
+  !
+    TZFIELD%CMNHNAME   = 'MSLP_MIN'
+    TZFIELD%CLONGNAME  = 'MSLP_MIN'
+    TZFIELD%CUNITS     = 'hPa'
+    TZFIELD%CCOMMENT   = 'X_Y_min Mean Sea Level Pressure'
+    CALL IO_Field_write(TPFILE,TZFIELD,XMSLP_MIN)
+  !
+  END IF
+!
+  ! Max updraft helicity
+  IF (LUH_MAX) THEN
+    TZFIELD = TFIELDMETADATA(                          &
+      CMNHNAME   = 'generic for mean_count variables', & !Temporary name to ease identification
+      CSTDNAME   = '',                                 &
+      CDIR       = 'XY',                               &
+      NTYPE      = TYPEREAL,                           &
+      NGRID      = 4,                                  &
+      NDIMS      = 2,                                  &
+      LTIMEDEP   = .TRUE.                              )
+!
+    TZFIELD%CMNHNAME   = 'UH_MAX'
+    TZFIELD%CLONGNAME  = 'UH_MAX'
+    TZFIELD%CUNITS     = 'm2 s-2'
+    TZFIELD%CCOMMENT   = 'X_Y_max Updraft Helicity'
+    CALL IO_Field_write(TPFILE,TZFIELD,XUH_MAX)
   END IF
 !
 END IF
@@ -1556,7 +1705,7 @@ END IF
 !
 !*       1.10   Diagnostic variables related to the precipitations
 !
-IF (CPROGRAM /= 'IDEAL') THEN
+IF ( (CPROGRAM /= 'IDEAL') .AND. (CPROGRAM /= 'REAL')  )THEN
   IF (ASSOCIATED(XINPRC)) THEN
   IF (SIZE(XINPRC) /= 0 ) THEN
     CALL FIND_FIELD_ID_FROM_MNHNAME('INPRC',IID,IRESP)

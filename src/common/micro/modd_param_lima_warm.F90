@@ -28,7 +28,7 @@ IMPLICIT NONE
 !*       1.   DESCRIPTIVE PARAMETERS
 !             ----------------------
 !
-TYPE PARAM_LIMA_WARM_t
+TYPE PARAM_LIMA_WARM_T
 REAL      ::  XLBC, XLBEXC,          & ! shape parameters of the cloud droplets
               XLBR, XLBEXR, XNR        ! shape parameters of the raindrops
 !
@@ -44,7 +44,8 @@ REAL      :: XAR,XBR,XCR,XDR,XF0R,XF1R,     & ! Raindrop       charact.
 !             ---------------------
 !
 REAL      :: XFSEDRR,XFSEDCR,                  & ! Constants for sedimentation
-             XFSEDRC,XFSEDCC                     ! fluxes of R, C
+             XFSEDRC,XFSEDCC,                  & ! fluxes of R, C
+             XGCC
 !
 !
 REAL      :: XDIVA,                            & ! Diffusivity of water vapor
@@ -111,9 +112,9 @@ REAL      :: XFREFFC  ! Factor to compute the cloud droplet effective radius
 REAL      :: XFREFFR  ! Factor to compute the rain drop     effective radius
 REAL      :: XCREC, XCRER
                       ! Factors to compute reff when cloud and rain are present
-END TYPE PARAM_LIMA_WARM_t
+END TYPE PARAM_LIMA_WARM_T
 !
-TYPE(PARAM_LIMA_WARM_t), TARGET, SAVE :: PARAM_LIMA_WARM
+TYPE(PARAM_LIMA_WARM_T), TARGET, SAVE :: PARAM_LIMA_WARM
 !
 REAL, POINTER :: XLBC => NULL(), &
                  XLBEXC => NULL(), &
@@ -139,6 +140,7 @@ REAL, POINTER :: XLBC => NULL(), &
                  XFSEDCR => NULL(), &
                  XFSEDRC => NULL(), &
                  XFSEDCC => NULL(), &
+                 XGCC => NULL(), &
                  XDIVA => NULL(), &
                  XTHCO => NULL(), &
                  XWMIN => NULL(), &
@@ -233,7 +235,10 @@ CHARACTER(LEN=JPSVNAMELGTMAX),DIMENSION(2),PARAMETER :: CAERO_MASS =(/'MASSAP', 
 !
 CONTAINS
 SUBROUTINE PARAM_LIMA_WARM_ASSOCIATE()
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 IMPLICIT NONE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_WARM_ASSOCIATE', 0, ZHOOK_HANDLE)
 IF(.NOT. ASSOCIATED(XLBC)) THEN
   XLBC              => PARAM_LIMA_WARM%XLBC
   XLBEXC            => PARAM_LIMA_WARM%XLBEXC
@@ -259,6 +264,7 @@ IF(.NOT. ASSOCIATED(XLBC)) THEN
   XFSEDCR           => PARAM_LIMA_WARM%XFSEDCR
   XFSEDRC           => PARAM_LIMA_WARM%XFSEDRC
   XFSEDCC           => PARAM_LIMA_WARM%XFSEDCC
+  XGCC              => PARAM_LIMA_WARM%XGCC
   XDIVA             => PARAM_LIMA_WARM%XDIVA
   XTHCO             => PARAM_LIMA_WARM%XTHCO
   XWMIN             => PARAM_LIMA_WARM%XWMIN
@@ -328,16 +334,20 @@ IF(.NOT. ASSOCIATED(XLBC)) THEN
   NHYP              => PARAM_LIMA_WARM%NHYP
   NAHEN             => PARAM_LIMA_WARM%NAHEN
 ENDIF
+IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_WARM_ASSOCIATE', 1, ZHOOK_HANDLE)
 END SUBROUTINE PARAM_LIMA_WARM_ASSOCIATE
 !
 SUBROUTINE PARAM_LIMA_WARM_ALLOCATE(HNAME, KDIM1, KDIM2, KDIM3, KDIM4)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
   IMPLICIT NONE
   CHARACTER(LEN=*), INTENT(IN) :: HNAME
   INTEGER, INTENT(IN)          :: KDIM1
   INTEGER, OPTIONAL, INTENT(IN):: KDIM2
   INTEGER, OPTIONAL, INTENT(IN):: KDIM3
   INTEGER, OPTIONAL, INTENT(IN):: KDIM4
+  REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
+  IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_WARM_ALLOCATE', 0, ZHOOK_HANDLE)
   SELECT CASE(TRIM(HNAME))
     CASE('XHYPF12')
       ALLOCATE(PARAM_LIMA_WARM%XHYPF12(KDIM1, KDIM2))
@@ -370,6 +380,7 @@ SUBROUTINE PARAM_LIMA_WARM_ALLOCATE(HNAME, KDIM1, KDIM2, KDIM3, KDIM4)
       ALLOCATE(PARAM_LIMA_WARM%XCONCC_INI(KDIM1,KDIM2,KDIM3,KDIM4))
       XCONCC_INI => PARAM_LIMA_WARM%XCONCC_INI
   END SELECT
+IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_WARM_ALLOCATE', 1, ZHOOK_HANDLE)
 END SUBROUTINE PARAM_LIMA_WARM_ALLOCATE
 !
 !-------------------------------------------------------------------------------

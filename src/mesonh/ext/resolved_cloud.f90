@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -44,7 +44,7 @@ INTEGER,                  INTENT(IN)   :: KSPLITG  ! Number of small time step
 INTEGER,                  INTENT(IN)   :: KMI      ! Model index
 INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
 CHARACTER(LEN=4), DIMENSION(2), INTENT(IN) :: HLBCX,HLBCY   ! X and Y-direc. LBC type
-TYPE(TFILEDATA),          INTENT(IN)   :: TPFILE   ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT)   :: TPFILE   ! Output file
 CHARACTER(len=4),         INTENT(IN)   :: HRAD     ! Radiation scheme name
 CHARACTER(len=4),         INTENT(IN)   :: HTURBDIM ! Dimensionality of the
                                                    ! turbulence scheme
@@ -293,7 +293,7 @@ END MODULE MODI_RESOLVED_CLOUD
 !                          CELLS can be used with rain_ice with LRED=T and with LIMA with LPTSPLIT=T
 !                          the adjustement for cloud electricity is also externalized
 !  A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
-!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
+!  A. Marcel Jan 2025: relaxation of the small fraction assumption
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -312,11 +312,14 @@ USE MODD_NSV,              ONLY: NSV, NSV_C1R3END, NSV_C2R2BEG, NSV_C2R2END,    
                                  NSV_LIMA_BEG, NSV_LIMA_END, NSV_LIMA_CCN_FREE, NSV_LIMA_IFN_FREE, &
                                  NSV_LIMA_NC, NSV_LIMA_NI, NSV_LIMA_NR,                            &
                                  NSV_AEREND, NSV_DSTEND, NSV_SLTEND,                               &
-                                 NSV_ELECBEG, NSV_ELECEND
+                                 NSV_ELECBEG, NSV_ELECEND, TNSV
 USE MODD_PARAM_C2R2,       ONLY: LSUPSAT
 USE MODD_PARAMETERS,       ONLY: JPHEXT, JPVEXT
 USE MODD_PARAM_ICE_n,      ONLY: CSEDIM, LADJ_BEFORE, LADJ_AFTER, LRED, PARAM_ICEN
-USE MODD_PARAM_LIMA,       ONLY: LADJ, LPTSPLIT, LSPRO, NMOD_CCN, NMOD_IFN, NMOD_IMM, NMOM_I
+USE MODD_PARAM_LIMA,       ONLY: LADJ, LPTSPLIT, LSPRO, NMOD_CCN, NMOD_IFN, NMOD_IMM, NMOM_I, PARAM_LIMA
+USE MODD_PARAM_LIMA_WARM,  ONLY: PARAM_LIMA_WARM
+USE MODD_PARAM_LIMA_COLD,  ONLY: PARAM_LIMA_COLD
+USE MODD_PARAM_LIMA_MIXED, ONLY: PARAM_LIMA_MIXED
 USE MODD_RAIN_ICE_DESCR_n, ONLY: XRTMIN, RAIN_ICE_DESCRN
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAMN
 USE MODD_REF,              ONLY: XTHVREFZ
@@ -325,6 +328,10 @@ USE MODD_TURB_n,           ONLY: TURBN
 !
 USE MODE_ll
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
+USE MODE_MPPDB
+#ifdef MNH_OPENACC
+USE MODE_MNH_ZWORK,   ONLY: MNH_MEM_GET, MNH_MEM_POSITION_PIN, MNH_MEM_RELEASE
+#endif
 use mode_sources_neg_correct, only: Sources_neg_correct
 !
 USE MODI_AER2LIMA
@@ -348,6 +355,9 @@ USE MODI_RAIN_ICE
 USE MODI_RAIN_ICE_ELEC
 USE MODI_RAIN_ICE_OLD
 USE MODI_SHUMAN
+#ifdef MNH_OPENACC
+USE MODI_SHUMAN_DEVICE
+#endif
 USE MODI_SLOW_TERMS
 !
 IMPLICIT NONE
@@ -369,7 +379,7 @@ INTEGER,                  INTENT(IN)   :: KSPLITG  ! Number of small time step
 INTEGER,                  INTENT(IN)   :: KMI      ! Model index
 INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
 CHARACTER(LEN=4), DIMENSION(2), INTENT(IN) :: HLBCX,HLBCY   ! X and Y-direc. LBC type
-TYPE(TFILEDATA),          INTENT(IN)   :: TPFILE   ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT)   :: TPFILE   ! Output file
 CHARACTER(len=4),         INTENT(IN)   :: HRAD     ! Radiation scheme name
 CHARACTER(len=4),         INTENT(IN)   :: HTURBDIM ! Dimensionality of the
                                                    ! turbulence scheme
@@ -487,7 +497,7 @@ INTEGER :: JK,JI,JL
 !
 !
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZDZZ
-real, dimension(:,:,:), allocatable :: ZEXN
+REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZEXN
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZZZ
                                     ! model layer height
 ! REAL  :: ZMASSTOT                   ! total mass  for one water category
@@ -523,6 +533,8 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLATHAM_IAGGS ! E Function to simulate
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZEFIELDW
 LOGICAL :: GELEC ! if true, cloud electrification is activated
 LOGICAL :: LLDTHRAD ! true if DTHRAD is used by LIMA
+INTEGER  :: JIU,JJU,JKU
+INTEGER  :: JII,JJI,JKI
 !
 ZSIGQSAT2D(:,:) = PSIGQSAT
 !
@@ -536,12 +548,16 @@ IKB=1+JPVEXT
 IKE=SIZE(PZZ,3) - JPVEXT
 IKU=SIZE(PZZ,3)
 !
+JIU =  size(PZZ, 1 )
+JJU =  size(PZZ, 2 )
+JKU =  size(PZZ, 3 )
+!
 CALL FILL_DIMPHYEX(YLDIMPHYEX, SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3))
 !
-GWEST  = LWEST_ll()
-GEAST  = LEAST_ll()
-GSOUTH = LSOUTH_ll()
-GNORTH = LNORTH_ll()
+GWEST  = ( HLBCX(1) /= 'CYCL' .AND. LWEST_ll() )
+GEAST  = ( HLBCX(2) /= 'CYCL' .AND. LEAST_ll() )
+GSOUTH = ( HLBCY(1) /= 'CYCL' .AND. LSOUTH_ll() )
+GNORTH = ( HLBCY(2) /= 'CYCL' .AND. LNORTH_ll() )
 !
 LMFCONV=(SIZE(PMFCONV)/=0)
 !
@@ -611,19 +627,27 @@ END IF
 !*       2.     TRANSFORMATION INTO PHYSICAL TENDENCIES
 !               ---------------------------------------
 !
+!$acc kernels
 PTHS(:,:,:) = PTHS(:,:,:) / PRHODJ(:,:,:)
+!$acc loop independent
 DO JRR = 1,KRR
   PRS(:,:,:,JRR)  = PRS(:,:,:,JRR) / PRHODJ(:,:,:)
 END DO
+!$acc end kernels
 !
 IF (HCLOUD=='C2R2' .OR. HCLOUD=='C3R5' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
+!$acc kernels
+!$acc loop independent
   DO JSV = ISVBEG, ISVEND
     PSVS(:,:,:,JSV) = PSVS(:,:,:,JSV) / PRHODJ(:,:,:)
   ENDDO
+!$acc end kernels
 ENDIF
 !
 !  complete the lateral boundaries to avoid possible problems
 !
+!$acc kernels
+!$acc loop independent
 DO JI=1,JPHEXT
   PTHS(JI,:,:) = PTHS(IIB,:,:)
   PTHS(IIE+JI,:,:) = PTHS(IIE,:,:)
@@ -638,12 +662,13 @@ END DO
 !
 !  complete the physical boundaries to avoid some computations
 !
-IF(GWEST  .AND. HLBCX(1) /= 'CYCL')  PRT(:IIB-1,:,:,2:) = 0.0
-IF(GEAST  .AND. HLBCX(2) /= 'CYCL')  PRT(IIE+1:,:,:,2:) = 0.0
-IF(GSOUTH .AND. HLBCY(1) /= 'CYCL')  PRT(:,:IJB-1,:,2:) = 0.0
-IF(GNORTH .AND. HLBCY(2) /= 'CYCL')  PRT(:,IJE+1:,:,2:) = 0.0
+IF( GWEST  )  PRT(:IIB-1,:,:,2:) = 0.0
+IF( GEAST  )  PRT(IIE+1:,:,:,2:) = 0.0
+IF( GSOUTH )  PRT(:,:IJB-1,:,2:) = 0.0
+IF( GNORTH )  PRT(:,IJE+1:,:,2:) = 0.0
 !
 IF (HCLOUD=='C2R2' .OR. HCLOUD=='C3R5' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
+!$acc loop independent
 DO JI=1,JPHEXT
   PSVS(JI,     :,      :, ISVBEG:ISVEND) = PSVS(IIB, :,   :, ISVBEG:ISVEND)
   PSVS(IIE+JI, :,      :, ISVBEG:ISVEND) = PSVS(IIE, :,   :, ISVBEG:ISVEND)
@@ -653,10 +678,10 @@ END DO
  !
 !  complete the physical boundaries to avoid some computations
 !
-  IF(GWEST  .AND. HLBCX(1) /= 'CYCL') PSVT(:IIB-1, :,      :, ISVBEG:ISVEND) = 0.0
-  IF(GEAST  .AND. HLBCX(2) /= 'CYCL') PSVT(IIE+1:, :,      :, ISVBEG:ISVEND) = 0.0
-  IF(GSOUTH .AND. HLBCY(1) /= 'CYCL') PSVT(:,      :IJB-1, :, ISVBEG:ISVEND) = 0.0
-  IF(GNORTH .AND. HLBCY(2) /= 'CYCL') PSVT(:,      IJE+1:, :, ISVBEG:ISVEND) = 0.0
+  IF( GWEST  ) PSVT(:IIB-1, :,      :, ISVBEG:ISVEND) = 0.0
+  IF( GEAST  ) PSVT(IIE+1:, :,      :, ISVBEG:ISVEND) = 0.0
+  IF( GSOUTH ) PSVT(:,      :IJB-1, :, ISVBEG:ISVEND) = 0.0
+  IF( GNORTH ) PSVT(:,      IJE+1:, :, ISVBEG:ISVEND) = 0.0
 ENDIF
 !
 !  complete the vertical boundaries
@@ -677,6 +702,7 @@ IF (HCLOUD == 'C2R2' .OR. HCLOUD == 'C3R5' .OR. HCLOUD == 'KHKO' &
   PSVT(:,:,IKB-1,ISVBEG:ISVEND) = PSVT(:,:,IKB,ISVBEG:ISVEND)
   PSVT(:,:,IKE+1,ISVBEG:ISVEND) = PSVT(:,:,IKE,ISVBEG:ISVEND)
 ENDIF
+!$acc end kernels
 !
 ! Same thing for cloud electricity
 IF (HELEC(1:3) == 'ELE') THEN
@@ -705,10 +731,10 @@ IF (HELEC(1:3) == 'ELE') THEN
   END DO
   !
   ! complete the physical boundaries to avoid some computations
-  IF(GWEST  .AND. HLBCX(1) /= 'CYCL') PSVT(IIB-1,:,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
-  IF(GEAST  .AND. HLBCX(2) /= 'CYCL') PSVT(IIE+1,:,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
-  IF(GSOUTH .AND. HLBCY(1) /= 'CYCL') PSVT(:,IJB-1,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
-  IF(GNORTH .AND. HLBCY(2) /= 'CYCL') PSVT(:,IJE+1,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+  IF( GWEST  ) PSVT(IIB-1,:,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+  IF( GEAST  ) PSVT(IIE+1,:,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+  IF( GSOUTH ) PSVT(:,IJB-1,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+  IF( GNORTH ) PSVT(:,IJE+1,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
   !
   ! complete the vertical boundaries
   PSVS(:,:,IKB-1,NSV_ELECBEG) = PSVS(:,:,IKB,NSV_ELECBEG)    ! Positive ion
@@ -852,9 +878,10 @@ SELECT CASE ( HCLOUD )
 !*       9.     MIXED-PHASE MICROPHYSICAL SCHEME (WITH 3 ICE SPECIES)
 !               -----------------------------------------------------
 !
-    allocate( zexn( size( pzz, 1 ), size( pzz, 2 ), size( pzz, 3 ) ) )
+!$acc kernels
+!$mnh_expand_array(JII=1:JIU,JJI=1:JJU,JKI=1:JKU)
     ZEXN(:,:,:)= (PPABST(:,:,:)/CST%XP00)**(CST%XRD/CST%XCPD)
-
+!$mnh_end_expand_array(JII=1:JIU,JJI=1:JJU,JKI=1:JKU)
     IF (HELEC == 'ELE4') THEN
       ALLOCATE( ZCND    (SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3)) )
       ALLOCATE( ZDEP    (SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3)) )
@@ -868,7 +895,14 @@ SELECT CASE ( HCLOUD )
     DO JK=IKB,IKE
       ZDZZ(:,:,JK)=PZZ(:,:,JK+1)-PZZ(:,:,JK)    
     ENDDO
-    ZZZ = MZF( PZZ )
+    ZDZZ(:,:,1) = ZDZZ(:,:,IKB)
+    ZDZZ(:,:,IKE+1) = ZDZZ(:,:,IKE)
+!$acc end kernels
+#ifndef MNH_OPENACC
+    ZZZ(:,:,:) = MZF( PZZ(:,:,:) )
+#else
+    CALL MZF_DEVICE( PZZ, ZZZ )
+#endif
     IF(LRED .AND. LADJ_BEFORE) THEN
       IF (HELEC == 'ELE4') THEN
         ! save the cloud droplets and ice crystals m.r. source before adjustement
@@ -947,7 +981,7 @@ SELECT CASE ( HCLOUD )
         ZQSS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+4)
         ZQGS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+5)
         ZQNIS(:,:,:) = PSVS(:,:,:,NSV_ELECEND)
-        IF (LSEDIM_BEARD) THEN
+        IF (ELEC_DESCR%LSEDIM_BEARD) THEN
           ALLOCATE(ZEFIELDW(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
           ZEFIELDW(:,:,:) = XEFIELDW(:,:,:)
         ELSE
@@ -975,7 +1009,7 @@ SELECT CASE ( HCLOUD )
       ALLOCATE(ZQHS(0,0,0))
       !
       CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN, &
-                    ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, LSEDIM_BEARD,       &
+                    ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, ELEC_DESCR%LSEDIM_BEARD,       &
                     XTHVREFZ(IKB),                                              &
                     PTSTEP, KRR, ZEXN,                                          &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
@@ -1060,7 +1094,7 @@ SELECT CASE ( HCLOUD )
                       PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),                     &
                       PINPRC,PINPRR, PINPRR3D, PEVAP3D,                             &
                       PINPRS, PINPRG, PSIGS,PINDEP, PRAINFR,                        &
-                      PSEA, PTOWN, PFPR=ZFPR)
+                      PSEA, PTOWN, PFPR=ZFPR                                        )
       END IF
     END IF
 
@@ -1134,15 +1168,15 @@ SELECT CASE ( HCLOUD )
       END IF
     END IF
 !
-    deallocate( zexn )
-!
   CASE ('ICE4')
 !
 !*       10.    MIXED-PHASE MICROPHYSICAL SCHEME (WITH 4 ICE SPECIES)
 !               -----------------------------------------------------
 !
-    allocate( zexn( size( pzz, 1 ), size( pzz, 2 ), size( pzz, 3 ) ) )
+!$acc kernels
+ !$mnh_expand_array(JII=1:JIU,JJI=1:JJU,JKI=1:JKU)
     ZEXN(:,:,:)= (PPABST(:,:,:)/CST%XP00)**(CST%XRD/CST%XCPD)
+ !$mnh_end_expand_array(JII=1:JIU,JJI=1:JJU,JKI=1:JKU)
 !
 !*       10.1   Compute the explicit microphysical sources
 !
@@ -1150,7 +1184,12 @@ SELECT CASE ( HCLOUD )
     DO JK=IKB,IKE
       ZDZZ(:,:,JK)=PZZ(:,:,JK+1)-PZZ(:,:,JK)    
     ENDDO
-    ZZZ = MZF( PZZ )
+!$acc end kernels
+#ifndef MNH_OPENACC
+    ZZZ(:,:,:) = MZF( PZZ(:,:,:) )
+#else
+    CALL MZF_DEVICE( PZZ, ZZZ )
+#endif
     IF(LRED .AND. LADJ_BEFORE) THEN
       IF (HELEC == 'ELE4') THEN
         ! save the cloud droplets and ice crystals m.r. source before adjustement
@@ -1234,7 +1273,7 @@ SELECT CASE ( HCLOUD )
         ZQGS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+5)
         ZQHS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+6)
         ZQNIS(:,:,:) = PSVS(:,:,:,NSV_ELECEND)
-        IF (LSEDIM_BEARD) THEN
+        IF (ELEC_DESCR%LSEDIM_BEARD) THEN
           ALLOCATE(ZEFIELDW(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
           ZEFIELDW(:,:,:) = XEFIELDW(:,:,:)
         ELSE
@@ -1262,7 +1301,7 @@ SELECT CASE ( HCLOUD )
       END IF
       !
       CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN, &
-                     ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, LSEDIM_BEARD,        &
+                     ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, ELEC_DESCR%LSEDIM_BEARD,        &
                      XTHVREFZ(IKB),                                              &
                      PTSTEP, KRR, ZEXN,                                          &
                      ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
@@ -1329,7 +1368,7 @@ SELECT CASE ( HCLOUD )
                     PINPRC, PINPRR, PINPRR3D, PEVAP3D,                    &
                     PINPRS, PINPRG, PSIGS,PINDEP, PRAINFR,                &
                     PSEA, PTOWN,                                          &
-                    PRT(:,:,:,7), PRS(:,:,:,7), PINPRH, PFPR=ZFPR)
+                    PRT(:,:,:,7), PRS(:,:,:,7), PINPRH, PFPR=ZFPR         )
     END IF
 !
 !
@@ -1382,7 +1421,6 @@ SELECT CASE ( HCLOUD )
       END IF
     END IF
 
-    deallocate( zexn )
 !           
 !
 !*       12.    2-MOMENT MIXED-PHASE MICROPHYSICAL SCHEME LIMA
@@ -1400,20 +1438,26 @@ SELECT CASE ( HCLOUD )
     END IF
     !
     LLDTHRAD = SIZE(PDTHRAD) /= 0
+!$acc kernels
     DO JK=IKB,IKE
       ZDZZ(:,:,JK)=PZZ(:,:,JK+1)-PZZ(:,:,JK)    
     ENDDO
-    ZZZ = MZF( PZZ )
+!$acc end kernels
+#ifndef MNH_OPENACC
+    ZZZ(:,:,:) = MZF( PZZ(:,:,:) )
+#else
+    CALL MZF_DEVICE( PZZ, ZZZ )
+#endif
     IF (LPTSPLIT) THEN 
       IF (GELEC) THEN
-        CALL LIMA (YLDIMPHYEX,CST, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
+         CALL LIMA (PARAM_LIMA, PARAM_LIMA_WARM, PARAM_LIMA_COLD, PARAM_LIMA_MIXED,&
+                   TNSV, YLDIMPHYEX,CST, NEBN, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
                    ELEC_DESCR, ELEC_PARAM,                                 &
                    TBUCONF,TBUDGETS, HACTCCN,SIZE(TBUDGETS), KRR,          &
                    PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
-                   NMOD_CCN, NMOD_IFN, NMOD_IMM,NCARB, NSOA, NSP,          &
-                   LDUST, LSALT, LORILAM,                                  &
+                   NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                &
                    LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
                    PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
                    PSVT, PSOLORG, PMI,                                     &
@@ -1424,14 +1468,14 @@ SELECT CASE ( HCLOUD )
                    PSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),                    &
                    PSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND)                     )
       ELSE
-        CALL LIMA (YLDIMPHYEX,CST, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
+        CALL LIMA (PARAM_LIMA, PARAM_LIMA_WARM, PARAM_LIMA_COLD, PARAM_LIMA_MIXED,&
+                   TNSV, YLDIMPHYEX,CST, NEBN, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
                    ELEC_DESCR, ELEC_PARAM,                                 &
                    TBUCONF, TBUDGETS, HACTCCN, SIZE(TBUDGETS), KRR,        &
                    PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
-                   NMOD_CCN, NMOD_IFN, NMOD_IMM,NCARB, NSOA, NSP,          &
-                   LDUST, LSALT, LORILAM,                                  &
+                   NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                &
                    LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
                    PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
                    PSVT, PSOLORG, PMI,                                     &
@@ -1479,12 +1523,13 @@ SELECT CASE ( HCLOUD )
                            PTHS,PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),         &
                            PCLDFR, PICEFR, PRAINFR, PSRCS                           )
     ELSE IF (LPTSPLIT) THEN
-      CALL LIMA_ADJUST_SPLIT(YLDIMPHYEX, CST, TBUCONF,TBUDGETS,SIZE(TBUDGETS),               &
-                             KRR, KMI, CCONDENS, CLAMBDA3,                                   &
+       CALL LIMA_ADJUST_SPLIT(PARAM_LIMA, PARAM_LIMA_WARM, &
+                             TNSV, YLDIMPHYEX, CST, NEBN, TURBN, TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
+                             KRR, CCONDENS, CLAMBDA3,                                        &
                              NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                        &
-                             OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,                          &
+                             OSUBG_COND, OSIGMAS, PTSTEP, ZSIGQSAT2D,                        &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS,                               &
-                             SIZE(PMFCONV)/=0, PMFCONV, PPABST, PPABSTT, ZZZ,                &
+                             SIZE(PMFCONV)/=0, PMFCONV, PPABST, ZZZ,                         &
                              LLDTHRAD, PDTHRAD, PW_ACT,                                      &
                              PRT, PRS, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                &
                              PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                          &
@@ -1522,31 +1567,37 @@ IF (ALLOCATED(ZLATHAM_IAGGS)) DEALLOCATE(ZLATHAM_IAGGS)
 IF(HCLOUD=='ICE3' .OR. HCLOUD=='ICE4' ) THEN
 ! TODO: code a generic routine to update vertical lower and upper levels to 0, a
 ! specific value or to IKB or IKE and apply it to every output prognostic variable of physics
+!$acc kernels
   PCIT(:,:,1)     = 0.
   PCIT(:,:,IKE+1) = 0.
 
-  PINPRC3D=ZFPR(:,:,:,2) / CST%XRHOLW
-  PINPRR3D=ZFPR(:,:,:,3) / CST%XRHOLW
-  PINPRS3D=ZFPR(:,:,:,5) / CST%XRHOLW
-  PINPRG3D=ZFPR(:,:,:,6) / CST%XRHOLW
-  IF(KRR==7) PINPRH3D=ZFPR(:,:,:,7) / CST%XRHOLW
+  !$mnh_expand_where(JII=1:JIU,JJI=1:JJU,JKI=1:JKU) 
+  PINPRC3D(:,:,:)=ZFPR(:,:,:,2) / CST%XRHOLW
+  PINPRR3D(:,:,:)=ZFPR(:,:,:,3) / CST%XRHOLW
+  PINPRS3D(:,:,:)=ZFPR(:,:,:,5) / CST%XRHOLW
+  PINPRG3D(:,:,:)=ZFPR(:,:,:,6) / CST%XRHOLW
+  IF(KRR==7) THEN
+    PINPRH3D(:,:,:)=ZFPR(:,:,:,7) / CST%XRHOLW
+  END IF
   WHERE (PRT(:,:,:,2) > 1.E-04 )
-    PSPEEDC=ZFPR(:,:,:,2) / (PRT(:,:,:,2) * PRHODREF(:,:,:))
+    PSPEEDC(:,:,:)=ZFPR(:,:,:,2) / (PRT(:,:,:,2) * PRHODREF(:,:,:))
   ENDWHERE
   WHERE (PRT(:,:,:,3) > 1.E-04 )
-    PSPEEDR=ZFPR(:,:,:,3) / (PRT(:,:,:,3) * PRHODREF(:,:,:))
+    PSPEEDR(:,:,:)=ZFPR(:,:,:,3) / (PRT(:,:,:,3) * PRHODREF(:,:,:))
   ENDWHERE
   WHERE (PRT(:,:,:,5) > 1.E-04 )
-    PSPEEDS=ZFPR(:,:,:,5) / (PRT(:,:,:,5) * PRHODREF(:,:,:))
+    PSPEEDS(:,:,:)=ZFPR(:,:,:,5) / (PRT(:,:,:,5) * PRHODREF(:,:,:))
   ENDWHERE
   WHERE (PRT(:,:,:,6) > 1.E-04 )
-    PSPEEDG=ZFPR(:,:,:,6) / (PRT(:,:,:,6) * PRHODREF(:,:,:))
+    PSPEEDG(:,:,:)=ZFPR(:,:,:,6) / (PRT(:,:,:,6) * PRHODREF(:,:,:))
   ENDWHERE
   IF(KRR==7) THEN
     WHERE (PRT(:,:,:,7) > 1.E-04 )
-      PSPEEDH=ZFPR(:,:,:,7) / (PRT(:,:,:,7) * PRHODREF(:,:,:))
+      PSPEEDH(:,:,:)=ZFPR(:,:,:,7) / (PRT(:,:,:,7) * PRHODREF(:,:,:))
     ENDWHERE
   ENDIF
+  !$mnh_end_expand_where(JII=1:JIU,JJI=1:JJU,JKI=1:JKU)
+!$acc end kernels
 ENDIF
 !
 ! Remove non-physical negative values (unnecessary in a perfect world) + corresponding budgets
@@ -1557,6 +1608,7 @@ call Sources_neg_correct( hcloud, helec, 'NECON', krr, ptstep, ppabst, ptht, prt
 !*      13.     SWITCH BACK TO THE PROGNOSTIC VARIABLES
 !               ---------------------------------------
 !
+!$acc kernels
 PTHS(:,:,:) = PTHS(:,:,:) * PRHODJ(:,:,:)
 !
 DO JRR = 1,KRR
@@ -1582,7 +1634,7 @@ IF (HELEC /= 'NONE') THEN
   PSVS(:,:,:,NSV_ELECBEG) = MAX(0., PSVS(:,:,:,NSV_ELECBEG))
   PSVS(:,:,:,NSV_ELECEND) = MAX(0., PSVS(:,:,:,NSV_ELECEND))
 END IF
-!
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !

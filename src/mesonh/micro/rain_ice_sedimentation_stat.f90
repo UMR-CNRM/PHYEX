@@ -38,6 +38,7 @@ USE MODD_RAIN_ICE_DESCR_n, only: XALPHAC, XALPHAC2, XCC, XCEXVT, XCONC_LAND, XCO
                                XDC, XLBC, XLBEXC, XNUC, XNUC2, XRTMIN
 
 use mode_budget,         only: Budget_store_init, Budget_store_end
+use mode_msg
 use mode_tools,          only: Countjv
 
 IMPLICIT NONE
@@ -107,6 +108,10 @@ REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),0:SIZE(PRHODREF,3)+1)   &
 REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),0:SIZE(PRHODREF,3)+1)   &
                                   :: ZWSEDW2       ! sedimentation speed
 !-------------------------------------------------------------------------------
+
+#ifdef MNH_OPENACC
+CALL PRINT_MSG(NVERB_FATAL,'GEN','RAIN_ICE_SEDIMENTATION_STAT','OPENACC: not yet implemented')
+#endif
 
 if ( lbudget_rc .and. osedic ) call Budget_store_init( tbudgets(NBUDGET_RC), 'SEDI', prcs(:, :, :) * prhodj(:, :, :) )
 if ( lbudget_rr )              call Budget_store_init( tbudgets(NBUDGET_RR), 'SEDI', prrs(:, :, :) * prhodj(:, :, :) )

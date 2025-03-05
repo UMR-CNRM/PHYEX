@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -46,6 +46,7 @@ USE MODD_PARAMETERS
 USE MODE_LIMA_FUNCTIONS, ONLY: MOMG
 USE MODI_HYPGEO
 USE MODI_GAMMA
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -58,8 +59,8 @@ REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 !
 INTEGER :: IKB                ! Coordinates of the first and last physical 
                               ! points along z
-INTEGER :: J1                 ! Internal loop indexes
-INTEGER :: JMOD               ! Internal loop to index the CCN modes
+INTEGER :: I1                 ! Internal loop indexes
+INTEGER :: IMOD               ! Internal loop to index the CCN modes
 !
 REAL, DIMENSION(6)  :: ZGAMC, ZGAMR ! parameters involving various moments of
                               ! the generalized gamma law
@@ -72,6 +73,7 @@ REAL :: ZRHO00                ! Surface reference air density
 REAL :: ZSURF_TEN             ! Water drop surface tension
 REAL :: ZSMIN, ZSMAX          ! Minimal and maximal supersaturation used to
                               ! discretize the HYP functions
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 !INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
@@ -81,10 +83,11 @@ REAL :: ZSMIN, ZSMAX          ! Minimal and maximal supersaturation used to
 !  
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('INI_LIMA_WARM', 0, ZHOOK_HANDLE)
 CALL PARAM_LIMA_WARM_ASSOCIATE()
 !
 !*       1.     CHARACTERISTICS OF THE SPECIES
-!   	        ------------------------------
+!               ------------------------------
 !
 !
 !*       1.1    Cloud droplet characteristics
@@ -117,7 +120,7 @@ XF1R = 0.308
 !
 !
 !*       2.     DIMENSIONAL DISTRIBUTIONS OF THE SPECIES
-!   	        ----------------------------------------
+!               ----------------------------------------
 !
 !
 !*       2.1    Cloud droplet distribution
@@ -169,7 +172,7 @@ END IF
 !
 !
 !*       3.     CONSTANTS FOR THE SEDIMENTATION
-!   	        -------------------------------
+!               -------------------------------
 !
 !
 !*       4.1    Exponent of the fall-speed air density correction
@@ -203,11 +206,12 @@ XD(3)     = XDR
 XFSEDR(3) = XFSEDRR
 XFSEDC(3) = XFSEDCR
 !
+XGCC      = 0.5*GAMMA_X0D(XNUC+1./XALPHAC)/GAMMA_X0D(XNUC)
 !------------------------------------------------------------------------------
 !
 !
 !*       4.     CONSTANTS FOR THE NUCLEATION PROCESS
-!   	        ------------------------------------
+!               ------------------------------------
 !
 !
 XWMIN = 0.01 ! Minimal positive vertical velocity required 
@@ -226,7 +230,7 @@ XCSTDCRIT = (XPI/6.)*XRHOLW*( (8.0*ZSURF_TEN )/( 3.0*XRV*XRHOLW ) )**3
 !
 !
 !
-!	4.1   Tabulation of the hypergeometric functions in 'no units'
+!    4.1   Tabulation of the hypergeometric functions in 'no units'
 !             --------------------------------------------------------
 !
 !               In LIMA's nucleation parameterization,
@@ -247,13 +251,13 @@ ZSMAX = 5.0E-2  ! Maximum supersaturation set at 5 %
 XHYPINTP1 = REAL(NHYP-1)/LOG(ZSMAX/ZSMIN)
 XHYPINTP2 = REAL(NHYP)-XHYPINTP1*LOG(ZSMAX)
 !
-DO JMOD = 1,NMOD_CCN 
-   DO J1 = 1,NHYP
-      ZSS =ZSMAX*(ZSMIN/ZSMAX)**(REAL(NHYP-J1)/REAL(NHYP-1))
-      XHYPF12(J1,JMOD) = HYPGEO(XMUHEN_MULTI(JMOD),0.5*XKHEN_MULTI(JMOD),&
-                                0.5*XKHEN_MULTI(JMOD)+1.0,XBETAHEN_MULTI(JMOD),ZSS)
-      XHYPF32(J1,JMOD) = HYPGEO(XMUHEN_MULTI(JMOD),0.5*XKHEN_MULTI(JMOD),&
-                                0.5*XKHEN_MULTI(JMOD)+1.5,XBETAHEN_MULTI(JMOD),ZSS)
+DO IMOD = 1,NMOD_CCN 
+   DO I1 = 1,NHYP
+      ZSS =ZSMAX*(ZSMIN/ZSMAX)**(REAL(NHYP-I1)/REAL(NHYP-1))
+      XHYPF12(I1,IMOD) = HYPGEO(XMUHEN_MULTI(IMOD),0.5*XKHEN_MULTI(IMOD),&
+                                0.5*XKHEN_MULTI(IMOD)+1.0,XBETAHEN_MULTI(IMOD),ZSS)
+      XHYPF32(I1,IMOD) = HYPGEO(XMUHEN_MULTI(IMOD),0.5*XKHEN_MULTI(IMOD),&
+                                0.5*XKHEN_MULTI(IMOD)+1.5,XBETAHEN_MULTI(IMOD),ZSS)
    END DO
 ENDDO
 !
@@ -261,7 +265,7 @@ NAHEN = 81 ! Tabulation for each Kelvin degree in the range XTT-40 to XTT+40
 XAHENINTP1 = 1.0
 XAHENINTP2 = 0.5*REAL(NAHEN-1) - XTT
 !
-!		Compute the tabulation of function of T :
+!        Compute the tabulation of function of T :
 !
 !                                   1
 !               XAHENG = -----------------------
@@ -281,17 +285,17 @@ CALL PARAM_LIMA_WARM_ALLOCATE('XAHENG3', NAHEN)
 CALL PARAM_LIMA_WARM_ALLOCATE('XPSI1', NAHEN)
 CALL PARAM_LIMA_WARM_ALLOCATE('XPSI3', NAHEN)
 XCSTHEN = 1.0 / ( XRHOLW*2.0*XPI )
-DO J1 = 1,NAHEN
-   ZTT = XTT + REAL(J1-(NAHEN-1)/2)                                          ! T
+DO I1 = 1,NAHEN
+   ZTT = XTT + REAL(I1-(NAHEN-1)/2)                                          ! T
    ZLV = XLVTT+(XCPV-XCL)*(ZTT-XTT)                                          ! Lv
-   XPSI1(J1) = (XG/(XRD*ZTT))*(XMV*ZLV/(XMD*XCPD*ZTT)-1.)                    ! Psi1
-   XPSI3(J1) = -1*XMV*ZLV/(XMD*XRD*(ZTT**2))                                 ! Psi3
+   XPSI1(I1) = (XG/(XRD*ZTT))*(XMV*ZLV/(XMD*XCPD*ZTT)-1.)                    ! Psi1
+   XPSI3(I1) = -1*XMV*ZLV/(XMD*XRD*(ZTT**2))                                 ! Psi3
    ZG    = 1./( XRHOLW*( (XRV*ZTT)/                                        & ! G
                          (XDIVA*EXP(XALPW-(XBETAW/ZTT)-(XGAMW*ALOG(ZTT)))) &
                        + (ZLV/ZTT)**2/(XTHCO*XRV) ) )              
-   XAHENG(J1) = XCSTHEN/(ZG)**(3./2.)
-   XAHENG2(J1) = 1/(ZG)**(1./2.) * GAMMA_X0D(XNUC+1./XALPHAC)/GAMMA_X0D(XNUC)
-   XAHENG3(J1) = (ZG) * GAMMA_X0D(XNUC+1./XALPHAC)/GAMMA_X0D(XNUC)
+   XAHENG(I1) = XCSTHEN/(ZG)**(3./2.)
+   XAHENG2(I1) = 1/(ZG)**(1./2.) * GAMMA_X0D(XNUC+1./XALPHAC)/GAMMA_X0D(XNUC)
+   XAHENG3(I1) = (ZG) * GAMMA_X0D(XNUC+1./XALPHAC)/GAMMA_X0D(XNUC)
 END DO
 !-------------------------------------------------------------------------------
 !
@@ -312,7 +316,7 @@ XCONCR_PARAM_INI = (1.E7)**3/(XPI*XRHOLW) ! MP law with N_O=1.E7 m-1 is assumed
 !
 !
 !*       5.     CONSTANTS FOR THE COALESCENCE PROCESSES
-!   	        ---------------------------------------
+!               ---------------------------------------
 !
 !
 !*       6.1    Csts for the coalescence processes
@@ -370,7 +374,7 @@ XSCBUEXP1 = -2500.0
 !
 !
 !*       6.     CONSTANTS FOR THE "SONTANEOUS" BREAK-UP
-!   	        ---------------------------------------
+!               ---------------------------------------
 !
 !
 XSPONBUD1 = 3.0E-3
@@ -383,7 +387,7 @@ XSPONCOEF2 = ((XSPONBUD3/XSPONBUD2)**3 - 1.0)/(XSPONBUD3-XSPONBUD1)**2
 !
 !
 !*        7.    CONSTANTS FOR EVAPORATION PROCESS
-!   	        ---------------------------------------
+!               ---------------------------------------
 !
 !
 X0CNDC = (4.0*XPI)*XC1C*XF0C*MOMG(XALPHAC,XNUC,1.)
@@ -416,7 +420,7 @@ XCEVAP = 0.86
 !
 !
 !*       8.     SET-UP RADIATIVE PARAMETERS
-!   	        ---------------------------
+!               ---------------------------
 !
 !
 ! R_eff_c = XFREFFC * (rho*r_c/N_c)**(1/3)
@@ -435,7 +439,7 @@ XCRER = 1.0/ (ZGAMR(6) * XAR**(2.0/3.0))
 !
 !
 !*       9.     SOME PRINTS FOR CONTROL
-!   	        -----------------------
+!               -----------------------
 !
 !
 !!$GFLAG = .TRUE.
@@ -464,6 +468,7 @@ XCRER = 1.0/ (ZGAMR(6) * XAR**(2.0/3.0))
 !
 !------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('INI_LIMA_WARM', 1, ZHOOK_HANDLE)
 END SUBROUTINE INI_LIMA_WARM
 !
 END MODULE MODE_INI_LIMA_WARM

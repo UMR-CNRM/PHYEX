@@ -181,7 +181,7 @@ LOGICAL,                INTENT(IN)   ::  OOCEAN ! switch for ocean version
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 
-TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
@@ -264,7 +264,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !*       6.   < V' R'np >
 !*       7.   < V' TPV' >
 !
-      CALL      TURB_HOR_THERMO_FLUX(TURBN,TLES,KSPLT, KRR, KRRL, KRRI,&
+      CALL      TURB_HOR_THERMO_FLUX(D,TURBN,TLES,KSPLT, KRR, KRRL, KRRI,&
                       TPFILE,OFLAT, O2D,                             &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -281,7 +281,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
       IF (KSPLT==1)                                                  &
       CALL      TURB_HOR_THERMO_CORR(D,CST,TURBN,NEBN,TLES,          &
                       KRR, KRRL, KRRI,                               &
-                      OOCEAN,OCOMPUTE_SRC,O2D,                       &
+                      OOCEAN,OCOMPUTE_SRC,O2D,OFLAT,                 &
                       TPFILE,                                        &
                       PINV_PDXX,PINV_PDYY,                           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -296,7 +296,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !*      10.   < V'V'>
 !*      11.   < W'W'>
 ! 
-      CALL       TURB_HOR_DYN_CORR(TURBN,TLES,KSPLT, PTSTEP,         &
+      CALL       TURB_HOR_DYN_CORR(D,TURBN,TLES,KSPLT, PTSTEP,         &
                       KRR,KSV,OFLAT, O2D,                            &
                       TPFILE,                                        &
                       PK,PINV_PDZZ,                                  &
@@ -314,7 +314,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !
 !*      12.   < U'V'>
 !
-      CALL      TURB_HOR_UV(TURBN,TLES,KSPLT,OFLAT,O2D,              &
+      CALL      TURB_HOR_UV(D,TURBN,TLES,KSPLT,OFLAT,O2D,            &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -329,7 +329,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !
 !*      13.   < U'W'>
 !
-      CALL      TURB_HOR_UW(TURBN,TLES,KSPLT,                        &
+      CALL      TURB_HOR_UW(D,TURBN,TLES,KSPLT,                      &
                       KRR,KSV,OFLAT,                                 &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDZZ,PMZM_PRHODJ,            &
@@ -343,7 +343,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !
 !*      14.   < V'W'>
 !
-      CALL      TURB_HOR_VW(TURBN,TLES,KSPLT,                        &
+      CALL      TURB_HOR_VW(D,TURBN,TLES,KSPLT,                      &
                       KRR,KSV,OFLAT,O2D,                             &
                       TPFILE,                                        &
                       PK,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,            &
@@ -358,8 +358,8 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !
 !*      15.   HORIZONTAL FLUXES OF PASSIVE SCALARS
 !
-      CALL      TURB_HOR_SV_FLUX(TURBN,TLES,KSPLT,OBLOWSNOW,OFLAT,   &
-                      TPFILE,KSV_LGBEG,KSV_LGEND,O2D,ONOMIXLG,       &
+      CALL      TURB_HOR_SV_FLUX(D,TURBN,TLES,KSPLT,OBLOWSNOW,OFLAT, &
+                      TPFILE,KSV,KSV_LGBEG,KSV_LGEND,O2D,ONOMIXLG,   &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
                       PDIRCOSXW,PDIRCOSYW,                           &
@@ -372,7 +372,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
       CALL      TURB_HOR_SV_CORR(D,CST,CSTURB,TURBN,TLES,            &
                       KSV,KSV_LGBEG,KSV_LGEND,                       &
                       KRR,KRRL,KRRI,OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,   &
-                      ONOMIXLG,O2D,                                  &
+                      ONOMIXLG,O2D,OFLAT,                            &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
                       PLM,PLEPS,PTKEM,PTHVREF,                       &
                       PTHLM,PRM,                                     &

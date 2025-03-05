@@ -168,7 +168,8 @@ USE MODD_IO, ONLY: TFILEDATA
 USE MODD_PARAMETERS
 !
 !
-USE MODI_SHUMAN 
+USE MODI_SHUMAN
+USE MODE_SHUMAN_PHY
 USE MODE_TURB_HOR
 USE MODE_TURB_HOR_TKE
 !
@@ -201,7 +202,7 @@ LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimension
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 INTEGER,                INTENT(IN)   ::  KHALO        ! Size of the halo for parallel distribution
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
-TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
@@ -262,25 +263,27 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PSIGS
 !
 !*       0.2  declaration of local variables
 !
-REAL,ALLOCATABLE,DIMENSION(:,:,:) :: ZK           ! Turbulent diffusion doef.
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZK           ! Turbulent diffusion doef.
                                                   ! ZK = PLM * SQRT(PTKEM)
-REAL,ALLOCATABLE,DIMENSION(:,:,:) :: ZINV_PDXX    ! 1./PDXX
-REAL,ALLOCATABLE,DIMENSION(:,:,:) :: ZINV_PDYY    ! 1./PDYY
-REAL,ALLOCATABLE,DIMENSION(:,:,:) :: ZINV_PDZZ    ! 1./PDZZ
-REAL,ALLOCATABLE,DIMENSION(:,:,:) :: ZMZM_PRHODJ  ! MZM(PRHODJ)
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZINV_PDXX    ! 1./PDXX
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZINV_PDYY    ! 1./PDYY
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZINV_PDZZ    ! 1./PDZZ
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZMZM_PRHODJ  ! MZM(PRHODJ)
 !
 INTEGER :: JSPLT ! current split
 !
-INTEGER :: IKB, IKE, IIB, IIE, IJB, IJE
-INTEGER :: JRR, JSV
+INTEGER :: IKB, IKE, IIB, IIE, IJB, IJE, IIT, IJT, IKT
+INTEGER :: JRR, JSV, JI, JJ, JK
 !
 INTEGER :: ISV
 INTEGER :: IINFO_ll
 !
-REAL,ALLOCATABLE,DIMENSION(:,:,:)   :: ZUM, ZVM, ZWM, ZTHLM, ZTKEM
-REAL,ALLOCATABLE,DIMENSION(:,:,:,:) :: ZRM, ZSVM
-REAL,ALLOCATABLE,DIMENSION(:,:,:)   :: ZRUS, ZRVS, ZRWS, ZRTHLS
-REAL,ALLOCATABLE,DIMENSION(:,:,:,:) :: ZRRS, ZRSVS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)   :: ZUM, ZVM, ZWM, ZTHLM, ZTKEM
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR) :: ZRM
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV) :: ZSVM
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)   :: ZRUS, ZRVS, ZRWS, ZRTHLS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR) :: ZRRS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV) :: ZRSVS
 !
 !
 TYPE(LIST_ll), POINTER, SAVE :: TZFIELDS_ll
@@ -292,21 +295,20 @@ TYPE(LIST_ll), POINTER, SAVE :: TZFIELDS_ll
 !
 IKB = 1.+JPVEXT
 IKE = SIZE(PUM,3) - JPVEXT
+IKT=D%NKT
+IIT=D%NIT
+IJT=D%NJT
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
 ISV=SIZE(PSVM,4)
 !
-ALLOCATE(ZK(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)))
-ALLOCATE(ZINV_PDXX(SIZE(PDXX,1),SIZE(PDXX,2),SIZE(PDXX,3)))
-ALLOCATE(ZINV_PDYY(SIZE(PDYY,1),SIZE(PDYY,2),SIZE(PDYY,3)))
-ALLOCATE(ZINV_PDZZ(SIZE(PDZZ,1),SIZE(PDZZ,2),SIZE(PDZZ,3)))
-ALLOCATE(ZMZM_PRHODJ(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)))
-!
+!$acc kernels present_cr(ZINV_PDXX,ZINV_PDYY,ZINV_PDZZ,ZK)
 ZINV_PDXX = 1./PDXX
 ZINV_PDYY = 1./PDYY
 ZINV_PDZZ = 1./PDZZ
-ZMZM_PRHODJ = MZM(PRHODJ)
 !
 ZK(:,:,:)         = PLM(:,:,:) * SQRT(PTKEM(:,:,:))
+!$acc end kernels
+ZMZM_PRHODJ = MZM(PRHODJ)
 !
 NULLIFY(TZFIELDS_ll)
 !
@@ -316,23 +318,6 @@ NULLIFY(TZFIELDS_ll)
 !             ------------------
 !
 IF (KSPLIT>1) THEN
-!
-!*       2.1  allocations
-!             -----------
-!
-  ALLOCATE(ZUM(SIZE(PUM,1),SIZE(PUM,2),SIZE(PUM,3)))
-  ALLOCATE(ZVM(SIZE(PVM,1),SIZE(PVM,2),SIZE(PVM,3)))
-  ALLOCATE(ZWM(SIZE(PWM,1),SIZE(PWM,2),SIZE(PWM,3)))
-  ALLOCATE(ZSVM(SIZE(PSVM,1),SIZE(PSVM,2),SIZE(PSVM,3),SIZE(PSVM,4)))
-  ALLOCATE(ZTHLM(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)))
-  ALLOCATE(ZTKEM(SIZE(PTKEM,1),SIZE(PTKEM,2),SIZE(PTKEM,3)))
-  ALLOCATE(ZRM(SIZE(PRM,1),SIZE(PRM,2),SIZE(PRM,3),SIZE(PRM,4)))
-  ALLOCATE(ZRUS(SIZE(PRUS,1),SIZE(PRUS,2),SIZE(PRUS,3)))
-  ALLOCATE(ZRVS(SIZE(PRVS,1),SIZE(PRVS,2),SIZE(PRVS,3)))
-  ALLOCATE(ZRWS(SIZE(PRWS,1),SIZE(PRWS,2),SIZE(PRWS,3)))
-  ALLOCATE(ZRSVS(SIZE(PRSVS,1),SIZE(PRSVS,2),SIZE(PRSVS,3),SIZE(PRSVS,4)))
-  ALLOCATE(ZRTHLS(SIZE(PRTHLS,1),SIZE(PRTHLS,2),SIZE(PRTHLS,3)))
-  ALLOCATE(ZRRS(SIZE(PRRS,1),SIZE(PRRS,2),SIZE(PRRS,3),SIZE(PRRS,4)))
 !
 !
 !*       2.2  list for parallel exchanges
@@ -351,6 +336,8 @@ IF (KSPLIT>1) THEN
 !             ---------------
 !
 !
+  !$acc kernels present_cr(ZSVM,ZRM,ZUM,ZVM,ZWM,ZTHLM,ZTKEM,ZRUS,ZRVS,ZRWS) &
+  !$acc present_cr(ZRSVS,zrthls,zrrs)
   ZUM=PUM
   ZVM=PVM
   ZWM=PWM
@@ -365,6 +352,7 @@ IF (KSPLIT>1) THEN
   IF (ISV>0) ZRSVS=PRSVS*KSPLIT
   ZRTHLS=PRTHLS*KSPLIT
   IF (KRR>0) ZRRS=PRRS*KSPLIT
+  !$acc end kernels
 
 !
 !*       2.4  split process
@@ -394,7 +382,7 @@ IF (KSPLIT>1) THEN
 !
 ! horizontal transport of Tke
 !
-  CALL   TURB_HOR_TKE(JSPLT,TLES,OFLAT,O2D,                          &
+  CALL   TURB_HOR_TKE(D, JSPLT,TLES,OFLAT,O2D,                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
                       ZINV_PDXX, ZINV_PDYY, ZINV_PDZZ, ZMZM_PRHODJ,  &
                       ZK, PRHODJ, ZTKEM,                             &
@@ -405,23 +393,50 @@ IF (KSPLIT>1) THEN
 
     ZUM=PUM+(ZRUS/KSPLIT-PRUS)/MXM(PRHODJ)*PTSTEP
     ZVM=PVM+(ZRVS/KSPLIT-PRVS)/MYM(PRHODJ)*PTSTEP
+!$acc kernels present_cr(ZSVM,ZRM,ztkem)
     ZWM=PWM+(ZRWS/KSPLIT-PRWS)/ZMZM_PRHODJ*PTSTEP
     DO JSV=1,ISV
       ZSVM(:,:,:,JSV)=PSVM(:,:,:,JSV)+   &
-        (ZRSVS(:,:,:,JSV)/KSPLIT-PRSVS(:,:,:,JSV))/PRHODJ*PTSTEP
+        (ZRSVS(:,:,:,JSV)/KSPLIT-PRSVS(:,:,:,JSV))/PRHODJ(:,:,:)*PTSTEP
     END DO
     ZTHLM=PTHLM+(ZRTHLS/KSPLIT-PRTHLS)/PRHODJ*PTSTEP
     ZTKEM=ZTKEM+PTRH*PTSTEP/KSPLIT
     DO JRR=1,KRR
       ZRM(:,:,:,JRR)=PRM(:,:,:,JRR)+   &
-       (ZRRS(:,:,:,JRR)/KSPLIT-PRRS(:,:,:,JRR))/PRHODJ*PTSTEP
+       (ZRRS(:,:,:,JRR)/KSPLIT-PRRS(:,:,:,JRR))/PRHODJ(:,:,:)*PTSTEP
     END DO
+!$acc end kernels
 !
 ! reinforce boundary conditions
 !
+#ifndef MNH_OPENACC
     IF (JSPLT<KSPLIT-KHALO+1) CALL UPDATE_HALO_ll(TZFIELDS_ll,IINFO_ll)
+#else
+    !
+    ! Pour le update_halo_ll, on fait des update self, puis le update_halo_ll sur CPU
+    ! on copie ensuite les champs avec le halo a jour sur le device
+    !
+    IF (JSPLT<KSPLIT-KHALO+1) THEN
+      !$update self(ZUM,ZVM,ZWM,ZTHLM,ZTKEM)
+      IF (ISV>0) THEN
+        !$update self(ZSVM(:,:,:,1:ISV))
+      END IF
+      IF (KRR>0) THEN
+        !$update self(ZRM(:,:,:,1:KRR))
+      END IF
+      CALL UPDATE_HALO_ll(TZFIELDS_ll,IINFO_ll)
+      IF (KRR>0) THEN
+        !$update device(ZRM(:,:,:,1:KRR))
+      END IF
+      IF (ISV>0) THEN
+        !$update device(ZSVM(:,:,:,1:ISV))
+      END IF
+      !$update device(ZUM,ZVM,ZWM,ZTHLM,ZTKEM)
+    ENDIF
+#endif
     !
     IF ( HLBCX(1) /= "CYCL" .AND. LWEST_ll()) THEN
+!$acc kernels present_cr(ZSVM,ZRM,zum,zvm,zwm,zthlm,ztkem)
        ZUM(IIB  ,:,:)=PUM(IIB  ,:,:)
        ZVM(IIB-1,:,:)=PVM(IIB-1,:,:)
        ZWM(IIB-1,:,:)=PWM(IIB-1,:,:)
@@ -429,9 +444,11 @@ IF (KSPLIT>1) THEN
        ZTKEM(IIB-1,:,:)=PTKEM(IIB-1,:,:)
        IF (ISV>0) ZSVM(IIB-1,:,:,:)=PSVM(IIB-1,:,:,:)
        IF (KRR>0) ZRM (IIB-1,:,:,:)=PRM (IIB-1,:,:,:)
+!$acc end kernels
      ENDIF
      !
      IF ( HLBCX(2) /= "CYCL" .AND. LEAST_ll()) THEN
+!$acc kernels present_cr(ZSVM,ZRM,zum,zvm,zwm,zthlm,ztkem)
        ZUM(IIE+1,:,:)=PUM(IIE+1,:,:)
        ZVM(IIE+1,:,:)=PVM(IIE+1,:,:)
        ZWM(IIE+1,:,:)=PWM(IIE+1,:,:)
@@ -439,9 +456,11 @@ IF (KSPLIT>1) THEN
        ZTKEM(IIE+1,:,:)=PTKEM(IIE+1,:,:)
        IF (ISV>0) ZSVM(IIE+1,:,:,:)=PSVM(IIE+1,:,:,:)
        IF (KRR>0) ZRM (IIE+1,:,:,:)=PRM(IIE+1,:,:,:)
+!$acc end kernels
      ENDIF
      !
      IF ( HLBCY(1) /= "CYCL" .AND. LSOUTH_ll()) THEN
+!$acc kernels present_cr(ZSVM,ZRM,zum,zvm,zwm,zthlm,ztkem)
        ZUM(:,IJB-1,:)=PUM(:,IJB-1,:)
        ZVM(:,IJB  ,:)=PVM(:,IJB  ,:)
        ZWM(:,IJB-1,:)=PWM(:,IJB-1,:)
@@ -449,9 +468,11 @@ IF (KSPLIT>1) THEN
        ZTKEM(:,IJB-1,:)=PTKEM(:,IJB-1,:)
        IF (ISV>0) ZSVM(:,IJB-1,:,:)=PSVM(:,IJB-1,:,:)
        IF (KRR>0) ZRM (:,IJB-1,:,:)=PRM (:,IJB-1,:,:)
+!$acc end kernels
      ENDIF
      !
      IF ( HLBCY(2) /= "CYCL" .AND. LNORTH_ll()) THEN
+!$acc kernels present_cr(ZSVM,ZRM,zum,zvm,zwm,zthlm,ztkem)
        ZUM(:,IJE+1,:)=PUM(:,IJE+1,:)
        ZVM(:,IJE+1,:)=PVM(:,IJE+1,:)
        ZWM(:,IJE+1,:)=PWM(:,IJE+1,:)
@@ -459,8 +480,10 @@ IF (KSPLIT>1) THEN
        ZTKEM(:,IJE+1,:)=PTKEM(:,IJE+1,:)
        IF (ISV>0) ZSVM(:,IJE+1,:,:)=PSVM(:,IJE+1,:,:)
        IF (KRR>0) ZRM (:,IJE+1,:,:)=PRM(:,IJE+1,:,:)
+!$acc end kernels
      ENDIF
      !
+!$acc kernels present_cr(ZSVM,ZRM)
      ZUM(:,:,IKB-1)=ZUM(:,:,IKB)
      ZVM(:,:,IKB-1)=ZVM(:,:,IKB)
      ZWM(:,:,IKB-1)=ZWM(:,:,IKB)
@@ -476,12 +499,14 @@ IF (KSPLIT>1) THEN
      ZTKEM(:,:,IKE+1)=ZTKEM(:,:,IKE)
      IF (ISV>0) ZSVM(:,:,IKE+1,:)=ZSVM(:,:,IKE,:)
      IF (KRR>0) ZRM (:,:,IKE+1,:)=ZRM (:,:,IKE,:)
+!$acc end kernels
      !
   END DO
 !
 !*       2.5  update the complete tendencies
 !             ------------------------------
 !
+!$acc kernels present_cr(zrus,zrvs,zrws,zrsvs,zrthls,zrrs,ztkem)
   PRUS=ZRUS/KSPLIT
   PRVS=ZRVS/KSPLIT
   PRWS=ZRWS/KSPLIT
@@ -489,23 +514,8 @@ IF (KSPLIT>1) THEN
   PRTHLS=ZRTHLS/KSPLIT
   IF (KRR>0) PRRS=ZRRS/KSPLIT
   PTRH=(ZTKEM-PTKEM)/PTSTEP
+!$acc end kernels
 !
-!*       2.6  deallocations
-!             -------------
-!
-  DEALLOCATE(ZUM)
-  DEALLOCATE(ZVM)
-  DEALLOCATE(ZWM)
-  DEALLOCATE(ZSVM)
-  DEALLOCATE(ZTHLM)
-  DEALLOCATE(ZTKEM)
-  DEALLOCATE(ZRM)
-  DEALLOCATE(ZRUS)
-  DEALLOCATE(ZRVS)
-  DEALLOCATE(ZRWS)
-  DEALLOCATE(ZRSVS)
-  DEALLOCATE(ZRTHLS)
-  DEALLOCATE(ZRRS)
   !
   CALL CLEANLIST_ll(TZFIELDS_ll)
 !
@@ -538,7 +548,7 @@ ELSE
 ! horizontal transport of Tke
 !
 
-  CALL   TURB_HOR_TKE(1,TLES,OFLAT,O2D,                              &
+  CALL   TURB_HOR_TKE(D, 1,TLES,OFLAT,O2D,                           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
                       ZINV_PDXX, ZINV_PDYY, ZINV_PDZZ, ZMZM_PRHODJ,  &
                       ZK, PRHODJ, PTKEM,                             &
@@ -546,12 +556,6 @@ ELSE
 !
 END IF
 !--------------------------------------------------------------------
-!
-DEALLOCATE(ZK)
-DEALLOCATE(ZINV_PDXX)
-DEALLOCATE(ZINV_PDYY)
-DEALLOCATE(ZINV_PDZZ)
-DEALLOCATE(ZMZM_PRHODJ)
 !
 END SUBROUTINE TURB_HOR_SPLT
 END MODULE MODE_TURB_HOR_SPLT

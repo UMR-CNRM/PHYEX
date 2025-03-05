@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -12,7 +12,7 @@ CONTAINS
       SUBROUTINE RZCOLX( KND, PALPHAX, PNUX, PALPHAZ, PNUZ,                  &
                          PEXZ, PEXMASSZ, PFALLX, PEXFALLX, PFALLEXPX,        &
                          PFALLZ, PEXFALLZ, PFALLEXPZ,                        &
-		         PLBDAXMAX, PLBDAZMAX, PLBDAXMIN, PLBDAZMIN,         &
+                         PLBDAXMAX, PLBDAZMAX, PLBDAXMIN, PLBDAZMIN,         &
                          PDINFTY, PRZCOLX                                    )
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ########################################################################

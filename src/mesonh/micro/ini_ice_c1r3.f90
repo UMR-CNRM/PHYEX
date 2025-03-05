@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2000-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2000-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -188,7 +188,7 @@ REAL     :: ZFAC_ZRNIC ! Zrnic factor used to decrease Long Kernels
 !
 !
 !*       0.     FUNCTION STATEMENTS
-!   	        -------------------
+!               -------------------
 !
 !
 !*       0.1    G(p) for p_moment of the Generalized GAMMA function
@@ -224,7 +224,7 @@ IF (ALLOCATED(XRTMIN)) RETURN     ! In case of nesting microphysics constants of
 !-------------------------------------------------------------------------------
 !
 !*       2.     CHARACTERISTICS OF THE SPECIES
-!   	        ------------------------------
+!               ------------------------------
 !
 !
 !*       2.1    Raindrops characteristics
@@ -307,7 +307,7 @@ XC1G = 1./2.
 !-------------------------------------------------------------------------------
 !
 !*       3.     DIMENSIONAL DISTRIBUTIONS OF THE SPECIES
-!	            ----------------------------------------
+!                ----------------------------------------
 !
 !
 !*       3.2    Ice crystal distribution
@@ -366,7 +366,7 @@ XCTMIN(6) = 1.0E-3
 !-------------------------------------------------------------------------------
 !
 !*       4.     CONSTANTS FOR THE SEDIMENTATION
-!   	        -------------------------------
+!               -------------------------------
 !
 !
 !*       4.1    Exponent of the fall-speed air density correction
@@ -407,7 +407,7 @@ XFSEDG  = XCG*XAG*XCCG*MOMG(XALPHAG,XNUG,XBG+XDG)*                         &
 !-------------------------------------------------------------------------------
 !
 !*       5.     CONSTANTS FOR THE SLOW COLD PROCESSES
-!      	        -------------------------------------
+!                  -------------------------------------
 !
 !
 !*       5.1    Constants for ice nucleation
@@ -609,7 +609,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 !*       7.     CONSTANTS FOR THE FAST COLD PROCESSES FOR THE AGGREGATES
-!	        --------------------------------------------------------
+!            --------------------------------------------------------
 !
 !
 !*       7.1    Constants for the riming of the aggregates
@@ -821,7 +821,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 !*       8.     CONSTANTS FOR THE FAST COLD PROCESSES FOR THE GRAUPELN
-!	            ------------------------------------------------------
+!                ------------------------------------------------------
 !
 !
 !*       8.1    Constants for the rain contact freezing

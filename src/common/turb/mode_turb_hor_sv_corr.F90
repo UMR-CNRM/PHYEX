@@ -7,7 +7,7 @@ IMPLICIT NONE
 CONTAINS
       SUBROUTINE TURB_HOR_SV_CORR(D,CST,CSTURB,TURBN,TLES,KSV,KSV_LGBEG,KSV_LGEND,&
                       KRR,KRRL,KRRI,OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,   &
-                      ONOMIXLG,O2D,                                  &
+                      ONOMIXLG,O2D,OFLAT,                            &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
                       PLM,PLEPS,PTKEM,PTHVREF,                       &
                       PTHLM,PRM,                                     &
@@ -16,7 +16,7 @@ CONTAINS
 !     ################################################################
 !
 !
-!!****  *TURB_HOT_SV_CORR*  computes subgrid Sv2 and SvThv terms
+!!****  *TURB_HOR_SV_CORR*  computes subgrid Sv2 and SvThv terms
 !!
 !!    PURPOSE
 !!    -------
@@ -60,7 +60,9 @@ USE MODI_GRADIENT_M
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
-USE MODI_SHUMAN 
+USE MODE_GRADIENT_M_PHY, ONLY: GX_M_M_PHY, GY_M_M_PHY
+USE MODI_SHUMAN
+USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
 USE MODI_LES_MEAN_SUBGRID
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
@@ -84,36 +86,37 @@ INTEGER,                  INTENT(IN)    ::  KRRL         ! number of liquid var.
 INTEGER,                  INTENT(IN)    ::  KRRI         ! number of ice var.
 INTEGER,                  INTENT(IN)    ::  KSV,KSV_LGBEG,KSV_LGEND ! number of sv var.
 LOGICAL,                  INTENT(IN)    ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                  INTENT(IN)    ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                  INTENT(IN)    ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                  INTENT(IN)    ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 LOGICAL,                  INTENT(IN)    ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
 LOGICAL,                  INTENT(IN)    ::  O2D          ! Logical for 2D model version (modd_conf)
 REAL,                     INTENT(IN)    ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PLM          ! mixing length
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PLEPS        ! dissipative length
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PTKEM        ! tke
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PTHVREF      ! reference Thv
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PTHLM        ! potential temperature at t-Delta t
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    ::  PRM          ! Mixing ratios at t-Delta t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PAMOIST      ! s and Thetal and Rnp
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PSRCM        ! normalized 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! mixing length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLEPS        ! dissipative length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! tke
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTHVREF      ! reference Thv
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTHLM        ! potential temperature at t-Delta t
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN)  ::  PRM          ! Mixing ratios at t-Delta t
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PAMOIST      ! s and Thetal and Rnp
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PSRCM        ! normalized 
                   ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PWM          ! w at t-1
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PWM          ! w at t-1
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
 !
 !
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(SIZE(PSVM,1),SIZE(PSVM,2),SIZE(PSVM,3))       &
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)       &
                                      :: ZFLX, ZA
 !
 INTEGER             :: JSV          ! loop counter
-INTEGER             :: IKU
+INTEGER             :: IKU, IIT, IJT, IKT, JI, JJ, JK
 !
 REAL :: ZTIME1, ZTIME2
 !
@@ -125,6 +128,9 @@ REAL :: ZCSV          !constant for the scalar flux
 ! ---------------------------------------------------------------------------
 !
 IKU=SIZE(PTKEM,3)
+IIT=D%NIT
+IJT=D%NJT
+IKT=D%NKT
 CALL SECOND_MNH(ZTIME1)
 !
 IF(OBLOWSNOW) THEN
@@ -143,11 +149,11 @@ DO JSV=1,KSV
   IF (TLES%LLES_CALL) THEN
     IF (.NOT. O2D) THEN
       ZFLX(:,:,:) =  ZCSV / ZCSVD * PLM(:,:,:) * PLEPS(:,:,:) *   &
-         (  GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)**2             &
-          + GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)**2 )
+         (  GX_M_M(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)**2             &
+          + GY_M_M(OFLAT,PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)**2 )
     ELSE
       ZFLX(:,:,:) =  ZCSV / ZCSVD * PLM(:,:,:) * PLEPS(:,:,:) *   &
-            GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)**2
+            GX_M_M(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)**2
     END IF
     CALL LES_MEAN_SUBGRID( -2.*ZCSVD*SQRT(PTKEM)*ZFLX/PLEPS, &
                            TLES%X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV), .TRUE. )
@@ -160,12 +166,12 @@ DO JSV=1,KSV
     CALL ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC,ZA)
     IF (.NOT. O2D) THEN
       ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                          &
-          *  (  GX_M_M(PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
-              + GY_M_M(PTHLM,PDYY,PDZZ,PDZY) * GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)  &
+          *  (  GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
+              + GY_M_M(OFLAT,PTHLM,PDYY,PDZZ,PDZY) * GY_M_M(OFLAT,PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)  &
              ) * (TURBN%XCSHF+ZCSV) / (2.*ZCTSVD)
     ELSE
       ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                          &
-              * GX_M_M(PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
+              * GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
               * (TURBN%XCSHF+ZCSV) / (2.*ZCTSVD)
     END IF
     CALL LES_MEAN_SUBGRID( ZA*ZFLX, TLES%X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
@@ -175,12 +181,12 @@ DO JSV=1,KSV
       CALL  EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN,ZA)
       IF (.NOT. O2D) THEN
         ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                                 &
-            *  (  GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
-                + GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY) * GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)  &
+            *  (  GX_M_M(OFLAT,PRM(:,:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
+                + GY_M_M(OFLAT,PRM(:,:,:,1),PDYY,PDZZ,PDZY) * GY_M_M(OFLAT,PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)  &
                ) * (TURBN%XCHF+ZCSV) / (2.*ZCQSVD)
       ELSE
         ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                                 &
-                * GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
+                * GX_M_M(OFLAT,PRM(:,:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
                 * (TURBN%XCHF+ZCSV) / (2.*ZCQSVD)
       END IF
       CALL LES_MEAN_SUBGRID( ZA*ZFLX, TLES%X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)

@@ -1,9 +1,8 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1996-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
-!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-!--------------- special set of characters for RCS information
 !     ######################
       MODULE MODI_DEEP_CONVECTION
 !     ######################
@@ -97,10 +96,6 @@ END INTERFACE
 !
 END MODULE MODI_DEEP_CONVECTION
 !
-!-----------------------------------------------------------------
-! $Source$ $Revision$
-! MASDEV4_7 conv 2006/09/21 10:55:01
-!-----------------------------------------------------------------
 !   ############################################################################
     SUBROUTINE DEEP_CONVECTION( KLON, KLEV, KIDIA, KFDIA, KBDIA, KTDIA,        &
                                 PDTCONV, KICE, OREFRESH, ODOWN, OSETTADJ,      &
@@ -221,10 +216,6 @@ USE MODI_CONVECT_PRECIP_ADJUST
 USE MODI_CONVECT_CLOSURE
 USE MODI_CH_CONVECT_SCAVENGING
 USE MODI_CONVECT_CHEM_TRANSPORT
-!
-#ifdef MNH_PGI
-USE MODE_PACK_PGI
-#endif
 !
 IMPLICIT NONE
 !

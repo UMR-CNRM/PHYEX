@@ -90,6 +90,8 @@ IF (LHOOK) CALL DR_HOOK('ICE4_WARM', 0, ZHOOK_HANDLE)
 !
 !*       4.2    compute the autoconversion of r_c for r_r production: RCAUTR
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0. .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -100,12 +102,15 @@ DO JL=1, KSIZE
     PRCAUTR(JL) = 0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 !
 !*       4.3    compute the accretion of r_c for r_r production: RCACCR
 !
 IF (HSUBG_RC_RR_ACCR=='NONE') THEN
   !CLoud water and rain are diluted over the grid box
+!$acc kernels
+!$acc loop independent
   DO JL=1, KSIZE
     IF(PRCT(JL)>ICED%XRTMIN(2) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)) THEN
       IF(.NOT. LDSOFT) THEN
@@ -117,7 +122,7 @@ IF (HSUBG_RC_RR_ACCR=='NONE') THEN
       PRCACCR(JL) = 0.
     ENDIF
   ENDDO
-
+!$acc end kernels
 ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
   !Cloud water is concentrated over its fraction with possibly to parts with high and low content as set for autoconversion
   !Rain is concentrated over its fraction
@@ -126,6 +131,8 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
   ! if PRF<PCF (rain is entirely falling in cloud): PRF-PHLC_HCF
   ! if PRF>PCF (rain is falling in cloud and in clear sky): PCF-PHLC_HCF
   ! => min(PCF, PRF)-PHLC_HCF
+!$acc kernels
+!$acc loop independent
   DO JL=1, KSIZE
     LMASK = PRCT(JL)>ICED%XRTMIN(2) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)
     LMASK1 = LMASK .AND. PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0.
@@ -153,6 +160,7 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
       PRCACCR(JL)=0.
     ENDIF
   ENDDO
+!$acc end kernels
 ELSE
   CALL PRINT_MSG(NVERB_FATAL,'GEN','ICE4_WARM','wrong HSUBG_RC_RR_ACCR case')
 ENDIF
@@ -160,6 +168,8 @@ ENDIF
 !*       4.4    compute the evaporation of r_r: RREVAV
 !
 IF (HSUBG_RR_EVAP=='NONE') THEN
+!$acc kernels
+!$acc loop independent
   DO JL=1, KSIZE
     IF(PRRT(JL)>ICED%XRTMIN(3) .AND. PRCT(JL)<=ICED%XRTMIN(2) .AND. LDCOMPUTE(JL)) THEN
       IF(.NOT. LDSOFT) THEN
@@ -174,6 +184,7 @@ IF (HSUBG_RR_EVAP=='NONE') THEN
       PRREVAV(JL)=0.
     ENDIF
   ENDDO
+!$acc end kernels
 
 ELSEIF (HSUBG_RR_EVAP=='CLFR' .OR. HSUBG_RR_EVAP=='PRFR') THEN
   !ATTENTION
@@ -182,6 +193,8 @@ ELSEIF (HSUBG_RR_EVAP=='CLFR' .OR. HSUBG_RR_EVAP=='PRFR') THEN
   !et plusieurs versions (comme actuellement, en ciel clair, en ciel nuageux) de PKA, PDV, PCJ dans rain_ice
   !On utiliserait la bonne version suivant l'option NONE, CLFR... dans l'évaporation et ailleurs
 
+!$acc kernels
+!$acc loop independent
   DO JL=1, KSIZE
     !Evaporation in clear sky part
     !With CLFR, rain is diluted over the grid box
@@ -224,7 +237,7 @@ ELSEIF (HSUBG_RR_EVAP=='CLFR' .OR. HSUBG_RR_EVAP=='PRFR') THEN
       PRREVAV(JL)=0.
     ENDIF
   ENDDO
-
+!$acc end kernels
 ELSE
   CALL PRINT_MSG(NVERB_FATAL,'GEN','ICE4_WARM','wrong HSUBG_RR_EVAP case')
 END IF

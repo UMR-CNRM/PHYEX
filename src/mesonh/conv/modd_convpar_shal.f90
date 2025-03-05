@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -63,7 +63,7 @@ REAL, SAVE :: XWTRIG      ! constant in vertical velocity trigger
 !
 !
 REAL, SAVE :: XNHGAM      ! accounts for non-hydrost. pressure 
-			  ! in buoyancy term of w equation
+                          ! in buoyancy term of w equation
                           ! = 2 / (1+gamma)
 REAL, SAVE :: XTFRZ1      ! begin of freezing interval
 REAL, SAVE :: XTFRZ2      ! end of freezing interval

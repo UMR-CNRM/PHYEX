@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -117,25 +117,25 @@ IF( KMF == 1 ) THEN
       ZW1(:) = 1. / ( 1.+ ZP * ABS ( ZX(:) ) )
       ZY(:)  = EXP( -0.5 * ZX(:) * ZX(:) )
       ZW2(:) = ZA1 * ZW1(:) + ZA2 * ZW1(:) * ZW1(:) +                   &
-		 ZA3 * ZW1(:) * ZW1(:) * ZW1(:)
+                 ZA3 * ZW1(:) * ZW1(:) * ZW1(:)
       ZW11   = ZA1 * ZT1 + ZA2 * ZT1 * ZT1 + ZA3 * ZT1 * ZT1 * ZT1
 ENDIF 
 !
 WHERE ( KMF == 1 .AND. ZX(:) >= 0. )
-	PER(:) = ZSIGMA * ( 0.5 * ( ZSQRTP - ZE45 * ZW11                 &
-		 - ZY(:) * ZW2(:) ) + ZSIGMA * ( ZE45 - ZY(:) ) )        &
-		 - 0.5 * ZE45 * PMIXC(:) * PMIXC(:)
-	PDR(:) = ZSIGMA*( 0.5 * ( ZY(:) * ZW2(:) - ZE45 * ZW11   )       &
-		 + ZSIGMA * ( ZE45 - ZY(:) ) )                           &
-		 - ZE45 * ( 0.5 + 0.5 * PMIXC(:) * PMIXC(:) - PMIXC(:) )
+        PER(:) = ZSIGMA * ( 0.5 * ( ZSQRTP - ZE45 * ZW11                 &
+                 - ZY(:) * ZW2(:) ) + ZSIGMA * ( ZE45 - ZY(:) ) )        &
+                 - 0.5 * ZE45 * PMIXC(:) * PMIXC(:)
+        PDR(:) = ZSIGMA*( 0.5 * ( ZY(:) * ZW2(:) - ZE45 * ZW11   )       &
+                 + ZSIGMA * ( ZE45 - ZY(:) ) )                           &
+                 - ZE45 * ( 0.5 + 0.5 * PMIXC(:) * PMIXC(:) - PMIXC(:) )
 END WHERE
 WHERE ( KMF == 1 .AND. ZX(:) < 0. ) 
-	PER(:) = ZSIGMA*( 0.5 * ( ZY(:) * ZW2(:) - ZE45 * ZW11   )       &
-		 + ZSIGMA * ( ZE45 - ZY(:) ) )                           &
-		 - 0.5 * ZE45 * PMIXC(:) * PMIXC(:)
-	PDR(:) = ZSIGMA * ( 0.5 * ( ZSQRTP - ZE45 * ZW11 - ZY(:)         &
-		 * ZW2(:) ) + ZSIGMA * ( ZE45 - ZY(:) ) )                &
-		 - ZE45 * ( 0.5 + 0.5 * PMIXC(:) * PMIXC(:) - PMIXC(:) )
+        PER(:) = ZSIGMA*( 0.5 * ( ZY(:) * ZW2(:) - ZE45 * ZW11   )       &
+                 + ZSIGMA * ( ZE45 - ZY(:) ) )                           &
+                 - 0.5 * ZE45 * PMIXC(:) * PMIXC(:)
+        PDR(:) = ZSIGMA * ( 0.5 * ( ZSQRTP - ZE45 * ZW11 - ZY(:)         &
+                 * ZW2(:) ) + ZSIGMA * ( ZE45 - ZY(:) ) )                &
+                 - ZE45 * ( 0.5 + 0.5 * PMIXC(:) * PMIXC(:) - PMIXC(:) )
 END WHERE
 !
       PER(:) = PER(:) * ZFE

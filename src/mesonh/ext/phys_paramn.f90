@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -18,7 +18,7 @@ USE MODD_IO,        ONLY: TFILEDATA
 use modd_precision, only: MNHTIME
 !
 INTEGER,           INTENT(IN)     :: KTCOUNT   ! temporal iteration count
-TYPE(TFILEDATA),   INTENT(IN)     :: TPFILE    ! Synchronous output file
+TYPE(TFILEDATA),   INTENT(INOUT)  :: TPFILE    ! Synchronous output file
 ! advection schemes
 REAL(kind=MNHTIME), DIMENSION(2), INTENT(INOUT) :: PRAD,PSHADOWS,PKAFR,PGROUND,PTURB,PMAFL,PDRAG,PTRACER,PEOL ! to store CPU
                                                                                                          ! time for computing time
@@ -36,7 +36,7 @@ END MODULE MODI_PHYS_PARAM_n
 !
 !     ########################################################################################
       SUBROUTINE PHYS_PARAM_n( KTCOUNT, TPFILE,                                              &
-                               PRAD, PSHADOWS, PKAFR, PGROUND, PMAFL, PEOL, PDRAG, PTURB,    &
+                               PRAD, PSHADOWS, PKAFR, PGROUND, PMAFL, PDRAG, PEOL, PTURB,    &
                                PTRACER, PTIME_BU, PWETDEPAER, OMASKkids, OCLOUD_ONLY         )
 !     ########################################################################################
 !
@@ -242,10 +242,11 @@ END MODULE MODI_PHYS_PARAM_n
 !  A. Costes      12/2021: add Blaze fire model
 !  Q. Rodier      2022   : integration with PHYEX
 !  C. Barthe      03/2023: add CELEC in call to turbulence
+!  V. Masson      01/2024: aggregation of columns for radiation
 !  A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !  A. Marcel Jan 2025: TKE mixing
 !  A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
-!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
+!  A. Marcel Jan 2025: relaxation of the small fraction assumption
 !!-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -305,6 +306,7 @@ USE MODD_NSV, ONLY : NSV, NSV_LGBEG, NSV_LGEND, &
                      NSV_LIMA_NR,NSV_LIMA_NS,NSV_LIMA_NG,NSV_LIMA_NH
 USE MODD_OCEANH
 USE MODD_OUT_n
+USE MODD_NEB_n, ONLY: LSTATNW
 USE MODD_PARAM_C2R2,       ONLY : LSEDC
 USE MODD_PARAMETERS
 USE MODD_PARAM_ICE_n,      ONLY : LSEDIC
@@ -320,16 +322,16 @@ USE MODD_PRECIP_n
 use modd_precision,        only: MNHTIME
 USE MODD_RADIATIONS_n
 USE MODD_RAIN_ICE_DESCR_n, ONLY: XRTMIN
-USE MODD_REF,              ONLY: LCOUPLES
+USE MODD_REF,              ONLY: LCOUPLES,XRHODREFZ
 USE MODD_REF_n
 USE MODD_SALT
 USE MODD_SHADOWS_n
 USE MODD_SUB_PHYS_PARAM_n
 USE MODD_TIME_n
-USE MODD_TIME_n
 USE MODD_TIME, ONLY : TDTEXP  ! Ajout PP
 USE MODD_TURB_FLUX_AIRCRAFT_BALLOON, ONLY : XTHW_FLUX, XRCW_FLUX, XSVW_FLUX
 USE MODD_TURB_n
+USE MODD_VAR_ll,      ONLY: IP
 
 USE MODE_AERO_PSD
 use mode_budget,            only: Budget_store_end, Budget_store_init
@@ -374,7 +376,7 @@ IMPLICIT NONE
 !*      0.1    declarations of arguments
 !
 INTEGER,           INTENT(IN)     :: KTCOUNT   ! temporal iteration count
-TYPE(TFILEDATA),   INTENT(IN)     :: TPFILE    ! Synchronous output file
+TYPE(TFILEDATA),   INTENT(INOUT)  :: TPFILE    ! Synchronous output file
 ! advection schemes
 REAL(kind=MNHTIME), DIMENSION(2), INTENT(INOUT) :: PRAD,PSHADOWS,PKAFR,PGROUND,PTURB,PMAFL,PDRAG,PTRACER,PEOL ! to store CPU
                                                                                                          ! time for computing time
@@ -653,7 +655,7 @@ IF (CRAD /='NONE') THEN
 !  test to see if the partial radiations for cloudy must be called
 !
   IF (CRAD =='ECMW' .OR. CRAD =='ECRA') THEN
-    CALL DATETIME_DISTANCE(TDTRAD_CLONLY,TDTCUR,ZTEMP_DIST)
+    ZTEMP_DIST = TDTCUR - TDTRAD_CLONLY
     IF( MOD(NINT(ZTEMP_DIST/XTSTEP),NINT(XDTRAD_CLONLY/XTSTEP))==0 ) THEN
       TDTRAD_CLONLY = TDTCUR
       GRAD = .TRUE.
@@ -663,7 +665,7 @@ IF (CRAD /='NONE') THEN
 !   
 ! test to see if the full radiations must be called
 !   
-  CALL DATETIME_DISTANCE(TDTCUR,TDTRAD_FULL,ZTEMP_DIST)
+  ZTEMP_DIST = TDTRAD_FULL - TDTCUR
   IF( MOD(NINT(ZTEMP_DIST/XTSTEP),NINT(XDTRAD/XTSTEP))==0 ) THEN
     TDTRAD_FULL = TDTCUR
     GRAD = .TRUE.
@@ -784,7 +786,7 @@ CALL SUNPOS_n   ( XZENITH, ZCOSZEN, ZSINZEN, ZAZIMSOL )
       XLWD(:,:,:)=0.0
       XDTHRADSW(:,:,:)=0.0
       XDTHRADLW(:,:,:)=0.0
-      CALL RADIATIONS_AGG(NRAD_AGG,NI_RAD_AGG,NJ_RAD_AGG,NIOR_RAD_AGG,NJOR_RAD_AGG, TPFILE,      &
+      CALL RADIATIONS_AGG(NRAD_AGG,NI_RAD_AGG,NJ_RAD_AGG,NIOR_RAD_AGG,NJOR_RAD_AGG, NRAD_AGG_FLAG, TPFILE,      &
                        LCLEAR_SKY, OCLOUD_ONLY, NCLEARCOL_TM1, CEFRADL, CEFRADI, COPWSW, COPISW, &
                        COPWLW, COPILW, XFUDG,                                                    &
                        NDLON, NFLEV, NRAD_DIAG, NFLUX, NRAD, NAER, NSWB_OLD, NSWB_MNH, NLWB_MNH, &
@@ -870,24 +872,32 @@ END IF
 ! Sfc turbulent fluxes & Radiative tendency due to SW penetrating ocean
 ! 
 IF (LCOUPLES) THEN
-ZSFU(:,:)= XSSUFL_C(:,:,1)
-ZSFV(:,:)= XSSVFL_C(:,:,1)
-ZSFTH(:,:)= XSSTFL_C(:,:,1)
-ZSFRV(:,:)=XSSRFL_C(:,:,1)
-ELSE 
-IF (LOCEAN) THEN
-!
+! Flux computed in NHOA/WASP and are given in W/M2
+! convert in SI as in MESO-NH & for Ocean & Atmos model
+ IF (LOCEAN) THEN
+  ZSFU=  XSSUFL/CST%XRH00OCEAN
+  ZSFV=  XSSVFL/CST%XRH00OCEAN
+  ZSFTH= XSSTFL/(CST%XCL*CST%XRH00OCEAN)
+!to do: to add factor s/(1-s)
+  ZSFRV=-XSSRFL/CST%XRH00OCEAN
+ ELSE
+  ZSFU= XSSUFL/XRHODREFZ(2)
+  ZSFV= XSSVFL/XRHODREFZ(2)
+  ZSFTH=XSSTFL/(XCPD*XRHODREFZ(2))
+  ZSFRV=XSSRFL/(CST%XLVTT*XRHODREFZ(2))
+ ENDIF 
+ELSE ! no coupled 
+ IF (LOCEAN) THEN
   ALLOCATE( ZIZOCE(IKU)); ZIZOCE(:)=0. 
   ALLOCATE( ZPROSOL1(IKU))
   ALLOCATE( ZPROSOL2(IKU))
-  ALLOCATE(XSSOLA(IIU,IJU))
   ! Time interpolation
   JSW     = INT(TDTCUR%xtime/REAL(NINFRT))
   ZSWA    = TDTCUR%xtime/REAL(NINFRT)-REAL(JSW)
   ZSFRV = 0.
   ZSFTH  = (XSSTFL_T(JSW+1)*(1.-ZSWA)+XSSTFL_T(JSW+2)*ZSWA) 
-  ZSFU = (XSSUFL_T(JSW+1)*(1.-ZSWA)+XSSUFL_T(JSW+2)*ZSWA)
-  ZSFV = (XSSVFL_T(JSW+1)*(1.-ZSWA)+XSSVFL_T(JSW+2)*ZSWA)
+  ZSFU   = (XSSUFL_T(JSW+1)*(1.-ZSWA)+XSSUFL_T(JSW+2)*ZSWA)
+  ZSFV   = (XSSVFL_T(JSW+1)*(1.-ZSWA)+XSSVFL_T(JSW+2)*ZSWA)
 !
   ZIZOCE(IKU)   = XSSOLA_T(JSW+1)*(1.-ZSWA)+XSSOLA_T(JSW+2)*ZSWA
   ZPROSOL1(IKU) = CST%XROC*ZIZOCE(IKU)
@@ -901,12 +911,11 @@ IF (LOCEAN) THEN
     XRTHS(:,:,JKM) = XRTHS(:,:,JKM) + XRHODJ(:,:,JKM)*ZIZOCE(JKM)
   END DO
   if ( TBUCONF%LBUDGET_th ) call Budget_store_end ( TBUDGETS(NBUDGET_TH), 'OCEAN', xrths(:, :, :) )
-  DEALLOCATE (XSSOLA)
   DEALLOCATE( ZIZOCE) 
   DEALLOCATE (ZPROSOL1)
   DEALLOCATE (ZPROSOL2)
-END IF! LOCEAN NO LCOUPLES
-END IF!NO LCOUPLES
+END IF! TEST LOCEAN NO LCOUPLES
+END IF! TEST LCOUPLES
 !
 !
 CALL SECOND_MNH2(ZTIME2)
@@ -944,7 +953,7 @@ IF( CDCONV == 'KAFR' .OR. CSCONV == 'KAFR' ) THEN
 !
   GDCONV = .FALSE.
 !
-  CALL DATETIME_DISTANCE(TDTDCONV,TDTCUR,ZTEMP_DIST)
+  ZTEMP_DIST = TDTCUR - TDTCUR
   IF( MOD(NINT(ZTEMP_DIST/XTSTEP),NINT(XDTCONV/XTSTEP))==0 ) THEN
     TDTDCONV = TDTCUR
     GDCONV   = .TRUE.
@@ -1329,7 +1338,7 @@ ELSE ! case no SURFEX (CSURF logical)
   ZCD_ROOF   = 0.
   ZSFRV_WALL = 0.
   ZSFRV_ROOF = 0.
-  IF (.NOT.LOCEAN) THEN
+  IF (.NOT.(LOCEAN.OR.LCOUPLES))THEN
     ZSFTH    = 0.
     ZSFRV    = 0.
     ZSFSV    = 0.
@@ -1600,6 +1609,15 @@ GCOMPUTE_SRC=SIZE(XSIGS, 3)/=0
 !
 ALLOCATE(ZTDIFF(IIU,IJU,IKU))
 ALLOCATE(ZTDISS(IIU,IJU,IKU))
+ALLOCATE(ZLENGTHM(IIU,IJU,IKU))
+ALLOCATE(ZLENGTHH(IIU,IJU,IKU))
+ALLOCATE(ZMFMOIST(IIU,IJU,IKU))
+ZTDIFF(:,:,:) = 0.
+ZTDISS(:,:,:) = 0.
+ZLENGTHM(:,:,:)= 0.
+ZLENGTHH(:,:,:)= 0.
+ZMFMOIST(:,:,:)= 0.
+
 !
 !! Compute Shape of sfc flux for Oceanic Deep Conv Case
 !
@@ -1628,15 +1646,20 @@ IF (LOCEAN .AND. LDEEPOC) THEN
   END DO
 END IF !END DEEP OCEAN CONV CASE
 !
+LSTATNW = .FALSE.
+LHARAT = .FALSE.
+!
+IGRADIENTSLEO=6
+ALLOCATE(ZHGRADLEO(IIU,IJU,IKU,IGRADIENTSLEO))
 IF(LLEONARD) THEN
-  IGRADIENTSLEO=6
-  ALLOCATE(ZHGRADLEO(IIU,IJU,IKU,IGRADIENTSLEO))
   ZHGRADLEO(:,:,:,1) = GX_W_UW(XWT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
   ZHGRADLEO(:,:,:,2) = GY_W_VW(XWT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
   ZHGRADLEO(:,:,:,3) = GX_M_M(XTHT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
   ZHGRADLEO(:,:,:,4) = GY_M_M(XTHT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
   ZHGRADLEO(:,:,:,5) = GX_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
   ZHGRADLEO(:,:,:,6) = GY_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
+ELSE
+  ZHGRADLEO(:,:,:,:) = 0.
 END IF
 IF(LGOGER) THEN
   !IGRADIENTSGOG=
@@ -1674,7 +1697,10 @@ END IF
 !
 DEALLOCATE(ZTDIFF)
 DEALLOCATE(ZTDISS)
-IF(LLEONARD) DEALLOCATE(ZHGRADLEO)
+DEALLOCATE(ZLENGTHM)
+DEALLOCATE(ZLENGTHH)
+DEALLOCATE(ZMFMOIST)
+DEALLOCATE(ZHGRADLEO)
 IF(LGOGER) DEALLOCATE(ZHGRADGOG)
 !
 IF (LRMC01) THEN

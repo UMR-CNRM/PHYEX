@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -65,33 +65,6 @@
 !!                               function over liquid water
 !!          XALPI,XBETAI,XGAMI ! Constants for saturation vapor pressure
 !!                               function over solid ice
-!!      Module MODD_BUDGET:
-!!         NBUMOD       : model in which budget is calculated
-!!         CBUTYPE      : type of desired budget
-!!                          'CART' for cartesian box configuration
-!!                          'MASK' for budget zone defined by a mask
-!!                          'NONE'  ' for no budget
-!!         LBU_RTH      : logical for budget of RTH (potential temperature)
-!!                        .TRUE. = budget of RTH
-!!                        .FALSE. = no budget of RTH
-!!         LBU_RRV      : logical for budget of RRV (water vapor)
-!!                        .TRUE. = budget of RRV
-!!                        .FALSE. = no budget of RRV
-!!         LBU_RRC      : logical for budget of RRC (cloud water)
-!!                        .TRUE. = budget of RRC
-!!                        .FALSE. = no budget of RRC
-!!         LBU_RRI      : logical for budget of RRI (cloud ice)
-!!                        .TRUE. = budget of RRI
-!!                        .FALSE. = no budget of RRI
-!!         LBU_RRR      : logical for budget of RRR (rain water)
-!!                        .TRUE. = budget of RRR
-!!                        .FALSE. = no budget of RRR
-!!         LBU_RRS      : logical for budget of RRS (aggregates)
-!!                        .TRUE. = budget of RRS
-!!                        .FALSE. = no budget of RRS
-!!         LBU_RRG      : logical for budget of RRG (graupeln)
-!!                        .TRUE. = budget of RRG
-!!                        .FALSE. = no budget of RRG
 !!
 !!    REFERENCE
 !!    ---------
@@ -306,8 +279,8 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(IN
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
-INTEGER :: JIJ, JK
-INTEGER :: IKTB, IKTE, IKB, IKT, IIJB, IIJE, IIJT
+INTEGER :: JIJ, JK, JRR
+INTEGER :: IKTB, IKTE, IKB, IIJB, IIJE, IIJT
 !
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLMICRO ! mask to limit computation
 !Arrays for nucleation call outisde of LLMICRO points
@@ -323,6 +296,7 @@ REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LRI
 REAL :: ZINV_TSTEP ! Inverse ov PTSTEP
 !For total tendencies computation
 REAL, DIMENSION(D%NIJT,D%NKT,0:7) :: ZWR
+REAL, DIMENSION(KRR) :: ZICEDRTMIN
 !
 REAL :: ZDEVIDE, ZRICE
 !
@@ -349,21 +323,27 @@ IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 0, ZHOOK_HANDLE)
 IKTB=D%NKTB
 IKTE=D%NKTE
 IKB=D%NKB
-IKT=D%NKT
 IIJB=D%NIJB
 IIJE=D%NIJE
 IIJT=D%NIJT
+ZICEDRTMIN(1:KRR)=ICED%XRTMIN(1:KRR)
 !-------------------------------------------------------------------------------
 !
 IF(PARAMI%LOCND2) THEN
   CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'LOCND2 OPTION NOT CODED IN THIS RAIN_ICE VERSION')
 END IF
+!$acc kernels
 ZINV_TSTEP=1./PTSTEP
 !
 ! LSFACT and LVFACT without exner, and LLMICRO
 ! LLMICRO is a mask with a True value on points where microphysics is active
-ZRSMIN(1:KRR) = ICED%XRTMIN(1:KRR) * ZINV_TSTEP
+!$mnh_expand_array(JRR=1:KRR)
+ZRSMIN(1:KRR) = ZICEDRTMIN(1:KRR) * ZINV_TSTEP
+!$mnh_end_expand_array(JRR=1:KRR)
 LLMICRO(:,:)=.FALSE.
+!$acc end kernels
+!$acc kernels
+!$acc loop independent collapse(2)
 DO JK = IKTB,IKTE
   DO JIJ = IIJB,IIJE
     !LSFACT and LVFACT
@@ -394,6 +374,7 @@ DO JK = IKTB,IKTE
     ENDIF
   ENDDO
 ENDDO
+!$acc end kernels
 !
 !
 !-------------------------------------------------------------------------------
@@ -420,8 +401,9 @@ ENDIF
 !*       3.     INITIAL VALUES SAVING
 !               ---------------------
 !
-
+!$acc kernels
 DO JK = IKTB,IKTE
+!$mnh_expand_array(JIJ=1:D%NIJT)
   !Copy of T variables to keep untouched the prognostic variables
   ZWR(:,JK,ITH)=PTHT(:,JK)
   ZWR(:,JK,IRV)=PRVT(:,JK)
@@ -441,7 +423,9 @@ DO JK = IKTB,IKTE
     PEVAP3D(:,JK)=0.
   ENDIF
   PRAINFR(:,JK)=0.
+!$mnh_end_expand_array(JIJ=1:D%NIJT)
 ENDDO
+!$acc end kernels
 !
 !
 !*       4.1    COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF LLMICRO POINTS
@@ -449,7 +433,9 @@ ENDDO
 !
 !The nucleation must be called everywhere
 !This call is for points outside of the LLMICR mask, another call is coded in ice4_tendencies
+!$acc kernels
 LLW3D(:,:)=.FALSE.
+!$acc loop independent collapse(2)
 DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
     IF (.NOT. LLMICRO(JIJ, JK)) THEN
@@ -461,6 +447,10 @@ DO JK=IKTB,IKTE
     ENDIF
   ENDDO
 ENDDO
+!$acc end kernels
+!
+!!!! WARNING TODO THIS BLOCK IS NOT ACCELERATED WITH OPENACC !!! SINCE ICE4_NUCL IS 1D 
+!!!! (see PHYEX/e8c7166 11/01/2024) issue 74 !!!
 DO JK=IKTB,IKTE
   !ZBUF is sized in (NIJT,4) when it should be in ((IIJE-IIJB+1),4), but this is of no consequence
   !since the values are not used.
@@ -470,11 +460,27 @@ DO JK=IKTB,IKTE
                        PRVT(IIJB:IIJE, JK), &
                        PCIT(IIJB:IIJE, JK), ZZ_RVHENI(IIJB:IIJE, JK), ZBUF(IIJB:IIJE, :), LLBUF(IIJB:IIJE))
 ENDDO
+!
+!!$acc kernels
+!!$acc loop independent collapse(2)
+!DO JK=IKTB,IKTE 
+!  DO JIJ=IIJB,IIJE
+!    CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(JIJ, JK), &
+!                         PTHT(JIJ, JK), PPABST(JIJ, JK), PRHODREF(JIJ, JK), &                                       
+!                         PEXN(JIJ, JK), ZW3D(JIJ, JK), ZT(JIJ, JK), &                                                           
+!                         PRVT(JIJ, JK), &                                                                                 
+!                         PCIT(JIJ, JK), ZZ_RVHENI(JIJ, JK))
+!ENDDO
+!!$acc end kernels
+
+!$acc kernels
+!$acc loop independent collapse(2)
 DO JK = IKTB, IKTE
   DO JIJ=IIJB, IIJE
     ZZ_RVHENI(JIJ,JK) = MIN(PRVS(JIJ,JK), ZZ_RVHENI(JIJ,JK)/PTSTEP)
   ENDDO
 ENDDO
+!$acc end kernels
 !
 !
 !*       4.2    COMPUTES PRECIPITATION FRACTION
@@ -690,6 +696,8 @@ END IF
 !
 !***     8.1    total tendencies limited by available species
 !
+!$acc kernels
+!$acc loop independent collapse(2)
 DO JK = IKTB, IKTE
   DO JIJ=IIJB, IIJE
     !LV/LS
@@ -726,6 +734,7 @@ DO JK = IKTB, IKTE
     ENDIF
   ENDDO
 ENDDO
+!$acc end kernels
 !-------------------------------------------------------------------------------
 !
 !***     8.2    Negative corrections
@@ -789,6 +798,8 @@ IF(PARAMI%LSEDIM_AFTER) THEN
                          &PQHT=PQHT, PQHS=PQHS)
         
   !"sedimentation" of rain fraction
+!$acc kernels
+!$acc loop independent collapse(2)
   DO JK = IKTB, IKTE
     DO JIJ=IIJB,IIJE
       ZWR(JIJ,JK,IRR)=PRRS(JIJ,JK)*PTSTEP
@@ -799,6 +810,7 @@ IF(PARAMI%LSEDIM_AFTER) THEN
       ENDIF
     ENDDO
   ENDDO
+!$acc end kernels
   IF (PRESENT(PRHS)) THEN
     CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, ZWR(:,:,IRR), &
                          &ZWR(:,:,IRS), ZWR(:,:,IRG), ZWR(:,:,IRH))
@@ -816,14 +828,16 @@ ENDIF
 IF (PARAMI%LDEPOSC) THEN !cloud water deposition on vegetation
   IF (BUCONF%LBU_ENABLE .AND. BUCONF%LBUDGET_RC) &
      & CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'DEPO', PRCS(:, :)*PRHODJ(:, :))
-
+!$acc kernels
   PINDEP(:)=0.
 !DEC$ IVDEP
+!$acc loop independent
   DO JIJ = IIJB, IIJE
     PINDEP(JIJ) = PARAMI%XVDEPOSC * PRCT(JIJ, IKB) * PRHODREF(JIJ, IKB) / CST%XRHOLW
     PRCS(JIJ, IKB) = PRCS(JIJ, IKB) - PARAMI%XVDEPOSC * PRCT(JIJ, IKB) / PDZZ(JIJ, IKB)
     PINPRC(JIJ) = PINPRC(JIJ) + PINDEP(JIJ)
   ENDDO
+!$acc end kernels
 
   IF (BUCONF%LBU_ENABLE .AND. BUCONF%LBUDGET_RC) &
      & CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'DEPO', PRCS(:, :)*PRHODJ(:, :))

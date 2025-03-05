@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2002-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2002-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -9,23 +9,23 @@
 !
 !!****  *MODD_ELEC_DESCR* - declaration of the electrical descriptive constants
 !!
-!!	PURPOSE
-!!	-------
+!!   PURPOSE
+!!   -------
 !
-!!**	IMPLICIT ARGUMENTS
-!!	------------------
-!!	  None
+!!**   IMPLICIT ARGUMENTS
+!!   ------------------
+!!     None
 !!
-!!	REFERENCE
-!!	---------
+!!   REFERENCE
+!!   ---------
 !!
-!!	AUTHOR
-!!	------
+!!   AUTHOR
+!!   ------
 !!       Gilles Molinie    * Laboratoire d'Aerologie *
 !!
-!!	MODIFICATIONS
-!!	-------------
-!!	  Original	14/11/02
+!!   MODIFICATIONS
+!!   -------------
+!!     Original   14/11/02
 !!        M. Chong      26/01/10  Small ions parameters
 !!                               +Option for Fair weather field from
 !!                               Helsdon-Farley (JGR, 1987, 5661-5675)
@@ -36,8 +36,8 @@
 !!
 !-------------------------------------------------------------------------------
 !
-!*	0.	DECLARATIONS
-!		------------
+!*   0.   DECLARATIONS
+!      ------------
 !
 USE MODD_PARAMETERS, ONLY: JPSVNAMELGTMAX
 
@@ -153,8 +153,6 @@ REAL, DIMENSION(:,:),   ALLOCATABLE :: XEPOTFW_TOP
 !
 ! Parameters relative to the "Beard" effect ELEC=>MICROPHYS
 !
-LOGICAL :: LSEDIM_BEARD=.FALSE.    ! .T.: to enable ELEC=>MICROPHYS via
-!                                  ! particule sedimentation rate
 LOGICAL :: LIAGGS_LATHAM=.FALSE.   ! .T.: to enable ELEC=>MICROPHYS via
 !                                  ! ice aggregation rate
 !
@@ -163,9 +161,11 @@ TYPE ELEC_DESCR_t
   REAL :: XFC, XFR, XFI, XFS, XFG, XFH ! f_x in q_x = e_x D^f_x
   REAL :: XCXR            ! Exponent in the concentration-slope
   REAL       :: XECHARGE        ! Elementary charge (C)
+  LOGICAL :: LSEDIM_BEARD=.FALSE.    ! .T.: to enable ELEC=>MICROPHYS via
+!                                  ! particule sedimentation rate
 END TYPE ELEC_DESCR_t
 !
-TYPE(ELEC_DESCR_t), SAVE, TARGET :: ELEC_DESCR
+TYPE(ELEC_DESCR_t), TARGET :: ELEC_DESCR
 !
 REAL, POINTER :: XFC => NULL(), &
                  XFR => NULL(), &
@@ -175,6 +175,8 @@ REAL, POINTER :: XFC => NULL(), &
                  XFH => NULL(), &
                  XCXR => NULL(), &
                  XECHARGE => NULL()
+
+LOGICAL, POINTER :: LSEDIM_BEARD => NULL()
 !
 CONTAINS
 !
@@ -189,6 +191,7 @@ SUBROUTINE ELEC_DESCR_ASSOCIATE()
   XFH => ELEC_DESCR%XFH
   XCXR => ELEC_DESCR%XCXR
   XECHARGE=> ELEC_DESCR%XECHARGE
+  LSEDIM_BEARD => ELEC_DESCR%LSEDIM_BEARD
 END SUBROUTINE ELEC_DESCR_ASSOCIATE
 !
 END MODULE MODD_ELEC_DESCR

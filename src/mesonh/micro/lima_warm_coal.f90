@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -186,7 +186,7 @@ INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE        ! Physical domain
 !
 !
 !*       1.     PREPARE COMPUTATIONS - PACK
-!   	        ---------------------------
+!               ---------------------------
 !
 !
 IIB=1+JPHEXT
@@ -249,7 +249,7 @@ IF( IMICRO >= 0 ) THEN
 IF (NMOM_R.GE.2) THEN
 !
 !*       2. Self-collection of cloud droplets    
-!   	 ------------------------------------
+!        ------------------------------------
 !
 !
   if ( lbudget_sv ) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'SELF', pccs(:, :, :)  * prhodj(:, :, :) )
@@ -270,7 +270,7 @@ IF (NMOM_R.GE.2) THEN
 !
 !
 !*       3. Autoconversion of cloud droplets (Berry-Reinhardt parameterization)
-!   	 ----------------------------------------------------------------------
+!        ----------------------------------------------------------------------
 !
 !
 !
@@ -333,7 +333,7 @@ IF (NMOM_R.GE.2) THEN
 !
 !
 !*       4. Accretion sources
-!   	 --------------------
+!        --------------------
 !
 !
    GACCR(:) = ZRRT(:)>XRTMIN(3) .AND. ZCRT(:)>XCTMIN(3)
@@ -405,7 +405,7 @@ IF (NMOM_R.GE.2) THEN
 !
 !
 !*       5. Self collection - Coalescence/Break-up
-!   	 -----------------------------------------
+!        -----------------------------------------
 !
 !
    IF( IACCR >= 0 ) THEN
@@ -454,7 +454,7 @@ END IF
 !
 !
 !*       6. Unpack and clean
-!   	 -------------------
+!        -------------------
 !
 !
    ZW(:,:,:) = PRCS(:,:,:)

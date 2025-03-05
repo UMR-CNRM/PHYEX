@@ -66,6 +66,7 @@ IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RI',0,ZHOOK_HANDLE)
 !
 !*       7.2    Bergeron-Findeisen effect: RCBERI
 !
+!$acc kernels
 DO JL=1, KSIZE
   IF(PSSI(JL)>0. .AND. PRCT(JL)>ICED%XRTMIN(2) .AND. PRIT(JL)>ICED%XRTMIN(4) &
      .AND. PCIT(JL)>1.E-20 .AND. LDCOMPUTE(JL)) THEN
@@ -78,6 +79,7 @@ DO JL=1, KSIZE
     PRCBERI(JL) = 0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RI', 1, ZHOOK_HANDLE)
 !

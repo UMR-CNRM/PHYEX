@@ -133,6 +133,7 @@ REAL, DIMENSION(KPROMA) :: &
                         & ZHLI_LCF, &
                         & ZHLI_LRI
 LOGICAL, DIMENSION(KPROMA) :: LLCOMPUTE ! .TRUE. or points where we must compute tendencies,
+REAL, DIMENSION(SIZE(ICED%XRTMIN))   :: ZRSMIN
 !
 !Output packed tendencies (for budgets only)
 REAL, DIMENSION(KPROMA, IBUNUM) :: ZBU_INST
@@ -161,6 +162,7 @@ IF (LHOOK) CALL DR_HOOK('ICE4_STEPPING', 0, ZHOOK_HANDLE)
 !               ------------
 !
 ZINV_TSTEP=1./PTSTEP
+ZRSMIN = ICED%XRTMIN
 !
 IF(BUCONF%LBU_ENABLE .OR. OSAVE_MICRO) THEN
   DO JV=1, IBUNUM-IBUNUM_EXTRA
@@ -178,18 +180,26 @@ IF(PARAMI%XTSTEP_TS/=0.)THEN
 ENDIF
 
 IF (LDEXT_TEND) THEN
+!$acc kernels
+!$acc loop independent collapse(2)
   DO JV=0, KRR
     DO JL=1, KMICRO
       PEXTPK(JL, JV)=PEXTPK(JL, JV)-PVART(JL, JV)*ZINV_TSTEP
     ENDDO
   ENDDO
+!$acc end kernels
 ENDIF
 IF (LDSIGMA_RC) THEN
+!$acc kernels
+!$acc loop independent
   DO JL=1, KMICRO
     PSIGMA_RC(JL)=PSIGMA_RC(JL)*2.
-  ENDDO 
+  ENDDO
+!$acc end kernels
 ENDIF
 IF (LDAUCV_ADJU) THEN
+!$acc kernels
+!$acc loop independent
   DO JL=1, KMICRO
     ZHLC_LRC(JL) = PVART(JL, IRC) - PHLC_HRC(JL)
     ZHLI_LRI(JL) = PVART(JL, IRI) - PHLI_HRI(JL)
@@ -204,6 +214,7 @@ IF (LDAUCV_ADJU) THEN
       ZHLI_LCF(JL)=0.
     ENDIF
   ENDDO
+!$acc end kernels
 ENDIF
 
 !-------------------------------------------------------------------------------
@@ -211,7 +222,9 @@ ENDIF
 !***       4.4 temporal loop
 !
 !
+!$acc kernels
 IITER(1:KMICRO)=0
+!$acc loop independent
 DO JL=1, KMICRO
   IF(LDMICRO(JL)) THEN
     ZTIME(JL)=0. ! Current integration time (all points may have a different integration time)
@@ -219,6 +232,7 @@ DO JL=1, KMICRO
     ZTIME(JL)=PTSTEP ! Nothing to do on this point, it has already reached the end of the timestep
   ENDIF
 ENDDO
+!$acc end kernels
 
 DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 
@@ -227,6 +241,8 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     ! because when time has evolved more than a limit, we must re-compute tendencies
     ZTIME_LASTCALL(1:KMICRO)=ZTIME(1:KMICRO)
   ENDIF
+!$acc kernels
+!$acc loop independent
   DO JL=1, KMICRO
     IF (ZTIME(JL) < PTSTEP) THEN
       LLCOMPUTE(JL)=.TRUE. ! Computation (.TRUE.) only for points for which integration time has not reached the timestep
@@ -235,23 +251,30 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
       LLCOMPUTE(JL)=.FALSE.
     ENDIF
   ENDDO
+!$acc end kernels
   LL_ANY_ITER=ANY(IITER(1:KMICRO) < INB_ITER_MAX)
   LLCPZ0RT=.TRUE.
   LSOFT=.FALSE. ! We *really* compute the tendencies
 
   DO WHILE(ANY(LLCOMPUTE(1:KMICRO))) ! Loop to adjust tendencies when we cross the 0°C or when a species disappears
+!$acc kernels
     ZSUM2(1:KMICRO)=PVART(1:KMICRO, IRI)
+!$acc loop independent collapse(2)
     DO JV=IRI+1,KRR
       DO JL=1, KMICRO
         ZSUM2(JL)=ZSUM2(JL)+PVART(JL, JV)
       ENDDO
     ENDDO
+!$acc end kernels
+!$acc kernels
+!$acc loop independent
     DO JL=1, KMICRO
       ZDEVIDE=(CST%XCPD + CST%XCPV*PVART(JL, IRV) + CST%XCL*(PVART(JL, IRC)+PVART(JL, IRR)) + CST%XCI*ZSUM2(JL)) * PEXN(JL)
       ZZT(JL) = PVART(JL, ITH) * PEXN(JL)
       ZLSFACT(JL)=(CST%XLSTT+(CST%XCPV-CST%XCI)*(ZZT(JL)-CST%XTT)) / ZDEVIDE
       ZLVFACT(JL)=(CST%XLVTT+(CST%XCPV-CST%XCL)*(ZZT(JL)-CST%XTT)) / ZDEVIDE
     ENDDO
+!$acc end kernels
     !-------------------------------------------------------------------------------
     !
     !***       4.5 Effective tendencies computation
@@ -275,11 +298,14 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 
     ! External tendencies
     IF(LDEXT_TEND) THEN
+!$acc kernels
+!$acc loop independent
       DO JV=0, KRR
         DO JL=1, KMICRO
           ZA(JL, JV) = ZA(JL, JV) + PEXTPK(JL, JV)
         ENDDO
       ENDDO
+!$acc end kernels
     ENDIF
     !-------------------------------------------------------------------------------
     !
@@ -287,6 +313,8 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     !
     !
     ! If we can, we shall use these tendencies until the end of the timestep
+!$acc kernels
+!$acc loop independent
     DO JL=1, KMICRO
       IF(LLCOMPUTE(JL)) THEN
         ZMAXTIME(JL)=(PTSTEP-ZTIME(JL)) ! Remaining time until the end of the timestep
@@ -294,9 +322,11 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
         ZMAXTIME(JL)=0.
       ENDIF
     ENDDO
-
+!$acc end kernels
     !We need to adjust tendencies when temperature reaches 0
     IF(PARAMI%LFEEDBACKT) THEN
+!$acc kernels
+!$acc loop independent
       DO JL=1, KMICRO
         !Is ZB(:, ITH) enough to change temperature sign?
         ZX=CST%XTT/PEXN(JL)
@@ -311,33 +341,42 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
           ENDIF
         ENDIF
       ENDDO
+!$acc end kernels
     ENDIF
 
     !We need to adjust tendencies when a species disappears
     !When a species is missing, only the external tendencies can be negative (and we must keep track of it)
+!$acc kernels
     DO JV=1, KRR
+!$acc loop independent
       DO JL=1, KMICRO
-        IF (ZA(JL, JV) < -1.E-20 .AND. PVART(JL, JV) > ICED%XRTMIN(JV)) THEN
+        IF (ZA(JL, JV) < -1.E-20 .AND. PVART(JL, JV) > ZRSMIN(JV)) THEN
           ZMAXTIME(JL)=MIN(ZMAXTIME(JL), -(ZB(JL, JV)+PVART(JL, JV))/ZA(JL, JV))
           ZMAXTIME(JL)=MAX(ZMAXTIME(JL), CST%XMNH_TINY) !to prevent rounding errors
         ENDIF
       ENDDO
     ENDDO
-
+!$acc end kernels
     !We stop when the end of the timestep is reached
+!$acc kernels
+!$acc loop independent
     DO JL=1, KMICRO
       IF (ZTIME(JL)+ZMAXTIME(JL) >= PTSTEP) THEN
         LLCOMPUTE(JL)=.FALSE.
       ENDIF
     ENDDO
+!$acc end kernels
     !We must recompute tendencies when the end of the sub-timestep is reached
     IF (PARAMI%XTSTEP_TS/=0.) THEN
+!$acc kernels
+!$acc loop independent
       DO JL=1, KMICRO
         IF ((IITER(JL) < INB_ITER_MAX) .AND. (ZTIME(JL)+ZMAXTIME(JL) > ZTIME_LASTCALL(JL)+ZTSTEP)) THEN
           ZMAXTIME(JL)=ZTIME_LASTCALL(JL)-ZTIME(JL)+ZTSTEP
           LLCOMPUTE(JL)=.FALSE.
         ENDIF
       ENDDO
+!$acc end kernels
     ENDIF
 
     !We must recompute tendencies when the maximum allowed change is reached
@@ -349,9 +388,11 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
         ! because when mixing ratio has evolved more than a threshold, we must re-compute tendencies
         ! Thus, at first iteration (ie when LLCPZ0RT=.TRUE.) we copy PVART into Z0RT
         DO JV=1,KRR
+!$acc kernels
           IF (LLCPZ0RT) THEN
             Z0RT(1:KMICRO, JV)=PVART(1:KMICRO, JV)
           ENDIF
+!$acc loop independent
           DO JL=1, KMICRO
             IF (IITER(JL)<INB_ITER_MAX .AND. ABS(ZA(JL,JV))>1.E-20) THEN
               ZTIME_THRESHOLD1D(JL)=(SIGN(1., ZA(JL, JV))*PARAMI%XMRSTEP+ &
@@ -360,30 +401,37 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
               ZTIME_THRESHOLD1D(JL)=-1.
             ENDIF
           ENDDO
+!$acc loop independent
           DO JL=1, KMICRO
             IF (ZTIME_THRESHOLD1D(JL)>=0 .AND. ZTIME_THRESHOLD1D(JL)<ZMAXTIME(JL) .AND. &
-               &(PVART(JL, JV)>ICED%XRTMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
+               &(PVART(JL, JV)>ZRSMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
               ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD1D(JL))
               LLCOMPUTE(JL)=.FALSE.
             ENDIF
           ENDDO
           IF (JV == 1) THEN
+!$acc loop independent
             DO JL=1, KMICRO
               ZMAXB(JL)=ABS(ZB(JL, JV))
             ENDDO
           ELSE
+!$acc loop independent
             DO JL=1, KMICRO
               ZMAXB(JL)=MAX(ZMAXB(JL), ABS(ZB(JL, JV)))
             ENDDO
           ENDIF
+!$acc end kernels
         ENDDO
         LLCPZ0RT=.FALSE.
+!$acc kernels
+!$acc loop independent
         DO JL=1, KMICRO
           IF (IITER(JL)<INB_ITER_MAX .AND. ZMAXB(JL)>PARAMI%XMRSTEP) THEN
             ZMAXTIME(JL)=0.
             LLCOMPUTE(JL)=.FALSE.
           ENDIF
         ENDDO
+!$acc end kernels
       ENDIF ! LL_ANY_ITER
     ENDIF ! XMRSTEP/=0.
     !-------------------------------------------------------------------------------
@@ -391,6 +439,8 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     !***       4.7 New values of variables for next iteration
     !
     !
+!$acc kernels
+!$acc loop independent collapse(2)
     DO JV=0, KRR
       DO JL=1, KMICRO
         IF(LDMICRO(JL)) THEN
@@ -398,35 +448,48 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
         ENDIF
       ENDDO
     ENDDO
+!$acc end kernels
+!$acc kernels
+!$acc loop independent
     DO JL=1, KMICRO
       IF (PVART(JL,IRI)<=0. .AND. LDMICRO(JL)) PCIT(JL) = 0.
       ZTIME(JL)=ZTIME(JL)+ZMAXTIME(JL)
     ENDDO
+!$acc end kernels
     !-------------------------------------------------------------------------------
     !
     !***       4.8 Mixing ratio change due to each process
     !
     IF(BUCONF%LBU_ENABLE .OR. OSAVE_MICRO) THEN
       !Mixing ratio change due to a tendency
+!$acc kernels
+!$acc loop independent collapse(2)
       DO JV=1, IBUNUM-IBUNUM_MR-IBUNUM_EXTRA
         DO JL=1, KMICRO
           PBU_SUM(JL, JV) = PBU_SUM(JL, JV) + ZBU_INST(JL, JV)*ZMAXTIME(JL)
         ENDDO
       ENDDO
+!$acc end kernels
 
       !Mixing ratio change due to a mixing ratio change
+!$acc kernels
+!$acc loop independent collapse(2)
       DO JV=IBUNUM-IBUNUM_MR-IBUNUM_EXTRA+1, IBUNUM-IBUNUM_EXTRA
         DO JL=1, KMICRO
           PBU_SUM(JL, JV) = PBU_SUM(JL, JV) + ZBU_INST(JL, JV)
         ENDDO
       ENDDO
+!$acc end kernels
 
       !Extra contribution as a mixing ratio change
       DO JV=IBUNUM-IBUNUM_EXTRA+1, IBUNUM
         JJV=IBUEXTRAIND(JV)
+!$acc kernels
+!$acc loop independent
         DO JL=1, KMICRO
           PBU_SUM(JL, JJV) = PBU_SUM(JL, JJV) + ZBU_INST(JL, JV)
         ENDDO
+!$acc end kernels
       ENDDO
     ENDIF
     !-------------------------------------------------------------------------------
@@ -439,6 +502,8 @@ ENDDO !Temporal loop
 
 IF(LDEXT_TEND) THEN
   !Z..T variables contain the external tendency, we substract it
+!$acc kernels
+!$acc loop independent collapse(2)
   DO JV=0, KRR
     DO JL=1, KMICRO
       IF(LDMICRO(JL)) THEN
@@ -446,10 +511,13 @@ IF(LDEXT_TEND) THEN
       ENDIF
     ENDDO
   ENDDO
+!$acc end kernels
 ENDIF
+!$acc kernels
 DO JL=1, KMICRO
   PRREVAV(JL)=ZBU_INST(JL, IRREVAV)
 ENDDO
+!$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_STEPPING', 1, ZHOOK_HANDLE)
 END SUBROUTINE ICE4_STEPPING

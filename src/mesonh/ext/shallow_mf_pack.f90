@@ -32,7 +32,7 @@ use modd_precision, only: MNHTIME
 INTEGER,                INTENT(IN)   :: KRR        ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL       ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI       ! number of ice water var.
-TYPE(TFILEDATA),        INTENT(IN)   :: TPFILE     ! Output file
+TYPE(TFILEDATA),        INTENT(INOUT):: TPFILE     ! Output file
 REAL(kind=MNHTIME),DIMENSION(2), INTENT(OUT)  :: PTIME_LES  ! time spent in LES computations
 REAL,                   INTENT(IN)   :: PTSTEP     ! Dynamical timestep 
 
@@ -120,7 +120,7 @@ END MODULE MODI_SHALLOW_MF_PACK
 !  A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !  A. Marcel Jan 2025: TKE mixing
 !  A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
-!!      A. Marcel Jan 2025: relaxation of the small fraction assumption
+!  A. Marcel Jan 2025: relaxation of the small fraction assumption
 ! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -161,7 +161,7 @@ IMPLICIT NONE
 INTEGER,                INTENT(IN)   :: KRR        ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL       ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI       ! number of ice water var.
-TYPE(TFILEDATA),        INTENT(IN)   :: TPFILE     ! Output file
+TYPE(TFILEDATA),        INTENT(INOUT):: TPFILE     ! Output file
 REAL(kind=MNHTIME),DIMENSION(2), INTENT(OUT)  :: PTIME_LES  ! time spent in LES computations
 REAL,                   INTENT(IN)   :: PTSTEP     ! Dynamical timestep 
 

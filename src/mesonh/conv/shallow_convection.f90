@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1996-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1996-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -486,7 +486,7 @@ ALLOCATE( ILCL(ICONV) )
 ALLOCATE( ICTL(ICONV) )
 ALLOCATE( IETL(ICONV) )
 !
-	 ! grid scale variables
+         ! grid scale variables
 !
 ALLOCATE( ZZ(ICONV,IKS) ) ;   ZZ  = 0.0
 ALLOCATE( ZPRES(ICONV,IKS) );   ZPRES = 0.0
@@ -788,8 +788,8 @@ ENDIF
   END DO
   END DO
 !
-	      ! execute a "scatter"= pack command to store the tendencies in
-	      ! the final 2D tables
+              ! execute a "scatter"= pack command to store the tendencies in
+              ! the final 2D tables
 !
   DO JK = IKB, IKE
   DO JI = 1, ICONV

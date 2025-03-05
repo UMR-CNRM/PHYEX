@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -216,7 +216,7 @@ END MODULE MODI_READ_FIELD
 !!
 !!    AUTHOR
 !!    ------
-!!  	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -447,6 +447,7 @@ LOGICAL                      :: ZLRECYCL     ! switch if turbulence recycling is
 LOGICAL                      :: GOLDFILEFORMAT
 CHARACTER(LEN=3)             :: YFRC         ! To mark the different forcing dates
 CHARACTER(LEN=3)             :: YNUM3
+CHARACTER(LEN=6)             :: YPROGRAMFILE
 CHARACTER(LEN=15)            :: YVAL
 REAL, DIMENSION(KIU,KJU,KKU) :: ZWORK        ! to compute supersaturation
 TYPE(TFIELDMETADATA)         :: TZFIELD
@@ -462,6 +463,10 @@ ZWORK = 0.0
 !If TPINIFILE file was written with a MesoNH version < 5.6, some variables had different names or were not available
 GOLDFILEFORMAT = (        TPINIFILE%NMNHVERSION(1) < 5                                       &
                    .OR. ( TPINIFILE%NMNHVERSION(1) == 5 .AND. TPINIFILE%NMNHVERSION(2) < 6 ) )
+!
+CALL IO_Field_read( TPINIFILE, 'PROGRAM', YPROGRAMFILE )
+!-------------------------------------------------------------------------------
+CALL IO_Field_read( TPINIFILE, 'PROGRAM', YPROGRAMFILE )
 !-------------------------------------------------------------------------------
 !
 !*       2.    READ PROGNOSTIC VARIABLES
@@ -513,8 +518,10 @@ SELECT CASE(HGETTKET)
       CALL IO_Field_read(TPINIFILE,'TKET',PTKET)
     END IF
     IF ( ( (TPINIFILE%NMNHVERSION(1)==5 .AND. TPINIFILE%NMNHVERSION(2)>0) .OR. TPINIFILE%NMNHVERSION(1)>5 ) &
-        .AND. (CCONF == 'RESTA') .AND. LSPLIT_CFL) THEN
-      CALL IO_Field_read(TPINIFILE,'TKEMS',PRTKEMS)
+        .AND. (CCONF == 'RESTA') .AND. LSPLIT_CFL .AND. TRIM(YPROGRAMFILE) == 'MESONH' ) THEN
+      CALL IO_Field_read( TPINIFILE, 'TKEMS', PRTKEMS )
+    ELSE
+      PRTKEMS(:,:,:) = 0.
     END IF
   CASE('INIT')
     PTKET(:,:,:)   = XTKEMIN
@@ -667,7 +674,10 @@ IF (LIBM .AND. CPROGRAM=='MESONH') THEN
     NDIMS      = 3,         &
     LTIMEDEP   = .TRUE.     )
    !
-   CALL IO_Field_read(TPINIFILE,TZFIELD,PIBM_XMUT)
+   CALL IO_Field_read( TPINIFILE, TZFIELD, PIBM_XMUT, IRESP )
+   !
+  !If field not found (only available in restarts) => set to 0.
+   IF ( IRESP /= 0 ) PIBM_XMUT = 0.
    !
 ENDIF
 !
@@ -1064,7 +1074,7 @@ IF ( NSV_SNW >= 1 ) THEN
   END DO
 END IF
 !
-IF (CCONF == 'RESTA') THEN
+IF ( CCONF == 'RESTA' .AND. TRIM(YPROGRAMFILE) == 'MESONH' ) THEN
   IF (CTEMP_SCHEME/='LEFR') THEN
     CALL IO_Field_read(TPINIFILE,'US_PRES',PRUS_PRES)
     CALL IO_Field_read(TPINIFILE,'VS_PRES',PRVS_PRES)
@@ -1334,7 +1344,7 @@ IF (LOCEAN .AND. (.NOT.LCOUPLES) .AND. (KOCEMI==1)) THEN
     CLONGNAME  = 'SSOLA',                             &
     CUNITS     = 'kg m3 K m s-1',                     &
     CDIR       = '--',                                &
-    CCOMMENT   = 'sfc solar flux to force ocean LES', &
+    CCOMMENT   = 'sfc solar flux at sfc to force ocean LES', &
     NGRID      = 0,                                   &
     NTYPE      = TYPEREAL,                            &
     NDIMS      = 1,                                   &

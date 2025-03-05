@@ -20,7 +20,7 @@ USE MODD_IO, ONLY: TFILEDATA
 IMPLICIT NONE
 !
 INTEGER,                          INTENT(IN)    :: KRR        ! Number of moist variables
-TYPE(TFILEDATA),                  INTENT(IN)    :: TPFILE     ! Output file
+TYPE(TFILEDATA),                  INTENT(INOUT) :: TPFILE     ! Output file
 CHARACTER(len=4),                 INTENT(IN)    :: HTURBDIM   ! Dimensionality of the turbulence scheme
 CHARACTER(len=4),                 INTENT(IN)    :: HRAD       ! Radiation scheme name
 LOGICAL,                          INTENT(IN)    :: OSUBG_COND ! Switch for Subgrid condensation
@@ -165,7 +165,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 INTEGER,                          INTENT(IN)    :: KRR        ! Number of moist variables
-TYPE(TFILEDATA),                  INTENT(IN)    :: TPFILE     ! Output file
+TYPE(TFILEDATA),                  INTENT(INOUT) :: TPFILE     ! Output file
 CHARACTER(len=4),                 INTENT(IN)    :: HTURBDIM   ! Dimensionality of the turbulence scheme
 CHARACTER(len=4),                 INTENT(IN)    :: HRAD       ! Radiation scheme name
 LOGICAL,                          INTENT(IN)    :: OSUBG_COND ! Switch for Subgrid condensation
