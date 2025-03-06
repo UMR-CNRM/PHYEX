@@ -1457,7 +1457,6 @@ IF (TURBN%LGOGER) THEN
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !* Computation of the horizontal mixing length
-  !ZK=TURBN%XSMAG**2*PDXX(IIJB:IIJE,1:IKT)*PDYY(IIJB:IIJE,1:IKT)
   !* Add horizontal terms
   ! DUDX=PHGRADGOG(IIJB:IIJE,1:IKT,1)
   ! DUDY=PHGRADGOG(IIJB:IIJE,1:IKT,2)
