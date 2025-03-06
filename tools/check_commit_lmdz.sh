@@ -323,13 +323,13 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       if [[ $commit == lmdz${separator}* ]]; then
         $prep_code -c $commit PHYEX #This commit is ready for inclusion
       else
-        $prep_code -c $commit $expand_options $subs -m lmdz PHYEX
+        $prep_code -c $commit $expand_options $subs -m lmdz PHYEX -- --shumanFUNCtoCALL --removeACC
       fi
     else
       echo "Copy $fromdir"
       mkdir PHYEX
       scp -q -r $fromdir/src PHYEX/
-      $prep_code $expand_options $subs -m lmdz PHYEX
+      $prep_code $expand_options $subs -m lmdz PHYEX -- --shumanFUNCtoCALL --removeACC
     fi
     if [ $packupdate -eq 1 ]; then
       #Update only modified files
