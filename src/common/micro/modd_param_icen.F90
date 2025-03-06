@@ -428,6 +428,10 @@ IF(LLCHECK) THEN
       CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODD_PARAM_ICE_n', 'With AROME/LMDZ, LADJ_BEFORE must be .T. and LADJ_AFTER must be .F.')
     ENDIF
   ENDIF
+
+  IF(LSNOW_T .AND. .NOT. LRED) THEN
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODD_PARAM_ICE_n', 'It is not possible to run LSNOW_T without LRED')
+  ENDIF
 ENDIF
 !
 !*      3. PRINTS

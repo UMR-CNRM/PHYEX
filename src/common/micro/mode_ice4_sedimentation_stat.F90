@@ -167,11 +167,11 @@ DO JK = IKE , IKB, -1*IKL
     ELSEIF (JRR==5) THEN
 
       !*       2.4   for aggregates/snow
-#ifdef REPRO48
-      CALL OTHER_SPECIES(ICEP%XFSEDS,ICEP%XEXSEDS,PRST(:,JK))
-#else
-      CALL SNOW(PRST(:,JK))
-#endif
+      IF(.NOT. ICEP%LNEWCOEFF) THEN
+        CALL OTHER_SPECIES(ICEP%XFSEDS,ICEP%XEXSEDS,PRST(:,JK))
+      ELSE
+        CALL SNOW(PRST(:,JK))
+      ENDIF
 
     ELSEIF (JRR==6) THEN
 
