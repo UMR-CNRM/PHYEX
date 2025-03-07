@@ -8,7 +8,7 @@ IMPLICIT NONE
 CONTAINS
       SUBROUTINE TURB_HOR_THERMO_CORR(D,CST,TURBN,NEBN,TLES,         &
                       KRR, KRRL, KRRI,                               &
-                      OOCEAN,OCOMPUTE_SRC,O2D,                       &
+                      OOCEAN,OCOMPUTE_SRC,O2D, OFLAT,                &
                       TPFILE,                                        &
                       PINV_PDXX,PINV_PDYY,                           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -76,6 +76,9 @@ USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
 USE MODI_SHUMAN 
+USE MODE_SHUMAN_PHY
+USE MODE_GRADIENT_M_PHY, ONLY : GX_M_U_PHY, GY_M_V_PHY, GY_M_M_PHY, GX_M_M_PHY
+USE MODE_GRADIENT_W_PHY, ONLY : GX_W_UW_PHY, GY_W_VW_PHY
 USE MODI_LES_MEAN_SUBGRID
 !
 USE MODE_EMOIST, ONLY: EMOIST
@@ -101,46 +104,46 @@ INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model version (modd_conf)
-TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
+LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
+TYPE(TFILEDATA),          INTENT(INOUT)    ::  TPFILE       ! Output file
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PINV_PDXX   ! 1./PDXX
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PINV_PDYY   ! 1./PDYY
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDXX   ! 1./PDXX
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDYY   ! 1./PDYY
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
                                                       ! Potential Temperature
 !
 ! Variables at t-1
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PWM 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PTHLM 
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    ::  PRM          ! mixing ratios at t-1,
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PWM 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTHLM 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN)    ::  PRM          ! mixing ratios at t-1,
                               !  where PRM(:,:,:,1) = conservative mixing ratio
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PTKEM        ! Turb. Kin. Energy
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PLM          ! Turb. mixing length
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PLEPS        ! dissipative length
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSRCM        ! normalized 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! Turb. Kin. Energy
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLEPS        ! dissipative length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PSRCM        ! normalized 
 !
 !
 !
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PSIGS
                                   ! IN: Vertical part of Sigma_s at t
                                   ! OUT: Total Sigma_s at t
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))       &
-                                     :: ZFLX,ZWORK,ZA
-    ! work arrays
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)   :: ZFLX,ZWORK,ZA ! work arrays
 !   
-INTEGER             :: IKB,IKE
+INTEGER             :: IKB,IKE,IIT,IJT,IKT
+INTEGER             :: JI,JJ,JK
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain  
-REAL, DIMENSION(SIZE(PDZZ,1),SIZE(PDZZ,2),1+JPVEXT:3+JPVEXT) :: ZCOEFF 
+REAL, DIMENSION(D%NIT,D%NJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF 
                                     ! coefficients for the uncentred gradient 
                                     ! computation near the ground
 REAL :: ZTIME1, ZTIME2
@@ -152,18 +155,23 @@ TYPE(TFIELDMETADATA) :: TZFIELD
 !             ------------------------
 !
 IKB = 1+JPVEXT               
-IKE = SIZE(PTHLM,3)-JPVEXT   
+IKE = SIZE(PTHLM,3)-JPVEXT
+IIT=D%NIT
+IJT=D%NJT
+IKT=D%NKT
 !
 !
 !
 !  compute the coefficients for the uncentred gradient computation near the 
 !  ground
+!$acc kernels present_cr(ZCOEFF)
 ZCOEFF(:,:,IKB+2)= - PDZZ(:,:,IKB+1) /      &
        ( (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) * PDZZ(:,:,IKB+2) )
 ZCOEFF(:,:,IKB+1)=   (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) /      &
        ( PDZZ(:,:,IKB+1) * PDZZ(:,:,IKB+2) )
 ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
        ( (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) * PDZZ(:,:,IKB+1) )
+!$acc end kernels
 !
 !
 !*       8.   TURBULENT CORRELATIONS : <THl THl>, <THl Rnp>, <Rnp Rnp>, Sigma_s
@@ -179,37 +187,43 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
   ! Computes the horizontal variance <THl THl>
   IF (.NOT. O2D) THEN
     ZFLX(:,:,:) = TURBN%XCTV * PLM(:,:,:) * PLEPS(:,:,:) *                           &
-       ( GX_M_M(PTHLM,PDXX,PDZZ,PDZX)**2 + GY_M_M(PTHLM,PDYY,PDZZ,PDZY)**2 )
+       ( GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX)**2 + GY_M_M(OFLAT,PTHLM,PDYY,PDZZ,PDZY)**2 )
   ELSE
     ZFLX(:,:,:) = TURBN%XCTV * PLM(:,:,:) * PLEPS(:,:,:) *                           &
-         GX_M_M(PTHLM,PDXX,PDZZ,PDZX)**2
+         GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX)**2
   END IF
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
 !
-  ZFLX(:,:,IKB:IKB) = TURBN%XCTV * PLM(:,:,IKB:IKB)                  &
-  * PLEPS(:,:,IKB:IKB) *  (                                    &
-  ( MXF(DXM(PTHLM(:,:,IKB:IKB)) * PINV_PDXX(:,:,IKB:IKB))      &
-   - ( ZCOEFF(:,:,IKB+2:IKB+2)*PTHLM(:,:,IKB+2:IKB+2)          &
-      +ZCOEFF(:,:,IKB+1:IKB+1)*PTHLM(:,:,IKB+1:IKB+1)          &
-      +ZCOEFF(:,:,IKB  :IKB  )*PTHLM(:,:,IKB  :IKB  )          &
-     ) * 0.5 * ( PDZX(:,:,IKB+1:IKB+1)+PDZX(:,:,IKB:IKB) )     &
-     / MXF(PDXX(:,:,IKB:IKB))                                  &
+  ZFLX(:,:,IKB) = TURBN%XCTV * PLM(:,:,IKB)                  &
+  * PLEPS(:,:,IKB) *  (                                    &
+  ( MXF(DXM(PTHLM(:,:,IKB)) * PINV_PDXX(:,:,IKB))      &
+   - ( ZCOEFF(:,:,IKB+2)*PTHLM(:,:,IKB+2)          &
+      +ZCOEFF(:,:,IKB+1)*PTHLM(:,:,IKB+1)          &
+      +ZCOEFF(:,:,IKB)*PTHLM(:,:,IKB)          &
+     ) * 0.5 * ( PDZX(:,:,IKB+1)+PDZX(:,:,IKB) )     &
+     / MXF(PDXX(:,:,IKB))                                  &
   ) ** 2 +                                                     &
-  ( MYF(DYM(PTHLM(:,:,IKB:IKB)) * PINV_PDYY(:,:,IKB:IKB))      &
-   - ( ZCOEFF(:,:,IKB+2:IKB+2)*PTHLM(:,:,IKB+2:IKB+2)          &
-      +ZCOEFF(:,:,IKB+1:IKB+1)*PTHLM(:,:,IKB+1:IKB+1)          &
-      +ZCOEFF(:,:,IKB  :IKB  )*PTHLM(:,:,IKB  :IKB  )          &
-     ) * 0.5 * ( PDZY(:,:,IKB+1:IKB+1)+PDZY(:,:,IKB:IKB) )     &
-     / MYF(PDYY(:,:,IKB:IKB))                                  &
+  ( MYF(DYM(PTHLM(:,:,IKB)) * PINV_PDYY(:,:,IKB))      &
+   - ( ZCOEFF(:,:,IKB+2)*PTHLM(:,:,IKB+2)          &
+      +ZCOEFF(:,:,IKB+1)*PTHLM(:,:,IKB+1)          &
+      +ZCOEFF(:,:,IKB)*PTHLM(:,:,IKB)          &
+     ) * 0.5 * ( PDZY(:,:,IKB+1)+PDZY(:,:,IKB) )     &
+     / MYF(PDYY(:,:,IKB))                                  &
   ) ** 2                                             )
   !
+!$acc kernels present_cr(ZFLX)
+  !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
   ZFLX(:,:,IKB-1) = ZFLX(:,:,IKB)
+  !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
   !
   IF ( KRRL > 0 ) THEN
+!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
     ZWORK(:,:,:) = ZFLX(:,:,:) * PATHETA(:,:,:) * PATHETA(:,:,:)
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
   END IF
+!$acc end kernels
   !
   ! stores <THl THl>
   IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
@@ -224,6 +238,7 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
       NTYPE      = TYPEREAL,         &
       NDIMS      = 3,                &
       LTIMEDEP   = .TRUE.            )
+!$acc update self(ZFLX)
     CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
   END IF
 !
@@ -249,57 +264,62 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
     IF (.NOT. O2D) THEN
       ZFLX(:,:,:)=                                                               &
             PLM(:,:,:) * PLEPS(:,:,:) *                                          &
-            (GX_M_M(PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)  &
-           + GY_M_M(PTHLM,PDYY,PDZZ,PDZY) * GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY)  &
+            (GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PRM(:,:,:,1),PDXX,PDZZ,PDZX)  &
+           + GY_M_M(OFLAT,PTHLM,PDYY,PDZZ,PDZY) * GY_M_M(OFLAT,PRM(:,:,:,1),PDYY,PDZZ,PDZY)  &
             ) * (TURBN%XCHT1+TURBN%XCHT2)
     ELSE
       ZFLX(:,:,:)=                                                               &
             PLM(:,:,:) * PLEPS(:,:,:) *                                          &
-            (GX_M_M(PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)  &
+            (GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PRM(:,:,:,1),PDXX,PDZZ,PDZX)  &
             ) * (TURBN%XCHT1+TURBN%XCHT2)
 
     END IF
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-    ZFLX(:,:,IKB:IKB) = (TURBN%XCHT1+TURBN%XCHT2) * PLM(:,:,IKB:IKB)         &
-    * PLEPS(:,:,IKB:IKB)  *  (                                   &
-    ( MXF(DXM(PTHLM(:,:,IKB:IKB)) * PINV_PDXX(:,:,IKB:IKB))      &
-     - ( ZCOEFF(:,:,IKB+2:IKB+2)*PTHLM(:,:,IKB+2:IKB+2)          &
-        +ZCOEFF(:,:,IKB+1:IKB+1)*PTHLM(:,:,IKB+1:IKB+1)          &
-        +ZCOEFF(:,:,IKB  :IKB  )*PTHLM(:,:,IKB  :IKB  )          &
-       ) * 0.5 * ( PDZX(:,:,IKB+1:IKB+1)+PDZX(:,:,IKB:IKB) )     &
-       / MXF(PDXX(:,:,IKB:IKB))                                  &
+    ZFLX(:,:,IKB) = (TURBN%XCHT1+TURBN%XCHT2) * PLM(:,:,IKB)         &
+    * PLEPS(:,:,IKB)  *  (                                   &
+    ( MXF(DXM(PTHLM(:,:,IKB)) * PINV_PDXX(:,:,IKB))      &
+     - ( ZCOEFF(:,:,IKB+2)*PTHLM(:,:,IKB+2)          &
+        +ZCOEFF(:,:,IKB+1)*PTHLM(:,:,IKB+1)          &
+        +ZCOEFF(:,:,IKB)*PTHLM(:,:,IKB)          &
+       ) * 0.5 * ( PDZX(:,:,IKB+1)+PDZX(:,:,IKB) )     &
+       / MXF(PDXX(:,:,IKB))                                  &
     ) *                                                          &
-    ( MXF(DXM(PRM(:,:,IKB:IKB,1)) * PINV_PDXX(:,:,IKB:IKB))      &
-     - ( ZCOEFF(:,:,IKB+2:IKB+2)*PRM(:,:,IKB+2:IKB+2,1)          &
-        +ZCOEFF(:,:,IKB+1:IKB+1)*PRM(:,:,IKB+1:IKB+1,1)          &
-        +ZCOEFF(:,:,IKB  :IKB  )*PRM(:,:,IKB  :IKB  ,1)          &
-       ) * 0.5 * ( PDZX(:,:,IKB+1:IKB+1)+PDZX(:,:,IKB:IKB) )     &
-       / MXF(PDXX(:,:,IKB:IKB))                                  &
+    ( MXF(DXM(PRM(:,:,IKB,1)) * PINV_PDXX(:,:,IKB))      &
+     - ( ZCOEFF(:,:,IKB+2)*PRM(:,:,IKB+2,1)          &
+        +ZCOEFF(:,:,IKB+1)*PRM(:,:,IKB+1,1)          &
+        +ZCOEFF(:,:,IKB)*PRM(:,:,IKB,1)          &
+       ) * 0.5 * ( PDZX(:,:,IKB+1)+PDZX(:,:,IKB) )     &
+       / MXF(PDXX(:,:,IKB))                                  &
     ) +                                                          &
-    ( MYF(DYM(PTHLM(:,:,IKB:IKB)) * PINV_PDYY(:,:,IKB:IKB))      &
-     - ( ZCOEFF(:,:,IKB+2:IKB+2)*PTHLM(:,:,IKB+2:IKB+2)          &
-        +ZCOEFF(:,:,IKB+1:IKB+1)*PTHLM(:,:,IKB+1:IKB+1)          &
-        +ZCOEFF(:,:,IKB  :IKB  )*PTHLM(:,:,IKB  :IKB  )          &
-       ) * 0.5 * ( PDZY(:,:,IKB+1:IKB+1)+PDZY(:,:,IKB:IKB) )     &
-       / MYF(PDYY(:,:,IKB:IKB))                                  &
+    ( MYF(DYM(PTHLM(:,:,IKB)) * PINV_PDYY(:,:,IKB))      &
+     - ( ZCOEFF(:,:,IKB+2)*PTHLM(:,:,IKB+2)          &
+        +ZCOEFF(:,:,IKB+1)*PTHLM(:,:,IKB+1)          &
+        +ZCOEFF(:,:,IKB)*PTHLM(:,:,IKB)          &
+       ) * 0.5 * ( PDZY(:,:,IKB+1)+PDZY(:,:,IKB) )     &
+       / MYF(PDYY(:,:,IKB))                                  &
     ) *                                                          &
-    ( MYF(DYM(PRM(:,:,IKB:IKB,1)) * PINV_PDYY(:,:,IKB:IKB))           &
-     - ( ZCOEFF(:,:,IKB+2:IKB+2)*PRM(:,:,IKB+2:IKB+2,1)          &
-        +ZCOEFF(:,:,IKB+1:IKB+1)*PRM(:,:,IKB+1:IKB+1,1)          &
-        +ZCOEFF(:,:,IKB  :IKB  )*PRM(:,:,IKB  :IKB  ,1)          &
-       ) * 0.5 * ( PDZY(:,:,IKB+1:IKB+1)+PDZY(:,:,IKB:IKB) )     &
-       / MYF(PDYY(:,:,IKB:IKB))                                  &
+    ( MYF(DYM(PRM(:,:,IKB,1)) * PINV_PDYY(:,:,IKB))           &
+     - ( ZCOEFF(:,:,IKB+2)*PRM(:,:,IKB+2,1)          &
+        +ZCOEFF(:,:,IKB+1)*PRM(:,:,IKB+1,1)          &
+        +ZCOEFF(:,:,IKB)*PRM(:,:,IKB,1)          &
+       ) * 0.5 * ( PDZY(:,:,IKB+1)+PDZY(:,:,IKB) )     &
+       / MYF(PDYY(:,:,IKB))                                  &
     )                                                          )
     !
+!$acc kernels present_cr(ZFLX)
+    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
     ZFLX(:,:,IKB-1) = ZFLX(:,:,IKB)
+    !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
     !
     IF ( KRRL > 0 )  THEN
+!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
       ZWORK(:,:,:) = ZWORK(:,:,:) +       &
                      2. * PATHETA(:,:,:) * PAMOIST(:,:,:) * ZFLX(:,:,:)    
-    END IF                    
-    !
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+    END IF
+!$acc end kernels
     ! stores <THl Rnp>
     IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
       TZFIELD = TFIELDMETADATA(         &
@@ -337,38 +357,43 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
     ! Computes the horizontal variance <Rnp Rnp>
     IF (.NOT. O2D) THEN
       ZFLX(:,:,:) = TURBN%XCHV * PLM(:,:,:) * PLEPS(:,:,:) *                      &
-           ( GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)**2 +                       &
-             GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY)**2 )
+           ( GX_M_M(OFLAT,PRM(:,:,:,1),PDXX,PDZZ,PDZX)**2 +                       &
+             GY_M_M(OFLAT,PRM(:,:,:,1),PDYY,PDZZ,PDZY)**2 )
     ELSE
       ZFLX(:,:,:) = TURBN%XCHV * PLM(:,:,:) * PLEPS(:,:,:) *                      &
-           ( GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)**2  )
+           ( GX_M_M(OFLAT,PRM(:,:,:,1),PDXX,PDZZ,PDZX)**2  )
     END IF
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-    ZFLX(:,:,IKB:IKB) = TURBN%XCHV * PLM(:,:,IKB:IKB)                  &
-    * PLEPS(:,:,IKB:IKB) *  (                                    &
-    ( MXF(DXM(PRM(:,:,IKB:IKB,1)) * PINV_PDXX(:,:,IKB:IKB))      &
-     - ( ZCOEFF(:,:,IKB+2:IKB+2)*PRM(:,:,IKB+2:IKB+2,1)          &
-        +ZCOEFF(:,:,IKB+1:IKB+1)*PRM(:,:,IKB+1:IKB+1,1)          &
-        +ZCOEFF(:,:,IKB  :IKB  )*PRM(:,:,IKB  :IKB  ,1)          &
-       ) * 0.5 * ( PDZX(:,:,IKB+1:IKB+1)+PDZX(:,:,IKB:IKB) )     &
-       / MXF(PDXX(:,:,IKB:IKB))                                  &
+    ZFLX(:,:,IKB) = TURBN%XCHV * PLM(:,:,IKB)                  &
+    * PLEPS(:,:,IKB) *  (                                    &
+    ( MXF(DXM(PRM(:,:,IKB,1)) * PINV_PDXX(:,:,IKB))      &
+     - ( ZCOEFF(:,:,IKB+2)*PRM(:,:,IKB+2,1)          &
+        +ZCOEFF(:,:,IKB+1)*PRM(:,:,IKB+1,1)          &
+        +ZCOEFF(:,:,IKB)*PRM(:,:,IKB,1)          &
+       ) * 0.5 * ( PDZX(:,:,IKB+1)+PDZX(:,:,IKB) )     &
+       / MXF(PDXX(:,:,IKB:))                                  &
     ) ** 2 +                                                     &
-    ( MYF(DYM(PRM(:,:,IKB:IKB,1)) * PINV_PDYY(:,:,IKB:IKB))           &
-     - ( ZCOEFF(:,:,IKB+2:IKB+2)*PRM(:,:,IKB+2:IKB+2,1)          &
-        +ZCOEFF(:,:,IKB+1:IKB+1)*PRM(:,:,IKB+1:IKB+1,1)          &
-        +ZCOEFF(:,:,IKB  :IKB  )*PRM(:,:,IKB  :IKB  ,1)          &
-       ) * 0.5 * ( PDZY(:,:,IKB+1:IKB+1)+PDZY(:,:,IKB:IKB) )     &
-       / MYF(PDYY(:,:,IKB:IKB))                                  &
+    ( MYF(DYM(PRM(:,:,IKB,1)) * PINV_PDYY(:,:,IKB))           &
+     - ( ZCOEFF(:,:,IKB+2)*PRM(:,:,IKB+2,1)          &
+        +ZCOEFF(:,:,IKB+1)*PRM(:,:,IKB+1,1)          &
+        +ZCOEFF(:,:,IKB)*PRM(:,:,IKB,1)          &
+       ) * 0.5 * ( PDZY(:,:,IKB+1)+PDZY(:,:,IKB) )     &
+       / MYF(PDYY(:,:,IKB))                                  &
     ) ** 2                                             )
 !
+!$acc kernels present_cr(ZFLX)
+    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
     ZFLX(:,:,IKB-1) = ZFLX(:,:,IKB)
+    !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
     !
     IF ( KRRL > 0 ) THEN       
+    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
       ZWORK(:,:,:) = ZWORK(:,:,:)+ PAMOIST(:,:,:) * PAMOIST(:,:,:) * ZFLX(:,:,:)
+    !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
     END IF
-    !
+!$acc end kernels
     ! stores <Rnp Rnp>
     IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
       TZFIELD = TFIELDMETADATA(      &
@@ -382,6 +407,7 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
         NTYPE      = TYPEREAL,       &
         NDIMS      = 3,              &
         LTIMEDEP   = .TRUE.          )
+!$acc update self(ZFLX)
       CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
     END IF
     !
@@ -404,11 +430,13 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
 !
   IF ( KRRL > 0 ) THEN   
     !
+    !$acc kernels present_cr(PSIGS)
     PSIGS(:,:,:)=PSIGS(:,:,:)*PSIGS(:,:,:) + ZWORK(:,:,:)
     ! Extrapolate PSIGS at the ground and at the top
     PSIGS(:,:,IKB-1) = PSIGS(:,:,IKB)
     PSIGS(:,:,IKE+1) = PSIGS(:,:,IKE)
     PSIGS(:,:,:) = SQRT(MAX ( PSIGS(:,:,:),1.E-12) ) 
+    !$acc end kernels
   END IF       
 !
 END IF

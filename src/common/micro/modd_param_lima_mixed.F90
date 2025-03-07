@@ -21,7 +21,7 @@
 !-------------------------------------------------------------------------------
 !
 IMPLICIT NONE
-TYPE PARAM_LIMA_MIXED_t
+TYPE PARAM_LIMA_MIXED_T
 !
 !*       1.   DESCRIPTIVE PARAMETERS
 !             ----------------------
@@ -83,7 +83,9 @@ REAL       :: XDCRLIM_RDSF_MIN,                & ! Raindrops min diam. : 0.2 mm
               XGAMINC_BOUND_RDSF_RMAX,         & ! Max val. of Lbda_r*dlim
               XRDSFINTP_R,XRDSFINTP1_R,        & !
               XFACTOR_RDSF_NI,                 & ! Factor for final RDSF Eq.
-              XMOMGR_RDSF
+              XMOMGR_RDSF,                     &
+              XTM_PSH,                         & ! Mean Temperature of shattering probability normal distribution
+              XSIG_PSH                           ! SIGMA of shattering probability normal distribution   
 !
 REAL, DIMENSION(:)      , ALLOCATABLE          &
                        :: XGAMINC_RDSF_R         ! Tab.incomplete Gamma function
@@ -173,8 +175,10 @@ REAL      :: XFCDRYG,                          & ! Constants for the dry growth
              XDRYLBDAG_MAX,                    & ! Max val. of Lbda_g for DRY
              XDRYINTP1R,XDRYINTP2R,            & ! Csts for bilin. interpol. of
              XDRYINTP1S,XDRYINTP2S,            & ! Lbda_r, Lbda_s and Lbda_g in
-             XDRYINTP1G,XDRYINTP2G               ! the XKER_SDRYG and XKER_RDRYG
-                                                 !            tables
+             XDRYINTP1G,XDRYINTP2G,            & ! the XKER_SDRYG and XKER_RDRYG tables
+             XMINDG,XMAXLBDG                     ! Minimum graupel diameter for
+                                                 ! graupel growth limitation and
+                                                 ! corresponding max lambda
 INTEGER      :: NDRYLBDAR,                     & ! Number of Lbda_r,
                 NDRYLBDAS,                     & !        of Lbda_s and
                 NDRYLBDAG                        !        of Lbda_g values in
@@ -222,9 +226,9 @@ REAL,DIMENSION(:,:), ALLOCATABLE               &
                             XKER_GWETH,        & ! Normalized kernel for GWETH
                             XKER_N_SWETH,      & ! Normalized kernel for GWETH
                             XKER_N_GWETH         ! Normalized kernel for GWETH
-END TYPE PARAM_LIMA_MIXED_t
+END TYPE PARAM_LIMA_MIXED_T
 !
-TYPE(PARAM_LIMA_MIXED_t), TARGET       :: PARAM_LIMA_MIXED
+TYPE(PARAM_LIMA_MIXED_T), TARGET       :: PARAM_LIMA_MIXED
 !
 REAL, POINTER :: XAG => NULL(), &
                  XBG => NULL(), &
@@ -278,6 +282,8 @@ REAL, POINTER :: XAG => NULL(), &
                  XRDSFINTP1_R => NULL(), &
                  XFACTOR_RDSF_NI => NULL(), &
                  XMOMGR_RDSF => NULL(), &
+                 XTM_PSH => NULL(), &
+                 XSIG_PSH => NULL(), &
                  XFSEDG => NULL(), &
                  XEXSEDG => NULL(), &
                  XFSEDRG => NULL(), &
@@ -419,7 +425,9 @@ REAL, POINTER :: XAG => NULL(), &
                  XWETINTP1G => NULL(), &
                  XWETINTP2G => NULL(), &
                  XWETINTP1H => NULL(), &
-                 XWETINTP2H => NULL()
+                 XWETINTP2H => NULL(), &
+                 XMINDG => NULL(),     &
+                 XMAXLBDG => NULL()
 
 INTEGER, POINTER :: NGAMINC => NULL(), &
                     NACCLBDAS => NULL(), &
@@ -454,6 +462,9 @@ REAL, DIMENSION(:,:), POINTER :: XGAMINC_CIBU_S => NULL(), &
                                  XKER_N_GWETH => NULL()
 CONTAINS
 SUBROUTINE PARAM_LIMA_MIXED_ASSOCIATE()
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_MIXED_ASSOCIATE', 0, ZHOOK_HANDLE)
 IF(.NOT. ASSOCIATED(XAG)) THEN
   XAG                      => PARAM_LIMA_MIXED%XAG
   XBG                      => PARAM_LIMA_MIXED%XBG
@@ -507,6 +518,8 @@ IF(.NOT. ASSOCIATED(XAG)) THEN
   XRDSFINTP1_R             => PARAM_LIMA_MIXED%XRDSFINTP1_R
   XFACTOR_RDSF_NI          => PARAM_LIMA_MIXED%XFACTOR_RDSF_NI
   XMOMGR_RDSF              => PARAM_LIMA_MIXED%XMOMGR_RDSF
+  XTM_PSH                  => PARAM_LIMA_MIXED%XTM_PSH
+  XSIG_PSH                 => PARAM_LIMA_MIXED%XSIG_PSH
   XFSEDG                   => PARAM_LIMA_MIXED%XFSEDG
   XEXSEDG                  => PARAM_LIMA_MIXED%XEXSEDG
   XFSEDRG                  => PARAM_LIMA_MIXED%XFSEDRG
@@ -649,6 +662,8 @@ IF(.NOT. ASSOCIATED(XAG)) THEN
   XWETINTP2G               => PARAM_LIMA_MIXED%XWETINTP2G
   XWETINTP1H               => PARAM_LIMA_MIXED%XWETINTP1H
   XWETINTP2H               => PARAM_LIMA_MIXED%XWETINTP2H
+  XMINDG                   => PARAM_LIMA_MIXED%XMINDG
+  XMAXLBDG                 => PARAM_LIMA_MIXED%XMAXLBDG
 
   NGAMINC                  => PARAM_LIMA_MIXED%NGAMINC
   NACCLBDAS                => PARAM_LIMA_MIXED%NACCLBDAS
@@ -660,14 +675,18 @@ IF(.NOT. ASSOCIATED(XAG)) THEN
   NWETLBDAG                => PARAM_LIMA_MIXED%NWETLBDAG
   NWETLBDAH                => PARAM_LIMA_MIXED%NWETLBDAH
 ENDIF
+IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_MIXED_ASSOCIATE', 1, ZHOOK_HANDLE)
 END SUBROUTINE PARAM_LIMA_MIXED_ASSOCIATE
 !
 SUBROUTINE PARAM_LIMA_MIXED_ALLOCATE(HNAME, KDIM1, KDIM2)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
   IMPLICIT NONE
   CHARACTER(LEN=*), INTENT(IN) :: HNAME
   INTEGER, INTENT(IN)          :: KDIM1
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
   INTEGER, OPTIONAL, INTENT(IN):: KDIM2
 
+  IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_MIXED_ALLOCATE', 0, ZHOOK_HANDLE)
   SELECT CASE(TRIM(HNAME))
     !1d
     CASE('XGAMINC_RDSF_R')
@@ -735,6 +754,7 @@ SUBROUTINE PARAM_LIMA_MIXED_ALLOCATE(HNAME, KDIM1, KDIM2)
       ALLOCATE(PARAM_LIMA_MIXED%XKER_N_GWETH(KDIM1, KDIM2))
       XKER_N_GWETH => PARAM_LIMA_MIXED%XKER_N_GWETH
   END SELECT
+IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_MIXED_ALLOCATE', 1, ZHOOK_HANDLE)
 END SUBROUTINE PARAM_LIMA_MIXED_ALLOCATE
 !
 !-------------------------------------------------------------------------------

@@ -1,9 +1,7 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2022 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
-!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-!########################
-!
 !--------------------------------------------------------------------------
 !
 !
@@ -11,8 +9,7 @@
 ! 
 !
 !     ######################################
-      FUNCTION GAMMA_X0D(PX)  RESULT(PGAMMA)
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
+      PURE FUNCTION GAMMA_X0D(PX)  RESULT(PGAMMA)
 !     ######################################
 !
 !
@@ -48,11 +45,15 @@
 !!    -------------
 !!      Original     7/11/95
 !!      C. Barthe    9/11/09  add a function for 1D arguments
+!  P. Wautelet 22/06/2022: GAMMA_X0D is now declared PURE
 !
 !*       0. DECLARATIONS
 !           ------------
 !
 IMPLICIT NONE
+
+!$acc routine seq
+
 !
 !*       0.1 declarations of arguments and result
 !
@@ -71,8 +72,6 @@ REAL, DIMENSION(6), PARAMETER        :: ZCOEF=(/76.18009172947146, &
                                                & -0.5395239384953E-5/)
 REAL                                 :: ZPI
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-IF (LHOOK) CALL DR_HOOK('GAMMA_X0D',0,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
 !
 !*       1. SOME CONSTANTS
@@ -89,7 +88,7 @@ ZPI = 3.141592654
 !
 IF (PX .LT. 0.) THEN
   ZX = 1. - PX
-ELSE 
+ELSE
   ZX = PX
 END IF
 ZY = ZX
@@ -107,7 +106,6 @@ IF (PX .LT. 0.) THEN
 ELSE
   PGAMMA = EXP(ZTMP + ALOG(ZSTP*ZSER/ZX))
 END IF
-IF (LHOOK) CALL DR_HOOK('GAMMA_X0D',1,ZHOOK_HANDLE)
 RETURN
 !
 END FUNCTION GAMMA_X0D
@@ -119,8 +117,7 @@ END FUNCTION GAMMA_X0D
 ! 
 !
 !     ######################################
-      FUNCTION GAMMA_X1D(PX)  RESULT(PGAMMA)
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
+      PURE FUNCTION GAMMA_X1D(PX)  RESULT(PGAMMA)
 !     ######################################
 !
 !
@@ -155,6 +152,7 @@ END FUNCTION GAMMA_X0D
 !!    MODIFICATIONS
 !!    -------------
 !!      Original     7/11/95
+!  P. Wautelet 22/06/2022: GAMMA_X1D is now declared PURE
 !!
 !-------------------------------------------------------------------------------
 !
@@ -181,8 +179,6 @@ REAL, DIMENSION(6), PARAMETER        :: ZCOEF=(/76.18009172947146, &
                                                & -0.5395239384953E-5/)
 REAL                                 :: ZPI
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-IF (LHOOK) CALL DR_HOOK('GAMMA_X1D',0,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
 !
 !*       1. SOME CONSTANTS
@@ -219,7 +215,6 @@ DO JI = 1, SIZE(PX)
     PGAMMA = EXP(ZTMP + ALOG(ZSTP*ZSER/ZX))
   END IF
 END DO
-IF (LHOOK) CALL DR_HOOK('GAMMA_X1D',1,ZHOOK_HANDLE)
 RETURN
 !
 END FUNCTION GAMMA_X1D

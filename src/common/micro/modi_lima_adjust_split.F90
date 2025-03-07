@@ -5,42 +5,49 @@
 IMPLICIT NONE
 INTERFACE
 !
-   SUBROUTINE LIMA_ADJUST_SPLIT(D, CST, BUCONF, TBUDGETS, KBUDGETS,             &
-                             KRR, KMI, HCONDENS, HLAMBDA3,                      &
+   SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, TNSV, D, CST, NEBN, TURBN, BUCONF, TBUDGETS, KBUDGETS, &
+                             KRR, HCONDENS, HLAMBDA3,                           &
                              KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,           &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
-                             PRHODREF, PRHODJ, PEXNREF, PSIGS, LMFCONV, PMFCONV,&
-                             PPABST, PPABSTT, PZZ, ODTHRAD, PDTHRAD, PW_NU,     &
+                             PRHODREF, PRHODJ, PEXNREF, PSIGS, OMFCONV, PMFCONV,&
+                             PPABST, PZZ, ODTHRAD, PDTHRAD, PW_NU,              &
                              PRT, PRS, PSVT, PSVS,                              &
                              HACTCCN, PAERO,PSOLORG, PMI,                       &
                              PTHS, OCOMPUTE_SRC, PSRCS, PCLDFR, PICEFR,         &
                              PRC_MF, PRI_MF, PCF_MF)
 !
 !USE MODD_IO,    ONLY: TFILEDATA
-USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
-USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t
-USE MODD_CST,            ONLY: CST_t
-USE MODD_NSV, ONLY: NSV
-USE MODD_NEB_n,            ONLY: NEBN
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_T
+USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_T
+USE MODD_CST,            ONLY: CST_T
+USE MODD_NSV, ONLY: NSV_T
+USE MODD_NEB_N,            ONLY: NEB_T
+USE MODD_TURB_N,            ONLY: TURB_T
+USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_T
+USE MODD_PARAM_LIMA_WARM, ONLY: PARAM_LIMA_WARM_T
 IMPLICIT NONE
 !
-TYPE(DIMPHYEX_t),         INTENT(IN)   :: D
-TYPE(CST_t),              INTENT(IN)    :: CST
-TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
+TYPE(NSV_T),              INTENT(IN)    :: TNSV
+TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
+TYPE(CST_T),              INTENT(IN)    :: CST
+TYPE(NEB_T),              INTENT(IN)    :: NEBN
+TYPE(TURB_T),              INTENT(IN)   :: TURBN
+TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
 INTEGER,                  INTENT(IN)   :: KRR        ! Number of moist variables
-INTEGER,                  INTENT(IN)   :: KMI        ! Model index 
-CHARACTER(len=80),        INTENT(IN)   :: HCONDENS
-CHARACTER(len=4),         INTENT(IN)   :: HLAMBDA3   ! formulation for lambda3 coeff
+CHARACTER(LEN=80),        INTENT(IN)   :: HCONDENS
+CHARACTER(LEN=4),         INTENT(IN)   :: HLAMBDA3   ! formulation for lambda3 coeff
 LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid
                                                      ! Condensation
 LOGICAL,                  INTENT(IN)   :: OSIGMAS    ! Switch for Sigma_s:
                                                      ! use values computed in CONDENSATION
                                                      ! or that from turbulence scheme
 REAL,                     INTENT(IN)   :: PTSTEP     ! Time step
-REAL,                     INTENT(IN)   :: PSIGQSAT   ! coeff applied to qsat variance contribution
+REAL, DIMENSION(D%NIT, D%NJT), INTENT(IN)   :: PSIGQSAT   ! coeff applied to qsat variance contribution
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PRHODREF  ! Dry density of the 
                                                                    ! reference state
@@ -49,12 +56,11 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PEXNREF   ! Reference E
 REAL, DIMENSION(MERGE(D%NIT,0,NEBN%LSUBG_COND), &
                 MERGE(D%NJT,0,NEBN%LSUBG_COND), &
                 MERGE(D%NKT,0,NEBN%LSUBG_COND)),   INTENT(IN)   ::  PSIGS     ! Sigma_s at time t
-LOGICAL,                                  INTENT(IN)    ::  LMFCONV ! T to use PMFCONV
-REAL, DIMENSION(MERGE(D%NIT,0,LMFCONV), &
-                MERGE(D%NJT,0,LMFCONV), &
-                MERGE(D%NKT,0,LMFCONV)),   INTENT(IN)   ::  PMFCONV   ! 
+LOGICAL,                                  INTENT(IN)    ::  OMFCONV ! T to use PMFCONV
+REAL, DIMENSION(MERGE(D%NIT,0,OMFCONV), &
+                MERGE(D%NJT,0,OMFCONV), &
+                MERGE(D%NKT,0,OMFCONV)),   INTENT(IN)   ::  PMFCONV   ! 
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PPABST    ! Absolute Pressure at t     
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PPABSTT   ! Absolute Pressure at t+dt     
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PZZ       !     
 LOGICAL,                                INTENT(IN)   :: ODTHRAD    ! Use radiative temperature tendency
 REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &
@@ -62,7 +68,7 @@ REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &
                 MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! Radiative temperature tendency
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PW_NU     ! updraft velocity used for
 !
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
 CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
@@ -72,9 +78,9 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(IN)    :: PRT       ! m.r. at 
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(INOUT) :: PRS       ! m.r. source
 !
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), INTENT(IN)    :: PSVT ! Concentrations at time t
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, TNSV%NSV), INTENT(IN)    :: PSVT ! Concentrations at time t
 !
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), INTENT(INOUT) :: PSVS ! Concentration sources
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, TNSV%NSV), INTENT(INOUT) :: PSVS ! Concentration sources
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT) :: PTHS      ! Theta source
 !

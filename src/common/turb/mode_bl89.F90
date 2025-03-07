@@ -1,6 +1,6 @@
-!MNH_LIC Copyright 1994-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
-!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 MODULE MODE_BL89
 IMPLICIT NONE
@@ -113,12 +113,10 @@ INTEGER :: JRR        ! moist loop counter
 REAL    :: ZRVORD     ! Rv/Rd
 REAL    :: ZPOTE,ZLWORK1,ZLWORK2
 REAL    :: ZTEST,ZTEST0,ZTESTM ! test for vectorization
-REAL    :: Z2SQRT2
 !-------------------------------------------------------------------------------
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('BL89',0,ZHOOK_HANDLE)
-Z2SQRT2=2.*SQRT(2.)
 !
 ZRVORD = CST%XRV / CST%XRD
 !
@@ -140,31 +138,40 @@ IKL=D%NKL
 ! Pointer remapping instead of RESHAPE (contiguous memory)
 ! 2D array => 3D array
 !
+!$acc kernels
 IF (OOCEAN) THEN
+!$acc loop independent collapse(2)
   DO JK=1,IKT
     DO JIJ=IIJB,IIJE
       ZG_O_THVREF(JIJ,JK) = CST%XG * CST%XALPHAOC
     END DO
   END DO
 ELSE !Atmosphere case
+!$acc loop independent collapse(2)
   DO JK=1,IKT
     DO JIJ=IIJB,IIJE
       ZG_O_THVREF(JIJ,JK) = CST%XG / PTHVREF(JIJ,JK)
     END DO
   END DO
 END IF
+!$acc end kernels
 !
+!$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ZSQRT_TKE(IIJB:IIJE,1:IKT) = SQRT(PTKEM(IIJB:IIJE,1:IKT))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
+!$acc end kernels
 !-------------------------------------------------------------------------------
 !
 !*       2.    Virtual potential temperature on the model grid
 !              -----------------------------------------------
 !
+  !$acc kernels
 IF(KRR /= 0) THEN
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZSUM(IIJB:IIJE,1:IKT) = 0.
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   DO JRR=1,KRR
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZSUM(IIJB:IIJE,1:IKT) = ZSUM(IIJB:IIJE,1:IKT)+PRM(IIJB:IIJE,1:IKT,JRR)
@@ -175,8 +182,11 @@ IF(KRR /= 0) THEN
                            / ( 1. + ZSUM(IIJB:IIJE,1:IKT) )
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ELSE
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZVPT(IIJB:IIJE,1:IKT)=PTHLM(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END IF
+!$acc end kernels
 !
 !!!!!!!!!!!!
 !!!!!!!!!!!!
@@ -189,6 +199,8 @@ END IF
 !but algorithm must remain the same.
 !!!!!!!!!!!!
 !
+!$acc kernels present_cr(ZLWORK,ZINTE)
+!$acc loop independent collapse(2)
 DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
     ZDELTVPT(JIJ,JK) = ZVPT(JIJ,JK) - ZVPT(JIJ,JK-IKL)
@@ -196,13 +208,17 @@ DO JK=IKTB,IKTE
   END DO
 END DO
 !
+!$acc loop independent
 DO JIJ=IIJB,IIJE
   ZDELTVPT(JIJ,IKU) = ZVPT(JIJ,IKU) - ZVPT(JIJ,IKU-IKL)
   ZDELTVPT(JIJ,IKA) = 0.
   ZHLVPT(JIJ,IKU) = 0.5 * ( ZVPT(JIJ,IKU) + ZVPT(JIJ,IKU-IKL) )
   ZHLVPT(JIJ,IKA) = ZVPT(JIJ,IKA)
 END DO
+!$acc end kernels
 !
+!$acc kernels
+!$acc loop independent collapse(2)
 DO JK=1,IKT
   DO JIJ=IIJB,IIJE
     IF(ABS(ZDELTVPT(JIJ,JK))<CSTURB%XLINF) THEN
@@ -210,6 +226,7 @@ DO JK=1,IKT
     END IF
   END DO
 END DO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -217,6 +234,8 @@ END DO
 !            --------------------
 !
 DO JK=IKTB,IKTE
+!Remark create(ZTESTM) to force the NVIDIA compiler 23.5 to manage correctly ZTESTM (implicit reduction)
+!$acc kernels create(ZTESTM)
 !
 !-------------------------------------------------------------------------------
 !
@@ -225,9 +244,12 @@ DO JK=IKTB,IKTE
   ZINTE(IIJB:IIJE)=PTKEM(IIJB:IIJE,JK)
   ZLWORK=0.
   ZTESTM=1.
+!$acc loop seq
   DO JKK=JK,IKB,-IKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0.
+      !!!$acc loop independent
+      !DO CONCURRENT(JIJ = IIBJ:IIJE)
       DO JIJ=IIJB,IIJE
         ZTEST0=0.5+SIGN(0.5,ZINTE(JIJ))
         !--------- SHEAR + STABILITY -----------
@@ -258,6 +280,7 @@ DO JK=IKTB,IKTE
 !*       5.  intermediate storage of the final mixing length
 !            -----------------------------------------------
 !
+  !$acc loop independent
   DO JIJ=IIJB,IIJE
     PLMDN(JIJ,JK)=MIN(ZLWORK(JIJ,JK),0.5*(PZZ(JIJ,JK)+PZZ(JIJ,JK+IKL))-PZZ(JIJ,IKB))
   END DO
@@ -271,9 +294,12 @@ DO JK=IKTB,IKTE
   ZLWORK(IIJB:IIJE,JK)=0.
   ZTESTM=1.
 !
+!$acc loop seq
   DO JKK=JK+IKL,IKE,IKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0.
+      !!!$acc loop independent
+      !DO CONCURRENT(JIJ = IIBJ:IIJE)
       DO JIJ=IIJB,IIJE
         ZTEST0=0.5+SIGN(0.5,ZINTE(JIJ))
         !--------- SHEAR + STABILITY -----------
@@ -312,6 +338,7 @@ DO JK=IKTB,IKTE
 !
 !*       7.  final mixing length
 !
+!$acc loop independent
   DO JIJ=IIJB,IIJE
     ZLWORK1=MAX(PLMDN(JIJ,JK),1.E-10_MNHREAL)
     ZLWORK2=MAX(ZLWORK(JIJ,JK),1.E-10_MNHREAL)
@@ -321,11 +348,11 @@ DO JK=IKTB,IKTE
     PLM(JIJ,JK)=MAX(PLM(JIJ,JK),TURBN%XLINI)
   END DO
 
-
 !-------------------------------------------------------------------------------
 !*       8.  end of the loop on the vertical levels
 !            --------------------------------------
 !
+!$acc end kernels
 END DO
 !
 !-------------------------------------------------------------------------------
@@ -333,10 +360,12 @@ END DO
 !*       9.  boundaries
 !            ----------
 !
+!$acc kernels
 PLM(IIJB:IIJE,IKA)=PLM(IIJB:IIJE,IKB)
 PLM(IIJB:IIJE,IKE)=PLM(IIJB:IIJE,IKE-IKL)
 PLM(IIJB:IIJE,IKU)=PLM(IIJB:IIJE,IKE-IKL)
 !
+!$acc end kernels
 !-------------------------------------------------------------------------------
 !
 !*      10.  retrieve output array in model coordinates

@@ -57,7 +57,7 @@ REAL,                             INTENT(IN)    :: PRTMIN
 REAL, DIMENSION(KSIZE),           INTENT(IN)    :: PRHO     ! reference density
 REAL, DIMENSION(KSIZE),           INTENT(IN)    :: PQX      ! Electric charge
 REAL, DIMENSION(KSIZE),           INTENT(IN)    :: PRX      ! Mixing ratio
-REAL, DIMENSION(KSIZE),           INTENT(INOUT) :: PEX      ! e coef of the q-D relation
+REAL, DIMENSION(KSIZE),           INTENT(OUT)   :: PEX      ! e coef of the q-D relation
 REAL, DIMENSION(KSIZE), OPTIONAL, INTENT(IN)    :: PLBDX    ! Slope parameter of the distribution
 REAL, DIMENSION(KSIZE), OPTIONAL, INTENT(IN)    :: PCX      ! Nb concentration
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
@@ -187,7 +187,7 @@ ELSE IF (KMOMENT == 1) THEN
   ELSE IF (KID == 4) THEN
     WHERE (PRX(:) > ZRTMIN .AND. PCX(:) > 0.0)
       PEX(:) = PDUM * PRHO(:) * PQX(:) /                      &
-               ((PCX**(1 - XEXFQUPDI)) * ZFQUPDX * (PRHO(:) * &
+               ((PCX(:)**(1 - XEXFQUPDI)) * ZFQUPDX * (PRHO(:) * &
                PDUM * PRX(:))**XEXFQUPDI)
       PEX(:) = SIGN( MIN(ABS(PEX(:)), ZEXMAX), PEX(:))
     ENDWHERE

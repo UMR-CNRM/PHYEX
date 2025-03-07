@@ -260,6 +260,8 @@ DO JITER =1,ITERMAX
   !*       2.3    compute the latent heat of vaporization Lv(T*) at t+1
   !                   and the latent heat of sublimation  Ls(T*) at t+1
   !
+!$acc kernels
+!$acc loop independent collapse(2)
   DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       IF (JITER==1) ZT(JIJ,JK) = PTH(JIJ,JK) * PEXN(JIJ,JK)
@@ -267,6 +269,7 @@ DO JITER =1,ITERMAX
       ZLS(JIJ,JK) = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( ZT(JIJ,JK) -CST%XTT )
     ENDDO
   ENDDO
+!$acc end kernels
   !
   !*       2.4   Iterate
   !
@@ -283,10 +286,11 @@ ENDDO         ! end of the iterative loop
 !               -------------------------------------------------
 !
 !
+! Apply a ponderation between condensation and mas flux cloud
 LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
 LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
-!
-! Apply a ponderation between condensation and mas flux cloud
+!$acc kernels
+!$acc loop independent collapse(2)
 DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
     ZRC(JIJ,JK)=ZRC(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
@@ -305,9 +309,12 @@ DO JK=IKTB,IKTE
     ENDIF
   ENDDO
 ENDDO
+!$acc end kernels
 !
-DO JK=IKTB,IKTE
-  DO JIJ=IIJB,IIJE
+!$acc kernels
+!$acc_nv loop independent collapse(2)
+!$acc_cr loop independent
+DO CONCURRENT( JK=IKTB:IKTE , JIJ=IIJB:IIJE )
     !
     !*       5.0    compute the variation of mixing ratio
     !
@@ -337,11 +344,15 @@ DO JK=IKTB,IKTE
     PRIS(JIJ,JK) = PRIS(JIJ,JK) + ZW2
     PTHS(JIJ,JK) = PTHS(JIJ,JK) +        &
                   ZW2 * ZLS(JIJ,JK) / (ZCPH(JIJ,JK) * PEXNREF(JIJ,JK))
-  ENDDO
+ENDDO
+!$acc end kernels
   !
   !*       5.2    compute the cloud fraction PCLDFR
   !
-  IF ( .NOT. NEBN%LSUBG_COND ) THEN
+IF ( .NOT. NEBN%LSUBG_COND ) THEN
+  !$acc kernels
+  !$acc loop independent collapse(2)
+  DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       IF (PRCS(JIJ,JK) + PRIS(JIJ,JK) > 1.E-12 / PTSTEP) THEN
         PCLDFR(JIJ,JK)  = 1.
@@ -352,13 +363,18 @@ DO JK=IKTB,IKTE
         PSRCS(JIJ,JK) = PCLDFR(JIJ,JK)
       END IF
     ENDDO
-  ELSE !NEBN%LSUBG_COND case
+  ENDDO
+  !$acc end kernels
+ELSE !NEBN%LSUBG_COND case
+  !$acc kernels
     ! Tests on characters strings can break the vectorization, or at least they would
     ! slow down considerably the performance of a vector loop. One should use tests on
     ! reals, integers or booleans only. REK.
     LLNONE=PARAMI%CSUBG_MF_PDF=='NONE'
     LLTRIANGLE=PARAMI%CSUBG_MF_PDF=='TRIANGLE'
     LLBIGA=PARAMI%CSUBG_MF_PDF=='BIGA'
+  !$acc loop independent collapse(2)
+  DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       !We limit PRC_MF+PRI_MF to PRVS*PTSTEP to avoid negative humidity
       ZW1=PRC_MF(JIJ,JK)/PTSTEP
@@ -433,11 +449,9 @@ DO JK=IKTB,IKTE
           PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)+PHLI_HRI_MF(JIJ,JK)
         ENDIF
       ENDIF
-    ENDDO
     !
     IF(PRESENT(POUT_RV) .OR. PRESENT(POUT_RC) .OR. &
       &PRESENT(POUT_RI) .OR. PRESENT(POUT_TH)) THEN
-      DO JIJ=IIJB,IIJE
         ZW1=PRC_MF(JIJ,JK)
         ZW2=PRI_MF(JIJ,JK)
         IF(ZW1+ZW2>ZRV(JIJ,JK)) THEN
@@ -449,10 +463,11 @@ DO JK=IKTB,IKTE
         ZRV(JIJ,JK)=ZRV(JIJ,JK)-(ZW1+ZW2)
         ZT(JIJ,JK) = ZT(JIJ,JK) + &
                     (ZW1 * ZLV(JIJ,JK) + ZW2 * ZLS(JIJ,JK)) / ZCPH(JIJ,JK)
-      ENDDO
-    ENDIF
-  ENDIF !NEBN%LSUBG_COND
-ENDDO
+      ENDIF
+    END DO
+  ENDDO
+!$acc end kernels
+ENDIF !NEBN%LSUBG_COND
 !
 IF(PRESENT(POUT_RV)) POUT_RV=ZRV
 IF(PRESENT(POUT_RC)) POUT_RC=ZRC
@@ -483,6 +498,9 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PRC_OUT ! Cloud water m.r. to adju
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PRI_OUT ! Cloud ice   m.r. to adjust in output
 !
 !*       2.4    compute the specific heat for moist air (Cph) at t+1
+!
+!$acc kernels
+!$acc loop independent collapse(2)
 DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
     SELECT CASE(KRR)
@@ -507,6 +525,7 @@ DO JK=IKTB,IKTE
     END SELECT
   ENDDO
 ENDDO
+!$acc end kernels
 !
 IF ( NEBN%LSUBG_COND ) THEN
   !
@@ -530,8 +549,10 @@ ELSE
   !                            FOR MIXED-PHASE CLOUD
   !               -----------------------------------------------
   !
+!$acc kernels
   ZSIGS(:,:)=0.
   ZSIGQSAT(:)=0.
+!$acc end kernels
   !We use ZSRCS because in Méso-NH, PSRCS can be a zero-length array in this case
   !ZT is INOUT
   CALL CONDENSATION(D, CST, ICEP, NEBN, TURBN, &

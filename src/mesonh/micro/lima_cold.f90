@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -222,7 +222,7 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE :: PNHS     ! Haze homogeneous activation
 !
 !
 !*       0.     3D MICROPHYSCAL VARIABLES
-!	        -------------------------
+!               -------------------------
 !
 !
 ! Prepare 3D water mixing ratios
@@ -327,7 +327,7 @@ END IF
 !
 !
 !*       1.     COMPUTE THE SEDIMENTATION (RS) SOURCE
-!	        -------------------------------------
+!               -------------------------------------
 !
 if ( lbu_enable ) then
   if ( lbudget_ri .and. osedi ) call Budget_store_init( tbudgets(NBUDGET_RI), 'SEDI', pris(:, :, :) * prhodj(:, :, :) )
@@ -362,7 +362,7 @@ end if
 !
 !
 !               COMPUTE THE NUCLEATION PROCESS SOURCES
-!   	        --------------------------------------
+!               --------------------------------------
 !
 IF (LNUCL) THEN
 !

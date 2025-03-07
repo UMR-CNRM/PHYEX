@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -41,6 +41,7 @@ USE MODD_PARAM_LIMA
 USE MODD_PARAMETERS
 USE MODE_INI_LIMA_WARM, ONLY: INI_LIMA_WARM
 USE MODE_INI_LIMA_COLD_MIXED, ONLY: INI_LIMA_COLD_MIXED
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !USE MODD_LUNIT, ONLY : TLUOUT0
 !
 IMPLICIT NONE
@@ -62,19 +63,21 @@ REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 REAL     :: ZT      ! Work variable
 REAL, DIMENSION(7)  :: ZVTRMAX
 !
-INTEGER  :: JI
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+INTEGER  :: II
 !  
 !-------------------------------------------------------------------------------
 !
 !
 !*       1.     INIT OUTPUT LISTING, COMPUTE KSPLITR AND KSPLITG
-!   	        ------------------------------------------------
+!               ------------------------------------------------
 !
 !
 ! Init output listing
 !ILUOUT0 = TLUOUT0%NLU
 !
 !
+IF (LHOOK) CALL DR_HOOK('INI_LIMA', 0, ZHOOK_HANDLE)
 ZVTRMAX(2) = 0.3         ! Maximum cloud droplet fall speed
 ZVTRMAX(3) = 15.         ! Maximum rain drop fall speed
 ZVTRMAX(4) = 1.5         ! Maximum ice crystal fall speed
@@ -84,12 +87,12 @@ ZVTRMAX(7) = 30.         ! Maximum hail fall speed
 !
 ! NSPLITSED
 !
-DO JI=2,7
-   NSPLITSED(JI) = 1
+DO II=2,7
+   NSPLITSED(II) = 1
    SPLIT : DO
-      ZT = PTSTEP / REAL(NSPLITSED(JI))
-      IF ( ZT * ZVTRMAX(JI) / PDZMIN < 1.0) EXIT SPLIT
-      NSPLITSED(JI) = NSPLITSED(JI) + 1
+      ZT = PTSTEP / REAL(NSPLITSED(II))
+      IF ( ZT * ZVTRMAX(II) / PDZMIN < 1.0) EXIT SPLIT
+      NSPLITSED(II) = NSPLITSED(II) + 1
    END DO SPLIT
 END DO
 !
@@ -114,7 +117,7 @@ END DO SPLITG
 !
 !
 !
-IF (ASSOCIATED(XRTMIN)) RETURN    ! In case of nesting microphysics, constants of
+IF (.NOT. ASSOCIATED(XRTMIN)) THEN    ! In case of nesting microphysics, constants of
                                   ! MODD_RAIN_C2R2_PARAM are computed only once.
 !
 !
@@ -145,7 +148,7 @@ XCEXVT = 0.4
 !
 !
 !*       2.     DEFINE SPECIES CHARACTERISTICS AND PROCESSES CONSTANTS
-!   	        ------------------------------------------------------
+!               ------------------------------------------------------
 !
 !
 CALL INI_LIMA_WARM(PTSTEP, PDZMIN)
@@ -154,6 +157,8 @@ CALL INI_LIMA_COLD_MIXED(PTSTEP, PDZMIN)
 !
 !------------------------------------------------------------------------------
 !
+END IF
+IF (LHOOK) CALL DR_HOOK('INI_LIMA', 1, ZHOOK_HANDLE)
 END SUBROUTINE INI_LIMA
 !
 END MODULE MODE_INI_LIMA

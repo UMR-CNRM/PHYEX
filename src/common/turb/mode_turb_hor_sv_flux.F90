@@ -6,8 +6,8 @@
 MODULE MODE_TURB_HOR_SV_FLUX
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_SV_FLUX(TURBN,TLES,KSPLT,OBLOWSNOW,OFLAT,  &
-                      TPFILE,KSV_LGBEG,KSV_LGEND,O2D,ONOMIXLG,       &
+      SUBROUTINE TURB_HOR_SV_FLUX(D,TURBN,TLES,KSPLT,OBLOWSNOW,OFLAT,&
+                      TPFILE,KSV,KSV_LGBEG,KSV_LGEND,O2D,ONOMIXLG,   &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
                       PDIRCOSXW,PDIRCOSYW,                           &
@@ -53,6 +53,7 @@ CONTAINS
 !!                     Nov  06, 2002 (V. Masson) LES budgets
 !!                     October 2009 (G. Tanguy) add ILENCH=LEN(YCOMMENT) after
 !!                                              change of YCOMMENT
+!!                     04/2016 (M.Moge) Use openACC directives to port the TURB part of Meso-NH on GPU
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !! --------------------------------------------------------------------------
 !
@@ -60,6 +61,7 @@ CONTAINS
 !          ------------
 !
 USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
 USE MODD_CST
 USE MODD_CTURB
@@ -74,7 +76,10 @@ USE MODI_GRADIENT_M
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
-USE MODI_SHUMAN 
+USE MODE_GRADIENT_M_PHY, ONLY: GX_M_U_PHY, GY_M_V_PHY, GX_M_M_PHY, GY_M_M_PHY
+USE MODE_GRADIENT_W_PHY, ONLY: GX_W_UW_PHY, GY_W_VW_PHY
+USE MODI_SHUMAN
+USE MODE_SHUMAN_PHY
 USE MODI_LES_MEAN_SUBGRID
 !
 USE MODI_SECOND_MNH
@@ -86,46 +91,47 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
 TYPE(TLES_t),             INTENT(INOUT) :: TLES          ! modd_les structure
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
-TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
-INTEGER,                  INTENT(IN)    ::  KSV_LGBEG,KSV_LGEND ! number of sv var.
+TYPE(TFILEDATA),          INTENT(INOUT)    ::  TPFILE       ! Output file
+INTEGER,                  INTENT(IN)    ::  KSV,KSV_LGBEG,KSV_LGEND ! number of sv var.
 LOGICAL,                  INTENT(IN)    ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                  INTENT(IN)    ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
 LOGICAL,                  INTENT(IN)    ::  O2D          ! Logical for 2D model version (modd_conf)
 LOGICAL,                  INTENT(IN)    ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
                                                         ! PK = PLM * SQRT(PTKEM)
 REAL,                     INTENT(IN)    ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PINV_PDXX   ! 1./PDXX
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PINV_PDYY   ! 1./PDYY
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PINV_PDZZ   ! 1./PDZZ
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PMZM_PRHODJ ! MZM(PRHODJ)
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDXX   ! 1./PDXX
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDYY   ! 1./PDYY
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDZZ   ! 1./PDZZ
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PMZM_PRHODJ ! MZM(PRHODJ)
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
 REAL, DIMENSION(:,:),     INTENT(IN)    ::  PDIRCOSXW, PDIRCOSYW
 ! Director Cosinus along x and y  directions at surface w-point
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PWM          ! vertical wind
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PWM          ! vertical wind
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PSFSVM       ! surface fluxes
+REAL, DIMENSION(D%NIT,D%NJT,KSV),   INTENT(IN)    ::  PSFSVM       ! surface fluxes
 !
 !
 ! Variables at t-1
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
 !
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS        ! var. at t+1 -split-
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS        ! var. at t+1 -split-
 !
 !
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(SIZE(PSVM,1),SIZE(PSVM,2),SIZE(PSVM,3))       &
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)       &
                                      :: ZFLXX,ZFLXY
     ! work arrays
-REAL, DIMENSION(SIZE(PSVM,1),SIZE(PSVM,2),1) :: ZWORK2D
+REAL, DIMENSION(D%NIT,D%NJT) :: ZWORK2D
 !
 REAL :: ZCSV          !constant for the scalar flux
 
@@ -139,7 +145,7 @@ REAL, DIMENSION(SIZE(PDZZ,1),SIZE(PDZZ,2),1+JPVEXT:3+JPVEXT) :: ZCOEFF
                                     ! computation near the ground
 !
 CHARACTER(LEN=NMNHNAMELGTMAX) :: YMNHNAME
-INTEGER :: IKU
+INTEGER :: IKU, IIT, IJT, IKT, JI, JJ, JK
 TYPE(TFIELDMETADATA) :: TZFIELD
 REAL :: ZTIME1, ZTIME2
 ! ---------------------------------------------------------------------------
@@ -150,6 +156,9 @@ REAL :: ZTIME1, ZTIME2
 IKB = 1+JPVEXT               
 IKE = SIZE(PSVM,3)-JPVEXT   
 IKU = SIZE(PSVM,3)
+IIT=D%NIT
+IJT=D%NJT
+IKT=D%NKT
 !
 ISV = SIZE(PSVM,4)
 !
@@ -162,12 +171,16 @@ ENDIF
 !
 !  compute the coefficients for the uncentred gradient computation near the 
 !  ground
+!$acc kernels
+!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
 ZCOEFF(:,:,IKB+2)= - PDZZ(:,:,IKB+1) /      &
        ( (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) * PDZZ(:,:,IKB+2) )
 ZCOEFF(:,:,IKB+1)=   (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) /      &
        ( PDZZ(:,:,IKB+1) * PDZZ(:,:,IKB+2) )
 ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
        ( (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) * PDZZ(:,:,IKB+1) )
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$acc end kernels
 !
 !
 !*      15.   HORIZONTAL FLUXES OF PASSIVE SCALARS
@@ -182,23 +195,32 @@ DO JSV=1,ISV
 !              ----------
 !
   ! Computes the flux in the X direction
-  ZFLXX(:,:,:) = -ZCSV * MXM(PK) * GX_M_U(1,IKU,1,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)
-  ZFLXX(:,:,IKE+1) = ZFLXX(:,:,IKE) 
+  ZFLXX(:,:,:) = -ZCSV * MXM(PK) * GX_M_U(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)
+
+!$acc kernels
+!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
+  ZFLXX(:,:,IKE+1) = ZFLXX(:,:,IKE)
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$acc end kernels
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-  ZFLXX(:,:,IKB:IKB) = -ZCSV * MXM( PK(:,:,IKB:IKB) ) *             &
-    ( DXM(PSVM(:,:,IKB:IKB,JSV)) * PINV_PDXX(:,:,IKB:IKB)           &
-     -MXM ( ZCOEFF(:,:,IKB+2:IKB+2)*PSVM(:,:,IKB+2:IKB+2,JSV)       &
-           +ZCOEFF(:,:,IKB+1:IKB+1)*PSVM(:,:,IKB+1:IKB+1,JSV)       &
-           +ZCOEFF(:,:,IKB  :IKB  )*PSVM(:,:,IKB  :IKB  ,JSV)       &
-          ) * 0.5 * ( PDZX(:,:,IKB+1:IKB+1)+PDZX(:,:,IKB:IKB) )     &
-            * PINV_PDXX(:,:,IKB:IKB)                                &
+  ZFLXX(:,:,IKB) = -ZCSV * MXM( PK(:,:,IKB) ) *             &
+    ( DXM(PSVM(:,:,IKB,JSV)) * PINV_PDXX(:,:,IKB)           &
+     -MXM ( ZCOEFF(:,:,2)*PSVM(:,:,2,JSV)       &
+           +ZCOEFF(:,:,IKB+1)*PSVM(:,:,IKB+1,JSV)       &
+           +ZCOEFF(:,:,IKB  )*PSVM(:,:,IKB  ,JSV)       &
+          ) * 0.5 * ( PDZX(:,:,IKB+1)+PDZX(:,:,IKB) )     &
+            * PINV_PDXX(:,:,IKB)                                &
     ) 
 ! extrapolates the flux under the ground so that the vertical average with 
 ! the IKB flux gives the ground value
-  ZWORK2D(:,:,1)=PSFSVM(:,:,JSV) * PDIRCOSXW(:,:)
-  ZFLXX(:,:,IKB-1:IKB-1) = 2. * MXM( ZWORK2D(:,:,1:1) ) - ZFLXX(:,:,IKB:IKB)
+!$acc kernels
+!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
+  ZWORK2D(:,:)=PSFSVM(:,:,JSV) * PDIRCOSXW(:,:)
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$acc end kernels
+  ZFLXX(:,:,IKB-1) = 2. * MXM( ZWORK2D(:,:) ) - ZFLXX(:,:,IKB)
   !
   ! stores  <U SVth>
   IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
@@ -214,15 +236,16 @@ DO JSV=1,ISV
       NTYPE      = TYPEREAL,                     &
       NDIMS      = 3,                            &
       LTIMEDEP   = .TRUE.                        )
+!$acc update self(ZFLXX)
     CALL IO_Field_write(TPFILE,TZFIELD,ZFLXX)
   END IF
 !
   IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID( MXF(ZFLXX), TLES%X_LES_SUBGRID_USv(:,:,:,JSV) ) 
-    CALL LES_MEAN_SUBGRID( MZF(MXF(GX_W_UW(PWM,PDXX,PDZZ,PDZX)*MZM(ZFLXX))), &
+    CALL LES_MEAN_SUBGRID( MZF(MXF(GX_W_UW(OFLAT,PWM,PDXX,PDZZ,PDZX)*MZM(ZFLXX))), &
                            TLES%X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) , .TRUE. )
-    CALL LES_MEAN_SUBGRID( GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)*MXF(ZFLXX), &
+    CALL LES_MEAN_SUBGRID( GX_M_M(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)*MXF(ZFLXX), &
                            TLES%X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV), .TRUE. )
     CALL SECOND_MNH(ZTIME2)
     TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
@@ -234,24 +257,32 @@ DO JSV=1,ISV
   IF (.NOT. O2D) THEN
 !
 ! Computes the flux in the Y direction
-    ZFLXY(:,:,:)=-ZCSV * MYM(PK) * GY_M_V(1,IKU,1,PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)
-    ZFLXY(:,:,IKE+1) = ZFLXY(:,:,IKE) 
+    ZFLXY(:,:,:)=-ZCSV * MYM(PK) * GY_M_V(OFLAT,PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)
+!$acc kernels
+!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
+    ZFLXY(:,:,IKE+1) = ZFLXY(:,:,IKE)
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$acc end kernels
 !
 ! Compute the flux at the first inner V-point with an uncentred vertical  
 ! gradient
 !
-    ZFLXY(:,:,IKB:IKB) = -ZCSV * MYM( PK(:,:,IKB:IKB) ) *             &
-      ( DYM(PSVM(:,:,IKB:IKB,JSV)) * PINV_PDYY(:,:,IKB:IKB)           &
-       -MYM ( ZCOEFF(:,:,IKB+2:IKB+2)*PSVM(:,:,IKB+2:IKB+2,JSV)       &
-             +ZCOEFF(:,:,IKB+1:IKB+1)*PSVM(:,:,IKB+1:IKB+1,JSV)       &
-             +ZCOEFF(:,:,IKB  :IKB  )*PSVM(:,:,IKB  :IKB  ,JSV)       &
-            ) * 0.5 * ( PDZY(:,:,IKB+1:IKB+1)+PDZY(:,:,IKB:IKB) )     &
-              * PINV_PDYY(:,:,IKB:IKB)                                &
+    ZFLXY(:,:,IKB) = -ZCSV * MYM( PK(:,:,IKB) ) *             &
+      ( DYM(PSVM(:,:,IKB,JSV)) * PINV_PDYY(:,:,IKB)           &
+       -MYM ( ZCOEFF(:,:,2)*PSVM(:,:,2,JSV)       &
+             +ZCOEFF(:,:,IKB+1)*PSVM(:,:,IKB+1,JSV)       &
+             +ZCOEFF(:,:,IKB  )*PSVM(:,:,IKB  ,JSV)       &
+            ) * 0.5 * ( PDZY(:,:,IKB+1)+PDZY(:,:,IKB) )     &
+              * PINV_PDYY(:,:,IKB)                                &
       ) 
 ! extrapolates the flux under the ground so that the vertical average with 
 ! the IKB flux gives the ground value
-    ZWORK2D(:,:,1)=PSFSVM(:,:,JSV) * PDIRCOSYW(:,:)
-    ZFLXY(:,:,IKB-1:IKB-1) = 2. * MYM( ZWORK2D(:,:,1:1) ) - ZFLXY(:,:,IKB:IKB)
+!$acc kernels
+!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
+    ZWORK2D(:,:)=PSFSVM(:,:,JSV) * PDIRCOSYW(:,:)
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$acc end kernels
+    ZFLXY(:,:,IKB-1) = 2. * MYM( ZWORK2D(:,:) ) - ZFLXY(:,:,IKB)
   !
   ! stores  <V SVth>
     IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
@@ -267,19 +298,24 @@ DO JSV=1,ISV
       NTYPE      = TYPEREAL,                         &
       NDIMS      = 3,                                &
       LTIMEDEP   = .TRUE.                            )
+!$acc update self(ZFLXY)
       CALL IO_Field_write(TPFILE,TZFIELD,ZFLXY)
     END IF
 !
   ELSE
-    ZFLXY=0.
+    !$acc kernels
+    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+    ZFLXY(:,:,:)=0.
+    !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+    !$acc end kernels
   END IF
 !
   IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID( MYF(ZFLXY), TLES%X_LES_SUBGRID_VSv(:,:,:,JSV) ) 
-    CALL LES_MEAN_SUBGRID( MZF(MYF(GY_W_VW(PWM,PDYY,PDZZ,PDZY)*MZM(ZFLXY))), &
+    CALL LES_MEAN_SUBGRID( MZF(MYF(GY_W_VW(OFLAT,PWM,PDYY,PDZZ,PDZY)*MZM(ZFLXY))), &
                            TLES%X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) , .TRUE. )
-    CALL LES_MEAN_SUBGRID( GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)*MYF(ZFLXY), &
+    CALL LES_MEAN_SUBGRID( GY_M_M(OFLAT,PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)*MYF(ZFLXY), &
                            TLES%X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV) , .TRUE. )
     CALL SECOND_MNH(ZTIME2)
     TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1

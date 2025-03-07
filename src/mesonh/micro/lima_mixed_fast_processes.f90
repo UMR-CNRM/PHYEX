@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -378,10 +378,10 @@ IF( IGRIM>0 ) THEN
 !
   WHERE ( GRIM(:) )
      ZZW1(:,1) = MIN( PRCS1D(:),                          &
-  	           XCRIMSS * ZZW(:) * PRCT1D(:) * PCST1D(:)      & 
-  	                            *   PLBDAS(:)**XEXCRIMSS &
+                 XCRIMSS * ZZW(:) * PRCT1D(:) * PCST1D(:)      & 
+                                  *   PLBDAS(:)**XEXCRIMSS &
                * (1+(XFVELOS/PLBDAS(:))**XALPHAS)**(-XNUS+XEXCRIMSS/XALPHAS) &
-    			            * PRHODREF(:)**(-XCEXVT) )
+                            * PRHODREF(:)**(-XCEXVT) )
      PRCS1D(:) = PRCS1D(:) - ZZW1(:,1)
      PRSS1D(:) = PRSS1D(:) + ZZW1(:,1)
      PTHS1D(:) = PTHS1D(:) + ZZW1(:,1)*(PLSFACT(:)-PLVFACT(:)) ! f(L_f*(RCRIMSS))
@@ -400,13 +400,13 @@ IF( IGRIM>0 ) THEN
 !
   WHERE ( GRIM(:) .AND. (PRSS1D(:)>XRTMIN(5)/PTSTEP) .AND. (PCSS1D(:)>XCTMIN(5)/PTSTEP))
      ZZW1(:,2) = MIN( PRCS1D(:),                 &
-    	           XCRIMSG * PRCT1D(:) * PCST1D(:)      & ! RCRIMSG
-    	           *  PLBDAS(:)**XEXCRIMSG*(1+(XFVELOS/PLBDAS(:))**XALPHAS)**(-XNUS+XEXCRIMSG/XALPHAS)  &
-  	                   * PRHODREF(:)**(-XCEXVT) &
-    		           - ZZW1(:,1)              )
+                   XCRIMSG * PRCT1D(:) * PCST1D(:)      & ! RCRIMSG
+                   *  PLBDAS(:)**XEXCRIMSG*(1+(XFVELOS/PLBDAS(:))**XALPHAS)**(-XNUS+XEXCRIMSG/XALPHAS)  &
+                         * PRHODREF(:)**(-XCEXVT) &
+                       - ZZW1(:,1)              )
      ZZW1(:,3) = MIN( PRSS1D(:),  PCST1D(:) *          &
                        XSRIMCG * PLBDAS(:)**XEXSRIMCG   & ! RSRIMCG 
-   	                       * (1.0 - ZZW(:) )/PTSTEP)
+                              * (1.0 - ZZW(:) )/PTSTEP)
      PRCS1D(:) = PRCS1D(:) - ZZW1(:,2)
      PRSS1D(:) = PRSS1D(:) - ZZW1(:,3)
      PRGS1D(:) = PRGS1D(:) + ZZW1(:,2) + ZZW1(:,3)
@@ -906,10 +906,10 @@ IF( IGACC>0 .AND. NMOM_R.GE.2) THEN
   DO JJ = 1,IGACC
      ZVEC3(JJ) =  (  XKER_N_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                     - XKER_N_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                				 	           * ZVEC1(JJ) &
+                                                * ZVEC1(JJ) &
                  - (  XKER_N_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                     - XKER_N_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-  	                    			             * (ZVEC1(JJ) - 1.0)
+                                                   * (ZVEC1(JJ) - 1.0)
   END DO
   ZZNW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GACC,FIELD=0.0 )
 !
@@ -981,10 +981,10 @@ IF( IGACC>0 .AND. NMOM_R.GE.2) THEN
   DO JJ = 1,IGACC
      ZVEC3(JJ) =  (  XKER_N_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)+1)* ZVEC1(JJ)          &
                         - XKER_N_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
-      			 	                                   * ZVEC2(JJ) &
+                                                          * ZVEC2(JJ) &
                      - (  XKER_N_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)+1)* ZVEC1(JJ)          &
                         - XKER_N_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
-			                                     * (ZVEC2(JJ) - 1.0)
+                                                 * (ZVEC2(JJ) - 1.0)
   END DO
   ZZNW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GACC,FIELD=0.0 )
 !
@@ -1355,7 +1355,7 @@ IF( IGDRY>0 ) THEN
   DO JJ = 1,IGDRY
      ZVEC3(JJ) =  (  XKER_N_SDRYG(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                         - XKER_N_SDRYG(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-      	    		 	                                  * ZVEC1(JJ) &
+                                                             * ZVEC1(JJ) &
                      - (  XKER_N_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                         - XKER_N_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                         * (ZVEC1(JJ) - 1.0)
@@ -1442,10 +1442,10 @@ IF( IGDRY>0 ) THEN
   DO JJ = 1,IGDRY
      ZVEC3(JJ) =  (  XKER_N_RDRYG(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                         - XKER_N_RDRYG(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                         			 	                  * ZVEC1(JJ) &
+                                                            * ZVEC1(JJ) &
                     - (  XKER_N_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                         - XKER_N_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                     			     * (ZVEC1(JJ) - 1.0)
+                                                      * (ZVEC1(JJ) - 1.0)
   END DO
   ZZNW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GDRY,FIELD=0.0 )
 !
@@ -1619,7 +1619,7 @@ WHERE( PRGT1D(:)>XRTMIN(6) .AND. PZT(:)<XTT                              &
    PRRS1D(:) = PRRS1D(:) - ZZW1(:,4)
    PRGS1D(:) = PRGS1D(:) + ZRDRYG(:)
    PTHS1D(:) = PTHS1D(:) + (ZZW1(:,1)+ZZW1(:,4))*(PLSFACT(:)-PLVFACT(:)) !
-  						        ! f(L_f*(RCDRYG+RRDRYG))
+                                  ! f(L_f*(RCDRYG+RRDRYG))
 !
    PCCS1D(:) = MAX( PCCS1D(:)-ZZNW1(:,1),0.0 )                                    
    PCIS1D(:) = MAX( PCIS1D(:)-ZZNW1(:,2),0.0 )                                     
@@ -1883,17 +1883,17 @@ IF( IHAIL>0 ) THEN
     DO JJ = 1,IGWET
        ZVEC3(JJ) = (  XKER_N_SWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                      - XKER_N_SWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-        		 	                                   * ZVEC1(JJ) &
+                                                        * ZVEC1(JJ) &
                    - ( XKER_N_SWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                      - XKER_N_SWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-         		                                     * (ZVEC1(JJ) - 1.0)
+                                                      * (ZVEC1(JJ) - 1.0)
     END DO
     ZZNW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GWET,FIELD=0.0 )
 !
     WHERE( GWET(:) )
        ZZNW1(:,3) = MIN( PCSS1D(:),XFNSWETH*ZZNW(:) * PCST1D(:)            & ! NSWETH
                                               *( PCHT1D(:) )              & 
-       	                 *( PRHODREF(:)**(-XCEXVT+1.) )               &
+                            *( PRHODREF(:)**(-XCEXVT+1.) )               &
                          *( XLBNSWETH1/( PLBDAH(:)**2              ) + &
                             XLBNSWETH2/( PLBDAH(:)   * PLBDAS(:)   ) + &
                             XLBNSWETH3/(               PLBDAS(:)**2) ) )
@@ -1966,10 +1966,10 @@ IF( IHAIL>0 ) THEN
     DO JJ = 1,IGWET
        ZVEC3(JJ) = (  XKER_N_GWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                         - XKER_N_GWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                          			 	                   * ZVEC1(JJ) &
+                                                              * ZVEC1(JJ) &
                      - (  XKER_N_GWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                         - XKER_N_GWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                    			     * (ZVEC1(JJ) - 1.0)
+                                                     * (ZVEC1(JJ) - 1.0)
     END DO
     ZZNW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GWET,FIELD=0.0 )
 !

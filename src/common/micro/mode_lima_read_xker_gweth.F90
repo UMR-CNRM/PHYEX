@@ -11,6 +11,7 @@ CONTAINS
                                    PALPHAH,PNUH,PALPHAG,PNUG,PEHG,PBG,PCH,PDH,PCG,PDG,      &
                                    PWETLBDAH_MAX,PWETLBDAG_MAX,PWETLBDAH_MIN,PWETLBDAG_MIN, &
                                    PFDINFTY,PKER_GWETH                                      )
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !     ########################################################################
 !
 !!****  * * - initialize the kernels for the graupel-hail wet growth process
@@ -52,10 +53,11 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-!*       0.2   Declarations of local variables :
+!*       0.2   Declarations of arguments :
 !
 !  
-INTEGER, INTENT(OUT) :: KND,KWETLBDAH,KWETLBDAG
+INTEGER, INTENT(OUT) :: KND
+INTEGER, INTENT(INOUT) :: KWETLBDAH,KWETLBDAG
 REAL,    INTENT(OUT) :: PALPHAH
 REAL,    INTENT(OUT) :: PNUH
 REAL,    INTENT(OUT) :: PALPHAG
@@ -71,12 +73,14 @@ REAL,    INTENT(OUT) :: PWETLBDAG_MAX
 REAL,    INTENT(OUT) :: PWETLBDAH_MIN
 REAL,    INTENT(OUT) :: PWETLBDAG_MIN
 REAL,    INTENT(OUT) :: PFDINFTY
-REAL, DIMENSION(:,:), INTENT(OUT), OPTIONAL :: PKER_GWETH 
+REAL, DIMENSION(KWETLBDAH,KWETLBDAG), INTENT(OUT), OPTIONAL :: PKER_GWETH 
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 ! ########################################################################
 ! #INSERT HERE THE OUTPUT OF INI_RAIN_ICE_HAIL IF THE KERNELS ARE UPDATED#
 ! ########################################################################
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_READ_XKER_GWETH', 0, ZHOOK_HANDLE)
 KND= 50
 KWETLBDAH= 40
 KWETLBDAG= 40
@@ -1699,5 +1703,6 @@ PKER_GWETH( 40, 39) =  0.181368E-01
 PKER_GWETH( 40, 40) =  0.197923E-01
 END IF
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_READ_XKER_GWETH', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_READ_XKER_GWETH
 END MODULE MODE_LIMA_READ_XKER_GWETH

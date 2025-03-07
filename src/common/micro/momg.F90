@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -8,7 +8,8 @@
 !
 INTERFACE MOMG
 !
-FUNCTION MOMG_X0D(PALPHA, PNU, PP)  RESULT(PMOMG)
+PURE FUNCTION MOMG_X0D(PALPHA, PNU, PP)  RESULT(PMOMG)
+!$acc routine seq
 REAL, INTENT(IN) :: PALPHA, PNU
 REAL, INTENT(IN) :: PP
 REAL             :: PMOMG
@@ -53,10 +54,12 @@ END MODULE MODI_MOMG
 !             ---------------------------------
 !
 !     ##############################################
-      FUNCTION MOMG_X0D(PALPHA, PNU, PP)  RESULT(PMOMG)
+      PURE FUNCTION MOMG_X0D(PALPHA, PNU, PP)  RESULT(PMOMG)
 !     ##############################################
 !
-USE MODI_GAMMA
+!
+!$acc routine seq
+USE MODI_GAMMA, ONLY: GAMMA
 !
 IMPLICIT NONE
 !

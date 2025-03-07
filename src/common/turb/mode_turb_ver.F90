@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -37,12 +37,12 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
 !!    -------
 !       The purpose of this routine is to compute the vertical turbulent
 !     fluxes of the evolutive variables and give back the source 
-!     terms to the main program.	In the case of large horizontal meshes,
+!     terms to the main program.  In the case of large horizontal meshes,
 !     the divergence of these vertical turbulent fluxes represent the whole
 !     effect of the turbulence but when the three-dimensionnal version of
 !     the turbulence scheme is activated (CTURBDIM="3DIM"), these divergences
 !     are completed in the next routine TURB_HOR. 
-!		  An arbitrary degree of implicitness has been implemented for the 
+!      An arbitrary degree of implicitness has been implemented for the 
 !     temporal treatment of these diffusion terms.
 !       The vertical boundary conditions are as follows:
 !           *  at the bottom, the surface fluxes are prescribed at the same
@@ -60,12 +60,12 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
 !!      implicit scheme (a Crank-Nicholson type with coefficients different
 !!      than 0.5), which allows to vary the degree of implicitness of the
 !!      formulation.
-!!      	 The different prognostic variables are treated one by one. 
+!!         The different prognostic variables are treated one by one. 
 !!      The contributions of each turbulent fluxes are cumulated into the 
 !!      tendency  PRvarS, and into the dynamic and thermal production of 
 !!      TKE if necessary.
 !!        
-!!			 In section 2 and 3, the thermodynamical fields are considered.
+!!       In section 2 and 3, the thermodynamical fields are considered.
 !!      Only the turbulent fluxes of the conservative variables
 !!      (Thetal and Rnp stored in PRx(:,:,:,1))  are computed. 
 !!       Note that the turbulent fluxes at the vertical 
@@ -76,14 +76,14 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
 !!      a function ETHETA or EMOIST, which preform the transformation from the
 !!      conservative variables to the virtual potential temperature. 
 !!     
-!! 	    In section 4, the variance of the statistical variable
+!!       In section 4, the variance of the statistical variable
 !!      s indicating presence or not of condensation, is determined in function 
 !!      of the turbulent moments of the conservative variables and its
 !!      squarred root is stored in PSIGS. This information will be completed in 
 !!      the horizontal turbulence if the turbulence dimensionality is not 
 !!      equal to "1DIM".
 !!
-!!			 In section 5, the x component of the stress tensor is computed.
+!!       In section 5, the x component of the stress tensor is computed.
 !!      The surface flux <u'w'> is computed from the value of the surface
 !!      fluxes computed in axes linked to the orography ( i", j" , k"):
 !!        i" is parallel to the surface and in the direction of the maximum
@@ -102,7 +102,7 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
 !!      in the surface layer.
 !!
 !!         In section 6, the same steps are repeated but for the y direction
-!!	and in section 7, a diagnostic computation of the W variance is 
+!!  and in section 7, a diagnostic computation of the W variance is 
 !!      performed.
 !!
 !!         In section 8, the turbulent fluxes for the scalar variables are 
@@ -112,11 +112,11 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
 !!    EXTERNAL
 !!    --------
 !!      GX_U_M, GY_V_M, GZ_W_M :  cartesian gradient operators 
-!!      GX_U_UW,GY_V_VW	         (X,Y,Z) represent the direction of the gradient
+!!      GX_U_UW,GY_V_VW           (X,Y,Z) represent the direction of the gradient
 !!                               _(M,U,...)_ represent the localization of the 
 !!                               field to be derivated
 !!                               _(M,UW,...) represent the localization of the 
-!!                               field	derivated
+!!                               field  derivated
 !!
 !!      SUBROUTINE TRIDIAG     : to compute the split implicit evolution
 !!                               of a variable located at a mass point
@@ -176,7 +176,7 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
 !!      Modifications: October 10, 1995 (J.Cuxart and J. Stein) 
 !!                                 Psi for scal var and LES tools
 !!      Modifications: November 10, 1995 (J. Stein)
-!!                                 change the surface	relations 
+!!                                 change the surface  relations 
 !!      Modifications: February 20, 1995 (J. Stein) optimization
 !!      Modifications: May 21, 1996 (J. Stein) 
 !!                                  bug in the vertical flux of the V wind 
@@ -204,6 +204,7 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
 !!                     10/2012 (J.Escobar) Bypass PGI bug , redefine some allocatable array inplace of automatic
 !!                     08/2014 (J.Escobar) Bypass PGI memory leak bug , replace IF statement with IF THEN ENDIF
 !!      Modifications: July,    2015  (Wim de Rooy) switch for HARATU (Racmo turbulence scheme)
+!!                     04/2016 (M.Moge) Use openACC directives to port the TURB part of Meso-NH on GPU
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !! JL Redelsperger 03/2021 : add Ocean LES case
 !!--------------------------------------------------------------------------
@@ -262,7 +263,7 @@ LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for la
 LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model version
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
-TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
+TYPE(TFILEDATA),        INTENT(INOUT)   ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                       ! Metric coefficients
@@ -338,16 +339,16 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PDP,PTP   ! Dynamic and thermal
                                                    ! TKE production terms
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(OUT)     ::  PSIGS
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PWTH      ! heat flux
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PWRC      ! cloud water flux
-REAL, DIMENSION(D%NIJT,D%NKT,KSV),INTENT(OUT) :: PWSV       ! scalar flux
-REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSTFL        ! Time evol Flux of T at sea surface (LOCEAN)!
-REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSTFL_C  ! O-A interface flux for theta(LOCEAN and LCOUPLES)
-REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSRFL_C  ! O-A interface flux for vapor (LOCEAN and LCOUPLES) 
-REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSUFL_C        ! Time evol Flux of U at sea surface (LOCEAN)
-REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSVFL_C  !
-REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSUFL   
-REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSVFL  !
+REAL, DIMENSION(MERGE(D%NIJT,0,OFLYER),MERGE(D%NKT,0,OFLYER)), INTENT(OUT)  :: PWTH       ! heat flux
+REAL, DIMENSION(MERGE(D%NIJT,0,OFLYER),MERGE(D%NKT,0,OFLYER)), INTENT(OUT)  :: PWRC      ! cloud water flux
+REAL, DIMENSION(MERGE(D%NIJT,0,OFLYER),MERGE(D%NKT,0,OFLYER),MERGE(KSV,0,OFLYER)),INTENT(OUT) :: PWSV       ! scalar flux
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSTFL        ! Time evol Flux of T at sea surface (LOCEAN)!
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSTFL_C  ! O-A interface flux for theta(LOCEAN and LCOUPLES)
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSRFL_C  ! O-A interface flux for vapor (LOCEAN and LCOUPLES) 
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSUFL_C        ! Time evol Flux of U at sea surface (LOCEAN)
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSVFL_C  !
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSUFL   
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSVFL  !
 !
 !*       0.2  declaration of local variables
 !
@@ -420,6 +421,7 @@ CALL PRANDTL(D,CST,CSTURB,TURBN, KRR,KSV,KRRI,TURBN%LTURB_FLX,  &
 !
 ! Buoyancy coefficient
 !
+!$acc kernels
 IF (OOCEAN) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZBETA(IIJB:IIJE,1:IKT) = CST%XG*CST%XALPHAOC
@@ -435,16 +437,20 @@ END IF
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ZSQRT_TKE(IIJB:IIJE,1:IKT) = SQRT(PTKEM(IIJB:IIJE,1:IKT))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
 !
 ! gradients of mean quantities at previous time-step
 !
 CALL GZ_M_W_PHY(D,PTHLM,PDZZ,ZDTH_DZ)
+!$acc kernels
 ZDR_DZ(:,:)  = 0.
+!$acc end kernels
 IF (KRR>0) CALL GZ_M_W_PHY(D,PRM(:,:,1),PDZZ,ZDR_DZ)
 !
 !
 ! Denominator factor in 3rd order terms
 !
+!$acc kernels
 IF (.NOT. TURBN%LHARAT) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZD(IIJB:IIJE,1:IKT) = (1.+ZREDTH1(IIJB:IIJE,1:IKT)+ZREDR1(IIJB:IIJE,1:IKT)) * &
@@ -455,6 +461,7 @@ ELSE
   ZD(IIJB:IIJE,1:IKT) = 1.
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ENDIF
+!$acc end kernels
 !
 ! Phi3 and Psi3 Prandtl numbers
 !
@@ -498,12 +505,13 @@ END IF
 !*       4.   TURBULENT CORRELATIONS : <w Rc>, <THl THl>, <THl Rnp>, <Rnp Rnp>
 !             ----------------------------------------------------------------
 !
-
+!$acc kernels
 IF (TURBN%LHARAT) THEN
   ZLM(:,:)=PLENGTHH(:,:)
 ELSE
   ZLM(:,:)=PLM(:,:)
 ENDIF
+!$acc end kernels
 !
   CALL  TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,TLES,                 &
                         KRR,KRRL,KRRI,KSV,KGRADIENTS,                 &
@@ -629,6 +637,7 @@ IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. TURBN%LHARAT) THEN
     NTYPE      = TYPEREAL,                   &
     NDIMS      = 3,                          &
     LTIMEDEP   = .TRUE.                      )
+  !$acc update self(ZPHI3)
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZPHI3)
 !
 ! stores the Turbulent Schmidt number
@@ -644,6 +653,7 @@ IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. TURBN%LHARAT) THEN
     NTYPE      = TYPEREAL,                   &
     NDIMS      = 3,                          &
     LTIMEDEP   = .TRUE.                      )
+  !$acc update self(ZPSI3)
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZPSI3)
 !
 !
@@ -658,6 +668,7 @@ IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. TURBN%LHARAT) THEN
     NTYPE      = TYPEREAL,                     &
     NDIMS      = 3,                            &
     LTIMEDEP   = .TRUE.                        )
+  !$acc update self(ZPSI_SV)
   DO JSV=1,KSV
     WRITE(TZFIELD%CMNHNAME, '("PSI_SV_",I3.3)') JSV
     TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)

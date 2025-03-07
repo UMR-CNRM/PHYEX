@@ -85,6 +85,8 @@ IF (LHOOK) CALL DR_HOOK('ICE4_SLOW', 0, ZHOOK_HANDLE)
 !
 !*       3.2     compute the homogeneous nucleation source: RCHONI
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(PT(JL)<CST%XTT-35.0 .AND. PRCT(JL)>ICED%XRTMIN(2) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -95,6 +97,7 @@ DO JL=1, KSIZE
     PRCHONI(JL) = 0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 !*       3.4    compute the deposition, aggregation and autoconversion sources
 !
@@ -112,6 +115,8 @@ ENDDO
 !
 !*       3.4.3  compute the deposition on r_s: RVDEPS
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(PRVT(JL)>ICED%XRTMIN(1) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -129,9 +134,12 @@ DO JL=1, KSIZE
     PRVDEPS(JL) = 0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 !*       3.4.4  compute the aggregation on r_s: RIAGGS
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(PRIT(JL)>ICED%XRTMIN(4) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -143,8 +151,8 @@ DO JL=1, KSIZE
 #else
       PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
                          * PRIT(JL)                      &
-                         * PRST(JL) * (1+(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**&
-                         (-ICED%XNUS+ICEP%XEXIAGGS/ICED%XALPHAS) &
+                         * PRST(JL) * &
+                         (1+(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEXIAGGS/ICED%XALPHAS) &
                          * PRHODREF(JL)**(-ICED%XCEXVT+1.) &
                          * ((PLBDAS(JL))**(ICED%XBS+ICEP%XEXIAGGS))
 #endif
@@ -154,9 +162,12 @@ DO JL=1, KSIZE
     PRIAGGS(JL) = 0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 !*       3.4.5  compute the autoconversion of r_i for r_s production: RIAUTS
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(PHLI_HRI(JL)>ICED%XRTMIN(4) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -169,10 +180,13 @@ DO JL=1, KSIZE
     PRIAUTS(JL) = 0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 !*       3.4.6  compute the deposition on r_g: RVDEPG
 !
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(PRVT(JL)>ICED%XRTMIN(1) .AND. PRGT(JL)>ICED%XRTMIN(6) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -183,6 +197,7 @@ DO JL=1, KSIZE
     PRVDEPG(JL) = 0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SLOW', 1, ZHOOK_HANDLE)
 !

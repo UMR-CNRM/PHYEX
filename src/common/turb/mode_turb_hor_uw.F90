@@ -7,7 +7,7 @@ MODULE MODE_TURB_HOR_UW
 IMPLICIT NONE
 CONTAINS
 !     ################################################################
-      SUBROUTINE TURB_HOR_UW(TURBN,TLES,KSPLT,                       &
+      SUBROUTINE TURB_HOR_UW(D,TURBN,TLES,KSPLT,                       &
                       KRR,KSV,OFLAT,                                 &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDZZ,PMZM_PRHODJ,            &
@@ -56,6 +56,7 @@ CONTAINS
 !!                     Nov  06, 2002 (V. Masson) LES budgets
 !!                     October 2009 (G. Tanguy) add ILENCH=LEN(YCOMMENT) after
 !!                                              change of YCOMMENT
+!!                     04/2016 (M.Moge) Use openACC directives to port the TURB part of Meso-NH on GPU
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !! --------------------------------------------------------------------------
 !
@@ -63,6 +64,7 @@ CONTAINS
 !          ------------
 !
 USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
 USE MODD_CST
 USE MODD_CTURB
@@ -77,7 +79,11 @@ USE MODI_GRADIENT_M
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
-USE MODI_SHUMAN 
+USE MODE_GRADIENT_U_PHY, ONLY: GZ_U_UW_PHY
+USE MODE_GRADIENT_M_PHY, ONLY: GX_M_U_PHY
+USE MODE_GRADIENT_W_PHY, ONLY: GX_W_UW_PHY
+USE MODI_SHUMAN
+USE MODE_SHUMAN_PHY
 USE MODI_LES_MEAN_SUBGRID
 !
 USE MODI_SECOND_MNH
@@ -89,51 +95,51 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
 TYPE(TLES_t),             INTENT(INOUT) :: TLES          ! modd_les structure
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
 INTEGER,                  INTENT(IN)    ::  KRR          ! number of moist var.
 INTEGER,                  INTENT(IN)    ::  KSV          ! number of sv var.
 LOGICAL,                  INTENT(IN)    ::  OFLAT        ! Logical for zero ororography
-TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT)    ::  TPFILE       ! Output file
 !
 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
                                                         ! PK = PLM * SQRT(PTKEM)
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PINV_PDXX   ! 1./PDXX
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PINV_PDZZ   ! 1./PDZZ
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PMZM_PRHODJ ! MZM(PRHODJ)
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PDXX, PDZZ, PDZX
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDXX   ! 1./PDXX
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDZZ   ! 1./PDZZ
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PMZM_PRHODJ ! MZM(PRHODJ)
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PDXX, PDZZ, PDZX
                                                          ! Metric coefficients
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PTHVREF      ! ref. state VPT       
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTHVREF      ! ref. state VPT       
 !
 ! Variables at t-1
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PUM,PWM,PTHLM
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    ::  PRM
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    ::  PSVM
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PUM,PWM,PTHLM
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN)    ::  PRM
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRUS, PRWS
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PDP          ! TKE production terms
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRWS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE production terms
 !
 !
 !
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(SIZE(PWM,1),SIZE(PWM,2),SIZE(PWM,3))       &
-                                     :: ZFLX,ZWORK
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZFLX,ZWORK
     ! work arrays
 !   
-INTEGER             :: IKB,IKE,IKU
+INTEGER             :: IKB,IKE,IKU, IIT, IJT, IKT
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain  
-INTEGER             :: JSV          ! scalar loop counter
+INTEGER             :: JSV,JI,JJ,JK          ! scalar loop counter
 !
-REAL, DIMENSION(SIZE(PWM,1),SIZE(PWM,2),SIZE(PWM,3))  :: GX_W_UW_PWM
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GX_W_UW_PWM
 !
 REAL :: ZTIME1, ZTIME2
 TYPE(TFIELDMETADATA) :: TZFIELD
@@ -145,9 +151,12 @@ TYPE(TFIELDMETADATA) :: TZFIELD
 IKB = 1+JPVEXT               
 IKE = SIZE(PWM,3)-JPVEXT    
 IKU = SIZE(PWM,3)
+IIT=D%NIT
+IJT=D%NJT
+IKT=D%NKT 
 !
 !
-GX_W_UW_PWM = GX_W_UW(PWM,PDXX,PDZZ,PDZX)
+GX_W_UW_PWM = GX_W_UW(OFLAT,PWM,PDXX,PDZZ,PDZX)
 !
 !
 !*      13.   < U'W'>
@@ -160,12 +169,16 @@ ZFLX(:,:,:) =                                                      &
 !!         &  to be tested
 !!  - (2./3.) * XCMFB * MZM( ZVPTU * MXM( PLM / SQRT(PTKEM) * XG / PTHVREF ) )
 !
+!$acc kernels
+!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
 ZFLX(:,:,IKE+1) = 0.  ! rigid wall condition => no turbulent flux
 !
 ! Nullify the flux at the ground level because it has been fully taken into
 ! account in turb_ver and extrapolate the flux under the ground 
 ZFLX(:,:,IKB) = 0.
 ZFLX(:,:,IKB-1)=2.*ZFLX(:,:,IKB)- ZFLX(:,:,IKB+1)
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$acc end kernels
 !
 ! stores  <U W>
 IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
@@ -180,6 +193,7 @@ IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
   NTYPE      = TYPEREAL,        &
   NDIMS      = 3,               &
   LTIMEDEP   = .TRUE.           )
+!$acc update self(ZFLX)
   CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
 END IF
 !
@@ -206,21 +220,25 @@ IF (KSPLT==1) THEN
   !
   !
   ! evaluate the dynamic production at w(IKB+1) in PDP(IKB)
-  ZWORK(:,:,IKB:IKB) = - MXF (                                             &
-     ZFLX(:,:,IKB+1:IKB+1) *                                               &
-   (   (PUM(:,:,IKB+1:IKB+1)-PUM(:,:,IKB:IKB)) / MXM(PDZZ(:,:,IKB+1:IKB+1))&
-     + ( DXM( PWM(:,:,IKB+1:IKB+1) )                                       &
-        -MXM(  (PWM(:,:,IKB+2:IKB+2)-PWM(:,:,IKB+1:IKB+1))                 &
-                /(PDZZ(:,:,IKB+2:IKB+2)+PDZZ(:,:,IKB+1:IKB+1))             &
-              +(PWM(:,:,IKB+1:IKB+1)-PWM(:,:,IKB  :IKB  ))                 &
-                /(PDZZ(:,:,IKB+1:IKB+1)+PDZZ(:,:,IKB  :IKB  ))             &
+  ZWORK(:,:,IKB) = - MXF (                                             &
+     ZFLX(:,:,IKB+1) *                                               &
+   (   (PUM(:,:,IKB+1)-PUM(:,:,IKB)) / MXM(PDZZ(:,:,IKB+1))&
+     + ( DXM( PWM(:,:,IKB+1) )                                       &
+        -MXM(  (PWM(:,:,IKB+2)-PWM(:,:,IKB+1))                 &
+                /(PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1))             &
+              +(PWM(:,:,IKB+1)-PWM(:,:,IKB))                 &
+                /(PDZZ(:,:,IKB+1)+PDZZ(:,:,IKB))             &
             )                                                              &
-          * PDZX(:,:,IKB+1:IKB+1)                                          &
-       ) / (0.5*(PDXX(:,:,IKB+1:IKB+1)+PDXX(:,:,IKB:IKB)))                 &
+          * PDZX(:,:,IKB+1)                                          &
+       ) / (0.5*(PDXX(:,:,IKB+1)+PDXX(:,:,IKB)))                 &
    )                        )  
   !
   ! dynamic production computation
+  !$acc kernels
+  !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
   PDP(:,:,:) = PDP(:,:,:) +  ZWORK(:,:,:)  
+  !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+  !$acc end kernels
   !
 END IF
 !
@@ -231,14 +249,14 @@ IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
   CALL LES_MEAN_SUBGRID( MZF(MXF(ZFLX)), TLES%X_LES_SUBGRID_WU , .TRUE. )
   CALL LES_MEAN_SUBGRID( MZF(MXF(GZ_U_UW(PUM,PDZZ)*ZFLX)), TLES%X_LES_RES_ddxa_U_SBG_UaU , .TRUE.)
   CALL LES_MEAN_SUBGRID( MZF(MXF(GX_W_UW_PWM*ZFLX)), TLES%X_LES_RES_ddxa_W_SBG_UaW , .TRUE.)
-  CALL LES_MEAN_SUBGRID( MXF(GX_M_U(1,IKU,1,PTHLM,PDXX,PDZZ,PDZX)*MZF(ZFLX)),&
+  CALL LES_MEAN_SUBGRID( MXF(GX_M_U(OFLAT,PTHLM,PDXX,PDZZ,PDZX)*MZF(ZFLX)),&
                          TLES%X_LES_RES_ddxa_Thl_SBG_UaW , .TRUE.)
   IF (KRR>=1) THEN
-    CALL LES_MEAN_SUBGRID( MXF(GX_M_U(1,IKU,1,PRM(:,:,:,1),PDXX,PDZZ,PDZX)*MZF(ZFLX)), &
+    CALL LES_MEAN_SUBGRID( MXF(GX_M_U(OFLAT,PRM(:,:,:,1),PDXX,PDZZ,PDZX)*MZF(ZFLX)), &
                            TLES%X_LES_RES_ddxa_Rt_SBG_UaW , .TRUE.)
   END IF
   DO JSV=1,KSV
-    CALL LES_MEAN_SUBGRID( MXF(GX_M_U(1,IKU,1,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)*MZF(ZFLX)), &
+    CALL LES_MEAN_SUBGRID( MXF(GX_M_U(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)*MZF(ZFLX)), &
                            TLES%X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,JSV) , .TRUE.)
   END DO
   CALL SECOND_MNH(ZTIME2)

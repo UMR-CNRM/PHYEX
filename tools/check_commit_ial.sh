@@ -613,13 +613,13 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       if [[ $commit == arome${separator}* ]]; then
         $prep_code $prepCodeOpts -c $commit PHYEX #This commit is ready for inclusion
       else
-        $prep_code $prepCodeOpts -c $commit $expand_options $subs -m arome PHYEX
+        $prep_code $prepCodeOpts -c $commit $expand_options $subs -m arome PHYEX -- --shumanFUNCtoCALL --removeACC
       fi
     else
       echo "Copy $fromdir"
       mkdir PHYEX
       scp -q -r $fromdir/src PHYEX/
-      $prep_code $prepCodeOpts $expand_options $subs -m arome PHYEX
+      $prep_code $prepCodeOpts $expand_options $subs -m arome PHYEX -- --shumanFUNCtoCALL --removeACC
     fi
     find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs
     if [ $packupdate -eq 1 ]; then
@@ -702,6 +702,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
         file=$EXT/arp_shallow_mf.F90; [ -f $file ] && mvdiff $file ../arpifs/phys_dmn/
       fi
       #Special mpa case
+      [ -f $EXT/modd_ch_aerosol.F90 ] && mvdiff $EXT/modd_ch_aerosol.F90 ../mpa/chem/module/modd_ch_aerosol.F90
       for file in modd_spp_type.F90 spp_mod_type.F90 aroini_conf.h aroini_conf.F90; do
         if [ -f $EXT/$file ]; then
           [ ! -d ../mpa/aux ] && mkdir ../mpa/aux

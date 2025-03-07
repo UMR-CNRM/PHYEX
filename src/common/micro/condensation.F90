@@ -109,7 +109,7 @@ TYPE(NEB_t),                  INTENT(IN)    :: NEBN
 TYPE(TURB_t),                 INTENT(IN)    :: TURBN
 CHARACTER(LEN=1),             INTENT(IN)    :: HFRAC_ICE
 CHARACTER(LEN=4),             INTENT(IN)    :: HCONDENS
-CHARACTER(LEN=*),             INTENT(IN)    :: HLAMBDA3 ! formulation for lambda3 coeff
+CHARACTER(LEN=4),             INTENT(IN)    :: HLAMBDA3 ! formulation for lambda3 coeff
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PPABS  ! pressure (Pa)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PZZ    ! height of model levels (m)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODREF
@@ -167,30 +167,32 @@ INTEGER, DIMENSION(D%NIJT)  :: ITPL            ! top levels of troposphere
 REAL,    DIMENSION(D%NIJT)  :: ZTMIN           ! minimum Temp. related to ITPL
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZLV, ZLS, ZCPD
-REAL :: ZGCOND, ZAUTC, ZAUTI, ZGAUV, ZGAUC, ZGAUI, ZGAUTC, ZGAUTI, ZCRIAUTI   ! Used for Gaussian PDF integration
-REAL :: ZLVS                                      ! thermodynamics
-REAL, DIMENSION(D%NIJT) :: ZPV, ZPIV, ZQSL, ZQSI ! thermodynamics
-REAL :: ZLL, DZZ, ZZZ                           ! used for length scales
-REAL :: ZAH, ZDRW, ZDTL, ZSIG_CONV                     ! related to computation of Sig_s
-REAL, DIMENSION(D%NIJT) :: ZA, ZB, ZSBAR, ZSIGMA, ZQ1 ! related to computation of Sig_s
-REAL, DIMENSION(D%NIJT) :: ZCOND
-REAL, DIMENSION(D%NIJT) :: ZFRAC           ! Ice fraction
-INTEGER  :: INQ1
-REAL :: ZINC
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZGCOND, ZAUTC, ZAUTI, ZGAUV, ZGAUC, ZGAUI, ZGAUTC, ZGAUTI, ZCRIAUTI   ! Used for Gaussian PDF integration
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZLVS                                      ! thermodynamics
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZPV, ZPIV, ZQSL, ZQSI ! thermodynamics
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZLL, DZZ, ZZZ                           ! used for length scales
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZAH, ZDRW, ZDTL, ZSIG_CONV                     ! related to computation of Sig_s
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZA, ZB, ZSBAR, ZSIGMA, ZQ1 ! related to computation of Sig_s
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZCOND
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZFRAC           ! Ice fraction
+INTEGER, DIMENSION(D%NIJT,D%NKT)  :: INQ1
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZINC
 ! related to OCND2 noise check :
-REAL :: ZRSP,  ZRSW, ZRFRAC, ZRSDIF, ZRCOLD
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZRSP,  ZRSW, ZRFRAC, ZRSDIF, ZRCOLD
 ! related to OCND2  ice cloud calulation :
-REAL, DIMENSION(D%NIJT) :: ESATW_T
-REAL :: ZDUM1,ZDUM2,ZDUM3,ZDUM4,ZPRIFACT,ZLWINC
-REAL, DIMENSION(D%NIJT) :: ZDZ, ZARDUM, ZARDUM2, ZCLDINI
+REAL, DIMENSION(D%NIJT,D%NKT) :: ESATW_T
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZDUM1,ZDUM2,ZDUM3,ZDUM4,ZPRIFACT,ZLWINC
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZDZ, ZARDUM, ZARDUM2, ZCLDINI
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZSIGQSAT, ZICE_CLD_WGT
 ! end OCND2
 
 ! LHGT_QS:
-REAL :: ZDZFACT,ZDZREF
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZDZFACT,ZDZREF
 ! LHGT_QS END
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: IERR
+INTEGER, DIMENSION(D%NKT) :: JKPK, JKMK
 !
 !
 !*       0.3  Definition of constants :
@@ -199,7 +201,7 @@ INTEGER :: IERR
 !
 REAL,PARAMETER :: ZL0     = 600.        ! tropospheric length scale
 REAL,PARAMETER :: ZCSIGMA = 0.2         ! constant in sigma_s parameterization
-REAL,PARAMETER :: ZCSIG_CONV = 0.30E-2  ! scaling factor for ZSIG_CONV as function of mass flux
+REAL,PARAMETER :: ZCSIG_CONV = 0.30E-2  ! scaling factor for ZSIG_CONV(JIJ,JK) as function of mass flux
 !
 
 REAL, DIMENSION(-22:11),PARAMETER :: ZSRC_1D =(/                         &
@@ -226,35 +228,64 @@ IKL=D%NKL
 IIJB=D%NIJB
 IIJE=D%NIJE
 !
+!$acc kernels
+DO JK=IKTB,IKTE
+  DO JIJ=IIJB,IIJE
+    ZSIGQSAT(JIJ,JK) = PSIGQSAT(JIJ)
+  ENDDO
+ENDDO
+!$acc end kernels
+IF(PRESENT(PICE_CLD_WGT)) THEN
+!$acc kernels
+  DO JK=IKTB,IKTE
+    DO JIJ=IIJB,IIJE
+      ZICE_CLD_WGT(JIJ,JK) = PICE_CLD_WGT(JIJ)
+    ENDDO
+  ENDDO
+!$acc end kernels
+END IF
+
+!$acc kernels
 PCLDFR(:,:) = 0. ! Initialize values
 PSIGRC(:,:) = 0. ! Initialize values
 PRV_OUT(:,:)= 0. ! Initialize values
 PRC_OUT(:,:)= 0. ! Initialize values
 PRI_OUT(:,:)= 0. ! Initialize values
-ZPRIFACT = 1.    ! Initialize value
-ZARDUM2 = 0.  ! Initialize values
-ZCLDINI = -1. ! Dummy Initialized cloud input to icecloud routine
-PIFR = 10. ! ratio of cloud ice water mixing ratio wet to dry
+ZPRIFACT(:,:) = 1.    ! Initialize value
+ZARDUM2(:,:) = 0.  ! Initialize values
+ZARDUM(:,:) = 0.  ! Initialize values
+ZCLDINI(:,:) = -1. ! Dummy Initialized cloud input to icecloud routine
+PIFR(:,:) = 10. ! ratio of cloud ice water mixing ratio wet to dry
            ! part of a gridbox
-ZDZREF = ICEP%XFRMIN(25) ! Thickness for unchanged vqsigsat (only used for LHGT_QS)
+ZDZREF(:,:) = ICEP%XFRMIN(25) ! Thickness for unchanged vqsigsat (only used for LHGT_QS)
 !
-IF(OCND2)ZPRIFACT = 0.
+IF(OCND2) ZRSW(:,:) = -9999 ! This variable was never initialized !
+!
+IF(OCND2)ZPRIFACT(:,:) = 0.
+!$acc end kernels
 !
 !
 !-------------------------------------------------------------------------------
 ! store total water mixing ratio
+!$acc kernels
+!$acc loop independent collapse(2)
 DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
-    ZRT(JIJ,JK)  = PRV_IN(JIJ,JK) + PRC_IN(JIJ,JK) + PRI_IN(JIJ,JK)*ZPRIFACT
+    ZRT(JIJ,JK)  = PRV_IN(JIJ,JK) + PRC_IN(JIJ,JK) + PRI_IN(JIJ,JK)*ZPRIFACT(JIJ,JK)
   END DO
 END DO
+!$acc end kernels
 !-------------------------------------------------------------------------------
 ! Preliminary calculations
 ! latent heat of vaporisation/sublimation
 IF(PRESENT(PLV) .AND. PRESENT(PLS)) THEN
+!$acc kernels
   ZLV(:,:)=PLV(:,:)
   ZLS(:,:)=PLS(:,:)
+!$acc end kernels
 ELSE
+!$acc kernels
+!$acc loop independent collapse(2)
   DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       ! latent heat of vaporisation/sublimation
@@ -262,10 +293,15 @@ ELSE
       ZLS(JIJ,JK) = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( PT(JIJ,JK) - CST%XTT )
     ENDDO
   ENDDO
+!$acc end kernels
 ENDIF
 IF(PRESENT(PCPH)) THEN
+!$acc kernels
   ZCPD(:,:)=PCPH(:,:)
+!$acc end kernels
 ELSE
+!$acc kernels
+!$acc loop independent collapse(2)
   DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       ZCPD(JIJ,JK) = CST%XCPD + CST%XCPV*PRV_IN(JIJ,JK) + CST%XCL*PRC_IN(JIJ,JK) + CST%XCI*PRI_IN(JIJ,JK) + &
@@ -273,19 +309,27 @@ ELSE
                                   CST%XCI*(PRS(JIJ,JK) + PRG(JIJ,JK) )
     ENDDO
   ENDDO
+!$acc end kernels
 ENDIF
 ! Preliminary calculations needed for computing the "turbulent part" of Sigma_s
 IF ( .NOT. OSIGMAS ) THEN
+!$acc kernels
+!$acc loop independent collapse(2)
   DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       ! store temperature at saturation
       ZTLK(JIJ,JK) = PT(JIJ,JK) - ZLV(JIJ,JK)*PRC_IN(JIJ,JK)/ZCPD(JIJ,JK) &
-                                    - ZLS(JIJ,JK)*PRI_IN(JIJ,JK)/ZCPD(JIJ,JK)*ZPRIFACT
+                                    - ZLS(JIJ,JK)*PRI_IN(JIJ,JK)/ZCPD(JIJ,JK)*ZPRIFACT(JIJ,JK)
     END DO
   END DO
+!$acc end kernels
   ! Determine tropopause/inversion  height from minimum temperature
+!$acc kernels
   ITPL(:)  = IKB+IKL
   ZTMIN(:) = 400.
+!$acc end kernels
+!$acc kernels
+!$acc loop independent collapse(2)
   DO JK = IKTB+1,IKTE-1
     DO JIJ=IIJB,IIJE
       IF ( PT(JIJ,JK) < ZTMIN(JIJ) ) THEN
@@ -294,155 +338,169 @@ IF ( .NOT. OSIGMAS ) THEN
       ENDIF
     END DO
   END DO
+!$acc end kernels
   ! Set the mixing length scale
+!$acc kernels
   ZL(:,IKB) = 20.
+!$acc loop independent collapse(2) private(JKP)
   DO JK = IKB+IKL,IKE,IKL
     DO JIJ=IIJB,IIJE
       ! free troposphere
       ZL(JIJ,JK) = ZL0
-      ZZZ =  PZZ(JIJ,JK) -  PZZ(JIJ,IKB)
+      ZZZ(JIJ,JK) =  PZZ(JIJ,JK) -  PZZ(JIJ,IKB)
       JKP = ITPL(JIJ)
       ! approximate length for boundary-layer
-      IF ( ZL0 > ZZZ ) ZL(JIJ,JK) = ZZZ
+      IF ( ZL0 > ZZZ(JIJ,JK) ) ZL(JIJ,JK) = ZZZ(JIJ,JK)
       ! gradual decrease of length-scale near and above tropopause
-      IF ( ZZZ > 0.9*(PZZ(JIJ,JKP)-PZZ(JIJ,IKB)) ) &
+      IF ( ZZZ(JIJ,JK) > 0.9*(PZZ(JIJ,JKP)-PZZ(JIJ,IKB)) ) &
            ZL(JIJ,JK) = .6 * ZL(JIJ,JK-IKL)
     END DO
   END DO
+!$acc end kernels
 END IF
 !-------------------------------------------------------------------------------
 !
-DO JK=IKTB,IKTE
-  JKP=MAX(MIN(JK+IKL,IKTE),IKTB)
-  JKM=MAX(MIN(JK-IKL,IKTE),IKTB)
-  IF (OCND2) THEN
-     DO JIJ = IIJB, IIJE
-       ZDZ(JIJ) = PZZ(JIJ,JKP) - PZZ(JIJ,JKP-IKL)
-     ENDDO
-     CALL ICECLOUD(D,CST,ICEP,PPABS(:,JK),PZZ(:,JK),ZDZ(:), &
-          & PT(:,JK),PRV_IN(:,JK),1.,-1., &
-          & ZCLDINI(:),PIFR(IIJB,JK),PICLDFR(:,JK), &
-          & PSSIO(:,JK),PSSIU(:,JK),ZARDUM2(:),ZARDUM(:))
-     ! latent heats
-     ! saturated water vapor mixing ratio over liquid water and ice
-     DO JIJ=IIJB,IIJE
-       ESATW_T(JIJ)=ESATW(ICEP%TIWMX, PT(JIJ,JK))
-       ZPV(JIJ)  = MIN(ESATW_T(JIJ), .99*PPABS(JIJ,JK))
-       ZPIV(JIJ) = MIN(ESATI(ICEP%TIWMX, PT(JIJ,JK)), .99*PPABS(JIJ,JK))
-     END DO
-  ELSE
-     ! latent heats
-     ! saturated water vapor mixing ratio over liquid water and ice
-    DO JIJ=IIJB,IIJE
-      ZPV(JIJ)  = MIN(EXP( CST%XALPW - CST%XBETAW / PT(JIJ,JK) - CST%XGAMW * LOG( PT(JIJ,JK) ) ), .99*PPABS(JIJ,JK))
-      ZPIV(JIJ) = MIN(EXP( CST%XALPI - CST%XBETAI / PT(JIJ,JK) - CST%XGAMI * LOG( PT(JIJ,JK) ) ), .99*PPABS(JIJ,JK))
+!$acc kernels
+!$acc loop independent
+DO JK = IKTB, IKTE
+ JKPK(JK) = MAX(MIN(JK+IKL, IKTE),IKTB)
+ JKMK(JK) = MAX(MIN(JK-IKL, IKTE),IKTB)
+END DO
+!$acc end kernels
+!
+!
+IF (OCND2) THEN
+!$acc kernels
+!$acc loop independent collapse(2)
+  DO JK=IKTB,IKTE
+    DO JIJ = IIJB, IIJE
+      ZDZ(JIJ,JK) = PZZ(JIJ,JKPK(JK)) - PZZ(JIJ,JKPK(JK)-IKL)
     END DO
+  END DO
+!$acc end kernels
+  CALL ICECLOUD(D, CST, ICEP, PPABS(:,:),PZZ(:,:),ZDZ(:,:), &
+       & PT(:,:),PRV_IN(:,:),1.,-1., &
+       & ZCLDINI(:,:),PIFR(IIJB,1),PICLDFR(:,:), &
+       & PSSIO(:,:),PSSIU(:,:),ZARDUM2(:,:),ZARDUM(:,:))
+  ! latent heats
+  ! saturated water vapor mixing ratio over liquid water and ice
+!$acc kernels
+!$acc loop independent collapse(2)
+  DO JK=IKTB,IKTE
+    DO JIJ = IIJB, IIJE
+      ESATW_T(JIJ,JK)=ESATW(ICEP%TIWMX, PT(JIJ,JK))
+      ZPV(JIJ,JK)  = MIN(ESATW_T(JIJ,JK), .99*PPABS(JIJ,JK))
+      ZPIV(JIJ,JK) = MIN(ESATI(ICEP%TIWMX, PT(JIJ,JK)), .99*PPABS(JIJ,JK))
+    END DO
+  END DO
+!$acc end kernels
+END IF
+
+!$acc kernels
+!$acc loop independent collapse(2)
+DO JK=IKTB,IKTE
+  DO JIJ = IIJB, IIJE
+  IF (.NOT. OCND2) THEN
+     ! latent heats
+     ! saturated water vapor mixing ratio over liquid water and ice
+      ZPV(JIJ,JK)  = MIN(EXP( CST%XALPW - CST%XBETAW / PT(JIJ,JK) - CST%XGAMW * LOG( PT(JIJ,JK) ) ), .99*PPABS(JIJ,JK))
+      ZPIV(JIJ,JK) = MIN(EXP( CST%XALPI - CST%XBETAI / PT(JIJ,JK) - CST%XGAMI * LOG( PT(JIJ,JK) ) ), .99*PPABS(JIJ,JK))
   ENDIF
   !Ice fraction
-  ZFRAC(:) = 0.
+  ZFRAC(JIJ,JK) = 0.
   IF (OUSERI .AND. .NOT.OCND2) THEN
-    DO JIJ=IIJB,IIJE
       IF (PRC_IN(JIJ,JK)+PRI_IN(JIJ,JK) > 1.E-20) THEN
-        ZFRAC(JIJ) = PRI_IN(JIJ,JK) / (PRC_IN(JIJ,JK)+PRI_IN(JIJ,JK))
+        ZFRAC(JIJ,JK) = PRI_IN(JIJ,JK) / (PRC_IN(JIJ,JK)+PRI_IN(JIJ,JK))
       ENDIF
-    END DO
-    DO JIJ=IIJB,IIJE
-      CALL COMPUTE_FRAC_ICE(CST, HFRAC_ICE, NEBN, ZFRAC(JIJ), PT(JIJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
-    ENDDO
+    CALL COMPUTE_FRAC_ICE(CST, HFRAC_ICE, NEBN, ZFRAC(JIJ,JK), PT(JIJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
   ENDIF
-  DO JIJ=IIJB,IIJE
-    ZQSL(JIJ)   = CST%XRD / CST%XRV * ZPV(JIJ) / ( PPABS(JIJ,JK) - ZPV(JIJ) )
-    ZQSI(JIJ)   = CST%XRD / CST%XRV * ZPIV(JIJ) / ( PPABS(JIJ,JK) - ZPIV(JIJ) )
+    ZQSL(JIJ,JK)   = CST%XRD / CST%XRV * ZPV(JIJ,JK) / ( PPABS(JIJ,JK) - ZPV(JIJ,JK) )
+    ZQSI(JIJ,JK)   = CST%XRD / CST%XRV * ZPIV(JIJ,JK) / ( PPABS(JIJ,JK) - ZPIV(JIJ,JK) )
 
     ! interpolate between liquid and solid as function of temperature
-    ZQSL(JIJ) = (1. - ZFRAC(JIJ)) * ZQSL(JIJ) + ZFRAC(JIJ) * ZQSI(JIJ)
-    ZLVS = (1. - ZFRAC(JIJ)) * ZLV(JIJ,JK) + &
-           & ZFRAC(JIJ)      * ZLS(JIJ,JK)
+    ZQSL(JIJ,JK) = (1. - ZFRAC(JIJ,JK)) * ZQSL(JIJ,JK) + ZFRAC(JIJ,JK) * ZQSI(JIJ,JK)
+    ZLVS(JIJ,JK) = (1. - ZFRAC(JIJ,JK)) * ZLV(JIJ,JK) + &
+           & ZFRAC(JIJ,JK)      * ZLS(JIJ,JK)
 
     ! coefficients a and b
-    ZAH  = ZLVS * ZQSL(JIJ) / ( CST%XRV * PT(JIJ,JK)**2 ) * (CST%XRV * ZQSL(JIJ) / CST%XRD + 1.)
-    ZA(JIJ)   = 1. / ( 1. + ZLVS/ZCPD(JIJ,JK) * ZAH )
-    ZB(JIJ)   = ZAH * ZA(JIJ)
-    ZSBAR(JIJ) = ZA(JIJ) * ( ZRT(JIJ,JK) - ZQSL(JIJ) + &
-                 & ZAH * ZLVS * (PRC_IN(JIJ,JK)+PRI_IN(JIJ,JK)*ZPRIFACT) / ZCPD(JIJ,JK))
-  END DO
+    ZAH(JIJ,JK)  = ZLVS(JIJ,JK) * ZQSL(JIJ,JK) / ( CST%XRV * PT(JIJ,JK)**2 ) * (CST%XRV * ZQSL(JIJ,JK) / CST%XRD + 1.)
+    ZA(JIJ,JK)   = 1. / ( 1. + ZLVS(JIJ,JK)/ZCPD(JIJ,JK) * ZAH(JIJ,JK) )
+    ZB(JIJ,JK)   = ZAH(JIJ,JK) * ZA(JIJ,JK)
+    ZSBAR(JIJ,JK) = ZA(JIJ,JK) * ( ZRT(JIJ,JK) - ZQSL(JIJ,JK) + &
+                 & ZAH(JIJ,JK) * ZLVS(JIJ,JK) * (PRC_IN(JIJ,JK)+PRI_IN(JIJ,JK)*ZPRIFACT(JIJ,JK)) / ZCPD(JIJ,JK))
   ! switch to take either present computed value of SIGMAS
   ! or that of Meso-NH turbulence scheme
   IF ( OSIGMAS ) THEN
-    DO JIJ=IIJB,IIJE
-      IF (PSIGQSAT(JIJ)/=0.) THEN
-        ZDZFACT = 1.
+      IF (ZSIGQSAT(JIJ,JK)/=0.) THEN
+        ZDZFACT(JIJ,JK) = 1.
         IF(NEBN%LHGT_QS .AND. JK+1 <= IKTE)THEN
-           ZDZFACT= MAX(ICEP%XFRMIN(23),MIN(ICEP%XFRMIN(24),(PZZ(JIJ,JK) - PZZ(JIJ,JK+1))/ZDZREF))
+           ZDZFACT(JIJ,JK)= MAX(ICEP%XFRMIN(23),MIN(ICEP%XFRMIN(24),(PZZ(JIJ,JK) - PZZ(JIJ,JK+1))/ZDZREF(JIJ,JK)))
         ELSEIF(NEBN%LHGT_QS)THEN
-           ZDZFACT= MAX(ICEP%XFRMIN(23),MIN(ICEP%XFRMIN(24),((PZZ(JIJ,JK-1) - PZZ(JIJ,JK)))*0.8/ZDZREF))
+           ZDZFACT(JIJ,JK)= MAX(ICEP%XFRMIN(23),MIN(ICEP%XFRMIN(24),((PZZ(JIJ,JK-1) - PZZ(JIJ,JK)))*0.8/ZDZREF(JIJ,JK)))
         ENDIF
         IF (NEBN%LSTATNW) THEN
-          ZSIGMA(JIJ) = SQRT((PSIGS(JIJ,JK))**2 + (PSIGQSAT(JIJ)*ZDZFACT*ZQSL(JIJ)*ZA(JIJ))**2)
+          ZSIGMA(JIJ,JK) = SQRT((PSIGS(JIJ,JK))**2 + (ZSIGQSAT(JIJ,JK)*ZDZFACT(JIJ,JK)*ZQSL(JIJ,JK)*ZA(JIJ,JK))**2)
         ELSE
-          ZSIGMA(JIJ) = SQRT((2*PSIGS(JIJ,JK))**2 + (PSIGQSAT(JIJ)*ZQSL(JIJ)*ZA(JIJ))**2)
+          ZSIGMA(JIJ,JK) = SQRT((2*PSIGS(JIJ,JK))**2 + (ZSIGQSAT(JIJ,JK)*ZQSL(JIJ,JK)*ZA(JIJ,JK))**2)
         ENDIF
       ELSE
         IF (NEBN%LSTATNW) THEN
-          ZSIGMA(JIJ) = PSIGS(JIJ,JK)
+          ZSIGMA(JIJ,JK) = PSIGS(JIJ,JK)
         ELSE
-          ZSIGMA(JIJ) = 2*PSIGS(JIJ,JK)
+          ZSIGMA(JIJ,JK) = 2*PSIGS(JIJ,JK)
         ENDIF
       END IF
-    END DO
+      IF (NEBN%LCONDBORN) THEN
+        ZSIGMA(JIJ,JK)=MIN(ZSIGMA(JIJ,JK),ZRT(JIJ,JK)/2.) 
+      ENDIF
   ELSE
-    DO JIJ=IIJB,IIJE
       ! parameterize Sigma_s with first_order closure
-      DZZ    =  PZZ(JIJ,JKP) - PZZ(JIJ,JKM)
-      ZDRW   =  ZRT(JIJ,JKP) - ZRT(JIJ,JKM)
-      ZDTL   =  ZTLK(JIJ,JKP) - ZTLK(JIJ,JKM) + CST%XG/ZCPD(JIJ,JK) * DZZ
-      ZLL = ZL(JIJ,JK)
+      DZZ(JIJ,JK)    =  PZZ(JIJ,JKPK(JK)) - PZZ(JIJ,JKMK(JK))
+      ZDRW(JIJ,JK)   =  ZRT(JIJ,JKPK(JK)) - ZRT(JIJ,JKMK(JK))
+      ZDTL(JIJ,JK)   =  ZTLK(JIJ,JKPK(JK)) - ZTLK(JIJ,JKMK(JK)) + CST%XG/ZCPD(JIJ,JK) * DZZ(JIJ,JK)
+      ZLL(JIJ,JK) = ZL(JIJ,JK)
       ! standard deviation due to convection
-      ZSIG_CONV =0.
-      IF(LMFCONV) ZSIG_CONV = ZCSIG_CONV * PMFCONV(JIJ,JK) / ZA(JIJ)
+      ZSIG_CONV(JIJ,JK) =0.
+      IF(LMFCONV) ZSIG_CONV(JIJ,JK) = ZCSIG_CONV * PMFCONV(JIJ,JK) / ZA(JIJ,JK)
       ! zsigma should be of order 4.e-4 in lowest 5 km of atmosphere
-      ZSIGMA(JIJ) =  SQRT( MAX( 1.E-25, ZCSIGMA * ZCSIGMA * ZLL*ZLL/(DZZ*DZZ)*(&
-           ZA(JIJ)*ZA(JIJ)*ZDRW*ZDRW - 2.*ZA(JIJ)*ZB(JIJ)*ZDRW*ZDTL + ZB(JIJ)*ZB(JIJ)*ZDTL*ZDTL) + &
-           ZSIG_CONV * ZSIG_CONV ) )
-    END DO
+      ZSIGMA(JIJ,JK) =  SQRT( MAX( 1.E-25, ZCSIGMA * ZCSIGMA * ZLL(JIJ,JK)*ZLL(JIJ,JK)/(DZZ(JIJ,JK)*DZZ(JIJ,JK))*(&
+           ZA(JIJ,JK)*ZA(JIJ,JK)*ZDRW(JIJ,JK)*ZDRW(JIJ,JK) - 2.*ZA(JIJ,JK)*ZB(JIJ,JK)*ZDRW(JIJ,JK)*ZDTL(JIJ,JK) + ZB(JIJ,JK)*ZB(JIJ,JK)*ZDTL(JIJ,JK)*ZDTL(JIJ,JK)) + &
+           ZSIG_CONV(JIJ,JK) * ZSIG_CONV(JIJ,JK) ) )
   END IF
-  DO JIJ=IIJB,IIJE
-    ZSIGMA(JIJ)= MAX( 1.E-10, ZSIGMA(JIJ) )
+    ZSIGMA(JIJ,JK)= MAX( 1.E-10, ZSIGMA(JIJ,JK) )
 
     ! normalized saturation deficit
-    ZQ1(JIJ)   = ZSBAR(JIJ)/ZSIGMA(JIJ)
-  END DO
+    ZQ1(JIJ,JK)   = ZSBAR(JIJ,JK)/ZSIGMA(JIJ,JK)
   IF(HCONDENS == 'GAUS') THEN
-    DO JIJ=IIJB,IIJE
       ! Gaussian Probability Density Function around ZQ1
       ! Computation of ZG and ZGAM(=erf(ZG))
-      ZGCOND = -ZQ1(JIJ)/SQRT(2.)
-
-      ZGAUV = 1 + ERF(-ZGCOND)
+      ZGCOND(JIJ,JK) = -ZQ1(JIJ,JK)/SQRT(2.)
+      ZGAUV(JIJ,JK) = 1 + ERF(-ZGCOND(JIJ,JK))
 
       !Computation Cloud Fraction
-      PCLDFR(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUV))
+      PCLDFR(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUV(JIJ,JK)))
 
       !Computation of condensate
-      ZCOND(JIJ) = (EXP(-ZGCOND**2)-ZGCOND*SQRT(CST%XPI)*ZGAUV)*ZSIGMA(JIJ)/SQRT(2.*CST%XPI)
-      ZCOND(JIJ) = MAX(ZCOND(JIJ), 0.)
+      ZCOND(JIJ,JK) = (EXP(-ZGCOND(JIJ,JK)**2)-ZGCOND(JIJ,JK)*SQRT(CST%XPI)*ZGAUV(JIJ,JK))*ZSIGMA(JIJ,JK)/SQRT(2.*CST%XPI)
+      ZCOND(JIJ,JK) = MAX(ZCOND(JIJ,JK), 0.)
+      IF (NEBN%LCONDBORN) THEN
+        ZCOND(JIJ,JK) = MIN(ZCOND(JIJ,JK),ZRT(JIJ,JK)-1.E-7)
+      ENDIF
 
-      IF (ZCOND(JIJ) < 1.E-12 .OR. PCLDFR(JIJ,JK) == 0.) THEN
+      IF (ZCOND(JIJ,JK) < 1.E-12 .OR. PCLDFR(JIJ,JK) == 0.) THEN
         PCLDFR(JIJ,JK)=0.
-        ZCOND(JIJ)=0.
+        ZCOND(JIJ,JK)=0.
       ENDIF
 
       PSIGRC(JIJ,JK) = PCLDFR(JIJ,JK)
-    END DO
     !Computation warm/cold Cloud Fraction and content in high water content part
     IF(PRESENT(PHLC_HCF) .AND. PRESENT(PHLC_HRC))THEN
-      DO JIJ=IIJB,IIJE
-        IF(1-ZFRAC(JIJ) > 1.E-20)THEN
-          ZAUTC = (ZSBAR(JIJ) - ICEP%XCRIAUTC/(PRHODREF(JIJ,JK)*(1-ZFRAC(JIJ))))/ZSIGMA(JIJ)
-          ZGAUTC = -ZAUTC/SQRT(2.)
-          ZGAUC = 1 + ERF(-ZGAUTC)
-          PHLC_HCF(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUC))
-          PHLC_HRC(JIJ,JK) = (1-ZFRAC(JIJ))*(EXP(-ZGAUTC**2)-ZGAUTC*SQRT(CST%XPI)*ZGAUC)*ZSIGMA(JIJ)/SQRT(2.*CST%XPI)
+        IF(1-ZFRAC(JIJ,JK) > 1.E-20)THEN
+          ZAUTC(JIJ,JK) = (ZSBAR(JIJ,JK) - ICEP%XCRIAUTC/(PRHODREF(JIJ,JK)*(1-ZFRAC(JIJ,JK))))/ZSIGMA(JIJ,JK)
+          ZGAUTC(JIJ,JK) = -ZAUTC(JIJ,JK)/SQRT(2.)
+          ZGAUC(JIJ,JK) = 1 + ERF(-ZGAUTC(JIJ,JK))
+          PHLC_HCF(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUC(JIJ,JK)))
+          PHLC_HRC(JIJ,JK) = (1-ZFRAC(JIJ,JK))*(EXP(-ZGAUTC(JIJ,JK)**2)-ZGAUTC(JIJ,JK)*SQRT(CST%XPI)*ZGAUC(JIJ,JK))*ZSIGMA(JIJ,JK)/SQRT(2.*CST%XPI)
           PHLC_HRC(JIJ,JK) = PHLC_HRC(JIJ,JK) + ICEP%XCRIAUTC/PRHODREF(JIJ,JK) * PHLC_HCF(JIJ,JK)
           PHLC_HRC(JIJ,JK) = MAX(PHLC_HRC(JIJ,JK), 0.)
           IF(PHLC_HRC(JIJ,JK) < 1.E-12 .OR. PHLC_HCF(JIJ,JK) < 1.E-6) THEN
@@ -453,19 +511,17 @@ DO JK=IKTB,IKTE
           PHLC_HCF(JIJ,JK)=0.
           PHLC_HRC(JIJ,JK)=0.
         ENDIF
-      END DO
     ENDIF
 
     IF(PRESENT(PHLI_HCF) .AND. PRESENT(PHLI_HRI))THEN
-      DO JIJ=IIJB,IIJE
-        IF(ZFRAC(JIJ) > 1.E-20)THEN
-          ZCRIAUTI=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JIJ,JK)-CST%XTT)+ICEP%XBCRIAUTI))
-          ZAUTI = (ZSBAR(JIJ) - ZCRIAUTI/ZFRAC(JIJ))/ZSIGMA(JIJ)
-          ZGAUTI = -ZAUTI/SQRT(2.)
-          ZGAUI = 1 + ERF(-ZGAUTI)
-          PHLI_HCF(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUI))
-          PHLI_HRI(JIJ,JK) = ZFRAC(JIJ)*(EXP(-ZGAUTI**2)-ZGAUTI*SQRT(CST%XPI)*ZGAUI)*ZSIGMA(JIJ)/SQRT(2.*CST%XPI)
-          PHLI_HRI(JIJ,JK) = PHLI_HRI(JIJ,JK) + ZCRIAUTI*PHLI_HCF(JIJ,JK)
+        IF(ZFRAC(JIJ,JK) > 1.E-20)THEN
+          ZCRIAUTI(JIJ,JK)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JIJ,JK)-CST%XTT)+ICEP%XBCRIAUTI))
+          ZAUTI(JIJ,JK) = (ZSBAR(JIJ,JK) - ZCRIAUTI(JIJ,JK)/ZFRAC(JIJ,JK))/ZSIGMA(JIJ,JK)
+          ZGAUTI(JIJ,JK) = -ZAUTI(JIJ,JK)/SQRT(2.)
+          ZGAUI(JIJ,JK) = 1 + ERF(-ZGAUTI(JIJ,JK))
+          PHLI_HCF(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUI(JIJ,JK)))
+          PHLI_HRI(JIJ,JK) = ZFRAC(JIJ,JK)*(EXP(-ZGAUTI(JIJ,JK)**2)-ZGAUTI(JIJ,JK)*SQRT(CST%XPI)*ZGAUI(JIJ,JK))*ZSIGMA(JIJ,JK)/SQRT(2.*CST%XPI)
+          PHLI_HRI(JIJ,JK) = PHLI_HRI(JIJ,JK) + ZCRIAUTI(JIJ,JK)*PHLI_HCF(JIJ,JK)
           PHLI_HRI(JIJ,JK) = MAX(PHLI_HRI(JIJ,JK), 0.)
           IF(PHLI_HRI(JIJ,JK) < 1.E-12 .OR. PHLI_HCF(JIJ,JK) < 1.E-6) THEN
             PHLI_HRI(JIJ,JK)=0.
@@ -475,120 +531,116 @@ DO JK=IKTB,IKTE
           PHLI_HCF(JIJ,JK)=0.
           PHLI_HRI(JIJ,JK)=0.
         ENDIF
-      END DO
     ENDIF
 
   ELSEIF(HCONDENS == 'CB02')THEN
-    DO JIJ=IIJB,IIJE
       !Total condensate
-      IF (ZQ1(JIJ) > 0. .AND. ZQ1(JIJ) <= 2) THEN
-        ZCOND(JIJ) = MIN(EXP(-1.)+.66*ZQ1(JIJ)+.086*ZQ1(JIJ)**2, 2.) ! We use the MIN function for continuity
-      ELSE IF (ZQ1(JIJ) > 2.) THEN
-        ZCOND(JIJ) = ZQ1(JIJ)
+      IF (ZQ1(JIJ,JK) > 0. .AND. ZQ1(JIJ,JK) <= 2) THEN
+        ZCOND(JIJ,JK) = MIN(EXP(-1.)+.66*ZQ1(JIJ,JK)+.086*ZQ1(JIJ,JK)**2, 2.) ! We use the MIN function for continuity
+      ELSE IF (ZQ1(JIJ,JK) > 2.) THEN
+        ZCOND(JIJ,JK) = ZQ1(JIJ,JK)
       ELSE
-        ZCOND(JIJ) = EXP( 1.2*ZQ1(JIJ)-1. )
+        ZCOND(JIJ,JK) = EXP( 1.2*ZQ1(JIJ,JK)-1. )
       ENDIF
-      ZCOND(JIJ) = ZCOND(JIJ) * ZSIGMA(JIJ)
+      ZCOND(JIJ,JK) = ZCOND(JIJ,JK) * ZSIGMA(JIJ,JK)
+      IF (NEBN%LCONDBORN) THEN
+        ZCOND(JIJ,JK) = MIN(ZCOND(JIJ,JK),ZRT(JIJ,JK)-1.E-7)
+      ENDIF
 
       !Cloud fraction
-      IF (ZCOND(JIJ) < 1.E-12) THEN
+      IF (ZCOND(JIJ,JK) < 1.E-12) THEN
         PCLDFR(JIJ,JK) = 0.
       ELSE
-        PCLDFR(JIJ,JK) = MAX( 0., MIN(1.,0.5+0.36*ATAN(1.55*ZQ1(JIJ))) )
+        PCLDFR(JIJ,JK) = MAX( 0., MIN(1.,0.5+0.36*ATAN(1.55*ZQ1(JIJ,JK))) )
       ENDIF
       IF (PCLDFR(JIJ,JK)==0.) THEN
-        ZCOND(JIJ)=0.
+        ZCOND(JIJ,JK)=0.
       ENDIF
 
-      INQ1 = MIN( MAX(-22,FLOOR(MIN(100., MAX(-100., 2*ZQ1(JIJ)))) ), 10)  !inner min/max prevents sigfpe when 2*zq1 does not fit into an int
-      ZINC = 2.*ZQ1(JIJ) - INQ1
+      INQ1(JIJ,JK) = MIN( MAX(-22,FLOOR(MIN(100., MAX(-100., 2*ZQ1(JIJ,JK)))) ), 10)  !inner min/max prevents sigfpe when 2*zq1 does not fit into an int
+      ZINC(JIJ,JK) = 2.*ZQ1(JIJ,JK) - INQ1(JIJ,JK)
 
-      PSIGRC(JIJ,JK) =  MIN(1.,(1.-ZINC)*ZSRC_1D(INQ1)+ZINC*ZSRC_1D(INQ1+1))
-    END DO
+      PSIGRC(JIJ,JK) =  MIN(1.,(1.-ZINC(JIJ,JK))*ZSRC_1D(INQ1(JIJ,JK))+ZINC(JIJ,JK)*ZSRC_1D(INQ1(JIJ,JK)+1))
     IF(PRESENT(PHLC_HCF) .AND. PRESENT(PHLC_HRC))THEN
-      PHLC_HCF(:,JK)=0.
-      PHLC_HRC(:,JK)=0.
+      PHLC_HCF(JIJ,JK)=0.
+      PHLC_HRC(JIJ,JK)=0.
     ENDIF
     IF(PRESENT(PHLI_HCF) .AND. PRESENT(PHLI_HRI))THEN
-      PHLI_HCF(:,JK)=0.
-      PHLI_HRI(:,JK)=0.
+      PHLI_HCF(JIJ,JK)=0.
+      PHLI_HRI(JIJ,JK)=0.
     ENDIF
   END IF !HCONDENS
 
   IF(.NOT. OCND2) THEN
-    DO JIJ=IIJB,IIJE
-      PRC_OUT(JIJ,JK) = (1.-ZFRAC(JIJ)) * ZCOND(JIJ) ! liquid condensate
-      PRI_OUT(JIJ,JK) = ZFRAC(JIJ) * ZCOND(JIJ)   ! solid condensate
+      PRC_OUT(JIJ,JK) = (1.-ZFRAC(JIJ,JK)) * ZCOND(JIJ,JK) ! liquid condensate
+      PRI_OUT(JIJ,JK) = ZFRAC(JIJ,JK) * ZCOND(JIJ,JK)   ! solid condensate
       PT(JIJ,JK) = PT(JIJ,JK) + ((PRC_OUT(JIJ,JK)-PRC_IN(JIJ,JK))*ZLV(JIJ,JK) + &
                                     &(PRI_OUT(JIJ,JK)-PRI_IN(JIJ,JK))*ZLS(JIJ,JK)   ) &
                                   & /ZCPD(JIJ,JK)
-      PRV_OUT(JIJ,JK) = ZRT(JIJ,JK) - PRC_OUT(JIJ,JK) - PRI_OUT(JIJ,JK)*ZPRIFACT
-    END DO
+      PRV_OUT(JIJ,JK) = ZRT(JIJ,JK) - PRC_OUT(JIJ,JK) - PRI_OUT(JIJ,JK)*ZPRIFACT(JIJ,JK)
   ELSE
-    DO JIJ=IIJB,IIJE
-      PRC_OUT(JIJ,JK) = (1.-ZFRAC(JIJ)) * ZCOND(JIJ) ! liquid condensate
-      ZLWINC = PRC_OUT(JIJ,JK) - PRC_IN(JIJ,JK)
+      PRC_OUT(JIJ,JK) = (1.-ZFRAC(JIJ,JK)) * ZCOND(JIJ,JK) ! liquid condensate
+      ZLWINC(JIJ,JK) = PRC_OUT(JIJ,JK) - PRC_IN(JIJ,JK)
       !
 !     This check is mainly for noise reduction :
 !     -------------------------
-      IF(ABS(ZLWINC)>1.0E-12  .AND.  ESATW(ICEP%TIWMX, PT(JIJ,JK)) < PPABS(JIJ,JK)*0.5 )THEN
-         ZRCOLD = PRC_OUT(JIJ,JK)
-         ZRFRAC = PRV_IN(JIJ,JK) - ZLWINC
-         IF( PRV_IN(JIJ,JK) < ZRSW )THEN ! sub - saturation over water:
+      IF(ABS(ZLWINC(JIJ,JK))>1.0E-12  .AND.  ESATW(ICEP%TIWMX, PT(JIJ,JK)) < PPABS(JIJ,JK)*0.5 )THEN
+         ZRCOLD(JIJ,JK) = PRC_OUT(JIJ,JK)
+         ZRFRAC(JIJ,JK) = PRV_IN(JIJ,JK) - ZLWINC(JIJ,JK)
+         IF( PRV_IN(JIJ,JK) < ZRSW(JIJ,JK) )THEN ! sub - saturation over water:
             ! Avoid drying of cloudwater leading to supersaturation with
             ! respect to water
-            ZRSDIF= MIN(0.,ZRSP-ZRFRAC)
+            ZRSDIF(JIJ,JK)= MIN(0.,ZRSP(JIJ,JK)-ZRFRAC(JIJ,JK))
          ELSE  ! super - saturation over water:
             ! Avoid deposition of water leading to sub-saturation with
             ! respect to water
-            !            ZRSDIF= MAX(0.,ZRSP-ZRFRAC)
-            ZRSDIF= 0. ! t7
+            !            ZRSDIF(JIJ,JK)= MAX(0.,ZRSP(JIJ,JK)-ZRFRAC(JIJ,JK))
+            ZRSDIF(JIJ,JK)= 0. ! t7
          ENDIF
-         PRC_OUT(JIJ,JK) = ZCOND(JIJ)  - ZRSDIF
+         PRC_OUT(JIJ,JK) = ZCOND(JIJ,JK)  - ZRSDIF(JIJ,JK)
       ELSE
-        ZRCOLD = PRC_IN(JIJ,JK)
+        ZRCOLD(JIJ,JK) = PRC_IN(JIJ,JK)
       ENDIF
- !    end check
+ !   end check
 
  !    compute separate ice cloud:
       PWCLDFR(JIJ,JK) = PCLDFR(JIJ,JK)
-      ZDUM1 = MIN(1.0,20.* PRC_OUT(JIJ,JK)*SQRT(ZDZ(JIJ))/ZQSL(JIJ)) ! cloud liquid water factor
-      ZDUM3 = MAX(0.,PICLDFR(JIJ,JK)-PWCLDFR(JIJ,JK)) ! pure ice cloud part
+      ZDUM1(JIJ,JK) = MIN(1.0,20.* PRC_OUT(JIJ,JK)*SQRT(ZDZ(JIJ,JK))/ZQSL(JIJ,JK)) ! cloud liquid water factor
+      ZDUM3(JIJ,JK) = MAX(0.,PICLDFR(JIJ,JK)-PWCLDFR(JIJ,JK)) ! pure ice cloud part
       IF (JK==IKTB) THEN
-        ZDUM4 = PRI_IN(JIJ,JK)
+        ZDUM4(JIJ,JK) = PRI_IN(JIJ,JK)
       ELSE
-        ZDUM4 = PRI_IN(JIJ,JK) + PRS(JIJ,JK)*0.5 + PRG(JIJ,JK)*0.25
+        ZDUM4(JIJ,JK) = PRI_IN(JIJ,JK) + PRS(JIJ,JK)*0.5 + PRG(JIJ,JK)*0.25
       ENDIF
 
-      ZDUM4 = MAX(0.,MIN(1.,PICE_CLD_WGT(JIJ)*ZDUM4*SQRT(ZDZ(JIJ))/ZQSI(JIJ))) ! clould ice+solid 
+      ZDUM4(JIJ,JK) = MAX(0.,MIN(1.,ZICE_CLD_WGT(JIJ,JK)*ZDUM4(JIJ,JK)*SQRT(ZDZ(JIJ,JK))/ZQSI(JIJ,JK))) ! clould ice+solid 
                                                          ! precip. water factor 
 
-      ZDUM2 = (0.8*PCLDFR(JIJ,JK)+0.2)*MIN(1.,ZDUM1 + ZDUM4*PCLDFR(JIJ,JK))
+      ZDUM2(JIJ,JK) = (0.8*PCLDFR(JIJ,JK)+0.2)*MIN(1.,ZDUM1(JIJ,JK) + ZDUM4(JIJ,JK)*PCLDFR(JIJ,JK))
       ! water cloud, use 'statistical' cloud, but reduce it in case of low liquid content
 
-      PCLDFR(JIJ,JK) = MIN(1., ZDUM2 + (0.5*ZDUM3+0.5)*ZDUM4) ! Rad cloud
+      PCLDFR(JIJ,JK) = MIN(1., ZDUM2(JIJ,JK) + (0.5*ZDUM3(JIJ,JK)+0.5)*ZDUM4(JIJ,JK)) ! Rad cloud
            ! Reduce ice cloud part in case of low ice water content
       PRI_OUT(JIJ,JK) = PRI_IN(JIJ,JK)
-      PT(JIJ,JK) = PT(JIJ,JK) + ((PRC_OUT(JIJ,JK)-ZRCOLD)*ZLV(JIJ,JK) + &
+      PT(JIJ,JK) = PT(JIJ,JK) + ((PRC_OUT(JIJ,JK)-ZRCOLD(JIJ,JK))*ZLV(JIJ,JK) + &
                                     &(PRI_OUT(JIJ,JK)-PRI_IN(JIJ,JK))*ZLS(JIJ,JK)   ) &
                                   & /ZCPD(JIJ,JK)
-      PRV_OUT(JIJ,JK) = ZRT(JIJ,JK) - PRC_OUT(JIJ,JK) - PRI_OUT(JIJ,JK)*ZPRIFACT
-    END DO
+      PRV_OUT(JIJ,JK) = ZRT(JIJ,JK) - PRC_OUT(JIJ,JK) - PRI_OUT(JIJ,JK)*ZPRIFACT(JIJ,JK)
   END IF ! End OCND2
   IF(HLAMBDA3=='CB')THEN
-    DO JIJ=IIJB,IIJE
       ! s r_c/ sig_s^2
       !    PSIGRC(JIJ,JK) = PCLDFR(JIJ,JK)  ! use simple Gaussian relation
       !
       !    multiply PSRCS by the lambda3 coefficient
       !
-      !      PSIGRC(JIJ,JK) = 2.*PCLDFR(JIJ,JK) * MIN( 3. , MAX(1.,1.-ZQ1(JIJ)) )
+      !      PSIGRC(JIJ,JK) = 2.*PCLDFR(JIJ,JK) * MIN( 3. , MAX(1.,1.-ZQ1(JIJ,JK)) )
       ! in the 3D case lambda_3 = 1.
 
-      PSIGRC(JIJ,JK) = PSIGRC(JIJ,JK)* MIN( 3. , MAX(1.,1.-ZQ1(JIJ)) )
-    END DO
+      PSIGRC(JIJ,JK) = PSIGRC(JIJ,JK)* MIN( 3. , MAX(1.,1.-ZQ1(JIJ,JK)) )
   END IF
 END DO
+END DO
+!$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('CONDENSATION',1,ZHOOK_HANDLE)
 !

@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -53,7 +53,7 @@ REAL, PARAMETER :: XLAM_CRAD = 3.154E-3 ! RASTA cloud radar wavelength (m) <=> 9
 TYPE CST_t
   !
   !*       1.     FUNDAMENTAL CONSTANTS
-  !	        ---------------------
+  !               ---------------------
   REAL :: XPI                !< Pi
   REAL :: XKARMAN            !< von karman constant
   REAL :: XLIGHTSPEED        !< light speed
@@ -62,18 +62,18 @@ TYPE CST_t
   REAL :: XAVOGADRO          !< Avogadro number
   !
   !*       2.     ASTRONOMICAL CONSTANTS
-  !	        ----------------------
+  !               ----------------------
   REAL :: XDAY,XSIYEA,XSIDAY !< day duration, sideral year duration, sideral day duration
   INTEGER :: NDAYSEC         !< Number of seconds in a day
   REAL :: XOMEGA             !< Earth rotation
   !
   !*       3.     TERRESTRIAL GEOIDE CONSTANTS
-  !	        ----------------------------
+  !               ----------------------------
   REAL :: XRADIUS            !< Earth radius
   REAL :: XG                 !< Gravity constant
   !
   !*       4.     REFERENCE PRESSURE
-  !	        -------------------
+  !               -------------------
   REAL :: XP00               !< Reference pressure
   REAL :: XP00OCEAN          !< Reference pressure for ocean model
   REAL :: XRH00OCEAN         !< Reference density for ocean model
@@ -82,11 +82,11 @@ TYPE CST_t
   REAL :: XSA00OCEAN         !< Ref value for SAlinity in ocean model
   !
   !*       5.     RADIATION CONSTANTS
-  !	        -------------------
+  !               -------------------
   REAL :: XSTEFAN,XI0        !< Stefan-Boltzman constant, solar constant
   !
   !*       6.     THERMODYNAMIC CONSTANTS
-  !	        -----------------------
+  !               -----------------------
   REAL :: XMD,XMV            !< Molar mass of dry air and molar mass of vapor
   REAL :: XRD,XRV            !< Gaz constant for dry air, gaz constant for vapor
   REAL :: XEPSILO            !< XMV/XMD
@@ -113,13 +113,13 @@ TYPE CST_t
   REAL :: XRHOLI             !< Volumic mass of ice
   !
   !*       7.     PRECOMPUTED CONSTANTS
-  !	        ---------------------
+  !               ---------------------
   REAL :: RDSRV              !< XRD/XRV
   REAL :: RDSCPD             !< XRD/XCPD
   REAL :: RINVXP00           !< 1./XP00
   !
   !*       8.     MACHINE PRECISION VALUE DEPENDING of REAL4/8 USE
-  !	        ---------------------
+  !               ---------------------
   REAL :: XMNH_TINY          !< minimum real on this machine
   REAL :: XMNH_TINY_12       !< sqrt(minimum real on this machine)
   REAL :: XMNH_EPSILON       !< minimum space with 1.0

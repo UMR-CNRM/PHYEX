@@ -109,29 +109,39 @@ IIJE=D%NIJE
 IKT=D%NKT
 !
 IF (OOCEAN) THEN                                    ! ocean case
+!$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   PETHETA(IIJB:IIJE,:) =  1.
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
 ELSE   
  IF ( KRR == 0) THEN                                ! dry case
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  PETHETA(IIJB:IIJE,:) = 1.
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc kernels
+   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+   PETHETA(IIJB:IIJE,:) = 1.
+   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
  ELSE IF ( KRR == 1 ) THEN                           ! only vapor
+!$acc kernels
   ZDELTA = (CST%XRV/CST%XRD) - 1.
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   PETHETA(IIJB:IIJE,:) = 1. + ZDELTA*PRM(IIJB:IIJE,:,1)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
  ELSE                                                ! liquid water & ice present
+!$acc kernels
   ZDELTA = (CST%XRV/CST%XRD) - 1.
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZRW(IIJB:IIJE,:) = PRM(IIJB:IIJE,:,1)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
   !
   IF ( KRRI>0 ) THEN  ! rc and ri case
+!$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZRW(IIJB:IIJE,:) = ZRW(IIJB:IIJE,:) + PRM(IIJB:IIJE,:,3)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc loop seq
     DO JRR=5,KRR
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZRW(IIJB:IIJE,:) = ZRW(IIJB:IIJE,:) + PRM(IIJB:IIJE,:,JRR)
@@ -154,7 +164,10 @@ ELSE
                             / (1. + ZRW(IIJB:IIJE,:))                                &
          ) * PATHETA(IIJB:IIJE,:) * 2. * PSRCM(IIJB:IIJE,:)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
   ELSE
+!$acc kernels
+!$acc loop seq
     DO JRR=3,KRR
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZRW(IIJB:IIJE,:) = ZRW(IIJB:IIJE,:) + PRM(IIJB:IIJE,:,JRR)
@@ -176,6 +189,7 @@ ELSE
          / (1. + ZRW(IIJB:IIJE,:))                                 &
          ) * PATHETA(IIJB:IIJE,:) * 2. * PSRCM(IIJB:IIJE,:)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
   END IF
  END IF
 !

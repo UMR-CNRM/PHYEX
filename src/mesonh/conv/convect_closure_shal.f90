@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -168,7 +168,7 @@ REAL, DIMENSION(KLON),     INTENT(IN) :: PDXDY  ! grid area (m^2)
 REAL, DIMENSION(KLON,KLEV),INTENT(IN) :: PTHL   ! grid scale enthalpy (J/kg)
 REAL, DIMENSION(KLON,KLEV),INTENT(IN) :: PTH    ! grid scale theta        
 REAL, DIMENSION(KLON,KLEV),INTENT(IN) :: PRW    ! grid scale total water  
-			                        ! mixing ratio 
+                                                ! mixing ratio 
 REAL, DIMENSION(KLON,KLEV),INTENT(IN) :: PRC    ! grid scale r_c 
 REAL, DIMENSION(KLON,KLEV),INTENT(IN) :: PRI    ! grid scale r_i 
 LOGICAL, DIMENSION(KLON),  INTENT(IN) :: OTRIG1 ! logical to keep trace of 
@@ -401,9 +401,9 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
     KFTSTEPS = MAXVAL( ITSTEP(:) )
     DO JSTEP = 1, KFTSTEPS ! Enter the fractional time step loop here
 !
-     	 ICOUNT(:) = ICOUNT(:) + 1
+      ICOUNT(:) = ICOUNT(:) + 1
 !
-	     GWORK3(:) =  ITSTEP(:) >= ICOUNT(:) .AND. GWORK1(:) 
+      GWORK3(:) =  ITSTEP(:) >= ICOUNT(:) .AND. GWORK1(:) 
 !
 !
 !*       7.     Assign enthalpy and r_w values at the top and bottom of each
@@ -534,12 +534,12 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
        CALL CONVECT_SATMIXRATIO( KLON, ZWORK1, ZTELCL, ZWORK3, ZLV, ZLS, ZCPH )
        ZWORK3(:) = MIN(   .1, MAX(   0., ZWORK3(:) ) )
 !
-	        ! compute theta_e updraft undilute
+                ! compute theta_e updraft undilute
        ZTHEUL(:) = ZTLCL(:) * ZPI(:) ** ( 1. - 0.28 * ZRVLCL(:) )            &
                                   * EXP( ( 3374.6525 / ZTLCL(:) - 2.5403 )   &
                                   * ZRVLCL(:) * ( 1. + 0.81 * ZRVLCL(:) ) )
 !
-	        ! compute theta_e saturated environment at LCL
+                ! compute theta_e saturated environment at LCL
        ZTHES1(:) = ZTELCL(:) * ZPI(:) ** ( 1. - 0.28 * ZWORK3(:) )           &
                                   * EXP( ( 3374.6525 / ZTELCL(:) - 2.5403 )  &
                                   * ZWORK3(:) * ( 1. + 0.81 * ZWORK3(:) ) )

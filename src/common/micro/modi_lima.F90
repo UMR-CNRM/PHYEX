@@ -3,13 +3,12 @@ MODULE MODI_LIMA
 IMPLICIT NONE
 INTERFACE
 !
-SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP,                       &
-                  BUCONF, TBUDGETS, HACTCCN, KBUDGETS, KRR,               &
+   SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV,                    &
+                  D, CST, NEBN, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, HACTCCN, KBUDGETS, KRR, &
                   PTSTEP, OELEC,                                          &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
-                  NCCN, NIFN, NIMM, KCARB, KSOA, KSP,                     &
-                  ODUST, OSALT, OORILAM,                                  &
+                  KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,                &
                   ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
                   PAERO,PSOLORG, PMI, PTHS, PRS, PSVS,                    &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
@@ -17,23 +16,34 @@ SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP,                       &
                   PLATHAM_IAGGS, PEFIELDW, PSV_ELEC_T, PSV_ELEC_S         )
 !
 USE MODD_IO,  ONLY: TFILEDATA
-USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODD_RAIN_ICE_DESCR_n,ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM_n,ONLY: RAIN_ICE_PARAM_t
-USE MODD_ELEC_PARAM,      ONLY: ELEC_PARAM_t
-USE MODD_ELEC_DESCR,      ONLY: ELEC_DESCR_t
-USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t
-USE MODD_CST,            ONLY: CST_t
-USE MODD_NSV, ONLY: NSV
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
+USE MODD_RAIN_ICE_DESCR_N,ONLY: RAIN_ICE_DESCR_T
+USE MODD_RAIN_ICE_PARAM_N,ONLY: RAIN_ICE_PARAM_T
+USE MODD_ELEC_PARAM,      ONLY: ELEC_PARAM_T
+USE MODD_ELEC_DESCR,      ONLY: ELEC_DESCR_T
+USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_T
+USE MODD_CST,            ONLY: CST_T
+USE MODD_NEB_N,          ONLY: NEB_T
+USE MODD_NSV, ONLY: NSV_T
 IMPLICIT NONE
 !
-TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
-TYPE(CST_t),              INTENT(IN)    :: CST
-TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
-TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
-TYPE(ELEC_PARAM_t),       INTENT(IN)    :: ELECP   ! electrical parameters
-TYPE(ELEC_DESCR_t),       INTENT(IN)    :: ELECD   ! electrical descriptive csts
-TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(NSV_T),              INTENT(IN)    :: TNSV
+TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
+TYPE(CST_T),              INTENT(IN)    :: CST
+TYPE(NEB_T),              INTENT(IN)    :: NEBN
+TYPE(RAIN_ICE_DESCR_T),   INTENT(IN)    :: ICED
+TYPE(RAIN_ICE_PARAM_T),   INTENT(IN)    :: ICEP
+TYPE(ELEC_PARAM_T),       INTENT(IN)    :: ELECP   ! electrical parameters
+TYPE(ELEC_DESCR_T),       INTENT(IN)    :: ELECD   ! electrical descriptive csts
+TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
 CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER,                  INTENT(IN)    :: KBUDGETS
@@ -50,9 +60,6 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PDZZ       ! Layer thik
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PRHODJ     ! Dry density * Jacobian
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PPABST     ! absolute pressure at t
 !
-INTEGER,                  INTENT(IN)    :: NCCN       ! for array size declarations
-INTEGER,                  INTENT(IN)    :: NIFN       ! for array size declarations
-INTEGER,                  INTENT(IN)    :: NIMM       ! for array size declarations
 INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
 LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 !
@@ -62,15 +69,15 @@ REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &
                 MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! dT/dt due to radiation
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, TNSV%NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT)    :: PTHS       ! Theta source
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(INOUT) :: PRS        ! Mixing ratios sources
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), INTENT(INOUT) :: PSVS       ! Concentration sources
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, TNSV%NSV), INTENT(INOUT) :: PSVS       ! Concentration sources
 !
 REAL, DIMENSION(D%NIT, D%NJT),     INTENT(OUT)        :: PINPRC     ! Cloud instant precip
 REAL, DIMENSION(D%NIT, D%NJT),     INTENT(OUT)        :: PINDEP     ! Cloud droplets deposition
@@ -88,8 +95,8 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(INOUT) :: PFPR    ! Precipitat
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PEFIELDW   ! Vertical component of the electric field
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), OPTIONAL, INTENT(IN)    :: PSV_ELEC_T ! Charge density at time t
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), OPTIONAL, INTENT(INOUT) :: PSV_ELEC_S ! Charge density sources
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, TNSV%NSV), OPTIONAL, INTENT(IN)    :: PSV_ELEC_T ! Charge density at time t
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, TNSV%NSV), OPTIONAL, INTENT(INOUT) :: PSV_ELEC_S ! Charge density sources
 !
 REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity
 END SUBROUTINE LIMA

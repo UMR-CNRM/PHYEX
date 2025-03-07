@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2022 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -38,6 +38,20 @@ USE MODD_RAIN_ICE_PARAM_n, only: NWETLBDAG, NWETLBDAH, NWETLBDAS, X0DEPH, X1DEPH
                                XWETINTP1G, XWETINTP1H, XWETINTP1S, XWETINTP2G, XWETINTP2H, XWETINTP2S
 
 use mode_budget,         only: Budget_store_add, Budget_store_end, Budget_store_init
+#ifdef MNH_OPENACC
+USE MODE_MNH_ZWORK, ONLY: MNH_MEM_GET, MNH_MEM_POSITION_PIN, MNH_MEM_RELEASE
+#endif
+use mode_mppdb
+use mode_msg
+#ifndef MNH_OPENACC
+use mode_tools,                        only: Countjv
+#else
+use mode_tools,                        only: Countjv_device
+#endif
+
+#ifdef MNH_BITREP
+USE MODI_BITREP
+#endif
 
 IMPLICIT NONE
 !
@@ -75,22 +89,103 @@ REAL,     DIMENSION(:),     intent(inout) :: PUSW     ! Undersaturation over wat
 !
 INTEGER                              :: IHAIL, IGWET
 INTEGER                              :: JJ, JL
-INTEGER, DIMENSION(size(PRHODREF))   :: I1H, I1W
-INTEGER, DIMENSION(:), ALLOCATABLE   :: IVEC1, IVEC2      ! Vectors of indices for interpolations
-REAL,    DIMENSION(:), ALLOCATABLE   :: ZVEC1,ZVEC2,ZVEC3 ! Work vectors for interpolations
-REAL,    DIMENSION(:), ALLOCATABLE   :: ZVECLBDAG, ZVECLBDAH, ZVECLBDAS
-REAL,    DIMENSION(size(PRHODREF))   :: ZZW               ! Work array
-REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
+#ifndef MNH_OPENACC
+INTEGER, DIMENSION(:),   ALLOCATABLE :: I1H, I1W
+INTEGER, DIMENSION(:),   ALLOCATABLE :: IVEC1, IVEC2      ! Vectors of indices for interpolations
+LOGICAL, DIMENSION(:),   ALLOCATABLE :: GWORK
+REAL,    DIMENSION(:),   ALLOCATABLE :: ZVEC1,ZVEC2,ZVEC3 ! Work vectors for interpolations
+REAL,    DIMENSION(:),   ALLOCATABLE :: ZVECLBDAG, ZVECLBDAH, ZVECLBDAS
+REAL,    DIMENSION(:),   ALLOCATABLE :: ZZW               ! Work array
+REAL,    DIMENSION(:,:), ALLOCATABLE :: ZZW1              ! Work arrays
+#else
+INTEGER, DIMENSION(:),   pointer, contiguous :: I1H, I1W
+INTEGER, DIMENSION(:),   pointer, contiguous :: IVEC1, IVEC2      ! Vectors of indices for interpolations
+LOGICAL, DIMENSION(:),   pointer, contiguous :: GWORK
+REAL,    DIMENSION(:),   pointer, contiguous :: ZVEC1,ZVEC2,ZVEC3 ! Work vectors for interpolations
+REAL,    DIMENSION(:),   pointer, contiguous :: ZVECLBDAG, ZVECLBDAH, ZVECLBDAS
+REAL,    DIMENSION(:),   pointer, contiguous :: ZZW               ! Work array
+REAL,    DIMENSION(:,:), pointer, contiguous :: ZZW1              ! Work arrays
+#endif
 !
 !-------------------------------------------------------------------------------
 !
-  IHAIL = 0
-  DO JJ = 1, SIZE(PRHT)
-    IF ( PRHT(JJ)>XRTMIN(7) ) THEN
-      IHAIL = IHAIL + 1
-      I1H(IHAIL) = JJ
-    END IF
-  END DO
+! IN variables
+!
+!$acc data present( OMICRO, PRHODREF, PRVT, PRCT, PRIT, PRST, PRGT, PRHT, &
+!$acc &             PRHODJ, PPRES, PZT, PLBDAS, PLBDAG, PLSFACT, PLVFACT, &
+!$acc &             PCJ, PKA, PDV,                                        &
+!
+! INOUT variables
+!
+!$acc &             PLBDAH, PRCS, PRRS, PRIS, PRSS, PRGS, PRHS, PTHS, PUSW )
+!
+! OUT variables
+!
+!NONE
+
+#ifdef MNH_OPENACC
+CALL PRINT_MSG(NVERB_WARNING,'GEN','RAIN_ICE_FAST_RH','OPENACC: not yet tested')
+#endif
+!
+IF (MPPDB_INITIALIZED) THEN
+  !Check all IN arrays
+  CALL MPPDB_CHECK(OMICRO,"RAIN_ICE_FAST_RH beg:OMICRO")
+  CALL MPPDB_CHECK(PRHODREF,"RAIN_ICE_FAST_RH beg:PRHODREF")
+  CALL MPPDB_CHECK(PRVT,"RAIN_ICE_FAST_RH beg:PRVT")
+  CALL MPPDB_CHECK(PRCT,"RAIN_ICE_FAST_RH beg:PRCT")
+  CALL MPPDB_CHECK(PRIT,"RAIN_ICE_FAST_RH beg:PRIT")
+  CALL MPPDB_CHECK(PRST,"RAIN_ICE_FAST_RH beg:PRST")
+  CALL MPPDB_CHECK(PRGT,"RAIN_ICE_FAST_RH beg:PRGT")
+  CALL MPPDB_CHECK(PRHT,"RAIN_ICE_FAST_RH beg:PRHT")
+  CALL MPPDB_CHECK(PRHODJ,"RAIN_ICE_FAST_RH beg:PRHODJ")
+  CALL MPPDB_CHECK(PPRES,"RAIN_ICE_FAST_RH beg:PPRES")
+  CALL MPPDB_CHECK(PZT,"RAIN_ICE_FAST_RH beg:PZT")
+  CALL MPPDB_CHECK(PLBDAS,"RAIN_ICE_FAST_RH beg:PLBDAS")
+  CALL MPPDB_CHECK(PLBDAG,"RAIN_ICE_FAST_RH beg:PLBDAG")
+  CALL MPPDB_CHECK(PLSFACT,"RAIN_ICE_FAST_RH beg:PLSFACT")
+  CALL MPPDB_CHECK(PLVFACT,"RAIN_ICE_FAST_RH beg:PLVFACT")
+  CALL MPPDB_CHECK(PCJ,"RAIN_ICE_FAST_RH beg:PCJ")
+  CALL MPPDB_CHECK(PKA,"RAIN_ICE_FAST_RH beg:PKA")
+  CALL MPPDB_CHECK(PDV,"RAIN_ICE_FAST_RH beg:PDV")
+  !Check all INOUT arrays
+  CALL MPPDB_CHECK(PLBDAH,"RAIN_ICE_FAST_RH beg:PLBDAH")
+  CALL MPPDB_CHECK(PRCS,"RAIN_ICE_FAST_RH beg:PRCS")
+  CALL MPPDB_CHECK(PRRS,"RAIN_ICE_FAST_RH beg:PRRS")
+  CALL MPPDB_CHECK(PRIS,"RAIN_ICE_FAST_RH beg:PRIS")
+  CALL MPPDB_CHECK(PRSS,"RAIN_ICE_FAST_RH beg:PRSS")
+  CALL MPPDB_CHECK(PRGS,"RAIN_ICE_FAST_RH beg:PRGS")
+  CALL MPPDB_CHECK(PRHS,"RAIN_ICE_FAST_RH beg:PRHS")
+  CALL MPPDB_CHECK(PTHS,"RAIN_ICE_FAST_RH beg:PTHS")
+  CALL MPPDB_CHECK(PUSW,"RAIN_ICE_FAST_RH beg:PUSW")
+END IF
+!
+#ifndef MNH_OPENACC
+ALLOCATE( I1H  (size(PRHODREF)) )
+ALLOCATE( I1W  (size(PRHODREF)) )
+ALLOCATE( GWORK(size(PRHODREF)) )
+ALLOCATE( ZZW  (size(PRHODREF)) )
+ALLOCATE( ZZW1 (size(PRHODREF),7) )
+#else
+!Pin positions in the pools of MNH memory
+CALL MNH_MEM_POSITION_PIN( 'RAIN_ICE_FAST_RH 1' )
+
+CALL MNH_MEM_GET( I1H,   SIZE(PRHODREF) )
+CALL MNH_MEM_GET( I1W,   SIZE(PRHODREF) )
+CALL MNH_MEM_GET( GWORK, SIZE(PRHODREF) )
+CALL MNH_MEM_GET( ZZW,   SIZE(PRHODREF) )
+CALL MNH_MEM_GET( ZZW1,  SIZE(PRHODREF), 7 )
+
+!$acc data present( I1H, I1W, GWORK, ZZW, ZZW1 )
+#endif
+
+!$acc kernels present_cr(GWORK)
+  GWORK(:) = PRHT(:)>XRTMIN(7)
+!$acc end kernels
+#ifndef MNH_OPENACC
+  IHAIL = COUNTJV( GWORK(:), I1H(:) )
+#else
+  CALL COUNTJV_DEVICE( GWORK(:), I1H(:), IHAIL )
+#endif
 !
   IF( IHAIL>0 ) THEN
 !PW:used init/end instead of add because zzw1 is produced and used with different conditions
@@ -112,8 +207,10 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
 !
 !*       7.2    compute the Wet growth of hail
 !
+!$acc kernels
     ZZW1(:,:) = 0.0
 !
+!$acc loop independent
     DO JJ = 1, IHAIL
       JL = I1H(JJ)
       PLBDAH(JL)  = XLBH * ( PRHODREF(JL) * MAX( PRHT(JL), XRTMIN(7) ) )**XLBEXH
@@ -128,22 +225,24 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
         ZZW1(JL,2) = MIN( PRIS(JL),XFWETH * PRIT(JL) * ZZW(JL) )             ! RIWETH
       END IF
     END DO
+!$acc end kernels
 !
 !*       7.2.1  accretion of aggregates on the hailstones
 !
-    IGWET = 0
-    DO JJ = 1, IHAIL
-      JL = I1H(JJ)
-      IF ( PRST(JL)>XRTMIN(5) .AND. PRSS(JL)>0.0 ) THEN
-        IGWET = IGWET + 1
-        I1W(IGWET) = JL
-      END IF
-    END DO
+!$acc kernels present_cr(GWORK)
+    GWORK(1:IHAIL) = PRST(I1H(1:IHAIL))>XRTMIN(5) .AND. PRSS(I1H(1:IHAIL))>0.0
+!$acc end kernels
+#ifndef MNH_OPENACC
+    IGWET = COUNTJV( GWORK(1:IHAIL), I1W(:) )
+#else
+    CALL COUNTJV_DEVICE( GWORK(1:IHAIL), I1W(:), IGWET )
+#endif
 !
     IF( IGWET>0 ) THEN
 !
 !*       7.2.2  allocations
 !
+#ifndef MNH_OPENACC
       ALLOCATE(ZVECLBDAH(IGWET))
       ALLOCATE(ZVECLBDAS(IGWET))
       ALLOCATE(ZVEC1(IGWET))
@@ -151,9 +250,24 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
       ALLOCATE(ZVEC3(IGWET))
       ALLOCATE(IVEC1(IGWET))
       ALLOCATE(IVEC2(IGWET))
+#else
+      !Pin positions in the pools of MNH memory
+      CALL MNH_MEM_POSITION_PIN( 'RAIN_ICE_FAST_RH 2' )
+
+      CALL MNH_MEM_GET( ZVECLBDAH, IGWET )
+      CALL MNH_MEM_GET( ZVECLBDAS, IGWET )
+      CALL MNH_MEM_GET( ZVEC1,     IGWET )
+      CALL MNH_MEM_GET( ZVEC2,     IGWET )
+      CALL MNH_MEM_GET( ZVEC3,     IGWET )
+      CALL MNH_MEM_GET( IVEC1,     IGWET )
+      CALL MNH_MEM_GET( IVEC2,     IGWET )
+
+!$acc data present( ZVECLBDAH, ZVECLBDAS, ZVEC1, ZVEC2, ZVEC3, IVEC1, IVEC2 )
+#endif
 !
 !*       7.2.3  select the (PLBDAH,PLBDAS) couplet
 !
+!$acc kernels
       ZVECLBDAH(1:IGWET) = PLBDAH(I1W(1:IGWET))
       ZVECLBDAS(1:IGWET) = PLBDAS(I1W(1:IGWET))
 !
@@ -174,6 +288,7 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
 !*       7.2.5  perform the bilinear interpolation of the normalized
 !               SWETH-kernel
 !
+!$acc loop independent
       DO JJ = 1,IGWET
         ZVEC3(JJ) = (  XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                      - XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
@@ -183,6 +298,7 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
                                                           * (ZVEC1(JJ) - 1.0)
       END DO
 !
+!$acc loop independent
       DO JJ = 1, IGWET
         JL = I1W(JJ)
         ZZW1(JL,3) = MIN( PRSS(JL),XFSWETH*ZVEC3(JJ)                       & ! RSWETH
@@ -192,6 +308,10 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
                             XLBSWETH2/( ZVECLBDAH(JJ)   * ZVECLBDAS(JJ)   ) + &
                             XLBSWETH3/(               ZVECLBDAS(JJ)**2) ) )
       END DO
+!$acc end kernels
+
+!$acc end data
+#ifndef MNH_OPENACC
       DEALLOCATE(ZVECLBDAS)
       DEALLOCATE(ZVECLBDAH)
       DEALLOCATE(IVEC2)
@@ -199,23 +319,28 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
       DEALLOCATE(ZVEC3)
       DEALLOCATE(ZVEC2)
       DEALLOCATE(ZVEC1)
+#else
+      !Release all memory allocated with MNH_MEM_GET calls since last call to MNH_MEM_POSITION_PIN
+      CALL MNH_MEM_RELEASE( 'RAIN_ICE_FAST_RH 2' )
+#endif
     END IF
 !
 !*       7.2.6  accretion of graupeln on the hailstones
 !
-    IGWET = 0
-    DO JJ = 1, IHAIL
-      JL = I1H(JJ)
-      IF ( PRGT(JL)>XRTMIN(6) .AND. PRGS(JL)>0.0 ) THEN
-        IGWET = IGWET + 1
-        I1W(IGWET) = JL
-      END IF
-    END DO
+!$acc kernels present_cr(GWORK)
+    GWORK(1:IHAIL) = PRGT(I1H(1:IHAIL))>XRTMIN(6) .AND. PRGS(I1H(1:IHAIL))>0.0
+!$acc end kernels
+#ifndef MNH_OPENACC
+    IGWET = COUNTJV( GWORK(1:IHAIL), I1W(:) )
+#else
+    CALL COUNTJV_DEVICE( GWORK(1:IHAIL), I1W(:), IGWET )
+#endif
 !
     IF( IGWET>0 ) THEN
 !
 !*       7.2.7  allocations
 !
+#ifndef MNH_OPENACC
       ALLOCATE(ZVECLBDAG(IGWET))
       ALLOCATE(ZVECLBDAH(IGWET))
       ALLOCATE(ZVEC1(IGWET))
@@ -223,9 +348,24 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
       ALLOCATE(ZVEC3(IGWET))
       ALLOCATE(IVEC1(IGWET))
       ALLOCATE(IVEC2(IGWET))
+#else
+      !Pin positions in the pools of MNH memory
+      CALL MNH_MEM_POSITION_PIN( 'RAIN_ICE_FAST_RH 3' )
+
+      CALL MNH_MEM_GET( ZVECLBDAG, IGWET )
+      CALL MNH_MEM_GET( ZVECLBDAH, IGWET )
+      CALL MNH_MEM_GET( ZVEC1,     IGWET )
+      CALL MNH_MEM_GET( ZVEC2,     IGWET )
+      CALL MNH_MEM_GET( ZVEC3,     IGWET )
+      CALL MNH_MEM_GET( IVEC1,     IGWET )
+      CALL MNH_MEM_GET( IVEC2,     IGWET )
+
+!$acc data present( ZVECLBDAG, ZVECLBDAH, ZVEC1, ZVEC2, ZVEC3, IVEC1, IVEC2 )
+#endif
 !
 !*       7.2.8  select the (PLBDAH,PLBDAG) couplet
 !
+!$acc kernels
       ZVECLBDAG(1:IGWET) = PLBDAG(I1W(1:IGWET))
       ZVECLBDAH(1:IGWET) = PLBDAH(I1W(1:IGWET))
 !
@@ -246,6 +386,7 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
 !*       7.2.10 perform the bilinear interpolation of the normalized
 !               GWETH-kernel
 !
+!$acc loop independent
       DO JJ = 1,IGWET
         ZVEC3(JJ) = (  XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                      - XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
@@ -255,6 +396,7 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
                                                           * (ZVEC1(JJ) - 1.0)
       END DO
 !
+!$acc loop independent
       DO JJ = 1, IGWET
         JL = I1W(JJ)
         ZZW1(JL,5) = MAX(MIN( PRGS(JL),XFGWETH*ZVEC3(JJ)                       & ! RGWETH
@@ -264,6 +406,10 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
                             XLBGWETH2/( ZVECLBDAH(JJ)   * ZVECLBDAG(JJ)   ) + &
                             XLBGWETH3/(               ZVECLBDAG(JJ)**2) ) ),0. )
       END DO
+!$acc end kernels
+
+!$acc end data
+#ifndef MNH_OPENACC
       DEALLOCATE(ZVECLBDAH)
       DEALLOCATE(ZVECLBDAG)
       DEALLOCATE(IVEC2)
@@ -271,10 +417,16 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
       DEALLOCATE(ZVEC3)
       DEALLOCATE(ZVEC2)
       DEALLOCATE(ZVEC1)
+#else
+      !Release all memory allocated with MNH_MEM_GET calls since last call to MNH_MEM_POSITION_PIN
+      CALL MNH_MEM_RELEASE( 'RAIN_ICE_FAST_RH 3' )
+#endif
     END IF
 !
 !*       7.3    compute the Wet growth of hail
 !
+!$acc kernels
+!$acc loop independent
     DO JJ = 1, IHAIL
       JL = I1H(JJ)
       IF ( PZT(JL)<XTT ) THEN
@@ -290,6 +442,7 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
                     ( ZZW1(JL,2)+ZZW1(JL,3)+ZZW1(JL,5) ) *                  &
                     ( PRHODREF(JL)*(XLMTT+(XCI-XCL)*(XTT-PZT(JL)))   ) ) / &
                           ( PRHODREF(JL)*(XLMTT-XCL*(XTT-PZT(JL))) ) )
+
 !
         ZZW1(JL,6) = MAX( ZZW(JL) - ZZW1(JL,2) - ZZW1(JL,3) - ZZW1(JL,5),0.) ! RCWETH+RRWETH
         IF ( ZZW1(JL,6)/=0.) THEN
@@ -316,6 +469,7 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
         END IF
       END IF
     END DO
+!$acc end kernels
 
     if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'WETH', Unpack ( pths(:) * prhodj(:), &
                                              mask = omicro(:,:,:), field = 0. ) )
@@ -370,6 +524,8 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
     if ( lbudget_rh ) call Budget_store_init( tbudgets(NBUDGET_RH), 'HMLT', Unpack ( prhs(:) * prhodj(:), &
                                               mask = omicro(:,:,:), field = 0. ) )
 
+!$acc kernels
+!$acc loop independent
     DO JJ = 1, IHAIL
       JL = I1H(JJ)
       IF( PRHS(JL)>0.0 .AND. PZT(JL)>XTT ) THEN
@@ -389,6 +545,7 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
         PTHS(JL) = PTHS(JL) - ZZW(JL)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(-RHMLTR))
       END IF
     END DO
+!$acc end kernels
 
     if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'HMLT', Unpack ( pths(:) * prhodj(:), &
                                               mask = omicro(:,:,:), field = 0. ) )
@@ -398,6 +555,28 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
                                               mask = omicro(:,:,:), field = 0. ) )
   END IF
 !
+IF (MPPDB_INITIALIZED) THEN
+  !Check all INOUT arrays
+  CALL MPPDB_CHECK(PLBDAH,"RAIN_ICE_FAST_RH end:PLBDAH")
+  CALL MPPDB_CHECK(PRCS,"RAIN_ICE_FAST_RH end:PRCS")
+  CALL MPPDB_CHECK(PRRS,"RAIN_ICE_FAST_RH end:PRRS")
+  CALL MPPDB_CHECK(PRIS,"RAIN_ICE_FAST_RH end:PRIS")
+  CALL MPPDB_CHECK(PRSS,"RAIN_ICE_FAST_RH end:PRSS")
+  CALL MPPDB_CHECK(PRGS,"RAIN_ICE_FAST_RH end:PRGS")
+  CALL MPPDB_CHECK(PRHS,"RAIN_ICE_FAST_RH end:PRHS")
+  CALL MPPDB_CHECK(PTHS,"RAIN_ICE_FAST_RH end:PTHS")
+  CALL MPPDB_CHECK(PUSW,"RAIN_ICE_FAST_RH end:PUSW")
+END IF
+
+!$acc end data
+
+#ifdef MNH_OPENACC
+!Release all memory allocated with MNH_MEM_GET calls since last call to MNH_MEM_POSITION_PIN
+CALL MNH_MEM_RELEASE( 'RAIN_ICE_FAST_RH 1' )
+#endif
+
+!$acc end data
+
 END SUBROUTINE RAIN_ICE_FAST_RH
 
 END MODULE MODE_RAIN_ICE_FAST_RH

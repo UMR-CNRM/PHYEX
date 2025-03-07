@@ -18,6 +18,7 @@ CONTAINS
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+!USE MODD_ELEC_DESCR, ONLY: XECHARGE
 !
 IMPLICIT NONE
 !
@@ -45,6 +46,8 @@ IIJB=D%NIJB
 IIJE=D%NIJE
 !
 !We correct negativities with conservation
+!$acc kernels
+!$acc loop independent
 DO JK = IKTB, IKTE
   DO JIJ = IIJB, IIJE
     ! 1) deal with negative values for mixing ratio, except for vapor
@@ -168,6 +171,7 @@ DO JK = IKTB, IKTE
     ENDIF
   ENDDO
 ENDDO
+!$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_CORRECT_NEGATIVITIES', 1, ZHOOK_HANDLE)
 !

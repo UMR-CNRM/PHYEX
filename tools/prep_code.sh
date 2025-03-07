@@ -271,6 +271,7 @@ if [ $ilooprm -eq 1 ]; then
          sed -i 's/JK=1:IKT/transIKT/g' $file
          sed -i 's/JIJ=IIJB:IIJE/transJIJ/g' $file
          sed -i 's/IKTB+1:IKTE/IKTB1IKTE/g' $file
+         sed -i 's/IKB+1:IKT/IKB1IKT/g' $file
          # Apply transformation
          sed -i 's/1:IKT/:/g' $file
          sed -i 's/IKTB:IKTE/:/g' $file
@@ -280,6 +281,7 @@ if [ $ilooprm -eq 1 ]; then
          sed -i 's/transIKT/JK=1:IKT/g' $file
          sed -i 's/transJIJ/JIJ=IIJB:IIJE/g' $file
          sed -i 's/IKTB1IKTE/IKTB+1:IKTE/g' $file
+         sed -i 's/IKB1IKT/IKB+1:IKT/g' $file
          if [[ "$file" == "turb"* ]]; then
            sed -i 's/IKTB : IKTE/IKTB:IKTE/g' $file
          fi
