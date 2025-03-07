@@ -83,15 +83,15 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a0592bb57dc99542ecd53d28f73d342b4" id="r_a0592bb57dc99542ecd53d28f73d342b4"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__lima_1_1lima.html#a0592bb57dc99542ecd53d28f73d342b4">lima</a> (d, cst, iced, icep, elecd, elecp, buconf, tbudgets, hactccn, kbudgets, krr, ptstep, oelec, prhodref, pexnref, pdzz, pthvrefzikb, prhodj, ppabst, nccn, nifn, nimm, kcarb, ksoa, ksp, odust, osalt, oorilam, odthrad, pdthrad, ptht, prt, psvt, pw_nu, paero, psolorg, pmi, pths, prs, psvs, pinprc, pindep, pinprr, pinpri, pinprs, pinprg, pinprh, pevap3d, pcldfr, picefr, pprcfr, pfpr, platham_iaggs, pefieldw, psv_elec_t, psv_elec_s)</td></tr>
-<tr class="separator:a0592bb57dc99542ecd53d28f73d342b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d7215cf2d4fa1dc23ae60b654b82909" id="r_a9d7215cf2d4fa1dc23ae60b654b82909"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__lima_1_1lima.html#a9d7215cf2d4fa1dc23ae60b654b82909">lima</a> (limap, limaw, limac, limam, tnsv, d, cst, nebn, iced, icep, elecd, elecp, buconf, tbudgets, hactccn, kbudgets, krr, ptstep, oelec, prhodref, pexnref, pdzz, pthvrefzikb, prhodj, ppabst, kcarb, ksoa, ksp, odust, osalt, oorilam, odthrad, pdthrad, ptht, prt, psvt, pw_nu, paero, psolorg, pmi, pths, prs, psvs, pinprc, pindep, pinprr, pinpri, pinprs, pinprg, pinprh, pevap3d, pcldfr, picefr, pprcfr, pfpr, platham_iaggs, pefieldw, psv_elec_t, psv_elec_s)</td></tr>
+<tr class="separator:a9d7215cf2d4fa1dc23ae60b654b82909"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
 <p class="definition">Definition at line <a class="el" href="modi__lima_8F90_source.html#l00006">6</a> of file <a class="el" href="modi__lima_8F90_source.html">modi_lima.F90</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a0592bb57dc99542ecd53d28f73d342b4" name="a0592bb57dc99542ecd53d28f73d342b4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0592bb57dc99542ecd53d28f73d342b4">&#9670;&#160;</a></span>lima()</h2>
+<a id="a9d7215cf2d4fa1dc23ae60b654b82909" name="a9d7215cf2d4fa1dc23ae60b654b82909"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9d7215cf2d4fa1dc23ae60b654b82909">&#9670;&#160;</a></span>lima()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -99,6 +99,36 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">subroutine modi_lima::lima::lima </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limap</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__warm_1_1param__lima__warm__t.html">param_lima_warm_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limaw</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__cold_1_1param__lima__cold__t.html">param_lima_cold_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limac</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__mixed_1_1param__lima__mixed__t.html">param_lima_mixed_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limam</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__nsv_1_1nsv__t.html">nsv_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>tnsv</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>d</em>, </td>
         </tr>
@@ -107,6 +137,12 @@ Public Member Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__cst_1_1cst__t.html">cst_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>cst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__neb__n_1_1neb__t.html">neb_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>nebn</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -214,24 +250,6 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">integer, intent(in)&#160;</td>
-          <td class="paramname"><em>nccn</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">integer, intent(in)&#160;</td>
-          <td class="paramname"><em>nifn</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">integer, intent(in)&#160;</td>
-          <td class="paramname"><em>nimm</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">integer, intent(in)&#160;</td>
           <td class="paramname"><em>kcarb</em>, </td>
         </tr>
         <tr>
@@ -291,7 +309,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, nsv), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, tnsv%nsv), intent(in)&#160;</td>
           <td class="paramname"><em>psvt</em>, </td>
         </tr>
         <tr>
@@ -303,7 +321,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt ,nsv), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt ,tnsv%nsv), intent(inout)&#160;</td>
           <td class="paramname"><em>paero</em>, </td>
         </tr>
         <tr>
@@ -333,7 +351,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, nsv), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, tnsv%nsv), intent(inout)&#160;</td>
           <td class="paramname"><em>psvs</em>, </td>
         </tr>
         <tr>
@@ -423,13 +441,13 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, nsv), intent(in), optional&#160;</td>
+          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, tnsv%nsv), intent(in), optional&#160;</td>
           <td class="paramname"><em>psv_elec_t</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, nsv), intent(inout), optional&#160;</td>
+          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, tnsv%nsv), intent(inout), optional&#160;</td>
           <td class="paramname"><em>psv_elec_s</em>&#160;</td>
         </tr>
         <tr>

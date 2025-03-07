@@ -95,27 +95,28 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00010" name="l00010"></a><span class="lineno"><a class="line" href="interfacemodi__gamma_1_1gamma.html">   10</a></span><span class="keyword">INTERFACE</span> <a class="code hl_interface" href="interfacemodi__gamma_1_1gamma.html">gamma</a></div>
 <div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="comment">!</span></div>
 <div class="foldopen" id="foldopen00012" data-start="" data-end="">
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="interfacemodi__gamma_1_1gamma.html#af49b84f790452d6b2293b5e4880e98a2">   12</a></span><span class="keyword">FUNCTION </span><a class="code hl_function" href="gamma_8F90.html#a9777227bbb84bfae4e8675b657d6e273">gamma_x0d</a>(PX)  <span class="keyword">RESULT</span>(PGAMMA)</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="interfacemodi__gamma_1_1gamma.html#adbb22ba3b9dea2d0bb142b215fc31ee5">   12</a></span><span class="keywordtype">PURE</span> <span class="keyword">FUNCTION </span><a class="code hl_function" href="gamma_8F90.html#a8e8146418bd5e0b749c1a73538f360df">gamma_x0d</a>(PX)  <span class="keyword">RESULT</span>(PGAMMA)</div>
 <div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="keywordtype">REAL</span>, <span class="keywordtype">INTENT(IN)</span>                                  :: px</div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keywordtype">REAL</span>                                              :: pgamma</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="comment">!$acc routine seq</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keywordtype">REAL</span>, <span class="keywordtype">INTENT(IN)</span>                                  :: px</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keywordtype">REAL</span>                                              :: pgamma</div>
 </div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword">END FUNCTION </span><a class="code hl_function" href="gamma_8F90.html#a9777227bbb84bfae4e8675b657d6e273">gamma_x0d</a></div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment">!</span></div>
-<div class="foldopen" id="foldopen00018" data-start="" data-end="">
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="interfacemodi__gamma_1_1gamma.html#ade8a0e1aecbdca26c0045704137f0b68">   18</a></span><span class="keyword">FUNCTION </span><a class="code hl_function" href="gamma_8F90.html#a003bf2c2db1780d1444255397506c466">gamma_x1d</a>(PX)  <span class="keyword">RESULT</span>(PGAMMA)</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(:)</span>, <span class="keywordtype">INTENT(IN)</span>        :: px</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(SIZE(PX))</span>             :: pgamma</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="keyword">END FUNCTION </span><a class="code hl_function" href="gamma_8F90.html#a8e8146418bd5e0b749c1a73538f360df">gamma_x0d</a></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment">!</span></div>
+<div class="foldopen" id="foldopen00019" data-start="" data-end="">
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno"><a class="line" href="interfacemodi__gamma_1_1gamma.html#a668ee9bb712c0cf91c2529b64a8fd489">   19</a></span><span class="keywordtype">PURE</span> <span class="keyword">FUNCTION </span><a class="code hl_function" href="gamma_8F90.html#a8f2e7bef7abc53745862f7fd150a9406">gamma_x1d</a>(PX)  <span class="keyword">RESULT</span>(PGAMMA)</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(:)</span>, <span class="keywordtype">INTENT(IN)</span>        :: px</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(SIZE(PX))</span>             :: pgamma</div>
 </div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="keyword">END FUNCTION </span><a class="code hl_function" href="gamma_8F90.html#a003bf2c2db1780d1444255397506c466">gamma_x1d</a></div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment">!</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="keyword">END FUNCTION </span><a class="code hl_function" href="gamma_8F90.html#a8f2e7bef7abc53745862f7fd150a9406">gamma_x1d</a></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="comment">!</span></div>
 </div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="keyword">END INTERFACE </span><a class="code hl_interface" href="interfacemodi__gamma_1_1gamma.html">gamma</a></div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="comment">!</span></div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemodi__gamma.html">modi_gamma</a></div>
-<div class="ttc" id="agamma_8F90_html_a003bf2c2db1780d1444255397506c466"><div class="ttname"><a href="gamma_8F90.html#a003bf2c2db1780d1444255397506c466">gamma_x1d</a></div><div class="ttdeci">real function, dimension(size(px)) gamma_x1d(px)</div><div class="ttdef"><b>Definition</b> <a href="gamma_8F90_source.html#l00122">gamma.F90:123</a></div></div>
-<div class="ttc" id="agamma_8F90_html_a9777227bbb84bfae4e8675b657d6e273"><div class="ttname"><a href="gamma_8F90.html#a9777227bbb84bfae4e8675b657d6e273">gamma_x0d</a></div><div class="ttdeci">real function gamma_x0d(px)</div><div class="ttdef"><b>Definition</b> <a href="gamma_8F90_source.html#l00014">gamma.F90:15</a></div></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="keyword">END INTERFACE </span><a class="code hl_interface" href="interfacemodi__gamma_1_1gamma.html">gamma</a></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="comment">!</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemodi__gamma.html">modi_gamma</a></div>
+<div class="ttc" id="agamma_8F90_html_a8e8146418bd5e0b749c1a73538f360df"><div class="ttname"><a href="gamma_8F90.html#a8e8146418bd5e0b749c1a73538f360df">gamma_x0d</a></div><div class="ttdeci">pure real function gamma_x0d(px)</div><div class="ttdef"><b>Definition</b> <a href="gamma_8F90_source.html#l00012">gamma.F90:13</a></div></div>
+<div class="ttc" id="agamma_8F90_html_a8f2e7bef7abc53745862f7fd150a9406"><div class="ttname"><a href="gamma_8F90.html#a8f2e7bef7abc53745862f7fd150a9406">gamma_x1d</a></div><div class="ttdeci">pure real function, dimension(size(px)) gamma_x1d(px)</div><div class="ttdef"><b>Definition</b> <a href="gamma_8F90_source.html#l00120">gamma.F90:121</a></div></div>
 <div class="ttc" id="ainterfacemodi__gamma_1_1gamma_html"><div class="ttname"><a href="interfacemodi__gamma_1_1gamma.html">modi_gamma::gamma</a></div><div class="ttdef"><b>Definition</b> <a href="modi__gamma_8F90_source.html#l00010">modi_gamma.F90:10</a></div></div>
 <div class="ttc" id="anamespacemodi__gamma_html"><div class="ttname"><a href="namespacemodi__gamma.html">modi_gamma</a></div><div class="ttdef"><b>Definition</b> <a href="modi__gamma_8F90_source.html#l00006">modi_gamma.F90:6</a></div></div>
 </div><!-- fragment --></div><!-- contents -->

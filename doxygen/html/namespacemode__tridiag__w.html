@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a30c3d22cb42f465fc2eae5533155256f" id="r_a30c3d22cb42f465fc2eae5533155256f"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__tridiag__w.html#a30c3d22cb42f465fc2eae5533155256f">tridiag_w</a> (pvarm, pf, pdfddwdz, ptstep, pmzf_dzz, prhodj, pvarp)</td></tr>
-<tr class="separator:a30c3d22cb42f465fc2eae5533155256f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a797db0f28331c854bef16325e6a47479" id="r_a797db0f28331c854bef16325e6a47479"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__tridiag__w.html#a797db0f28331c854bef16325e6a47479">tridiag_w</a> (d, pvarm, pf, pdfddwdz, ptstep, pmzf_dzz, prhodj, pvarp)</td></tr>
+<tr class="separator:a797db0f28331c854bef16325e6a47479"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a30c3d22cb42f465fc2eae5533155256f" name="a30c3d22cb42f465fc2eae5533155256f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a30c3d22cb42f465fc2eae5533155256f">&#9670;&#160;</a></span>tridiag_w()</h2>
+<a id="a797db0f28331c854bef16325e6a47479" name="a797db0f28331c854bef16325e6a47479"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a797db0f28331c854bef16325e6a47479">&#9670;&#160;</a></span>tridiag_w()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,19 +91,25 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_tridiag_w::tridiag_w </td>
           <td>(</td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pvarm</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdfddwdz</em>, </td>
         </tr>
         <tr>
@@ -115,19 +121,19 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pmzf_dzz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>pvarp</em>&#160;</td>
         </tr>
         <tr>
@@ -140,12 +146,28 @@ Functions/Subroutines</h2></td></tr>
 
 <p class="definition">Definition at line <a class="el" href="mode__tridiag__w_8F90_source.html#l00016">16</a> of file <a class="el" href="mode__tridiag__w_8F90_source.html">mode_tridiag_w.F90</a>.</p>
 <div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacemode__tridiag__w_a797db0f28331c854bef16325e6a47479_cgraph.png" border="0" usemap="#anamespacemode__tridiag__w_a797db0f28331c854bef16325e6a47479_cgraph" alt=""/></div>
+<map name="anamespacemode__tridiag__w_a797db0f28331c854bef16325e6a47479_cgraph" id="anamespacemode__tridiag__w_a797db0f28331c854bef16325e6a47479_cgraph">
+<area shape="rect" title=" " alt="" coords="5,106,199,131"/>
+<area shape="rect" href="namespacemode__mnh__zwork.html#a73ae7467a02d921bfe10f89830b5a38e" title=" " alt="" coords="267,5,446,45"/>
+<area shape="poly" title=" " alt="" coords="129,103,246,55,269,47,270,52,248,60,131,108"/>
+<area shape="rect" href="namespacemode__mnh__zwork.html#a7f0fb14af8a6e354101a5a8e37865e9d" title=" " alt="" coords="267,69,446,109"/>
+<area shape="poly" title=" " alt="" coords="199,105,253,99,254,104,199,110"/>
+<area shape="rect" href="shuman_8F90.html#a620b12be5daf1abac11fc6e553221834" title=" " alt="" coords="329,134,384,159"/>
+<area shape="poly" title=" " alt="" coords="199,127,316,140,316,145,199,132"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a86441e6781603bb2b6b1f30d8c0e39b4" title=" " alt="" coords="247,183,467,209"/>
+<area shape="poly" title=" " alt="" coords="136,129,247,168,283,178,281,183,246,173,135,134"/>
+</map>
+</div>
+<div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__tridiag__w_a30c3d22cb42f465fc2eae5533155256f_icgraph.png" border="0" usemap="#anamespacemode__tridiag__w_a30c3d22cb42f465fc2eae5533155256f_icgraph" alt=""/></div>
-<map name="anamespacemode__tridiag__w_a30c3d22cb42f465fc2eae5533155256f_icgraph" id="anamespacemode__tridiag__w_a30c3d22cb42f465fc2eae5533155256f_icgraph">
+<div class="center"><img src="namespacemode__tridiag__w_a797db0f28331c854bef16325e6a47479_icgraph.png" border="0" usemap="#anamespacemode__tridiag__w_a797db0f28331c854bef16325e6a47479_icgraph" alt=""/></div>
+<map name="anamespacemode__tridiag__w_a797db0f28331c854bef16325e6a47479_icgraph" id="anamespacemode__tridiag__w_a797db0f28331c854bef16325e6a47479_icgraph">
 <area shape="rect" title=" " alt="" coords="761,13,955,38"/>
-<area shape="rect" href="namespacemode__turb__hor__dyn__corr.html#ab3cbbab3d5e796dd7cd3e03f57b3f947" title=" " alt="" coords="531,5,713,45"/>
+<area shape="rect" href="namespacemode__turb__hor__dyn__corr.html#a06b95eda0366712b196aa5d42934f98d" title=" " alt="" coords="531,5,713,45"/>
 <area shape="poly" title=" " alt="" coords="748,28,714,28,714,23,748,23"/>
 <area shape="rect" href="namespacemode__turb__hor.html#a392ed5235673e3faa3d5c1f17974a7cc" title=" " alt="" coords="300,13,483,38"/>
 <area shape="poly" title=" " alt="" coords="517,28,483,28,483,23,517,23"/>

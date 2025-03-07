@@ -90,29 +90,35 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a2943c14a86a0563917af7725383fd2b5" id="r_a2943c14a86a0563917af7725383fd2b5"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__rain__accr__snow.html#a2943c14a86a0563917af7725383fd2b5">mode_lima_rain_accr_snow::lima_rain_accr_snow</a> (ptstep, ldcompute, prhodref, pt, prrt, pcrt, prst, pcst, plbdr, plbds, plvfact, plsfact, p_th_acc, p_cr_acc, p_cs_acc, p_rr_accss, p_rr_accsg, p_rs_accrg)</td></tr>
-<tr class="separator:a2943c14a86a0563917af7725383fd2b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adbcc617781d11ed8c4a00ec86c224f71" id="r_adbcc617781d11ed8c4a00ec86c224f71"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(i1))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mode__lima__rain__accr__snow_8F90.html#adbcc617781d11ed8c4a00ec86c224f71">get_xker_raccss</a> (i1, i2)</td></tr>
-<tr class="separator:adbcc617781d11ed8c4a00ec86c224f71"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9039208ab8fb8cb069fc8fb5479d712" id="r_ab9039208ab8fb8cb069fc8fb5479d712"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__rain__accr__snow.html#ab9039208ab8fb8cb069fc8fb5479d712">mode_lima_rain_accr_snow::lima_rain_accr_snow</a> (cst, limap, limaw, limac, limam, ksize, ptstep, odcompute, prhodref, pt, prrt, pcrt, prst, pcst, plbdr, plbds, plvfact, plsfact, p_th_acc, p_cr_acc, p_cs_acc, p_rr_accss, p_rr_accsg, p_rs_accrg)</td></tr>
+<tr class="separator:ab9039208ab8fb8cb069fc8fb5479d712"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0918186b5bda5fc56669291113b8ec90" id="r_a0918186b5bda5fc56669291113b8ec90"><td class="memItemLeft" align="right" valign="top">real function, dimension(ksize)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mode__lima__rain__accr__snow_8F90.html#a0918186b5bda5fc56669291113b8ec90">get_xker_raccss</a> (ksize, k1, k2)</td></tr>
+<tr class="separator:a0918186b5bda5fc56669291113b8ec90"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="adbcc617781d11ed8c4a00ec86c224f71" name="adbcc617781d11ed8c4a00ec86c224f71"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adbcc617781d11ed8c4a00ec86c224f71">&#9670;&#160;</a></span>get_xker_raccss()</h2>
+<a id="a0918186b5bda5fc56669291113b8ec90" name="a0918186b5bda5fc56669291113b8ec90"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0918186b5bda5fc56669291113b8ec90">&#9670;&#160;</a></span>get_xker_raccss()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">real function, dimension(size(i1)) lima_rain_accr_snow::get_xker_raccss </td>
+          <td class="memname">real function, dimension(ksize) lima_rain_accr_snow::get_xker_raccss </td>
           <td>(</td>
-          <td class="paramtype">integer, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>i1</em>, </td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>ksize</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>i2</em>&#160;</td>
+          <td class="paramtype">integer, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>k1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>k2</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -122,18 +128,18 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="mode__lima__rain__accr__snow_8F90_source.html#l00309">309</a> of file <a class="el" href="mode__lima__rain__accr__snow_8F90_source.html">mode_lima_rain_accr_snow.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mode__lima__rain__accr__snow_8F90_source.html#l00312">312</a> of file <a class="el" href="mode__lima__rain__accr__snow_8F90_source.html">mode_lima_rain_accr_snow.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="mode__lima__rain__accr__snow_8F90_adbcc617781d11ed8c4a00ec86c224f71_icgraph.png" border="0" usemap="#amode__lima__rain__accr__snow_8F90_adbcc617781d11ed8c4a00ec86c224f71_icgraph" alt=""/></div>
-<map name="amode__lima__rain__accr__snow_8F90_adbcc617781d11ed8c4a00ec86c224f71_icgraph" id="amode__lima__rain__accr__snow_8F90_adbcc617781d11ed8c4a00ec86c224f71_icgraph">
+<div class="center"><img src="mode__lima__rain__accr__snow_8F90_a0918186b5bda5fc56669291113b8ec90_icgraph.png" border="0" usemap="#amode__lima__rain__accr__snow_8F90_a0918186b5bda5fc56669291113b8ec90_icgraph" alt=""/></div>
+<map name="amode__lima__rain__accr__snow_8F90_a0918186b5bda5fc56669291113b8ec90_icgraph" id="amode__lima__rain__accr__snow_8F90_a0918186b5bda5fc56669291113b8ec90_icgraph">
 <area shape="rect" title=" " alt="" coords="580,13,707,38"/>
-<area shape="rect" href="namespacemode__lima__rain__accr__snow.html#a2943c14a86a0563917af7725383fd2b5" title=" " alt="" coords="325,5,532,45"/>
+<area shape="rect" href="namespacemode__lima__rain__accr__snow.html#ab9039208ab8fb8cb069fc8fb5479d712" title=" " alt="" coords="325,5,532,45"/>
 <area shape="poly" title=" " alt="" coords="566,28,532,28,532,23,566,23"/>
-<area shape="rect" href="namespacemode__lima__tendencies.html#a66a6879e5b8b9b9734043455a865948d" title=" " alt="" coords="104,5,277,45"/>
+<area shape="rect" href="namespacemode__lima__tendencies.html#acefa2d69ebd2194440988a2afd517425" title=" " alt="" coords="104,5,277,45"/>
 <area shape="poly" title=" " alt="" coords="312,28,278,28,278,23,312,23"/>
-<area shape="rect" href="lima_8F90.html#a7358dec3cc36d58f782836dc100f62fa" title=" " alt="" coords="5,13,56,38"/>
+<area shape="rect" href="lima_8F90.html#a45fe64d21afbc6cace563fda83cb1e79" title=" " alt="" coords="5,13,56,38"/>
 <area shape="poly" title=" " alt="" coords="90,28,57,28,57,23,90,23"/>
 </map>
 </div>

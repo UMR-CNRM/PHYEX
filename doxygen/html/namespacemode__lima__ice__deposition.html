@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:ac3d95b321cc678c477c7c484d2de598b" id="r_ac3d95b321cc678c477c7c484d2de598b"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__ice__deposition.html#ac3d95b321cc678c477c7c484d2de598b">lima_ice_deposition</a> (ptstep, ldcompute, prhodref, pt, pssi, pai, pcj, plsfact, prit, pcit, plbdi, p_th_depi, p_ri_depi, p_ri_cnvs, p_ci_cnvs)</td></tr>
-<tr class="separator:ac3d95b321cc678c477c7c484d2de598b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30a51d8173bb1f710b05367826e9928c" id="r_a30a51d8173bb1f710b05367826e9928c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__ice__deposition.html#a30a51d8173bb1f710b05367826e9928c">lima_ice_deposition</a> (cst, limap, limac, ksize, ptstep, odcompute, prhodref, pt, pssi, pai, pcj, plsfact, prit, pcit, pcit_shape, plbdi, p_th_depi, p_ri_depi, p_shci_hach, p_ri_cnvs, p_ci_cnvs, p_shci_cnvs)</td></tr>
+<tr class="separator:a30a51d8173bb1f710b05367826e9928c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="ac3d95b321cc678c477c7c484d2de598b" name="ac3d95b321cc678c477c7c484d2de598b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac3d95b321cc678c477c7c484d2de598b">&#9670;&#160;</a></span>lima_ice_deposition()</h2>
+<a id="a30a51d8173bb1f710b05367826e9928c" name="a30a51d8173bb1f710b05367826e9928c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a30a51d8173bb1f710b05367826e9928c">&#9670;&#160;</a></span>lima_ice_deposition()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,92 +91,134 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_lima_ice_deposition::lima_ice_deposition </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__cst_1_1cst__t.html">cst_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>cst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limap</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__cold_1_1param__lima__cold__t.html">param_lima_cold_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limac</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>ksize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, intent(in)&#160;</td>
           <td class="paramname"><em>ptstep</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">logical, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>ldcompute</em>, </td>
+          <td class="paramtype">logical, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>odcompute</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pssi</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pai</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pcj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plsfact</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>prit</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pcit</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize,limap%nnb_crystal_shape), intent(in)&#160;</td>
+          <td class="paramname"><em>pcit_shape</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plbdi</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_th_depi</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_ri_depi</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize,limap%nnb_crystal_shape), intent(out)&#160;</td>
+          <td class="paramname"><em>p_shci_hach</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_ri_cnvs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
-          <td class="paramname"><em>p_ci_cnvs</em>&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
+          <td class="paramname"><em>p_ci_cnvs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize,limap%nnb_crystal_shape), intent(out)&#160;</td>
+          <td class="paramname"><em>p_shci_cnvs</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -188,14 +230,26 @@ Functions/Subroutines</h2></td></tr>
 
 <p class="definition">Definition at line <a class="el" href="mode__lima__ice__deposition_8F90_source.html#l00010">10</a> of file <a class="el" href="mode__lima__ice__deposition_8F90_source.html">mode_lima_ice_deposition.F90</a>.</p>
 <div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacemode__lima__ice__deposition_a30a51d8173bb1f710b05367826e9928c_cgraph.png" border="0" usemap="#anamespacemode__lima__ice__deposition_a30a51d8173bb1f710b05367826e9928c_cgraph" alt=""/></div>
+<map name="anamespacemode__lima__ice__deposition_a30a51d8173bb1f710b05367826e9928c_cgraph" id="anamespacemode__lima__ice__deposition_a30a51d8173bb1f710b05367826e9928c_cgraph">
+<area shape="rect" title=" " alt="" coords="5,37,201,77"/>
+<area shape="rect" href="namespacemode__lima__change__shape.html#a4a38d6aba769b1415b787d50506a2670" title=" " alt="" coords="271,5,466,45"/>
+<area shape="poly" title=" " alt="" coords="201,43,257,36,258,41,202,48"/>
+<area shape="rect" href="namespacemode__lima__shape__compute__lbda.html#afbdd88c58791bc09ac78e8162f2e3d0a" title=" " alt="" coords="249,69,488,109"/>
+<area shape="poly" title=" " alt="" coords="202,66,236,71,235,76,201,72"/>
+</map>
+</div>
+<div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__lima__ice__deposition_ac3d95b321cc678c477c7c484d2de598b_icgraph.png" border="0" usemap="#anamespacemode__lima__ice__deposition_ac3d95b321cc678c477c7c484d2de598b_icgraph" alt=""/></div>
-<map name="anamespacemode__lima__ice__deposition_ac3d95b321cc678c477c7c484d2de598b_icgraph" id="anamespacemode__lima__ice__deposition_ac3d95b321cc678c477c7c484d2de598b_icgraph">
+<div class="center"><img src="namespacemode__lima__ice__deposition_a30a51d8173bb1f710b05367826e9928c_icgraph.png" border="0" usemap="#anamespacemode__lima__ice__deposition_a30a51d8173bb1f710b05367826e9928c_icgraph" alt=""/></div>
+<map name="anamespacemode__lima__ice__deposition_a30a51d8173bb1f710b05367826e9928c_icgraph" id="anamespacemode__lima__ice__deposition_a30a51d8173bb1f710b05367826e9928c_icgraph">
 <area shape="rect" title=" " alt="" coords="325,5,521,45"/>
-<area shape="rect" href="namespacemode__lima__tendencies.html#a66a6879e5b8b9b9734043455a865948d" title=" " alt="" coords="104,5,277,45"/>
+<area shape="rect" href="namespacemode__lima__tendencies.html#acefa2d69ebd2194440988a2afd517425" title=" " alt="" coords="104,5,277,45"/>
 <area shape="poly" title=" " alt="" coords="312,28,277,28,277,23,312,23"/>
-<area shape="rect" href="lima_8F90.html#a7358dec3cc36d58f782836dc100f62fa" title=" " alt="" coords="5,13,56,38"/>
+<area shape="rect" href="lima_8F90.html#a45fe64d21afbc6cace563fda83cb1e79" title=" " alt="" coords="5,13,56,38"/>
 <area shape="poly" title=" " alt="" coords="90,28,57,28,57,23,90,23"/>
 </map>
 </div>

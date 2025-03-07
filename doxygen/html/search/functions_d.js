@@ -13,6 +13,5 @@ var searchData=
   ['qsatw_5f1d_10',['qsatw_1d',['../interfacemode__thermo_1_1qsat.html#a55be208ab916e716f59df4207bc99efe',1,'mode_thermo::qsat']]],
   ['qsatw_5f2d_11',['qsatw_2d',['../interfacemode__thermo_1_1qsat.html#a0c7627ff125913f8015ec87a8f6cb0c7',1,'mode_thermo::qsat']]],
   ['qsatw_5f2d_5fmask_12',['qsatw_2d_mask',['../interfacemode__thermo_1_1qsat.html#af746c5ff651f8448319cc4d6ff111266',1,'mode_thermo::qsat']]],
-  ['qsatw_5f3d_13',['qsatw_3d',['../interfacemode__thermo_1_1qsat.html#a83fca0c9ba5b2220e05c9549190e81f7',1,'mode_thermo::qsat']]],
-  ['quicksort_14',['quicksort',['../namespacemode__tools.html#af62439ea68c41cde8703a03ce06aa993',1,'mode_tools']]]
+  ['qsatw_5f3d_13',['qsatw_3d',['../interfacemode__thermo_1_1qsat.html#a83fca0c9ba5b2220e05c9549190e81f7',1,'mode_thermo::qsat']]]
 ];

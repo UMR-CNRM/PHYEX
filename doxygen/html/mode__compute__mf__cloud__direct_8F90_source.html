@@ -160,7 +160,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="comment">!*                    0.1  Declaration of local variables</span></div>
 <div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="comment">!</span></div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="keywordtype">REAL</span>(KIND=jphook) :: zhook_handle</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="keywordtype">INTEGER</span>  :: JI,JK, JK0, IKB,IKE,IKL,IKT,IIJB,IIJE</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="keywordtype">INTEGER</span>  :: JIJ,JK, JK0, IKB,IKE,IKL,IKT,IIJB,IIJE</div>
 <div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span> :: ZFRAC_UP_M</div>
 <div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="comment">!</span></div>
 <div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="comment">!*                    0.2 Initialisation</span></div>
@@ -185,23 +185,23 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
 <div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="keywordflow">IF</span>(parammf%LRELAX_ALPHA_MF) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__shuman__mf_1_1mzf__mf.html">mzf_mf</a>(d, pfrac_up(:,:), zfrac_up_m(:,:))</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>  <span class="comment">!$mnh_expand_array(JI=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
 <div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>  pweight_mf_cloud(iijb:iije, 1:ikt) = zfrac_up_m(iijb:iije, 1:ikt)*parammf%XALPHA_MF</div>
 <div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>  pweight_mf_cloud(iijb:iije, 1:ikt) = max(0., min(pweight_mf_cloud(iijb:iije, 1:ikt), 1.))</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>  <span class="comment">!$mnh_end_expand_array(JI=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
 <div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span><span class="keywordflow">ENDIF</span></div>
 <div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="keywordflow">DO</span> ji=iijb,iije</div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>  jk0=kklcl(ji)-ikl <span class="comment">! first mass level with cloud</span></div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="keywordflow">DO</span> jij=iijb,iije</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>  jk0=kklcl(jij)-ikl <span class="comment">! first mass level with cloud</span></div>
 <div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>  jk0=max(jk0, min(ikb,ike)) <span class="comment">!protection if KKL=1</span></div>
 <div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>  jk0=min(jk0, max(ikb,ike)) <span class="comment">!protection if KKL=-1</span></div>
 <div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>  <span class="keywordflow">DO</span> jk=jk0,ike-ikl,ikl</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    pcf_mf(ji,jk ) = max( 0., min(1.,parammf%XKCF_MF *0.5* (       &amp;</div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>                &amp;    pfrac_up(ji,jk) +  pfrac_up(ji,jk+ikl) ) ))</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    prc_mf(ji,jk)  = 0.5* parammf%XKCF_MF * ( pfrac_up(ji,jk)*prc_up(ji,jk)  &amp;</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>                         + pfrac_up(ji,jk+ikl)*prc_up(ji,jk+ikl) )</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    pri_mf(ji,jk)  = 0.5* parammf%XKCF_MF * ( pfrac_up(ji,jk)*pri_up(ji,jk)  &amp;</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>                         + pfrac_up(ji,jk+ikl)*pri_up(ji,jk+ikl) )</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    pcf_mf(jij,jk ) = max( 0., min(1.,parammf%XKCF_MF *0.5* (       &amp;</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>                &amp;    pfrac_up(jij,jk) +  pfrac_up(jij,jk+ikl) ) ))</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    prc_mf(jij,jk)  = 0.5* parammf%XKCF_MF * ( pfrac_up(jij,jk)*prc_up(jij,jk)  &amp;</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>                         + pfrac_up(jij,jk+ikl)*prc_up(jij,jk+ikl) )</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    pri_mf(jij,jk)  = 0.5* parammf%XKCF_MF * ( pfrac_up(jij,jk)*pri_up(jij,jk)  &amp;</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>                         + pfrac_up(jij,jk+ikl)*pri_up(jij,jk+ikl) )</div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="keywordflow">  END DO</span></div>
 <div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="keywordflow">END DO</span></div>
 <div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span> </div>

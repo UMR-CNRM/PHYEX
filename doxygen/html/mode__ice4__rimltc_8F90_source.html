@@ -144,23 +144,25 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="comment">!</span></div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="comment">!*       7.1    cloud ice melting</span></div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="comment">!</span></div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="keywordflow">DO</span> jl=1, ksize</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>  <span class="keywordflow">IF</span>(prit(jl)&gt;0. .AND. pt(jl)&gt;cst%XTT .AND. ldcompute(jl)) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    primltc_mr(jl)=prit(jl)</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <span class="keywordflow">IF</span>(parami%LFEEDBACKT) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>      <span class="comment">!Limitation due to 0 crossing of temperature</span></div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>      primltc_mr(jl)=min(primltc_mr(jl), max(0., (ptht(jl)-cst%XTT/pexn(jl)) / (plsfact(jl)-plvfact(jl))))</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><span class="keywordflow">    ENDIF</span></div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>  <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    primltc_mr(jl)=0.</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keywordflow">  ENDIF</span></div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="keywordflow">ENDDO</span></div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;ICE4_RIMLTC&#39;</span>, 1, zhook_handle)</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="comment">!</span></div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="comment">!$acc kernels</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="comment">!$acc loop independent</span></div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="keywordflow">DO</span> jl=1, ksize</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>  <span class="keywordflow">IF</span>(prit(jl)&gt;0. .AND. pt(jl)&gt;cst%XTT .AND. ldcompute(jl)) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    primltc_mr(jl)=prit(jl)</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="keywordflow">IF</span>(parami%LFEEDBACKT) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>      <span class="comment">!Limitation due to 0 crossing of temperature</span></div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>      primltc_mr(jl)=min(primltc_mr(jl), max(0., (ptht(jl)-cst%XTT/pexn(jl)) / (plsfact(jl)-plvfact(jl))))</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="keywordflow">    ENDIF</span></div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>  <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    primltc_mr(jl)=0.</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="keywordflow">  ENDIF</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="keywordflow">ENDDO</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;ICE4_RIMLTC&#39;</span>, 1, zhook_handle)</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="comment">!</span></div>
 </div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__ice4__rimltc.html#a7432d9834ff47ced22931cd22482ca80">ice4_rimltc</a></div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__ice4__rimltc.html">mode_ice4_rimltc</a></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__ice4__rimltc.html#a7432d9834ff47ced22931cd22482ca80">ice4_rimltc</a></div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__ice4__rimltc.html">mode_ice4_rimltc</a></div>
 <div class="ttc" id="anamespacemodd__cst_html"><div class="ttname"><a href="namespacemodd__cst.html">modd_cst</a></div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00007">modd_cst.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__param__ice__n_html"><div class="ttname"><a href="namespacemodd__param__ice__n.html">modd_param_ice_n</a></div><div class="ttdef"><b>Definition</b> <a href="modd__param__icen_8F90_source.html#l00007">modd_param_icen.F90:7</a></div></div>
 <div class="ttc" id="anamespacemode__ice4__rimltc_html"><div class="ttname"><a href="namespacemode__ice4__rimltc.html">mode_ice4_rimltc</a></div><div class="ttdef"><b>Definition</b> <a href="mode__ice4__rimltc_8F90_source.html#l00006">mode_ice4_rimltc.F90:6</a></div></div>

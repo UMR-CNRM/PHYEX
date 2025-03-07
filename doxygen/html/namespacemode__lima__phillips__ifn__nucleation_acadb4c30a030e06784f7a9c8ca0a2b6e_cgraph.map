@@ -1,0 +1,14 @@
+<map id="mode_lima_phillips_ifn_nucleation::lima_phillips_ifn_nucleation" name="mode_lima_phillips_ifn_nucleation::lima_phillips_ifn_nucleation">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,62,180,117"/>
+<area shape="rect" id="Node000002" href="$namespacemode__lima__phillips__integ.html#a68ca360a0d494ee102d29790d492b1f2" title=" " alt="" coords="228,33,421,73"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="180,73,214,68,215,73,180,78"/>
+<area shape="rect" id="Node000005" href="$namespacemode__lima__phillips__ref__spectrum.html#ab91199aba8de6e0614c6c8f158c7ab44" title=" " alt="" coords="240,98,409,153"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="180,100,227,107,226,113,180,105"/>
+<area shape="rect" id="Node000003" href="$namespacemode__lima__functions.html#a3e22ec601b2ac99348f456ace2fa7aae" title=" " alt="" coords="469,69,632,109"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="422,66,456,72,455,77,421,71"/>
+<area shape="rect" id="Node000004" href="$namespacemode__lima__functions.html#ac95f2b89e5c96b62e348760c18ab2dd6" title=" " alt="" coords="469,5,632,45"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="421,39,455,34,456,40,422,44"/>
+<area shape="poly" id="edge5_Node000005_Node000003" title=" " alt="" coords="409,109,455,102,456,107,410,114"/>
+<area shape="rect" id="Node000006" href="$namespacemode__lima__functions.html#a51d8231eb917aff6e1b62be65ce9d3f3" title=" " alt="" coords="469,133,632,173"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="410,133,456,139,456,144,409,138"/>
+</map>

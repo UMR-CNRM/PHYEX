@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:adb50758aa32e847a5c5db961c90cdc6a" id="r_adb50758aa32e847a5c5db961c90cdc6a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__turb__hor__sv__flux.html#adb50758aa32e847a5c5db961c90cdc6a">turb_hor_sv_flux</a> (turbn, tles, ksplt, oblowsnow, oflat, tpfile, ksv_lgbeg, ksv_lgend, o2d, onomixlg, pk, pinv_pdxx, pinv_pdyy, pinv_pdzz, pmzm_prhodj, pdxx, pdyy, pdzz, pdzx, pdzy, prsnow, pdircosxw, pdircosyw, prhodj, pwm, psfsvm, psvm, prsvs)</td></tr>
-<tr class="separator:adb50758aa32e847a5c5db961c90cdc6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa6e8f229e1939ca208908b5f6adefa1" id="r_afa6e8f229e1939ca208908b5f6adefa1"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__turb__hor__sv__flux.html#afa6e8f229e1939ca208908b5f6adefa1">turb_hor_sv_flux</a> (d, turbn, tles, ksplt, oblowsnow, oflat, tpfile, ksv, ksv_lgbeg, ksv_lgend, o2d, onomixlg, pk, pinv_pdxx, pinv_pdyy, pinv_pdzz, pmzm_prhodj, pdxx, pdyy, pdzz, pdzx, pdzy, prsnow, pdircosxw, pdircosyw, prhodj, pwm, psfsvm, psvm, prsvs)</td></tr>
+<tr class="separator:afa6e8f229e1939ca208908b5f6adefa1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="adb50758aa32e847a5c5db961c90cdc6a" name="adb50758aa32e847a5c5db961c90cdc6a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adb50758aa32e847a5c5db961c90cdc6a">&#9670;&#160;</a></span>turb_hor_sv_flux()</h2>
+<a id="afa6e8f229e1939ca208908b5f6adefa1" name="afa6e8f229e1939ca208908b5f6adefa1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa6e8f229e1939ca208908b5f6adefa1">&#9670;&#160;</a></span>turb_hor_sv_flux()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,6 +91,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_turb_hor_sv_flux::turb_hor_sv_flux </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__turb__n_1_1turb__t.html">turb_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>turbn</em>, </td>
         </tr>
@@ -121,8 +127,14 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">type(<a class="el" href="structmodd__io_1_1tfiledata.html">tfiledata</a>), intent(in)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__io_1_1tfiledata.html">tfiledata</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>tpfile</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>ksv</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -151,61 +163,61 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pk</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pinv_pdxx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pinv_pdyy</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pinv_pdzz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pmzm_prhodj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdxx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdyy</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdzz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdzx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdzy</em>, </td>
         </tr>
         <tr>
@@ -229,31 +241,31 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pwm</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,ksv), intent(in)&#160;</td>
           <td class="paramname"><em>psfsvm</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt,ksv), intent(in)&#160;</td>
           <td class="paramname"><em>psvm</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt,ksv), intent(inout)&#160;</td>
           <td class="paramname"><em>prsvs</em>&#160;</td>
         </tr>
         <tr>
@@ -268,18 +280,61 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__turb__hor__sv__flux_adb50758aa32e847a5c5db961c90cdc6a_cgraph.png" border="0" usemap="#anamespacemode__turb__hor__sv__flux_adb50758aa32e847a5c5db961c90cdc6a_cgraph" alt=""/></div>
-<map name="anamespacemode__turb__hor__sv__flux_adb50758aa32e847a5c5db961c90cdc6a_cgraph" id="anamespacemode__turb__hor__sv__flux_adb50758aa32e847a5c5db961c90cdc6a_cgraph">
-<area shape="rect" title=" " alt="" coords="5,5,179,45"/>
-<area shape="rect" href="namespacemode__io__field__write.html#a51061fb206463f97afeb0bdafb71c461" title=" " alt="" coords="227,5,380,45"/>
-<area shape="poly" title=" " alt="" coords="179,23,213,23,213,28,179,28"/>
+<div class="center"><img src="namespacemode__turb__hor__sv__flux_afa6e8f229e1939ca208908b5f6adefa1_cgraph.png" border="0" usemap="#anamespacemode__turb__hor__sv__flux_afa6e8f229e1939ca208908b5f6adefa1_cgraph" alt=""/></div>
+<map name="anamespacemode__turb__hor__sv__flux_afa6e8f229e1939ca208908b5f6adefa1_cgraph" id="anamespacemode__turb__hor__sv__flux_afa6e8f229e1939ca208908b5f6adefa1_cgraph">
+<area shape="rect" title=" " alt="" coords="5,277,179,317"/>
+<area shape="rect" href="namespacemode__gradient__m__phy.html#a1bdcecaa1b1590cde6660efeceb5f029" title=" " alt="" coords="227,85,397,125"/>
+<area shape="poly" title=" " alt="" coords="103,275,151,207,186,169,225,135,234,129,237,133,228,139,189,172,155,211,107,278"/>
+<area shape="rect" href="namespacemode__gradient__m__phy.html#a1d01248f648bab96433dc23eddaaa898" title=" " alt="" coords="227,149,397,189"/>
+<area shape="poly" title=" " alt="" coords="116,274,165,237,225,198,238,192,241,197,228,203,168,241,119,279"/>
+<area shape="rect" href="namespacemode__gradient__w__phy.html#abc70f65183a5a309b3554844b6ce5457" title=" " alt="" coords="227,213,397,253"/>
+<area shape="poly" title=" " alt="" coords="161,274,229,254,231,259,162,279"/>
+<area shape="rect" href="namespacemode__gradient__m__phy.html#a2c8e99829ce766147be8c6f3a683069d" title=" " alt="" coords="227,405,397,445"/>
+<area shape="poly" title=" " alt="" coords="119,315,168,352,228,390,241,397,238,401,225,395,165,356,116,319"/>
+<area shape="rect" href="namespacemode__gradient__m__phy.html#a8941f997f819b6ece6300491d07ac24e" title=" " alt="" coords="227,341,397,381"/>
+<area shape="poly" title=" " alt="" coords="162,314,231,334,229,339,161,319"/>
+<area shape="rect" href="namespacemode__gradient__w__phy.html#a4675d14d9ff979468ad4472dd3b5f452" title=" " alt="" coords="227,277,397,317"/>
+<area shape="poly" title=" " alt="" coords="179,294,214,294,214,299,179,299"/>
+<area shape="rect" href="namespacemode__io__field__write.html#a51061fb206463f97afeb0bdafb71c461" title=" " alt="" coords="235,469,389,509"/>
+<area shape="poly" title=" " alt="" coords="107,315,155,383,189,421,228,455,237,460,234,465,225,459,186,425,151,386,103,318"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#ad1f46fbcb602580b47426b961da805a8" title=" " alt="" coords="452,55,660,80"/>
+<area shape="poly" title=" " alt="" coords="397,89,459,79,460,85,398,94"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a440add7f9106295e507be65c1c530473" title=" " alt="" coords="449,301,663,327"/>
+<area shape="poly" title=" " alt="" coords="384,123,399,135,414,155,421,175,423,214,425,251,433,269,447,287,453,292,450,296,443,291,428,272,420,252,417,214,415,176,409,157,395,138,381,127"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a1c4329981fbefbc265709f1515123cf0" title=" " alt="" coords="449,5,663,31"/>
+<area shape="poly" title=" " alt="" coords="349,82,394,60,444,39,471,32,473,37,446,45,396,65,351,87"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#ad7e5b1c3c9f74262b10ca07db9ca6893" title=" " alt="" coords="445,104,667,129"/>
+<area shape="poly" title=" " alt="" coords="398,106,432,108,431,113,397,112"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a960e2dc2b7078cc75ef8e5192c212356" title=" " alt="" coords="450,203,662,228"/>
+<area shape="poly" title=" " alt="" coords="377,122,399,135,414,149,423,163,432,176,447,188,462,195,460,200,444,192,428,179,419,165,410,152,396,139,375,127"/>
+<area shape="poly" title=" " alt="" coords="369,250,398,262,422,275,446,286,476,295,474,300,444,291,420,280,396,267,367,255"/>
+<area shape="poly" title=" " alt="" coords="376,210,396,199,410,184,418,169,427,153,444,138,455,132,458,137,447,143,432,156,423,171,415,187,399,203,379,215"/>
+<area shape="poly" title=" " alt="" coords="397,224,436,221,437,226,397,229"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a6c289ab6a361d1385d4b061f32f3902c" title=" " alt="" coords="448,153,664,179"/>
+<area shape="poly" title=" " alt="" coords="371,210,445,187,478,179,480,184,446,193,372,215"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a86441e6781603bb2b6b1f30d8c0e39b4" title=" " alt="" coords="446,252,666,277"/>
+<area shape="poly" title=" " alt="" coords="397,241,446,248,445,253,396,246"/>
+<area shape="poly" title=" " alt="" coords="375,402,396,391,410,377,419,363,428,349,444,336,456,329,459,334,447,340,432,353,423,366,414,380,399,395,378,407"/>
+<area shape="poly" title=" " alt="" coords="381,402,395,391,409,372,415,353,417,314,420,276,428,256,443,237,448,233,452,237,447,241,432,259,425,277,423,315,421,354,414,374,399,394,384,407"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a191f841104f424a01825322f617985de" title=" " alt="" coords="452,499,660,524"/>
+<area shape="poly" title=" " alt="" coords="372,442,399,454,422,470,446,484,472,492,470,497,444,488,420,474,396,459,369,447"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#ae651e59d4c09e8187d0292f473eaaf33" title=" " alt="" coords="449,449,663,475"/>
+<area shape="poly" title=" " alt="" coords="398,435,460,445,459,450,397,440"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a022e15d54f09a2283f66868ffa20e725" title=" " alt="" coords="445,400,667,425"/>
+<area shape="poly" title=" " alt="" coords="397,418,431,416,432,421,398,423"/>
+<area shape="poly" title=" " alt="" coords="397,300,435,303,435,308,397,305"/>
+<area shape="poly" title=" " alt="" coords="368,274,396,262,420,249,444,237,469,229,471,234,446,242,422,254,399,267,370,279"/>
+<area shape="poly" title=" " alt="" coords="396,283,445,277,446,282,397,288"/>
+<area shape="poly" title=" " alt="" coords="378,315,399,327,414,342,423,357,432,372,447,385,461,393,458,397,444,390,428,375,419,360,410,345,396,331,376,319"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a21558529c1139a3f336daa0438bb5569" title=" " alt="" coords="448,351,664,376"/>
+<area shape="poly" title=" " alt="" coords="375,314,446,335,483,345,482,350,445,341,373,319"/>
 </map>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__turb__hor__sv__flux_adb50758aa32e847a5c5db961c90cdc6a_icgraph.png" border="0" usemap="#anamespacemode__turb__hor__sv__flux_adb50758aa32e847a5c5db961c90cdc6a_icgraph" alt=""/></div>
-<map name="anamespacemode__turb__hor__sv__flux_adb50758aa32e847a5c5db961c90cdc6a_icgraph" id="anamespacemode__turb__hor__sv__flux_adb50758aa32e847a5c5db961c90cdc6a_icgraph">
+<div class="center"><img src="namespacemode__turb__hor__sv__flux_afa6e8f229e1939ca208908b5f6adefa1_icgraph.png" border="0" usemap="#anamespacemode__turb__hor__sv__flux_afa6e8f229e1939ca208908b5f6adefa1_icgraph" alt=""/></div>
+<map name="anamespacemode__turb__hor__sv__flux_afa6e8f229e1939ca208908b5f6adefa1_icgraph" id="anamespacemode__turb__hor__sv__flux_afa6e8f229e1939ca208908b5f6adefa1_icgraph">
 <area shape="rect" title=" " alt="" coords="531,5,704,45"/>
 <area shape="rect" href="namespacemode__turb__hor.html#a392ed5235673e3faa3d5c1f17974a7cc" title=" " alt="" coords="300,13,483,38"/>
 <area shape="poly" title=" " alt="" coords="517,28,483,28,483,23,517,23"/>

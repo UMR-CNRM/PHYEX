@@ -84,12 +84,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a38482b92a3cfcd111b69dfc8e5aa3dab" id="r_a38482b92a3cfcd111b69dfc8e5aa3dab"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lima__adjust__split_8F90.html#a38482b92a3cfcd111b69dfc8e5aa3dab">lima_adjust_split</a> (d, cst, buconf, tbudgets, kbudgets, krr, kmi, hcondens, hlambda3, kcarb, ksoa, ksp, odust, osalt, oorilam, osubg_cond, osigmas, ptstep, psigqsat, prhodref, prhodj, pexnref, psigs, lmfconv, pmfconv, ppabst, ppabstt, pzz, odthrad, pdthrad, pw_nu, prt, prs, psvt, psvs, hactccn, paero, psolorg, pmi, pths, ocompute_src, psrcs, pcldfr, picefr, prc_mf, pri_mf, pcf_mf)</td></tr>
-<tr class="separator:a38482b92a3cfcd111b69dfc8e5aa3dab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aedede318ea55fea4785f60c637a69212" id="r_aedede318ea55fea4785f60c637a69212"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lima__adjust__split_8F90.html#aedede318ea55fea4785f60c637a69212">lima_adjust_split</a> (limap, limaw, tnsv, d, cst, nebn, turbn, buconf, tbudgets, kbudgets, krr, hcondens, hlambda3, kcarb, ksoa, ksp, odust, osalt, oorilam, osubg_cond, osigmas, ptstep, psigqsat, prhodref, prhodj, pexnref, psigs, omfconv, pmfconv, ppabst, pzz, odthrad, pdthrad, pw_nu, prt, prs, psvt, psvs, hactccn, paero, psolorg, pmi, pths, ocompute_src, psrcs, pcldfr, picefr, prc_mf, pri_mf, pcf_mf)</td></tr>
+<tr class="separator:aedede318ea55fea4785f60c637a69212"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a38482b92a3cfcd111b69dfc8e5aa3dab" name="a38482b92a3cfcd111b69dfc8e5aa3dab"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a38482b92a3cfcd111b69dfc8e5aa3dab">&#9670;&#160;</a></span>lima_adjust_split()</h2>
+<a id="aedede318ea55fea4785f60c637a69212" name="aedede318ea55fea4785f60c637a69212"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aedede318ea55fea4785f60c637a69212">&#9670;&#160;</a></span>lima_adjust_split()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -97,6 +97,24 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine lima_adjust_split </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limap</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__warm_1_1param__lima__warm__t.html">param_lima_warm_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limaw</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__nsv_1_1nsv__t.html">nsv_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>tnsv</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>d</em>, </td>
         </tr>
@@ -105,6 +123,18 @@ Functions/Subroutines</h2></td></tr>
           <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__cst_1_1cst__t.html">cst_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>cst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__neb__n_1_1neb__t.html">neb_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>nebn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__turb__n_1_1turb__t.html">turb_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>turbn</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -129,12 +159,6 @@ Functions/Subroutines</h2></td></tr>
           <td></td>
           <td class="paramtype">integer, intent(in)&#160;</td>
           <td class="paramname"><em>krr</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">integer, intent(in)&#160;</td>
-          <td class="paramname"><em>kmi</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -205,61 +229,55 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>psigqsat</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pexnref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(merge(d%nit,0,nebn%lsubg_cond),                 merge(d%njt,0,nebn%lsubg_cond),                 merge(d%nkt,0,nebn%lsubg_cond)), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,nebn%lsubg_cond),                 merge(d%nkt,0,nebn%lsubg_cond)), intent(in)&#160;</td>
           <td class="paramname"><em>psigs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">logical, intent(in)&#160;</td>
-          <td class="paramname"><em>lmfconv</em>, </td>
+          <td class="paramname"><em>omfconv</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(merge(d%nit,0,lmfconv),                 merge(d%njt,0,lmfconv),                 merge(d%nkt,0,lmfconv)), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,omfconv),                 merge(d%nkt,0,omfconv)), intent(in)&#160;</td>
           <td class="paramname"><em>pmfconv</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>ppabst</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>ppabstt</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pzz</em>, </td>
         </tr>
         <tr>
@@ -271,37 +289,37 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(merge(d%nit,0,odthrad),                 merge(d%njt,0,odthrad),                 merge(d%nkt,0,odthrad)), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,odthrad),                 merge(d%nkt,0,odthrad)), intent(in)&#160;</td>
           <td class="paramname"><em>pdthrad</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pw_nu</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, krr), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, krr), intent(in)&#160;</td>
           <td class="paramname"><em>prt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, krr), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, krr), intent(inout)&#160;</td>
           <td class="paramname"><em>prs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, nsv), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv), intent(in)&#160;</td>
           <td class="paramname"><em>psvt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, nsv), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv), intent(inout)&#160;</td>
           <td class="paramname"><em>psvs</em>, </td>
         </tr>
         <tr>
@@ -313,25 +331,25 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt ,nsv), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt ,tnsv%nsv), intent(inout)&#160;</td>
           <td class="paramname"><em>paero</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, 10), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, 10), intent(in)&#160;</td>
           <td class="paramname"><em>psolorg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, ksp+kcarb+ksoa), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, ksp+kcarb+ksoa), intent(in)&#160;</td>
           <td class="paramname"><em>pmi</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>pths</em>, </td>
         </tr>
         <tr>
@@ -343,37 +361,37 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(merge(d%nit,0,ocompute_src),                 merge(d%njt,0,ocompute_src),                 merge(d%nkt,0,ocompute_src)), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,ocompute_src),                 merge(d%nkt,0,ocompute_src)), intent(out)&#160;</td>
           <td class="paramname"><em>psrcs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>pcldfr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>picefr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prc_mf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pri_mf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pcf_mf</em>&#160;</td>
         </tr>
         <tr>
@@ -388,23 +406,21 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="lima__adjust__split_8F90_a38482b92a3cfcd111b69dfc8e5aa3dab_cgraph.png" border="0" usemap="#alima__adjust__split_8F90_a38482b92a3cfcd111b69dfc8e5aa3dab_cgraph" alt=""/></div>
-<map name="alima__adjust__split_8F90_a38482b92a3cfcd111b69dfc8e5aa3dab_cgraph" id="alima__adjust__split_8F90_a38482b92a3cfcd111b69dfc8e5aa3dab_cgraph">
+<div class="center"><img src="lima__adjust__split_8F90_aedede318ea55fea4785f60c637a69212_cgraph.png" border="0" usemap="#alima__adjust__split_8F90_aedede318ea55fea4785f60c637a69212_cgraph" alt=""/></div>
+<map name="alima__adjust__split_8F90_aedede318ea55fea4785f60c637a69212_cgraph" id="alima__adjust__split_8F90_aedede318ea55fea4785f60c637a69212_cgraph">
 <area shape="rect" title=" " alt="" coords="5,77,139,102"/>
 <area shape="rect" href="namespacemode__budget__phy.html#adb853e4fb0b59cc93057b507a52bd8ce" title=" " alt="" coords="187,5,382,45"/>
 <area shape="poly" title=" " alt="" coords="115,74,204,47,205,52,116,79"/>
 <area shape="rect" href="namespacemode__budget__phy.html#a45dce5bc68868ab14b72a6c987fd5d08" title=" " alt="" coords="187,69,382,109"/>
 <area shape="poly" title=" " alt="" coords="139,87,174,87,174,92,139,92"/>
-<area shape="rect" href="namespacemode__lima__ccn__activation.html#a2d67fb48f430119b2c3cbb02d06354fd" title=" " alt="" coords="187,133,383,173"/>
+<area shape="rect" href="namespacemode__lima__ccn__activation.html#abc1c855d76ed81dd65e912638061e76a" title=" " alt="" coords="187,133,383,173"/>
 <area shape="poly" title=" " alt="" coords="116,100,205,127,204,132,115,105"/>
 <area shape="rect" href="namespacemode__budget__phy.html#af12acae4d0ad98243d08fc99268ce6d0" title=" " alt="" coords="431,5,625,45"/>
 <area shape="poly" title=" " alt="" coords="382,23,417,23,417,28,382,28"/>
 <area shape="rect" href="namespacemode__budget__phy.html#a65b741f24c7da49ec1c6d3cc674707dc" title=" " alt="" coords="431,69,625,109"/>
 <area shape="poly" title=" " alt="" coords="382,87,417,87,417,92,382,92"/>
-<area shape="rect" href="mode__lima__ccn__activation_8F90.html#a95087338f3fdc42f3c75d1bb4a265af8" title=" " alt="" coords="499,141,557,166"/>
+<area shape="rect" href="mode__lima__ccn__activation_8F90.html#a1fc2197bb5e03d994cf4624b9a88ab44" title=" " alt="" coords="499,141,557,166"/>
 <area shape="poly" title=" " alt="" coords="383,151,485,151,485,156,383,156"/>
-<area shape="rect" href="gamma_8F90.html#a9777227bbb84bfae4e8675b657d6e273" title=" " alt="" coords="673,141,776,166"/>
-<area shape="poly" title=" " alt="" coords="558,151,660,151,660,156,558,156"/>
 </map>
 </div>
 

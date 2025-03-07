@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:ad1066781c1d7cf473987b82786e411fe" id="r_ad1066781c1d7cf473987b82786e411fe"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__phillips__ref__spectrum.html#ad1066781c1d7cf473987b82786e411fe">lima_phillips_ref_spectrum</a> (cst, zzt, zsi, zsi_w, zzy)</td></tr>
-<tr class="separator:ad1066781c1d7cf473987b82786e411fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab91199aba8de6e0614c6c8f158c7ab44" id="r_ab91199aba8de6e0614c6c8f158c7ab44"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__phillips__ref__spectrum.html#ab91199aba8de6e0614c6c8f158c7ab44">lima_phillips_ref_spectrum</a> (limap, cst, isize, pzt, psi, psi_w, pzy)</td></tr>
+<tr class="separator:ab91199aba8de6e0614c6c8f158c7ab44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="ad1066781c1d7cf473987b82786e411fe" name="ad1066781c1d7cf473987b82786e411fe"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad1066781c1d7cf473987b82786e411fe">&#9670;&#160;</a></span>lima_phillips_ref_spectrum()</h2>
+<a id="ab91199aba8de6e0614c6c8f158c7ab44" name="ab91199aba8de6e0614c6c8f158c7ab44"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab91199aba8de6e0614c6c8f158c7ab44">&#9670;&#160;</a></span>lima_phillips_ref_spectrum()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,32 +91,44 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_lima_phillips_ref_spectrum::lima_phillips_ref_spectrum </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limap</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__cst_1_1cst__t.html">cst_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>cst</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>zzt</em>, </td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>isize</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>zsi</em>, </td>
+          <td class="paramtype">real, dimension(isize), intent(in)&#160;</td>
+          <td class="paramname"><em>pzt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>zsi_w</em>, </td>
+          <td class="paramtype">real, dimension(isize), intent(in)&#160;</td>
+          <td class="paramname"><em>psi</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(inout)&#160;</td>
-          <td class="paramname"><em>zzy</em>&#160;</td>
+          <td class="paramtype">real, dimension(isize), intent(in)&#160;</td>
+          <td class="paramname"><em>psi_w</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(isize), intent(out)&#160;</td>
+          <td class="paramname"><em>pzy</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -130,8 +142,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__lima__phillips__ref__spectrum_ad1066781c1d7cf473987b82786e411fe_cgraph.png" border="0" usemap="#anamespacemode__lima__phillips__ref__spectrum_ad1066781c1d7cf473987b82786e411fe_cgraph" alt=""/></div>
-<map name="anamespacemode__lima__phillips__ref__spectrum_ad1066781c1d7cf473987b82786e411fe_cgraph" id="anamespacemode__lima__phillips__ref__spectrum_ad1066781c1d7cf473987b82786e411fe_cgraph">
+<div class="center"><img src="namespacemode__lima__phillips__ref__spectrum_ab91199aba8de6e0614c6c8f158c7ab44_cgraph.png" border="0" usemap="#anamespacemode__lima__phillips__ref__spectrum_ab91199aba8de6e0614c6c8f158c7ab44_cgraph" alt=""/></div>
+<map name="anamespacemode__lima__phillips__ref__spectrum_ab91199aba8de6e0614c6c8f158c7ab44_cgraph" id="anamespacemode__lima__phillips__ref__spectrum_ab91199aba8de6e0614c6c8f158c7ab44_cgraph">
 <area shape="rect" title=" " alt="" coords="5,30,175,85"/>
 <area shape="rect" href="namespacemode__lima__functions.html#a3e22ec601b2ac99348f456ace2fa7aae" title=" " alt="" coords="223,5,385,45"/>
 <area shape="poly" title=" " alt="" coords="174,42,209,37,210,42,175,47"/>
@@ -142,14 +154,14 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__lima__phillips__ref__spectrum_ad1066781c1d7cf473987b82786e411fe_icgraph.png" border="0" usemap="#anamespacemode__lima__phillips__ref__spectrum_ad1066781c1d7cf473987b82786e411fe_icgraph" alt=""/></div>
-<map name="anamespacemode__lima__phillips__ref__spectrum_ad1066781c1d7cf473987b82786e411fe_icgraph" id="anamespacemode__lima__phillips__ref__spectrum_ad1066781c1d7cf473987b82786e411fe_icgraph">
+<div class="center"><img src="namespacemode__lima__phillips__ref__spectrum_ab91199aba8de6e0614c6c8f158c7ab44_icgraph.png" border="0" usemap="#anamespacemode__lima__phillips__ref__spectrum_ab91199aba8de6e0614c6c8f158c7ab44_icgraph" alt=""/></div>
+<map name="anamespacemode__lima__phillips__ref__spectrum_ab91199aba8de6e0614c6c8f158c7ab44_icgraph" id="anamespacemode__lima__phillips__ref__spectrum_ab91199aba8de6e0614c6c8f158c7ab44_icgraph">
 <area shape="rect" title=" " alt="" coords="593,5,763,60"/>
-<area shape="rect" href="namespacemode__lima__phillips__ifn__nucleation.html#a6b60f7e620ce1e7d07bf5e7d0b480942" title=" " alt="" coords="371,5,545,60"/>
+<area shape="rect" href="namespacemode__lima__phillips__ifn__nucleation.html#acadb4c30a030e06784f7a9c8ca0a2b6e" title=" " alt="" coords="371,5,545,60"/>
 <area shape="poly" title=" " alt="" coords="580,35,545,35,545,30,580,30"/>
-<area shape="rect" href="namespacemode__lima__nucleation__procs.html#a5c1d2784bd1e82482b45258b5ebccc50" title=" " alt="" coords="104,13,323,53"/>
+<area shape="rect" href="namespacemode__lima__nucleation__procs.html#a72240eeca7448319f2b8eb01e72fc9df" title=" " alt="" coords="104,13,323,53"/>
 <area shape="poly" title=" " alt="" coords="357,35,323,35,323,30,357,30"/>
-<area shape="rect" href="lima_8F90.html#a7358dec3cc36d58f782836dc100f62fa" title=" " alt="" coords="5,20,56,45"/>
+<area shape="rect" href="lima_8F90.html#a45fe64d21afbc6cace563fda83cb1e79" title=" " alt="" coords="5,20,56,45"/>
 <area shape="poly" title=" " alt="" coords="90,35,56,35,56,30,90,30"/>
 </map>
 </div>

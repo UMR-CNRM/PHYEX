@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a95176c7ee8b40b8234f7d74aa11c4130" id="r_a95176c7ee8b40b8234f7d74aa11c4130"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__update__nsv.html#a95176c7ee8b40b8234f7d74aa11c4130">lima_update_nsv</a> (ldinit, kmi, ksv, cdcloud, ldupdate)</td></tr>
-<tr class="separator:a95176c7ee8b40b8234f7d74aa11c4130"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a305b773235435e7ba299272dedfe7a54" id="r_a305b773235435e7ba299272dedfe7a54"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__update__nsv.html#a305b773235435e7ba299272dedfe7a54">lima_update_nsv</a> (limap, tnsv, odinit, kmi, ksv, hdcloud, odupdate)</td></tr>
+<tr class="separator:a305b773235435e7ba299272dedfe7a54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a95176c7ee8b40b8234f7d74aa11c4130" name="a95176c7ee8b40b8234f7d74aa11c4130"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a95176c7ee8b40b8234f7d74aa11c4130">&#9670;&#160;</a></span>lima_update_nsv()</h2>
+<a id="a305b773235435e7ba299272dedfe7a54" name="a305b773235435e7ba299272dedfe7a54"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a305b773235435e7ba299272dedfe7a54">&#9670;&#160;</a></span>lima_update_nsv()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,8 +91,20 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_lima_update_nsv::lima_update_nsv </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limap</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__nsv_1_1nsv__t.html">nsv_t</a>), intent(inout)&#160;</td>
+          <td class="paramname"><em>tnsv</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">logical, intent(in)&#160;</td>
-          <td class="paramname"><em>ldinit</em>, </td>
+          <td class="paramname"><em>odinit</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -110,13 +122,13 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">character(len=4), intent(in)&#160;</td>
-          <td class="paramname"><em>cdcloud</em>, </td>
+          <td class="paramname"><em>hdcloud</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">logical, intent(in)&#160;</td>
-          <td class="paramname"><em>ldupdate</em>&#160;</td>
+          <td class="paramname"><em>odupdate</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -127,11 +139,11 @@ Functions/Subroutines</h2></td></tr>
 </div><div class="memdoc">
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">ldinit</td><td>.TRUE. to fill the different NSV_LIMA_*_A arrays</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">odinit</td><td>.TRUE. to fill the different NSV_LIMA_*_A arrays</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">kmi</td><td>model number</td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">ksv</td><td>IN: Initial value to use when filling the NSV_LIMA_*_A arrays; OUT: Final value after having filled the arrays</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">cdcloud</td><td>Cloud scheme</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ldupdate</td><td>.TRUE. to goto model </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hdcloud</td><td>Cloud scheme</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">odupdate</td><td>.TRUE. to goto model </td></tr>
   </table>
   </dd>
 </dl>
@@ -140,8 +152,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__lima__update__nsv_a95176c7ee8b40b8234f7d74aa11c4130_icgraph.png" border="0" usemap="#anamespacemode__lima__update__nsv_a95176c7ee8b40b8234f7d74aa11c4130_icgraph" alt=""/></div>
-<map name="anamespacemode__lima__update__nsv_a95176c7ee8b40b8234f7d74aa11c4130_icgraph" id="anamespacemode__lima__update__nsv_a95176c7ee8b40b8234f7d74aa11c4130_icgraph">
+<div class="center"><img src="namespacemode__lima__update__nsv_a305b773235435e7ba299272dedfe7a54_icgraph.png" border="0" usemap="#anamespacemode__lima__update__nsv_a305b773235435e7ba299272dedfe7a54_icgraph" alt=""/></div>
+<map name="anamespacemode__lima__update__nsv_a305b773235435e7ba299272dedfe7a54_icgraph" id="anamespacemode__lima__update__nsv_a305b773235435e7ba299272dedfe7a54_icgraph">
 <area shape="rect" title=" " alt="" coords="139,5,316,45"/>
 <area shape="rect" href="ini__phyex_8F90.html#a59831747ac1dcbd264164bfa16ab136a" title=" " alt="" coords="5,13,91,38"/>
 <area shape="poly" title=" " alt="" coords="125,28,91,28,91,23,125,23"/>

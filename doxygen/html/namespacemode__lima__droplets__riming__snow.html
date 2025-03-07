@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:ae6df7a5ef1ddbca038aec8eb98c171d8" id="r_ae6df7a5ef1ddbca038aec8eb98c171d8"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__droplets__riming__snow.html#ae6df7a5ef1ddbca038aec8eb98c171d8">lima_droplets_riming_snow</a> (ptstep, ldcompute, prhodref, pt, prct, pcct, prst, pcst, plbdc, plbds, plvfact, plsfact, p_th_rim, p_cc_rim, p_cs_rim, p_rc_rimss, p_rc_rimsg, p_rs_rimcg, p_ri_hms, p_ci_hms, p_rs_hms)</td></tr>
-<tr class="separator:ae6df7a5ef1ddbca038aec8eb98c171d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a45bb6ab1902140b5eb84c41a2152f2b1" id="r_a45bb6ab1902140b5eb84c41a2152f2b1"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__droplets__riming__snow.html#a45bb6ab1902140b5eb84c41a2152f2b1">lima_droplets_riming_snow</a> (cst, limap, limac, limam, ksize, ptstep, odcompute, prhodref, pt, prct, pcct, prst, pcst, plbdc, plbds, plvfact, plsfact, p_th_rim, p_cc_rim, p_cs_rim, p_rc_rimss, p_rc_rimsg, p_rs_rimcg, p_ri_hms, p_ci_hms, p_rs_hms)</td></tr>
+<tr class="separator:a45bb6ab1902140b5eb84c41a2152f2b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="ae6df7a5ef1ddbca038aec8eb98c171d8" name="ae6df7a5ef1ddbca038aec8eb98c171d8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae6df7a5ef1ddbca038aec8eb98c171d8">&#9670;&#160;</a></span>lima_droplets_riming_snow()</h2>
+<a id="a45bb6ab1902140b5eb84c41a2152f2b1" name="a45bb6ab1902140b5eb84c41a2152f2b1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a45bb6ab1902140b5eb84c41a2152f2b1">&#9670;&#160;</a></span>lima_droplets_riming_snow()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,127 +91,157 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_lima_droplets_riming_snow::lima_droplets_riming_snow </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__cst_1_1cst__t.html">cst_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>cst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limap</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__cold_1_1param__lima__cold__t.html">param_lima_cold_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limac</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__mixed_1_1param__lima__mixed__t.html">param_lima_mixed_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limam</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>ksize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, intent(in)&#160;</td>
           <td class="paramname"><em>ptstep</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">logical, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>ldcompute</em>, </td>
+          <td class="paramtype">logical, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>odcompute</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>prct</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pcct</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>prst</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pcst</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plbdc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plbds</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plvfact</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plsfact</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_th_rim</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_cc_rim</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_cs_rim</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_rc_rimss</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_rc_rimsg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_rs_rimcg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_ri_hms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_ci_hms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_rs_hms</em>&#160;</td>
         </tr>
         <tr>
@@ -226,12 +256,12 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__lima__droplets__riming__snow_ae6df7a5ef1ddbca038aec8eb98c171d8_icgraph.png" border="0" usemap="#anamespacemode__lima__droplets__riming__snow_ae6df7a5ef1ddbca038aec8eb98c171d8_icgraph" alt=""/></div>
-<map name="anamespacemode__lima__droplets__riming__snow_ae6df7a5ef1ddbca038aec8eb98c171d8_icgraph" id="anamespacemode__lima__droplets__riming__snow_ae6df7a5ef1ddbca038aec8eb98c171d8_icgraph">
+<div class="center"><img src="namespacemode__lima__droplets__riming__snow_a45bb6ab1902140b5eb84c41a2152f2b1_icgraph.png" border="0" usemap="#anamespacemode__lima__droplets__riming__snow_a45bb6ab1902140b5eb84c41a2152f2b1_icgraph" alt=""/></div>
+<map name="anamespacemode__lima__droplets__riming__snow_a45bb6ab1902140b5eb84c41a2152f2b1_icgraph" id="anamespacemode__lima__droplets__riming__snow_a45bb6ab1902140b5eb84c41a2152f2b1_icgraph">
 <area shape="rect" title=" " alt="" coords="325,5,533,60"/>
-<area shape="rect" href="namespacemode__lima__tendencies.html#a66a6879e5b8b9b9734043455a865948d" title=" " alt="" coords="104,13,277,53"/>
+<area shape="rect" href="namespacemode__lima__tendencies.html#acefa2d69ebd2194440988a2afd517425" title=" " alt="" coords="104,13,277,53"/>
 <area shape="poly" title=" " alt="" coords="312,35,278,35,278,30,312,30"/>
-<area shape="rect" href="lima_8F90.html#a7358dec3cc36d58f782836dc100f62fa" title=" " alt="" coords="5,20,56,45"/>
+<area shape="rect" href="lima_8F90.html#a45fe64d21afbc6cace563fda83cb1e79" title=" " alt="" coords="5,20,56,45"/>
 <area shape="poly" title=" " alt="" coords="90,35,57,35,57,30,90,30"/>
 </map>
 </div>

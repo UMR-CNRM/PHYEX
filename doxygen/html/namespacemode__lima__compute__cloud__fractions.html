@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a313096666433d9e60d9e7a8fa5c30b30" id="r_a313096666433d9e60d9e7a8fa5c30b30"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__compute__cloud__fractions.html#a313096666433d9e60d9e7a8fa5c30b30">lima_compute_cloud_fractions</a> (d, pcct, prct, pcrt, prrt, pcit, prit, pcst, prst, pcgt, prgt, pcht, prht, pcldfr, picefr, pprcfr)</td></tr>
-<tr class="separator:a313096666433d9e60d9e7a8fa5c30b30"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0ef7be0a4b7adc256c4aab0a9a31e7e" id="r_ab0ef7be0a4b7adc256c4aab0a9a31e7e"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__compute__cloud__fractions.html#ab0ef7be0a4b7adc256c4aab0a9a31e7e">lima_compute_cloud_fractions</a> (limap, d, pcct, prct, pcrt, prrt, pcit, prit, pcst, prst, pcgt, prgt, pcht, prht, pcldfr, picefr, pprcfr)</td></tr>
+<tr class="separator:ab0ef7be0a4b7adc256c4aab0a9a31e7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a313096666433d9e60d9e7a8fa5c30b30" name="a313096666433d9e60d9e7a8fa5c30b30"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a313096666433d9e60d9e7a8fa5c30b30">&#9670;&#160;</a></span>lima_compute_cloud_fractions()</h2>
+<a id="ab0ef7be0a4b7adc256c4aab0a9a31e7e" name="ab0ef7be0a4b7adc256c4aab0a9a31e7e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab0ef7be0a4b7adc256c4aab0a9a31e7e">&#9670;&#160;</a></span>lima_compute_cloud_fractions()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,97 +91,103 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_lima_compute_cloud_fractions::lima_compute_cloud_fractions </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limap</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>d</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pcct</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prct</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pcrt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prrt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pcit</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prit</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pcst</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prst</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pcgt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prgt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pcht</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prht</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>pcldfr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>picefr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>pprcfr</em>&#160;</td>
         </tr>
         <tr>
@@ -196,10 +202,10 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__lima__compute__cloud__fractions_a313096666433d9e60d9e7a8fa5c30b30_icgraph.png" border="0" usemap="#anamespacemode__lima__compute__cloud__fractions_a313096666433d9e60d9e7a8fa5c30b30_icgraph" alt=""/></div>
-<map name="anamespacemode__lima__compute__cloud__fractions_a313096666433d9e60d9e7a8fa5c30b30_icgraph" id="anamespacemode__lima__compute__cloud__fractions_a313096666433d9e60d9e7a8fa5c30b30_icgraph">
+<div class="center"><img src="namespacemode__lima__compute__cloud__fractions_ab0ef7be0a4b7adc256c4aab0a9a31e7e_icgraph.png" border="0" usemap="#anamespacemode__lima__compute__cloud__fractions_ab0ef7be0a4b7adc256c4aab0a9a31e7e_icgraph" alt=""/></div>
+<map name="anamespacemode__lima__compute__cloud__fractions_ab0ef7be0a4b7adc256c4aab0a9a31e7e_icgraph" id="anamespacemode__lima__compute__cloud__fractions_ab0ef7be0a4b7adc256c4aab0a9a31e7e_icgraph">
 <area shape="rect" title=" " alt="" coords="104,5,305,60"/>
-<area shape="rect" href="lima_8F90.html#a7358dec3cc36d58f782836dc100f62fa" title=" " alt="" coords="5,20,56,45"/>
+<area shape="rect" href="lima_8F90.html#a45fe64d21afbc6cace563fda83cb1e79" title=" " alt="" coords="5,20,56,45"/>
 <area shape="poly" title=" " alt="" coords="90,35,56,35,56,30,90,30"/>
 </map>
 </div>

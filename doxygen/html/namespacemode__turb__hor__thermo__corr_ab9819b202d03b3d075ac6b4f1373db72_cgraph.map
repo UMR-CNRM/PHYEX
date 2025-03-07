@@ -1,9 +1,0 @@
-<map id="mode_turb_hor_thermo_corr::turb_hor_thermo_corr" name="mode_turb_hor_thermo_corr::turb_hor_thermo_corr">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,47,208,87"/>
-<area shape="rect" id="Node000002" href="$namespacemode__emoist.html#ada2b9445e260dc0d0e6a2e498721eb20" title=" " alt="" coords="256,5,420,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="200,45,264,31,265,36,202,50"/>
-<area shape="rect" id="Node000003" href="$namespacemode__etheta.html#a31f831e28aecdb5f3034da350902b721" title=" " alt="" coords="259,55,417,80"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="208,65,245,65,245,70,208,70"/>
-<area shape="rect" id="Node000004" href="$namespacemode__io__field__write.html#a51061fb206463f97afeb0bdafb71c461" title=" " alt="" coords="261,105,415,145"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="189,85,248,100,247,105,187,90"/>
-</map>

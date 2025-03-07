@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:ac0240765dbf1c3ee6b96497ce08a4623" id="r_ac0240765dbf1c3ee6b96497ce08a4623"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__rain__evaporation.html#ac0240765dbf1c3ee6b96497ce08a4623">lima_rain_evaporation</a> (ptstep, ldcompute, prhodref, pt, plv, plvfact, pevsat, prvsat, prvt, prct, prrt, pcrt, plbdr, p_th_evap, p_rr_evap, p_cr_evap, pevap3d)</td></tr>
-<tr class="separator:ac0240765dbf1c3ee6b96497ce08a4623"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e77b77b499d15a4793e1aa84e30dc8a" id="r_a3e77b77b499d15a4793e1aa84e30dc8a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__rain__evaporation.html#a3e77b77b499d15a4793e1aa84e30dc8a">lima_rain_evaporation</a> (cst, limap, limaw, ksize, ptstep, odcompute, prhodref, pt, plv, plvfact, pevsat, prvsat, prvt, prct, prrt, pcrt, plbdr, p_th_evap, p_rr_evap, p_cr_evap, pevap3d)</td></tr>
+<tr class="separator:a3e77b77b499d15a4793e1aa84e30dc8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="ac0240765dbf1c3ee6b96497ce08a4623" name="ac0240765dbf1c3ee6b96497ce08a4623"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac0240765dbf1c3ee6b96497ce08a4623">&#9670;&#160;</a></span>lima_rain_evaporation()</h2>
+<a id="a3e77b77b499d15a4793e1aa84e30dc8a" name="a3e77b77b499d15a4793e1aa84e30dc8a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e77b77b499d15a4793e1aa84e30dc8a">&#9670;&#160;</a></span>lima_rain_evaporation()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,103 +91,127 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_lima_rain_evaporation::lima_rain_evaporation </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__cst_1_1cst__t.html">cst_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>cst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limap</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__warm_1_1param__lima__warm__t.html">param_lima_warm_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limaw</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>ksize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, intent(in)&#160;</td>
           <td class="paramname"><em>ptstep</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">logical, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>ldcompute</em>, </td>
+          <td class="paramtype">logical, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>odcompute</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plv</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plvfact</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pevsat</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>prvsat</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>prvt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>prct</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>prrt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pcrt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plbdr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_th_evap</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_rr_evap</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_cr_evap</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>pevap3d</em>&#160;</td>
         </tr>
         <tr>
@@ -202,12 +226,12 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__lima__rain__evaporation_ac0240765dbf1c3ee6b96497ce08a4623_icgraph.png" border="0" usemap="#anamespacemode__lima__rain__evaporation_ac0240765dbf1c3ee6b96497ce08a4623_icgraph" alt=""/></div>
-<map name="anamespacemode__lima__rain__evaporation_ac0240765dbf1c3ee6b96497ce08a4623_icgraph" id="anamespacemode__lima__rain__evaporation_ac0240765dbf1c3ee6b96497ce08a4623_icgraph">
+<div class="center"><img src="namespacemode__lima__rain__evaporation_a3e77b77b499d15a4793e1aa84e30dc8a_icgraph.png" border="0" usemap="#anamespacemode__lima__rain__evaporation_a3e77b77b499d15a4793e1aa84e30dc8a_icgraph" alt=""/></div>
+<map name="anamespacemode__lima__rain__evaporation_a3e77b77b499d15a4793e1aa84e30dc8a_icgraph" id="anamespacemode__lima__rain__evaporation_a3e77b77b499d15a4793e1aa84e30dc8a_icgraph">
 <area shape="rect" title=" " alt="" coords="325,5,537,45"/>
-<area shape="rect" href="namespacemode__lima__tendencies.html#a66a6879e5b8b9b9734043455a865948d" title=" " alt="" coords="104,5,277,45"/>
+<area shape="rect" href="namespacemode__lima__tendencies.html#acefa2d69ebd2194440988a2afd517425" title=" " alt="" coords="104,5,277,45"/>
 <area shape="poly" title=" " alt="" coords="312,28,278,28,278,23,312,23"/>
-<area shape="rect" href="lima_8F90.html#a7358dec3cc36d58f782836dc100f62fa" title=" " alt="" coords="5,13,56,38"/>
+<area shape="rect" href="lima_8F90.html#a45fe64d21afbc6cace563fda83cb1e79" title=" " alt="" coords="5,13,56,38"/>
 <area shape="poly" title=" " alt="" coords="90,28,57,28,57,23,90,23"/>
 </map>
 </div>

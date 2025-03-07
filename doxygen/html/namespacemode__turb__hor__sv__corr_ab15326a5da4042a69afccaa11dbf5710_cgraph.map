@@ -1,7 +1,0 @@
-<map id="mode_turb_hor_sv_corr::turb_hor_sv_corr" name="mode_turb_hor_sv_corr::turb_hor_sv_corr">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,23,180,63"/>
-<area shape="rect" id="Node000002" href="$namespacemode__emoist.html#ada2b9445e260dc0d0e6a2e498721eb20" title=" " alt="" coords="228,5,392,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="180,31,214,26,215,32,180,36"/>
-<area shape="rect" id="Node000003" href="$namespacemode__etheta.html#a31f831e28aecdb5f3034da350902b721" title=" " alt="" coords="231,55,389,80"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="180,50,218,54,217,60,180,56"/>
-</map>

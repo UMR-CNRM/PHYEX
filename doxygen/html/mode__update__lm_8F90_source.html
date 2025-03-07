@@ -82,9 +82,9 @@ $(document).ready(function() { init_codefold(0); });
   <div class="headertitle"><div class="title">mode_update_lm.F90</div></div>
 </div><!--header-->
 <div class="contents">
-<a href="mode__update__lm_8F90.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">!MNH_LIC Copyright 2006-2019 CNRS, Meteo-France and Universite Paul Sabatier</span></div>
+<a href="mode__update__lm_8F90.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">!MNH_LIC Copyright 2006-2024 CNRS, Meteo-France and Universite Paul Sabatier</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment">!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence</span></div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  </span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment">!MNH_LIC for details. version 1.</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment">!-----------------------------------------------------------------</span></div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno"><a class="line" href="namespacemode__update__lm.html">    6</a></span>      <span class="keyword">MODULE</span> <a class="code hl_namespace" href="namespacemode__update__lm.html">mode_update_lm</a></div>
@@ -114,7 +114,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="comment">!!</span></div>
 <div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="comment">!!    AUTHOR</span></div>
 <div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="comment">!!    ------</span></div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="comment">!!  V. Masson        * Meteo France *</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="comment">!!      V. Masson        * Meteo France *</span></div>
 <div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="comment">!!</span></div>
 <div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="comment">!!    MODIFICATIONS</span></div>
 <div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="comment">!!    -------------</span></div>
@@ -126,11 +126,11 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="comment">!</span></div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="comment">!*       0.    DECLARATIONS</span></div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="comment">!         </span></div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__parameters.html">modd_parameters</a></div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>,   <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="comment">!</span></div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__ll.html">mode_ll</a></div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__argslist__ll.html">modd_argslist_ll</a>, <span class="keywordtype">ONLY</span> : <a class="code hl_struct" href="structmodd__argslist__ll_1_1list__ll.html">list_ll</a></div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__argslist__ll.html">modd_argslist_ll</a>, <span class="keywordtype">ONLY</span> : <a class="code hl_struct" href="structmodd__argslist__ll_1_1list__ll.html">list_ll</a></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__parameters.html">modd_parameters</a></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>,   <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="comment">!</span></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__ll.html">mode_ll</a></div>
 <div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="comment">!</span></div>
 <div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="keywordtype">IMPLICIT NONE</span></div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="comment">!</span></div>
@@ -152,61 +152,84 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="keywordtype">INTEGER</span>             :: IJE      <span class="comment">! last  physical index in y direction</span></div>
 <div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><span class="keywordtype">INTEGER</span>             :: JI       <span class="comment">! loop index</span></div>
 <div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="comment">!</span></div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__argslist__ll_1_1list__ll.html">list_ll</a>), <span class="keywordtype">POINTER</span> :: TZLM_ll   <span class="comment">! list of fields to exchange</span></div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keywordtype">INTEGER</span>                :: IINFO_ll       <span class="comment">! return code of parallel routine</span></div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="comment">!</span></div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="comment">!</span></div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="comment">!*       1.    COMPUTE DIMENSIONS OF ARRAYS :</span></div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="comment">!              ----------------------------</span></div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>iib = d%NIB</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>iie = d%NIE</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>ijb = d%NJB</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>ije = d%NJE</div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="keyword">NULLIFY</span>(tzlm_ll)</div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="comment">!</span></div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="comment">!</span></div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="comment">!*       2.  UPDATE HALOs :</span></div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="comment">!            -------------</span></div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="comment">!</span></div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="comment">!</span></div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="comment">!!$IF(NHALO == 1) THEN</span></div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#acbd4d8abaff9489710dbb801d892f963">add3dfield_ll</a>( tzlm_ll, plm,   <span class="stringliteral">&#39;UPDATE_LM::PLM&#39;</span>   )</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#acbd4d8abaff9489710dbb801d892f963">add3dfield_ll</a>( tzlm_ll, pleps, <span class="stringliteral">&#39;UPDATE_LM::PLEPS&#39;</span> )</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#a038cd1e6d379c6ff88f833ecff30b899">update_halo_ll</a>(tzlm_ll,iinfo_ll)</div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#a47525845f3b864b7336cbcfae099930d">cleanlist_ll</a>(tzlm_ll)</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="comment">!!$END IF</span></div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="keywordtype">LOGICAL</span>                :: GNORTH, GSOUTH, GWEST, GEAST</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__argslist__ll_1_1list__ll.html">list_ll</a>), <span class="keywordtype">POINTER</span> :: TZLM_ll   <span class="comment">! list of fields to exchange</span></div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="keywordtype">INTEGER</span>                :: IINFO_ll       <span class="comment">! return code of parallel routine</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="comment">!</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="comment">!$acc data present_crm(PLM,PLEPS)</span></div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="comment">!</span></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="comment">!*       1.    COMPUTE DIMENSIONS OF ARRAYS :</span></div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="comment">!              ----------------------------</span></div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>iib = d%NIB</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>iie = d%NIE</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>ijb = d%NJB</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>ije = d%NJE</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="keyword">NULLIFY</span>(tzlm_ll)</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="comment">!</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>gwest  = ( hlbcx(1) /= <span class="stringliteral">&#39;CYCL&#39;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#ac88285a7367d7ec31aa6de2182be6064">lwest_ll</a>() )</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>geast  = ( hlbcx(2) /= <span class="stringliteral">&#39;CYCL&#39;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#aed8b87ed55482e1498eb8df0f6641142">least_ll</a>() )</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>gsouth = ( hlbcy(1) /= <span class="stringliteral">&#39;CYCL&#39;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#aff8e0e92dee9397dbb97e65db0ad096f">lsouth_ll</a>() )</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>gnorth = ( hlbcy(2) /= <span class="stringliteral">&#39;CYCL&#39;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#a42d593fe9bddb4f67beb9518adc88d19">lnorth_ll</a>() )</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="comment">!</span></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="comment">!*       2.  UPDATE HALOs :</span></div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="comment">!            -------------</span></div>
 <div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="comment">!</span></div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="comment">!</span></div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="comment">!*       3.  UPDATE EXTERNAL POINTS OF GLOBAL DOMAIN:</span></div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="comment">!            ---------------------------------------</span></div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="comment">!</span></div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="keywordflow">IF</span> ( hlbcx(1) /= <span class="stringliteral">&quot;CYCL&quot;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#ac88285a7367d7ec31aa6de2182be6064">lwest_ll</a>()) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>  plm(iib-1,:,:) = plm(iib,:,:)</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>  pleps(iib-1,:,:) = pleps(iib,:,:)</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="keywordflow">IF</span> ( hlbcx(2) /= <span class="stringliteral">&quot;CYCL&quot;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#aed8b87ed55482e1498eb8df0f6641142">least_ll</a>()) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>  plm(iie+1,:,:) = plm(iie,:,:)</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>  pleps(iie+1,:,:) = pleps(iie,:,:)</div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="keywordflow">IF</span> ( hlbcy(1) /= <span class="stringliteral">&quot;CYCL&quot;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#aff8e0e92dee9397dbb97e65db0ad096f">lsouth_ll</a>()) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>  <span class="keywordflow">DO</span> ji=1,<span class="keyword">SIZE</span>(plm,1)</div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    plm(ji,ijb-1,:) = plm(ji,ijb,:)</div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    pleps(ji,ijb-1,:) = pleps(ji,ijb,:)</div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span><span class="keywordflow">  END DO</span></div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span><span class="keywordflow">IF</span> ( hlbcy(2) /= <span class="stringliteral">&quot;CYCL&quot;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#a42d593fe9bddb4f67beb9518adc88d19">lnorth_ll</a>()) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>  <span class="keywordflow">DO</span> ji=1,<span class="keyword">SIZE</span>(plm,1)</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    plm(ji,ije+1,:) = plm(ji,ije,:)</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    pleps(ji,ije+1,:) = pleps(ji,ije,:)</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span><span class="keywordflow">  END DO</span></div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="comment">!-----------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="comment">!</span></div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="comment">!!$IF(NHALO == 1) THEN</span></div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="comment">!$acc update_crm self(PLM,PLEPS)</span></div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#acbd4d8abaff9489710dbb801d892f963">add3dfield_ll</a>( tzlm_ll, plm,   <span class="stringliteral">&#39;UPDATE_LM::PLM&#39;</span>   )</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#acbd4d8abaff9489710dbb801d892f963">add3dfield_ll</a>( tzlm_ll, pleps, <span class="stringliteral">&#39;UPDATE_LM::PLEPS&#39;</span> )</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#a038cd1e6d379c6ff88f833ecff30b899">update_halo_ll</a>(tzlm_ll,iinfo_ll)</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#a47525845f3b864b7336cbcfae099930d">cleanlist_ll</a>(tzlm_ll)</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="comment">!$acc update_crm device(PLM,PLEPS)</span></div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="comment">!!$END IF</span></div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="comment">!</span></div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span><span class="comment">!</span></div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="comment">!*       3.  UPDATE EXTERNAL POINTS OF GLOBAL DOMAIN:</span></div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="comment">!            ---------------------------------------</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span><span class="comment">!</span></div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span> </div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="keywordflow">IF</span> ( gwest ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>  <span class="comment">!$acc kernels async</span></div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>  plm(iib-1,:,:) = plm(iib,:,:)</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>  pleps(iib-1,:,:) = pleps(iib,:,:)</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>  <span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="keywordflow">IF</span> ( geast ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>  <span class="comment">!$acc kernels async</span></div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>  plm(iie+1,:,:) = plm(iie,:,:)</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>  pleps(iie+1,:,:) = pleps(iie,:,:)</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>  <span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span><span class="keywordflow">IF</span> ( gsouth ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>  <span class="comment">!$acc kernels async </span></div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>  <span class="keywordflow">DO</span> ji=1,<span class="keyword">SIZE</span>(plm,1)</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    plm(ji,ijb-1,:) = plm(ji,ijb,:)</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    pleps(ji,ijb-1,:) = pleps(ji,ijb,:)</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span><span class="keywordflow">  END DO</span></div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>  <span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span><span class="keywordflow">IF</span> ( gnorth ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>  <span class="comment">!$acc kernels async</span></div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>  <span class="keywordflow">DO</span> ji=1,<span class="keyword">SIZE</span>(plm,1)</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>    plm(ji,ije+1,:) = plm(ji,ije,:)</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>    pleps(ji,ije+1,:) = pleps(ji,ije,:)</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span><span class="keywordflow"> END DO</span></div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span> <span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span><span class="comment">!$acc wait</span></div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span> </div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span><span class="comment">!$acc end data</span></div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span> </div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span><span class="comment">!-----------------------------------------------------------------------------</span></div>
 </div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__update__lm.html#a35ee5e49f5c162ca10856e12e124d8ca">update_lm</a></div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__update__lm.html">mode_update_lm</a></div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__update__lm.html#a35ee5e49f5c162ca10856e12e124d8ca">update_lm</a></div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__update__lm.html">mode_update_lm</a></div>
 <div class="ttc" id="anamespacemodd__argslist__ll_html"><div class="ttname"><a href="namespacemodd__argslist__ll.html">modd_argslist_ll</a></div><div class="ttdef"><b>Definition</b> <a href="modd__argslist__ll_8F90_source.html#l00001">modd_argslist_ll.F90:1</a></div></div>
 <div class="ttc" id="anamespacemodd__dimphyex_html"><div class="ttname"><a href="namespacemodd__dimphyex.html">modd_dimphyex</a></div><div class="ttdef"><b>Definition</b> <a href="modd__dimphyexn_8F90_source.html#l00007">modd_dimphyexn.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__parameters_html"><div class="ttname"><a href="namespacemodd__parameters.html">modd_parameters</a></div><div class="ttdef"><b>Definition</b> <a href="modd__parameters_8F90_source.html#l00007">modd_parameters.F90:7</a></div></div>

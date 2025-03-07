@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a42321fe7fc7b5749324b95cc3bf093ed" id="r_a42321fe7fc7b5749324b95cc3bf093ed"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__sedimentation.html#a42321fe7fc7b5749324b95cc3bf093ed">lima_sedimentation</a> (d, cst, hphase, kmoments, kid, ksplitg, ptstep, oelec, pdzz, prhodref, pthvrefzikb, ppabst, pt, prt_sum, pcpt, prs, pcs, pinpr, pfpr, pefieldw, pqs)</td></tr>
-<tr class="separator:a42321fe7fc7b5749324b95cc3bf093ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad5d080255221def1b9da5ec90c72ca2e" id="r_ad5d080255221def1b9da5ec90c72ca2e"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__sedimentation.html#ad5d080255221def1b9da5ec90c72ca2e">lima_sedimentation</a> (limap, limaw, limac, limam, d, cst, hphase, kmoments, kid, kishape, ksplitg, ptstep, oelec, elecp, elecd, pdzz, prhodref, pthvrefzikb, ppabst, pt, prt_sum, pcpt, prs, pcs, pinpr, pfpr, pefieldw, pqs, plbdai_shape)</td></tr>
+<tr class="separator:ad5d080255221def1b9da5ec90c72ca2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a42321fe7fc7b5749324b95cc3bf093ed" name="a42321fe7fc7b5749324b95cc3bf093ed"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a42321fe7fc7b5749324b95cc3bf093ed">&#9670;&#160;</a></span>lima_sedimentation()</h2>
+<a id="ad5d080255221def1b9da5ec90c72ca2e" name="ad5d080255221def1b9da5ec90c72ca2e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad5d080255221def1b9da5ec90c72ca2e">&#9670;&#160;</a></span>lima_sedimentation()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,6 +91,30 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_lima_sedimentation::lima_sedimentation </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limap</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__warm_1_1param__lima__warm__t.html">param_lima_warm_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limaw</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__cold_1_1param__lima__cold__t.html">param_lima_cold_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limac</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__mixed_1_1param__lima__mixed__t.html">param_lima_mixed_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limam</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>d</em>, </td>
         </tr>
@@ -122,6 +146,12 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>kishape</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
           <td class="paramname"><em>ksplitg</em>, </td>
         </tr>
         <tr>
@@ -139,13 +169,25 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__elec__param_1_1elec__param__t.html">elec_param_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>elecp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__elec__descr_1_1elec__descr__t.html">elec_descr_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>elecd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdzz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
@@ -157,62 +199,68 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>ppabst</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>pt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>prt_sum</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>pcpt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>prs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>pcs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(out)&#160;</td>
           <td class="paramname"><em>pinpr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>pfpr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in), optional&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
           <td class="paramname"><em>pefieldw</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout), optional&#160;</td>
-          <td class="paramname"><em>pqs</em>&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout), optional&#160;</td>
+          <td class="paramname"><em>pqs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>plbdai_shape</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -226,24 +274,22 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__lima__sedimentation_a42321fe7fc7b5749324b95cc3bf093ed_cgraph.png" border="0" usemap="#anamespacemode__lima__sedimentation_a42321fe7fc7b5749324b95cc3bf093ed_cgraph" alt=""/></div>
-<map name="anamespacemode__lima__sedimentation_a42321fe7fc7b5749324b95cc3bf093ed_cgraph" id="anamespacemode__lima__sedimentation_a42321fe7fc7b5749324b95cc3bf093ed_cgraph">
-<area shape="rect" title=" " alt="" coords="5,69,201,109"/>
+<div class="center"><img src="namespacemode__lima__sedimentation_ad5d080255221def1b9da5ec90c72ca2e_cgraph.png" border="0" usemap="#anamespacemode__lima__sedimentation_ad5d080255221def1b9da5ec90c72ca2e_cgraph" alt=""/></div>
+<map name="anamespacemode__lima__sedimentation_ad5d080255221def1b9da5ec90c72ca2e_cgraph" id="anamespacemode__lima__sedimentation_ad5d080255221def1b9da5ec90c72ca2e_cgraph">
+<area shape="rect" title=" " alt="" coords="5,37,201,77"/>
 <area shape="rect" href="namespacemode__elec__beard__effect.html#a1294ed60c5f7fc904f054eb043ed03a5" title=" " alt="" coords="249,5,431,45"/>
-<area shape="poly" title=" " alt="" coords="177,67,252,46,253,51,179,72"/>
+<area shape="poly" title=" " alt="" coords="201,41,235,37,236,42,202,47"/>
 <area shape="rect" href="namespacemode__elec__compute__ex.html#a521f2c8257d9921e8ef5c73aa92a8307" title=" " alt="" coords="250,69,430,109"/>
-<area shape="poly" title=" " alt="" coords="202,87,236,87,236,92,202,92"/>
-<area shape="rect" href="gamma_8F90.html#a9777227bbb84bfae4e8675b657d6e273" title=" " alt="" coords="289,134,391,159"/>
-<area shape="poly" title=" " alt="" coords="187,107,276,129,275,134,186,112"/>
+<area shape="poly" title=" " alt="" coords="202,68,237,73,236,78,201,73"/>
 </map>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__lima__sedimentation_a42321fe7fc7b5749324b95cc3bf093ed_icgraph.png" border="0" usemap="#anamespacemode__lima__sedimentation_a42321fe7fc7b5749324b95cc3bf093ed_icgraph" alt=""/></div>
-<map name="anamespacemode__lima__sedimentation_a42321fe7fc7b5749324b95cc3bf093ed_icgraph" id="anamespacemode__lima__sedimentation_a42321fe7fc7b5749324b95cc3bf093ed_icgraph">
+<div class="center"><img src="namespacemode__lima__sedimentation_ad5d080255221def1b9da5ec90c72ca2e_icgraph.png" border="0" usemap="#anamespacemode__lima__sedimentation_ad5d080255221def1b9da5ec90c72ca2e_icgraph" alt=""/></div>
+<map name="anamespacemode__lima__sedimentation_ad5d080255221def1b9da5ec90c72ca2e_icgraph" id="anamespacemode__lima__sedimentation_ad5d080255221def1b9da5ec90c72ca2e_icgraph">
 <area shape="rect" title=" " alt="" coords="104,5,300,45"/>
-<area shape="rect" href="lima_8F90.html#a7358dec3cc36d58f782836dc100f62fa" title=" " alt="" coords="5,13,56,38"/>
+<area shape="rect" href="lima_8F90.html#a45fe64d21afbc6cace563fda83cb1e79" title=" " alt="" coords="5,13,56,38"/>
 <area shape="poly" title=" " alt="" coords="90,28,56,28,56,23,90,23"/>
 </map>
 </div>

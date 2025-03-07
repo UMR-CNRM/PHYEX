@@ -1,0 +1,15 @@
+<map id="lima_adjust_split" name="lima_adjust_split">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,77,139,102"/>
+<area shape="rect" id="Node000002" href="$namespacemode__budget__phy.html#adb853e4fb0b59cc93057b507a52bd8ce" title=" " alt="" coords="187,5,382,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="115,74,204,47,205,52,116,79"/>
+<area shape="rect" id="Node000004" href="$namespacemode__budget__phy.html#a45dce5bc68868ab14b72a6c987fd5d08" title=" " alt="" coords="187,69,382,109"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="139,87,174,87,174,92,139,92"/>
+<area shape="rect" id="Node000006" href="$namespacemode__lima__ccn__activation.html#abc1c855d76ed81dd65e912638061e76a" title=" " alt="" coords="187,133,383,173"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="116,100,205,127,204,132,115,105"/>
+<area shape="rect" id="Node000003" href="$namespacemode__budget__phy.html#af12acae4d0ad98243d08fc99268ce6d0" title=" " alt="" coords="431,5,625,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="382,23,417,23,417,28,382,28"/>
+<area shape="rect" id="Node000005" href="$namespacemode__budget__phy.html#a65b741f24c7da49ec1c6d3cc674707dc" title=" " alt="" coords="431,69,625,109"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="382,87,417,87,417,92,382,92"/>
+<area shape="rect" id="Node000007" href="$mode__lima__ccn__activation_8F90.html#a1fc2197bb5e03d994cf4624b9a88ab44" title=" " alt="" coords="499,141,557,166"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="383,151,485,151,485,156,383,156"/>
+</map>

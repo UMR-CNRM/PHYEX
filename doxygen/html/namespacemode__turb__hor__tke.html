@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a755f73813708c8a6a1d9319986c9c508" id="r_a755f73813708c8a6a1d9319986c9c508"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__turb__hor__tke.html#a755f73813708c8a6a1d9319986c9c508">turb_hor_tke</a> (ksplt, tles, oflat, o2d, pdxx, pdyy, pdzz, pdzx, pdzy, pinv_pdxx, pinv_pdyy, pinv_pdzz, pmzm_prhodj, pk, prhodj, ptkem, ptrh)</td></tr>
-<tr class="separator:a755f73813708c8a6a1d9319986c9c508"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21f7c9335828c879eaf7565b4f19c365" id="r_a21f7c9335828c879eaf7565b4f19c365"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__turb__hor__tke.html#a21f7c9335828c879eaf7565b4f19c365">turb_hor_tke</a> (d, ksplt, tles, oflat, o2d, pdxx, pdyy, pdzz, pdzx, pdzy, pinv_pdxx, pinv_pdyy, pinv_pdzz, pmzm_prhodj, pk, prhodj, ptkem, ptrh)</td></tr>
+<tr class="separator:a21f7c9335828c879eaf7565b4f19c365"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a755f73813708c8a6a1d9319986c9c508" name="a755f73813708c8a6a1d9319986c9c508"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a755f73813708c8a6a1d9319986c9c508">&#9670;&#160;</a></span>turb_hor_tke()</h2>
+<a id="a21f7c9335828c879eaf7565b4f19c365" name="a21f7c9335828c879eaf7565b4f19c365"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a21f7c9335828c879eaf7565b4f19c365">&#9670;&#160;</a></span>turb_hor_tke()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,6 +91,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_turb_hor_tke::turb_hor_tke </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">integer, intent(in)&#160;</td>
           <td class="paramname"><em>ksplt</em>, </td>
         </tr>
@@ -115,79 +121,79 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdxx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdyy</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdzz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdzx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdzy</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pinv_pdxx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pinv_pdyy</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pinv_pdzz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pmzm_prhodj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pk</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>ptkem</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>ptrh</em>&#160;</td>
         </tr>
         <tr>
@@ -200,10 +206,22 @@ Functions/Subroutines</h2></td></tr>
 
 <p class="definition">Definition at line <a class="el" href="mode__turb__hor__tke_8F90_source.html#l00009">9</a> of file <a class="el" href="mode__turb__hor__tke_8F90_source.html">mode_turb_hor_tke.F90</a>.</p>
 <div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacemode__turb__hor__tke_a21f7c9335828c879eaf7565b4f19c365_cgraph.png" border="0" usemap="#anamespacemode__turb__hor__tke_a21f7c9335828c879eaf7565b4f19c365_cgraph" alt=""/></div>
+<map name="anamespacemode__turb__hor__tke_a21f7c9335828c879eaf7565b4f19c365_cgraph" id="anamespacemode__turb__hor__tke_a21f7c9335828c879eaf7565b4f19c365_cgraph">
+<area shape="rect" title=" " alt="" coords="5,37,160,77"/>
+<area shape="rect" href="namespacemode__gradient__m__phy.html#a1d01248f648bab96433dc23eddaaa898" title=" " alt="" coords="208,5,379,45"/>
+<area shape="poly" title=" " alt="" coords="160,43,194,38,195,43,161,48"/>
+<area shape="rect" href="namespacemode__gradient__m__phy.html#a8941f997f819b6ece6300491d07ac24e" title=" " alt="" coords="208,69,379,109"/>
+<area shape="poly" title=" " alt="" coords="161,66,195,72,194,77,160,72"/>
+</map>
+</div>
+<div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__turb__hor__tke_a755f73813708c8a6a1d9319986c9c508_icgraph.png" border="0" usemap="#anamespacemode__turb__hor__tke_a755f73813708c8a6a1d9319986c9c508_icgraph" alt=""/></div>
-<map name="anamespacemode__turb__hor__tke_a755f73813708c8a6a1d9319986c9c508_icgraph" id="anamespacemode__turb__hor__tke_a755f73813708c8a6a1d9319986c9c508_icgraph">
+<div class="center"><img src="namespacemode__turb__hor__tke_a21f7c9335828c879eaf7565b4f19c365_icgraph.png" border="0" usemap="#anamespacemode__turb__hor__tke_a21f7c9335828c879eaf7565b4f19c365_icgraph" alt=""/></div>
+<map name="anamespacemode__turb__hor__tke_a21f7c9335828c879eaf7565b4f19c365_icgraph" id="anamespacemode__turb__hor__tke_a21f7c9335828c879eaf7565b4f19c365_icgraph">
 <area shape="rect" title=" " alt="" coords="300,5,455,45"/>
 <area shape="rect" href="namespacemode__turb__hor__splt.html#af567a0992241afa9a2e5ad86eb96f424" title=" " alt="" coords="101,5,252,45"/>
 <area shape="poly" title=" " alt="" coords="286,28,252,28,252,23,286,23"/>

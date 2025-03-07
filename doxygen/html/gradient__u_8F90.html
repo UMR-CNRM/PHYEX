@@ -88,6 +88,8 @@ Functions/Subroutines</h2></td></tr>
 <tr class="separator:af35c7e159090a20c1947fc4eec1a57c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad46993699f88b3b25c6d38ab91190b6a" id="r_ad46993699f88b3b25c6d38ab91190b6a"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__u_8F90.html#ad46993699f88b3b25c6d38ab91190b6a">gy_u_uv</a> (pa, pdyy, pdzz, pdzy, kka, kku, kl)</td></tr>
 <tr class="separator:ad46993699f88b3b25c6d38ab91190b6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefc4b7fcb432c39c3b044b1e9ec385e0" id="r_aefc4b7fcb432c39c3b044b1e9ec385e0"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__u_8F90.html#aefc4b7fcb432c39c3b044b1e9ec385e0">gy_u_uv_device</a> (pa, pdyy, pdzz, pdzy, pgy_u_uv_device)</td></tr>
+<tr class="separator:aefc4b7fcb432c39c3b044b1e9ec385e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc308949033045e8380f5d3012419466" id="r_acc308949033045e8380f5d3012419466"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__u_8F90.html#acc308949033045e8380f5d3012419466">gz_u_uw</a> (pa, pdzz, kka, kku, kl)</td></tr>
 <tr class="separator:acc308949033045e8380f5d3012419466"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -149,6 +151,20 @@ Functions/Subroutines</h2></td></tr>
 </div><div class="memdoc">
 
 <p class="definition">Definition at line <a class="el" href="gradient__u_8F90_source.html#l00002">2</a> of file <a class="el" href="gradient__u_8F90_source.html">gradient_u.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="gradient__u_8F90_af35c7e159090a20c1947fc4eec1a57c0_icgraph.png" border="0" usemap="#agradient__u_8F90_af35c7e159090a20c1947fc4eec1a57c0_icgraph" alt=""/></div>
+<map name="agradient__u_8F90_af35c7e159090a20c1947fc4eec1a57c0_icgraph" id="agradient__u_8F90_af35c7e159090a20c1947fc4eec1a57c0_icgraph">
+<area shape="rect" title=" " alt="" coords="563,13,636,38"/>
+<area shape="rect" href="namespacemode__turb__ver__dyn__flux.html#a3c9f2de641870f3cbae768327606e3af" title=" " alt="" coords="332,5,515,45"/>
+<area shape="poly" title=" " alt="" coords="549,28,515,28,515,23,549,23"/>
+<area shape="rect" href="namespacemode__turb__ver.html#a6a55f740dcd7870f2e64d634483cc1e8" title=" " alt="" coords="101,13,284,38"/>
+<area shape="poly" title=" " alt="" coords="319,28,284,28,284,23,319,23"/>
+<area shape="rect" href="turb_8F90.html#a808c1b84c0353e66a4b430000939bc16" title=" " alt="" coords="5,13,53,38"/>
+<area shape="poly" title=" " alt="" coords="88,28,53,28,53,23,88,23"/>
+</map>
+</div>
 
 </div>
 </div>
@@ -212,6 +228,54 @@ Functions/Subroutines</h2></td></tr>
 
 </div>
 </div>
+<a id="aefc4b7fcb432c39c3b044b1e9ec385e0" name="aefc4b7fcb432c39c3b044b1e9ec385e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aefc4b7fcb432c39c3b044b1e9ec385e0">&#9670;&#160;</a></span>gy_u_uv_device()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine gy_u_uv_device </td>
+          <td>(</td>
+          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pa</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pdyy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pdzz</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pdzy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(:,:,:), intent(out)&#160;</td>
+          <td class="paramname"><em>pgy_u_uv_device</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="gradient__u_8F90_source.html#l00203">203</a> of file <a class="el" href="gradient__u_8F90_source.html">gradient_u.F90</a>.</p>
+
+</div>
+</div>
 <a id="acc308949033045e8380f5d3012419466" name="acc308949033045e8380f5d3012419466"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acc308949033045e8380f5d3012419466">&#9670;&#160;</a></span>gz_u_uw()</h2>
 
@@ -256,7 +320,21 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="gradient__u_8F90_source.html#l00202">202</a> of file <a class="el" href="gradient__u_8F90_source.html">gradient_u.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="gradient__u_8F90_source.html#l00223">223</a> of file <a class="el" href="gradient__u_8F90_source.html">gradient_u.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="gradient__u_8F90_acc308949033045e8380f5d3012419466_icgraph.png" border="0" usemap="#agradient__u_8F90_acc308949033045e8380f5d3012419466_icgraph" alt=""/></div>
+<map name="agradient__u_8F90_acc308949033045e8380f5d3012419466_icgraph" id="agradient__u_8F90_acc308949033045e8380f5d3012419466_icgraph">
+<area shape="rect" title=" " alt="" coords="563,13,641,38"/>
+<area shape="rect" href="namespacemode__turb__ver__dyn__flux.html#a3c9f2de641870f3cbae768327606e3af" title=" " alt="" coords="332,5,515,45"/>
+<area shape="poly" title=" " alt="" coords="549,28,515,28,515,23,549,23"/>
+<area shape="rect" href="namespacemode__turb__ver.html#a6a55f740dcd7870f2e64d634483cc1e8" title=" " alt="" coords="101,13,284,38"/>
+<area shape="poly" title=" " alt="" coords="319,28,284,28,284,23,319,23"/>
+<area shape="rect" href="turb_8F90.html#a808c1b84c0353e66a4b430000939bc16" title=" " alt="" coords="5,13,53,38"/>
+<area shape="poly" title=" " alt="" coords="88,28,53,28,53,23,88,23"/>
+</map>
+</div>
 
 </div>
 </div>

@@ -339,7 +339,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">type(<a class="el" href="structmodd__io_1_1tfiledata.html">tfiledata</a>), intent(in)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__io_1_1tfiledata.html">tfiledata</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>tpfile</em>, </td>
         </tr>
         <tr>
@@ -645,19 +645,19 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,oflyer),merge(d%nkt,0,oflyer)), intent(out)&#160;</td>
           <td class="paramname"><em>pwth</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,oflyer),merge(d%nkt,0,oflyer)), intent(out)&#160;</td>
           <td class="paramname"><em>pwrc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt,ksv), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,oflyer),merge(d%nkt,0,oflyer),merge(ksv,0,oflyer)), intent(out)&#160;</td>
           <td class="paramname"><em>pwsv</em>, </td>
         </tr>
         <tr>
@@ -771,61 +771,61 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,oibm),merge(d%nkt,0,oibm)), intent(in), optional&#160;</td>
           <td class="paramname"><em>pibm_ls</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out), optional&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,oibm),merge(d%nkt,0,oibm)), intent(out), optional&#160;</td>
           <td class="paramname"><em>pibm_xmut</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout), optional&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,odiag_in_run),merge(d%nkt,0,odiag_in_run)), intent(inout), optional&#160;</td>
           <td class="paramname"><em>pcurrent_tke_diss</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(in), optional&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,ocouples)), intent(in), optional&#160;</td>
           <td class="paramname"><em>psstfl</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(in), optional&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,ocouples)), intent(in), optional&#160;</td>
           <td class="paramname"><em>psstfl_c</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(in), optional&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,ocouples)), intent(in), optional&#160;</td>
           <td class="paramname"><em>pssrfl_c</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(in), optional&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,ocouples)), intent(in), optional&#160;</td>
           <td class="paramname"><em>pssufl_c</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(in), optional&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,ocouples)), intent(in), optional&#160;</td>
           <td class="paramname"><em>pssvfl_c</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(in), optional&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,ocouples)), intent(in), optional&#160;</td>
           <td class="paramname"><em>pssufl</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(in), optional&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,ocouples)), intent(in), optional&#160;</td>
           <td class="paramname"><em>pssvfl</em>&#160;</td>
         </tr>
         <tr>

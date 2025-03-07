@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:aa22e8bfb11070f2c3a322075a9cf5112" id="r_aa22e8bfb11070f2c3a322075a9cf5112"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__set__conc__lima.html#aa22e8bfb11070f2c3a322075a9cf5112">set_conc_lima</a> (kmi, hgetcloud, prhodref, prt, psvt, ldlbc)</td></tr>
-<tr class="separator:aa22e8bfb11070f2c3a322075a9cf5112"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a902ba0f2b2199a55c0e2b1679ae98797" id="r_a902ba0f2b2199a55c0e2b1679ae98797"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__set__conc__lima.html#a902ba0f2b2199a55c0e2b1679ae98797">set_conc_lima</a> (tnsv, d, krr, kmi, hgetcloud, prhodref, prt, psvt, odlbc)</td></tr>
+<tr class="separator:a902ba0f2b2199a55c0e2b1679ae98797"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="aa22e8bfb11070f2c3a322075a9cf5112" name="aa22e8bfb11070f2c3a322075a9cf5112"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa22e8bfb11070f2c3a322075a9cf5112">&#9670;&#160;</a></span>set_conc_lima()</h2>
+<a id="a902ba0f2b2199a55c0e2b1679ae98797" name="a902ba0f2b2199a55c0e2b1679ae98797"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a902ba0f2b2199a55c0e2b1679ae98797">&#9670;&#160;</a></span>set_conc_lima()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,6 +91,24 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_set_conc_lima::set_conc_lima </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__nsv_1_1nsv__t.html">nsv_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>tnsv</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>krr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">integer, intent(in)&#160;</td>
           <td class="paramname"><em>kmi</em>, </td>
         </tr>
@@ -103,26 +121,26 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,krr), intent(inout)&#160;</td>
           <td class="paramname"><em>prt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,tnsv%nsv_lima), intent(inout)&#160;</td>
           <td class="paramname"><em>psvt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">logical, intent(in), optional&#160;</td>
-          <td class="paramname"><em>ldlbc</em>&#160;</td>
+          <td class="paramname"><em>odlbc</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

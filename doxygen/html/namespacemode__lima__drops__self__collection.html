@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:abafec831e0e2ceb9c525b7dc97ca6da2" id="r_abafec831e0e2ceb9c525b7dc97ca6da2"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__drops__self__collection.html#abafec831e0e2ceb9c525b7dc97ca6da2">lima_drops_self_collection</a> (ldcompute, prhodref, pcrt, plbdr, plbdr3, p_cr_scbu)</td></tr>
-<tr class="separator:abafec831e0e2ceb9c525b7dc97ca6da2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72e41b4e43d2840e5946ddcefa90c980" id="r_a72e41b4e43d2840e5946ddcefa90c980"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__drops__self__collection.html#a72e41b4e43d2840e5946ddcefa90c980">lima_drops_self_collection</a> (limap, limaw, ksize, odcompute, prhodref, pcrt, plbdr, plbdr3, p_cr_scbu)</td></tr>
+<tr class="separator:a72e41b4e43d2840e5946ddcefa90c980"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="abafec831e0e2ceb9c525b7dc97ca6da2" name="abafec831e0e2ceb9c525b7dc97ca6da2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abafec831e0e2ceb9c525b7dc97ca6da2">&#9670;&#160;</a></span>lima_drops_self_collection()</h2>
+<a id="a72e41b4e43d2840e5946ddcefa90c980" name="a72e41b4e43d2840e5946ddcefa90c980"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a72e41b4e43d2840e5946ddcefa90c980">&#9670;&#160;</a></span>lima_drops_self_collection()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,37 +91,55 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_lima_drops_self_collection::lima_drops_self_collection </td>
           <td>(</td>
-          <td class="paramtype">logical, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>ldcompute</em>, </td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limap</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__warm_1_1param__lima__warm__t.html">param_lima_warm_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limaw</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>ksize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>odcompute</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pcrt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plbdr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plbdr3</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_cr_scbu</em>&#160;</td>
         </tr>
         <tr>
@@ -136,12 +154,12 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__lima__drops__self__collection_abafec831e0e2ceb9c525b7dc97ca6da2_icgraph.png" border="0" usemap="#anamespacemode__lima__drops__self__collection_abafec831e0e2ceb9c525b7dc97ca6da2_icgraph" alt=""/></div>
-<map name="anamespacemode__lima__drops__self__collection_abafec831e0e2ceb9c525b7dc97ca6da2_icgraph" id="anamespacemode__lima__drops__self__collection_abafec831e0e2ceb9c525b7dc97ca6da2_icgraph">
+<div class="center"><img src="namespacemode__lima__drops__self__collection_a72e41b4e43d2840e5946ddcefa90c980_icgraph.png" border="0" usemap="#anamespacemode__lima__drops__self__collection_a72e41b4e43d2840e5946ddcefa90c980_icgraph" alt=""/></div>
+<map name="anamespacemode__lima__drops__self__collection_a72e41b4e43d2840e5946ddcefa90c980_icgraph" id="anamespacemode__lima__drops__self__collection_a72e41b4e43d2840e5946ddcefa90c980_icgraph">
 <area shape="rect" title=" " alt="" coords="325,5,497,60"/>
-<area shape="rect" href="namespacemode__lima__tendencies.html#a66a6879e5b8b9b9734043455a865948d" title=" " alt="" coords="104,13,277,53"/>
+<area shape="rect" href="namespacemode__lima__tendencies.html#acefa2d69ebd2194440988a2afd517425" title=" " alt="" coords="104,13,277,53"/>
 <area shape="poly" title=" " alt="" coords="312,35,277,35,277,30,312,30"/>
-<area shape="rect" href="lima_8F90.html#a7358dec3cc36d58f782836dc100f62fa" title=" " alt="" coords="5,20,56,45"/>
+<area shape="rect" href="lima_8F90.html#a45fe64d21afbc6cace563fda83cb1e79" title=" " alt="" coords="5,20,56,45"/>
 <area shape="poly" title=" " alt="" coords="90,35,57,35,57,30,90,30"/>
 </map>
 </div>

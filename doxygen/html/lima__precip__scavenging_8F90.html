@@ -84,14 +84,14 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a79cfb2f21b0f1588ac25815e5c95329a" id="r_a79cfb2f21b0f1588ac25815e5c95329a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lima__precip__scavenging_8F90.html#a79cfb2f21b0f1588ac25815e5c95329a">lima_precip_scavenging</a> (d, cst, buconf, tbudgets, kbudgets, hcloud, cdconf, kluout, ktcount, ptstep, prrt, prhodref, prhodj, pzz, ppabst, ptht, psvt, prsvs, pinpap)</td></tr>
-<tr class="separator:a79cfb2f21b0f1588ac25815e5c95329a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4656dc7a8849f2cc3b0995e392fe60da" id="r_a4656dc7a8849f2cc3b0995e392fe60da"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lima__precip__scavenging_8F90.html#a4656dc7a8849f2cc3b0995e392fe60da">scav_mass_sedimentation</a> (hcloud, cdconf, ptstep, ktcount, pzz, prhodj, prhodref, prain, psvt_mass, prsvs_mass, pinpap)</td></tr>
-<tr class="separator:a4656dc7a8849f2cc3b0995e392fe60da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5605851b01ea0b9c9cdd3f35198a5962" id="r_a5605851b01ea0b9c9cdd3f35198a5962"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lima__precip__scavenging_8F90.html#a5605851b01ea0b9c9cdd3f35198a5962">lima_precip_scavenging</a> (tnsv, d, cst, buconf, tbudgets, kbudgets, hcloud, hdconf, kluout, ktcount, ptstep, prrt, prhodref, prhodj, pzz, ppabst, ptht, psvt, prsvs, pinpap)</td></tr>
+<tr class="separator:a5605851b01ea0b9c9cdd3f35198a5962"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95150e6bd739a994aae5327a09ae1d7a" id="r_a95150e6bd739a994aae5327a09ae1d7a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lima__precip__scavenging_8F90.html#a95150e6bd739a994aae5327a09ae1d7a">scav_mass_sedimentation</a> (d, hcloud, hdconf, ptstep, ktcount, pzz, prhodj, prhodref, prain, psvt_mass, prsvs_mass, pinpap)</td></tr>
+<tr class="separator:a95150e6bd739a994aae5327a09ae1d7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a79cfb2f21b0f1588ac25815e5c95329a" name="a79cfb2f21b0f1588ac25815e5c95329a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a79cfb2f21b0f1588ac25815e5c95329a">&#9670;&#160;</a></span>lima_precip_scavenging()</h2>
+<a id="a5605851b01ea0b9c9cdd3f35198a5962" name="a5605851b01ea0b9c9cdd3f35198a5962"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5605851b01ea0b9c9cdd3f35198a5962">&#9670;&#160;</a></span>lima_precip_scavenging()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -99,6 +99,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine lima_precip_scavenging </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__nsv_1_1nsv__t.html">nsv_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>tnsv</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>d</em>, </td>
         </tr>
@@ -136,7 +142,7 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">character(len=5), intent(in)&#160;</td>
-          <td class="paramname"><em>cdconf</em>, </td>
+          <td class="paramname"><em>hdconf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -159,55 +165,55 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prrt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pzz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>ppabst</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>ptht</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,tnsv%nsv_lima), intent(in)&#160;</td>
           <td class="paramname"><em>psvt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,tnsv%nsv_lima), intent(inout)&#160;</td>
           <td class="paramname"><em>prsvs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(inout)&#160;</td>
           <td class="paramname"><em>pinpap</em>&#160;</td>
         </tr>
         <tr>
@@ -222,20 +228,20 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="lima__precip__scavenging_8F90_a79cfb2f21b0f1588ac25815e5c95329a_cgraph.png" border="0" usemap="#alima__precip__scavenging_8F90_a79cfb2f21b0f1588ac25815e5c95329a_cgraph" alt=""/></div>
-<map name="alima__precip__scavenging_8F90_a79cfb2f21b0f1588ac25815e5c95329a_cgraph" id="alima__precip__scavenging_8F90_a79cfb2f21b0f1588ac25815e5c95329a_cgraph">
+<div class="center"><img src="lima__precip__scavenging_8F90_a5605851b01ea0b9c9cdd3f35198a5962_cgraph.png" border="0" usemap="#alima__precip__scavenging_8F90_a5605851b01ea0b9c9cdd3f35198a5962_cgraph" alt=""/></div>
+<map name="alima__precip__scavenging_8F90_a5605851b01ea0b9c9cdd3f35198a5962_cgraph" id="alima__precip__scavenging_8F90_a5605851b01ea0b9c9cdd3f35198a5962_cgraph">
 <area shape="rect" title=" " alt="" coords="5,163,184,189"/>
 <area shape="rect" href="namespacemode__budget__phy.html#adb853e4fb0b59cc93057b507a52bd8ce" title=" " alt="" coords="232,5,427,45"/>
 <area shape="poly" title=" " alt="" coords="106,161,157,110,192,81,231,55,243,48,246,53,233,60,195,85,160,114,109,165"/>
 <area shape="rect" href="namespacemode__budget__phy.html#a45dce5bc68868ab14b72a6c987fd5d08" title=" " alt="" coords="232,69,427,109"/>
 <area shape="poly" title=" " alt="" coords="125,161,231,119,252,111,254,116,233,124,127,166"/>
-<area shape="rect" href="gamma_8F90.html#a9777227bbb84bfae4e8675b657d6e273" title=" " alt="" coords="278,134,381,159"/>
+<area shape="rect" href="gamma_8F90.html#a8e8146418bd5e0b749c1a73538f360df" title=" " alt="" coords="278,134,381,159"/>
 <area shape="poly" title=" " alt="" coords="184,162,264,152,265,157,185,167"/>
 <area shape="rect" href="namespacemode__lima__functions.html#a6dfe035d47af5616553309414a825656" title=" " alt="" coords="248,184,411,224"/>
 <area shape="poly" title=" " alt="" coords="185,184,235,190,234,195,184,189"/>
 <area shape="rect" href="namespacemode__lima__functions.html#a0e8957535956d85ee8df370b493c7a48" title=" " alt="" coords="248,248,411,288"/>
 <area shape="poly" title=" " alt="" coords="124,186,233,234,253,241,251,246,231,238,122,191"/>
-<area shape="rect" href="lima__precip__scavenging_8F90.html#a4656dc7a8849f2cc3b0995e392fe60da" title=" " alt="" coords="232,313,427,338"/>
+<area shape="rect" href="lima__precip__scavenging_8F90.html#a95150e6bd739a994aae5327a09ae1d7a" title=" " alt="" coords="232,313,427,338"/>
 <area shape="poly" title=" " alt="" coords="108,187,158,241,194,271,233,298,251,306,249,311,231,302,191,276,155,245,104,191"/>
 <area shape="rect" href="namespacemode__budget__phy.html#af12acae4d0ad98243d08fc99268ce6d0" title=" " alt="" coords="475,5,669,45"/>
 <area shape="poly" title=" " alt="" coords="427,23,461,23,461,28,427,28"/>
@@ -252,8 +258,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="a4656dc7a8849f2cc3b0995e392fe60da" name="a4656dc7a8849f2cc3b0995e392fe60da"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4656dc7a8849f2cc3b0995e392fe60da">&#9670;&#160;</a></span>scav_mass_sedimentation()</h2>
+<a id="a95150e6bd739a994aae5327a09ae1d7a" name="a95150e6bd739a994aae5327a09ae1d7a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a95150e6bd739a994aae5327a09ae1d7a">&#9670;&#160;</a></span>scav_mass_sedimentation()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -261,6 +267,12 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine lima_precip_scavenging::scav_mass_sedimentation </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">character (len=4), intent(in)&#160;</td>
           <td class="paramname"><em>hcloud</em>, </td>
         </tr>
@@ -268,7 +280,7 @@ Here is the call graph for this function:</div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">character(len=5), intent(in)&#160;</td>
-          <td class="paramname"><em>cdconf</em>, </td>
+          <td class="paramname"><em>hdconf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -285,43 +297,43 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pzz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prain</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>psvt_mass</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>prsvs_mass</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(inout)&#160;</td>
           <td class="paramname"><em>pinpap</em>&#160;</td>
         </tr>
         <tr>
@@ -336,10 +348,10 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="lima__precip__scavenging_8F90_a4656dc7a8849f2cc3b0995e392fe60da_icgraph.png" border="0" usemap="#alima__precip__scavenging_8F90_a4656dc7a8849f2cc3b0995e392fe60da_icgraph" alt=""/></div>
-<map name="alima__precip__scavenging_8F90_a4656dc7a8849f2cc3b0995e392fe60da_icgraph" id="alima__precip__scavenging_8F90_a4656dc7a8849f2cc3b0995e392fe60da_icgraph">
+<div class="center"><img src="lima__precip__scavenging_8F90_a95150e6bd739a994aae5327a09ae1d7a_icgraph.png" border="0" usemap="#alima__precip__scavenging_8F90_a95150e6bd739a994aae5327a09ae1d7a_icgraph" alt=""/></div>
+<map name="alima__precip__scavenging_8F90_a95150e6bd739a994aae5327a09ae1d7a_icgraph" id="alima__precip__scavenging_8F90_a95150e6bd739a994aae5327a09ae1d7a_icgraph">
 <area shape="rect" title=" " alt="" coords="232,5,427,31"/>
-<area shape="rect" href="lima__precip__scavenging_8F90.html#a79cfb2f21b0f1588ac25815e5c95329a" title=" " alt="" coords="5,5,184,31"/>
+<area shape="rect" href="lima__precip__scavenging_8F90.html#a5605851b01ea0b9c9cdd3f35198a5962" title=" " alt="" coords="5,5,184,31"/>
 <area shape="poly" title=" " alt="" coords="219,21,184,21,184,15,219,15"/>
 </map>
 </div>

@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:ad3bbdc1aface423c081685839a34566a" id="r_ad3bbdc1aface423c081685839a34566a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__droplets__self__collection.html#ad3bbdc1aface423c081685839a34566a">lima_droplets_self_collection</a> (ldcompute, prhodref, pcct, plbdc3, p_cc_self)</td></tr>
-<tr class="separator:ad3bbdc1aface423c081685839a34566a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa1c927cb365fab47dc52682c54ddf39" id="r_aaa1c927cb365fab47dc52682c54ddf39"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__droplets__self__collection.html#aaa1c927cb365fab47dc52682c54ddf39">lima_droplets_self_collection</a> (limap, limaw, ksize, odcompute, prhodref, pcct, plbdc3, p_cc_self)</td></tr>
+<tr class="separator:aaa1c927cb365fab47dc52682c54ddf39"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="ad3bbdc1aface423c081685839a34566a" name="ad3bbdc1aface423c081685839a34566a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad3bbdc1aface423c081685839a34566a">&#9670;&#160;</a></span>lima_droplets_self_collection()</h2>
+<a id="aaa1c927cb365fab47dc52682c54ddf39" name="aaa1c927cb365fab47dc52682c54ddf39"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaa1c927cb365fab47dc52682c54ddf39">&#9670;&#160;</a></span>lima_droplets_self_collection()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,31 +91,49 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_lima_droplets_self_collection::lima_droplets_self_collection </td>
           <td>(</td>
-          <td class="paramtype">logical, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>ldcompute</em>, </td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limap</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__warm_1_1param__lima__warm__t.html">param_lima_warm_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limaw</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>ksize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>odcompute</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pcct</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plbdc3</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
           <td class="paramname"><em>p_cc_self</em>&#160;</td>
         </tr>
         <tr>
@@ -130,12 +148,12 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__lima__droplets__self__collection_ad3bbdc1aface423c081685839a34566a_icgraph.png" border="0" usemap="#anamespacemode__lima__droplets__self__collection_ad3bbdc1aface423c081685839a34566a_icgraph" alt=""/></div>
-<map name="anamespacemode__lima__droplets__self__collection_ad3bbdc1aface423c081685839a34566a_icgraph" id="anamespacemode__lima__droplets__self__collection_ad3bbdc1aface423c081685839a34566a_icgraph">
+<div class="center"><img src="namespacemode__lima__droplets__self__collection_aaa1c927cb365fab47dc52682c54ddf39_icgraph.png" border="0" usemap="#anamespacemode__lima__droplets__self__collection_aaa1c927cb365fab47dc52682c54ddf39_icgraph" alt=""/></div>
+<map name="anamespacemode__lima__droplets__self__collection_aaa1c927cb365fab47dc52682c54ddf39_icgraph" id="anamespacemode__lima__droplets__self__collection_aaa1c927cb365fab47dc52682c54ddf39_icgraph">
 <area shape="rect" title=" " alt="" coords="325,5,508,60"/>
-<area shape="rect" href="namespacemode__lima__tendencies.html#a66a6879e5b8b9b9734043455a865948d" title=" " alt="" coords="104,13,277,53"/>
+<area shape="rect" href="namespacemode__lima__tendencies.html#acefa2d69ebd2194440988a2afd517425" title=" " alt="" coords="104,13,277,53"/>
 <area shape="poly" title=" " alt="" coords="312,35,277,35,277,30,312,30"/>
-<area shape="rect" href="lima_8F90.html#a7358dec3cc36d58f782836dc100f62fa" title=" " alt="" coords="5,20,56,45"/>
+<area shape="rect" href="lima_8F90.html#a45fe64d21afbc6cace563fda83cb1e79" title=" " alt="" coords="5,20,56,45"/>
 <area shape="poly" title=" " alt="" coords="90,35,57,35,57,30,90,30"/>
 </map>
 </div>

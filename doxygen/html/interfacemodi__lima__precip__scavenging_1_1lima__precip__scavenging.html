@@ -83,15 +83,15 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:afde62ce85721e7133dfe782049baabe9" id="r_afde62ce85721e7133dfe782049baabe9"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__lima__precip__scavenging_1_1lima__precip__scavenging.html#afde62ce85721e7133dfe782049baabe9">lima_precip_scavenging</a> (d, cst, buconf, tbudgets, kbudgets, hcloud, cdconf, kluout, ktcount, ptstep, prrt, prhodref, prhodj, pzz, ppabst, ptht, psvt, prsvs, pinpap)</td></tr>
-<tr class="separator:afde62ce85721e7133dfe782049baabe9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e9364025bf9bbdbc35705b6c38322ef" id="r_a3e9364025bf9bbdbc35705b6c38322ef"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__lima__precip__scavenging_1_1lima__precip__scavenging.html#a3e9364025bf9bbdbc35705b6c38322ef">lima_precip_scavenging</a> (tnsv, d, cst, buconf, tbudgets, kbudgets, hcloud, hdconf, kluout, ktcount, ptstep, prrt, prhodref, prhodj, pzz, ppabst, ptht, psvt, prsvs, pinpap)</td></tr>
+<tr class="separator:a3e9364025bf9bbdbc35705b6c38322ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
 <p class="definition">Definition at line <a class="el" href="modi__lima__precip__scavenging_8F90_source.html#l00008">8</a> of file <a class="el" href="modi__lima__precip__scavenging_8F90_source.html">modi_lima_precip_scavenging.F90</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="afde62ce85721e7133dfe782049baabe9" name="afde62ce85721e7133dfe782049baabe9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afde62ce85721e7133dfe782049baabe9">&#9670;&#160;</a></span>lima_precip_scavenging()</h2>
+<a id="a3e9364025bf9bbdbc35705b6c38322ef" name="a3e9364025bf9bbdbc35705b6c38322ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e9364025bf9bbdbc35705b6c38322ef">&#9670;&#160;</a></span>lima_precip_scavenging()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -99,6 +99,12 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">subroutine modi_lima_precip_scavenging::lima_precip_scavenging::lima_precip_scavenging </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__nsv_1_1nsv__t.html">nsv_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>tnsv</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>d</em>, </td>
         </tr>
@@ -136,7 +142,7 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">character(len=5), intent(in)&#160;</td>
-          <td class="paramname"><em>cdconf</em>, </td>
+          <td class="paramname"><em>hdconf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -159,49 +165,49 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prrt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pzz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>ppabst</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>ptht</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,tnsv%nsv_lima), intent(in)&#160;</td>
           <td class="paramname"><em>psvt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,tnsv%nsv_lima), intent(inout)&#160;</td>
           <td class="paramname"><em>prsvs</em>, </td>
         </tr>
         <tr>

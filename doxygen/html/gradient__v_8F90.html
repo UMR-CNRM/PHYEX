@@ -84,6 +84,8 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
+<tr class="memitem:a5f4116949457439ef61104756f00593d" id="r_a5f4116949457439ef61104756f00593d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__v_8F90.html#a5f4116949457439ef61104756f00593d">gx_v_uv_device</a> (pa, pdxx, pdzz, pdzx, pgx_v_uv_device)</td></tr>
+<tr class="separator:a5f4116949457439ef61104756f00593d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6eb5c38c94abdeda511512895be14673" id="r_a6eb5c38c94abdeda511512895be14673"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__v_8F90.html#a6eb5c38c94abdeda511512895be14673">gx_v_uv</a> (pa, pdxx, pdzz, pdzx, kka, kku, kl)</td></tr>
 <tr class="separator:a6eb5c38c94abdeda511512895be14673"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19ac6c76d88715e4438d2bddfb7e53fe" id="r_a19ac6c76d88715e4438d2bddfb7e53fe"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__v_8F90.html#a19ac6c76d88715e4438d2bddfb7e53fe">gy_v_m</a> (pa, pdyy, pdzz, pdzy, kka, kku, kl)</td></tr>
@@ -139,6 +141,54 @@ Functions/Subroutines</h2></td></tr>
           <td></td>
           <td class="paramtype">integer, intent(in), optional&#160;</td>
           <td class="paramname"><em>kl</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="gradient__v_8F90_source.html#l00025">25</a> of file <a class="el" href="gradient__v_8F90_source.html">gradient_v.F90</a>.</p>
+
+</div>
+</div>
+<a id="a5f4116949457439ef61104756f00593d" name="a5f4116949457439ef61104756f00593d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f4116949457439ef61104756f00593d">&#9670;&#160;</a></span>gx_v_uv_device()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine gx_v_uv_device </td>
+          <td>(</td>
+          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pa</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pdxx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pdzz</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pdzx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(:,:,:), intent(out)&#160;</td>
+          <td class="paramname"><em>pgx_v_uv_device</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -208,7 +258,21 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="gradient__v_8F90_source.html#l00101">101</a> of file <a class="el" href="gradient__v_8F90_source.html">gradient_v.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="gradient__v_8F90_source.html#l00124">124</a> of file <a class="el" href="gradient__v_8F90_source.html">gradient_v.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="gradient__v_8F90_a19ac6c76d88715e4438d2bddfb7e53fe_icgraph.png" border="0" usemap="#agradient__v_8F90_a19ac6c76d88715e4438d2bddfb7e53fe_icgraph" alt=""/></div>
+<map name="agradient__v_8F90_a19ac6c76d88715e4438d2bddfb7e53fe_icgraph" id="agradient__v_8F90_a19ac6c76d88715e4438d2bddfb7e53fe_icgraph">
+<area shape="rect" title=" " alt="" coords="563,13,636,38"/>
+<area shape="rect" href="namespacemode__turb__ver__dyn__flux.html#a3c9f2de641870f3cbae768327606e3af" title=" " alt="" coords="332,5,515,45"/>
+<area shape="poly" title=" " alt="" coords="549,28,515,28,515,23,549,23"/>
+<area shape="rect" href="namespacemode__turb__ver.html#a6a55f740dcd7870f2e64d634483cc1e8" title=" " alt="" coords="101,13,284,38"/>
+<area shape="poly" title=" " alt="" coords="319,28,284,28,284,23,319,23"/>
+<area shape="rect" href="turb_8F90.html#a808c1b84c0353e66a4b430000939bc16" title=" " alt="" coords="5,13,53,38"/>
+<area shape="poly" title=" " alt="" coords="88,28,53,28,53,23,88,23"/>
+</map>
+</div>
 
 </div>
 </div>
@@ -256,7 +320,21 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="gradient__v_8F90_source.html#l00200">200</a> of file <a class="el" href="gradient__v_8F90_source.html">gradient_v.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="gradient__v_8F90_source.html#l00223">223</a> of file <a class="el" href="gradient__v_8F90_source.html">gradient_v.F90</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="gradient__v_8F90_a41ca3dd27096c3e43809344c68c38df0_icgraph.png" border="0" usemap="#agradient__v_8F90_a41ca3dd27096c3e43809344c68c38df0_icgraph" alt=""/></div>
+<map name="agradient__v_8F90_a41ca3dd27096c3e43809344c68c38df0_icgraph" id="agradient__v_8F90_a41ca3dd27096c3e43809344c68c38df0_icgraph">
+<area shape="rect" title=" " alt="" coords="563,13,641,38"/>
+<area shape="rect" href="namespacemode__turb__ver__dyn__flux.html#a3c9f2de641870f3cbae768327606e3af" title=" " alt="" coords="332,5,515,45"/>
+<area shape="poly" title=" " alt="" coords="549,28,515,28,515,23,549,23"/>
+<area shape="rect" href="namespacemode__turb__ver.html#a6a55f740dcd7870f2e64d634483cc1e8" title=" " alt="" coords="101,13,284,38"/>
+<area shape="poly" title=" " alt="" coords="319,28,284,28,284,23,319,23"/>
+<area shape="rect" href="turb_8F90.html#a808c1b84c0353e66a4b430000939bc16" title=" " alt="" coords="5,13,53,38"/>
+<area shape="poly" title=" " alt="" coords="88,28,53,28,53,23,88,23"/>
+</map>
+</div>
 
 </div>
 </div>

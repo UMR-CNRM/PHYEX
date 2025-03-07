@@ -90,29 +90,35 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:acfac79eca17f9d3d9be259699af94618" id="r_acfac79eca17f9d3d9be259699af94618"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__hail.html#acfac79eca17f9d3d9be259699af94618">mode_lima_hail::lima_hail</a> (ptstep, ldcompute, prhodref, ppres, pt, pka, pdv, pcj, prvt, prct, prrt, prit, prst, prgt, prht, pcct, pcrt, pcit, pcst, pcgt, pcht, plbdc, plbdr, plbds, plbdg, plbdh, plvfact, plsfact, p_th_weth, p_rc_weth, p_cc_weth, p_rr_weth, p_cr_weth, p_ri_weth, p_ci_weth, p_rs_weth, p_cs_weth, p_rg_weth, p_cg_weth, p_rh_weth, p_rg_cohg, p_cg_cohg, p_th_hmlt, p_rr_hmlt, p_cr_hmlt, p_ch_hmlt, pa_th, pa_rc, pa_cc, pa_rr, pa_cr, pa_ri, pa_ci, pa_rs, pa_cs, pa_rg, pa_cg, pa_rh, pa_ch)</td></tr>
-<tr class="separator:acfac79eca17f9d3d9be259699af94618"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9dac68d7977271e23bcf8bf355658779" id="r_a9dac68d7977271e23bcf8bf355658779"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(snow))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mode__lima__hail_8F90.html#a9dac68d7977271e23bcf8bf355658779">get_xker_sweth</a> (graupel, snow)</td></tr>
-<tr class="separator:a9dac68d7977271e23bcf8bf355658779"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d7a4b9b29fd3388a4326ef9d6757800" id="r_a7d7a4b9b29fd3388a4326ef9d6757800"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__hail.html#a7d7a4b9b29fd3388a4326ef9d6757800">mode_lima_hail::lima_hail</a> (cst, limap, limam, ksize, ptstep, odcompute, prhodref, ppres, pt, pka, pdv, pcj, prvt, prct, prrt, prit, prst, prgt, prht, pcct, pcrt, pcit, pcst, pcgt, pcht, plbdc, plbdr, plbds, plbdg, plbdh, plvfact, plsfact, p_th_weth, p_rc_weth, p_cc_weth, p_rr_weth, p_cr_weth, p_ri_weth, p_ci_weth, p_rs_weth, p_cs_weth, p_rg_weth, p_cg_weth, p_rh_weth, p_rg_cohg, p_cg_cohg, p_th_hmlt, p_rr_hmlt, p_cr_hmlt, p_ch_hmlt, pa_th, pa_rc, pa_cc, pa_rr, pa_cr, pa_ri, pa_ci, pa_rs, pa_cs, pa_rg, pa_cg, pa_rh, pa_ch)</td></tr>
+<tr class="separator:a7d7a4b9b29fd3388a4326ef9d6757800"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d03f5fa17dea6e8ee9cca45b088276d" id="r_a9d03f5fa17dea6e8ee9cca45b088276d"><td class="memItemLeft" align="right" valign="top">real function, dimension(ksize)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mode__lima__hail_8F90.html#a9d03f5fa17dea6e8ee9cca45b088276d">get_xker_sweth</a> (ksize, kh, ks)</td></tr>
+<tr class="separator:a9d03f5fa17dea6e8ee9cca45b088276d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a9dac68d7977271e23bcf8bf355658779" name="a9dac68d7977271e23bcf8bf355658779"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9dac68d7977271e23bcf8bf355658779">&#9670;&#160;</a></span>get_xker_sweth()</h2>
+<a id="a9d03f5fa17dea6e8ee9cca45b088276d" name="a9d03f5fa17dea6e8ee9cca45b088276d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9d03f5fa17dea6e8ee9cca45b088276d">&#9670;&#160;</a></span>get_xker_sweth()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">real function, dimension(size(snow)) lima_hail::get_xker_sweth </td>
+          <td class="memname">real function, dimension(ksize) lima_hail::get_xker_sweth </td>
           <td>(</td>
-          <td class="paramtype">integer, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>graupel</em>, </td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>ksize</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>snow</em>&#160;</td>
+          <td class="paramtype">integer, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>kh</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>ks</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -122,18 +128,18 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="mode__lima__hail_8F90_source.html#l00429">429</a> of file <a class="el" href="mode__lima__hail_8F90_source.html">mode_lima_hail.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mode__lima__hail_8F90_source.html#l00430">430</a> of file <a class="el" href="mode__lima__hail_8F90_source.html">mode_lima_hail.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="mode__lima__hail_8F90_a9dac68d7977271e23bcf8bf355658779_icgraph.png" border="0" usemap="#amode__lima__hail_8F90_a9dac68d7977271e23bcf8bf355658779_icgraph" alt=""/></div>
-<map name="amode__lima__hail_8F90_a9dac68d7977271e23bcf8bf355658779_icgraph" id="amode__lima__hail_8F90_a9dac68d7977271e23bcf8bf355658779_icgraph">
+<div class="center"><img src="mode__lima__hail_8F90_a9d03f5fa17dea6e8ee9cca45b088276d_icgraph.png" border="0" usemap="#amode__lima__hail_8F90_a9d03f5fa17dea6e8ee9cca45b088276d_icgraph" alt=""/></div>
+<map name="amode__lima__hail_8F90_a9d03f5fa17dea6e8ee9cca45b088276d_icgraph" id="amode__lima__hail_8F90_a9d03f5fa17dea6e8ee9cca45b088276d_icgraph">
 <area shape="rect" title=" " alt="" coords="568,13,692,38"/>
-<area shape="rect" href="namespacemode__lima__hail.html#acfac79eca17f9d3d9be259699af94618" title=" " alt="" coords="325,13,520,38"/>
+<area shape="rect" href="namespacemode__lima__hail.html#a7d7a4b9b29fd3388a4326ef9d6757800" title=" " alt="" coords="325,13,520,38"/>
 <area shape="poly" title=" " alt="" coords="554,28,520,28,520,23,554,23"/>
-<area shape="rect" href="namespacemode__lima__tendencies.html#a66a6879e5b8b9b9734043455a865948d" title=" " alt="" coords="104,5,277,45"/>
+<area shape="rect" href="namespacemode__lima__tendencies.html#acefa2d69ebd2194440988a2afd517425" title=" " alt="" coords="104,5,277,45"/>
 <area shape="poly" title=" " alt="" coords="311,28,278,28,278,23,311,23"/>
-<area shape="rect" href="lima_8F90.html#a7358dec3cc36d58f782836dc100f62fa" title=" " alt="" coords="5,13,56,38"/>
+<area shape="rect" href="lima_8F90.html#a45fe64d21afbc6cace563fda83cb1e79" title=" " alt="" coords="5,13,56,38"/>
 <area shape="poly" title=" " alt="" coords="90,28,57,28,57,23,90,23"/>
 </map>
 </div>

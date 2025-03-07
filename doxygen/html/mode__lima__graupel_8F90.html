@@ -90,29 +90,35 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a80801efa49f4a982a173590ba23ce26e" id="r_a80801efa49f4a982a173590ba23ce26e"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__graupel.html#a80801efa49f4a982a173590ba23ce26e">mode_lima_graupel::lima_graupel</a> (ptstep, ldcompute, prhodref, ppres, pt, pka, pdv, pcj, prvt, prct, prrt, prit, prst, prgt, pcct, pcrt, pcit, pcst, pcgt, plbdc, plbdr, plbds, plbdg, plvfact, plsfact, p_th_wetg, p_rc_wetg, p_cc_wetg, p_rr_wetg, p_cr_wetg, p_ri_wetg, p_ci_wetg, p_rs_wetg, p_cs_wetg, p_rg_wetg, p_cg_wetg, p_rh_wetg, p_th_dryg, p_rc_dryg, p_cc_dryg, p_rr_dryg, p_cr_dryg, p_ri_dryg, p_ci_dryg, p_rs_dryg, p_cs_dryg, p_rg_dryg, p_ri_hmg, p_ci_hmg, p_rg_hmg, p_th_gmlt, p_rr_gmlt, p_cr_gmlt, p_cg_gmlt, pa_th, pa_rc, pa_cc, pa_rr, pa_cr, pa_ri, pa_ci, pa_rs, pa_cs, pa_rg, pa_cg, pa_rh, pa_ch)</td></tr>
-<tr class="separator:a80801efa49f4a982a173590ba23ce26e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae3b424a56a27be11f9732e22e3403309" id="r_ae3b424a56a27be11f9732e22e3403309"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(snow))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mode__lima__graupel_8F90.html#ae3b424a56a27be11f9732e22e3403309">get_xker_sdryg</a> (graupel, snow)</td></tr>
-<tr class="separator:ae3b424a56a27be11f9732e22e3403309"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af70cc5c74b0e36b56e10f6165eb96ac3" id="r_af70cc5c74b0e36b56e10f6165eb96ac3"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__graupel.html#af70cc5c74b0e36b56e10f6165eb96ac3">mode_lima_graupel::lima_graupel</a> (cst, limap, limac, limam, ksize, ptstep, odcompute, prhodref, ppres, pt, pka, pdv, pcj, prvt, prct, prrt, prit, prst, prgt, pcct, pcrt, pcit, pcst, pcgt, plbdc, plbdr, plbds, plbdg, plvfact, plsfact, p_th_wetg, p_rc_wetg, p_cc_wetg, p_rr_wetg, p_cr_wetg, p_ri_wetg, p_ci_wetg, p_rs_wetg, p_cs_wetg, p_rg_wetg, p_cg_wetg, p_rh_wetg, p_th_dryg, p_rc_dryg, p_cc_dryg, p_rr_dryg, p_cr_dryg, p_ri_dryg, p_ci_dryg, p_rs_dryg, p_cs_dryg, p_rg_dryg, p_ri_hmg, p_ci_hmg, p_rg_hmg, p_th_gmlt, p_rr_gmlt, p_cr_gmlt, p_cg_gmlt, pa_th, pa_rc, pa_cc, pa_rr, pa_cr, pa_ri, pa_ci, pa_rs, pa_cs, pa_rg, pa_cg, pa_rh, pa_ch)</td></tr>
+<tr class="separator:af70cc5c74b0e36b56e10f6165eb96ac3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48c558d519a59bc87d2019e72067bd52" id="r_a48c558d519a59bc87d2019e72067bd52"><td class="memItemLeft" align="right" valign="top">real function, dimension(ksize)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mode__lima__graupel_8F90.html#a48c558d519a59bc87d2019e72067bd52">get_xker_sdryg</a> (ksize, kg, ks)</td></tr>
+<tr class="separator:a48c558d519a59bc87d2019e72067bd52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="ae3b424a56a27be11f9732e22e3403309" name="ae3b424a56a27be11f9732e22e3403309"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae3b424a56a27be11f9732e22e3403309">&#9670;&#160;</a></span>get_xker_sdryg()</h2>
+<a id="a48c558d519a59bc87d2019e72067bd52" name="a48c558d519a59bc87d2019e72067bd52"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a48c558d519a59bc87d2019e72067bd52">&#9670;&#160;</a></span>get_xker_sdryg()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">real function, dimension(size(snow)) lima_graupel::get_xker_sdryg </td>
+          <td class="memname">real function, dimension(ksize) lima_graupel::get_xker_sdryg </td>
           <td>(</td>
-          <td class="paramtype">integer, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>graupel</em>, </td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>ksize</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer, dimension(:), intent(in)&#160;</td>
-          <td class="paramname"><em>snow</em>&#160;</td>
+          <td class="paramtype">integer, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>kg</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>ks</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -122,18 +128,18 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="mode__lima__graupel_8F90_source.html#l00513">513</a> of file <a class="el" href="mode__lima__graupel_8F90_source.html">mode_lima_graupel.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mode__lima__graupel_8F90_source.html#l00555">555</a> of file <a class="el" href="mode__lima__graupel_8F90_source.html">mode_lima_graupel.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="mode__lima__graupel_8F90_ae3b424a56a27be11f9732e22e3403309_icgraph.png" border="0" usemap="#amode__lima__graupel_8F90_ae3b424a56a27be11f9732e22e3403309_icgraph" alt=""/></div>
-<map name="amode__lima__graupel_8F90_ae3b424a56a27be11f9732e22e3403309_icgraph" id="amode__lima__graupel_8F90_ae3b424a56a27be11f9732e22e3403309_icgraph">
+<div class="center"><img src="mode__lima__graupel_8F90_a48c558d519a59bc87d2019e72067bd52_icgraph.png" border="0" usemap="#amode__lima__graupel_8F90_a48c558d519a59bc87d2019e72067bd52_icgraph" alt=""/></div>
+<map name="amode__lima__graupel_8F90_a48c558d519a59bc87d2019e72067bd52_icgraph" id="amode__lima__graupel_8F90_a48c558d519a59bc87d2019e72067bd52_icgraph">
 <area shape="rect" title=" " alt="" coords="532,13,653,38"/>
-<area shape="rect" href="namespacemode__lima__graupel.html#a80801efa49f4a982a173590ba23ce26e" title=" " alt="" coords="325,5,484,45"/>
+<area shape="rect" href="namespacemode__lima__graupel.html#af70cc5c74b0e36b56e10f6165eb96ac3" title=" " alt="" coords="325,5,484,45"/>
 <area shape="poly" title=" " alt="" coords="518,28,484,28,484,23,518,23"/>
-<area shape="rect" href="namespacemode__lima__tendencies.html#a66a6879e5b8b9b9734043455a865948d" title=" " alt="" coords="104,5,277,45"/>
+<area shape="rect" href="namespacemode__lima__tendencies.html#acefa2d69ebd2194440988a2afd517425" title=" " alt="" coords="104,5,277,45"/>
 <area shape="poly" title=" " alt="" coords="312,28,278,28,278,23,312,23"/>
-<area shape="rect" href="lima_8F90.html#a7358dec3cc36d58f782836dc100f62fa" title=" " alt="" coords="5,13,56,38"/>
+<area shape="rect" href="lima_8F90.html#a45fe64d21afbc6cace563fda83cb1e79" title=" " alt="" coords="5,13,56,38"/>
 <area shape="poly" title=" " alt="" coords="90,28,57,28,57,23,90,23"/>
 </map>
 </div>

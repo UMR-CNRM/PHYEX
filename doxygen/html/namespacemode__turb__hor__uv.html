@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a8584858a5a3f4c0ce40b3014142b58a4" id="r_a8584858a5a3f4c0ce40b3014142b58a4"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__turb__hor__uv.html#a8584858a5a3f4c0ce40b3014142b58a4">turb_hor_uv</a> (turbn, tles, ksplt, oflat, o2d, tpfile, pk, pinv_pdxx, pinv_pdyy, pinv_pdzz, pmzm_prhodj, pdxx, pdyy, pdzz, pdzx, pdzy, pdircoszw, pcosslope, psinslope, prhodj, pcdueff, ptau11m, ptau12m, ptau22m, ptau33m, pum, pvm, puslopem, pvslopem, pdp, prus, prvs)</td></tr>
-<tr class="separator:a8584858a5a3f4c0ce40b3014142b58a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a282f69609676256ef3744836569f7d85" id="r_a282f69609676256ef3744836569f7d85"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__turb__hor__uv.html#a282f69609676256ef3744836569f7d85">turb_hor_uv</a> (d, turbn, tles, ksplt, oflat, o2d, tpfile, pk, pinv_pdxx, pinv_pdyy, pinv_pdzz, pmzm_prhodj, pdxx, pdyy, pdzz, pdzx, pdzy, pdircoszw, pcosslope, psinslope, prhodj, pcdueff, ptau11m, ptau12m, ptau22m, ptau33m, pum, pvm, puslopem, pvslopem, pdp, prus, prvs)</td></tr>
+<tr class="separator:a282f69609676256ef3744836569f7d85"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a8584858a5a3f4c0ce40b3014142b58a4" name="a8584858a5a3f4c0ce40b3014142b58a4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8584858a5a3f4c0ce40b3014142b58a4">&#9670;&#160;</a></span>turb_hor_uv()</h2>
+<a id="a282f69609676256ef3744836569f7d85" name="a282f69609676256ef3744836569f7d85"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a282f69609676256ef3744836569f7d85">&#9670;&#160;</a></span>turb_hor_uv()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -91,6 +91,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine mode_turb_hor_uv::turb_hor_uv </td>
           <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__turb__n_1_1turb__t.html">turb_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>turbn</em>, </td>
         </tr>
@@ -121,163 +127,163 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">type(<a class="el" href="structmodd__io_1_1tfiledata.html">tfiledata</a>), intent(in)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__io_1_1tfiledata.html">tfiledata</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>tpfile</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pk</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pinv_pdxx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pinv_pdyy</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pinv_pdzz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pmzm_prhodj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdxx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdyy</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdzz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdzx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pdzy</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt), intent(in)&#160;</td>
           <td class="paramname"><em>pdircoszw</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt), intent(in)&#160;</td>
           <td class="paramname"><em>pcosslope</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt), intent(in)&#160;</td>
           <td class="paramname"><em>psinslope</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt), intent(in)&#160;</td>
           <td class="paramname"><em>pcdueff</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt), intent(in)&#160;</td>
           <td class="paramname"><em>ptau11m</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt), intent(in)&#160;</td>
           <td class="paramname"><em>ptau12m</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt), intent(in)&#160;</td>
           <td class="paramname"><em>ptau22m</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt), intent(in)&#160;</td>
           <td class="paramname"><em>ptau33m</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pum</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pvm</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt), intent(in)&#160;</td>
           <td class="paramname"><em>puslopem</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt), intent(in)&#160;</td>
           <td class="paramname"><em>pvslopem</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>pdp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>prus</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>prvs</em>&#160;</td>
         </tr>
         <tr>
@@ -292,8 +298,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__turb__hor__uv_a8584858a5a3f4c0ce40b3014142b58a4_cgraph.png" border="0" usemap="#anamespacemode__turb__hor__uv_a8584858a5a3f4c0ce40b3014142b58a4_cgraph" alt=""/></div>
-<map name="anamespacemode__turb__hor__uv_a8584858a5a3f4c0ce40b3014142b58a4_cgraph" id="anamespacemode__turb__hor__uv_a8584858a5a3f4c0ce40b3014142b58a4_cgraph">
+<div class="center"><img src="namespacemode__turb__hor__uv_a282f69609676256ef3744836569f7d85_cgraph.png" border="0" usemap="#anamespacemode__turb__hor__uv_a282f69609676256ef3744836569f7d85_cgraph" alt=""/></div>
+<map name="anamespacemode__turb__hor__uv_a282f69609676256ef3744836569f7d85_cgraph" id="anamespacemode__turb__hor__uv_a282f69609676256ef3744836569f7d85_cgraph">
 <area shape="rect" title=" " alt="" coords="5,5,181,45"/>
 <area shape="rect" href="namespacemode__io__field__write.html#a51061fb206463f97afeb0bdafb71c461" title=" " alt="" coords="229,5,383,45"/>
 <area shape="poly" title=" " alt="" coords="182,23,215,23,215,28,182,28"/>
@@ -302,8 +308,8 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__turb__hor__uv_a8584858a5a3f4c0ce40b3014142b58a4_icgraph.png" border="0" usemap="#anamespacemode__turb__hor__uv_a8584858a5a3f4c0ce40b3014142b58a4_icgraph" alt=""/></div>
-<map name="anamespacemode__turb__hor__uv_a8584858a5a3f4c0ce40b3014142b58a4_icgraph" id="anamespacemode__turb__hor__uv_a8584858a5a3f4c0ce40b3014142b58a4_icgraph">
+<div class="center"><img src="namespacemode__turb__hor__uv_a282f69609676256ef3744836569f7d85_icgraph.png" border="0" usemap="#anamespacemode__turb__hor__uv_a282f69609676256ef3744836569f7d85_icgraph" alt=""/></div>
+<map name="anamespacemode__turb__hor__uv_a282f69609676256ef3744836569f7d85_icgraph" id="anamespacemode__turb__hor__uv_a282f69609676256ef3744836569f7d85_icgraph">
 <area shape="rect" title=" " alt="" coords="531,5,707,45"/>
 <area shape="rect" href="namespacemode__turb__hor.html#a392ed5235673e3faa3d5c1f17974a7cc" title=" " alt="" coords="300,13,483,38"/>
 <area shape="poly" title=" " alt="" coords="517,28,483,28,483,23,517,23"/>

@@ -211,7 +211,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">type(<a class="el" href="structmodd__io_1_1tfiledata.html">tfiledata</a>), intent(in)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__io_1_1tfiledata.html">tfiledata</a>), intent(inout)&#160;</td>
           <td class="paramname"><em>tpfile</em>, </td>
         </tr>
         <tr>
@@ -313,7 +313,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout), optional&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,odiag_in_run),merge(d%nkt,0,odiag_in_run)), intent(inout), optional&#160;</td>
           <td class="paramname"><em>pcurrent_tke_diss</em>&#160;</td>
         </tr>
         <tr>
@@ -330,31 +330,37 @@ Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacemode__tke__eps__sources_ae63dfac8204f9d1868f33b9357bed0ab_cgraph.png" border="0" usemap="#anamespacemode__tke__eps__sources_ae63dfac8204f9d1868f33b9357bed0ab_cgraph" alt=""/></div>
 <map name="anamespacemode__tke__eps__sources_ae63dfac8204f9d1868f33b9357bed0ab_cgraph" id="anamespacemode__tke__eps__sources_ae63dfac8204f9d1868f33b9357bed0ab_cgraph">
-<area shape="rect" title=" " alt="" coords="5,329,179,369"/>
+<area shape="rect" title=" " alt="" coords="5,403,179,443"/>
 <area shape="rect" href="namespacemode__argslist__ll__phy.html#a5d087a26c2d355ea231111a5f32e7200" title=" " alt="" coords="257,5,417,45"/>
-<area shape="poly" title=" " alt="" coords="94,329,106,274,130,201,147,161,169,123,194,87,225,55,243,43,246,48,228,59,199,90,173,126,152,164,135,203,111,276,99,330"/>
+<area shape="poly" title=" " alt="" coords="92,402,100,336,121,243,138,192,160,143,189,96,225,55,242,43,245,47,228,59,193,99,165,145,143,194,126,244,105,337,97,403"/>
 <area shape="rect" href="namespacemode__budget__phy.html#aa498d2363e7683e361ea7dfdc83cf561" title=" " alt="" coords="239,69,434,109"/>
-<area shape="poly" title=" " alt="" coords="97,328,113,285,139,228,176,170,199,143,225,119,233,114,236,118,228,123,203,146,181,173,144,231,118,287,102,330"/>
+<area shape="poly" title=" " alt="" coords="94,402,105,346,129,270,146,229,168,189,194,152,225,119,231,115,234,119,228,123,198,155,172,192,151,231,134,272,111,347,99,403"/>
 <area shape="rect" href="namespacemode__budget__phy.html#adb853e4fb0b59cc93057b507a52bd8ce" title=" " alt="" coords="239,133,434,173"/>
-<area shape="poly" title=" " alt="" coords="102,327,149,257,184,217,225,183,235,177,238,182,228,188,188,221,154,260,107,330"/>
+<area shape="poly" title=" " alt="" coords="96,402,112,356,138,298,175,236,199,208,225,183,232,178,235,183,228,187,202,212,180,239,143,300,117,358,101,403"/>
 <area shape="rect" href="namespacemode__budget__phy.html#a45dce5bc68868ab14b72a6c987fd5d08" title=" " alt="" coords="239,197,434,237"/>
-<area shape="poly" title=" " alt="" coords="114,327,163,288,225,248,244,240,247,245,228,253,166,292,117,331"/>
+<area shape="poly" title=" " alt="" coords="101,401,120,368,148,327,183,285,225,249,237,241,240,246,228,253,187,288,152,330,125,371,106,404"/>
 <area shape="rect" href="namespacemode__ll.html#a47525845f3b864b7336cbcfae099930d" title=" " alt="" coords="261,262,413,287"/>
-<area shape="poly" title=" " alt="" coords="142,327,226,297,261,288,262,293,227,303,144,332"/>
-<area shape="rect" href="namespacemode__shuman__phy.html#ae898ed480a8ca1c64c3bdc70d9819873" title=" " alt="" coords="233,311,440,337"/>
-<area shape="poly" title=" " alt="" coords="179,338,219,333,220,339,179,343"/>
-<area shape="rect" href="namespacemode__shuman__phy.html#a440add7f9106295e507be65c1c530473" title=" " alt="" coords="229,361,444,386"/>
-<area shape="poly" title=" " alt="" coords="179,355,216,359,215,364,179,360"/>
-<area shape="rect" href="namespacemode__io__field__write__phy.html#ae90c9595e48348b2813cd33897aa4a2f" title=" " alt="" coords="247,411,426,451"/>
-<area shape="poly" title=" " alt="" coords="146,367,228,396,252,404,250,409,226,401,144,372"/>
-<area shape="rect" href="namespacemode__shuman__phy.html#a960e2dc2b7078cc75ef8e5192c212356" title=" " alt="" coords="231,475,443,501"/>
-<area shape="poly" title=" " alt="" coords="113,368,162,415,194,439,228,460,247,469,245,473,225,465,191,444,158,419,109,371"/>
-<area shape="rect" href="namespacemode__shuman__phy.html#a86441e6781603bb2b6b1f30d8c0e39b4" title=" " alt="" coords="227,525,447,550"/>
-<area shape="poly" title=" " alt="" coords="106,368,125,400,152,439,187,479,228,511,240,517,237,522,225,516,183,482,148,443,121,403,102,371"/>
-<area shape="rect" href="namespacemode__tridiag__tke.html#a7c2b147475a5a8c8025462c332fedd5f" title=" " alt="" coords="231,574,443,599"/>
-<area shape="poly" title=" " alt="" coords="102,369,119,410,145,462,181,516,203,540,228,561,237,566,234,570,225,565,200,544,177,519,140,465,114,412,97,371"/>
-<area shape="rect" href="namespacemode__ll.html#a038cd1e6d379c6ff88f833ecff30b899" title=" " alt="" coords="248,623,425,649"/>
-<area shape="poly" title=" " alt="" coords="100,369,113,419,138,484,175,553,200,583,228,610,237,616,234,620,225,614,196,587,171,556,133,487,108,420,95,370"/>
+<area shape="poly" title=" " alt="" coords="108,400,156,349,189,321,225,298,246,289,248,293,228,302,192,325,160,352,111,404"/>
+<area shape="rect" href="shuman_8F90.html#adedf57feaea229131891a0a121b69939" title=" " alt="" coords="315,311,358,337"/>
+<area shape="poly" title=" " alt="" coords="123,400,170,373,226,347,265,335,301,327,303,332,266,340,228,352,173,378,125,405"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#ae898ed480a8ca1c64c3bdc70d9819873" title=" " alt="" coords="233,361,440,386"/>
+<area shape="poly" title=" " alt="" coords="178,403,259,386,260,391,180,408"/>
+<area shape="rect" href="shuman_8F90.html#a73362ac83a8e3824c77dfc9963893fc8" title=" " alt="" coords="311,410,362,435"/>
+<area shape="poly" title=" " alt="" coords="179,420,298,420,298,425,179,425"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a440add7f9106295e507be65c1c530473" title=" " alt="" coords="229,459,444,485"/>
+<area shape="poly" title=" " alt="" coords="180,438,260,454,259,459,178,443"/>
+<area shape="rect" href="namespacemode__io__field__write__phy.html#ae90c9595e48348b2813cd33897aa4a2f" title=" " alt="" coords="247,509,426,549"/>
+<area shape="poly" title=" " alt="" coords="126,441,173,468,228,495,247,502,245,507,226,500,171,473,123,445"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a960e2dc2b7078cc75ef8e5192c212356" title=" " alt="" coords="231,574,443,599"/>
+<area shape="poly" title=" " alt="" coords="109,441,157,500,190,532,228,559,244,567,242,572,225,564,187,536,153,504,105,444"/>
+<area shape="rect" href="shuman_8F90.html#a620b12be5daf1abac11fc6e553221834" title=" " alt="" coords="309,623,364,649"/>
+<area shape="poly" title=" " alt="" coords="104,442,122,479,148,525,184,571,228,610,261,625,296,632,295,637,260,630,225,614,180,575,144,528,117,481,99,444"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a86441e6781603bb2b6b1f30d8c0e39b4" title=" " alt="" coords="227,673,447,698"/>
+<area shape="poly" title=" " alt="" coords="101,442,116,488,141,547,178,608,202,636,228,659,236,664,233,669,225,663,198,639,174,611,136,549,111,489,96,444"/>
+<area shape="rect" href="namespacemode__tridiag__tke.html#a7c2b147475a5a8c8025462c332fedd5f" title=" " alt="" coords="231,722,443,747"/>
+<area shape="poly" title=" " alt="" coords="99,442,111,496,134,569,151,607,172,645,198,679,228,709,235,713,232,718,225,713,194,683,168,648,147,610,129,571,106,498,94,443"/>
+<area shape="rect" href="namespacemode__ll.html#a038cd1e6d379c6ff88f833ecff30b899" title=" " alt="" coords="248,771,425,797"/>
+<area shape="poly" title=" " alt="" coords="98,442,106,504,128,590,145,636,167,681,194,722,228,758,238,765,235,769,225,762,190,726,162,684,140,638,123,592,101,505,92,443"/>
 <area shape="rect" href="namespacemode__ll.html#acbd4d8abaff9489710dbb801d892f963" title=" " alt="" coords="509,13,675,38"/>
 <area shape="poly" title=" " alt="" coords="417,23,496,23,496,28,417,28"/>
 <area shape="rect" href="namespacemode__budget__phy.html#ab73a15213f73d8a5225e1021ba265f52" title=" " alt="" coords="495,69,689,109"/>
