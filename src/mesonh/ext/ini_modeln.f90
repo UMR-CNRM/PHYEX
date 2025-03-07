@@ -647,7 +647,6 @@ IF (.NOT. LOCEAN) THEN
     WRITE(ILUOUT,*) 'NRELFRC = ', NRELFRC
  END IF
 END IF
-END IF
 !*       2.2  Checks the position of vertical absorbing layer
 !
 IKU=NKMAX+2*JPVEXT
