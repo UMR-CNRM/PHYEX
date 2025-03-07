@@ -35,8 +35,10 @@ function usage {
   echo "                the context is built using the provided hostname instead of the real hostname"
   echo "                This can be usefull when running on a cluster node which can vary from run to run"
   echo "--mail MAIL     comma-separated list of e-mail addresses (no spaces); if not provided, mail is not sent"
+  echo "--options-XXX   where XXX is a model name"
+  echo "                Options to give to the check_commit script for this model"
   echo ""
-  echo "Unrecognized options are given to the check_commit scripts."
+  echo "Unrecognized options are given to all the check_commit scripts."
   echo ""
   echo "This script provides functionality for automated tests."
   echo "It can be run with cron to periodically test the last commit on the PHYEX repository"
@@ -75,6 +77,7 @@ perfopt=""
 docgen=1
 contextHostname=${HOSTNAME}
 checkCommitOptions=""
+declare -A checkCommitOptionsModel
 
 allargs="$@"
 while [ -n "$1" ]; do
@@ -97,6 +100,7 @@ while [ -n "$1" ]; do
     '--no-doc-gen') docgen=0;;
     '--hostname') contextHostname=$2; shift;;
     '--mail') MAIL=$2; shift;;
+    --options-*) checkCommitOptionsModel[$(echo $1 | cut -c 11-)]="$2"; shift;;
     *) checkCommitOptions="$checkCommitOptions $1";;
   esac
   shift
@@ -304,6 +308,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
     retmodel=0
     log 0 "Tests for model ${model}"
     #Model specific configuration
+    additionalOptions="${checkCommitOptions} ${checkCommitOptionsModel[${model}]}"
     if [ "${model}" == 'ial' ]; then
       compilation='-p -c'
       execution="-r $perfopt"
@@ -331,7 +336,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
     fi
 
     #Commande
-    cmd="check_commit_${model}.sh --repo-user ${PHYEXREPOuser} --repo-protocol ${PHYEXREPOprotocol} ${checkCommitOptions} ${SHA}"
+    cmd="check_commit_${model}.sh --repo-user ${PHYEXREPOuser} --repo-protocol ${PHYEXREPOprotocol} ${additionalOptions} ${SHA}"
 
     #Compilation
     result=0
