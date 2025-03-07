@@ -427,7 +427,8 @@ REAL                            :: ZZWLBDC, ZZRAY, ZZT, ZZWLBDA, ZZCC
 REAL                            :: ZLBDA
 REAL                            :: ZFSED, ZEXSED
 REAL                            :: ZMRCHANGE
-REAL, DIMENSION(D%NIJT)       :: ZMAX_TSTEP ! Maximum CFL in column
+REAL, DIMENSION(D%NIJT)       :: ZMAX_TSTEP1D ! Maximum CFL in column
+REAL, DIMENSION(D%NIJT,D%NKT)       :: ZMAX_TSTEP2D ! Maximum CFL in column
 REAL, DIMENSION(SIZE(ICED%XRTMIN))   :: ZRSMIN
 REAL, DIMENSION(D%NIJT)       :: ZREMAINT   ! Remaining time until the timestep end
 LOGICAL :: ZANYREMAINT
@@ -521,7 +522,7 @@ DO WHILE (ZANYREMAINT)
     END IF
 !$acc end kernels
 !$acc kernels
-!$acc loop independent collapse(2)
+!$acc loop independent collapse(2) private(ZEXT)
     DO JK = IKTB,IKTE
       DO JIJ = IIJB,IIJE
         IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
@@ -573,7 +574,7 @@ DO WHILE (ZANYREMAINT)
     END IF
 !$acc end kernels
 !$acc kernels
-!$acc loop independent collapse(2)
+!$acc loop independent collapse(2) private(ZEXT)
     DO JK = IKTB,IKTE
       DO JIJ = IIJB,IIJE
         IF(PRXT(JIJ, JK) .GT. MAX(ICED%XRTMIN(4), 1.0E-7) .AND. ZREMAINT(JIJ)>0.) THEN
@@ -641,7 +642,7 @@ DO WHILE (ZANYREMAINT)
 !$end kernels
 #else
 !$acc kernels
-!$acc loop independent collapse(2)
+!$acc loop independent collapse(2) private(ZEXT)
     DO JK = IKTB,IKTE
       DO JIJ = IIJB,IIJE
         IF(PRXT(JIJ,JK)> ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
@@ -746,7 +747,7 @@ DO WHILE (ZANYREMAINT)
     END IF
 !$acc end kernels
 !$acc kernels
-!$acc loop independent collapse(2)
+!$acc loop independent collapse(2) private(ZEXT)
     DO JK = IKTB,IKTE
       DO JIJ = IIJB,IIJE
         IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
@@ -785,17 +786,30 @@ DO WHILE (ZANYREMAINT)
     END IF
   ENDIF
 !$acc kernels
-  ZMAX_TSTEP(:) = ZREMAINT(:)
-!QR: need of reversed order of loop (JIJ>JK) to avoid bug on Nvidia reduction of ZMAX_TSTEP
-! Tested with smaller kernels: execution crashes with
-! call to cuEventSynchronize returned error 700: Illegal address
-!$acc loop independent
-  DO JIJ = IIJB,IIJE
-!$acc loop seq
-    DO JK = IKTB,IKTE
+  ZMAX_TSTEP1D(:) = ZREMAINT(:)
+
+!$acc loop independent collapse(2)
+  DO JK = IKTB,IKTE
+    DO JIJ = IIJB,IIJE
+      ZMAX_TSTEP2D(JIJ,JK) = ZREMAINT(JIJ)
+    END DO
+  END DO
+
+!$acc loop independent collapse(2)
+  DO JK = IKTB,IKTE
+    DO JIJ = IIJB,IIJE
       IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZWSED(JIJ, JK)>1.E-20 .AND. ZREMAINT(JIJ)>0.) THEN
-        ZMAX_TSTEP(JIJ) = MIN(ZMAX_TSTEP(JIJ), PARAMI%XSPLIT_MAXCFL * PRHODREF(JIJ, JK) * &
-                        & PRXT(JIJ, JK) * PDZZ(JIJ, JK) / ZWSED(JIJ, JK))
+        ZMAX_TSTEP2D(JIJ,JK) = PARAMI%XSPLIT_MAXCFL * PRHODREF(JIJ, JK) * &
+                        & PRXT(JIJ, JK) * PDZZ(JIJ, JK) / ZWSED(JIJ, JK)
+      ENDIF
+    ENDDO
+  ENDDO
+
+!$acc loop independent collapse(2)
+  DO JK = IKTB,IKTE
+    DO JIJ = IIJB,IIJE
+      IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZWSED(JIJ, JK)>1.E-20 .AND. ZREMAINT(JIJ)>0.) THEN
+        ZMAX_TSTEP1D(JIJ) = MIN(ZMAX_TSTEP1D(JIJ), ZMAX_TSTEP2D(JIJ,JK))
       ENDIF
     ENDDO
   ENDDO
@@ -803,23 +817,23 @@ DO WHILE (ZANYREMAINT)
 !$acc kernels
 !$acc loop independent
   DO JIJ = IIJB, IIJE
-      ZREMAINT(JIJ) = ZREMAINT(JIJ) - ZMAX_TSTEP(JIJ)
-      PINPRX(JIJ) = PINPRX(JIJ) + ZWSED(JIJ,IKB) / CST%XRHOLW * (ZMAX_TSTEP(JIJ) * ZINVTSTEP)
+      ZREMAINT(JIJ) = ZREMAINT(JIJ) - ZMAX_TSTEP1D(JIJ)
+      PINPRX(JIJ) = PINPRX(JIJ) + ZWSED(JIJ,IKB) / CST%XRHOLW * (ZMAX_TSTEP1D(JIJ) * ZINVTSTEP)
   ENDDO
 !$acc end kernels
 !$acc kernels
   DO JK = IKTB , IKTE
 !$acc loop independent
     DO JIJ = IIJB, IIJE
-      ZMRCHANGE = ZMAX_TSTEP(JIJ) * POORHODZ(JIJ,JK)*(ZWSED(JIJ,JK+IKL)-ZWSED(JIJ,JK))
-      PRXT(JIJ,JK) = PRXT(JIJ,JK) + ZMRCHANGE + PPRXS(JIJ,JK) * ZMAX_TSTEP(JIJ)
+      ZMRCHANGE = ZMAX_TSTEP1D(JIJ) * POORHODZ(JIJ,JK)*(ZWSED(JIJ,JK+IKL)-ZWSED(JIJ,JK))
+      PRXT(JIJ,JK) = PRXT(JIJ,JK) + ZMRCHANGE + PPRXS(JIJ,JK) * ZMAX_TSTEP1D(JIJ)
       PRXS(JIJ,JK) = PRXS(JIJ,JK) + ZMRCHANGE * ZINVTSTEP
       IF (GPRESENT_PFPR) THEN
-        PFPR(JIJ,JK,KSPE) = PFPR(JIJ,JK,KSPE) + ZWSED(JIJ,JK) * (ZMAX_TSTEP(JIJ) * ZINVTSTEP)
+        PFPR(JIJ,JK,KSPE) = PFPR(JIJ,JK,KSPE) + ZWSED(JIJ,JK) * (ZMAX_TSTEP1D(JIJ) * ZINVTSTEP)
       ENDIF
       IF (OELEC) THEN
-        ZQCHANGE = ZMAX_TSTEP(JIJ) * POORHODZ(JIJ,JK) * (ZWSEDQ(JIJ,JK+IKL) - ZWSEDQ(JIJ,JK))
-        PQXT(JIJ,JK) = PQXT(JIJ,JK) + ZQCHANGE + PPQXS(JIJ,JK) * ZMAX_TSTEP(JIJ)
+        ZQCHANGE = ZMAX_TSTEP1D(JIJ) * POORHODZ(JIJ,JK) * (ZWSEDQ(JIJ,JK+IKL) - ZWSEDQ(JIJ,JK))
+        PQXT(JIJ,JK) = PQXT(JIJ,JK) + ZQCHANGE + PPQXS(JIJ,JK) * ZMAX_TSTEP1D(JIJ)
         PQXS(JIJ,JK) = PQXS(JIJ,JK) + ZQCHANGE * ZINVTSTEP
       ENDIF
     ENDDO
