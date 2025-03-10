@@ -425,7 +425,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       #This commit is ready for inclusion
       PATH=$UPDATEDPATH prep_code.sh -c $commit src
     else
-      PATH=$UPDATEDPATH prep_code.sh --pyfortool_opts_env PYFT_OPTS -c $commit $expand_options --shumanFUNCtoCALL --removeACC $subs \
+      PATH=$UPDATEDPATH prep_code.sh --pyfortool_opts_env PYFT_OPTS -c $commit $expand_options --shumanFUNCtoCALL $subs \
                                      -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL --removeACC
     fi
   else
@@ -433,7 +433,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     mkdir src
     scp -q -r $fromdir/src src/
     PATH=$UPDATEDPATH prep_code.sh --pyfortool_opts_env PYFT_OPTS $expand_options  $subs \
-                                   -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL --removeACC
+                                   -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
   fi
   
   # Add some code
