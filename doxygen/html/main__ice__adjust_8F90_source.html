@@ -227,283 +227,284 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>d0%NKTE = klev</div>
 <div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span> </div>
 <div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>istsz=0</div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>istsz(kind(prhodj)/4) = nproma * 15 * klev</div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span><span class="preprocessor">#ifndef USE_STACK</span></div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span><span class="preprocessor"></span>istsz(2) = istsz(2) + ceiling(istsz(1) / 2.)</div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>istsz(1) = 0</div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span><span class="preprocessor"></span><span class="keyword">ALLOCATE</span> (pstack4(istsz(1), ngpblks))</div>
-<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span><span class="keyword">ALLOCATE</span> (pstack8(istsz(2), ngpblks))</div>
-<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span><a class="code hl_variable" href="namespacemode__mnh__zwork.html#a1b5ddeee6673b7e837af8b60219a0010">zmnh_stack</a> =&gt; pstack8</div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span> </div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>ts = omp_get_wtime()</div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span> </div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>ztd = 0.</div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>ztc = 0.</div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span> </div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook (<span class="stringliteral">&#39;MAIN&#39;</span>,0,zhook_handle)</div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span> </div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="keywordflow">DO</span> itime = 1, ntime</div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span> </div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>  tsd = omp_get_wtime()</div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span> </div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span><span class="preprocessor">#ifdef _OPENACC</span></div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span><span class="preprocessor"></span>  <span class="keyword">CALL </span>copy_phyex_t(phyex)</div>
-<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span><span class="preprocessor"></span> </div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span><span class="comment">!$acc data &amp;</span></div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span><span class="comment">!$acc      &amp; copyin  (D0, &amp;</span></div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span><span class="comment">!$acc      &amp;          ZSIGQSAT, PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, &amp;</span></div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span><span class="comment">!$acc      &amp;          PWEIGHT_MF_CLOUD, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, ZRS, ZICE_CLD_WGT) &amp;</span></div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span><span class="comment">!$acc      &amp; copy    (PRS, PTHS) &amp;</span></div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span><span class="comment">!$acc      &amp; copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &amp;</span></div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span><span class="comment">!$acc      &amp; create  (PSTACK4, PSTACK8) </span></div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span> </div>
-<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>  tsc = omp_get_wtime()</div>
-<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span> </div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span><span class="preprocessor">#ifdef USE_OPENMP</span></div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span><span class="preprocessor"></span><span class="comment">!$OMP PARALLEL PRIVATE (D, YLSTACK, ITID, JBLK1, JBLK2)</span></div>
-<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span> </div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>  ntid = omp_get_max_threads()</div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>  itid = omp_get_thread_num()</div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>  jblk1 = 1 +  (ngpblks * (itid+0)) / ntid</div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>  jblk2 =      (ngpblks * (itid+1)) / ntid</div>
-<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span><span class="preprocessor">#else</span></div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="preprocessor"></span>  jblk1 = 1</div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>  jblk2 = ngpblks</div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="preprocessor"></span> </div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>  d = d0</div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span> </div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span><span class="comment">!$acc parallel loop gang vector present (PHYEX) private (YLSTACK, IBL, JLON, D) collapse (2)</span></div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span> </div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>  <span class="keywordflow">DO</span> ibl = jblk1, jblk2</div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span> </div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span><span class="preprocessor">#ifdef USE_COLCALL</span></div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span><span class="preprocessor"></span>  <span class="keywordflow">DO</span> jlon = 1, nproma</div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>    d = d0</div>
-<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>    d%NIB = jlon</div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>    d%NIE = jlon</div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    d%NIJB = jlon</div>
-<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>    d%NIJE = jlon</div>
-<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span><span class="preprocessor"></span> </div>
-<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span><span class="preprocessor">#ifdef USE_STACK</span></div>
-<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span><span class="preprocessor"></span>    <span class="comment">!Using cray pointers, AROME mechanism</span></div>
-<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>    ylstack%L(1) = loc(pstack4(1, ibl))</div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>    ylstack%U(1) = ylstack%L(1) + istsz(1) * kind(pstack4)</div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>    ylstack%L(2) = loc(pstack8(1, ibl))</div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>    ylstack%U(2) = ylstack%L(2) + istsz(2) * kind(pstack8)</div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span><span class="preprocessor">#else</span></div>
-<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span><span class="preprocessor"></span>    <span class="comment">!Using fortran indexing, Meso-NH mechanism</span></div>
-<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>    ylstack%L(2) = 1</div>
-<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>    ylstack%U(2) = istsz(2)</div>
-<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>    <a class="code hl_variable" href="namespacemode__mnh__zwork.html#ab2d2cae5021c306448d3eb1266cb3546">imnh_block</a> =&gt; ibl</div>
-<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>    <a class="code hl_variable" href="namespacemode__mnh__zwork.html#afeea983961d4672701fb6e9776baab69">ymnh_stack</a> =&gt; ylstack</div>
-<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>    <a class="code hl_variable" href="namespacemode__mnh__zwork.html#a97931885af69f5ee5a77a72e78c6ef2a">inumpin</a> = 0</div>
-<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span><span class="preprocessor"></span> </div>
-<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__ice__adjust_1_1ice__adjust.html">ice_adjust</a> (d, phyex%CST, phyex%RAIN_ICE_PARAMN, phyex%NEBN, phyex%TURBN, phyex%PARAM_ICEN, &amp;</div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>    &amp; phyex%MISC%TBUCONF, phyex%MISC%KRR, phyex%MISC%HBUNAME,     &amp;</div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>    &amp; phyex%MISC%PTSTEP, zsigqsat(:, ibl), prhodj=prhodj(:, :, ibl), &amp;</div>
-<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>    &amp; pexnref=pexnref(:, :, ibl),                                                                                           &amp;</div>
-<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>    &amp; prhodref=prhodref(:, :, ibl), psigs=psigs(:, :, ibl), lmfconv=phyex%MISC%LMFCONV, pmfconv=pmfconv(:, :, ibl), &amp;</div>
-<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>    &amp; ppabst=ppabsm(:, :, ibl), pzz=zzz(:, :, ibl), pexn=pexnref(:, :, ibl), pcf_mf=pcf_mf(:, :, ibl),          &amp;</div>
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>    &amp; prc_mf=prc_mf(:, :, ibl), pri_mf=pri_mf(:, :, ibl), pweight_mf_cloud=pweight_mf_cloud(:, :, ibl),               &amp;</div>
-<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>    &amp; picldfr=zdum1(:, :, ibl), pwcldfr=zdum2(:, :, ibl), pssio=zdum3(:, :, ibl),                                      &amp;</div>
-<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>    &amp; pssiu=zdum4(:, :, ibl), pifr=zdum5(:, :, ibl),                                                                      &amp;</div>
-<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>    &amp; prv=zrs(:, :, 1, ibl), prc=zrs(:, :, 2, ibl),                                                                       &amp;</div>
-<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>    &amp; prvs=prs(:, :, 1, ibl), prcs=prs(:, :, 2, ibl), pth=zrs(:, :, 0, ibl), pths=pths(:, :, ibl),                 &amp;</div>
-<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>    &amp; ocompute_src=phyex%MISC%OCOMPUTE_SRC,                                                                                     &amp;</div>
-<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>    &amp; psrcs=psrcs(:, :, ibl), pcldfr=pcldfr(:, :, ibl), prr=zrs(:, :, 3, ibl), pri=zrs(:, :, 4, ibl),             &amp;</div>
-<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>    &amp; pris=prs(:, :, 4, ibl), prs=zrs(:, :, 5, ibl), prg=zrs(:, :, 6, ibl), &amp;</div>
-<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>    &amp; tbudgets=phyex%MISC%YLBUDGET, kbudgets=phyex%MISC%NBUDGET,    &amp;</div>
-<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>    &amp; pice_cld_wgt=zice_cld_wgt(:, ibl),                                                                                     &amp;</div>
-<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>    &amp; phlc_hrc=phlc_hrc(:, :, ibl), phlc_hcf=phlc_hcf(:, :, ibl),                                                         &amp;</div>
-<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>    &amp; phli_hri=phli_hri(:, :, ibl), phli_hcf=phli_hcf(:, :, ibl)                                                          &amp;</div>
-<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span><span class="preprocessor">#ifdef USE_STACK</span></div>
-<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span><span class="preprocessor"></span>    &amp; , ydstack=ylstack &amp;</div>
-<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span><span class="preprocessor"></span>    &amp; )</div>
-<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span> </div>
-<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span><span class="preprocessor">#ifdef USE_COLCALL</span></div>
-<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span><span class="preprocessor"></span><span class="keywordflow">    ENDDO</span></div>
-<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span><span class="preprocessor"></span> </div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span><span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span> </div>
-<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span><span class="preprocessor">#ifdef USE_OPENMP</span></div>
-<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span><span class="preprocessor"></span><span class="comment">!$OMP END PARALLEL</span></div>
-<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span><span class="preprocessor"></span> </div>
-<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span><span class="comment">!$acc end parallel loop</span></div>
-<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span> </div>
-<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>  tec = omp_get_wtime()</div>
-<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span> </div>
-<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span><span class="comment">!$acc end data</span></div>
-<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span> </div>
-<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span><span class="preprocessor">#ifdef _OPENACC</span></div>
-<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span><span class="preprocessor"></span>  <span class="keyword">CALL </span>wipe_phyex_t(phyex)</div>
-<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span><span class="preprocessor"></span> </div>
-<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>  ted = omp_get_wtime()</div>
-<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span> </div>
-<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>  ztc = ztc + (tec - tsc)</div>
-<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>  ztd = ztd + (ted - tsd)</div>
-<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span> </div>
-<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span><span class="keywordflow">ENDDO</span></div>
-<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span> </div>
-<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook (<span class="stringliteral">&#39;MAIN&#39;</span>,1,zhook_handle)</div>
-<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span> </div>
-<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>te = omp_get_wtime()</div>
-<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span> </div>
-<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span><span class="keyword">WRITE</span> (*,<span class="stringliteral">&#39;(A,F8.2,A)&#39;</span>) <span class="stringliteral">&#39;elapsed time : &#39;</span>,te-ts,<span class="stringliteral">&#39; s&#39;</span></div>
-<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span><span class="keyword">WRITE</span> (*,<span class="stringliteral">&#39;(A,F8.4,A)&#39;</span>) <span class="stringliteral">&#39;          i.e. &#39;</span>,1000.*(te-ts)/(nproma*ngpblks)/ntime,<span class="stringliteral">&#39; ms/gp&#39;</span></div>
-<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span> </div>
-<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>print *, <span class="stringliteral">&quot; ZTD = &quot;</span>, ztd, ztd / real(nproma*ngpblks*ntime)</div>
-<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>print *, <span class="stringliteral">&quot; ZTC = &quot;</span>, ztc, ztc / real(nproma*ngpblks*ntime)</div>
-<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span> </div>
-<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span><span class="keywordflow">IF</span> (llcheck .OR. llstat .OR. llcheckdiff) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>  <span class="keywordflow">DO</span> ibl = iblock1, iblock2</div>
-<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>    print *, <span class="stringliteral">&quot; IBL = &quot;</span>, ibl</div>
-<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PSRCS&quot;</span>,    psrcs_out(:,:,ibl), psrcs(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PCLDFR&quot;</span>,   pcldfr_out(:,:,ibl), pcldfr(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PHLC_HRC&quot;</span>, phlc_hrc_out(:,:,ibl), phlc_hrc(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PHLC_HCF&quot;</span>, phlc_hcf_out(:,:,ibl), phlc_hcf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PHLI_HRI&quot;</span>, phli_hri_out(:,:,ibl), phli_hri(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PHLI_HCF&quot;</span>, phli_hcf_out(:,:,ibl), phli_hcf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span><span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span><span class="keywordflow">ENDIF</span></div>
-<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span> </div>
-<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span><span class="keywordflow">IF</span> (llcheckdiff) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>  <span class="keywordflow">IF</span> (lldiff) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>    print*, <span class="stringliteral">&quot;THERE ARE DIFF SOMEWHERE&quot;</span></div>
-<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>  <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>    print*, <span class="stringliteral">&quot;THERE IS NO DIFF AT ALL&quot;</span></div>
-<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span><span class="keywordflow">  ENDIF</span></div>
-<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span><span class="keywordflow">ENDIF</span></div>
-<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span> </div>
-<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>stop</div>
-<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span> </div>
-<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span><span class="keyword">CONTAINS</span></div>
-<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span> </div>
-<div class="foldopen" id="foldopen00306" data-start="" data-end="">
-<div class="line"><a id="l00306" name="l00306"></a><span class="lineno"><a class="line" href="main__ice__adjust_8F90.html#a21b7e3321ba604b57e15565542e383ab">  306</a></span><span class="keyword">SUBROUTINE </span><a class="code hl_function" href="main__ice__adjust_8F90.html#a21b7e3321ba604b57e15565542e383ab">init_phyex</a>(KRR, PHYEX)</div>
-<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span> </div>
-<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__budget.html">modd_budget</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_function" href="namespacemodd__budget.html#af15bfc58a4de25c3d3c3c8dcb4f017c0">tbuconf_associate</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a4ea4532bcfa769b5ed97e4d1e68a8113">nbudget_ri</a>, <a class="code hl_variable" href="namespacemodd__budget.html#ab3640d48385fc524ecad2d781cea62a3">tbuconf</a>, <a class="code hl_variable" href="namespacemodd__budget.html#ae9bc97d9f9cae22bcc504a8a124ac6ce">lbu_enable</a>, <a class="code hl_variable" href="namespacemodd__budget.html#acf82c6bd421a88421df5595ac79bb542">lbudget_u</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a802431094bc6501f87019a6ab406e570">lbudget_v</a>, <a class="code hl_variable" href="namespacemodd__budget.html#ab580c1b443696a91d5c37993340818a5">lbudget_w</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a7f6e57c23da9e9c572bd56a4c41a769d">lbudget_th</a>, &amp;</div>
-<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>                       <a class="code hl_variable" href="namespacemodd__budget.html#aab39dbe23e4c4db8a691864039f710c6">lbudget_tke</a>, <a class="code hl_variable" href="namespacemodd__budget.html#ab9a185119e7f9db785c376c6188ac6da">lbudget_rv</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a843d98437669b10b9df3f8aeafa1f5bf">lbudget_rc</a>, <a class="code hl_variable" href="namespacemodd__budget.html#aca0427e804c90bcf5b4c780ee0a76e0d">lbudget_rr</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a794e754365ecc90ea94968f0401f3282">lbudget_ri</a>, <a class="code hl_variable" href="namespacemodd__budget.html#ae35f637542b32d30cdc352198ecce4e7">lbudget_rs</a>, <a class="code hl_variable" href="namespacemodd__budget.html#ad827c27888d19864e8a8d2b126cde909">lbudget_rg</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a1991401753344457bc4ef3bf63aa6c2a">lbudget_rh</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a4b1ca863f572ff257cb8ebb46f923fba">lbudget_sv</a></div>
-<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__phyex.html">modd_phyex</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__phyex_1_1phyex__t.html">phyex_t</a></div>
-<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodi__ini__phyex.html">modi_ini_phyex</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemodi__ini__phyex_1_1ini__phyex.html">ini_phyex</a></div>
-<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span> </div>
-<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span><span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span> </div>
-<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span><span class="comment">! -----------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span><span class="comment">!     DUMMY VARIABLES</span></div>
-<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span><span class="keywordtype">INTEGER</span>,          <span class="keywordtype">INTENT(IN)</span>  :: krr</div>
-<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__phyex_1_1phyex__t.html">phyex_t</a>),    <span class="keywordtype">INTENT(OUT)</span> :: PHYEX</div>
-<div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span> </div>
-<div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span><span class="comment">!-----------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span><span class="comment">!    LOCAL VARIABLES</span></div>
-<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span><span class="keywordtype">INTEGER</span> :: IULOUT, JRR</div>
-<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span><span class="keywordtype">REAL</span> :: ZDZMIN</div>
-<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span><span class="keywordtype">CHARACTER(LEN=6)</span> :: CPROGRAM</div>
-<div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span><span class="keywordtype">CHARACTER(LEN=4)</span> :: CMICRO, CSCONV, CTURB</div>
-<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span><span class="keywordtype">REAL</span>             :: PTSTEP</div>
-<div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span><span class="comment">! -----------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span> </div>
-<div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span>iulout=20</div>
-<div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span>cprogram=<span class="stringliteral">&#39;AROME&#39;</span></div>
-<div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span>zdzmin=20.</div>
-<div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span>cmicro=<span class="stringliteral">&#39;ICE3&#39;</span></div>
-<div class="line"><a id="l00333" name="l00333"></a><span class="lineno">  333</span>csconv=<span class="stringliteral">&#39;NONE&#39;</span></div>
-<div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span>cturb=<span class="stringliteral">&#39;TKEL&#39;</span></div>
-<div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span>ptstep = 50.000000000000000</div>
-<div class="line"><a id="l00336" name="l00336"></a><span class="lineno">  336</span>phyex%MISC%TPFILE%NLU=0</div>
-<div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span> </div>
-<div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span><span class="comment">!Default values</span></div>
-<div class="line"><a id="l00339" name="l00339"></a><span class="lineno">  339</span><span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__ini__phyex_1_1ini__phyex.html">ini_phyex</a>(cprogram, phyex%MISC%TPFILE, .true., iulout, 0, 1, &amp;</div>
-<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span>              &amp;ptstep, zdzmin, &amp;</div>
-<div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span>              &amp;cmicro, csconv, cturb, &amp;</div>
-<div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span>              &amp;lddefaultval=.true., ldreadnam=.false., ldcheck=.false., kprint=0, ldinit=.false., &amp;</div>
-<div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span>              &amp;phyex_out=phyex)</div>
-<div class="line"><a id="l00344" name="l00344"></a><span class="lineno">  344</span> </div>
-<div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span><span class="comment">!Control parameters</span></div>
-<div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span>phyex%MISC%PTSTEP       = ptstep</div>
-<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span>phyex%MISC%HBUNAME      = <span class="stringliteral">&#39;DEPI&#39;</span></div>
-<div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span>phyex%MISC%LMFCONV      = .true.</div>
-<div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span>phyex%MISC%KRR          = krr</div>
-<div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span>phyex%MISC%OCOMPUTE_SRC = .true.</div>
-<div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span> </div>
-<div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span><span class="comment">!Emulate the namelist reading</span></div>
-<div class="line"><a id="l00353" name="l00353"></a><span class="lineno">  353</span>phyex%PARAM_ICEN%LCRIAUTI=.true.</div>
-<div class="line"><a id="l00354" name="l00354"></a><span class="lineno">  354</span>phyex%PARAM_ICEN%XCRIAUTI_NAM=0.2e-3</div>
-<div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span>phyex%PARAM_ICEN%XT0CRIAUTI_NAM=-5.</div>
-<div class="line"><a id="l00356" name="l00356"></a><span class="lineno">  356</span>phyex%PARAM_ICEN%XCRIAUTC_NAM=0.1e-2</div>
-<div class="line"><a id="l00357" name="l00357"></a><span class="lineno">  357</span>phyex%PARAM_ICEN%LOCND2=.false.</div>
-<div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span>phyex%PARAM_ICEN%CSEDIM=<span class="stringliteral">&#39;STAT&#39;</span></div>
-<div class="line"><a id="l00359" name="l00359"></a><span class="lineno">  359</span>phyex%PARAM_ICEN%LWARM=.true.</div>
-<div class="line"><a id="l00360" name="l00360"></a><span class="lineno">  360</span>phyex%PARAM_ICEN%LSEDIC=.true.</div>
-<div class="line"><a id="l00361" name="l00361"></a><span class="lineno">  361</span>phyex%PARAM_ICEN%CSNOWRIMING=<span class="stringliteral">&#39;M90 &#39;</span></div>
-<div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span>phyex%PARAM_ICEN%XFRACM90=0.1 <span class="comment">! Fraction used for the Murakami 1990 formulation</span></div>
-<div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span>phyex%PARAM_ICEN%LCONVHG=.true. <span class="comment">! TRUE to allow the conversion from hail to graupel</span></div>
-<div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span>phyex%PARAM_ICEN%LCRFLIMIT=.true. <span class="comment">!True to limit rain contact freezing to possible heat exchange</span></div>
-<div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span>phyex%PARAM_ICEN%LFEEDBACKT=.true. <span class="comment">! When .TRUE. feed back on temperature is taken into account</span></div>
-<div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span>phyex%PARAM_ICEN%LEVLIMIT=.true.   <span class="comment">! When .TRUE. water vapour pressure is limited by saturation</span></div>
-<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span>phyex%PARAM_ICEN%LNULLWETG=.true.  <span class="comment">! When .TRUE. graupel wet growth is activated with null rate (to allow water shedding)</span></div>
-<div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span>phyex%PARAM_ICEN%LWETGPOST=.true.  <span class="comment">! When .TRUE. graupel wet growth is activated with positive temperature (to allow water shedding)</span></div>
-<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>phyex%PARAM_ICEN%LNULLWETH=.true.  <span class="comment">! Same as LNULLWETG but for hail</span></div>
-<div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span>phyex%PARAM_ICEN%LWETHPOST=.true.  <span class="comment">! Same as LWETGPOST but for hail</span></div>
-<div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span>phyex%PARAM_ICEN%LSEDIM_AFTER=.false. <span class="comment">! Sedimentation done after microphysics</span></div>
-<div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span>phyex%PARAM_ICEN%XSPLIT_MAXCFL=0.8</div>
-<div class="line"><a id="l00373" name="l00373"></a><span class="lineno">  373</span>phyex%PARAM_ICEN%LDEPOSC=.false.  <span class="comment">! water deposition on vegetation</span></div>
-<div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span>phyex%PARAM_ICEN%XVDEPOSC=0.02    <span class="comment">! deposition speed (2 cm.s-1)</span></div>
-<div class="line"><a id="l00375" name="l00375"></a><span class="lineno">  375</span>phyex%PARAM_ICEN%CSUBG_RC_RR_ACCR=<span class="stringliteral">&#39;NONE&#39;</span></div>
-<div class="line"><a id="l00376" name="l00376"></a><span class="lineno">  376</span>phyex%PARAM_ICEN%CSUBG_RR_EVAP=<span class="stringliteral">&#39;NONE&#39;</span></div>
-<div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span>phyex%PARAM_ICEN%CSUBG_PR_PDF=<span class="stringliteral">&#39;SIGM&#39;</span></div>
-<div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span>phyex%NEBN%LSUBG_COND   = .true.</div>
-<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span>phyex%NEBN%LSIGMAS = .true.</div>
-<div class="line"><a id="l00380" name="l00380"></a><span class="lineno">  380</span>phyex%NEBN%CFRAC_ICE_ADJUST=<span class="stringliteral">&#39;S&#39;</span> <span class="comment">! Ice/liquid partition rule to use in adjustment</span></div>
-<div class="line"><a id="l00381" name="l00381"></a><span class="lineno">  381</span>phyex%NEBN%CFRAC_ICE_SHALLOW_MF=<span class="stringliteral">&#39;S&#39;</span> <span class="comment">! Ice/liquid partition rule to use in shallow_mf</span></div>
-<div class="line"><a id="l00382" name="l00382"></a><span class="lineno">  382</span> </div>
-<div class="line"><a id="l00383" name="l00383"></a><span class="lineno">  383</span><span class="comment">!Param initialisation</span></div>
-<div class="line"><a id="l00384" name="l00384"></a><span class="lineno">  384</span><span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__ini__phyex_1_1ini__phyex.html">ini_phyex</a>(cprogram, phyex%MISC%TPFILE, .true., iulout, 0, 1, &amp;</div>
-<div class="line"><a id="l00385" name="l00385"></a><span class="lineno">  385</span>              &amp;ptstep, zdzmin, &amp;</div>
-<div class="line"><a id="l00386" name="l00386"></a><span class="lineno">  386</span>              &amp;cmicro, csconv, cturb, &amp;</div>
-<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span>              &amp;lddefaultval=.false., ldreadnam=.false., ldcheck=.true., kprint=2, ldinit=.true., &amp;</div>
-<div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span>              &amp;phyex_in=phyex, phyex_out=phyex)</div>
-<div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span> </div>
-<div class="line"><a id="l00390" name="l00390"></a><span class="lineno">  390</span><span class="comment">!Budgets</span></div>
-<div class="line"><a id="l00391" name="l00391"></a><span class="lineno">  391</span><span class="keyword">CALL </span><a class="code hl_function" href="namespacemodd__budget.html#af15bfc58a4de25c3d3c3c8dcb4f017c0">tbuconf_associate</a></div>
-<div class="line"><a id="l00392" name="l00392"></a><span class="lineno">  392</span>phyex%MISC%NBUDGET=<a class="code hl_variable" href="namespacemodd__budget.html#a4ea4532bcfa769b5ed97e4d1e68a8113">nbudget_ri</a></div>
-<div class="line"><a id="l00393" name="l00393"></a><span class="lineno">  393</span><span class="keywordflow">DO</span> jrr=1, phyex%MISC%NBUDGET</div>
-<div class="line"><a id="l00394" name="l00394"></a><span class="lineno">  394</span>  phyex%MISC%YLBUDGET(jrr)%NBUDGET=jrr</div>
-<div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span><span class="keywordflow">ENDDO</span></div>
-<div class="line"><a id="l00396" name="l00396"></a><span class="lineno">  396</span><a class="code hl_variable" href="namespacemodd__budget.html#ae9bc97d9f9cae22bcc504a8a124ac6ce">lbu_enable</a>=.false.                                                                                                       </div>
-<div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span><a class="code hl_variable" href="namespacemodd__budget.html#acf82c6bd421a88421df5595ac79bb542">lbudget_u</a>=.false.</div>
-<div class="line"><a id="l00398" name="l00398"></a><span class="lineno">  398</span><a class="code hl_variable" href="namespacemodd__budget.html#a802431094bc6501f87019a6ab406e570">lbudget_v</a>=.false.</div>
-<div class="line"><a id="l00399" name="l00399"></a><span class="lineno">  399</span><a class="code hl_variable" href="namespacemodd__budget.html#ab580c1b443696a91d5c37993340818a5">lbudget_w</a>=.false.</div>
-<div class="line"><a id="l00400" name="l00400"></a><span class="lineno">  400</span><a class="code hl_variable" href="namespacemodd__budget.html#a7f6e57c23da9e9c572bd56a4c41a769d">lbudget_th</a>=.false.</div>
-<div class="line"><a id="l00401" name="l00401"></a><span class="lineno">  401</span><a class="code hl_variable" href="namespacemodd__budget.html#aab39dbe23e4c4db8a691864039f710c6">lbudget_tke</a>=.false.</div>
-<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span><a class="code hl_variable" href="namespacemodd__budget.html#ab9a185119e7f9db785c376c6188ac6da">lbudget_rv</a>=.false.</div>
-<div class="line"><a id="l00403" name="l00403"></a><span class="lineno">  403</span><a class="code hl_variable" href="namespacemodd__budget.html#a843d98437669b10b9df3f8aeafa1f5bf">lbudget_rc</a>=.false.</div>
-<div class="line"><a id="l00404" name="l00404"></a><span class="lineno">  404</span><a class="code hl_variable" href="namespacemodd__budget.html#aca0427e804c90bcf5b4c780ee0a76e0d">lbudget_rr</a>=.false.</div>
-<div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span><a class="code hl_variable" href="namespacemodd__budget.html#a794e754365ecc90ea94968f0401f3282">lbudget_ri</a>=.false.</div>
-<div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span><a class="code hl_variable" href="namespacemodd__budget.html#ae35f637542b32d30cdc352198ecce4e7">lbudget_rs</a>=.false.</div>
-<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span><a class="code hl_variable" href="namespacemodd__budget.html#ad827c27888d19864e8a8d2b126cde909">lbudget_rg</a>=.false.</div>
-<div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span><a class="code hl_variable" href="namespacemodd__budget.html#a1991401753344457bc4ef3bf63aa6c2a">lbudget_rh</a>=.false.</div>
-<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span><a class="code hl_variable" href="namespacemodd__budget.html#a4b1ca863f572ff257cb8ebb46f923fba">lbudget_sv</a>=.false.</div>
-<div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span>phyex%MISC%TBUCONF=<a class="code hl_variable" href="namespacemodd__budget.html#ab3640d48385fc524ecad2d781cea62a3">tbuconf</a></div>
-<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span> </div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>istsz(kind(klev)/4) = nproma * klev</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>istsz(kind(prhodj)/4) = istsz(kind(prhodj)/4) + nproma * 80 * klev</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span><span class="preprocessor">#ifndef USE_STACK</span></div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span><span class="preprocessor"></span>istsz(2) = istsz(2) + ceiling(istsz(1) / 2.)</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>istsz(1) = 0</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span><span class="preprocessor"></span><span class="keyword">ALLOCATE</span> (pstack4(istsz(1), ngpblks))</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span><span class="keyword">ALLOCATE</span> (pstack8(istsz(2), ngpblks))</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span><a class="code hl_variable" href="namespacemode__mnh__zwork.html#a1b5ddeee6673b7e837af8b60219a0010">zmnh_stack</a> =&gt; pstack8</div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span> </div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>ts = omp_get_wtime()</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span> </div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>ztd = 0.</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>ztc = 0.</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span> </div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook (<span class="stringliteral">&#39;MAIN&#39;</span>,0,zhook_handle)</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span> </div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span><span class="keywordflow">DO</span> itime = 1, ntime</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span> </div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>  tsd = omp_get_wtime()</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span> </div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span><span class="preprocessor">#ifdef _OPENACC</span></div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="preprocessor"></span>  <span class="keyword">CALL </span>copy_phyex_t(phyex)</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span><span class="preprocessor"></span> </div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span><span class="comment">!$acc data &amp;</span></div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span><span class="comment">!$acc      &amp; copyin  (D0, &amp;</span></div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span><span class="comment">!$acc      &amp;          ZSIGQSAT, PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, &amp;</span></div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span><span class="comment">!$acc      &amp;          PWEIGHT_MF_CLOUD, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, ZRS, ZICE_CLD_WGT) &amp;</span></div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span><span class="comment">!$acc      &amp; copy    (PRS, PTHS) &amp;</span></div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span><span class="comment">!$acc      &amp; copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &amp;</span></div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span><span class="comment">!$acc      &amp; create  (PSTACK4, PSTACK8) </span></div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span> </div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>  tsc = omp_get_wtime()</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span> </div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span><span class="preprocessor">#ifdef USE_OPENMP</span></div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span><span class="preprocessor"></span><span class="comment">!$OMP PARALLEL PRIVATE (D, YLSTACK, ITID, JBLK1, JBLK2)</span></div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span> </div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>  ntid = omp_get_max_threads()</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>  itid = omp_get_thread_num()</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>  jblk1 = 1 +  (ngpblks * (itid+0)) / ntid</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>  jblk2 =      (ngpblks * (itid+1)) / ntid</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span><span class="preprocessor"></span>  jblk1 = 1</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>  jblk2 = ngpblks</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span><span class="preprocessor"></span> </div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>  d = d0</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span> </div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span><span class="comment">!$acc parallel loop gang vector present (PHYEX) private (YLSTACK, IBL, JLON, D) collapse (2)</span></div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span> </div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>  <span class="keywordflow">DO</span> ibl = jblk1, jblk2</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span> </div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span><span class="preprocessor">#ifdef USE_COLCALL</span></div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span><span class="preprocessor"></span>  <span class="keywordflow">DO</span> jlon = 1, nproma</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>    d = d0</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>    d%NIB = jlon</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    d%NIE = jlon</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>    d%NIJB = jlon</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    d%NIJE = jlon</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span><span class="preprocessor"></span> </div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span><span class="preprocessor">#ifdef USE_STACK</span></div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span><span class="preprocessor"></span>    <span class="comment">!Using cray pointers, AROME mechanism</span></div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>    ylstack%L(1) = loc(pstack4(1, ibl))</div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>    ylstack%U(1) = ylstack%L(1) + istsz(1) * kind(pstack4)</div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>    ylstack%L(2) = loc(pstack8(1, ibl))</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>    ylstack%U(2) = ylstack%L(2) + istsz(2) * kind(pstack8)</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span><span class="preprocessor"></span>    <span class="comment">!Using fortran indexing, Meso-NH mechanism</span></div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>    ylstack%L(2) = 1</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>    ylstack%U(2) = istsz(2)</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>    <a class="code hl_variable" href="namespacemode__mnh__zwork.html#ab2d2cae5021c306448d3eb1266cb3546">imnh_block</a> =&gt; ibl</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>    <a class="code hl_variable" href="namespacemode__mnh__zwork.html#afeea983961d4672701fb6e9776baab69">ymnh_stack</a> =&gt; ylstack</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>    <a class="code hl_variable" href="namespacemode__mnh__zwork.html#a97931885af69f5ee5a77a72e78c6ef2a">inumpin</a> = 0</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span><span class="preprocessor"></span> </div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__ice__adjust_1_1ice__adjust.html">ice_adjust</a> (d, phyex%CST, phyex%RAIN_ICE_PARAMN, phyex%NEBN, phyex%TURBN, phyex%PARAM_ICEN, &amp;</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>    &amp; phyex%MISC%TBUCONF, phyex%MISC%KRR, phyex%MISC%HBUNAME,     &amp;</div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>    &amp; phyex%MISC%PTSTEP, zsigqsat(:, ibl), prhodj=prhodj(:, :, ibl), &amp;</div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>    &amp; pexnref=pexnref(:, :, ibl),                                                                                           &amp;</div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>    &amp; prhodref=prhodref(:, :, ibl), psigs=psigs(:, :, ibl), lmfconv=phyex%MISC%LMFCONV, pmfconv=pmfconv(:, :, ibl), &amp;</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>    &amp; ppabst=ppabsm(:, :, ibl), pzz=zzz(:, :, ibl), pexn=pexnref(:, :, ibl), pcf_mf=pcf_mf(:, :, ibl),          &amp;</div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>    &amp; prc_mf=prc_mf(:, :, ibl), pri_mf=pri_mf(:, :, ibl), pweight_mf_cloud=pweight_mf_cloud(:, :, ibl),               &amp;</div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>    &amp; picldfr=zdum1(:, :, ibl), pwcldfr=zdum2(:, :, ibl), pssio=zdum3(:, :, ibl),                                      &amp;</div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>    &amp; pssiu=zdum4(:, :, ibl), pifr=zdum5(:, :, ibl),                                                                      &amp;</div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>    &amp; prv=zrs(:, :, 1, ibl), prc=zrs(:, :, 2, ibl),                                                                       &amp;</div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>    &amp; prvs=prs(:, :, 1, ibl), prcs=prs(:, :, 2, ibl), pth=zrs(:, :, 0, ibl), pths=pths(:, :, ibl),                 &amp;</div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>    &amp; ocompute_src=phyex%MISC%OCOMPUTE_SRC,                                                                                     &amp;</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>    &amp; psrcs=psrcs(:, :, ibl), pcldfr=pcldfr(:, :, ibl), prr=zrs(:, :, 3, ibl), pri=zrs(:, :, 4, ibl),             &amp;</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>    &amp; pris=prs(:, :, 4, ibl), prs=zrs(:, :, 5, ibl), prg=zrs(:, :, 6, ibl), &amp;</div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>    &amp; tbudgets=phyex%MISC%YLBUDGET, kbudgets=phyex%MISC%NBUDGET,    &amp;</div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>    &amp; pice_cld_wgt=zice_cld_wgt(:, ibl),                                                                                     &amp;</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>    &amp; phlc_hrc=phlc_hrc(:, :, ibl), phlc_hcf=phlc_hcf(:, :, ibl),                                                         &amp;</div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>    &amp; phli_hri=phli_hri(:, :, ibl), phli_hcf=phli_hcf(:, :, ibl)                                                          &amp;</div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span><span class="preprocessor">#ifdef USE_STACK</span></div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span><span class="preprocessor"></span>    &amp; , ydstack=ylstack &amp;</div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span><span class="preprocessor"></span>    &amp; )</div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span> </div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span><span class="preprocessor">#ifdef USE_COLCALL</span></div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span><span class="preprocessor"></span><span class="keywordflow">    ENDDO</span></div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span><span class="preprocessor"></span> </div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span><span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span> </div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span><span class="preprocessor">#ifdef USE_OPENMP</span></div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span><span class="preprocessor"></span><span class="comment">!$OMP END PARALLEL</span></div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span><span class="preprocessor"></span> </div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span><span class="comment">!$acc end parallel loop</span></div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span> </div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>  tec = omp_get_wtime()</div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span> </div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span><span class="comment">!$acc end data</span></div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span> </div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span><span class="preprocessor">#ifdef _OPENACC</span></div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span><span class="preprocessor"></span>  <span class="keyword">CALL </span>wipe_phyex_t(phyex)</div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span><span class="preprocessor"></span> </div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>  ted = omp_get_wtime()</div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span> </div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>  ztc = ztc + (tec - tsc)</div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>  ztd = ztd + (ted - tsd)</div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span> </div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span><span class="keywordflow">ENDDO</span></div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span> </div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook (<span class="stringliteral">&#39;MAIN&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span> </div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>te = omp_get_wtime()</div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span> </div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span><span class="keyword">WRITE</span> (*,<span class="stringliteral">&#39;(A,F8.2,A)&#39;</span>) <span class="stringliteral">&#39;elapsed time : &#39;</span>,te-ts,<span class="stringliteral">&#39; s&#39;</span></div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span><span class="keyword">WRITE</span> (*,<span class="stringliteral">&#39;(A,F8.4,A)&#39;</span>) <span class="stringliteral">&#39;          i.e. &#39;</span>,1000.*(te-ts)/(nproma*ngpblks)/ntime,<span class="stringliteral">&#39; ms/gp&#39;</span></div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span> </div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>print *, <span class="stringliteral">&quot; ZTD = &quot;</span>, ztd, ztd / real(nproma*ngpblks*ntime)</div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>print *, <span class="stringliteral">&quot; ZTC = &quot;</span>, ztc, ztc / real(nproma*ngpblks*ntime)</div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span> </div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span><span class="keywordflow">IF</span> (llcheck .OR. llstat .OR. llcheckdiff) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>  <span class="keywordflow">DO</span> ibl = iblock1, iblock2</div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>    print *, <span class="stringliteral">&quot; IBL = &quot;</span>, ibl</div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PSRCS&quot;</span>,    psrcs_out(:,:,ibl), psrcs(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PCLDFR&quot;</span>,   pcldfr_out(:,:,ibl), pcldfr(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PHLC_HRC&quot;</span>, phlc_hrc_out(:,:,ibl), phlc_hrc(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PHLC_HCF&quot;</span>, phlc_hcf_out(:,:,ibl), phlc_hcf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PHLI_HRI&quot;</span>, phli_hri_out(:,:,ibl), phli_hri(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PHLI_HCF&quot;</span>, phli_hcf_out(:,:,ibl), phli_hcf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span><span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span><span class="keywordflow">ENDIF</span></div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span> </div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span><span class="keywordflow">IF</span> (llcheckdiff) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>  <span class="keywordflow">IF</span> (lldiff) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>    print*, <span class="stringliteral">&quot;THERE ARE DIFF SOMEWHERE&quot;</span></div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>  <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span>    print*, <span class="stringliteral">&quot;THERE IS NO DIFF AT ALL&quot;</span></div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span><span class="keywordflow">  ENDIF</span></div>
+<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span><span class="keywordflow">ENDIF</span></div>
+<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span> </div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>stop</div>
+<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span> </div>
+<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span><span class="keyword">CONTAINS</span></div>
+<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span> </div>
+<div class="foldopen" id="foldopen00307" data-start="" data-end="">
+<div class="line"><a id="l00307" name="l00307"></a><span class="lineno"><a class="line" href="main__ice__adjust_8F90.html#a21b7e3321ba604b57e15565542e383ab">  307</a></span><span class="keyword">SUBROUTINE </span><a class="code hl_function" href="main__ice__adjust_8F90.html#a21b7e3321ba604b57e15565542e383ab">init_phyex</a>(KRR, PHYEX)</div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span> </div>
+<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__budget.html">modd_budget</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_function" href="namespacemodd__budget.html#af15bfc58a4de25c3d3c3c8dcb4f017c0">tbuconf_associate</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a4ea4532bcfa769b5ed97e4d1e68a8113">nbudget_ri</a>, <a class="code hl_variable" href="namespacemodd__budget.html#ab3640d48385fc524ecad2d781cea62a3">tbuconf</a>, <a class="code hl_variable" href="namespacemodd__budget.html#ae9bc97d9f9cae22bcc504a8a124ac6ce">lbu_enable</a>, <a class="code hl_variable" href="namespacemodd__budget.html#acf82c6bd421a88421df5595ac79bb542">lbudget_u</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a802431094bc6501f87019a6ab406e570">lbudget_v</a>, <a class="code hl_variable" href="namespacemodd__budget.html#ab580c1b443696a91d5c37993340818a5">lbudget_w</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a7f6e57c23da9e9c572bd56a4c41a769d">lbudget_th</a>, &amp;</div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>                       <a class="code hl_variable" href="namespacemodd__budget.html#aab39dbe23e4c4db8a691864039f710c6">lbudget_tke</a>, <a class="code hl_variable" href="namespacemodd__budget.html#ab9a185119e7f9db785c376c6188ac6da">lbudget_rv</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a843d98437669b10b9df3f8aeafa1f5bf">lbudget_rc</a>, <a class="code hl_variable" href="namespacemodd__budget.html#aca0427e804c90bcf5b4c780ee0a76e0d">lbudget_rr</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a794e754365ecc90ea94968f0401f3282">lbudget_ri</a>, <a class="code hl_variable" href="namespacemodd__budget.html#ae35f637542b32d30cdc352198ecce4e7">lbudget_rs</a>, <a class="code hl_variable" href="namespacemodd__budget.html#ad827c27888d19864e8a8d2b126cde909">lbudget_rg</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a1991401753344457bc4ef3bf63aa6c2a">lbudget_rh</a>, <a class="code hl_variable" href="namespacemodd__budget.html#a4b1ca863f572ff257cb8ebb46f923fba">lbudget_sv</a></div>
+<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__phyex.html">modd_phyex</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__phyex_1_1phyex__t.html">phyex_t</a></div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodi__ini__phyex.html">modi_ini_phyex</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemodi__ini__phyex_1_1ini__phyex.html">ini_phyex</a></div>
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span> </div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span><span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span> </div>
+<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span><span class="comment">! -----------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span><span class="comment">!     DUMMY VARIABLES</span></div>
+<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span><span class="keywordtype">INTEGER</span>,          <span class="keywordtype">INTENT(IN)</span>  :: krr</div>
+<div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__phyex_1_1phyex__t.html">phyex_t</a>),    <span class="keywordtype">INTENT(OUT)</span> :: PHYEX</div>
+<div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span> </div>
+<div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span><span class="comment">!-----------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span><span class="comment">!    LOCAL VARIABLES</span></div>
+<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span><span class="keywordtype">INTEGER</span> :: IULOUT, JRR</div>
+<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span><span class="keywordtype">REAL</span> :: ZDZMIN</div>
+<div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span><span class="keywordtype">CHARACTER(LEN=6)</span> :: CPROGRAM</div>
+<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span><span class="keywordtype">CHARACTER(LEN=4)</span> :: CMICRO, CSCONV, CTURB</div>
+<div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span><span class="keywordtype">REAL</span>             :: PTSTEP</div>
+<div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span><span class="comment">! -----------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span> </div>
+<div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span>iulout=20</div>
+<div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span>cprogram=<span class="stringliteral">&#39;AROME&#39;</span></div>
+<div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span>zdzmin=20.</div>
+<div class="line"><a id="l00333" name="l00333"></a><span class="lineno">  333</span>cmicro=<span class="stringliteral">&#39;ICE3&#39;</span></div>
+<div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span>csconv=<span class="stringliteral">&#39;NONE&#39;</span></div>
+<div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span>cturb=<span class="stringliteral">&#39;TKEL&#39;</span></div>
+<div class="line"><a id="l00336" name="l00336"></a><span class="lineno">  336</span>ptstep = 50.000000000000000</div>
+<div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span>phyex%MISC%TPFILE%NLU=0</div>
+<div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span> </div>
+<div class="line"><a id="l00339" name="l00339"></a><span class="lineno">  339</span><span class="comment">!Default values</span></div>
+<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span><span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__ini__phyex_1_1ini__phyex.html">ini_phyex</a>(cprogram, phyex%MISC%TPFILE, .true., iulout, 0, 1, &amp;</div>
+<div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span>              &amp;ptstep, zdzmin, &amp;</div>
+<div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span>              &amp;cmicro, csconv, cturb, &amp;</div>
+<div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span>              &amp;lddefaultval=.true., ldreadnam=.false., ldcheck=.false., kprint=0, ldinit=.false., &amp;</div>
+<div class="line"><a id="l00344" name="l00344"></a><span class="lineno">  344</span>              &amp;phyex_out=phyex)</div>
+<div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span> </div>
+<div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span><span class="comment">!Control parameters</span></div>
+<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span>phyex%MISC%PTSTEP       = ptstep</div>
+<div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span>phyex%MISC%HBUNAME      = <span class="stringliteral">&#39;DEPI&#39;</span></div>
+<div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span>phyex%MISC%LMFCONV      = .true.</div>
+<div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span>phyex%MISC%KRR          = krr</div>
+<div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span>phyex%MISC%OCOMPUTE_SRC = .true.</div>
+<div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span> </div>
+<div class="line"><a id="l00353" name="l00353"></a><span class="lineno">  353</span><span class="comment">!Emulate the namelist reading</span></div>
+<div class="line"><a id="l00354" name="l00354"></a><span class="lineno">  354</span>phyex%PARAM_ICEN%LCRIAUTI=.true.</div>
+<div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span>phyex%PARAM_ICEN%XCRIAUTI_NAM=0.2e-3</div>
+<div class="line"><a id="l00356" name="l00356"></a><span class="lineno">  356</span>phyex%PARAM_ICEN%XT0CRIAUTI_NAM=-5.</div>
+<div class="line"><a id="l00357" name="l00357"></a><span class="lineno">  357</span>phyex%PARAM_ICEN%XCRIAUTC_NAM=0.1e-2</div>
+<div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span>phyex%PARAM_ICEN%LOCND2=.false.</div>
+<div class="line"><a id="l00359" name="l00359"></a><span class="lineno">  359</span>phyex%PARAM_ICEN%CSEDIM=<span class="stringliteral">&#39;STAT&#39;</span></div>
+<div class="line"><a id="l00360" name="l00360"></a><span class="lineno">  360</span>phyex%PARAM_ICEN%LWARM=.true.</div>
+<div class="line"><a id="l00361" name="l00361"></a><span class="lineno">  361</span>phyex%PARAM_ICEN%LSEDIC=.true.</div>
+<div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span>phyex%PARAM_ICEN%CSNOWRIMING=<span class="stringliteral">&#39;M90 &#39;</span></div>
+<div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span>phyex%PARAM_ICEN%XFRACM90=0.1 <span class="comment">! Fraction used for the Murakami 1990 formulation</span></div>
+<div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span>phyex%PARAM_ICEN%LCONVHG=.true. <span class="comment">! TRUE to allow the conversion from hail to graupel</span></div>
+<div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span>phyex%PARAM_ICEN%LCRFLIMIT=.true. <span class="comment">!True to limit rain contact freezing to possible heat exchange</span></div>
+<div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span>phyex%PARAM_ICEN%LFEEDBACKT=.true. <span class="comment">! When .TRUE. feed back on temperature is taken into account</span></div>
+<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span>phyex%PARAM_ICEN%LEVLIMIT=.true.   <span class="comment">! When .TRUE. water vapour pressure is limited by saturation</span></div>
+<div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span>phyex%PARAM_ICEN%LNULLWETG=.true.  <span class="comment">! When .TRUE. graupel wet growth is activated with null rate (to allow water shedding)</span></div>
+<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>phyex%PARAM_ICEN%LWETGPOST=.true.  <span class="comment">! When .TRUE. graupel wet growth is activated with positive temperature (to allow water shedding)</span></div>
+<div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span>phyex%PARAM_ICEN%LNULLWETH=.true.  <span class="comment">! Same as LNULLWETG but for hail</span></div>
+<div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span>phyex%PARAM_ICEN%LWETHPOST=.true.  <span class="comment">! Same as LWETGPOST but for hail</span></div>
+<div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span>phyex%PARAM_ICEN%LSEDIM_AFTER=.false. <span class="comment">! Sedimentation done after microphysics</span></div>
+<div class="line"><a id="l00373" name="l00373"></a><span class="lineno">  373</span>phyex%PARAM_ICEN%XSPLIT_MAXCFL=0.8</div>
+<div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span>phyex%PARAM_ICEN%LDEPOSC=.false.  <span class="comment">! water deposition on vegetation</span></div>
+<div class="line"><a id="l00375" name="l00375"></a><span class="lineno">  375</span>phyex%PARAM_ICEN%XVDEPOSC=0.02    <span class="comment">! deposition speed (2 cm.s-1)</span></div>
+<div class="line"><a id="l00376" name="l00376"></a><span class="lineno">  376</span>phyex%PARAM_ICEN%CSUBG_RC_RR_ACCR=<span class="stringliteral">&#39;NONE&#39;</span></div>
+<div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span>phyex%PARAM_ICEN%CSUBG_RR_EVAP=<span class="stringliteral">&#39;NONE&#39;</span></div>
+<div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span>phyex%PARAM_ICEN%CSUBG_PR_PDF=<span class="stringliteral">&#39;SIGM&#39;</span></div>
+<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span>phyex%NEBN%LSUBG_COND   = .true.</div>
+<div class="line"><a id="l00380" name="l00380"></a><span class="lineno">  380</span>phyex%NEBN%LSIGMAS = .true.</div>
+<div class="line"><a id="l00381" name="l00381"></a><span class="lineno">  381</span>phyex%NEBN%CFRAC_ICE_ADJUST=<span class="stringliteral">&#39;S&#39;</span> <span class="comment">! Ice/liquid partition rule to use in adjustment</span></div>
+<div class="line"><a id="l00382" name="l00382"></a><span class="lineno">  382</span>phyex%NEBN%CFRAC_ICE_SHALLOW_MF=<span class="stringliteral">&#39;S&#39;</span> <span class="comment">! Ice/liquid partition rule to use in shallow_mf</span></div>
+<div class="line"><a id="l00383" name="l00383"></a><span class="lineno">  383</span> </div>
+<div class="line"><a id="l00384" name="l00384"></a><span class="lineno">  384</span><span class="comment">!Param initialisation</span></div>
+<div class="line"><a id="l00385" name="l00385"></a><span class="lineno">  385</span><span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__ini__phyex_1_1ini__phyex.html">ini_phyex</a>(cprogram, phyex%MISC%TPFILE, .true., iulout, 0, 1, &amp;</div>
+<div class="line"><a id="l00386" name="l00386"></a><span class="lineno">  386</span>              &amp;ptstep, zdzmin, &amp;</div>
+<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span>              &amp;cmicro, csconv, cturb, &amp;</div>
+<div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span>              &amp;lddefaultval=.false., ldreadnam=.false., ldcheck=.true., kprint=2, ldinit=.true., &amp;</div>
+<div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span>              &amp;phyex_in=phyex, phyex_out=phyex)</div>
+<div class="line"><a id="l00390" name="l00390"></a><span class="lineno">  390</span> </div>
+<div class="line"><a id="l00391" name="l00391"></a><span class="lineno">  391</span><span class="comment">!Budgets</span></div>
+<div class="line"><a id="l00392" name="l00392"></a><span class="lineno">  392</span><span class="keyword">CALL </span><a class="code hl_function" href="namespacemodd__budget.html#af15bfc58a4de25c3d3c3c8dcb4f017c0">tbuconf_associate</a></div>
+<div class="line"><a id="l00393" name="l00393"></a><span class="lineno">  393</span>phyex%MISC%NBUDGET=<a class="code hl_variable" href="namespacemodd__budget.html#a4ea4532bcfa769b5ed97e4d1e68a8113">nbudget_ri</a></div>
+<div class="line"><a id="l00394" name="l00394"></a><span class="lineno">  394</span><span class="keywordflow">DO</span> jrr=1, phyex%MISC%NBUDGET</div>
+<div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span>  phyex%MISC%YLBUDGET(jrr)%NBUDGET=jrr</div>
+<div class="line"><a id="l00396" name="l00396"></a><span class="lineno">  396</span><span class="keywordflow">ENDDO</span></div>
+<div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span><a class="code hl_variable" href="namespacemodd__budget.html#ae9bc97d9f9cae22bcc504a8a124ac6ce">lbu_enable</a>=.false.                                                                                                       </div>
+<div class="line"><a id="l00398" name="l00398"></a><span class="lineno">  398</span><a class="code hl_variable" href="namespacemodd__budget.html#acf82c6bd421a88421df5595ac79bb542">lbudget_u</a>=.false.</div>
+<div class="line"><a id="l00399" name="l00399"></a><span class="lineno">  399</span><a class="code hl_variable" href="namespacemodd__budget.html#a802431094bc6501f87019a6ab406e570">lbudget_v</a>=.false.</div>
+<div class="line"><a id="l00400" name="l00400"></a><span class="lineno">  400</span><a class="code hl_variable" href="namespacemodd__budget.html#ab580c1b443696a91d5c37993340818a5">lbudget_w</a>=.false.</div>
+<div class="line"><a id="l00401" name="l00401"></a><span class="lineno">  401</span><a class="code hl_variable" href="namespacemodd__budget.html#a7f6e57c23da9e9c572bd56a4c41a769d">lbudget_th</a>=.false.</div>
+<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span><a class="code hl_variable" href="namespacemodd__budget.html#aab39dbe23e4c4db8a691864039f710c6">lbudget_tke</a>=.false.</div>
+<div class="line"><a id="l00403" name="l00403"></a><span class="lineno">  403</span><a class="code hl_variable" href="namespacemodd__budget.html#ab9a185119e7f9db785c376c6188ac6da">lbudget_rv</a>=.false.</div>
+<div class="line"><a id="l00404" name="l00404"></a><span class="lineno">  404</span><a class="code hl_variable" href="namespacemodd__budget.html#a843d98437669b10b9df3f8aeafa1f5bf">lbudget_rc</a>=.false.</div>
+<div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span><a class="code hl_variable" href="namespacemodd__budget.html#aca0427e804c90bcf5b4c780ee0a76e0d">lbudget_rr</a>=.false.</div>
+<div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span><a class="code hl_variable" href="namespacemodd__budget.html#a794e754365ecc90ea94968f0401f3282">lbudget_ri</a>=.false.</div>
+<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span><a class="code hl_variable" href="namespacemodd__budget.html#ae35f637542b32d30cdc352198ecce4e7">lbudget_rs</a>=.false.</div>
+<div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span><a class="code hl_variable" href="namespacemodd__budget.html#ad827c27888d19864e8a8d2b126cde909">lbudget_rg</a>=.false.</div>
+<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span><a class="code hl_variable" href="namespacemodd__budget.html#a1991401753344457bc4ef3bf63aa6c2a">lbudget_rh</a>=.false.</div>
+<div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span><a class="code hl_variable" href="namespacemodd__budget.html#a4b1ca863f572ff257cb8ebb46f923fba">lbudget_sv</a>=.false.</div>
+<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span>phyex%MISC%TBUCONF=<a class="code hl_variable" href="namespacemodd__budget.html#ab3640d48385fc524ecad2d781cea62a3">tbuconf</a></div>
+<div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span> </div>
 </div>
-<div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="main__ice__adjust_8F90.html#a21b7e3321ba604b57e15565542e383ab">init_phyex</a></div>
-<div class="line"><a id="l00413" name="l00413"></a><span class="lineno">  413</span> </div>
-<div class="line"><a id="l00414" name="l00414"></a><span class="lineno">  414</span><span class="keyword">END PROGRAM</span></div>
-<div class="line"><a id="l00415" name="l00415"></a><span class="lineno">  415</span> </div>
+<div class="line"><a id="l00413" name="l00413"></a><span class="lineno">  413</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="main__ice__adjust_8F90.html#a21b7e3321ba604b57e15565542e383ab">init_phyex</a></div>
+<div class="line"><a id="l00414" name="l00414"></a><span class="lineno">  414</span> </div>
+<div class="line"><a id="l00415" name="l00415"></a><span class="lineno">  415</span><span class="keyword">END PROGRAM</span></div>
+<div class="line"><a id="l00416" name="l00416"></a><span class="lineno">  416</span> </div>
 <div class="ttc" id="ainterfacecompute__diff_1_1diff_html"><div class="ttname"><a href="interfacecompute__diff_1_1diff.html">compute_diff::diff</a></div><div class="ttdef"><b>Definition</b> <a href="compute__diff_8F90_source.html#l00003">compute_diff.F90:3</a></div></div>
 <div class="ttc" id="ainterfacemodi__ice__adjust_1_1ice__adjust_html"><div class="ttname"><a href="interfacemodi__ice__adjust_1_1ice__adjust.html">modi_ice_adjust::ice_adjust</a></div><div class="ttdef"><b>Definition</b> <a href="modi__ice__adjust_8F90_source.html#l00008">modi_ice_adjust.F90:8</a></div></div>
 <div class="ttc" id="ainterfacemodi__ini__phyex_1_1ini__phyex_html"><div class="ttname"><a href="interfacemodi__ini__phyex_1_1ini__phyex.html">modi_ini_phyex::ini_phyex</a></div><div class="ttdef"><b>Definition</b> <a href="modi__ini__phyex_8F90_source.html#l00004">modi_ini_phyex.F90:4</a></div></div>
 <div class="ttc" id="ainterfacexrd__getoptions_1_1getoption_html"><div class="ttname"><a href="interfacexrd__getoptions_1_1getoption.html">xrd_getoptions::getoption</a></div><div class="ttdef"><b>Definition</b> <a href="xrd__getoptions_8F90_source.html#l00018">xrd_getoptions.F90:18</a></div></div>
-<div class="ttc" id="amain__ice__adjust_8F90_html_a21b7e3321ba604b57e15565542e383ab"><div class="ttname"><a href="main__ice__adjust_8F90.html#a21b7e3321ba604b57e15565542e383ab">init_phyex</a></div><div class="ttdeci">subroutine init_phyex(krr, phyex)</div><div class="ttdef"><b>Definition</b> <a href="main__ice__adjust_8F90_source.html#l00306">main_ice_adjust.F90:307</a></div></div>
+<div class="ttc" id="amain__ice__adjust_8F90_html_a21b7e3321ba604b57e15565542e383ab"><div class="ttname"><a href="main__ice__adjust_8F90.html#a21b7e3321ba604b57e15565542e383ab">init_phyex</a></div><div class="ttdeci">subroutine init_phyex(krr, phyex)</div><div class="ttdef"><b>Definition</b> <a href="main__ice__adjust_8F90_source.html#l00307">main_ice_adjust.F90:308</a></div></div>
 <div class="ttc" id="amain__ice__adjust_8F90_html_afeba0366abb7402856928b5c96e9e3e1"><div class="ttname"><a href="main__ice__adjust_8F90.html#afeba0366abb7402856928b5c96e9e3e1">main_ice_adjust</a></div><div class="ttdeci">program main_ice_adjust</div><div class="ttdef"><b>Definition</b> <a href="main__ice__adjust_8F90_source.html#l00001">main_ice_adjust.F90:1</a></div></div>
 <div class="ttc" id="anamespacecompute__diff_html"><div class="ttname"><a href="namespacecompute__diff.html">compute_diff</a></div><div class="ttdef"><b>Definition</b> <a href="compute__diff_8F90_source.html#l00001">compute_diff.F90:1</a></div></div>
 <div class="ttc" id="anamespacegetdata__ice__adjust__mod_html"><div class="ttname"><a href="namespacegetdata__ice__adjust__mod.html">getdata_ice_adjust_mod</a></div><div class="ttdef"><b>Definition</b> <a href="getdata__ice__adjust__mod_8F90_source.html#l00001">getdata_ice_adjust_mod.F90:1</a></div></div>
