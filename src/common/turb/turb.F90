@@ -2225,8 +2225,8 @@ END WHERE
 IF (.NOT. TURBN%LRMC01) THEN
   ZALPHA=0.5**(-1.5)
   !
-  !$acc_cr loop independent private(GZD,ZD)
-  DO CONCURRENT(JIJ=IIJB:IIJE)
+  !$acc loop independent private(GZD,ZD)
+  DO JIJ=IIJB,IIJE
     GZD = .TRUE.
     IF (GOCEAN) THEN
       !$acc loop seq

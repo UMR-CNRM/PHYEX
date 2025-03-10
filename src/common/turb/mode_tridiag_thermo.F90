@@ -175,11 +175,12 @@ IIJE=D%NIJE
 !
 CALL MZM_PHY(D,PRHODJ,ZMZM_RHODJ)
 !$acc kernels present_cr(ZRHODJ_DFDDTDZ_O_DZ2)
-!$acc_nv loop independent collapse(2)
-!$acc_cr loop independent
-DO CONCURRENT(JK=1:IKT,JIJ=IIJB:IIJE)
-ZRHODJ_DFDDTDZ_O_DZ2(JIJ,JK) = ZMZM_RHODJ(JIJ,JK)*PDFDDTDZ(JIJ,JK) &
-                                                /PDZZ(JIJ,JK)**2
+!$acc loop independent collapse(2)
+DO JK=IKTB,IKTE
+  DO JIJ=IIJB,IIJE
+    ZRHODJ_DFDDTDZ_O_DZ2(JIJ,JK) = ZMZM_RHODJ(JIJ,JK)*PDFDDTDZ(JIJ,JK) &
+                                                    /PDZZ(JIJ,JK)**2
+  ENDDO
 END DO
 !$acc end kernels
 !
