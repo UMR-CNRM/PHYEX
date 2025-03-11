@@ -156,22 +156,26 @@ IF(.NOT. LDSOFT) THEN
   IF(IGWET>0)THEN
 !$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
+    IF(.NOT. ICEP%LNEWCOEFF) THEN
+      WHERE(GWET(1:KSIZE))
+        PRH_TEND(1:KSIZE, IRSWETH)=ICEP%XFSWETH*ZZW(1:KSIZE)                       & ! RSWETH
+                      *( PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS) )*( PLBDAH(1:KSIZE)**ICED%XCXH )  &
+                         *( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) )               &
+                         *( ICEP%XLBSWETH1/( PLBDAH(1:KSIZE)**2              ) + &
+                            ICEP%XLBSWETH2/( PLBDAH(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
+                            ICEP%XLBSWETH3/(               PLBDAS(1:KSIZE)**2) )
+      END WHERE
+    ELSE
+      WHERE(GWET(1:KSIZE))
+        PRH_TEND(1:KSIZE, IRSWETH)=ICEP%XFSWETH*ZZW(1:KSIZE)                       & ! RSWETH
+                      *( PRST(1:KSIZE))*( PLBDAH(1:KSIZE)**ICED%XCXH )  &
+                         *( PRHODREF(1:KSIZE)**(-ICED%XCEXVT) )               &
+                         *( ICEP%XLBSWETH1/( PLBDAH(1:KSIZE)**2              ) + &
+                            ICEP%XLBSWETH2/( PLBDAH(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
+                            ICEP%XLBSWETH3/(               PLBDAS(1:KSIZE)**2) )
+      END WHERE
+    ENDIF
     WHERE(GWET(1:KSIZE))
-#ifdef REPRO48
-      PRH_TEND(1:KSIZE, IRSWETH)=ICEP%XFSWETH*ZZW(1:KSIZE)                       & ! RSWETH
-                    *( PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS) )*( PLBDAH(1:KSIZE)**ICED%XCXH )  &
-                       *( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) )               &
-                       *( ICEP%XLBSWETH1/( PLBDAH(1:KSIZE)**2              ) + &            
-                          ICEP%XLBSWETH2/( PLBDAH(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
-                          ICEP%XLBSWETH3/(               PLBDAS(1:KSIZE)**2) )
-#else
-      PRH_TEND(1:KSIZE, IRSWETH)=ICEP%XFSWETH*ZZW(1:KSIZE)                       & ! RSWETH
-                    *( PRST(1:KSIZE))*( PLBDAH(1:KSIZE)**ICED%XCXH )  &
-                       *( PRHODREF(1:KSIZE)**(-ICED%XCEXVT) )               &
-                       *( ICEP%XLBSWETH1/( PLBDAH(1:KSIZE)**2              ) + &            
-                          ICEP%XLBSWETH2/( PLBDAH(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
-                          ICEP%XLBSWETH3/(               PLBDAS(1:KSIZE)**2) )
-#endif
       PRH_TEND(1:KSIZE, IRSDRYH)=PRH_TEND(1:KSIZE, IRSWETH)*(ICEP%XCOLSH*EXP(ICEP%XCOLEXSH*(PT(1:KSIZE)-CST%XTT)))
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)

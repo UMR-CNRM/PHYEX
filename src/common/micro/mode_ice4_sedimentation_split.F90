@@ -625,67 +625,67 @@ DO WHILE (ZANYREMAINT)
       ZLBDA3(:,:) = 0.
     END IF
 !$acc end kernels
-#ifdef REPRO48
-    !The following lines must be kept equal to the computation in the general case ("for other species" case below)
-    ZFSED=ICEP%XFSEDS
-    ZEXSED=ICEP%XEXSEDS
-!$acc kernels
-!$acc loop independent collapse(2)
-    DO JK = IKTB,IKTE
-      DO JIJ = IIJB,IIJE
-        IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
-          ZWSED(JIJ, JK) = ZFSED  * PRXT(JIJ, JK)**ZEXSED            &
-                         &        * PRHODREF(JIJ, JK)**(ZEXSED-ICED%XCEXVT)
-        ENDIF
-      ENDDO
-    ENDDO
-!$end kernels
-#else
-!$acc kernels
-!$acc loop independent collapse(2) private(ZEXT)
-    DO JK = IKTB,IKTE
-      DO JIJ = IIJB,IIJE
-        IF(PRXT(JIJ,JK)> ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
-          IF (PARAMI%LSNOW_T .AND. PT(JIJ,JK)>263.15) THEN
-            ZLBDA = MAX(MIN(ICED%XLBDAS_MAX, 10**(14.554-0.0423*PT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
-          ELSE IF (PARAMI%LSNOW_T) THEN
-            ZLBDA = MAX(MIN(ICED%XLBDAS_MAX, 10**(6.226 -0.0106*PT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
-          ELSE
-            ZLBDA=MAX(MIN(ICED%XLBDAS_MAX, ICED%XLBS * ( PRHODREF(JIJ,JK) * PRXT(JIJ,JK) )**ICED%XLBEXS),ICED%XLBDAS_MIN)
-          END IF
-          ZWSED(JIJ, JK) = ICEP%XFSEDS *  &
-               & PRXT(JIJ,JK)* &
-               & PRHODREF(JIJ,JK)**(1-ICED%XCEXVT) * &
-               & (1 + (ICED%XFVELOS/ZLBDA)**ICED%XALPHAS)** (-ICED%XNUS+ICEP%XEXSEDS/ICED%XALPHAS) * &
-               & ZLBDA ** (ICED%XBS+ICEP%XEXSEDS)
-          IF (OELEC .AND. ZLBDA > 0.) THEN
-            ! compute the e_x coefficient of the q - D relationship
-            ZEXT = PRHODREF(JIJ,JK) * PQXT(JIJ,JK) / (ELECP%XFQUPDS * ZLBDA**(ICED%XCXS-ELECD%XFS))
-            ZEXT = SIGN( MIN(ABS(ZEXT), ELECP%XESMAX), ZEXT)
-            IF (ABS(ZEXT) > ELECP%XESMIN) THEN
-              ZWSEDQ(JIJ,JK) = ELECP%XFQSEDS * ZEXT * PRXT(JIJ,JK)**ELECP%XEXQSEDS &
-                                       * PRHODREF(JIJ,JK)**(ELECP%XEXQSEDS-ICED%XCEXVT)
-              IF (OSEDIM_BEARD) ZLBDA3(JIJ,JK) = ZLBDA
-            ENDIF
-          ENDIF
-        ENDIF
-      ENDDO
-    ENDDO
-!$acc end kernels
-    IF (OELEC .AND. OSEDIM_BEARD) THEN
-      CALL ELEC_BEARD_EFFECT(D, CST, HCLOUD, KSPE, GMASK, PT, PRHODREF, PTHVREFZIKB,&
-                             PRXT, PQXT, PEFIELDW, ZLBDA3, ZBEARDCOEFF, ICED=ICED)
+    IF(.NOT. ICEP%LNEWCOEFF) THEN
+      !The following lines must be kept equal to the computation in the general case ("for other species" case below)
+      ZFSED=ICEP%XFSEDS
+      ZEXSED=ICEP%XEXSEDS
 !$acc kernels
 !$acc loop independent collapse(2)
       DO JK = IKTB,IKTE
         DO JIJ = IIJB,IIJE
-          ZWSED(JIJ,JK)  = ZWSED(JIJ,JK)  * ZBEARDCOEFF(JIJ,JK)
-          ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZBEARDCOEFF(JIJ,JK)
-        END DO
-      END DO
+          IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
+            ZWSED(JIJ, JK) = ZFSED  * PRXT(JIJ, JK)**ZEXSED            &
+                           &        * PRHODREF(JIJ, JK)**(ZEXSED-ICED%XCEXVT)
+          ENDIF
+        ENDDO
+      ENDDO
 !$acc end kernels
-    END IF
-#endif
+    ELSE
+!$acc kernels
+!$acc loop independent collapse(2) private(ZEXT)
+      DO JK = IKTB,IKTE
+        DO JIJ = IIJB,IIJE
+          IF(PRXT(JIJ,JK)> ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
+            IF (PARAMI%LSNOW_T .AND. PT(JIJ,JK)>263.15) THEN
+              ZLBDA = MAX(MIN(ICED%XLBDAS_MAX, 10**(14.554-0.0423*PT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
+            ELSE IF (PARAMI%LSNOW_T) THEN
+              ZLBDA = MAX(MIN(ICED%XLBDAS_MAX, 10**(6.226 -0.0106*PT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
+            ELSE
+              ZLBDA=MAX(MIN(ICED%XLBDAS_MAX, ICED%XLBS * ( PRHODREF(JIJ,JK) * PRXT(JIJ,JK) )**ICED%XLBEXS),ICED%XLBDAS_MIN)
+            END IF
+            ZWSED(JIJ, JK) = ICEP%XFSEDS *  &
+                 & PRXT(JIJ,JK)* &
+                 & PRHODREF(JIJ,JK)**(1-ICED%XCEXVT) * &
+                 & (1 + (ICED%XFVELOS/ZLBDA)**ICED%XALPHAS)** (-ICED%XNUS+ICEP%XEXSEDS/ICED%XALPHAS) * &
+                 & ZLBDA ** (ICED%XBS+ICEP%XEXSEDS)
+            IF (OELEC .AND. ZLBDA > 0.) THEN
+              ! compute the e_x coefficient of the q - D relationship
+              ZEXT = PRHODREF(JIJ,JK) * PQXT(JIJ,JK) / (ELECP%XFQUPDS * ZLBDA**(ICED%XCXS-ELECD%XFS))
+              ZEXT = SIGN( MIN(ABS(ZEXT), ELECP%XESMAX), ZEXT)
+              IF (ABS(ZEXT) > ELECP%XESMIN) THEN
+                ZWSEDQ(JIJ,JK) = ELECP%XFQSEDS * ZEXT * PRXT(JIJ,JK)**ELECP%XEXQSEDS &
+                                         * PRHODREF(JIJ,JK)**(ELECP%XEXQSEDS-ICED%XCEXVT)
+                IF (OSEDIM_BEARD) ZLBDA3(JIJ,JK) = ZLBDA
+              ENDIF
+            ENDIF
+          ENDIF
+        ENDDO
+      ENDDO
+!$acc end kernels
+      IF (OELEC .AND. OSEDIM_BEARD) THEN
+        CALL ELEC_BEARD_EFFECT(D, CST, HCLOUD, KSPE, GMASK, PT, PRHODREF, PTHVREFZIKB,&
+                               PRXT, PQXT, PEFIELDW, ZLBDA3, ZBEARDCOEFF, ICED=ICED)
+!$acc kernels
+!$acc loop independent collapse(2)
+        DO JK = IKTB,IKTE
+          DO JIJ = IIJB,IIJE
+            ZWSED(JIJ,JK)  = ZWSED(JIJ,JK)  * ZBEARDCOEFF(JIJ,JK)
+            ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZBEARDCOEFF(JIJ,JK)
+          END DO
+        END DO
+!$acc end kernels
+      END IF
+    ENDIF
   ELSE
     ! ******* for other species
     SELECT CASE(KSPE)

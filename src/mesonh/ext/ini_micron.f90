@@ -283,7 +283,7 @@ DEALLOCATE(ZDZ)
 IF (CCLOUD(1:3) == 'KES') THEN
   CALL INI_CLOUD(XTSTEP,ZDZMIN,NSPLITR)                  ! Warm cloud only
 ELSE IF (CCLOUD(1:3) == 'ICE'  ) THEN
-  CALL INI_RAIN_ICE(KLUOUT,XTSTEP,ZDZMIN,NSPLITR,CCLOUD) ! Mixed phase cloud
+  CALL INI_RAIN_ICE(CPROGRAM,KLUOUT,XTSTEP,ZDZMIN,NSPLITR,CCLOUD) ! Mixed phase cloud
                                                          ! including hail
 ELSE IF (CCLOUD == 'C2R2' .OR. CCLOUD == 'C3R5' .OR. CCLOUD == 'KHKO') THEN
   CALL INI_RAIN_C2R2(XTSTEP,ZDZMIN,NSPLITR,CCLOUD)       ! 1/2 spectral warm cloud

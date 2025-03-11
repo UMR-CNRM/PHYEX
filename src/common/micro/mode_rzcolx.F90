@@ -214,13 +214,8 @@ DO JLBDAX = 1,SIZE(PRZCOLX(:,:),1)
 !*       1.7     Compute the scaled fall speed difference by integration over
 !                the dimensional spectrum of specy Z
 !
-#ifdef REPRO48
-        ZCOLLZ = ZCOLLZ + ZFUNC                                               &
-                        * PEXZ * ABS(PFALLX*ZDX**PEXFALLX-PFALLZ*ZDZ**PEXFALLZ)
-#else
-         ZCOLLZ = ZCOLLZ + ZFUNC * PEXZ * ABS( PFALLX*ZDX**PEXFALLX * EXP(-(ZDX*PFALLEXPX)**PALPHAX) &
+        ZCOLLZ = ZCOLLZ + ZFUNC * PEXZ * ABS( PFALLX*ZDX**PEXFALLX * EXP(-(ZDX*PFALLEXPX)**PALPHAX) &
                                              - PFALLZ*ZDZ**PEXFALLZ * EXP(-(ZDZ*PFALLEXPZ)**PALPHAZ))
-#endif
       END DO
 !
 !*       1.8     Compute the normalization factor by integration over the

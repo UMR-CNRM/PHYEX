@@ -197,24 +197,28 @@ IF(.NOT. LDSOFT) THEN
   IF(IGDRY>0)THEN
 !$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
+    IF(.NOT. ICEP%LNEWCOEFF) THEN
+      WHERE(GDRY(1:KSIZE))
+        PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
+                                      / ICEP%XCOLSG &
+                    *(PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
+                    *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.))                    &
+                         *( ICEP%XLBSDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
+                            ICEP%XLBSDRYG2/( PLBDAG(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
+                            ICEP%XLBSDRYG3/(               PLBDAS(1:KSIZE)**2))
+      END WHERE
+    ELSE
+      WHERE(GDRY(1:KSIZE))
+        PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
+                                      / ICEP%XCOLSG &
+                    *(PRST(1:KSIZE))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
+                    *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT))                    &
+                         *( ICEP%XLBSDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
+                            ICEP%XLBSDRYG2/( PLBDAG(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
+                            ICEP%XLBSDRYG3/(               PLBDAS(1:KSIZE)**2))
+      END WHERE
+    ENDIF
     WHERE(GDRY(1:KSIZE))
-#ifdef REPRO48
-      PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
-                                    / ICEP%XCOLSG &
-                  *(PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
-                  *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.))                    &
-                       *( ICEP%XLBSDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
-                          ICEP%XLBSDRYG2/( PLBDAG(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
-                          ICEP%XLBSDRYG3/(               PLBDAS(1:KSIZE)**2))
-#else
-      PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
-                                    / ICEP%XCOLSG &
-                  *(PRST(1:KSIZE))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
-                  *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT))                    &
-                       *( ICEP%XLBSDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
-                          ICEP%XLBSDRYG2/( PLBDAG(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
-                          ICEP%XLBSDRYG3/(               PLBDAS(1:KSIZE)**2))
-#endif
       PRG_TEND(1:KSIZE, IRSDRYG)=PRG_TEND(1:KSIZE, IRSWETG)*ICEP%XCOLSG*EXP(ICEP%XCOLEXSG*(PT(1:KSIZE)-CST%XTT))
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
