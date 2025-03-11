@@ -3,10 +3,10 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-SUBROUTINE ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, KSIZE, ODCOMPUTE, &
+ELEMENTAL SUBROUTINE ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, ODCOMPUTE, &
                            PTHT, PPABST, PRHODREF, PEXN, PLSFACT, PT, &
                            PRVT, &
-                           PCIT, PRVHENI_MR, PBUF, LDBUF)
+                           PCIT, PRVHENI_MR)
 !!
 !!**  PURPOSE
 !!    -------
@@ -38,103 +38,86 @@ TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
-INTEGER,                  INTENT(IN)    :: KSIZE
-LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PTHT    ! Theta at t
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PPABST  ! absolute pressure at t
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PEXN    ! Exner function
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT      ! Temperature at time t
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRVT    ! Water vapor m.r. at t
-REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
-REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: PRVHENI_MR ! Mixing ratio change due to the heterogeneous nucleation
-REAL, DIMENSION(KSIZE, 4),INTENT(OUT)   :: PBUF    ! Buffer
-LOGICAL, DIMENSION(KSIZE),INTENT(OUT)   :: LDBUF   ! Buffer
+LOGICAL, INTENT(IN)    :: ODCOMPUTE
+REAL,    INTENT(IN)    :: PTHT    ! Theta at t
+REAL,    INTENT(IN)    :: PPABST  ! absolute pressure at t
+REAL,    INTENT(IN)    :: PRHODREF! Reference density
+REAL,    INTENT(IN)    :: PEXN    ! Exner function
+REAL,    INTENT(IN)    :: PLSFACT
+REAL,    INTENT(IN)    :: PT      ! Temperature at time t
+REAL,    INTENT(IN)    :: PRVT    ! Water vapor m.r. at t
+REAL,    INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
+REAL,    INTENT(OUT)   :: PRVHENI_MR ! Mixing ratio change due to the heterogeneous nucleation
 !
 !*       0.2  declaration of local variables
 !
-!This routine will be included in a CONTAIN part of other routine
-!For GPU source-to-source transformation, this routine cannot declare
-!local arrays. We must use buffer (declared in the calling routine)
-INTEGER :: JL
-INTEGER, PARAMETER :: IW1=1, IW2=2, IUSW=3, ISSI=4
+REAL  :: ZW ! work array
+LOGICAL  :: GNEGT  ! Test where to compute the HEN process
+REAL   :: ZZW,      & ! Work array
+                           ZUSW,     & ! Undersaturation over water
+                           ZSSI        ! Supersaturation over ice
 !-------------------------------------------------------------------------------
 !
 !
-!$mnh_expand_where(JL=1:KSIZE)
-WHERE(ODCOMPUTE(:))
-  LDBUF(:)=PT(:)<CST%XTT .AND. PRVT(:)>ICED%XRTMIN(1)
-ELSEWHERE
-  LDBUF(:)=.FALSE.
-ENDWHERE
-!$mnh_end_expand_where(JL=1:KSIZE)
+  IF (ODCOMPUTE) THEN
+GNEGT=PT<CST%XTT .AND. PRVT>ICED%XRTMIN(1)
+ELSE
+GNEGT=.FALSE.
+END IF
 
-PBUF(:, IUSW)=0.
-PBUF(:, IW2)=0.
-!$mnh_expand_where(JL=1:KSIZE)
-WHERE(LDBUF(:))
-  PBUF(:, IW2)=ALOG(PT(:))
-  PBUF(:, IUSW)=EXP(CST%XALPW - CST%XBETAW/PT(:) - CST%XGAMW*PBUF(:, IW2))          ! es_w
-  PBUF(:, IW2)=EXP(CST%XALPI - CST%XBETAI/PT(:) - CST%XGAMI*PBUF(:, IW2))           ! es_i
-END WHERE
-!$mnh_end_expand_where(JL=1:KSIZE)
+ZUSW=0.
+ZZW=0.
 
-PBUF(:, ISSI)=0.
-!$mnh_expand_where(JL=1:KSIZE)
-WHERE(LDBUF(:))
-  PBUF(:, IW2)=MIN(PPABST(:)/2., PBUF(:, IW2))             ! safety limitation
-  PBUF(:, ISSI)=PRVT(:)*(PPABST(:)-PBUF(:, IW2)) / (CST%XEPSILO*PBUF(:, IW2)) - 1.0
+IF (GNEGT) THEN
+ ZZW=ALOG(PT)
+ ZUSW=EXP(CST%XALPW - CST%XBETAW/PT - CST%XGAMW*ZZW)          ! es_w
+ ZZW=EXP(CST%XALPI - CST%XBETAI/PT - CST%XGAMI*ZZW)           ! es_i
+END IF
+  
+ZSSI=0.
+IF (GNEGT) THEN
+  ZZW=MIN(PPABST/2., ZZW)             ! safety limitation
+  ZSSI=PRVT*(PPABST-ZZW) / (CST%XEPSILO*ZZW) - 1.0
                                                ! Supersaturation over ice
-  PBUF(:, IUSW)=MIN(PPABST(:)/2., PBUF(:, IUSW))            ! safety limitation
-  PBUF(:, IUSW)=(PBUF(:, IUSW)/PBUF(:, IW2))*((PPABST(:)-PBUF(:, IW2))/(PPABST(:)-PBUF(:, IUSW))) - 1.0
+  ZUSW=MIN(PPABST/2., ZUSW)            ! safety limitation
+  ZUSW=(ZUSW/ZZW)*((PPABST-ZZW)/(PPABST-ZUSW)) - 1.0
                              ! Supersaturation of saturated water vapor over ice
-  PBUF(:, ISSI)=MIN(PBUF(:, ISSI), PBUF(:, IUSW)) ! limitation of SSi according to SSw=0
-END WHERE
-!$mnh_end_expand_where(JL=1:KSIZE)
+  ZSSI=MIN(ZSSI, ZUSW) ! limitation of SSi according to SSw=0
+END IF
+  
+ZZW=0.
 
-PBUF(:, IW2)=0.
-DO JL=1,KSIZE
-  IF(LDBUF(JL)) THEN
-    IF(PT(JL)<CST%XTT-5.0 .AND. PBUF(JL, ISSI)>0.0) THEN
-      PBUF(JL, IW2)=ICEP%XNU20*EXP(ICEP%XALPHA2*PBUF(JL, ISSI)-ICEP%XBETA2)
-    ELSEIF(PT(JL)<=CST%XTT-2.0 .AND. PT(JL)>=CST%XTT-5.0 .AND. PBUF(JL, ISSI)>0.0) THEN
-      PBUF(JL, IW2)=MAX(ICEP%XNU20*EXP(-ICEP%XBETA2 ), &                                                                                       
-                  ICEP%XNU10*EXP(-ICEP%XBETA1*(PT(JL)-CST%XTT))*(PBUF(JL, ISSI)/PBUF(JL, IUSW))**ICEP%XALPHA1)
-    ENDIF
+IF(GNEGT) THEN
+  IF(PT<CST%XTT-5.0 .AND. ZSSI>0.0) THEN
+    ZZW=ICEP%XNU20*EXP(ICEP%XALPHA2*ZSSI-ICEP%XBETA2)
+  ELSEIF(PT<=CST%XTT-2.0 .AND. PT>=CST%XTT-5.0 .AND. ZSSI>0.0) THEN
+    ZZW=MAX(ICEP%XNU20*EXP(-ICEP%XBETA2 ), &                                                                                       
+                ICEP%XNU10*EXP(-ICEP%XBETA1*(PT-CST%XTT))*(ZSSI/ZUSW)**ICEP%XALPHA1)
   ENDIF
-ENDDO
-!$mnh_expand_where(JL=1:KSIZE)
-WHERE(LDBUF(:))
-  PBUF(:, IW2)=PBUF(:, IW2)-PCIT(:)
-  PBUF(:, IW2)=MIN(PBUF(:, IW2), 50.E3) ! limitation provisoire a 50 l^-1
-END WHERE
-!$mnh_end_expand_where(JL=1:KSIZE)
+ENDIF
+IF (GNEGT) THEN
+  ZZW=ZZW-PCIT
+  ZZW=MIN(ZZW, 50.E3) ! limitation provisoire a 50 l^-1
+END IF
 
-PRVHENI_MR(:)=0.
-!$mnh_expand_where(JL=1:KSIZE)
-WHERE(LDBUF(:))
-  PRVHENI_MR(:)=MAX(PBUF(:, IW2), 0.0)*ICEP%XMNU0/PRHODREF(:)
-  PRVHENI_MR(:)=MIN(PRVT(:), PRVHENI_MR(:))
-END WHERE
-!$mnh_end_expand_where(JL=1:KSIZE)
+PRVHENI_MR=0.
+
+IF (GNEGT) THEN
+  PRVHENI_MR=MAX(ZZW, 0.0)*ICEP%XMNU0/PRHODREF
+  PRVHENI_MR=MIN(PRVT, PRVHENI_MR)
+END IF
 !Limitation due to 0 crossing of temperature
 IF(PARAMI%LFEEDBACKT) THEN
-  PBUF(:, IW1)=0.
-  !$mnh_expand_where(JL=1:KSIZE)
-  WHERE(LDBUF(:))
-    PBUF(:, IW1)=MIN(PRVHENI_MR(:), &
-              MAX(0., (CST%XTT/PEXN(:)-PTHT(:))/PLSFACT(:))) / &
-              MAX(PRVHENI_MR(:), 1.E-20)
-  END WHERE
-  PRVHENI_MR(:)=PRVHENI_MR(:)*PBUF(:, IW1)
-  PBUF(:, IW2)=PBUF(:, IW2)*PBUF(:, IW1)
-  !$mnh_end_expand_where(JL=1:KSIZE)
+  ZW=0.
+  IF (GNEGT) THEN
+    ZW=MIN(PRVHENI_MR, &
+              MAX(0., (CST%XTT/PEXN-PTHT)/PLSFACT)) / &
+              MAX(PRVHENI_MR, 1.E-20)
+  END IF
+  PRVHENI_MR=PRVHENI_MR*ZW
+  ZZW=ZZW*ZW
 ENDIF
-!$mnh_expand_where(JL=1:KSIZE)
-WHERE(LDBUF(:))
-  PCIT(:)=MAX(PBUF(:, IW2)+PCIT(:), PCIT(:))
-END WHERE
-!$mnh_end_expand_where(JL=1:KSIZE)
-!
+IF (GNEGT) THEN
+  PCIT=MAX(ZZW+PCIT, PCIT)
+END IF
 END SUBROUTINE ICE4_NUCLEATION

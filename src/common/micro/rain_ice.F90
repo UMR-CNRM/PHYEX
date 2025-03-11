@@ -304,8 +304,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZW3D
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLW3D
 REAL, DIMENSION(KRR) :: ZRSMIN
 INTEGER :: ISIZE, IPROMA, IGPBLKS, ISIZE2
-REAL, DIMENSION(D%NIJT,4) :: ZBUF
-LOGICAL, DIMENSION(D%NIJT) :: LLBUF
 !
 LOGICAL :: LSAVE_MICRO ! if true, microphysical tendencies are saved for cloud electricity
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC),MERGE(IBUNUM-IBUNUM_EXTRA,0,OELEC)) :: &
@@ -448,30 +446,19 @@ DO JK=IKTB,IKTE
   ENDDO
 ENDDO
 !$acc end kernels
-!
-!!!! WARNING TODO THIS BLOCK IS NOT ACCELERATED WITH OPENACC !!! SINCE ICE4_NUCL IS 1D 
-!!!! (see PHYEX/e8c7166 11/01/2024) issue 74 !!!
-DO JK=IKTB,IKTE
-  !ZBUF is sized in (NIJT,4) when it should be in ((IIJE-IIJB+1),4), but this is of no consequence
-  !since the values are not used.
-  CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, IIJE-IIJB+1, LLW3D(IIJB:IIJE, JK), &
-                       PTHT(IIJB:IIJE, JK), PPABST(IIJB:IIJE, JK), PRHODREF(IIJB:IIJE, JK), &
-                       PEXN(IIJB:IIJE, JK), ZW3D(IIJB:IIJE, JK), ZT(IIJB:IIJE, JK), &
-                       PRVT(IIJB:IIJE, JK), &
-                       PCIT(IIJB:IIJE, JK), ZZ_RVHENI(IIJB:IIJE, JK), ZBUF(IIJB:IIJE, :), LLBUF(IIJB:IIJE))
+
+!$acc kernels
+!$acc loop independent collapse(2)
+DO JK=IKTB,IKTE                                                                                                                     
+  DO JIJ=IIJB,IIJE
+    CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(JIJ, JK), &
+                         PTHT(JIJ, JK), PPABST(JIJ, JK), PRHODREF(JIJ, JK), &                                       
+                         PEXN(JIJ, JK), ZW3D(JIJ, JK), ZT(JIJ, JK), &                                                           
+                         PRVT(JIJ, JK), &                                                                                 
+                         PCIT(JIJ, JK), ZZ_RVHENI(JIJ, JK))
+  ENDDO
 ENDDO
-!
-!!$acc kernels
-!!$acc loop independent collapse(2)
-!DO JK=IKTB,IKTE 
-!  DO JIJ=IIJB,IIJE
-!    CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(JIJ, JK), &
-!                         PTHT(JIJ, JK), PPABST(JIJ, JK), PRHODREF(JIJ, JK), &                                       
-!                         PEXN(JIJ, JK), ZW3D(JIJ, JK), ZT(JIJ, JK), &                                                           
-!                         PRVT(JIJ, JK), &                                                                                 
-!                         PCIT(JIJ, JK), ZZ_RVHENI(JIJ, JK))
-!ENDDO
-!!$acc end kernels
+!$acc end kernels
 
 !$acc kernels
 !$acc loop independent collapse(2)

@@ -114,8 +114,6 @@ REAL, DIMENSION(KPROMA) :: ZT, &
                         & ZRGSI, ZRGSI_MR, ZRAINFR
 INTEGER :: JL, JV
 LOGICAL, DIMENSION(KPROMA) :: LLWETG ! .TRUE. if graupel growths in wet mode
-LOGICAL, DIMENSION(KPROMA) :: LLBUF
-REAL, DIMENSION(KPROMA, 4) :: ZBUF
 LOGICAL :: LLMASK
 REAL :: ZZW
 LOGICAL :: LLRFR
@@ -146,13 +144,12 @@ ELSE
   !
   !*       2.     COMPUTES THE SLOW COLD PROCESS SOURCES
   !               --------------------------------------
-  !ZBUF is sized in (NPROMA,4) when it should be in (KSIZE,4), but this is of no consequence
-  !since the values are not used.
-  CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, KSIZE, LDCOMPUTE(1:KSIZE), &
-                   ZVART(1:KSIZE,ITH), PPRES(1:KSIZE), PRHODREF(1:KSIZE), PEXN(1:KSIZE), PLSFACT(1:KSIZE), ZT(1:KSIZE), &
-                   ZVART(1:KSIZE,IRV), &
-                   PCIT(1:KSIZE), PBU_INST(1:KSIZE, IRVHENI_MR), ZBUF(:, :), LLBUF(1:KSIZE))
-
+  DO JL=1, KSIZE
+    CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LDCOMPUTE(JL), &
+                     ZVART(JL,ITH), PPRES(JL), PRHODREF(JL), PEXN(JL), PLSFACT(JL), ZT(JL), &
+                     ZVART(JL,IRV), &
+                     PCIT(JL), PBU_INST(JL, IRVHENI_MR))
+  ENDDO
   DO JL=1, KSIZE
     ZVART(JL,ITH)=ZVART(JL,ITH) + PBU_INST(JL, IRVHENI_MR)*PLSFACT(JL)
     ZT(JL) = ZVART(JL,ITH) * PEXN(JL)
