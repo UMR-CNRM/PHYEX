@@ -84,18 +84,18 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:af4c48d7bdb49e428195997f724cf1a49" id="r_af4c48d7bdb49e428195997f724cf1a49"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ice4__nucleation_8func_8h.html#af4c48d7bdb49e428195997f724cf1a49">ice4_nucleation</a> (cst, parami, icep, iced, ksize, odcompute, ptht, ppabst, prhodref, pexn, plsfact, pt, prvt, pcit, prvheni_mr, pbuf, ldbuf)</td></tr>
-<tr class="separator:af4c48d7bdb49e428195997f724cf1a49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae000795a8256f761fed116057c6c3823" id="r_ae000795a8256f761fed116057c6c3823"><td class="memItemLeft" align="right" valign="top">elemental subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ice4__nucleation_8func_8h.html#ae000795a8256f761fed116057c6c3823">ice4_nucleation</a> (cst, parami, icep, iced, odcompute, ptht, ppabst, prhodref, pexn, plsfact, pt, prvt, pcit, prvheni_mr)</td></tr>
+<tr class="separator:ae000795a8256f761fed116057c6c3823"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="af4c48d7bdb49e428195997f724cf1a49" name="af4c48d7bdb49e428195997f724cf1a49"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af4c48d7bdb49e428195997f724cf1a49">&#9670;&#160;</a></span>ice4_nucleation()</h2>
+<a id="ae000795a8256f761fed116057c6c3823" name="ae000795a8256f761fed116057c6c3823"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae000795a8256f761fed116057c6c3823">&#9670;&#160;</a></span>ice4_nucleation()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">subroutine ice4_nucleation </td>
+          <td class="memname">elemental subroutine ice4_nucleation </td>
           <td>(</td>
           <td class="paramtype">type(<a class="el" href="structmodd__cst_1_1cst__t.html">cst_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>cst</em>, </td>
@@ -121,80 +121,62 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer, intent(in)&#160;</td>
-          <td class="paramname"><em>ksize</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">logical, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramtype">logical, intent(in)&#160;</td>
           <td class="paramname"><em>odcompute</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramtype">real, intent(in)&#160;</td>
           <td class="paramname"><em>ptht</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramtype">real, intent(in)&#160;</td>
           <td class="paramname"><em>ppabst</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramtype">real, intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramtype">real, intent(in)&#160;</td>
           <td class="paramname"><em>pexn</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramtype">real, intent(in)&#160;</td>
           <td class="paramname"><em>plsfact</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramtype">real, intent(in)&#160;</td>
           <td class="paramname"><em>pt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramtype">real, intent(in)&#160;</td>
           <td class="paramname"><em>prvt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(ksize), intent(inout)&#160;</td>
+          <td class="paramtype">real, intent(inout)&#160;</td>
           <td class="paramname"><em>pcit</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
-          <td class="paramname"><em>prvheni_mr</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(ksize, 4), intent(out)&#160;</td>
-          <td class="paramname"><em>pbuf</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">logical, dimension(ksize), intent(out)&#160;</td>
-          <td class="paramname"><em>ldbuf</em>&#160;</td>
+          <td class="paramtype">real, intent(out)&#160;</td>
+          <td class="paramname"><em>prvheni_mr</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -208,8 +190,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="ice4__nucleation_8func_8h_af4c48d7bdb49e428195997f724cf1a49_icgraph.png" border="0" usemap="#aice4__nucleation_8func_8h_af4c48d7bdb49e428195997f724cf1a49_icgraph" alt=""/></div>
-<map name="aice4__nucleation_8func_8h_af4c48d7bdb49e428195997f724cf1a49_icgraph" id="aice4__nucleation_8func_8h_af4c48d7bdb49e428195997f724cf1a49_icgraph">
+<div class="center"><img src="ice4__nucleation_8func_8h_ae000795a8256f761fed116057c6c3823_icgraph.png" border="0" usemap="#aice4__nucleation_8func_8h_ae000795a8256f761fed116057c6c3823_icgraph" alt=""/></div>
+<map name="aice4__nucleation_8func_8h_ae000795a8256f761fed116057c6c3823_icgraph" id="aice4__nucleation_8func_8h_ae000795a8256f761fed116057c6c3823_icgraph">
 <area shape="rect" title=" " alt="" coords="801,42,925,67"/>
 <area shape="rect" href="namespacemode__ice4__tendencies.html#accd3a6e40fae254a7fa20df1ca8f047d" title=" " alt="" coords="583,5,753,45"/>
 <area shape="poly" title=" " alt="" coords="787,46,753,41,754,36,788,41"/>

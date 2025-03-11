@@ -175,30 +175,34 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>  <span class="keywordflow">IF</span>(igrim&gt;0) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    <span class="comment">!$mnh_expand_where(JL=1:KSIZE)</span></div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    <span class="keywordflow">WHERE</span>(grim(1:ksize))</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="preprocessor">#ifdef REPRO48</span></div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="preprocessor"></span>      prsrimcg_mr(1:ksize) = icep%XSRIMCG * plbdas(1:ksize)**icep%XEXSRIMCG   &amp; <span class="comment">! RSRIMCG</span></div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>                               * (1.0 - zzw(1:ksize) )/prhodref(1:ksize)</div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="preprocessor">#else</span></div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="preprocessor"></span>      prsrimcg_mr(1:ksize) = icep%XSRIMCG * plbdas(1:ksize)**icep%XEXSRIMCG   &amp; <span class="comment">! RSRIMCG</span></div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>                               * (1.0 - zzw(1:ksize) )*prst(1:ksize)</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="preprocessor"></span>      prsrimcg_mr(1:ksize)=min(prst(1:ksize), prsrimcg_mr(1:ksize))</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="keywordflow">    END WHERE</span></div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    <span class="comment">!$mnh_end_expand_where(JL=1:KSIZE)</span></div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="keywordflow">  END IF</span></div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span><span class="keywordflow">ENDIF</span></div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span><span class="comment">!</span></div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;ICE4_RSRIMCG_OLD&#39;</span>, 1, zhook_handle)</div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="comment">!</span></div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span><span class="keyword">CONTAINS</span></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    <span class="keywordflow">IF</span>(.NOT. icep%LNEWCOEFF) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>      <span class="keywordflow">WHERE</span>(grim(1:ksize))</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>        prsrimcg_mr(1:ksize) = icep%XSRIMCG * plbdas(1:ksize)**icep%XEXSRIMCG   &amp; <span class="comment">! RSRIMCG</span></div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>                                 * (1.0 - zzw(1:ksize) )/prhodref(1:ksize)</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="keywordflow">      END WHERE</span></div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>      <span class="keywordflow">WHERE</span>(grim(1:ksize))</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>        prsrimcg_mr(1:ksize) = icep%XSRIMCG * plbdas(1:ksize)**icep%XEXSRIMCG   &amp; <span class="comment">! RSRIMCG</span></div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>                                 * (1.0 - zzw(1:ksize) )*prst(1:ksize)</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="keywordflow">      END WHERE</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="keywordflow">    ENDIF</span></div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    <span class="keywordflow">WHERE</span>(grim(1:ksize))</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>      prsrimcg_mr(1:ksize)=min(prst(1:ksize), prsrimcg_mr(1:ksize))</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span><span class="keywordflow">    END WHERE</span></div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <span class="comment">!$mnh_end_expand_where(JL=1:KSIZE)</span></div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="keywordflow">  END IF</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span><span class="keywordflow">ENDIF</span></div>
 <div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span><span class="comment">!</span></div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>include <span class="stringliteral">&quot;interp_micro.func.h&quot;</span></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;ICE4_RSRIMCG_OLD&#39;</span>, 1, zhook_handle)</div>
 <div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span><span class="comment">!</span></div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="keyword">CONTAINS</span></div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span><span class="comment">!</span></div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>include <span class="stringliteral">&quot;interp_micro.func.h&quot;</span></div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><span class="comment">!</span></div>
 </div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__ice4__rsrimcg__old.html#a52897f2e7004b151acb7ef2eaa54b7d1">ice4_rsrimcg_old</a></div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__ice4__rsrimcg__old.html">mode_ice4_rsrimcg_old</a></div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__ice4__rsrimcg__old.html#a52897f2e7004b151acb7ef2eaa54b7d1">ice4_rsrimcg_old</a></div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__ice4__rsrimcg__old.html">mode_ice4_rsrimcg_old</a></div>
 <div class="ttc" id="ainterp__micro_8func_8h_html_abc8a42ec0dfe0b9b8647547eede8c6a0"><div class="ttname"><a href="interp__micro_8func_8h.html#abc8a42ec0dfe0b9b8647547eede8c6a0">interp_micro_1d</a></div><div class="ttdeci">subroutine interp_micro_1d(kproma, ksize, pin, knum, p1, p2, ldpack, ldmask, kbuf1, kbuf2, pbuf1, pbuf2, klen, plt1, pout1, plt2, pout2, plt3, pout3)</div><div class="ttdef"><b>Definition</b> <a href="interp__micro_8func_8h_source.html#l00005">interp_micro.func.h:9</a></div></div>
 <div class="ttc" id="anamespacemodd__cst_html"><div class="ttname"><a href="namespacemodd__cst.html">modd_cst</a></div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00007">modd_cst.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__param__ice__n_html"><div class="ttname"><a href="namespacemodd__param__ice__n.html">modd_param_ice_n</a></div><div class="ttdef"><b>Definition</b> <a href="modd__param__icen_8F90_source.html#l00007">modd_param_icen.F90:7</a></div></div>
