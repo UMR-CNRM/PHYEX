@@ -47,6 +47,10 @@ REAL,    ALLOCATABLE   :: ZDUM2          (:,:,:)
 REAL,    ALLOCATABLE   :: ZDUM3          (:,:,:)
 REAL,    ALLOCATABLE   :: ZDUM4          (:,:,:)
 REAL,    ALLOCATABLE   :: ZDUM5          (:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM6          (:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM7          (:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM8          (:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM9          (:,:,:)
 
 REAL,    ALLOCATABLE   :: PRS_OUT        (:,:,:,:) 
 REAL,    ALLOCATABLE   :: PSRCS_OUT      (:,:,:)   
@@ -111,7 +115,7 @@ ENDIF
 
 CALL GETDATA_ICE_ADJUST (NPROMA, NGPBLKS, NFLEVG, PRHODJ, PEXNREF, PRHODREF, PPABSM, PTHT, ZICE_CLD_WGT,     &
 & ZSIGQSAT, PSIGS, PMFCONV, PRC_MF, PRI_MF, PCF_MF, PWEIGHT_MF_CLOUD, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, &
-& PTHS, PRS, PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, &
+& ZDUM6, ZDUM7, ZDUM8, ZDUM9, PTHS, PRS, PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, &
 & PHLI_HRI, PHLI_HCF, ZRS, ZZZ, PRS_OUT, PSRCS_OUT, PCLDFR_OUT, PHLC_HRC_OUT, PHLC_HCF_OUT,       &
 & PHLI_HRI_OUT, PHLI_HCF_OUT, LLVERBOSE)
 
@@ -171,7 +175,7 @@ DO ITIME = 1, NTIME
 !$acc data &
 !$acc      & copyin  (D0, &
 !$acc      &          ZSIGQSAT, PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, &
-!$acc      &          PWEIGHT_MF_CLOUD, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, ZRS, ZICE_CLD_WGT) &
+!$acc      &          PWEIGHT_MF_CLOUD, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, ZDUM6, ZDUM7, ZDUM8, ZDUM9, ZRS, ZICE_CLD_WGT) &
 !$acc      & copy    (PRS, PTHS) &
 !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
 !$acc      & create  (PSTACK4, PSTACK8) 
@@ -220,6 +224,8 @@ DO ITIME = 1, NTIME
     INUMPIN = 0
 #endif
 
+    !Workaround for NEC: PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF must be provided to prevent
+    !                    crash during execution, even if they are unused
     CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, PHYEX%PARAM_ICEN, &
     & PHYEX%MISC%TBUCONF, PHYEX%MISC%KRR, PHYEX%MISC%HBUNAME,     &
     & PHYEX%MISC%PTSTEP, ZSIGQSAT (:, IBL), PRHODJ=PRHODJ (:, :, IBL), &
@@ -237,7 +243,9 @@ DO ITIME = 1, NTIME
     & TBUDGETS=PHYEX%MISC%YLBUDGET, KBUDGETS=PHYEX%MISC%NBUDGET,    &
     & PICE_CLD_WGT=ZICE_CLD_WGT(:, IBL),                                                                                     &
     & PHLC_HRC=PHLC_HRC(:, :, IBL), PHLC_HCF=PHLC_HCF(:, :, IBL),                                                         &
-    & PHLI_HRI=PHLI_HRI(:, :, IBL), PHLI_HCF=PHLI_HCF(:, :, IBL)                                                          &
+    & PHLI_HRI=PHLI_HRI(:, :, IBL), PHLI_HCF=PHLI_HCF(:, :, IBL),                                                         &
+    & PHLC_HRC_MF=ZDUM6(:, :, IBL), PHLC_HCF_MF=ZDUM7(:, :, IBL), &
+    & PHLI_HRI_MF=ZDUM8(:, :, IBL), PHLI_HCF_MF=ZDUM9(:, :, IBL) &
 #ifdef USE_STACK
     & , YDSTACK=YLSTACK &
 #endif
