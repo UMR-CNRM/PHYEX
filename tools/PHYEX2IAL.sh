@@ -69,6 +69,7 @@ fi
 
 # Create temporary directory and set up its automatic destruction
 export TMP_LOC=$(mktemp -d --tmpdir=$TMP XXXXXX)
+mkdir $TMP_LOC/PHYEX
 trap "echo Removing now temporary directory $TMP_LOC ; \rm -rf $TMP_LOC" EXIT
 
 # Creates a pack using check_commit_ial.sh script
@@ -88,9 +89,23 @@ fi
 git checkout -b "${BRANCH}" "${IALVERSION}"
 
 # copy the pack created with PHYEX into the IAL branch
+# We force the content of the phyex directory to be exactly the same
+# whereas, for other directories, we do not suppress files except
+# if it is listed in the ignored files section of the ics_masterodb script
 cd $TMP_LOC/PHYEX/*/src/local/
 for rep in *; do
-  rsync -r --delete $rep /home/riette/IAL/
+  if [ $rep == 'phyex' ]; then
+    del="--delete"
+  else
+    del=""
+  fi
+  rsync -r $del $rep ${IALDIRECTORY}
+done
+cd ../..
+for file in $(sed -n "$(grep -n end_of_ignored_files ics_masterodb | \
+                        cut -d: -f 1 | tr '\n' ',' | rev | cut -c 2- | rev)p" ics_masterodb | \
+              head -n -1 | tail -n +2); do
+  rm ${IALDIRECTORY}/$file
 done
 
 # commit
