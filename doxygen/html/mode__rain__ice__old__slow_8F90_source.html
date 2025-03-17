@@ -251,7 +251,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>    <span class="keywordflow">IF</span>(ocnd2)<span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>       pai(:) = paa2(:) + pbb3(:)*ppres(:)</div>
 <div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>    <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>       pai(:) = exp( cst%XALPI - cst%XBETAI/pzt(:) - cst%XGAMI*alog(pzt(:) ) ) <span class="comment">! es_i</span></div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>       pai(:) = exp( cst%XALPI - cst%XBETAI/pzt(:) - cst%XGAMI*log(pzt(:) ) ) <span class="comment">! es_i</span></div>
 <div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>       pai(:) = ( cst%XLSTT + (cst%XCPV-cst%XCI)*(pzt(:)-cst%XTT) )**2 / (pka(:)*cst%XRV*pzt(:)**2) &amp;</div>
 <div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>                                   + ( cst%XRV*pzt(:) ) / (pdv(:)*pai(:))</div>
 <div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span><span class="keywordflow">    ENDIF</span></div>

@@ -731,7 +731,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span>  <span class="keywordflow">IF</span>(ocnd2)<span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span>    zssi(:) = zrvt(:)*( zpres(:)-zesi(:) ) / ( cst%XEPSILO * zesi(:) ) - 1.0</div>
 <div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span>  <span class="keywordflow">ELSE</span>                                                  <span class="comment">! Supersaturation over ice</span></div>
-<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span>    zzw(:) = exp( cst%XALPI - cst%XBETAI/zzt(:) - cst%XGAMI*alog(zzt(:) ) )</div>
+<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span>    zzw(:) = exp( cst%XALPI - cst%XBETAI/zzt(:) - cst%XGAMI*log(zzt(:) ) )</div>
 <div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span>    zssi(:) = zrvt(:)*( zpres(:)-zzw(:) ) / ( cst%XEPSILO * zzw(:) ) - 1.0</div>
 <div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span>                                                    <span class="comment">! Supersaturation over ice</span></div>
 <div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span><span class="keywordflow">  ENDIF</span></div>

@@ -332,7 +332,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>        <span class="keywordflow">DO</span> jk = 1, ksize</div>
 <div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>          <span class="keywordflow">IF</span> ((zrrt(jk) &gt; iced%XRTMIN(3)) .AND. (zrct(jk) &lt;= iced%XRTMIN(2))) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span> </div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>            zzw(jk)  = exp( cst%XALPW - cst%XBETAW/zzt(jk) - cst%XGAMW*alog(zzt(jk) ) ) <span class="comment">! es_w</span></div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>            zzw(jk)  = exp( cst%XALPW - cst%XBETAW/zzt(jk) - cst%XGAMW*log(zzt(jk) ) ) <span class="comment">! es_w</span></div>
 <div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>            zusw(jk) = 1.0 - zrvt(jk)*( zpres(jk)-zzw(jk) ) / ( cst%XEPSILO * zzw(jk) )</div>
 <div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>                                                        <span class="comment">! Undersaturation over water</span></div>
 <div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>            zzw(jk) = (cst%XLVTT+(cst%XCPV-cst%XCL)*(zzt(jk)-cst%XTT))**2 / (zka(jk)*cst%XRV*zzt(jk)**2) &amp;</div>
@@ -405,7 +405,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span>            zzw2(jk) =  zthlt(jk) * zzt(jk) / ztht(jk)</div>
 <div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span> </div>
 <div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span>            <span class="comment">! es_w with new T^u</span></div>
-<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span>            zzw(jk)  = exp(cst%XALPW - cst%XBETAW/zzw2(jk) - cst%XGAMW*alog(zzw2(jk)))</div>
+<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span>            zzw(jk)  = exp(cst%XALPW - cst%XBETAW/zzw2(jk) - cst%XGAMW*log(zzw2(jk)))</div>
 <div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span> </div>
 <div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span>            <span class="comment">! S, Undersaturation over water (with new theta^u)</span></div>
 <div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span>            zusw(jk) = 1.0 - zrvt(jk)*(zpres(jk) - zzw(jk)) / (cst%XEPSILO * zzw(jk))</div>

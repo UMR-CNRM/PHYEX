@@ -267,7 +267,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span><span class="comment">!  Saturation vapor mixing ratio and radiative tendency                    </span></div>
 <div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span><span class="comment">!</span></div>
 <div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>zeps= cst%XMV / cst%XMD</div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>zrvsat(:,:) = zeps / (ppabst(:,:)*exp(-cst%XALPW+cst%XBETAW/pt(:,:)+cst%XGAMW*alog(pt(:,:))) - 1.0)</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>zrvsat(:,:) = zeps / (ppabst(:,:)*exp(-cst%XALPW+cst%XBETAW/pt(:,:)+cst%XGAMW*log(pt(:,:))) - 1.0)</div>
 <div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>ztdt(:,:)   = 0.</div>
 <div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span><span class="keywordflow">IF</span> (limap%LACTIT .AND. <span class="keyword">SIZE</span>(pdthrad).GT.0) ztdt(:,:)   = pdthrad(:,:) * pexnref(:,:)</div>
 <div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="comment">!</span></div>

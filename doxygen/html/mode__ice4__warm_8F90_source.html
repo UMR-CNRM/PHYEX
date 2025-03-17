@@ -258,7 +258,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>  <span class="keywordflow">DO</span> jl=1, ksize</div>
 <div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>    <span class="keywordflow">IF</span>(prrt(jl)&gt;iced%XRTMIN(3) .AND. prct(jl)&lt;=iced%XRTMIN(2) .AND. ldcompute(jl)) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>      <span class="keywordflow">IF</span>(.NOT. ldsoft) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>        prrevav(jl) = exp(cst%XALPW - cst%XBETAW/pt(jl) - cst%XGAMW*alog(pt(jl))) <span class="comment">! es_w</span></div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>        prrevav(jl) = exp(cst%XALPW - cst%XBETAW/pt(jl) - cst%XGAMW*log(pt(jl))) <span class="comment">! es_w</span></div>
 <div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>        zusw(jl) = 1. - prvt(jl)*(ppres(jl)-prrevav(jl)) / (cst%XEPSILO * prrevav(jl)) <span class="comment">! Undersaturation over water</span></div>
 <div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>        prrevav(jl) = (cst%XLVTT+(cst%XCPV-cst%XCL)*(pt(jl)-cst%XTT) )**2 / (pka(jl)*cst%XRV*pt(jl)**2) &amp;</div>
 <div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>                    &amp;+(cst%XRV*pt(jl)) / (pdv(jl)*prrevav(jl))</div>
@@ -305,7 +305,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>        zzw2 =  zthlt(jl) * pt(jl) / ptht(jl)</div>
 <div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>        <span class="comment">!</span></div>
 <div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>        <span class="comment">! es_w with new T^u</span></div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>        prrevav(jl)  = exp(cst%XALPW - cst%XBETAW/zzw2 - cst%XGAMW*alog(zzw2))</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>        prrevav(jl)  = exp(cst%XALPW - cst%XBETAW/zzw2 - cst%XGAMW*log(zzw2))</div>
 <div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>        <span class="comment">!</span></div>
 <div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>        <span class="comment">! S, Undersaturation over water (with new theta^u)</span></div>
 <div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>        zusw(jl) = 1.0 - prvt(jl)*(ppres(jl)-prrevav(jl)) / (cst%XEPSILO * prrevav(jl))</div>

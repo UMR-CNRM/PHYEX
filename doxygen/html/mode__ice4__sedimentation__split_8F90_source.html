@@ -667,11 +667,11 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span>          zwsed(jij, jk) =  icep%XFSEDI * prxt(jij, jk) *  &amp;</div>
 <div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span>                              &amp; prhodref(jij,jk)**(1.-iced%XCEXVT) * &amp; <span class="comment">!    McF&amp;H</span></div>
 <div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>                              &amp; max( 0.05e6,-0.15319e6-0.021454e6* &amp;</div>
-<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>                              &amp;      alog(prhodref(jij,jk)*prxt(jij,jk)) )**icep%XEXCSEDI</div>
+<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>                              &amp;      log(prhodref(jij,jk)*prxt(jij,jk)) )**icep%XEXCSEDI</div>
 <div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span>          <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span>            <span class="comment">! N_ci from McF&amp;H</span></div>
 <div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span>            znci = elecp%XFCI * prhodref(jij,jk) * prxt(jij,jk) * &amp;</div>
-<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span>                          max(0.05e6,-0.15319e6-0.021454e6*alog(prhodref(jij,jk)*prxt(jij,jk)))**3.</div>
+<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span>                          max(0.05e6,-0.15319e6-0.021454e6*log(prhodref(jij,jk)*prxt(jij,jk)))**3.</div>
 <div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>            <span class="comment">! compute e_i of the q - D relationship</span></div>
 <div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>            zext = pqxt(jij,jk) / elecp%XFQUPDI *                         &amp;</div>
 <div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>                  (prhodref(jij,jk) * prxt(jij,jk))**(-elecp%XEXFQUPDI) * &amp;</div>
@@ -680,7 +680,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span>              zwsedq(jij,jk) = elecp%XFQSEDI * zext * prxt(jij,jk) * &amp;</div>
 <div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span>                               prhodref(jij,jk)**(1.-iced%XCEXVT) *  &amp;</div>
 <div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span>                               max( 0.05e6,-0.15319e6-0.021454e6*    &amp; <span class="comment">!    McF&amp;H</span></div>
-<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>                                    alog(prhodref(jij,jk)*prxt(jij,jk)) )**(3.*(1-elecp%XEXQSEDI))</div>
+<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>                                    log(prhodref(jij,jk)*prxt(jij,jk)) )**(3.*(1-elecp%XEXQSEDI))</div>
 <div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>              <span class="keywordflow">IF</span> (osedim_beard) zlbda3(jij,jk) = (2.14e-3 * <a class="code hl_interface" href="interfacemodi__momg_1_1momg.html">momg</a>(iced%XALPHAI,iced%XNUI,1.7) *     &amp;</div>
 <div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>                                                  znci / (prhodref(jij,jk) * prxt(jij,jk)))**0.588235</div>
 <div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span><span class="keywordflow">            ENDIF</span></div>

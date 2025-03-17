@@ -507,7 +507,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00418" name="l00418"></a><span class="lineno">  418</span>            zvec1(ii,ik) = max( 1.0001, min( float(limaw%NAHEN)-0.0001, limaw%XAHENINTP1 * zt(ii,ik) + limaw%XAHENINTP2 ) )</div>
 <div class="line"><a id="l00419" name="l00419"></a><span class="lineno">  419</span>            ivec1(ii,ik) = int( zvec1(ii,ik) )</div>
 <div class="line"><a id="l00420" name="l00420"></a><span class="lineno">  420</span>            zvec1(ii,ik) = zvec1(ii,ik) - float( ivec1(ii,ik) )</div>
-<div class="line"><a id="l00421" name="l00421"></a><span class="lineno">  421</span>            zw(ii,ik) = exp( cst%XALPW - cst%XBETAW/zt(ii,ik) - cst%XGAMW*alog(zt(ii,ik) ) ) <span class="comment">! es_w</span></div>
+<div class="line"><a id="l00421" name="l00421"></a><span class="lineno">  421</span>            zw(ii,ik) = exp( cst%XALPW - cst%XBETAW/zt(ii,ik) - cst%XGAMW*log(zt(ii,ik) ) ) <span class="comment">! es_w</span></div>
 <div class="line"><a id="l00422" name="l00422"></a><span class="lineno">  422</span>            zw(ii,ik) = cst%XMV / cst%XMD * zw(ii,ik) / ( ppabst(ii,ik)-zw(ii,ik) ) </div>
 <div class="line"><a id="l00423" name="l00423"></a><span class="lineno">  423</span>            zs(ii,ik) = zrvs(ii,ik)*ptstep / zw(ii,ik) - 1.</div>
 <div class="line"><a id="l00424" name="l00424"></a><span class="lineno">  424</span>            zw(ii,ik) = zccs(ii,ik)*ptstep/(limaw%XLBC*zccs(ii,ik)/zrcs(ii,ik))**limaw%XLBEXC</div>

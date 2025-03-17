@@ -538,8 +538,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00453" name="l00453"></a><span class="lineno">  453</span>   zls(:) = cst%XLSTT + (cst%XCPV-cst%XCI)*(zt(:)-cst%XTT)</div>
 <div class="line"><a id="l00454" name="l00454"></a><span class="lineno">  454</span>   zlsfact(:) = zls(:)/zw(:)               <span class="comment">! L_s/(Pi_ref*C_ph)</span></div>
 <div class="line"><a id="l00455" name="l00455"></a><span class="lineno">  455</span><span class="comment">!</span></div>
-<div class="line"><a id="l00456" name="l00456"></a><span class="lineno">  456</span>   zevsat(:)  = exp( cst%XALPW - cst%XBETAW/zt(:) - cst%XGAMW*alog(zt(:) ) )</div>
-<div class="line"><a id="l00457" name="l00457"></a><span class="lineno">  457</span>   zeisat(:)  = exp( cst%XALPI - cst%XBETAI/zt(:) - cst%XGAMI*alog(zt(:) ) )</div>
+<div class="line"><a id="l00456" name="l00456"></a><span class="lineno">  456</span>   zevsat(:)  = exp( cst%XALPW - cst%XBETAW/zt(:) - cst%XGAMW*log(zt(:) ) )</div>
+<div class="line"><a id="l00457" name="l00457"></a><span class="lineno">  457</span>   zeisat(:)  = exp( cst%XALPI - cst%XBETAI/zt(:) - cst%XGAMI*log(zt(:) ) )</div>
 <div class="line"><a id="l00458" name="l00458"></a><span class="lineno">  458</span>   <span class="comment">!</span></div>
 <div class="line"><a id="l00459" name="l00459"></a><span class="lineno">  459</span>   zeps= cst%XMV / cst%XMD</div>
 <div class="line"><a id="l00460" name="l00460"></a><span class="lineno">  460</span>   zrvsat(:) = zeps * zevsat(:) / (ppabst(:) - zevsat(:))</div>

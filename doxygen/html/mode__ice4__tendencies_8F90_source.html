@@ -345,7 +345,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span><span class="comment">!$acc loop independent</span></div>
 <div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>  <span class="keywordflow">DO</span> jl=1, ksize</div>
-<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>    zzw = exp(cst%XALPI-cst%XBETAI/zt(jl)-cst%XGAMI*alog(zt(jl)))</div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>    zzw = exp(cst%XALPI-cst%XBETAI/zt(jl)-cst%XGAMI*log(zt(jl)))</div>
 <div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>    pssi(jl) = zvart(jl,<a class="code hl_variable" href="namespacemodd__fields__address.html#ade195eadced458e34c5cf9d0501963e8">irv</a>)*( ppres(jl)-zzw ) / ( cst%XEPSILO * zzw ) - 1.0</div>
 <div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>                                                      <span class="comment">! Supersaturation over ice</span></div>
 <div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>    zka(jl) = 2.38e-2 + 0.0071e-2*(zt(jl)-cst%XTT) <span class="comment">! k_a</span></div>

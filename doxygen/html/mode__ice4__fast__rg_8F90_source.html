@@ -364,7 +364,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>    <span class="keywordflow">IF</span>(.NOT. ldsoft) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>      prg_tend(jl, ifreez1)=prvt(jl)*ppres(jl)/(cst%XEPSILO+prvt(jl)) <span class="comment">! Vapor pressure</span></div>
 <div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>      <span class="keywordflow">IF</span>(parami%LEVLIMIT) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>        prg_tend(jl, ifreez1)=min(prg_tend(jl, ifreez1), exp(cst%XALPI-cst%XBETAI/pt(jl)-cst%XGAMI*alog(pt(jl)))) <span class="comment">! min(ev, es_i(T))</span></div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>        prg_tend(jl, ifreez1)=min(prg_tend(jl, ifreez1), exp(cst%XALPI-cst%XBETAI/pt(jl)-cst%XGAMI*log(pt(jl)))) <span class="comment">! min(ev, es_i(T))</span></div>
 <div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span><span class="keywordflow">      ENDIF</span></div>
 <div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>      prg_tend(jl, ifreez1)=pka(jl)*(cst%XTT-pt(jl)) +                              &amp;</div>
 <div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>               (pdv(jl)*(cst%XLVTT+(cst%XCPV-cst%XCL)*(pt(jl)-cst%XTT)) &amp;</div>
@@ -469,7 +469,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00384" name="l00384"></a><span class="lineno">  384</span>    <span class="keywordflow">IF</span>(.NOT. ldsoft) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00385" name="l00385"></a><span class="lineno">  385</span>      prgmltr(jl)=prvt(jl)*ppres(jl)/(cst%XEPSILO+prvt(jl)) <span class="comment">! Vapor pressure</span></div>
 <div class="line"><a id="l00386" name="l00386"></a><span class="lineno">  386</span>      <span class="keywordflow">IF</span>(parami%LEVLIMIT) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span>        prgmltr(jl)=min(prgmltr(jl), exp(cst%XALPW-cst%XBETAW/pt(jl)-cst%XGAMW*alog(pt(jl)))) <span class="comment">! min(ev, es_w(T))</span></div>
+<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span>        prgmltr(jl)=min(prgmltr(jl), exp(cst%XALPW-cst%XBETAW/pt(jl)-cst%XGAMW*log(pt(jl)))) <span class="comment">! min(ev, es_w(T))</span></div>
 <div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span><span class="keywordflow">      ENDIF</span></div>
 <div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span>      prgmltr(jl)=pka(jl)*(cst%XTT-pt(jl)) +                                 &amp;</div>
 <div class="line"><a id="l00390" name="l00390"></a><span class="lineno">  390</span>                  pdv(jl)*(cst%XLVTT + ( cst%XCPV - cst%XCL ) * ( pt(jl) - cst%XTT )) &amp;</div>
