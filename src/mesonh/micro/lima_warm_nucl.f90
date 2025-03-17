@@ -242,7 +242,7 @@ ZCTMIN(:) = XCTMIN(:) / PTSTEP
 !  Saturation vapor mixing ratio and radiative tendency                    
 !
 ZEPS= XMV / XMD
-ZRVSAT(:,:,:) = ZEPS / (PPABST(:,:,:)*EXP(-XALPW+XBETAW/PT(:,:,:)+XGAMW*ALOG(PT(:,:,:))) - 1.0)
+ZRVSAT(:,:,:) = ZEPS / (PPABST(:,:,:)*EXP(-XALPW+XBETAW/PT(:,:,:)+XGAMW*LOG(PT(:,:,:))) - 1.0)
 ZTDT(:,:,:)   = 0.
 IF (OACTIT .AND. SIZE(PTM).GT.0) ZTDT(:,:,:)   = PTM(:,:,:) * PEXNREF(:,:,:)   ! dThRad
 !

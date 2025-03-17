@@ -418,8 +418,8 @@ DO JITER = 1, ITERMAX
 !     compute the saturation vapor pressures at t+1
 !
       CALL GET_HALO(ZT)
-      ZW1(:,:,:) = EXP(XALPW - XBETAW/ZT(:,:,:) - XGAMW*ALOG(ZT(:,:,:))) ! e_sw
-      ZW2(:,:,:) = EXP(XALPI - XBETAI/ZT(:,:,:) - XGAMI*ALOG(ZT(:,:,:))) ! e_si
+      ZW1(:,:,:) = EXP(XALPW - XBETAW/ZT(:,:,:) - XGAMW*LOG(ZT(:,:,:))) ! e_sw
+      ZW2(:,:,:) = EXP(XALPI - XBETAI/ZT(:,:,:) - XGAMI*LOG(ZT(:,:,:))) ! e_si
       ZW1(:,:,:) = MIN(PPABST(:,:,:)/2.,ZW1(:,:,:))   ! safety limitation
       ZW2(:,:,:) = MIN(PPABST(:,:,:)/2.,ZW2(:,:,:))   ! safety limitation
 !
@@ -474,8 +474,8 @@ DO JITER = 1, ITERMAX
 !
 !*       4.3    compute the saturation vapor pressures at t+1
 !
-    ZW1(:,:,:) = EXP(XALPW - XBETAW / ZT(:,:,:) - XGAMW * ALOG(ZT(:,:,:))) ! e_sw
-    ZW2(:,:,:) = EXP(XALPI - XBETAI / ZT(:,:,:) - XGAMI * ALOG(ZT(:,:,:))) ! e_si
+    ZW1(:,:,:) = EXP(XALPW - XBETAW / ZT(:,:,:) - XGAMW * LOG(ZT(:,:,:))) ! e_sw
+    ZW2(:,:,:) = EXP(XALPI - XBETAI / ZT(:,:,:) - XGAMI * LOG(ZT(:,:,:))) ! e_si
     ZW1(:,:,:) = MIN(PPABST(:,:,:)/2.,ZW1(:,:,:))   ! safety limitation
     ZW2(:,:,:) = MIN(PPABST(:,:,:)/2.,ZW2(:,:,:))   ! safety limitation
 !

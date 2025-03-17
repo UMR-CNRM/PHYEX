@@ -217,7 +217,7 @@ WHERE ( OWORK1(:) )
         ZTMIX(:)  = PTHLCL(:) * ( ZPRESMIX(:) / XP00 ) ** ZRDOCP
         ZEVMIX(:) = PRVLCL(:) * ZPRESMIX(:) / ( PRVLCL(:) + ZEPS )
         ZEVMIX(:) = MAX( 1.E-8, ZEVMIX(:) )
-        ZWORK1(:) = ALOG( ZEVMIX(:) / 613.3 )
+        ZWORK1(:) = LOG( ZEVMIX(:) / 613.3 )
               ! dewpoint temperature
         ZWORK1(:) = ( 4780.8 - 32.19 * ZWORK1(:) ) / ( 17.502 - ZWORK1(:) ) 
               ! adiabatic saturation temperature
@@ -280,8 +280,8 @@ END WHERE
     DO JI = 1, IIE
         JK   = KLCL(JI)
         JKM  = JK - 1
-        ZDP(JI)     = ALOG( ZPLCL(JI) / PPRES(JI,JKM) ) /                     &
-                      ALOG( PPRES(JI,JK) / PPRES(JI,JKM) )
+        ZDP(JI)     = LOG( ZPLCL(JI) / PPRES(JI,JKM) ) /                     &
+                      LOG( PPRES(JI,JK) / PPRES(JI,JKM) )
         ZWORK1(JI)  = PTH(JI,JK)  * ( PPRES(JI,JK) / XP00 ) ** ZRDOCP
         ZWORK2(JI)  = PTH(JI,JKM) * ( PPRES(JI,JKM) / XP00 ) ** ZRDOCP
         ZWORK1(JI)  = ZWORK2(JI) + ( ZWORK1(JI) - ZWORK2(JI) ) * ZDP(JI) 

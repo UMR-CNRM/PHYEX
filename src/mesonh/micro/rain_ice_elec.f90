@@ -650,7 +650,7 @@ IF (IMICRO > 0) THEN
   ALLOCATE(ZUSW(IMICRO))
   ALLOCATE(ZSSI(IMICRO))
 !
-  ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) )
+  ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*LOG(ZZT(:) ) )
   ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( (XMV/XMD) * ZZW(:) ) - 1.0
                                                     ! Supersaturation over ice
 !
@@ -1495,7 +1495,7 @@ REAL :: ZVR, ZVI, ZVS, ZVG, ZETA0, ZK, ZRE0
           ZEIS(JL) = SIGN( MIN(ABS(ZEIS(JL)), XEIMAX), ZEIS(JL))
           ZCIS(JL) = XFCI * ZRHODREFI(JL) * ZRIS(JL) * &
                      MAX(0.05E6,                       &
-                        -0.15319E6 - 0.021454E6 * ALOG(ZRHODREFI(JL) * ZRIS(JL)))**3
+                        -0.15319E6 - 0.021454E6 * LOG(ZRHODREFI(JL) * ZRIS(JL)))**3
           ZLBDAI(JL) = (2.14E-3 * MOMG(XALPHAI,XNUI,1.7) *     &
                         ZCIS(JL) / (ZRHODREFI(JL) * ZRIS(JL)))**0.588235
         END IF
@@ -1536,7 +1536,7 @@ REAL :: ZVR, ZVI, ZVS, ZVG, ZETA0, ZK, ZRE0
                              XFSEDI * ZRIS(JL) *           &
                              ZRHODREFI(JL)**(1.0-XCEXVT) * & !    McF&H
                              MAX( 0.05E6,-0.15319E6-0.021454E6* &
-                             ALOG(ZRHODREFI(JL)*ZRIS(JL)) )**XEXCSEDI
+                             LOG(ZRHODREFI(JL)*ZRIS(JL)) )**XEXCSEDI
         IF (ZRIS(JL) .GT. MAX(ZRTMIN(4),1.0E-7) .AND. ABS(ZEIS(JL)) .GT. XEIMIN .AND. &
             ZCIT(JL) .GT. 0. ) THEN
           ZWSEDQ(II1(JL),II2(JL),II3(JL)) = ZBEARDCOEFI *                      &
@@ -2052,13 +2052,13 @@ REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) :: ZCONC3D !
           ZWSEDW1(JI,JJ,JK) = XFSEDI *                           &
                               PRHODREF(JI,JJ,JK)**(XCEXVT) *     & ! McF&H
                               MAX(0.05E6,-0.15319E6-0.021454E6*  &
-                              ALOG(PRHODREF(JI,JJ,JK)*PRIS(JI,JJ,JK)))**XEXCSEDI
+                              LOG(PRHODREF(JI,JJ,JK)*PRIS(JI,JJ,JK)))**XEXCSEDI
         ENDIF
         IF (ZQP > MAX(ZRTMIN(4),1.0E-7)) THEN
           ZWSEDW2(JI,JJ,JK)= XFSEDI *                           &
                              PRHODREF(JI,JJ,JK)**(XCEXVT) *     & ! McF&H
                              MAX( 0.05E6,-0.15319E6-0.021454E6* &
-                             ALOG(PRHODREF(JI,JJ,JK)*ZQP) )**XEXCSEDI
+                             LOG(PRHODREF(JI,JJ,JK)*ZQP) )**XEXCSEDI
         ENDIF
       ENDDO
       DO JI = IIB, IIE
@@ -2291,11 +2291,11 @@ IF( INEGT >= 1 ) THEN
   ALLOCATE(ZZW(INEGT))
   ALLOCATE(ZUSW(INEGT))
   ALLOCATE(ZSSI(INEGT))
-  ZZW(:) = EXP(XALPI - XBETAI / ZZT(:) - XGAMI * ALOG(ZZT(:)))         ! es_i
+  ZZW(:) = EXP(XALPI - XBETAI / ZZT(:) - XGAMI * LOG(ZZT(:)))         ! es_i
   ZZW(:) = MIN(ZPRES(:) / 2., ZZW(:))             ! safety limitation
   ZSSI(:) = ZRVT(:) * (ZPRES(:) - ZZW(:)) / ((XMV / XMD) * ZZW(:)) - 1.0
                                                   ! Supersaturation over ice
-  ZUSW(:) = EXP(XALPW - XBETAW / ZZT(:) - XGAMW * ALOG(ZZT(:)))        ! es_w
+  ZUSW(:) = EXP(XALPW - XBETAW / ZZT(:) - XGAMW * LOG(ZZT(:)))        ! es_w
   ZUSW(:) = MIN(ZPRES(:) / 2., ZUSW(:))           ! safety limitation
   ZUSW(:) = (ZUSW(:) / ZZW(:)) * ((ZPRES(:) - ZZW(:)) / (ZPRES(:) - ZUSW(:))) - 1.0
                            ! Supersaturation of saturated water vapor over ice
@@ -2457,7 +2457,7 @@ IMPLICIT NONE
 !*       3.5.3.1  compute the thermodynamical function A_i(T,P)
 !*                and the c^prime_j (in the ventilation factor)
 !
-  ZAI(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) ) ! es_i
+  ZAI(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*LOG(ZZT(:) ) ) ! es_i
   ZAI(:) = ( XLSTT + (XCPV-XCI)*(ZZT(:)-XTT) )**2 / (ZKA(:)*XRV*ZZT(:)**2) &
                                  + ( XRV*ZZT(:) ) / (ZDV(:)*ZAI(:))
   ZCJ(:) = XSCFAC * ZRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZZT(:)-XTT) )
@@ -2798,7 +2798,7 @@ REAL :: ZCRIAUTC             ! Critical cloud mixing ratio
 
     ZZW(:) = 0.0
     WHERE ((ZRRT(:) > XRTMIN(3)) .AND. (ZRCT(:) <= XRTMIN(2)))
-      ZZW(:)  = EXP( XALPW - XBETAW/ZZT(:) - XGAMW*ALOG(ZZT(:) ) ) ! es_w
+      ZZW(:)  = EXP( XALPW - XBETAW/ZZT(:) - XGAMW*LOG(ZZT(:) ) ) ! es_w
       ZUSW(:) = 1.0 - ZRVT(:) * (ZPRES(:) - ZZW(:)) / ((XMV / XMD) * ZZW(:)) 
                                                     ! Undersaturation over water
       ZZW(:) = (XLVTT + (XCPV - XCL) * (ZZT(:) - XTT) )**2 / &

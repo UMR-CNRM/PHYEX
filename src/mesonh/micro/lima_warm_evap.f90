@@ -182,7 +182,7 @@ ZCTMIN(:) = XCTMIN(:) / PTSTEP
 !
 ZEPS= XMV / XMD
 ZRVSAT(:,:,:) = ZEPS / (PPABST(:,:,:) * &
-                   EXP(-XALPW+XBETAW/ZT(:,:,:)+XGAMW*ALOG(ZT(:,:,:))) - 1.0)
+                   EXP(-XALPW+XBETAW/ZT(:,:,:)+XGAMW*LOG(ZT(:,:,:))) - 1.0)
 ZLV(:,:,:) = XLVTT + (XCPV-XCL)*(ZT(:,:,:)-XTT)
 !
 GEVAP(:,:,:) = .FALSE.
@@ -247,7 +247,7 @@ IF( IEVAP >= 0 ) THEN
 ! Compute the function G(T)
 !
    ZZW2(:) = 1. / ( XRHOLW*((((ZZLV(:)/ZZT(:))**2)/(XTHCO*XRV)) +          & ! G
-          (XRV*ZZT(:))/(XDIVA*EXP(XALPW-XBETAW/ZZT(:)-XGAMW*ALOG(ZZT(:))))))
+          (XRV*ZZT(:))/(XDIVA*EXP(XALPW-XBETAW/ZZT(:)-XGAMW*LOG(ZZT(:))))))
 !
 ! Compute the evaporation tendency
 !

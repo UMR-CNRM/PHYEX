@@ -247,7 +247,7 @@ MODULE MODE_RAIN_ICE_OLD_WARM
         DO JK = 1, KSIZE
           IF ((ZRRT(JK) > ICED%XRTMIN(3)) .AND. (ZRCT(JK) <= ICED%XRTMIN(2))) THEN
 
-            ZZW(JK)  = EXP( CST%XALPW - CST%XBETAW/ZZT(JK) - CST%XGAMW*ALOG(ZZT(JK) ) ) ! es_w
+            ZZW(JK)  = EXP( CST%XALPW - CST%XBETAW/ZZT(JK) - CST%XGAMW*LOG(ZZT(JK) ) ) ! es_w
             ZUSW(JK) = 1.0 - ZRVT(JK)*( ZPRES(JK)-ZZW(JK) ) / ( CST%XEPSILO * ZZW(JK) )
                                                         ! Undersaturation over water
             ZZW(JK) = (CST%XLVTT+(CST%XCPV-CST%XCL)*(ZZT(JK)-CST%XTT))**2 / (ZKA(JK)*CST%XRV*ZZT(JK)**2) &
@@ -320,7 +320,7 @@ MODULE MODE_RAIN_ICE_OLD_WARM
             ZZW2(JK) =  ZTHLT(JK) * ZZT(JK) / ZTHT(JK)
 
             ! es_w with new T^u
-            ZZW(JK)  = EXP(CST%XALPW - CST%XBETAW/ZZW2(JK) - CST%XGAMW*ALOG(ZZW2(JK)))
+            ZZW(JK)  = EXP(CST%XALPW - CST%XBETAW/ZZW2(JK) - CST%XGAMW*LOG(ZZW2(JK)))
 
             ! S, Undersaturation over water (with new theta^u)
             ZUSW(JK) = 1.0 - ZRVT(JK)*(ZPRES(JK) - ZZW(JK)) / (CST%XEPSILO * ZZW(JK))

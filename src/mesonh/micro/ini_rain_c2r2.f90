@@ -438,7 +438,7 @@ ELSE
     XPSI1(J1) = (XG/(XRD*ZTT))*(XMV*ZLV/(XMD*XCPD*ZTT)-1.)   ! Psi1
     XPSI3(J1) = -1*XMV*ZLV/(XMD*XRD*(ZTT**2))   ! Psi3
     ZG    = 1./( XRHOLW*( (XRV*ZTT)/                                        & !G
-                          (XDIVA*EXP(XALPW-(XBETAW/ZTT)-(XGAMW*ALOG(ZTT)))) &
+                          (XDIVA*EXP(XALPW-(XBETAW/ZTT)-(XGAMW*LOG(ZTT)))) &
                         + (ZLV/ZTT)**2/(XTHCO*XRV) ) )
     XAHENG(J1) = XCSTHEN/(ZG)**(3./2.)
   END DO

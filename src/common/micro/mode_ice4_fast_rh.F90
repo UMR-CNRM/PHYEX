@@ -278,7 +278,7 @@ DO JL=1, KSIZE
     IF(.NOT. LDSOFT) THEN
       PRH_TEND(JL, IFREEZ1)=PRVT(JL)*PPRES(JL)/(CST%XEPSILO+PRVT(JL)) ! Vapor pressure
       IF(PARAMI%LEVLIMIT) THEN
-        PRH_TEND(JL, IFREEZ1)=MIN(PRH_TEND(JL, IFREEZ1), EXP(CST%XALPI-CST%XBETAI/PT(JL)-CST%XGAMI*ALOG(PT(JL)))) ! min(ev, es_i(T))
+        PRH_TEND(JL, IFREEZ1)=MIN(PRH_TEND(JL, IFREEZ1), EXP(CST%XALPI-CST%XBETAI/PT(JL)-CST%XGAMI*LOG(PT(JL)))) ! min(ev, es_i(T))
       ENDIF
       PRH_TEND(JL, IFREEZ1)=PKA(JL)*(CST%XTT-PT(JL)) +                              &
                             (PDV(JL)*(CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(JL)-CST%XTT)) &
@@ -385,7 +385,7 @@ DO JL=1, KSIZE
     IF(.NOT. LDSOFT) THEN
       PRHMLTR(JL) = PRVT(JL)*PPRES(JL)/(CST%XEPSILO+PRVT(JL)) ! Vapor pressure
       IF(PARAMI%LEVLIMIT) THEN
-        PRHMLTR(JL)=MIN(PRHMLTR(JL), EXP(CST%XALPW-CST%XBETAW/PT(JL)-CST%XGAMW*ALOG(PT(JL)))) ! min(ev, es_w(T))
+        PRHMLTR(JL)=MIN(PRHMLTR(JL), EXP(CST%XALPW-CST%XBETAW/PT(JL)-CST%XGAMW*LOG(PT(JL)))) ! min(ev, es_w(T))
       ENDIF
       PRHMLTR(JL) = PKA(JL)*(CST%XTT-PT(JL)) +                              &
                     PDV(JL)*(CST%XLVTT + (CST%XCPV - CST%XCL) * (PT(JL) - CST%XTT)) &

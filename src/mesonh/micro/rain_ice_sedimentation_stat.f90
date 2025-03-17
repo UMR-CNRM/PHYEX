@@ -339,13 +339,13 @@ PINPRR3D (:,:,:) = 0.
          ZWSEDW1 (JI,JJ,JK)= XFSEDI *  &
          &  PRHODREF(JI,JJ,JK)**(XCEXVT) * & !    McF&H
          &  MAX( 0.05E6,-0.15319E6-0.021454E6* &
-         &  ALOG(PRHODREF(JI,JJ,JK)*PRIS(JI,JJ,JK)) )**XEXCSEDI
+         &  LOG(PRHODREF(JI,JJ,JK)*PRIS(JI,JJ,JK)) )**XEXCSEDI
        ENDIF
        IF ( ZQP(JI,JJ) > MAX(ZRTMIN(4),1.0E-7 ) ) THEN
          ZWSEDW2 (JI,JJ,JK)= XFSEDI *  &
          &  PRHODREF(JI,JJ,JK)**(XCEXVT) * & !    McF&H
          &  MAX( 0.05E6,-0.15319E6-0.021454E6* &
-         &  ALOG(PRHODREF(JI,JJ,JK)*ZQP(JI,JJ)) )**XEXCSEDI
+         &  LOG(PRHODREF(JI,JJ,JK)*ZQP(JI,JJ)) )**XEXCSEDI
        ENDIF
      ENDDO
      DO JJ = KJB, KJE

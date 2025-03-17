@@ -360,7 +360,7 @@ IF( IMICRO >= 1 .AND. .NOT.LPTSPLIT) THEN
    ZDV(:) = 0.211E-4 * (ZZT(:)/XTT)**1.94 * (XP00/ZPRES(:)) ! D_v
    ZCJ(:) = XSCFAC * ZRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZZT(:)-XTT) )
 !
-   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) ) ! es_i
+   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*LOG(ZZT(:) ) ) ! es_i
    ZRVSATI(:) = ZEPS*ZZW(:) / ( ZPRES(:)-ZZW(:) )              ! r_si
    ZRVSATI_PRIME(:) = (( XBETAI/ZZT(:) - XGAMI ) / ZZT(:))  &  ! r'_si
                        * ZRVSATI(:) * ( 1. + ZRVSATI(:)/ZEPS )
@@ -405,7 +405,7 @@ IF( IMICRO >= 1 .AND. .NOT.LPTSPLIT) THEN
 !  Implicit ice crystal sublimation if ice saturated conditions are not met
 !
    ZZT(:) = ( ZTHS(:) * PTSTEP ) * ( ZPRES(:) / XP00 ) ** (XRD/XCPD)
-   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) ) ! es_i
+   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*LOG(ZZT(:) ) ) ! es_i
    ZRVSATI(:) = ZEPS*ZZW(:) / ( ZPRES(:)-ZZW(:) )              ! r_si
    WHERE( ZRVS(:)*PTSTEP<ZRVSATI(:) )
       ZZW(:)  = ZRVS(:) + ZRIS(:)
@@ -537,7 +537,7 @@ ENDIF
 !Computation of saturation in the meshes where there is no
 !condensation/evaporation/activation
 WHERE(.NOT.GNUCT(:,:,:) )
- ZRVSAT(:,:,:) = EXP(XALPW-XBETAW/PTHS(:,:,:)-XGAMW*ALOG(PTHS(:,:,:)))
+ ZRVSAT(:,:,:) = EXP(XALPW-XBETAW/PTHS(:,:,:)-XGAMW*LOG(PTHS(:,:,:)))
  !rvsat
  ZRVSAT(:,:,:) = (XMV / XMD)*ZRVSAT(:,:,:)/(PPABSTT(:,:,:)-ZRVSAT(:,:,:))
  ZSAT(:,:,:)   = (PRS(:,:,:,1)/ZRVSAT(:,:,:))-1D0

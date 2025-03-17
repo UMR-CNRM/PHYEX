@@ -646,7 +646,7 @@ IF ( KSIZE >= 0 ) THEN
   IF(OCND2)THEN
     ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZESI(:) ) / ( CST%XEPSILO * ZESI(:) ) - 1.0
   ELSE                                                  ! Supersaturation over ice
-    ZZW(:) = EXP( CST%XALPI - CST%XBETAI/ZZT(:) - CST%XGAMI*ALOG(ZZT(:) ) )
+    ZZW(:) = EXP( CST%XALPI - CST%XBETAI/ZZT(:) - CST%XGAMI*LOG(ZZT(:) ) )
     ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( CST%XEPSILO * ZZW(:) ) - 1.0
                                                     ! Supersaturation over ice
   ENDIF

@@ -260,7 +260,7 @@ ELSE
 !$acc kernels
 !$acc loop independent
   DO JL=1, KSIZE
-    ZZW = EXP(CST%XALPI-CST%XBETAI/ZT(JL)-CST%XGAMI*ALOG(ZT(JL)))
+    ZZW = EXP(CST%XALPI-CST%XBETAI/ZT(JL)-CST%XGAMI*LOG(ZT(JL)))
     PSSI(JL) = ZVART(JL,IRV)*( PPRES(JL)-ZZW ) / ( CST%XEPSILO * ZZW ) - 1.0
                                                       ! Supersaturation over ice
     ZKA(JL) = 2.38E-2 + 0.0071E-2*(ZT(JL)-CST%XTT) ! k_a

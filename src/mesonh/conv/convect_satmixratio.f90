@@ -111,7 +111,7 @@ REAL    :: ZEPS           ! R_d / R_v
     ZEPS      = XRD / XRV
 !
     ZT(:)     = MIN( 400., MAX( PT(:), 10. ) ) ! overflow bound
-    PEW(:)    = EXP( XALPW - XBETAW / ZT(:) - XGAMW * ALOG( ZT(:) ) )
+    PEW(:)    = EXP( XALPW - XBETAW / ZT(:) - XGAMW * LOG( ZT(:) ) )
     PEW(:)    = ZEPS * PEW(:) / ( PPRES(:) - PEW(:) )
 !
     PLV(:)    = XLVTT + ( XCPV - XCL ) * ( ZT(:) - XTT ) ! compute L_v

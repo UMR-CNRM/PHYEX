@@ -581,11 +581,11 @@ DO WHILE (ZANYREMAINT)
           ZWSED(JIJ, JK) =  ICEP%XFSEDI * PRXT(JIJ, JK) *  &
                               & PRHODREF(JIJ,JK)**(1.-ICED%XCEXVT) * & !    McF&H
                               & MAX( 0.05E6,-0.15319E6-0.021454E6* &
-                              &      ALOG(PRHODREF(JIJ,JK)*PRXT(JIJ,JK)) )**ICEP%XEXCSEDI
+                              &      LOG(PRHODREF(JIJ,JK)*PRXT(JIJ,JK)) )**ICEP%XEXCSEDI
           IF (OELEC) THEN
             ! N_ci from McF&H
             ZNCI = ELECP%XFCI * PRHODREF(JIJ,JK) * PRXT(JIJ,JK) * &
-                          MAX(0.05E6,-0.15319E6-0.021454E6*ALOG(PRHODREF(JIJ,JK)*PRXT(JIJ,JK)))**3.
+                          MAX(0.05E6,-0.15319E6-0.021454E6*LOG(PRHODREF(JIJ,JK)*PRXT(JIJ,JK)))**3.
             ! compute e_i of the q - D relationship
             ZEXT = PQXT(JIJ,JK) / ELECP%XFQUPDI *                         &
                   (PRHODREF(JIJ,JK) * PRXT(JIJ,JK))**(-ELECP%XEXFQUPDI) * &
@@ -594,7 +594,7 @@ DO WHILE (ZANYREMAINT)
               ZWSEDQ(JIJ,JK) = ELECP%XFQSEDI * ZEXT * PRXT(JIJ,JK) * &
                                PRHODREF(JIJ,JK)**(1.-ICED%XCEXVT) *  &
                                MAX( 0.05E6,-0.15319E6-0.021454E6*    & !    McF&H
-                                    ALOG(PRHODREF(JIJ,JK)*PRXT(JIJ,JK)) )**(3.*(1-ELECP%XEXQSEDI))
+                                    LOG(PRHODREF(JIJ,JK)*PRXT(JIJ,JK)) )**(3.*(1-ELECP%XEXQSEDI))
               IF (OSEDIM_BEARD) ZLBDA3(JIJ,JK) = (2.14E-3 * MOMG(ICED%XALPHAI,ICED%XNUI,1.7) *     &
                                                   ZNCI / (PRHODREF(JIJ,JK) * PRXT(JIJ,JK)))**0.588235
             ENDIF

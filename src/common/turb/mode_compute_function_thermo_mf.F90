@@ -151,7 +151,7 @@ IF ( KRRL >= 1 ) THEN
   !*      Saturation vapor pressure with respect to water
   !
   ZE(IIJB:IIJE,IKTB:IKTE) =  EXP(CST%XALPW - CST%XBETAW/PT(IIJB:IIJE,IKTB:IKTE) - &
-                                        &CST%XGAMW*ALOG( PT(IIJB:IIJE,IKTB:IKTE) ) )
+                                        &CST%XGAMW*LOG( PT(IIJB:IIJE,IKTB:IKTE) ) )
   !
   !*      Saturation  mixing ratio with respect to water
   !
@@ -198,7 +198,7 @@ IF ( KRRL >= 1 ) THEN
     !*      Saturation vapor pressure with respect to ice
     !
     ZE(IIJB:IIJE,IKTB:IKTE) =  EXP(CST%XALPI - CST%XBETAI/PT(IIJB:IIJE,IKTB:IKTE) - &
-                                          &CST%XGAMI*ALOG( PT(IIJB:IIJE,IKTB:IKTE) ) )
+                                          &CST%XGAMI*LOG( PT(IIJB:IIJE,IKTB:IKTE) ) )
     !
     !*      Saturation  mixing ratio with respect to ice
     !

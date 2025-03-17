@@ -166,7 +166,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     IF(OCND2)THEN
        PAI(:) = PAA2(:) + PBB3(:)*PPRES(:)
     ELSE
-       PAI(:) = EXP( CST%XALPI - CST%XBETAI/PZT(:) - CST%XGAMI*ALOG(PZT(:) ) ) ! es_i
+       PAI(:) = EXP( CST%XALPI - CST%XBETAI/PZT(:) - CST%XGAMI*LOG(PZT(:) ) ) ! es_i
        PAI(:) = ( CST%XLSTT + (CST%XCPV-CST%XCI)*(PZT(:)-CST%XTT) )**2 / (PKA(:)*CST%XRV*PZT(:)**2) &
                                    + ( CST%XRV*PZT(:) ) / (PDV(:)*PAI(:))
     ENDIF

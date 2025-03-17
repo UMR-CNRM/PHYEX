@@ -1817,7 +1817,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !*      1.2 Saturation vapor pressure at t
   !
-  ZRVSAT(IIJB:IIJE,1:IKT) =  EXP( PALP - PBETA/PT(IIJB:IIJE,1:IKT) - PGAM*ALOG( PT(IIJB:IIJE,1:IKT) ) )
+  ZRVSAT(IIJB:IIJE,1:IKT) =  EXP( PALP - PBETA/PT(IIJB:IIJE,1:IKT) - PGAM*LOG( PT(IIJB:IIJE,1:IKT) ) )
   !
   !*      1.3 saturation  mixing ratio at t
   !
@@ -1910,7 +1910,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
   !
   !*      1.2 Saturation vapor pressure at t
   !
-  ZRVSAT(IIJB:IIJE,1:IKT) =  EXP( PALP - PBETA/PT(IIJB:IIJE,1:IKT) - PGAM*ALOG( PT(IIJB:IIJE,1:IKT) ) )
+  ZRVSAT(IIJB:IIJE,1:IKT) =  EXP( PALP - PBETA/PT(IIJB:IIJE,1:IKT) - PGAM*LOG( PT(IIJB:IIJE,1:IKT) ) )
   !
   !*      1.3 saturation  mixing ratio at t
   !

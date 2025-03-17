@@ -86,10 +86,10 @@ REAL          :: ZFACT_CCN, ZFACT_IFN
 ZT(:,:,:) = PTHT(:,:,:)*(PPABST(:,:,:)/XP00)**(XRD/XCPD)
 ZWORK(:,:,:) = PRVT(:,:,:)*PPABST(:,:,:)/((XMV/XMD)+PRVT(:,:,:))
                    ! water vapor partial pressure
-ZREHU(:,:,:) = ZWORK(:,:,:)/EXP( XALPW-XBETAW/ZT(:,:,:)-XGAMW*ALOG(ZT(:,:,:)) )
+ZREHU(:,:,:) = ZWORK(:,:,:)/EXP( XALPW-XBETAW/ZT(:,:,:)-XGAMW*LOG(ZT(:,:,:)) )
                    ! saturation over water
 WHERE ( ZT(:,:,:)<XTT )
-  ZREHU(:,:,:) = ZWORK(:,:,:)/EXP(XALPI-XBETAI/ZT(:,:,:)-XGAMI*ALOG(ZT(:,:,:)))
+  ZREHU(:,:,:) = ZWORK(:,:,:)/EXP(XALPI-XBETAI/ZT(:,:,:)-XGAMI*LOG(ZT(:,:,:)))
                    ! saturation over ice
 END WHERE
 ZREHU(:,:,:) = MIN( 0.99, MAX( 0.01,ZREHU(:,:,:) ) )

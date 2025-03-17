@@ -173,7 +173,7 @@ IF (HSUBG_RR_EVAP=='NONE') THEN
   DO JL=1, KSIZE
     IF(PRRT(JL)>ICED%XRTMIN(3) .AND. PRCT(JL)<=ICED%XRTMIN(2) .AND. LDCOMPUTE(JL)) THEN
       IF(.NOT. LDSOFT) THEN
-        PRREVAV(JL) = EXP(CST%XALPW - CST%XBETAW/PT(JL) - CST%XGAMW*ALOG(PT(JL))) ! es_w
+        PRREVAV(JL) = EXP(CST%XALPW - CST%XBETAW/PT(JL) - CST%XGAMW*LOG(PT(JL))) ! es_w
         ZUSW(JL) = 1. - PRVT(JL)*(PPRES(JL)-PRREVAV(JL)) / (CST%XEPSILO * PRREVAV(JL)) ! Undersaturation over water
         PRREVAV(JL) = (CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(JL)-CST%XTT) )**2 / (PKA(JL)*CST%XRV*PT(JL)**2) &
                     &+(CST%XRV*PT(JL)) / (PDV(JL)*PRREVAV(JL))
@@ -220,7 +220,7 @@ ELSEIF (HSUBG_RR_EVAP=='CLFR' .OR. HSUBG_RR_EVAP=='PRFR') THEN
         ZZW2 =  ZTHLT(JL) * PT(JL) / PTHT(JL)
         !
         ! es_w with new T^u
-        PRREVAV(JL)  = EXP(CST%XALPW - CST%XBETAW/ZZW2 - CST%XGAMW*ALOG(ZZW2))
+        PRREVAV(JL)  = EXP(CST%XALPW - CST%XBETAW/ZZW2 - CST%XGAMW*LOG(ZZW2))
         !
         ! S, Undersaturation over water (with new theta^u)
         ZUSW(JL) = 1.0 - PRVT(JL)*(PPRES(JL)-PRREVAV(JL)) / (CST%XEPSILO * PRREVAV(JL))

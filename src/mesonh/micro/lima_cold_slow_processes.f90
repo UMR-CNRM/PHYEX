@@ -324,7 +324,7 @@ IF( IMICRO >= 1 ) THEN
 !
    ZLSFACT(:) = (XLSTT+(XCPV-XCI)*(ZZT(:)-XTT))/ZZW(:) ! L_s/(Pi_ref*C_ph)
 !
-   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) )
+   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*LOG(ZZT(:) ) )
    ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( (XMV/XMD) * ZZW(:) ) - 1.0
                                                        ! Supersaturation over ice
 ! Distribution parameters for ice and snow

@@ -594,7 +594,7 @@ DO JN = 1 , KSPLITR
       ZWSED (II1(JL),II2(JL),II3(JL)) = XFSEDI * ZRSLOC *                  &
                                         ZRHODREFLOC**(1.0-XCEXVT) *        & !    McF&H
                                         MAX( 0.05E6,-0.15319E6-0.021454E6* &
-                                        ALOG(ZRHODREFLOC*ZRSLOC) )**XEXCSEDI
+                                        LOG(ZRHODREFLOC*ZRSLOC) )**XEXCSEDI
 #else
       ZWSED (II1(JL),II2(JL),II3(JL)) = XFSEDI * ZRSLOC *                          &
                                         BR_POW(ZRHODREFLOC,1.0-XCEXVT) *           & !    McF&H

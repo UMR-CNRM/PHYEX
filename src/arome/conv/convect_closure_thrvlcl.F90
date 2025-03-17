@@ -181,7 +181,7 @@ DO JI=D%NIB,D%NIE
         ZTMIX(JI)  = PTHLCL(JI) * ( ZPRESMIX(JI) / CST%XP00 ) ** ZRDOCP
         ZEVMIX(JI) = PRVLCL(JI) * ZPRESMIX(JI) / ( PRVLCL(JI) + ZEPS )
         ZEVMIX(JI) = MAX( 1.E-8, ZEVMIX(JI) )
-        ZWORK1(JI) = ALOG( ZEVMIX(JI) / 613.3 )
+        ZWORK1(JI) = LOG( ZEVMIX(JI) / 613.3 )
               ! dewpoint temperature
         ZWORK1(JI) = ( 4780.8 - 32.19 * ZWORK1(JI) ) / ( 17.502 - ZWORK1(JI) ) 
               ! adiabatic saturation temperature
@@ -254,8 +254,8 @@ ENDDO
     DO JI = D%NIB, D%NIE
         JK   = KLCL(JI)
         JKM  = JK - 1
-        ZDP(JI)     = ALOG( ZPLCL(JI) / PPRES(JI,JKM) ) /                     &
-                      ALOG( PPRES(JI,JK) / PPRES(JI,JKM) )
+        ZDP(JI)     = LOG( ZPLCL(JI) / PPRES(JI,JKM) ) /                     &
+                      LOG( PPRES(JI,JK) / PPRES(JI,JKM) )
         ZWORK1(JI)  = PTH(JI,JK)  * ( PPRES(JI,JK) / CST%XP00 ) ** ZRDOCP
         ZWORK2(JI)  = PTH(JI,JKM) * ( PPRES(JI,JKM) / CST%XP00 ) ** ZRDOCP
         ZWORK1(JI)  = ZWORK2(JI) + ( ZWORK1(JI) - ZWORK2(JI) ) * ZDP(JI) 

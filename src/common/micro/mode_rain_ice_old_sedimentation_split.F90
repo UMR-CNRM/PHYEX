@@ -364,7 +364,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
           ZWSED(II1(JL),II2(JL))= ICEP%XFSEDI * ZRIS(JL) *  &
                           ZRHODREFI(JL)**(1.0-ICED%XCEXVT) * & !    McF&H
                           MAX( 0.05E6,-0.15319E6-0.021454E6* &
-                          ALOG(ZRHODREFI(JL)*ZRIS(JL)) )**ICEP%XEXCSEDI
+                          LOG(ZRHODREFI(JL)*ZRIS(JL)) )**ICEP%XEXCSEDI
         END DO
       END IF !ISEDIMI
 

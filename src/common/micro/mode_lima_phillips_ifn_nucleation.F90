@@ -197,7 +197,7 @@ ZT(:,:)  = PTHT(:,:) * ( PPABST(:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
 !
 ! Saturation over ice
 !
-ZW(:,:) = EXP( CST%XALPI - CST%XBETAI/ZT(:,:) - CST%XGAMI*ALOG(ZT(:,:) ) )
+ZW(:,:) = EXP( CST%XALPI - CST%XBETAI/ZT(:,:) - CST%XGAMI*LOG(ZT(:,:) ) )
 ZW(:,:) = PRVT(:,:)*( PPABST(:,:)-ZW(:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:,:) )
 !
 !
@@ -293,10 +293,10 @@ IF (INEGT > 0) THEN
    ZLSFACT(:) = (CST%XLSTT+(CST%XCPV-CST%XCI)*ZTCELSIUS(:))/ZZW(:)          ! L_s/(Pi_ref*C_ph)
    ZLVFACT(:) = (CST%XLVTT+(CST%XCPV-CST%XCL)*ZTCELSIUS(:))/ZZW(:)          ! L_v/(Pi_ref*C_ph)
 !
-   ZZW(:)  = EXP( CST%XALPI - CST%XBETAI/ZZT(:) - CST%XGAMI*ALOG(ZZT(:) ) ) ! es_i
+   ZZW(:)  = EXP( CST%XALPI - CST%XBETAI/ZZT(:) - CST%XGAMI*LOG(ZZT(:) ) ) ! es_i
    ZSI(:)  = ZRVT(:)*(ZPRES(:)-ZZW(:))/((CST%XMV/CST%XMD)*ZZW(:))       ! Saturation over ice
 !
-   ZZY(:)  = EXP( CST%XALPW - CST%XBETAW/ZZT(:) - CST%XGAMW*ALOG(ZZT(:) ) ) ! es_w
+   ZZY(:)  = EXP( CST%XALPW - CST%XBETAW/ZZT(:) - CST%XGAMW*LOG(ZZT(:) ) ) ! es_w
    ZSW(:)  = ZRVT(:)*(ZPRES(:)-ZZY(:))/((CST%XMV/CST%XMD)*ZZY(:))       ! Saturation over water
 !
    ZSI_W(:)= ZZY(:)/ZZW(:)     ! Saturation over ice at water saturation: es_w/es_i

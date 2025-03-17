@@ -238,7 +238,7 @@ ZT(:,:,:)  = PTHT(:,:,:) * ( PPABST(:,:,:)/XP00 ) ** (XRD/XCPD)
 !
 ! Saturation over ice
 !
-ZW(:,:,:) = EXP( XALPI - XBETAI/ZT(:,:,:) - XGAMI*ALOG(ZT(:,:,:) ) )
+ZW(:,:,:) = EXP( XALPI - XBETAI/ZT(:,:,:) - XGAMI*LOG(ZT(:,:,:) ) )
 ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (XMV/XMD) * ZW(:,:,:) )
 !
 !
@@ -313,7 +313,7 @@ IF( INEGT >= 1 ) THEN
   ZLSFACT(:) = (XLSTT+(XCPV-XCI)*ZTCELSIUS(:))/ZZW(:) ! L_s/(Pi_ref*C_ph)
   ZLVFACT(:) = (XLVTT+(XCPV-XCL)*ZTCELSIUS(:))/ZZW(:) ! L_v/(Pi_ref*C_ph)
 !
-  ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:)) ) ! es_i
+  ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*LOG(ZZT(:)) ) ! es_i
   ZSSI(:) = ZRVT(:)*(ZPRES(:)-ZZW(:))/((XMV/XMD)*ZZW(:)) - 1.0
                                                     ! Supersaturation over ice
 !

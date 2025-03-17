@@ -325,7 +325,7 @@ END IF
    ZZW(:) = 0.0
    WHERE( (ZRCS(:)>XRTMIN(2)/PTSTEP) .AND. (ZRIS(:)>XRTMIN(4)/PTSTEP) .AND. (ZCIT(:)>XCTMIN(4)) )
       ZZW(:) = EXP( (XALPW-XALPI) - (XBETAW-XBETAI)/ZZT(:)          &
-                                  - (XGAMW-XGAMI)*ALOG(ZZT(:)) ) -1.0 
+                                  - (XGAMW-XGAMI)*LOG(ZZT(:)) ) -1.0 
                                       ! supersaturation of saturated water over ice
       ZZW(:) = MIN( ZRCS(:),( ZZW(:) / ZAI(:) ) * ZCIT(:) *        &
                     ( X0DEPI/ZLBDAI(:)+X2DEPI*ZCJ(:)*ZCJ(:)/ZLBDAI(:)**(XDI+2.0) ) )

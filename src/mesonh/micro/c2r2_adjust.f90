@@ -280,7 +280,7 @@ DO JITER =1,ITERMAX
 !
 !*       2.6    compute the saturation vapor pressure at t+1
 !
-  ZW1(:,:,:) = EXP( XALPW - XBETAW/ZT(:,:,:) - XGAMW*ALOG( ZT(:,:,:) ) )
+  ZW1(:,:,:) = EXP( XALPW - XBETAW/ZT(:,:,:) - XGAMW*LOG( ZT(:,:,:) ) )
 !
 !*       2.7    compute the saturation mixing ratio at t+1
 !

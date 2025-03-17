@@ -219,7 +219,7 @@ CALL MNH_MEM_GET( zz_diff,  SIZE(PLSFACT) )
 !*              and the c^prime_j (in the ventilation factor)
 !
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
-  PAI(:) = EXP( XALPI - XBETAI/PZT(:) - XGAMI*ALOG(PZT(:) ) ) ! es_i
+  PAI(:) = EXP( XALPI - XBETAI/PZT(:) - XGAMI*LOG(PZT(:) ) ) ! es_i
   PAI(:) = ( XLSTT + (XCPV-XCI)*(PZT(:)-XTT) )**2 / (PKA(:)*XRV*PZT(:)**2) &
                                  + ( XRV*PZT(:) ) / (PDV(:)*PAI(:))
   PCJ(:) = XSCFAC * PRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(PZT(:)-XTT) )

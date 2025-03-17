@@ -131,8 +131,8 @@ ZEPS        = CST%XRD / CST%XRV
 !    
 DO JITER = 1,6
   DO JI=D%NIB,D%NIE
-     PEW(JI) = EXP( CST%XALPW - CST%XBETAW / PT(JI) - CST%XGAMW * ALOG( PT(JI) ) )
-     ZEI(JI) = EXP( CST%XALPI - CST%XBETAI / PT(JI) - CST%XGAMI * ALOG( PT(JI) ) )
+     PEW(JI) = EXP( CST%XALPW - CST%XBETAW / PT(JI) - CST%XGAMW * LOG( PT(JI) ) )
+     ZEI(JI) = EXP( CST%XALPI - CST%XBETAI / PT(JI) - CST%XGAMI * LOG( PT(JI) ) )
      PEW(JI) = ZEPS * PEW(JI) / ( PPRES(JI) - PEW(JI) )
      ZEI(JI) = ZEPS * ZEI(JI) / ( PPRES(JI) - ZEI(JI) )    
 !

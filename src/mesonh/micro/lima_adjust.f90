@@ -537,7 +537,7 @@ IF( IMICRO >= 1 ) THEN
    ZDV(:) = 0.211E-4 * (ZZT(:)/XTT)**1.94 * (XP00/ZPRES(:)) ! D_v
    ZCJ(:) = XSCFAC * ZRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZZT(:)-XTT) )
 !
-   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) ) ! es_i
+   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*LOG(ZZT(:) ) ) ! es_i
    ZRVSATI(:) = ZEPS*ZZW(:) / ( ZPRES(:)-ZZW(:) )              ! r_si
    ZRVSATI_PRIME(:) = (( XBETAI/ZZT(:) - XGAMI ) / ZZT(:))  &  ! r'_si
                        * ZRVSATI(:) * ( 1. + ZRVSATI(:)/ZEPS )
@@ -582,7 +582,7 @@ IF( IMICRO >= 1 ) THEN
 !  Implicit ice crystal sublimation if ice saturated conditions are not met
 !
    ZZT(:) = ( ZTHS(:) * ZDT ) * ( ZPRES(:) / XP00 ) ** (XRD/XCPD)
-   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) ) ! es_i
+   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*LOG(ZZT(:) ) ) ! es_i
    ZRVSATI(:) = ZEPS*ZZW(:) / ( ZPRES(:)-ZZW(:) )              ! r_si
    WHERE( ZRVS(:)*ZDT<ZRVSATI(:) )
       ZZW(:)  = ZRVS(:) + ZRIS(:)
@@ -676,7 +676,7 @@ IF( IMICRO >= 1 ) THEN
    ALLOCATE(ZCND(IMICRO))
    ALLOCATE(ZRVSATW(IMICRO))
    ZLVFACT(:) = (XLVTT+(XCPV-XCL)*(ZZT(:)-XTT))/ZZCPH(:) ! L_v/C_ph
-   ZZW(:) = EXP( XALPW - XBETAW/ZZT(:) - XGAMW*ALOG(ZZT(:) ) ) ! es_w
+   ZZW(:) = EXP( XALPW - XBETAW/ZZT(:) - XGAMW*LOG(ZZT(:) ) ) ! es_w
    ZRVSATW(:) = ZEPS*ZZW(:) / ( ZPRES(:)-ZZW(:) )              ! r_sw
    
    IF (LADJ) THEN
@@ -832,14 +832,14 @@ IF( IMICRO >= 1 ) THEN
 !
 !*       6.2    implicit adjustment at water saturation
 !
-   ZZW(:) = EXP( XALPW - XBETAW/ZZT(:) - XGAMW*ALOG(ZZT(:) ) ) ! es_w
+   ZZW(:) = EXP( XALPW - XBETAW/ZZT(:) - XGAMW*LOG(ZZT(:) ) ) ! es_w
    ZRVSATW(:) = ZEPS*ZZW(:) / ( ZPRES(:)-ZZW(:) )              ! r_sw
    ZRVSATW_PRIME(:) = (( XBETAW/ZZT(:) - XGAMW ) / ZZT(:))  &  ! r'_sw
                       * ZRVSATW(:) * ( 1. + ZRVSATW(:)/ZEPS )
    ZDELTW(:) = ABS( ZRVS(:)*ZDT - ZRVSATW(:) )
    ZAW(:) = ( XLSTT + (XCPV-XCL)*(ZZT(:)-XTT) )**2 / (ZKA(:)*XRV*ZZT(:)**2) &
                                   + ( XRV*ZZT(:) ) / (ZDV(:)*ZZW(:))
-   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) ) ! es_i
+   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*LOG(ZZT(:) ) ) ! es_i
    ZRVSATI(:) = ZEPS*ZZW(:) / ( ZPRES(:)-ZZW(:) )              ! r_si
    ZRVSATI_PRIME(:) = (( XBETAI/ZZT(:) - XGAMI ) / ZZT(:))  &  ! r'_si
                       * ZRVSATI(:) * ( 1. + ZRVSATI(:)/ZEPS )
@@ -918,7 +918,7 @@ IF( IMICRO >= 1 ) THEN
 !*       6.3    explicit integration of the final eva/dep rates
 !
    ZZT(:) = ( ZTHS(:) * ZDT ) * ( ZPRES(:) / XP00 ) ** (XRD/XCPD)
-   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) ) ! es_i
+   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*LOG(ZZT(:) ) ) ! es_i
    ZRVSATI(:) = ZEPS*ZZW(:) / ( ZPRES(:)-ZZW(:) )              ! r_si
 !
 !  If Si < 0, implicit adjustment to Si=0 using ice only
@@ -942,7 +942,7 @@ IF( IMICRO >= 1 ) THEN
    ZDV(:) = 0.211E-4 * (ZZT(:)/XTT)**1.94 * (XP00/ZPRES(:)) ! D_v
    ZCJ(:) = XSCFAC * ZRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZZT(:)-XTT) )
 !
-   ZZW(:) = EXP( XALPW - XBETAW/ZZT(:) - XGAMW*ALOG(ZZT(:) ) ) ! es_w
+   ZZW(:) = EXP( XALPW - XBETAW/ZZT(:) - XGAMW*LOG(ZZT(:) ) ) ! es_w
    ZRVSATW(:) = ZEPS*ZZW(:) / ( ZPRES(:)-ZZW(:) )              ! r_sw
    ZRVSATW_PRIME(:) = (( XBETAW/ZZT(:) - XGAMW ) / ZZT(:))  &  ! r'_sw
                       * ZRVSATW(:) * ( 1. + ZRVSATW(:)/ZEPS )
@@ -950,7 +950,7 @@ IF( IMICRO >= 1 ) THEN
    ZAW(:) = ( XLSTT + (XCPV-XCL)*(ZZT(:)-XTT) )**2 / (ZKA(:)*XRV*ZZT(:)**2) &
                                   + ( XRV*ZZT(:) ) / (ZDV(:)*ZZW(:))
 !
-   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) ) ! es_i
+   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*LOG(ZZT(:) ) ) ! es_i
    ZRVSATI(:) = ZEPS*ZZW(:) / ( ZPRES(:)-ZZW(:) )              ! r_si
    ZRVSATI_PRIME(:) = (( XBETAI/ZZT(:) - XGAMI ) / ZZT(:))  &  ! r'_si
                       * ZRVSATI(:) * ( 1. + ZRVSATI(:)/ZEPS )
@@ -1018,7 +1018,7 @@ IF( IMICRO >= 1 ) THEN
    ZZT(:) = ( ZTHS(:) * ZDT ) * ( ZPRES(:) / XP00 ) ** (XRD/XCPD)
    ZLVFACT(:) = (XLVTT+(XCPV-XCL)*(ZZT(:)-XTT))/ZZCPH(:) ! L_v/C_ph
    ZLSFACT(:) = (XLSTT+(XCPV-XCI)*(ZZT(:)-XTT))/ZZCPH(:) ! L_s/C_ph   
-   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) ) ! es_i
+   ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*LOG(ZZT(:) ) ) ! es_i
    ZRVSATI(:) = ZEPS*ZZW(:) / ( ZPRES(:)-ZZW(:) )              ! r_si
    WHERE( ZRVS(:)*ZDT<ZRVSATI(:) )
       ZZW(:)  = ZRVS(:) + ZRIS(:)
@@ -1255,7 +1255,7 @@ END IF
 !
 IF ( tpfile%lopened ) THEN
   ZT(:,:,:) = ( PTHS(:,:,:) * ZDT ) * ZEXNS(:,:,:)
-  ZW(:,:,:) = EXP( XALPI - XBETAI/ZT(:,:,:) - XGAMI*ALOG(ZT(:,:,:) ) )
+  ZW(:,:,:) = EXP( XALPI - XBETAI/ZT(:,:,:) - XGAMI*LOG(ZT(:,:,:) ) )
   ZW1(:,:,:)= PPABSTT(:,:,:)
   ZW(:,:,:) = PRVT(:,:,:)*( ZW1(:,:,:)-ZW(:,:,:) ) / ( (XMV/XMD) * ZW(:,:,:) ) - 1.0
 

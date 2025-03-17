@@ -75,7 +75,7 @@ REAL :: ZT      ! temperature
 !-------------------------------------------------------------------------------
 !
     ZT     = MIN( 400., MAX( PT, 10. ) ) ! overflow bound
-    PEW    = EXP( CST%XALPW - CST%XBETAW / ZT - CST%XGAMW * ALOG( ZT ) )
+    PEW    = EXP( CST%XALPW - CST%XBETAW / ZT - CST%XGAMW * LOG( ZT ) )
     PEW    = PEPS * PEW / ( PPRES - PEW )
 !
     PLV    = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZT - CST%XTT ) ! compute L_v

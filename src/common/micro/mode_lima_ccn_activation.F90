@@ -182,7 +182,7 @@ IF (LHOOK) CALL DR_HOOK('LIMA_CCN_ACTIVATION', 0, ZHOOK_HANDLE)
 !  Saturation vapor mixing ratio and radiative tendency                    
 !
 ZEPS= CST%XMV / CST%XMD
-ZRVSAT(:,:) = ZEPS / (PPABST(:,:)*EXP(-CST%XALPW+CST%XBETAW/PT(:,:)+CST%XGAMW*ALOG(PT(:,:))) - 1.0)
+ZRVSAT(:,:) = ZEPS / (PPABST(:,:)*EXP(-CST%XALPW+CST%XBETAW/PT(:,:)+CST%XGAMW*LOG(PT(:,:))) - 1.0)
 ZTDT(:,:)   = 0.
 IF (LIMAP%LACTIT .AND. SIZE(PDTHRAD).GT.0) ZTDT(:,:)   = PDTHRAD(:,:) * PEXNREF(:,:)
 !

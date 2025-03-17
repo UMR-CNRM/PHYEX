@@ -168,8 +168,8 @@ ZEPS        = XRD / XRV
 !               ------------------------
 !    
 DO JITER = 1,6
-     PEW(:) = EXP( XALPW - XBETAW / PT(:) - XGAMW * ALOG( PT(:) ) )
-     ZEI(:) = EXP( XALPI - XBETAI / PT(:) - XGAMI * ALOG( PT(:) ) )
+     PEW(:) = EXP( XALPW - XBETAW / PT(:) - XGAMW * LOG( PT(:) ) )
+     ZEI(:) = EXP( XALPI - XBETAI / PT(:) - XGAMI * LOG( PT(:) ) )
      PEW(:) = ZEPS * PEW(:) / ( PPRES(:) - PEW(:) )
      ZEI(:) = ZEPS * ZEI(:) / ( PPRES(:) - ZEI(:) )    
 !

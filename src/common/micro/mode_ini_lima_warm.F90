@@ -291,7 +291,7 @@ DO I1 = 1,NAHEN
    XPSI1(I1) = (XG/(XRD*ZTT))*(XMV*ZLV/(XMD*XCPD*ZTT)-1.)                    ! Psi1
    XPSI3(I1) = -1*XMV*ZLV/(XMD*XRD*(ZTT**2))                                 ! Psi3
    ZG    = 1./( XRHOLW*( (XRV*ZTT)/                                        & ! G
-                         (XDIVA*EXP(XALPW-(XBETAW/ZTT)-(XGAMW*ALOG(ZTT)))) &
+                         (XDIVA*EXP(XALPW-(XBETAW/ZTT)-(XGAMW*LOG(ZTT)))) &
                        + (ZLV/ZTT)**2/(XTHCO*XRV) ) )              
    XAHENG(I1) = XCSTHEN/(ZG)**(3./2.)
    XAHENG2(I1) = 1/(ZG)**(1./2.) * GAMMA_X0D(XNUC+1./XALPHAC)/GAMMA_X0D(XNUC)

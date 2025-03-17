@@ -35,7 +35,7 @@ CONTAINS
 !
   REAL FUNCTION ESATW(TT)
     REAL,INTENT(IN) :: TT
-    ESATW = EXP( XALPW - XBETAW/TT - XGAMW*ALOG(TT) )
+    ESATW = EXP( XALPW - XBETAW/TT - XGAMW*LOG(TT) )
   END FUNCTION ESATW
 !      
 !     pure saturation pressure over ice for tt <0 C,
@@ -43,8 +43,8 @@ CONTAINS
 !
   REAL FUNCTION ESATI(TT)
     REAL,INTENT(IN) :: TT
-    ESATI = ( 0.5 + SIGN(0.5,TT-XTT) )*EXP( XALPW - XBETAW/TT - XGAMW*ALOG(TT) ) - &
-         &   ( SIGN(0.5,TT-XTT) - 0.5)*EXP( XALPI - XBETAI/TT - XGAMI*ALOG(TT) )
+    ESATI = ( 0.5 + SIGN(0.5,TT-XTT) )*EXP( XALPW - XBETAW/TT - XGAMW*LOG(TT) ) - &
+         &   ( SIGN(0.5,TT-XTT) - 0.5)*EXP( XALPI - XBETAI/TT - XGAMI*LOG(TT) )
   END FUNCTION ESATI
 !
 !     pure saturation pressure over water

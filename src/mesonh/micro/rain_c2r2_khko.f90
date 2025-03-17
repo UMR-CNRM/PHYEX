@@ -620,7 +620,7 @@ end if
 !  
 ZEPS= XMV / XMD
 ZRVSAT(:,:,:) = ZEPS / (PPABST(:,:,:) * &
-                   EXP(-XALPW+XBETAW/ZT(:,:,:)+XGAMW*ALOG(ZT(:,:,:))) - 1.0)
+                   EXP(-XALPW+XBETAW/ZT(:,:,:)+XGAMW*LOG(ZT(:,:,:))) - 1.0)
 ZZW1LOG(:,:,:)= 0. ! supersaturation
 ZTDT(:,:,:)   = 0.
 ZDRC(:,:,:)   = 0.
@@ -945,7 +945,7 @@ ZEPS= XMV / XMD
 !
 !
 ZRVSAT(:,:,:) = ZEPS / (PPABST(:,:,:) * &
-                   EXP(-XALPW+XBETAW/ZT(:,:,:)+XGAMW*ALOG(ZT(:,:,:))) - 1.0)
+                   EXP(-XALPW+XBETAW/ZT(:,:,:)+XGAMW*LOG(ZT(:,:,:))) - 1.0)
 ZZW1LOG(:,:,:)= 0. ! supersaturation
 ZTDT(:,:,:)   = 0.
 ZDRC(:,:,:)   = 0.
@@ -1583,7 +1583,7 @@ IF( IEVAP >= 1 ) THEN
 !*       5.2  Compute the function G(T)
 !
   ZZW2(:) = 1. / ( XRHOLW*((((ZZLV(:)/ZZT(:))**2)/(XTHCO*XRV)) +          & ! G
-          (XRV*ZZT(:))/(XDIVA*EXP(XALPW-XBETAW/ZZT(:)-XGAMW*ALOG(ZZT(:))))))
+          (XRV*ZZT(:))/(XDIVA*EXP(XALPW-XBETAW/ZZT(:)-XGAMW*LOG(ZZT(:))))))
 !
 !*       5.3  Compute the evaporation tendency
 !

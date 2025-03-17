@@ -318,7 +318,7 @@ CONTAINS
           ZWSEDW1= ICEP%XFSEDI *  &
                             & PRHODREF(JIJ,JK)**(-ICED%XCEXVT) * & !    McF&H
                             & MAX( 0.05E6,-0.15319E6-0.021454E6* &
-                            &      ALOG(PRHODREF(JIJ,JK)*PRXT(JIJ)) )**ICEP%XEXCSEDI
+                            &      LOG(PRHODREF(JIJ,JK)*PRXT(JIJ)) )**ICEP%XEXCSEDI
         ELSE
           ZWSEDW1=0.
         ENDIF
@@ -326,7 +326,7 @@ CONTAINS
           ZWSEDW2= ICEP%XFSEDI *  &
                             & PRHODREF(JIJ,JK)**(-ICED%XCEXVT) * & !    McF&H
                             & MAX( 0.05E6,-0.15319E6-0.021454E6* &
-                            &      ALOG(PRHODREF(JIJ,JK)*ZQP) )**ICEP%XEXCSEDI
+                            &      LOG(PRHODREF(JIJ,JK)*ZQP) )**ICEP%XEXCSEDI
         ELSE
           ZWSEDW2=0.
         ENDIF

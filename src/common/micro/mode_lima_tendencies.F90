@@ -453,8 +453,8 @@ WHERE (ODCOMPUTE(:))
    ZLS(:) = CST%XLSTT + (CST%XCPV-CST%XCI)*(ZT(:)-CST%XTT)
    ZLSFACT(:) = ZLS(:)/ZW(:)               ! L_s/(Pi_ref*C_ph)
 !
-   ZEVSAT(:)  = EXP( CST%XALPW - CST%XBETAW/ZT(:) - CST%XGAMW*ALOG(ZT(:) ) )
-   ZEISAT(:)  = EXP( CST%XALPI - CST%XBETAI/ZT(:) - CST%XGAMI*ALOG(ZT(:) ) )
+   ZEVSAT(:)  = EXP( CST%XALPW - CST%XBETAW/ZT(:) - CST%XGAMW*LOG(ZT(:) ) )
+   ZEISAT(:)  = EXP( CST%XALPI - CST%XBETAI/ZT(:) - CST%XGAMI*LOG(ZT(:) ) )
    !
    ZEPS= CST%XMV / CST%XMD
    ZRVSAT(:) = ZEPS * ZEVSAT(:) / (PPABST(:) - ZEVSAT(:))

@@ -336,7 +336,7 @@ CALL CONVECT_SATMIXRATIO( KLON, ZWORK4, ZDT, ZWORK3, ZLV, ZLS, ZCPH )
       ! compute envir. saturated theta_e for melting corrected temperature
     ZWORK1(:) = MIN( ZWORK2(:), ZWORK3(:) )
     ZWORK3(:) = ZWORK3(:) * ZWORK4(:) / ( ZWORK3(:) + ZEPS ) ! sat. pressure
-    ZWORK3(:) = ALOG( ZWORK3(:) / 613.3 )
+    ZWORK3(:) = LOG( ZWORK3(:) / 613.3 )
               ! dewp point temperature
     ZWORK3(:) = ( 4780.8 - 32.19 * ZWORK3(:) ) / ( 17.502 - ZWORK3(:) )
               ! adiabatic saturation temperature

@@ -154,13 +154,13 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
       ELSE
 
         DO JL = 1, KSIZE
-          ZZW(JL)  = EXP( CST%XALPI - CST%XBETAI/ZZT(JL) - CST%XGAMI*ALOG(ZZT(JL))) ! es_i
+          ZZW(JL)  = EXP( CST%XALPI - CST%XBETAI/ZZT(JL) - CST%XGAMI*LOG(ZZT(JL))) ! es_i
           ZZW(JL)  = MIN(ZPRES(JL)/2., ZZW(JL))             ! safety limitation
           ZSSI(JL) = ZRVT(JL)*( ZPRES(JL)-ZZW(JL) ) / ( CST%XEPSILO * ZZW(JL) ) - 1.0
         ENDDO
                                                       ! Supersaturation over ice
         DO JL = 1, KSIZE
-          ZUSW(JL) = EXP( CST%XALPW - CST%XBETAW/ZZT(JL) - CST%XGAMW*ALOG(ZZT(JL)))  ! es_w
+          ZUSW(JL) = EXP( CST%XALPW - CST%XBETAW/ZZT(JL) - CST%XGAMW*LOG(ZZT(JL)))  ! es_w
           ZUSW(JL) = MIN(ZPRES(JL)/2.,ZUSW(JL))            ! safety limitation
                              ! Supersaturation of saturated water vapor over ice
           ZUSW(JL) = (ZUSW(JL)/ZZW(JL))*((ZPRES(JL)-ZZW(JL))/(ZPRES(JL)-ZUSW(JL))) - 1.0

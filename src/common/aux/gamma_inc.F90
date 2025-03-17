@@ -95,7 +95,7 @@ IF( (PX.LT.PA+1.0) ) THEN
                      ' by the series method')
     END IF
   END DO LOOP_SERIES
-  PGAMMA_INC = ZSUM * EXP( -PX+PA*ALOG(PX)-ALOG(GAMMA(PA)) )
+  PGAMMA_INC = ZSUM * EXP( -PX+PA*LOG(PX)-LOG(GAMMA(PA)) )
 !
   ELSE
 !
@@ -127,7 +127,7 @@ IF( (PX.LT.PA+1.0) ) THEN
                      ' by the continuous fraction method')
     END IF
   END DO LOOP_FRACTION
-  PGAMMA_INC = 1.0 - ZH*EXP( -PX+PA*ALOG(PX)-ALOG(GAMMA(PA)) )
+  PGAMMA_INC = 1.0 - ZH*EXP( -PX+PA*LOG(PX)-LOG(GAMMA(PA)) )
 !
 END IF
 !

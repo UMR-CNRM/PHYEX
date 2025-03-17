@@ -72,7 +72,7 @@ ZUSW(:)=0.
 ZZW(:)=0.
 !$mnh_expand_where(II=1:KSIZE)
 WHERE(GNEGT(:))
-  ZZW(:)=ALOG(PT(:))
+  ZZW(:)=LOG(PT(:))
   ZUSW(:)=EXP(CST%XALPW - CST%XBETAW/PT(:) - CST%XGAMW*ZZW(:))          ! es_w
   ZZW(:)=EXP(CST%XALPI - CST%XBETAI/PT(:) - CST%XGAMI*ZZW(:))           ! es_i
 END WHERE

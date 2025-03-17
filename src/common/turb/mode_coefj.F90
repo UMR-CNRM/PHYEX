@@ -97,7 +97,7 @@ ZL(:,:,:) = XLVTT + ( XCPV - XCL ) * ( ZTL(:,:,:) -XTT )
 !
 ZEPS      = XMV/XMD
 ZP(:,:,:) = (PEXNREF(:,:,:)**(XCPD/XRD))*XP00
-ZES(:,:,:)  = EXP( XALPW - XBETAW/ZTL(:,:,:) - XGAMW*ALOG(ZTL(:,:,:) ) )
+ZES(:,:,:)  = EXP( XALPW - XBETAW/ZTL(:,:,:) - XGAMW*LOG(ZTL(:,:,:) ) )
 ZRVS(:,:,:) =  ZES(:,:,:) * ZEPS / ( ZP(:,:,:) - ZES(:,:,:) )             
 !
 !        4. RESULT FOR rc only
@@ -118,7 +118,7 @@ IF(PRESENT(PFRAC_ICE)) THEN
 !*       6. COMPUTATION OF rvs(Tl)
 !           ----------------------
 !
-  ZES(:,:,:)  = EXP( XALPI - XBETAI/ZTL(:,:,:) - XGAMI*ALOG(ZTL(:,:,:) ) )
+  ZES(:,:,:)  = EXP( XALPI - XBETAI/ZTL(:,:,:) - XGAMI*LOG(ZTL(:,:,:) ) )
   ZRVS(:,:,:) =  ZES(:,:,:) * ZEPS / ( ZP(:,:,:) - ZES(:,:,:) )
 !
 !        7. RESULT FOR rc and ri

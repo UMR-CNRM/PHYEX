@@ -294,7 +294,7 @@ zzw(JL) = 0.
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)       
        !$mnh_expand_where(JL=1:JLU)
        WHERE( GWORK(:) )
-          ZZW(:)  = EXP( XALPW - XBETAW/PZT(:) - XGAMW*ALOG(PZT(:) ) ) ! es_w
+          ZZW(:)  = EXP( XALPW - XBETAW/PZT(:) - XGAMW*LOG(PZT(:) ) ) ! es_w
           PUSW(:) = 1.0 - PRVT(:)*( PPRES(:)-ZZW(:) ) / ( (XMV/XMD) * ZZW(:) )
                                                         ! Undersaturation over water
           ZZW(:) = ( XLVTT+(XCPV-XCL)*(PZT(:)-XTT) )**2 / ( PKA(:)*XRV*PZT(:)**2 ) &
@@ -371,7 +371,7 @@ IF (CSUBG_RR_EVAP=='CLFR') GCSUBG_RR_EVAP=.true.
         !
         ! es_w with new T^u
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
-        ZZW(JL)  = EXP( XALPW - XBETAW/ZZW2(JL) - XGAMW*ALOG(ZZW2(JL) ) )
+        ZZW(JL)  = EXP( XALPW - XBETAW/ZZW2(JL) - XGAMW*LOG(ZZW2(JL) ) )
 #else
         ZZW(JL)  = BR_EXP( XALPW - XBETAW/ZZW2(JL) - XGAMW*BR_LOG(ZZW2(JL) ) )
 #endif
