@@ -69,7 +69,7 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_CFRZ
 !*       0.2   Declarations of local variables :
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-REAL, DIMENSION(SIZE(PRRT)) :: ZW1, ZW2 ! work arrays
+REAL, DIMENSION(SIZE(PRRT)) :: ZW0, ZW1, ZW2, ZW3 ! work arrays
 !
 !-------------------------------------------------------------------------------
 !
@@ -85,8 +85,10 @@ P_CR_CFRZ(:)=0.
 P_RI_CFRZ(:)=0.
 P_CI_CFRZ(:)=0.
 !
+ZW0(:)=0.
 ZW1(:)=0.
 ZW2(:)=0.
+ZW3(:)=0.
 !
 WHERE( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRRT(:)>LIMAP%XRTMIN(3) .AND. PT(:)<CST%XTT .AND. &
        PCIT(:)>LIMAP%XCTMIN(4) .AND. PCRT(:)>LIMAP%XCTMIN(3) .AND. ODCOMPUTE(:) )
@@ -99,10 +101,18 @@ WHERE( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRRT(:)>LIMAP%XRTMIN(3) .AND. PT(:)<CST%XTT
                                      * PLBDR(:)**LIMAM%XEXRCFRI         &
                                      * PRHODREF(:)**(-LIMAP%XCEXVT-1.0)
 !
-   P_RR_CFRZ(:) = - ZW2(:)
-   P_CR_CFRZ(:) = - ZW2(:) * (PCRT(:)/PRRT(:))
-   P_RI_CFRZ(:) = - ZW1(:)
-   P_CI_CFRZ(:) = - ZW1(:) * (PCIT(:)/PRIT(:))
+! Comparison between heat to be released (to freeze rain) and heat sink (rain and ice temperature change)
+! ZW0 is the proportion of process that can take place
+   ZW0(:) = MAX(0., MIN(1., (ZW1(:)*CST%XCI+ZW2(:)*CST%XCL)*(CST%XTT-PT(:)) / &
+        MAX(1.E-20, CST%XLVTT*PRRCFRIG(:))))
+   ZW2(:) = ZW0(:) * ZW2(:)       ! Part of rain that can be frozen
+   ZW3(:) = (1.- ZW0(:)) * ZW1(:) ! Part of collected pristine ice converted to rain
+   ZW1(:) = ZW0(:) * ZW1(:)       ! Part of collected pristine ice that leads to graupel
+!   
+   P_RR_CFRZ(:) = - ZW2(:) + ZW3(:)
+   P_CR_CFRZ(:) =   P_RR_CFRZ(:) * (PCRT(:)/PRRT(:))
+   P_RI_CFRZ(:) = - ZW1(:) - ZW3(:)
+   P_CI_CFRZ(:) =   P_RI_CFRZ(:) * (PCIT(:)/PRIT(:))
    P_TH_CFRZ(:) = - P_RR_CFRZ(:) * (PLSFACT(:)-PLVFACT(:))
 !
 END WHERE
