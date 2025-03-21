@@ -15,6 +15,8 @@ SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV, D, CST, NEBN,         &
                   PAERO,PSOLORG, PMI, PTHS, PRS, PSVS,                    &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
                   PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
+                  PHLC_HCF, PHLC_HRC,                                     &
+                  PHLI_HCF, PHLI_HRI,                                     &
                   PLATHAM_IAGGS, PEFIELDW, PSV_ELEC_T, PSV_ELEC_S         )
 !     #####################################################################
 !
@@ -51,10 +53,10 @@ SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV, D, CST, NEBN,         &
 !
 !*       0.    DECLARATIONS
 !              ------------
-USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
+USE MODD_PARAM_LIMA_MIXED,ONLY:PARAM_LIMA_MIXED_T
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
-USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE MODD_PARAM_LIMA,      ONLY:PARAM_LIMA_T
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
 USE MODD_RAIN_ICE_DESCR_N,ONLY: RAIN_ICE_DESCR_T
 USE MODD_RAIN_ICE_PARAM_N,ONLY: RAIN_ICE_PARAM_T
@@ -68,6 +70,8 @@ USE MODD_NEB_N,           ONLY: NEB_T
 USE MODE_BUDGET_PHY,      ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 USE MODE_TOOLS,           only: COUNTJV
 
+USE MODE_LIMA_COMPUTE_PDF, ONLY: LIMA_COMPUTE_PDF
+USE MODE_LIMA_RAINFR_VERT, ONLY: LIMA_RAINFR_VERT
 USE MODE_LIMA_COMPUTE_CLOUD_FRACTIONS, ONLY: LIMA_COMPUTE_CLOUD_FRACTIONS
 USE MODE_LIMA_SHAPE_COMPUTE_LBDA, ONLY : LIMA_SHAPE_COMPUTE_LBDA_3D
 USE MODE_LIMA_INST_PROCS, ONLY: LIMA_INST_PROCS
@@ -141,6 +145,11 @@ REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT) :: PICEFR     ! Cloud fraction
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT) :: PPRCFR     ! Cloud fraction
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(OUT) :: PFPR    ! Precipitation fluxes in altitude
+!
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLC_HCF
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLC_HRC
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLI_HCF
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLI_HRI
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
 REAL, DIMENSION(D%NIJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PEFIELDW   ! Vertical component of the electric field
@@ -337,7 +346,7 @@ REAL, DIMENSION(:), ALLOCATABLE                      :: ZCF1D, ZIF1D, ZPF1D     
 ! Various parameters
 ! domain size and levels (AROME compatibility)
 ! loops and packing
-INTEGER :: II, IPACK, IN
+INTEGER :: II, IPACK, IN, IK
 INTEGER :: IDX
 INTEGER, DIMENSION(:), ALLOCATABLE :: I1, I2, I3
 ! Inverse ov PTSTEP
@@ -375,6 +384,13 @@ REAL, DIMENSION(:,:), ALLOCATABLE :: ZRVT_ELEC, ZRCT_ELEC, ZRRT_ELEC, ZRIT_ELEC,
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZCCT_ELEC, ZCRT_ELEC, ZCIT_ELEC, ZCST_ELEC, ZCGT_ELEC, ZCHT_ELEC
 REAL, DIMENSION(:),     ALLOCATABLE :: ZLATHAM_IAGGS
 !
+! ICE4 COMPUTE PDF
+LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLMICRO
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_LCF
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_LRC
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LCF
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LRI
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZSIGMA_RC
 !-------------------------------------------------------------------------------
 !
 !*       0.     Init
@@ -1144,14 +1160,14 @@ END IF
 !*       2.     Compute cloud, ice and precipitation fractions
 !               ----------------------------------------------
 !
-CALL LIMA_COMPUTE_CLOUD_FRACTIONS (LIMAP, D,                          &
-                                   ZCCT, ZRCT,                        &
-                                   ZCRT, ZRRT,                        &
-                                   ZCIT, ZRIT,                        &
-                                   ZCST, ZRST,                        &
-                                   ZCGT, ZRGT,                        &
-                                   ZCHT, ZRHT,                        &
-                                   PCLDFR, PICEFR, PPRCFR             )
+!CALL LIMA_COMPUTE_CLOUD_FRACTIONS (LIMAP, D,                          &
+!                                   ZCCT, ZRCT,                        &
+!                                   ZCRT, ZRRT,                        &
+!                                   ZCIT, ZRIT,                        &
+!                                   ZCST, ZRST,                        &
+!                                   ZCGT, ZRGT,                        &
+!                                   ZCHT, ZRHT,                        &
+!                                   PCLDFR, PICEFR, PPRCFR             )
 !
 !
 !-------------------------------------------------------------------------------
@@ -1218,6 +1234,55 @@ IF (OELEC) THEN
   IF (LIMAP%NMOM_H .GE. 2) ZCHT_ELEC(:,:) = ZCHT(:,:)
 END IF
 !
+!-------------------------------------------------------------------------------
+!
+!*       2.     COMPUTE PRECIPITATION FRACTION
+!               ------------------------------
+!
+LLMICRO(:,:)=.TRUE.
+IF ( AIE_AIE_AIE ) THEN
+!IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
+!  IF (PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM') THEN
+!    DO IK = D%NKTB, D%NKTE                                                                                                         !         
+!      DO II=D%NIJB, D%NIJE
+!        ZSIGMA_RC(II, IK)=PSIGS(II, IK)**2
+!      ENDDO
+!    ENDDO
+!  ENDIF
+!  IF (PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU') THEN
+    DO IK = D%NKTB, D%NKTE     
+      DO II=D%NIJB, D%NIJE
+        ZHLC_LRC(II, IK) = ZWR(II, IK, IRC) - PHLC_HRC(II, IK)
+        ZHLI_LRI(II, IK) = ZWR(II, IK, IRI) - PHLI_HRI(II, IK)
+        IF(ZWR(II, IK, IRC)>0.) THEN
+          ZHLC_LCF(II, IK) = PCLDFR(II, IK)- PHLC_HCF(II, IK)
+        ELSE
+          ZHLC_LCF(II, IK)=0.
+        ENDIF
+        IF(ZWR(II, IK, IRI)>0.) THEN
+          ZHLI_LCF(II, IK) = PCLDFR(II, IK)- PHLI_HCF(II, IK)
+        ELSE
+          ZHLI_LCF(II, IK)=0.
+        ENDIF
+      ENDDO
+    ENDDO
+!  ENDIF
+  !We cannot use ZWR(:,D%NKTB:D%NKTE,IRC) which is not contiguous
+  CALL LIMA_COMPUTE_PDF(CST, LIMAP, D%NIJT*(D%NKTE-D%NKTB+1), 'ADJU', 'ADJU', 'NONE',&
+                        LLMICRO(:,D%NKTB:D%NKTE), PRHODREF(:,D%NKTB:D%NKTE), ZRCT(:,D%NKTB:D%NKTE), ZRIT(:,D%NKTB:D%NKTE), &
+                        PCLDFR(:,D%NKTB:D%NKTE), ZT(:,D%NKTB:D%NKTE), ZSIGMA_RC(:,D%NKTB:D%NKTE), &
+                        PHLC_HCF(:,D%NKTB:D%NKTE), ZHLC_LCF(:,D%NKTB:D%NKTE), PHLC_HRC(:,D%NKTB:D%NKTE), ZHLC_LRC(:,D%NKTB:D%NKTE), &
+                        PHLI_HCF(:,D%NKTB:D%NKTE), ZHLI_LCF(:,D%NKTB:D%NKTE), PHLI_HRI(:,D%NKTB:D%NKTE), ZHLI_LRI(:,D%NKTB:D%NKTE), &
+                        PPRCFR(:,D%NKTB:D%NKTE))
+!CALL ICE4_COMPUTE_PDF2D(D, CST, ICEP, ICED, PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF, &
+!                        LLMICRO, PRHODREF, ZWR(:,:,IRC), ZWR(:,:,IRI), PCLDFR, ZT, ZSIGMA_RC,&
+!                            PHLC_HCF, ZHLC_LCF, PHLC_HRC, ZHLC_LRC, &
+!                            PHLI_HCF, ZHLI_LCF, PHLI_HRI, ZHLI_LRI, PRAINFR)
+  CALL LIMA_RAINFR_VERT(D, ICED, PPRCFR, ZRRT, ZRST, ZRGT, ZRHT)
+ELSE
+  PPRCFR(:,:)=1.
+ENDIF
+
 !-------------------------------------------------------------------------------
 !
 !*       2.     LOOP

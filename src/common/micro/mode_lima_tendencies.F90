@@ -49,6 +49,8 @@ CONTAINS
                               PA_RI, PA_CI, PA_CI_SHAPE, PA_RS, PA_CS, PA_RG, PA_CG, PA_RH, PA_CH, &
                               PEVAP3D,                                                          &
                               PCF1D, PIF1D, PPF1D,                                              &
+                              PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC,                           &
+                              PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI,                           &
                               PLATHAM_IAGGS                                                     )
 !     ######################################################################
 !!
@@ -99,6 +101,7 @@ USE MODE_LIMA_HAIL_DEPOSITION, ONLY: LIMA_HAIL_DEPOSITION
 USE MODE_LIMA_HAIL, ONLY: LIMA_HAIL
 USE MODE_LIMA_SHAPE_COMPUTE_LBDA, ONLY: LIMA_SHAPE_COMPUTE_LBDA
 !
+USE MODE_LIMA_COMPUTE_PDF, ONLY: LIMA_COMPUTE_PDF
 USE MODE_LIMA_BERGERON, ONLY: LIMA_BERGERON
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
@@ -308,9 +311,18 @@ REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PA_CH
 !
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: PEVAP3D
 !
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCF1D
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PIF1D
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PPF1D
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PCF1D
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PIF1D
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PPF1D
+!
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLC_HCF
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLC_LCF
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLC_HRC
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLC_LRC
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLI_HCF
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLI_LCF
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLI_HRI
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLI_LRI
 !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLATHAM_IAGGS ! factor to account for the effect of Efield on IAGGS
 !
@@ -369,9 +381,8 @@ REAL,    DIMENSION(SIZE(PRCT))  :: ZCHT
 !
 REAL,    DIMENSION(SIZE(PRCT))  :: ZSIGMOIDE
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-!-------------------------------------------------------------------------------
-! Pre-compute quantities
+REAL,    DIMENSION(SIZE(PRCT))  :: ZSIGMA_RC
+!
 INTEGER :: ISIZE ! size of 1D array
 INTEGER :: ISH   ! loop index for ice crystal shapes
 REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZRIT_SHAPE
@@ -379,6 +390,66 @@ REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZRIT_SHAPE_IF
 REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZCIT_SHAPE_IF
 REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZLBDAI_SHAPE
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+!-------------------------------------------------------------------------------
+! Pre-compute quantities
+!
+!
+! Is it necessary to compute the following quantities
+! accounting for subgrig cloud fraction ?
+! lambda does not depend on cloud fraction for 2-m species
+! lambda depends on CF for 1-m species ?
+!
+!
+! Is it necessary to change water vapour in cloudy / non cloudy parts ?
+!
+!
+WHERE (ODCOMPUTE(:))
+   ZT(:) = PTHT(:) * ( PPABST(:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
+!
+   ZW(:) = PEXNREF(:)*( CST%XCPD &
+                               +CST%XCPV*PRVT(:) &
+                               +CST%XCL*(ZRCT(:)+ZRRT(:)) &
+                               +CST%XCI*(ZRIT(:)+ZRST(:)+ZRGT(:)+ZRHT(:)) )
+!
+   ZLV(:) = CST%XLVTT + (CST%XCPV-CST%XCL)*(ZT(:)-CST%XTT)
+   ZLVFACT(:) = ZLV(:)/ZW(:)               ! L_v/(Pi_ref*C_ph)
+   ZLS(:) = CST%XLSTT + (CST%XCPV-CST%XCI)*(ZT(:)-CST%XTT)
+   ZLSFACT(:) = ZLS(:)/ZW(:)               ! L_s/(Pi_ref*C_ph)
+!
+   ZEVSAT(:)  = EXP( CST%XALPW - CST%XBETAW/ZT(:) - CST%XGAMW*LOG(ZT(:) ) )
+   ZEISAT(:)  = EXP( CST%XALPI - CST%XBETAI/ZT(:) - CST%XGAMI*LOG(ZT(:) ) )
+   !
+   ZEPS= CST%XMV / CST%XMD
+   ZRVSAT(:) = ZEPS * ZEVSAT(:) / (PPABST(:) - ZEVSAT(:))
+   ZRISAT(:) = ZEPS * ZEISAT(:) / (PPABST(:) - ZEISAT(:))
+   !
+   ZSSI(:)  = PRVT(:)/ZRISAT(:) - 1.0             ! Si  =  rv/rsi - 1
+   ZSSIW(:) = ZRVSAT(:)/ZRISAT(:) - 1.0 ! Siw = rsw/rsi - 1
+!
+   ZKA(:) = 2.38E-2 + 0.0071E-2 * ( ZT(:) - CST%XTT )
+!
+   ZDV(:) = 0.211E-4 * (ZT(:)/CST%XTT)**1.94 * (CST%XP00/PPABST(:))
+!
+   ZAI(:) =   ( CST%XLSTT + (CST%XCPV-CST%XCI)*(ZT(:)-CST%XTT) )**2 / (ZKA(:)*CST%XRV*ZT(:)**2) &
+                + ( CST%XRV*ZT(:) ) / (ZDV(:)*ZEISAT(:))
+!
+   ZCJ(:) = LIMAC%XSCFAC * PRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZT(:)-CST%XTT) )
+!
+END WHERE
+!
+! Compute pdf & control PRCFR
+ZSIGMA_RC(:)=0.
+CALL LIMA_COMPUTE_PDF(CST, LIMAP, KSIZE, 'ADJU', 'ADJU', 'NONE',&
+                      ODCOMPUTE, PRHODREF, PRCT, PRIT, &
+                      PCF1D, PT, ZSIGMA_RC, &
+                      PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
+                      PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, &
+                      PPF1D)
+WHERE(PRRT(:)+PRST(:)+PRGT(:)+PRHT(:).GE.LIMAP%XRTMIN(3) .AND. PPF1D.LE.0.01)
+   PPF1D(:)=1.
+END WHERE
+
 ! Prevent fractions to reach 0 (divide by 0)
 !
 IF (LHOOK) CALL DR_HOOK('LIMA_TENDENCIES', 0, ZHOOK_HANDLE)
@@ -429,49 +500,6 @@ WHERE (PRHT(:).GE.LIMAP%XRTMIN(7))
    ZRHT(:)=PRHT(:)
 ELSEWHERE
    ZRHT(:)=0.
-END WHERE
-!
-! Is it necessary to compute the following quantities
-! accounting for subgrig cloud fraction ?
-! lambda does not depend on cloud fraction for 2-m species
-! lambda depends on CF for 1-m species ?
-!
-!
-! Is it necessary to change water vapour in cloudy / non cloudy parts ?
-!
-!
-WHERE (ODCOMPUTE(:))
-   ZT(:) = PTHT(:) * ( PPABST(:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
-!
-   ZW(:) = PEXNREF(:)*( CST%XCPD &
-                               +CST%XCPV*PRVT(:) &
-                               +CST%XCL*(ZRCT(:)+ZRRT(:)) &
-                               +CST%XCI*(ZRIT(:)+ZRST(:)+ZRGT(:)+ZRHT(:)) )
-!
-   ZLV(:) = CST%XLVTT + (CST%XCPV-CST%XCL)*(ZT(:)-CST%XTT)
-   ZLVFACT(:) = ZLV(:)/ZW(:)               ! L_v/(Pi_ref*C_ph)
-   ZLS(:) = CST%XLSTT + (CST%XCPV-CST%XCI)*(ZT(:)-CST%XTT)
-   ZLSFACT(:) = ZLS(:)/ZW(:)               ! L_s/(Pi_ref*C_ph)
-!
-   ZEVSAT(:)  = EXP( CST%XALPW - CST%XBETAW/ZT(:) - CST%XGAMW*LOG(ZT(:) ) )
-   ZEISAT(:)  = EXP( CST%XALPI - CST%XBETAI/ZT(:) - CST%XGAMI*LOG(ZT(:) ) )
-   !
-   ZEPS= CST%XMV / CST%XMD
-   ZRVSAT(:) = ZEPS * ZEVSAT(:) / (PPABST(:) - ZEVSAT(:))
-   ZRISAT(:) = ZEPS * ZEISAT(:) / (PPABST(:) - ZEISAT(:))
-   !
-   ZSSI(:)  = PRVT(:)/ZRISAT(:) - 1.0             ! Si  =  rv/rsi - 1
-   ZSSIW(:) = ZRVSAT(:)/ZRISAT(:) - 1.0 ! Siw = rsw/rsi - 1
-!
-   ZKA(:) = 2.38E-2 + 0.0071E-2 * ( ZT(:) - CST%XTT )
-!
-   ZDV(:) = 0.211E-4 * (ZT(:)/CST%XTT)**1.94 * (CST%XP00/PPABST(:))
-!
-   ZAI(:) =   ( CST%XLSTT + (CST%XCPV-CST%XCI)*(ZT(:)-CST%XTT) )**2 / (ZKA(:)*CST%XRV*ZT(:)**2) &
-                + ( CST%XRV*ZT(:) ) / (ZDV(:)*ZEISAT(:))
-!
-   ZCJ(:) = LIMAC%XSCFAC * PRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZT(:)-CST%XTT) )
-!
 END WHERE
 !
 ! Cloud droplets : same formula for 1 and 2 moments, but using real or fixed Nc value

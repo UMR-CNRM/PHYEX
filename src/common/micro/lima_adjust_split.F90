@@ -13,7 +13,10 @@ SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, TNSV, D, CST, NEBN, TURBN, BUCONF, TB
                              PRT, PRS, PSVT, PSVS,                              &
                              HACTCCN, PAERO,PSOLORG, PMI,                       &
                              PTHS, OCOMPUTE_SRC, PSRCS, PCLDFR, PICEFR,         &
-                             PRC_MF, PRI_MF, PCF_MF)
+                             PRC_MF, PRI_MF, PCF_MF,                            &
+                             PICE_CLD_WGT, PWEIGHT_MF_CLOUD,                    &
+                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,            &
+                             PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF )
 !     ###########################################################################
 !
 !!****  *MIMA_ADJUST* -  compute the fast microphysical sources 
@@ -180,6 +183,16 @@ REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(OUT) :: PICEFR    ! Cloud fraction
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(IN)  :: PRC_MF! Convective Mass Flux liquid mixing ratio
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(IN)  :: PRI_MF! Convective Mass Flux ice mixing ratio
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(IN)  :: PCF_MF! Convective Mass Flux Cloud fraction 
+REAL, DIMENSION(D%NIJT),       OPTIONAL, INTENT(IN)   ::  PICE_CLD_WGT
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)    :: PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HRC
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HCF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HRI
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HCF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLC_HRC_MF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLC_HCF_MF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLI_HRI_MF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLI_HCF_MF
 !
 !
 !*       0.2   Declarations of local variables :
@@ -247,6 +260,8 @@ INTEGER :: ISV_LIMA_NI
 INTEGER :: ISV_LIMA_IFN_FREE
 INTEGER :: ISV_LIMA_IFN_NUCL
 INTEGER :: ISV_LIMA_IMM_NUCL
+!
+LOGICAL :: LLHLC_H, LLHLI_H
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
@@ -385,34 +400,122 @@ IF (LIMAP%LADJ) THEN
         ZRRS*PTSTEP,ZRSS*PTSTEP, ZRGS*PTSTEP,                                &
         Z_SIGS, .FALSE., PMFCONV, PCLDFR, Z_SRCS, GUSERI, G_SIGMAS, .FALSE., &
         ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                                        &
-        PSIGQSAT, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
+        PSIGQSAT, PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                               &
+        PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,&
+        PICE_CLD_WGT=PICE_CLD_WGT )
    !
-   IF (LIMAP%NMOM_C.GE.1) THEN
-      ZW1(:,:) = (ZRC(:,:) - ZRCS(:,:)*PTSTEP) / PTSTEP
-      WHERE( ZW1(:,:) < 0.0 )
-         ZW1(:,:) = MAX ( ZW1(:,:), -ZRCS(:,:) )
-      ELSEWHERE
-         ZW1(:,:) = MIN ( ZW1(:,:),  ZRVS(:,:) )
-      END WHERE
-      ZRVS(:,:) = ZRVS(:,:) - ZW1(:,:)
-      ZRCS(:,:) = ZRCS(:,:) + ZW1(:,:)
-      PTHS(:,:) = PTHS(:,:) +        &
-           ZW1(:,:) * ZLV(:,:) / (ZCPH(:,:) * PEXNREF(:,:))
+   IF (NEBN%LSUBG_COND) THEN
+      PSRCS=Z_SRCS
+   ENDIF
+   IF (NEBN%LSUBG_COND .AND. LIMAP%NMOM_C.GE.2 .AND. LIMAP%LACTI) THEN
+      ZW_MF=0.
+      ZRV2=ZRVT
+      ZRC2=ZRCT
+      CALL LIMA_CCN_ACTIVATION (LIMAP, LIMAW, TNSV, D, CST, NEBN,&
+           KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,              &
+           PRHODREF, PEXNREF, PPABST, ZT2, PDTHRAD, PW_NU+ZW_MF, &
+           PAERO,PSOLORG, PMI,  HACTCCN,                         &
+           ZTHT, ZRV2, ZRC2, ZCCT, ZRRT, ZNFT, ZNAT,             &
+           PCLDFR                                                )      
    END IF
    !
-   IF (LIMAP%NMOM_I.EQ.1) THEN
-      PICEFR(:,:)=PCLDFR(:,:)
-      ZW2(:,:) = (ZRI(:,:) - ZRIS(:,:)*PTSTEP) / PTSTEP ! idem ZW1 but for Ri
-      !
-      WHERE( ZW2(:,:) < 0.0 )
-         ZW2(:,:) = MAX ( ZW2(:,:), -ZRIS(:,:) )
+   IF ( .NOT. NEBN%LSUBG_COND ) THEN
+      WHERE (ZRCS(:,:) + ZRIS(:,:) > 1.E-12 / PTSTEP)
+         PCLDFR(:,:)  = 1.
       ELSEWHERE
-         ZW2(:,:) = MIN ( ZW2(:,:),  ZRVS(:,:) )
-      END WHERE
-      ZRVS(:,:) = ZRVS(:,:) - ZW2(:,:)
-      ZRIS(:,:) = ZRIS(:,:) + ZW2(:,:)
-      PTHS(:,:) = PTHS(:,:) +        &
-           ZW2(:,:) * ZLS(:,:) / (ZCPH(:,:) * PEXNREF(:,:))
+         PCLDFR(:,:)  = 0. 
+      ENDWHERE
+      IF ( SIZE(PSRCS,2) /= 0 ) THEN
+         WHERE (ZRCS(:,:) + ZRIS(:,:) > 1.E-12 / PTSTEP)
+            PSRCS(:,:)  = 1.
+         ELSEWHERE
+            PSRCS(:,:)  = 0.
+         ENDWHERE
+      END IF
+   ELSE
+      ! Apply a ponderation between condensation and mas flux cloud
+      LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
+      LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
+      DO IK=D%NKTB,D%NKTE
+         DO II=D%NJB,D%NIJE
+            ZRC(II,IK)=ZRC(II,IK)*(1.-PWEIGHT_MF_CLOUD(II,IK))
+            ZRI(II,IK)=ZRI(II,IK)*(1.-PWEIGHT_MF_CLOUD(II,IK))
+            PCLDFR(II,IK)=PCLDFR(II,IK)*(1.-PWEIGHT_MF_CLOUD(II,IK))
+            IF (OCOMPUTE_SRC) THEN
+               PSRCS(II,IK)=PSRCS(II,IK)*(1.-PWEIGHT_MF_CLOUD(II,IK))
+            ENDIF
+            IF(LLHLC_H) THEN
+               PHLC_HRC(II,IK)=PHLC_HRC(II,IK)*(1.-PWEIGHT_MF_CLOUD(II,IK))
+               PHLC_HCF(II,IK)=PHLC_HCF(II,IK)*(1.-PWEIGHT_MF_CLOUD(II,IK))
+            ENDIF
+            IF(LLHLI_H) THEN
+               PHLI_HRI(II,IK)=PHLI_HRI(II,IK)*(1.-PWEIGHT_MF_CLOUD(II,IK))
+               PHLI_HCF(II,IK)=PHLI_HCF(II,IK)*(1.-PWEIGHT_MF_CLOUD(II,IK))
+            ENDIF
+         ENDDO
+      ENDDO
+      ! Compute the variation of mixing ratio
+      DO IK=D%NKTB,D%NKTE
+         DO II=D%NJB,D%NIJE
+            IF (LIMAP%NMOM_C.GE.1) THEN
+               ZW1 = (ZRC(II,IK) - ZRCS(II,IK)*PTSTEP) / PTSTEP
+               IF( ZW1 < 0.0 ) THEN
+                  ZW1 = MAX ( ZW1, -ZRCS(II,IK) )
+               ELSE
+                  ZW1 = MIN ( ZW1,  ZRVS(II,IK) )
+               ENDIF
+               ZRVS(II,IK) = ZRVS(II,IK) - ZW1
+               ZRCS(II,IK) = ZRCS(II,IK) + ZW1
+               PTHS(II,IK) = PTHS(II,IK) +        &
+                    ZW1 * ZLV(II,IK) / (ZCPH(II,IK) * PEXNREF(II,IK))
+            END IF
+            IF (LIMAP%NMOM_I.EQ.1) THEN
+               PICEFR(II,IK)=PCLDFR(II,IK)
+               ZW2 = (ZRI(II,IK) - ZRIS(II,IK)*PTSTEP) / PTSTEP
+               IF( ZW2 < 0.0 ) THEN
+                  ZW2 = MAX ( ZW2, -ZRIS(II,IK) )
+               ELSE
+                  ZW2 = MIN ( ZW2,  ZRVS(II,IK) )
+               ENDIF
+               ZRVS(II,IK) = ZRVS(II,IK) - ZW2
+               ZRIS(II,IK) = ZRIS(II,IK) + ZW2
+               PTHS(II,IK) = PTHS(II,IK) +        &
+                    ZW2 * ZLS(II,IK) / (ZCPH(II,IK) * PEXNREF(II,IK))
+            END IF
+         END DO
+      END DO
+      ! compute the cloud fraction with option 'BIGA' (see ice_adjust to implement other options)
+      DO IK=D%NKTB,D%NKTE
+         DO II=D%NJB,D%NIJE
+            ZW1=PRC_MF(JIJ,JK)/PTSTEP
+            ZW2=0.
+            IF (LIMAP%NMOM_I.EQ.1) ZW2=PRI_MF(JIJ,JK)/PTSTEP
+            IF(ZW1+ZW2>ZRVS(JIJ,JK)) THEN
+               ZW1=ZW1*ZRVS(JIJ,JK)/(ZW1+ZW2)
+               ZW2=ZRVS(JIJ,JK)-ZW1
+            ENDIF
+            PCLDFR(JIJ,JK)=MIN(1.,PCLDFR(JIJ,JK)+PCF_MF(JIJ,JK))
+            ZRVS(JIJ,JK)=ZRVS(JIJ,JK)-(ZW1+ZW2)
+            ZRCS(JIJ,JK)=ZRCS(JIJ,JK)+ZW1
+            IF (LIMAP%NMOM_I.EQ.1) ZRIS(JIJ,JK)=ZRIS(JIJ,JK)+ZW2
+            IF (LIMAP%NMOM_C.GE.1) ZCCS(JIJ,JK)=ZCCT(JIJ,JK) / PTSTEP
+            IF (LIMAP%NMOD_CCN.GE.1) ZNFS(JIJ,JK,:) = ZNFT(JIJ,JK,:) / PTSTEP
+            IF (LIMAP%NMOD_CCN.GE.1) ZNAS(JIJ,JK,:) = ZNAT(JIJ,JK,:) / PTSTEP
+            PTHS(JIJ,JK) = PTHS(JIJ,JK) + &
+                    (ZW1 * ZLV(JIJ,JK) + ZW2 * ZLS(JIJ,JK)) / ZCPH(JIJ,JK) / PEXNREF(JIJ,JK)
+      !
+            IF(LLHLC_H) THEN
+               ZCRIAUT=ICEP%XCRIAUTC/PRHODREF(JIJ,JK)
+               PHLC_HCF(JIJ,JK)=MIN(1., PHLC_HCF(JIJ,JK)+PHLC_HCF_MF(JIJ,JK))
+               PHLC_HRC(JIJ,JK)=PHLC_HRC(JIJ,JK)+PHLC_HRC_MF(JIJ,JK)
+            END IF
+            IF(LLHLI_H) THEN
+               ZCRIAUT=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(ZT(JIJ,JK)-CST%XTT)+ICEP%XBCRIAUTI))
+               PHLI_HCF(JIJ,JK)=MIN(1., PHLI_HCF(JIJ,JK)+PHLI_HCF_MF(JIJ,JK))
+               PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)+PHLI_HRI_MF(JIJ,JK)
+            ENDIF
+         END DO
+      END DO
    END IF
    !
 ELSE
@@ -441,60 +544,6 @@ ELSE
    END DO
 END IF
 !
-IF (OSUBG_COND) THEN
-   PSRCS=Z_SRCS
-ENDIF
-IF (OSUBG_COND .AND. LIMAP%NMOM_C.GE.2 .AND. LIMAP%LACTI) THEN
-   ZW_MF=0.
-   ZRV2=ZRVT
-   ZRC2=ZRCT
-   CALL LIMA_CCN_ACTIVATION (LIMAP, LIMAW, TNSV, D, CST, NEBN,&
-        KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,              &
-        PRHODREF, PEXNREF, PPABST, ZT2, PDTHRAD, PW_NU+ZW_MF, &
-        PAERO,PSOLORG, PMI,  HACTCCN,                         &
-        ZTHT, ZRV2, ZRC2, ZCCT, ZRRT, ZNFT, ZNAT,             &
-        PCLDFR                                                )      
-END IF
-!
-!-------------------------------------------------------------------------------
-!
-!*       3.     CLOUD FROM MASS-FLUX SCHEME
-!               ---------------------------
-!
-IF ( .NOT. OSUBG_COND ) THEN
-   WHERE (ZRCS(:,:) + ZRIS(:,:) > 1.E-12 / PTSTEP)
-      PCLDFR(:,:)  = 1.
-   ELSEWHERE
-      PCLDFR(:,:)  = 0. 
-   ENDWHERE
-   IF ( SIZE(PSRCS,2) /= 0 ) THEN
-      WHERE (ZRCS(:,:) + ZRIS(:,:) > 1.E-12 / PTSTEP)
-         PSRCS(:,:)  = 1.
-      ELSEWHERE
-         PSRCS(:,:)  = 0.
-      ENDWHERE
-   END IF
-ELSE
-   ! We limit PRC_MF+PRI_MF to ZRVS*PTSTEP to avoid negative humidity
-   ZW1(:,:)=PRC_MF(:,:)/PTSTEP
-   ZW2(:,:)=0.
-   IF (LIMAP%NMOM_I.EQ.1) ZW2(:,:)=PRI_MF(:,:)/PTSTEP
-   WHERE(ZW1(:,:)+ZW2(:,:)>ZRVS(:,:))
-      ZW1(:,:)=ZW1(:,:)*ZRVS(:,:)/(ZW1(:,:)+ZW2(:,:))
-      ZW2(:,:)=ZRVS(:,:)-ZW1(:,:)
-   ENDWHERE
-   ! Compute CF and update rc, ri from MF scheme
-   PCLDFR(:,:) = MIN(1.,PCLDFR(:,:)+PCF_MF(:,:))
-   ZRVS(:,:)   = ZRVS(:,:) - ZW1(:,:) -ZW2(:,:)
-   ZRCS(:,:)   = ZRCS(:,:) + ZW1(:,:)
-   IF (LIMAP%NMOM_I.EQ.1) ZRIS(:,:)   = ZRIS(:,:) + ZW2(:,:)
-   IF (LIMAP%NMOM_C.GE.1) ZCCS(:,:)   = ZCCT(:,:) / PTSTEP
-   IF (LIMAP%NMOD_CCN.GE.1) ZNFS(:,:,:) = ZNFT(:,:,:) / PTSTEP
-   IF (LIMAP%NMOD_CCN.GE.1) ZNAS(:,:,:) = ZNAT(:,:,:) / PTSTEP
-   PTHS(:,:)   = PTHS(:,:) + &
-        (ZW1(:,:) * ZLV(:,:) + ZW2(:,:) * ZLS(:,:)) / ZCPH(:,:)     &
-        /  PEXNREF(:,:)
-END IF
 !
 !-------------------------------------------------------------------------------
 !

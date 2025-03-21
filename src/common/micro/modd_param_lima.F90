@@ -138,6 +138,9 @@ REAL      :: XNDEBRIS_CIBU              ! Number of ice crystal debris produced
 !
 REAL      :: XPSH_MAX_RDSF              ! shattering probability normal distribution maximum
 !
+! 1-m autoconversion
+REAL      :: XCRIAUTI, XACRIAUTI, XBCRIAUTI
+!
 !-------------------------------------------------------------------------------
 !
 !
@@ -192,6 +195,9 @@ REAL                  :: XFSOLUB_CCN,       & ! Fractionnal solubility of the CC
 ! Cloud droplet deposition
 !
 REAL :: XVDEPOC
+!
+! 1-m autoconversion threshold
+REAL :: XCRIAUTC
 !
 !-------------------------------------------------------------------------------
 !
@@ -314,6 +320,10 @@ REAL, POINTER :: XMRSTEP => NULL(), &
                  XACTEMP_CCN => NULL(), &
                  XAERDIFF => NULL(), &
                  XAERHEIGHT => NULL(), &
+                 XCRIAUTI => NULL(), &
+                 XACRIAUTI => NULL(), &
+                 XBCRIAUTI => NULL(), &
+                 XCRIAUTC => NULL(), &
                  XVDEPOC => NULL(), &
                  XT0SCAV => NULL(), &
                  XTREF => NULL(), &
@@ -393,7 +403,8 @@ NAMELIST/NAM_PARAM_LIMA/LNUCL, LSEDI, LHHONI, LMEYERS,                     &
                         XFSOLUB_CCN, XACTEMP_CCN, XAERDIFF, XAERHEIGHT,    &                                         
                         LSCAV, LAERO_MASS, LDEPOC, XVDEPOC, LACTTKE,       &                                         
                         LPTSPLIT, LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS,&
-                        LSIGMOIDE_NG, LSIGMOIDE_G, XSIGMOIDE_G, XMVDMIN_G
+                        LSIGMOIDE_NG, LSIGMOIDE_G, XSIGMOIDE_G, XMVDMIN_G, &
+                        XCRIAUTC, XCRIAUTI, XACRIAUTI, XBCRIAUTI
 
 CONTAINS
 SUBROUTINE PARAM_LIMA_ASSOCIATE()
@@ -474,6 +485,10 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   XACTEMP_CCN        => PARAM_LIMA%XACTEMP_CCN
   XAERDIFF           => PARAM_LIMA%XAERDIFF
   XAERHEIGHT         => PARAM_LIMA%XAERHEIGHT
+  XCRIAUTI           => PARAM_LIMA%XCRIAUTI
+  XACRIAUTI          => PARAM_LIMA%XACRIAUTI
+  XBCRIAUTI          => PARAM_LIMA%XBCRIAUTI
+  XCRIAUTC           => PARAM_LIMA%XCRIAUTC
   XVDEPOC            => PARAM_LIMA%XVDEPOC
   XT0SCAV            => PARAM_LIMA%XT0SCAV
   XTREF              => PARAM_LIMA%XTREF
@@ -767,6 +782,10 @@ IF(GLDEFAULTVAL) THEN
   LSIGMOIDE_NG = .FALSE.
   XSIGMOIDE_G = 1.E8
   XMVDMIN_G = 125.E-6
+  XCRIAUTC=0.5E-3
+  XCRIAUTI=0.2E-4 !  Revised value by Chaboureau et al. (2001)
+  XACRIAUTI=0.06
+  XBCRIAUTI=-3.5
 ENDIF
 !
 !*      2. NAMELIST
