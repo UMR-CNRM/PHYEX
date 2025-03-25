@@ -409,6 +409,11 @@ REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZRIT_SHAPE_IF
 REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZCIT_SHAPE_IF
 REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZLBDAI_SHAPE
 !
+REAL, DIMENSION(KSIZE) :: ZHLC_HCF
+REAL, DIMENSION(KSIZE) :: ZHLC_LCF
+REAL, DIMENSION(KSIZE) :: ZHLI_HCF
+REAL, DIMENSION(KSIZE) :: ZHLI_LCF
+!
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 ! Pre-compute quantities
@@ -475,6 +480,10 @@ IF (LHOOK) CALL DR_HOOK('LIMA_TENDENCIES', 0, ZHOOK_HANDLE)
 ZCF1D(:) = MAX(PCF1D(:),0.01)
 ZIF1D(:) = MAX(PIF1D(:),0.01)
 ZPF1D(:) = MAX(PPF1D(:),0.01)
+ZHLC_HCF(:) = MAX(ZHLC_HCF(:),0.01)
+ZHLC_LCF(:) = MAX(ZHLC_LCF(:),0.01)
+ZHLI_HCF(:) = MAX(ZHLI_HCF(:),0.01)
+ZHLI_LCF(:) = MAX(ZHLI_LCF(:),0.01)
 !
 !
 !
@@ -535,12 +544,12 @@ WHERE (ZRCT(:)>LIMAP%XRTMIN(2) .AND. PCCT(:)>LIMAP%XCTMIN(2) .AND. ODCOMPUTE(:))
 END WHERE
 ZLBDC3(:) = 1.E30
 WHERE (PHLC_HRC(:)>LIMAP%XRTMIN(2) .AND. PCCT(:)>LIMAP%XCTMIN(2) .AND. ODCOMPUTE(:))
-   ZLBDC3_HRC(:) = LIMAW%XLBC*PCCT(:) / PHLC_HRC(:)
+   ZLBDC3_HRC(:) = LIMAW%XLBC*PCCT(:) / ZHLC_HRC(:)
    ZLBDC_HRC(:)  = ZLBDC3(:)**LIMAW%XLBEXC
 END WHERE
 ZLBDC3(:) = 1.E30
 WHERE (PHLC_LRC(:)>LIMAP%XRTMIN(2) .AND. PCCT(:)>LIMAP%XCTMIN(2) .AND. ODCOMPUTE(:))
-   ZLBDC3_LRC(:) = LIMAW%XLBC*PCCT(:) / PHLC_LRC(:)
+   ZLBDC3_LRC(:) = LIMAW%XLBC*PCCT(:) / ZHLC_LRC(:)
    ZLBDC_LRC(:)  = ZLBDC3(:)**LIMAW%XLBEXC
 END WHERE
 !
@@ -688,14 +697,17 @@ IF ((.NOT. LIMAP%LKHKO) .AND. LIMAP%NMOM_C.GE.2) THEN
 END IF
 !
 IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
-   ! In low content cloud
-   CALL LIMA_DROPLETS_AUTOCONVERSION (CST, LIMAP, LIMAW, KSIZE, ODCOMPUTE,   & ! depends on CF
-                                      PRHODREF,                              &
-                                      PHLC_LRC/PHLC_LCF, ZCCT/ZCF1D, ZLBDC_LRC, ZLBDR,  &
-                                      P_RC_AUTO_2, P_CC_AUTO_2, P_CR_AUTO_2        )
-   P_RC_AUTO(:) = P_RC_AUTO_2(:) * PHLC_LCF(:)
-   P_CC_AUTO(:) = P_CC_AUTO_2(:) * PHLC_LCF(:)
-   P_CR_AUTO(:) = P_CR_AUTO_2(:) * PHLC_LCF(:)
+   P_RC_AUTO(:) = 0.
+   P_CC_AUTO(:) = 0.
+   P_CR_AUTO(:) = 0.
+!!$   ! In low content cloud
+!!$   CALL LIMA_DROPLETS_AUTOCONVERSION (CST, LIMAP, LIMAW, KSIZE, ODCOMPUTE,   & ! depends on CF
+!!$                                      PRHODREF,                              &
+!!$                                      PHLC_LRC/ZHLC_LCF, ZCCT/ZCF1D, ZLBDC_LRC, ZLBDR,  &
+!!$                                      P_RC_AUTO_2, P_CC_AUTO_2, P_CR_AUTO_2        )
+!!$   P_RC_AUTO(:) = P_RC_AUTO_2(:) * PHLC_LCF(:)
+!!$   P_CC_AUTO(:) = P_CC_AUTO_2(:) * PHLC_LCF(:)
+!!$   P_CR_AUTO(:) = P_CR_AUTO_2(:) * PHLC_LCF(:)
    !
    !PA_RC(:) = PA_RC(:) + P_RC_AUTO(:)
    !IF (LIMAP%NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_AUTO(:)
@@ -704,7 +716,7 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
    ! In high content cloud
    CALL LIMA_DROPLETS_AUTOCONVERSION (CST, LIMAP, LIMAW, KSIZE, ODCOMPUTE,   & ! depends on CF
                                       PRHODREF,                              &
-                                      PHLC_HRC/PHLC_HCF, ZCCT/ZCF1D, ZLBDC_HRC, ZLBDR,  &
+                                      PHLC_HRC/ZHLC_HCF, ZCCT/ZCF1D, ZLBDC_HRC, ZLBDR,  &
                                       P_RC_AUTO_2, P_CC_AUTO_2, P_CR_AUTO_2        )
    P_RC_AUTO(:) = P_RC_AUTO(:) + P_RC_AUTO_2(:) * PHLC_HCF(:)
    P_CC_AUTO(:) = P_CC_AUTO(:) + P_CC_AUTO_2(:) * PHLC_HCF(:)
@@ -717,10 +729,12 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
 END IF
 !
 IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
+   P_CC_ACCR(:) = 0.
+   P_RC_ACCR(:) = 0.
    ! In high content cloud
    CALL LIMA_DROPLETS_ACCRETION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,                & ! depends on CF, PF
                                  PRHODREF,                                      &
-                                 PHLC_HRC/PHLC_HCF, ZRRT/ZPF1D, ZCCT/ZCF1D, ZCRT/ZPF1D,&
+                                 PHLC_HRC/ZHLC_HCF, ZRRT/ZPF1D, ZCCT/ZCF1D, ZCRT/ZPF1D,&
                                  ZLBDC_HRC, ZLBDC3_HRC, ZLBDR, ZLBDR3,                 &
                                  P_RC_ACCR_2, P_CC_ACCR_2                           )
    !
@@ -729,7 +743,7 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
    ! In low content cloud
    CALL LIMA_DROPLETS_ACCRETION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,                & ! depends on CF, PF
                                  PRHODREF,                                      &
-                                 PHLC_LRC/PHLC_LCF, ZRRT/ZPF1D, ZCCT/ZCF1D, ZCRT/ZPF1D,&
+                                 PHLC_LRC/ZHLC_LCF, ZRRT/ZPF1D, ZCCT/ZCF1D, ZCRT/ZPF1D,&
                                  ZLBDC_LRC, ZLBDC3_LRC, ZLBDR, ZLBDR3,                  &
                                  P_RC_ACCR_2, P_CC_ACCR_2                           )
    !
@@ -776,7 +790,7 @@ IF (LIMAP%NMOM_I.GE.1) THEN
    ! In low content part
    CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF
                              PRHODREF, ZT, ZSSI, ZAI, ZCJ, ZLSFACT,           &
-                             PHLI_LRI/PHLI_LCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_LRI,    &
+                             PHLI_LRI/ZHLI_LCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_LRI,    &
                              P_TH_DEPI_2, P_RI_DEPI_2, P_SHCI_HACH_2,         &
                              P_RI_CNVS_2, P_CI_CNVS_2, P_SHCI_CNVS_2          )
    !
@@ -792,7 +806,7 @@ IF (LIMAP%NMOM_I.GE.1) THEN
    ! In high content part
    CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF
                              PRHODREF, ZT, ZSSI, ZAI, ZCJ, ZLSFACT,           &
-                             PHLI_HRI/PHLI_HCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_HRI,    &
+                             PHLI_HRI/ZHLI_HCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_HRI,    &
                              P_TH_DEPI_2, P_RI_DEPI_2, P_SHCI_HACH_2,         &
                              P_RI_CNVS_2, P_CI_CNVS_2, P_SHCI_CNVS_2          )
    !

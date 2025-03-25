@@ -434,7 +434,7 @@ IF (LIMAP%LADJ) THEN
          ENDWHERE
       END IF
    ELSE
-      ! Apply a ponderation between condensation and mas flux cloud
+      ! Apply a ponderation between condensation and mass flux cloud
       LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
       LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
       DO IK=D%NKTB,D%NKTE
@@ -455,7 +455,7 @@ IF (LIMAP%LADJ) THEN
             ENDIF
          ENDDO
       ENDDO
-      ! Compute the variation of mixing ratio
+      ! Compute the variation of mixing ratio from condensation
       DO IK=D%NKTB,D%NKTE
          DO II=D%NJB,D%NIJE
             IF (LIMAP%NMOM_C.GE.1) THEN
@@ -469,6 +469,10 @@ IF (LIMAP%LADJ) THEN
                ZRCS(II,IK) = ZRCS(II,IK) + ZW1
                PTHS(II,IK) = PTHS(II,IK) +        &
                     ZW1 * ZLV(II,IK) / (ZCPH(II,IK) * PEXNREF(II,IK))
+               ! ZCCS only includes contribution from PCLDFR out of condensation so far
+               IF (LIMAP%NMOM_C.GE.2) ZCCS(II,IK)=ZCCT(II,IK) / PTSTEP
+               IF (LIMAP%NMOD_CCN.GE.1) ZNFS(II,IK,:) = ZNFT(II,IK,:) / PTSTEP
+               IF (LIMAP%NMOD_CCN.GE.1) ZNAS(II,IK,:) = ZNAT(II,IK,:) / PTSTEP
             END IF
             IF (LIMAP%NMOM_I.EQ.1) THEN
                PICEFR(II,IK)=PCLDFR(II,IK)
@@ -485,7 +489,7 @@ IF (LIMAP%LADJ) THEN
             END IF
          END DO
       END DO
-      ! compute the cloud fraction with option 'BIGA' (see ice_adjust to implement other options)
+      ! compute the mass flux scheme cloud contribution with option 'BIGA' (see ice_adjust to implement other options)
       DO IK=D%NKTB,D%NKTE
          DO II=D%NJB,D%NIJE
             ZW1=PRC_MF(II,IK)/PTSTEP
@@ -499,9 +503,6 @@ IF (LIMAP%LADJ) THEN
             ZRVS(II,IK)=ZRVS(II,IK)-(ZW1+ZW2)
             ZRCS(II,IK)=ZRCS(II,IK)+ZW1
             IF (LIMAP%NMOM_I.EQ.1) ZRIS(II,IK)=ZRIS(II,IK)+ZW2
-            IF (LIMAP%NMOM_C.GE.1) ZCCS(II,IK)=ZCCT(II,IK) / PTSTEP
-            IF (LIMAP%NMOD_CCN.GE.1) ZNFS(II,IK,:) = ZNFT(II,IK,:) / PTSTEP
-            IF (LIMAP%NMOD_CCN.GE.1) ZNAS(II,IK,:) = ZNAT(II,IK,:) / PTSTEP
             PTHS(II,IK) = PTHS(II,IK) + &
                     (ZW1 * ZLV(II,IK) + ZW2 * ZLS(II,IK)) / ZCPH(II,IK) / PEXNREF(II,IK)
       !

@@ -1257,52 +1257,50 @@ IF ( NEBN%LSUBG_COND ) THEN
 !    ENDDO
 !  ENDIF
    !  IF (PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU') THEN
-    IF (PRESENT(PHLC_HRC)) THEN
-       ZHLC_HRC(:,:)=PHLC_HRC(:,:)
-       ZHLC_HCF(:,:)=PHLC_HCF(:,:)
-       ZHLI_HRI(:,:)=PHLI_HRI(:,:)
-       ZHLI_HCF(:,:)=PHLI_HCF(:,:)
-    ELSE
-       ZHLC_HRC(:,:)=ZRCT(:,:)
-       ZHLC_HCF(:,:)=PCLDFR(:,:)
-       ZHLI_HRI(:,:)=ZRIT(:,:)
-       ZHLI_HCF(:,:)=PICEFR(:,:)
-    END IF
-    DO IK = D%NKTB, D%NKTE     
-      DO II=D%NIJB, D%NIJE
-        ZHLC_LRC(II, IK) = ZRCT(II, IK) - ZHLC_HRC(II, IK)
-        ZHLI_LRI(II, IK) = ZRIT(II, IK) - ZHLI_HRI(II, IK)
-        IF(ZRCT(II, IK)>0.) THEN
-          ZHLC_LCF(II, IK) = PCLDFR(II, IK)- ZHLC_HCF(II, IK)
-        ELSE
-          ZHLC_LCF(II, IK)=0.
-        ENDIF
-        IF(ZRIT(II, IK)>0.) THEN
-          ZHLI_LCF(II, IK) = PICEFR(II, IK)- ZHLI_HCF(II, IK)
-        ELSE
-          ZHLI_LCF(II, IK)=0.
-        ENDIF
+   IF (PRESENT(PHLC_HRC)) THEN
+      ZHLC_HRC(:,:)=PHLC_HRC(:,:)
+      ZHLC_HCF(:,:)=PHLC_HCF(:,:)
+      ZHLI_HRI(:,:)=PHLI_HRI(:,:)
+      ZHLI_HCF(:,:)=PHLI_HCF(:,:)
+      DO IK = D%NKTB, D%NKTE     
+         DO II=D%NIJB, D%NIJE
+            ZHLC_LRC(II, IK) = ZRCT(II, IK) - ZHLC_HRC(II, IK)
+            ZHLI_LRI(II, IK) = ZRIT(II, IK) - ZHLI_HRI(II, IK)
+            IF(ZRCT(II, IK)>0.) THEN
+               ZHLC_LCF(II, IK) = PCLDFR(II, IK)- ZHLC_HCF(II, IK)
+            ELSE
+               ZHLC_LCF(II, IK)=0.
+            ENDIF
+            IF(ZRIT(II, IK)>0.) THEN
+               ZHLI_LCF(II, IK) = PICEFR(II, IK)- ZHLI_HCF(II, IK)
+            ELSE
+               ZHLI_LCF(II, IK)=0.
+            ENDIF
+         ENDDO
       ENDDO
-    ENDDO
-!  ENDIF
-  !We cannot use ZWR(:,D%NKTB:D%NKTE,IRC) which is not contiguous
+   ELSE
+      ZHLC_LRC(:,:)=0.
+      ZHLI_LRI(:,:)=0.
+      ZHLC_LCF(:,:)=0.
+      ZHLI_LCF(:,:)=0.
+      ZHLC_HRC(:,:)=ZRCT(:,:)
+      ZHLC_HCF(:,:)=PCLDFR(:,:)
+      ZHLI_HRI(:,:)=ZRIT(:,:)
+      ZHLI_HCF(:,:)=PICEFR(:,:)
+   END IF
   CALL LIMA_COMPUTE_PDF(CST, LIMAP, D%NIJT*(D%NKTE-D%NKTB+1), 'ADJU', 'ADJU', 'NONE',&
                         LLMICRO(:,D%NKTB:D%NKTE), PRHODREF(:,D%NKTB:D%NKTE), ZRCT(:,D%NKTB:D%NKTE), ZRIT(:,D%NKTB:D%NKTE), &
                         PCLDFR(:,D%NKTB:D%NKTE), ZT(:,D%NKTB:D%NKTE), ZSIGMA_RC(:,D%NKTB:D%NKTE), &
                         ZHLC_HCF(:,D%NKTB:D%NKTE), ZHLC_LCF(:,D%NKTB:D%NKTE), ZHLC_HRC(:,D%NKTB:D%NKTE), ZHLC_LRC(:,D%NKTB:D%NKTE), &
                         ZHLI_HCF(:,D%NKTB:D%NKTE), ZHLI_LCF(:,D%NKTB:D%NKTE), ZHLI_HRI(:,D%NKTB:D%NKTE), ZHLI_LRI(:,D%NKTB:D%NKTE), &
                         PPRCFR(:,D%NKTB:D%NKTE))
-!CALL ICE4_COMPUTE_PDF2D(D, CST, ICEP, ICED, PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF, &
-!                        LLMICRO, PRHODREF, ZWR(:,:,IRC), ZWR(:,:,IRI), PCLDFR, ZT, ZSIGMA_RC,&
-!                            PHLC_HCF, ZHLC_LCF, PHLC_HRC, ZHLC_LRC, &
-!                            PHLI_HCF, ZHLI_LCF, PHLI_HRI, ZHLI_LRI, PRAINFR)
   CALL LIMA_RAINFR_VERT(D, LIMAP, PPRCFR, ZRRT, ZRST, ZRGT, ZRHT)
 ELSE
    PPRCFR(:,:)=1.
    ZHLC_LRC(:,:)=0.
    ZHLI_LRI(:,:)=0.
-   ZHLC_LCF(:,:)=1.
-   ZHLI_LCF(:,:)=1.
+   ZHLC_LCF(:,:)=0.
+   ZHLI_LCF(:,:)=0.
    ZHLC_HRC(:,:)=ZRCT(:,:)
    ZHLI_LRI(:,:)=ZRIT(:,:)
    ZHLC_HCF(:,:)=1.
