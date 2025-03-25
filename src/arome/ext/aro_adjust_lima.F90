@@ -6,9 +6,11 @@
                                   PZZF, PRHODJ, PRHODREF, PEXNREF,&
                                   PPABSM, PTHT, PRT, PSVT, PSIGS, &
                                   PW_NU, PDTHRAD, &
-                                  PMFCONV, PRC_MF, PRI_MF, PCF_MF, &
+                                  PMFCONV, PRC_MF, PRI_MF, PCF_MF, PWEIGHT_MF_CLOUD, &
                                   PTHS, PRS,  PSVS, PSRCS, PCLDFR, PICEFR, PPRCFR, &
-                                  YDDDH, YDLDDH, YDMDDH, LLIMAINIT )
+                                  YDDDH, YDLDDH, YDMDDH, LLIMAINIT, &
+                                  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
+                                  PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF )
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##########################################################################
@@ -142,7 +144,7 @@ REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PW_NU   ! w for CCN activation
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PDTHRAD ! rad theta tendency for CCN activation
 !
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PMFCONV ! convective mass flux
-REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PRC_MF, PRI_MF, PCF_MF
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PRC_MF, PRI_MF, PCF_MF, PWEIGHT_MF_CLOUD
 !
 !
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT) :: PTHS  ! Theta source
@@ -167,6 +169,15 @@ TYPE(TMDDH), INTENT(IN), TARGET :: YDMDDH
 !
 LOGICAL,                  INTENT(IN)    :: LLIMAINIT
 !
+REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLC_HRC
+REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLC_HCF
+REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLI_HRI
+REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLI_HCF
+REAL, DIMENSION(KLON,1,KLEV), INTENT(IN)    :: PHLC_HRC_MF
+REAL, DIMENSION(KLON,1,KLEV), INTENT(IN)    :: PHLC_HCF_MF
+REAL, DIMENSION(KLON,1,KLEV), INTENT(IN)    :: PHLI_HRI_MF
+REAL, DIMENSION(KLON,1,KLEV), INTENT(IN)    :: PHLI_HCF_MF
+!
 !*       0.2   Declarations of local variables :
 
 !
@@ -185,7 +196,7 @@ REAL  :: ZRATIO                     ! ZMASSTOT / ZMASSCOR
 !
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_SV1+NSV_LIMA-1) :: YLBUDGET
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
-REAL, DIMENSION(KLON,1) :: ZSIGQSAT
+REAL, DIMENSION(KLON,1) :: ZSIGQSAT, ZICE_CLD_WGT
 !
 !------------------------------------------------------------------------------
 !
@@ -353,7 +364,10 @@ ENDDO
          PRT=PRT, PRS=PRS, PSVT=PSVT, PSVS=PSVS, &
          HACTCCN=HACTCCN, PAERO=PSVT, PSOLORG=ZSOLORG, PMI=ZMI, & 
          PTHS=PTHS, OCOMPUTE_SRC=.TRUE., PSRCS=PSRCS, PCLDFR=PCLDFR, PICEFR=PICEFR, &
-         PRC_MF=PRC_MF, PRI_MF=PRI_MF, PCF_MF=PCF_MF )
+         PRC_MF=PRC_MF, PRI_MF=PRI_MF, PCF_MF=PCF_MF, &
+         PICE_CLD_WGT=ZICE_CLD_WGT, PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD, &
+         PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,            &
+         PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF, PHLI_HRI_MF=PHLI_HRI_MF, PHLI_HCF_MF=PHLI_HCF_MF )
 !
 !-------------------------------------------------------------------------------
 !

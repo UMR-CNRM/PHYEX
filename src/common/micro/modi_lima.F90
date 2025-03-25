@@ -13,6 +13,8 @@ INTERFACE
                   PAERO,PSOLORG, PMI, PTHS, PRS, PSVS,                    &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
                   PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
+                  PHLC_HCF, PHLC_HRC,                                     &
+                  PHLI_HCF, PHLI_HRI,                                     &
                   PLATHAM_IAGGS, PEFIELDW, PSV_ELEC_T, PSV_ELEC_S         )
 !
 USE MODD_IO,  ONLY: TFILEDATA
@@ -92,6 +94,11 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT) :: PCLDFR     ! Cloud frac
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT) :: PICEFR     ! Cloud fraction
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT) :: PPRCFR     ! Cloud fraction
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(INOUT) :: PFPR    ! Precipitation fluxes in altitude
+!
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLC_HCF
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLC_HRC
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLI_HCF
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLI_HRI
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PEFIELDW   ! Vertical component of the electric field

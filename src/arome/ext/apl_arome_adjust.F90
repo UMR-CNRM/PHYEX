@@ -332,11 +332,13 @@ SUBROUTINE APL_AROME_ADJUST(YDCST, YDMODEL, YDCPG_BNDS, YDCPG_OPTS, YDCPG_MISC, 
       & ZDT, YDMODEL%YRML_PHY_MF%YRPARAR%PHYEX%NEBN%VSIGQSAT, PZZ_F,                   &
       & PRHODJM(:, 1:YDCPG_OPTS%KFLEVG), PRHODREFM(:, 1:YDCPG_OPTS%KFLEVG), PEXNREFM,  &
       & PPABSM(:, 1:YDCPG_OPTS%KFLEVG), PTHM(:, 1:YDCPG_OPTS%KFLEVG),                  &
-      & PRM, PLIMAM, ZSIGM, ZPTRWNU, PDTHRAD, ZMFM, ZRC_MF, ZRI_MF, ZCF_MF, PTHS, PRS, &
-      & PLIMAS, PSRCS(:, 1:YDCPG_OPTS%KFLEVG), PNEBMNH,                                &
+      & PRM, PLIMAM, ZSIGM, ZPTRWNU, PDTHRAD, ZMFM, ZRC_MF, ZRI_MF, ZCF_MF, ZWEIGHT_MF_CLOUD, &
+      & PTHS, PRS, PLIMAS, PSRCS(:, 1:YDCPG_OPTS%KFLEVG), PNEBMNH,                     &
       & PICEFR, PPRCFR,                                                                &
       & YDDDH, YDMODEL%YRML_DIAG%YRLDDH, YDMODEL%YRML_DIAG%YRMDDH,                     &
-      & LLIMAINIT)
+      & LLIMAINIT,                                                                     &
+      & PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                                        &
+      & ZHLC_HRC_MF, ZHLC_HCF_MF, ZHLI_HRI_MF, ZHLI_HCF_MF                             )
 
     ELSE
 
