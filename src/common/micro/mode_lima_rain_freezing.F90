@@ -104,7 +104,7 @@ WHERE( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRRT(:)>LIMAP%XRTMIN(3) .AND. PT(:)<CST%XTT
 ! Comparison between heat to be released (to freeze rain) and heat sink (rain and ice temperature change)
 ! ZW0 is the proportion of process that can take place
    ZW0(:) = MAX(0., MIN(1., (ZW1(:)*CST%XCI+ZW2(:)*CST%XCL)*(CST%XTT-PT(:)) / &
-        MAX(1.E-20, CST%XLVTT*PRRCFRIG(:))))
+        MAX(1.E-20, CST%XLVTT*ZW2(:))))
    ZW2(:) = ZW0(:) * ZW2(:)       ! Part of rain that can be frozen
    ZW3(:) = (1.- ZW0(:)) * ZW1(:) ! Part of collected pristine ice converted to rain
    ZW1(:) = ZW0(:) * ZW1(:)       ! Part of collected pristine ice that leads to graupel

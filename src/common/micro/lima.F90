@@ -146,10 +146,10 @@ REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT) :: PICEFR     ! Cloud fraction
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT) :: PPRCFR     ! Cloud fraction
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(OUT) :: PFPR    ! Precipitation fluxes in altitude
 !
-REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLC_HCF
-REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLC_HRC
-REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLI_HCF
-REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PHLI_HRI
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,   INTENT(INOUT) :: PHLC_HCF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,   INTENT(INOUT) :: PHLC_HRC
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,   INTENT(INOUT) :: PHLI_HCF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,   INTENT(INOUT) :: PHLI_HRI
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
 REAL, DIMENSION(D%NIJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PEFIELDW   ! Vertical component of the electric field
@@ -189,7 +189,10 @@ REAL, DIMENSION(:),   ALLOCATABLE ::                               &
      ZTHT1D,                                                       &
      ZRVT1D, ZRCT1D, ZRRT1D, ZRIT1D, ZRST1D, ZRGT1D, ZRHT1D,       &
      ZCCT1D, ZCRT1D, ZCIT1D, ZCST1D, ZCGT1D, ZCHT1D,               &
-     ZEVAP1D
+     ZEVAP1D,                                                      &
+     ZHLC_LCF1D, ZHLC_LRC1D, ZHLI_LCF1D, ZHLI_LRI1D,               &
+     ZHLC_HCF1D, ZHLC_HRC1D, ZHLI_HCF1D, ZHLI_HRI1D
+
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZIFNN1D
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZCIT1D_SHAPE
 
@@ -390,6 +393,10 @@ REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_LCF
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_LRC
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LCF
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LRI
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_HCF
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_HRC
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_HCF
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_HRI
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZSIGMA_RC
 !-------------------------------------------------------------------------------
 !
@@ -1240,7 +1247,7 @@ END IF
 !               ------------------------------
 !
 LLMICRO(:,:)=.TRUE.
-IF ( AIE_AIE_AIE ) THEN
+IF ( NEBN%LSUBG_COND ) THEN
 !IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
 !  IF (PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM') THEN
 !    DO IK = D%NKTB, D%NKTE                                                                                                         !         
@@ -1249,18 +1256,29 @@ IF ( AIE_AIE_AIE ) THEN
 !      ENDDO
 !    ENDDO
 !  ENDIF
-!  IF (PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU') THEN
+   !  IF (PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU') THEN
+    IF (PRESENT(PHLC_HRC)) THEN
+       ZHLC_HRC(:,:)=PHLC_HRC(:,:)
+       ZHLC_HCF(:,:)=PHLC_HCF(:,:)
+       ZHLI_HRI(:,:)=PHLI_HRI(:,:)
+       ZHLI_HCF(:,:)=PHLI_HCF(:,:)
+    ELSE
+       ZHLC_HRC(:,:)=ZRCT(:,:)
+       ZHLC_HCF(:,:)=PCLDFR(:,:)
+       ZHLI_HRI(:,:)=ZRIT(:,:)
+       ZHLI_HCF(:,:)=PICEFR(:,:)
+    END IF
     DO IK = D%NKTB, D%NKTE     
       DO II=D%NIJB, D%NIJE
-        ZHLC_LRC(II, IK) = ZWR(II, IK, IRC) - PHLC_HRC(II, IK)
-        ZHLI_LRI(II, IK) = ZWR(II, IK, IRI) - PHLI_HRI(II, IK)
-        IF(ZWR(II, IK, IRC)>0.) THEN
-          ZHLC_LCF(II, IK) = PCLDFR(II, IK)- PHLC_HCF(II, IK)
+        ZHLC_LRC(II, IK) = ZRCT(II, IK) - ZHLC_HRC(II, IK)
+        ZHLI_LRI(II, IK) = ZRIT(II, IK) - ZHLI_HRI(II, IK)
+        IF(ZRCT(II, IK)>0.) THEN
+          ZHLC_LCF(II, IK) = PCLDFR(II, IK)- ZHLC_HCF(II, IK)
         ELSE
           ZHLC_LCF(II, IK)=0.
         ENDIF
-        IF(ZWR(II, IK, IRI)>0.) THEN
-          ZHLI_LCF(II, IK) = PCLDFR(II, IK)- PHLI_HCF(II, IK)
+        IF(ZRIT(II, IK)>0.) THEN
+          ZHLI_LCF(II, IK) = PICEFR(II, IK)- ZHLI_HCF(II, IK)
         ELSE
           ZHLI_LCF(II, IK)=0.
         ENDIF
@@ -1271,8 +1289,8 @@ IF ( AIE_AIE_AIE ) THEN
   CALL LIMA_COMPUTE_PDF(CST, LIMAP, D%NIJT*(D%NKTE-D%NKTB+1), 'ADJU', 'ADJU', 'NONE',&
                         LLMICRO(:,D%NKTB:D%NKTE), PRHODREF(:,D%NKTB:D%NKTE), ZRCT(:,D%NKTB:D%NKTE), ZRIT(:,D%NKTB:D%NKTE), &
                         PCLDFR(:,D%NKTB:D%NKTE), ZT(:,D%NKTB:D%NKTE), ZSIGMA_RC(:,D%NKTB:D%NKTE), &
-                        PHLC_HCF(:,D%NKTB:D%NKTE), ZHLC_LCF(:,D%NKTB:D%NKTE), PHLC_HRC(:,D%NKTB:D%NKTE), ZHLC_LRC(:,D%NKTB:D%NKTE), &
-                        PHLI_HCF(:,D%NKTB:D%NKTE), ZHLI_LCF(:,D%NKTB:D%NKTE), PHLI_HRI(:,D%NKTB:D%NKTE), ZHLI_LRI(:,D%NKTB:D%NKTE), &
+                        ZHLC_HCF(:,D%NKTB:D%NKTE), ZHLC_LCF(:,D%NKTB:D%NKTE), ZHLC_HRC(:,D%NKTB:D%NKTE), ZHLC_LRC(:,D%NKTB:D%NKTE), &
+                        ZHLI_HCF(:,D%NKTB:D%NKTE), ZHLI_LCF(:,D%NKTB:D%NKTE), ZHLI_HRI(:,D%NKTB:D%NKTE), ZHLI_LRI(:,D%NKTB:D%NKTE), &
                         PPRCFR(:,D%NKTB:D%NKTE))
 !CALL ICE4_COMPUTE_PDF2D(D, CST, ICEP, ICED, PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF, &
 !                        LLMICRO, PRHODREF, ZWR(:,:,IRC), ZWR(:,:,IRI), PCLDFR, ZT, ZSIGMA_RC,&
@@ -1280,7 +1298,15 @@ IF ( AIE_AIE_AIE ) THEN
 !                            PHLI_HCF, ZHLI_LCF, PHLI_HRI, ZHLI_LRI, PRAINFR)
   CALL LIMA_RAINFR_VERT(D, LIMAP, PPRCFR, ZRRT, ZRST, ZRGT, ZRHT)
 ELSE
-  PPRCFR(:,:)=1.
+   PPRCFR(:,:)=1.
+   ZHLC_LRC(:,:)=0.
+   ZHLI_LRI(:,:)=0.
+   ZHLC_LCF(:,:)=1.
+   ZHLI_LCF(:,:)=1.
+   ZHLC_HRC(:,:)=ZRCT(:,:)
+   ZHLI_LRI(:,:)=ZRIT(:,:)
+   ZHLC_HCF(:,:)=1.
+   ZHLI_HCF(:,:)=1.
 ENDIF
 
 !-------------------------------------------------------------------------------
@@ -1373,6 +1399,15 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       ALLOCATE(ZCF1D(IPACK))
       ALLOCATE(ZIF1D(IPACK))
       ALLOCATE(ZPF1D(IPACK))
+      ALLOCATE(ZHLC_HRC1D(IPACK))
+      ALLOCATE(ZHLC_HCF1D(IPACK))
+      ALLOCATE(ZHLI_HRI1D(IPACK))
+      ALLOCATE(ZHLI_HCF1D(IPACK))
+      ALLOCATE(ZLATHAM_IAGGS(IPACK))
+      ALLOCATE(ZHLC_LRC1D(IPACK))
+      ALLOCATE(ZHLC_LCF1D(IPACK))
+      ALLOCATE(ZHLI_LRI1D(IPACK))
+      ALLOCATE(ZHLI_LCF1D(IPACK))
       ALLOCATE(ZLATHAM_IAGGS(IPACK))
       IF (LIMAP%LCRYSTAL_SHAPE) THEN
         ALLOCATE(ZCIT1D_SHAPE(IPACK,LIMAP%NNB_CRYSTAL_SHAPE))
@@ -1414,6 +1449,14 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          ZCF1D(II)            = PCLDFR(I1(II),I3(II))
          ZIF1D(II)            = PICEFR(I1(II),I3(II))
          ZPF1D(II)            = PPRCFR(I1(II),I3(II))
+         ZHLC_HRC1D(II)       = ZHLC_HRC(I1(II),I3(II))
+         ZHLC_HCF1D(II)       = ZHLC_HCF(I1(II),I3(II))
+         ZHLI_HRI1D(II)       = ZHLI_HRI(I1(II),I3(II))
+         ZHLI_HCF1D(II)       = ZHLI_HCF(I1(II),I3(II))
+         ZHLC_LRC1D(II)       = ZHLC_LRC(I1(II),I3(II))
+         ZHLC_LCF1D(II)       = ZHLC_LCF(I1(II),I3(II))
+         ZHLI_LRI1D(II)       = ZHLI_LRI(I1(II),I3(II))
+         ZHLI_LCF1D(II)       = ZHLI_LCF(I1(II),I3(II))
          IF (OELEC) THEN
            ZLATHAM_IAGGS(II) = PLATHAM_IAGGS(I1(II),I3(II))
          ELSE
@@ -1690,6 +1733,8 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
                             ZA_RH, ZA_CH,                                           &
                             ZEVAP1D,                                                &
                             ZCF1D, ZIF1D, ZPF1D,                                    &
+                            ZHLC_HCF1D, ZHLC_LCF1D, ZHLC_HRC1D, ZHLC_LRC1D,         &
+                            ZHLI_HCF1D, ZHLI_LCF1D, ZHLI_HRI1D, ZHLI_LRI1D,         &
                             ZLATHAM_IAGGS                                           )
 
       !

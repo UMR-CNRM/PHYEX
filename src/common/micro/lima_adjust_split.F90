@@ -230,8 +230,8 @@ REAL, DIMENSION(D%NIJT,D%NKT) &
                             ZT, ZT2,  &      ! guess of the temperature at t+1
                             ZCPH, &      ! guess of the CPh for the mixing
                             ZW,   &
-                            ZW1,  &
-                            ZW2,  &
+                            ZZW1,  &
+                            ZZW2,  &
                             ZLV,  &      ! guess of the Lv at t+1
                             ZLS,  &      ! guess of the Ls at t+1
                             ZMASK,&
@@ -247,6 +247,7 @@ INTEGER                           :: ISIZE
 LOGICAL                           :: G_SIGMAS, GUSERI
 REAL, DIMENSION(:), ALLOCATABLE   :: ZRTMIN
 REAL, DIMENSION(:), ALLOCATABLE   :: ZCTMIN
+REAL :: ZW1, ZW2, ZCRIAUT
 !
 INTEGER :: IDX
 INTEGER :: II, IK, IL
@@ -487,32 +488,32 @@ IF (LIMAP%LADJ) THEN
       ! compute the cloud fraction with option 'BIGA' (see ice_adjust to implement other options)
       DO IK=D%NKTB,D%NKTE
          DO II=D%NJB,D%NIJE
-            ZW1=PRC_MF(JIJ,JK)/PTSTEP
+            ZW1=PRC_MF(II,IK)/PTSTEP
             ZW2=0.
-            IF (LIMAP%NMOM_I.EQ.1) ZW2=PRI_MF(JIJ,JK)/PTSTEP
-            IF(ZW1+ZW2>ZRVS(JIJ,JK)) THEN
-               ZW1=ZW1*ZRVS(JIJ,JK)/(ZW1+ZW2)
-               ZW2=ZRVS(JIJ,JK)-ZW1
+            IF (LIMAP%NMOM_I.EQ.1) ZW2=PRI_MF(II,IK)/PTSTEP
+            IF(ZW1+ZW2>ZRVS(II,IK)) THEN
+               ZW1=ZW1*ZRVS(II,IK)/(ZW1+ZW2)
+               ZW2=ZRVS(II,IK)-ZW1
             ENDIF
-            PCLDFR(JIJ,JK)=MIN(1.,PCLDFR(JIJ,JK)+PCF_MF(JIJ,JK))
-            ZRVS(JIJ,JK)=ZRVS(JIJ,JK)-(ZW1+ZW2)
-            ZRCS(JIJ,JK)=ZRCS(JIJ,JK)+ZW1
-            IF (LIMAP%NMOM_I.EQ.1) ZRIS(JIJ,JK)=ZRIS(JIJ,JK)+ZW2
-            IF (LIMAP%NMOM_C.GE.1) ZCCS(JIJ,JK)=ZCCT(JIJ,JK) / PTSTEP
-            IF (LIMAP%NMOD_CCN.GE.1) ZNFS(JIJ,JK,:) = ZNFT(JIJ,JK,:) / PTSTEP
-            IF (LIMAP%NMOD_CCN.GE.1) ZNAS(JIJ,JK,:) = ZNAT(JIJ,JK,:) / PTSTEP
-            PTHS(JIJ,JK) = PTHS(JIJ,JK) + &
-                    (ZW1 * ZLV(JIJ,JK) + ZW2 * ZLS(JIJ,JK)) / ZCPH(JIJ,JK) / PEXNREF(JIJ,JK)
+            PCLDFR(II,IK)=MIN(1.,PCLDFR(II,IK)+PCF_MF(II,IK))
+            ZRVS(II,IK)=ZRVS(II,IK)-(ZW1+ZW2)
+            ZRCS(II,IK)=ZRCS(II,IK)+ZW1
+            IF (LIMAP%NMOM_I.EQ.1) ZRIS(II,IK)=ZRIS(II,IK)+ZW2
+            IF (LIMAP%NMOM_C.GE.1) ZCCS(II,IK)=ZCCT(II,IK) / PTSTEP
+            IF (LIMAP%NMOD_CCN.GE.1) ZNFS(II,IK,:) = ZNFT(II,IK,:) / PTSTEP
+            IF (LIMAP%NMOD_CCN.GE.1) ZNAS(II,IK,:) = ZNAT(II,IK,:) / PTSTEP
+            PTHS(II,IK) = PTHS(II,IK) + &
+                    (ZW1 * ZLV(II,IK) + ZW2 * ZLS(II,IK)) / ZCPH(II,IK) / PEXNREF(II,IK)
       !
             IF(LLHLC_H) THEN
-               ZCRIAUT=ICEP%XCRIAUTC/PRHODREF(JIJ,JK)
-               PHLC_HCF(JIJ,JK)=MIN(1., PHLC_HCF(JIJ,JK)+PHLC_HCF_MF(JIJ,JK))
-               PHLC_HRC(JIJ,JK)=PHLC_HRC(JIJ,JK)+PHLC_HRC_MF(JIJ,JK)
+               ZCRIAUT=LIMAP%XCRIAUTC/PRHODREF(II,IK)
+               PHLC_HCF(II,IK)=MIN(1., PHLC_HCF(II,IK)+PHLC_HCF_MF(II,IK))
+               PHLC_HRC(II,IK)=PHLC_HRC(II,IK)+PHLC_HRC_MF(II,IK)
             END IF
             IF(LLHLI_H) THEN
-               ZCRIAUT=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(ZT(JIJ,JK)-CST%XTT)+ICEP%XBCRIAUTI))
-               PHLI_HCF(JIJ,JK)=MIN(1., PHLI_HCF(JIJ,JK)+PHLI_HCF_MF(JIJ,JK))
-               PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)+PHLI_HRI_MF(JIJ,JK)
+               ZCRIAUT=MIN(LIMAP%XCRIAUTI,10**(LIMAP%XACRIAUTI*(ZT(II,IK)-CST%XTT)+LIMAP%XBCRIAUTI))
+               PHLI_HCF(II,IK)=MIN(1., PHLI_HCF(II,IK)+PHLI_HCF_MF(II,IK))
+               PHLI_HRI(II,IK)=PHLI_HRI(II,IK)+PHLI_HRI_MF(II,IK)
             ENDIF
          END DO
       END DO
@@ -529,8 +530,8 @@ ELSE
             ZW(II,IK) = CST%XMV / CST%XMD * ZW(II,IK) / ( PPABST(II,IK)-ZW(II,IK) ) 
             ZS(II,IK) = ZRVS(II,IK)*PTSTEP / ZW(II,IK) - 1.
             ZW(II,IK) = ZCCS(II,IK)*PTSTEP/(LIMAW%XLBC*ZCCS(II,IK)/ZRCS(II,IK))**LIMAW%XLBEXC
-            ZW2(II,IK) = LIMAW%XAHENG3(IVEC1(II,IK)+1)*ZVEC1(II,IK)-LIMAW%XAHENG3(IVEC1(II,IK))*(ZVEC1(II,IK)-1.)
-            ZCND(II,IK) = 2.*3.14*1000.*ZW2(II,IK)*ZS(II,IK)*ZW(II,IK)
+            ZZW2(II,IK) = LIMAW%XAHENG3(IVEC1(II,IK)+1)*ZVEC1(II,IK)-LIMAW%XAHENG3(IVEC1(II,IK))*(ZVEC1(II,IK)-1.)
+            ZCND(II,IK) = 2.*3.14*1000.*ZZW2(II,IK)*ZS(II,IK)*ZW(II,IK)
             IF(ZCND(II,IK).LE.0.) THEN
                ZCND(II,IK) = MAX ( ZCND(II,IK), -ZRCS(II,IK) )
             ELSE
@@ -562,21 +563,21 @@ IF (LIMAP%NMOM_C .GE. 2) THEN
       PCLDFR(:,:) = 0.
    END WHERE
    !
-   ZW1(:,:) = 0.
-   IF (LIMAP%NMOD_CCN.GE.1) ZW1(:,:) = SUM(ZNAS,DIM=3)
-   ZW (:,:) = MIN( ZW(:,:), ZW1(:,:) )
-   ZW2(:,:) = 0.
+   ZZW1(:,:) = 0.
+   IF (LIMAP%NMOD_CCN.GE.1) ZZW1(:,:) = SUM(ZNAS,DIM=3)
+   ZW (:,:) = MIN( ZW(:,:), ZZW1(:,:) )
+   ZZW2(:,:) = 0.
    WHERE ( ZW(:,:) > 0. )
       ZMASK(:,:) = 1.0
-      ZW2(:,:) = ZW(:,:) / ZW1(:,:)
+      ZZW2(:,:) = ZW(:,:) / ZZW1(:,:)
    ENDWHERE
    !
    IF (LIMAP%NMOD_CCN.GE.1) THEN
       DO IMOD = 1, LIMAP%NMOD_CCN
          ZNFS(:,:,IMOD) = ZNFS(:,:,IMOD) +                           &
-              ZMASK(:,:) * ZNAS(:,:,IMOD) * ZW2(:,:)
+              ZMASK(:,:) * ZNAS(:,:,IMOD) * ZZW2(:,:)
          ZNAS(:,:,IMOD) = ZNAS(:,:,IMOD) -                           &
-              ZMASK(:,:) * ZNAS(:,:,IMOD) * ZW2(:,:)
+              ZMASK(:,:) * ZNAS(:,:,IMOD) * ZZW2(:,:)
          ZNAS(:,:,IMOD) = MAX( 0.0 , ZNAS(:,:,IMOD) )
       ENDDO
    END IF

@@ -461,7 +461,7 @@ END WHERE
 ZSIGMA_RC(:)=0.
 CALL LIMA_COMPUTE_PDF(CST, LIMAP, KSIZE, 'ADJU', 'ADJU', 'NONE',&
                       ODCOMPUTE, PRHODREF, PRCT, PRIT, &
-                      PCF1D, PT, ZSIGMA_RC, &
+                      PCF1D, ZT, ZSIGMA_RC, &
                       PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
                       PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, &
                       PPF1D)
@@ -726,7 +726,6 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
    !
    P_CC_ACCR(:) = P_CC_ACCR_2(:) * MIN(PHLC_HCF(:),ZPF1D(:))
    P_RC_ACCR(:) = P_RC_ACCR_2(:) * MIN(PHLC_HCF(:),ZPF1D(:))
-   ZPF_TMP(:)=MAX(0.1,ZPF1D(:)-ZCF1D(:))
    ! In low content cloud
    CALL LIMA_DROPLETS_ACCRETION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,                & ! depends on CF, PF
                                  PRHODREF,                                      &
