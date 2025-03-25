@@ -99,6 +99,7 @@ INTEGER :: IND                ! Number of interval to integrate the kernels
 REAL :: ZZESR, ZZESS, ZZEII   ! Mean efficiency of rain-aggregate collection, aggregate-aggregate collection
 REAL :: ZZFDINFTY             ! Factor used to define the "infinite" diameter
 !
+REAL :: ZCRI0, ZTCRI0         ! Second point to determine 10**(aT+b) law of ri->rs autoconversion
 !
 !INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
 !LOGICAL  :: GFLAG   ! Logical flag for printing the constatnts on the output
@@ -977,7 +978,18 @@ XCOLEXII = 0.025   !  Temperature factor of the I+I collection efficiency
 !
 !*       6.3    Constants for pristine ice autoconversion
 !
+XTIMAUTI = 1.E-3  !  Time constant at T=T_t
 XTEXAUTI = 0.025   !  Temperature factor of the I+I collection efficiency
+IF(LCRIAUTI) THEN
+  !second point to determine 10**(aT+b) law
+  ZTCRI0=-40.0
+  ZCRI0=1.25E-6
+  XBCRIAUTI=-( LOG10(XCRIAUTI) - LOG10(ZCRI0)*XT0CRIAUTI/ZTCRI0 )&
+                   *ZTCRI0/(XT0CRIAUTI-ZTCRI0)
+  XACRIAUTI=(LOG10(ZCRI0)-XBCRIAUTI)/ZTCRI0
+ELSE
+  XT0CRIAUTI=(LOG10(XCRIAUTI)-XBCRIAUTI)/0.06
+ENDIF
 !
 !!$GFLAG = .TRUE.
 !!$IF (GFLAG) THEN

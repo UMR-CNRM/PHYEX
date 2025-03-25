@@ -138,7 +138,7 @@ INTEGER   :: NSCLBDAI
 REAL      :: XAUTO3, XAUTO4,                   & ! Constants for pristine ice
              XLAUTS,   XLAUTS_THRESHOLD,       & ! autoconversion : AUT
              XITAUTS, XITAUTS_THRESHOLD,       & ! (ini_ice_com)
-             XTEXAUTI
+             XTEXAUTI, XTIMAUTI
 !
 REAL      :: XCONCI_MAX                          ! Limitation of the pristine
                                    ! ice concentration (init and grid-nesting)
@@ -299,6 +299,7 @@ REAL, POINTER :: XLBEXI => NULL(), &
                  XITAUTS => NULL(), &
                  XITAUTS_THRESHOLD => NULL(), &
                  XTEXAUTI => NULL(), &
+                 XTIMAUTI => NULL(), &
                  XCONCI_MAX => NULL(), &
                  XFREFFI => NULL(), &
                  XALPHA1 => NULL(), &
@@ -490,6 +491,7 @@ IF(.NOT. ASSOCIATED(XLBEXI)) THEN
   XITAUTS            => PARAM_LIMA_COLD%XITAUTS
   XITAUTS_THRESHOLD  => PARAM_LIMA_COLD%XITAUTS_THRESHOLD
   XTEXAUTI           => PARAM_LIMA_COLD%XTEXAUTI
+  XTIMAUTI           => PARAM_LIMA_COLD%XTIMAUTI
   XCONCI_MAX         => PARAM_LIMA_COLD%XCONCI_MAX
   XFREFFI            => PARAM_LIMA_COLD%XFREFFI
   XALPHA1            => PARAM_LIMA_COLD%XALPHA1

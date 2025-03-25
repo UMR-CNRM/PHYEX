@@ -62,6 +62,10 @@ REAL, ALLOCATABLE   :: PEVAP        (:,:,:)
 REAL, ALLOCATABLE   :: PAERO        (:,:,:,:)
 REAL, ALLOCATABLE   :: PSOLORG        (:,:,:,:)
 REAL, ALLOCATABLE   :: PMI        (:,:,:,:)
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PHLC_HRC
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PHLC_HCF
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PHLI_HRI
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PHLI_HCF
 
 INTEGER :: NPROMA, NGPBLKS, NFLEVG
 INTEGER :: JLON, JLEV
@@ -137,6 +141,10 @@ CALL GETDATA_LIMA (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, NMOD_CCN, NMOD_IFN, NMOD_I
                   &ZINPRC, ZINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, PEVAP, &
                   &PAERO, PSOLORG, PMI, &
                   &LLVERBOSE)
+PHLC_HRC(:,:,:)=PRT(:,:,:,2)
+PHLC_HCF(:,:,:)=PCLDFR(:,:,:)
+PHLI_HRI(:,:,:)=PRT(:,:,:,4)
+PHLI_HCF(:,:,:)=1.
 
 KLEV = SIZE (PRS, 2)
 
@@ -271,7 +279,8 @@ DO ITIME = 1, NTIME
                PINPRC=ZINPRC(:, IBL), PINDEP=ZINDEP(:, IBL), PINPRR=PINPRR(:, IBL), PINPRI=ZINPRI(:, IBL), PINPRS=PINPRS(:, IBL), &
                PINPRG=PINPRG(:, IBL), PINPRH=PINPRH(:, IBL), &
                PEVAP3D=PEVAP(:, :, IBL), PCLDFR=PCLDFR(:, :, IBL), PICEFR=PICEFR(:, :, IBL), PPRCFR=PPRCFR(:, :, IBL), &
-               PFPR=PFPR(:, :, :, IBL) &
+               PFPR=PFPR(:, :, :, IBL), &
+               PHLC_HCF=PHLC_HCF(:, :, IBL), PHLC_HRC=PHLC_HRC(:, :, IBL), PHLI_HCF=PHLI_HCF(:, :, IBL), PHLI_HRI=PHLI_HRI(:, :, IBL) &
 
 #ifdef USE_STACK
     & , YDSTACK=YLSTACK &

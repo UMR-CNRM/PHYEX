@@ -115,8 +115,8 @@ IF (LIMAP%NMOM_I.EQ.1) THEN
 !        -----------------------------------------
 !
    WHERE( GMICRO )
-      ZCRIAUTI(:)=MIN(0.2E-4,10**(0.06*(PT(:)-CST%XTT)-3.5))
-      ZZW(:)   = 1.E-3 * EXP( 0.015*(PT(:)-CST%XTT) ) * MAX( PRIT(:)-ZCRIAUTI(:),0.0 )
+      ZCRIAUTI(:)=MIN(LIMAP%XCRIAUTI,10**(LIMA%XACRIAUTI*(PT(:)-CST%XTT)+LIMAP%XBCRIAUTI))
+      ZZW(:)   = LIMAC%XTIMAUTI * EXP( LIMAC%XTEXAUTI*(PT(:)-CST%XTT) ) * MAX( PRIT(:)-ZCRIAUTI(:),0.0 )
       P_RI_CNVS(:) = - ZZW(:)
    END WHERE
 ELSE

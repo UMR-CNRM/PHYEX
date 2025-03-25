@@ -139,7 +139,10 @@ REAL      :: XNDEBRIS_CIBU              ! Number of ice crystal debris produced
 REAL      :: XPSH_MAX_RDSF              ! shattering probability normal distribution maximum
 !
 ! 1-m autoconversion
-REAL      :: XCRIAUTI, XACRIAUTI, XBCRIAUTI
+LOGICAL :: LCRIAUTI     !< .T. to compute XACRIAUTI and XBCRIAUTI (from XCRIAUTI and XT0CRIAUTI);
+                        !! .F. to compute XT0CRIAUTI (from XCRIAUTI and XBCRIAUTI)
+REAL :: XT0CRIAUTI  !< Threshold temperature (???) for the ice->snow autoconversion threshold
+REAL :: XCRIAUTI, XACRIAUTI, XBCRIAUTI
 !
 !-------------------------------------------------------------------------------
 !
@@ -274,6 +277,7 @@ LOGICAL, POINTER :: LLIMA_DIAG => NULL(), &
                     LCCN_HOM => NULL(), &
                     LSCAV => NULL(), &
                     LAERO_MASS => NULL(),&
+                    LCRIAUTI => NULL(), &
                     LSIGMOIDE_G => NULL(),&
                     LSIGMOIDE_NG => NULL()
 
@@ -320,6 +324,7 @@ REAL, POINTER :: XMRSTEP => NULL(), &
                  XACTEMP_CCN => NULL(), &
                  XAERDIFF => NULL(), &
                  XAERHEIGHT => NULL(), &
+                 XT0CRIAUTI => NULL(), &
                  XCRIAUTI => NULL(), &
                  XACRIAUTI => NULL(), &
                  XBCRIAUTI => NULL(), &
@@ -404,7 +409,7 @@ NAMELIST/NAM_PARAM_LIMA/LNUCL, LSEDI, LHHONI, LMEYERS,                     &
                         LSCAV, LAERO_MASS, LDEPOC, XVDEPOC, LACTTKE,       &                                         
                         LPTSPLIT, LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS,&
                         LSIGMOIDE_NG, LSIGMOIDE_G, XSIGMOIDE_G, XMVDMIN_G, &
-                        XCRIAUTC, XCRIAUTI, XACRIAUTI, XBCRIAUTI
+                        XCRIAUTC, XCRIAUTI, XACRIAUTI, XBCRIAUTI, LCRIAUTI, XT0CRIAUTI
 
 CONTAINS
 SUBROUTINE PARAM_LIMA_ASSOCIATE()
@@ -442,6 +447,7 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   LAERO_MASS         => PARAM_LIMA%LAERO_MASS
   LSIGMOIDE_G        => PARAM_LIMA%LSIGMOIDE_G
   LSIGMOIDE_NG       => PARAM_LIMA%LSIGMOIDE_NG
+  LCRIAUTI           => PARAM_LIMA%LCRIAUTI
 
   NMAXITER           => PARAM_LIMA%NMAXITER
   NMOM_I             => PARAM_LIMA%NMOM_I
@@ -485,6 +491,7 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   XACTEMP_CCN        => PARAM_LIMA%XACTEMP_CCN
   XAERDIFF           => PARAM_LIMA%XAERDIFF
   XAERHEIGHT         => PARAM_LIMA%XAERHEIGHT
+  XT0CRIAUTI         => PARAM_ICEN%XT0CRIAUTI
   XCRIAUTI           => PARAM_LIMA%XCRIAUTI
   XACRIAUTI          => PARAM_LIMA%XACRIAUTI
   XBCRIAUTI          => PARAM_LIMA%XBCRIAUTI
@@ -782,10 +789,12 @@ IF(GLDEFAULTVAL) THEN
   LSIGMOIDE_NG = .FALSE.
   XSIGMOIDE_G = 1.E8
   XMVDMIN_G = 125.E-6
+  LCRIAUTI=.FALSE.
   XCRIAUTC=0.5E-3
   XCRIAUTI=0.2E-4 !  Revised value by Chaboureau et al. (2001)
   XACRIAUTI=0.06
   XBCRIAUTI=-3.5
+  XT0CRIAUTI=(LOG10(XCRIAUTI)-XBCRIAUTI)/0.06
 ENDIF
 !
 !*      2. NAMELIST
