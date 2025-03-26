@@ -1247,7 +1247,7 @@ END IF
 !               ------------------------------
 !
 LLMICRO(:,:)=.TRUE.
-IF ( NEBN%LSUBG_COND ) THEN
+IF ( .FALSE. .AND. NEBN%LSUBG_COND ) THEN
 !IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
 !  IF (PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM') THEN
 !    DO IK = D%NKTB, D%NKTE                                                                                                         !         
@@ -1288,13 +1288,13 @@ IF ( NEBN%LSUBG_COND ) THEN
       ZHLI_HRI(:,:)=ZRIT(:,:)
       ZHLI_HCF(:,:)=PICEFR(:,:)
    END IF
-  CALL LIMA_COMPUTE_PDF(CST, LIMAP, D%NIJT*(D%NKTE-D%NKTB+1), 'ADJU', 'ADJU', 'NONE',&
-                        LLMICRO(:,D%NKTB:D%NKTE), PRHODREF(:,D%NKTB:D%NKTE), ZRCT(:,D%NKTB:D%NKTE), ZRIT(:,D%NKTB:D%NKTE), &
-                        PCLDFR(:,D%NKTB:D%NKTE), ZT(:,D%NKTB:D%NKTE), ZSIGMA_RC(:,D%NKTB:D%NKTE), &
-                        ZHLC_HCF(:,D%NKTB:D%NKTE), ZHLC_LCF(:,D%NKTB:D%NKTE), ZHLC_HRC(:,D%NKTB:D%NKTE), ZHLC_LRC(:,D%NKTB:D%NKTE), &
-                        ZHLI_HCF(:,D%NKTB:D%NKTE), ZHLI_LCF(:,D%NKTB:D%NKTE), ZHLI_HRI(:,D%NKTB:D%NKTE), ZHLI_LRI(:,D%NKTB:D%NKTE), &
-                        PPRCFR(:,D%NKTB:D%NKTE))
-  CALL LIMA_RAINFR_VERT(D, LIMAP, PPRCFR, ZRRT, ZRST, ZRGT, ZRHT)
+!  CALL LIMA_COMPUTE_PDF(CST, LIMAP, D%NIJT*(D%NKTE-D%NKTB+1), 'ADJU', 'ADJU', 'NONE',&
+!                        LLMICRO(:,D%NKTB:D%NKTE), PRHODREF(:,D%NKTB:D%NKTE), ZRCT(:,D%NKTB:D%NKTE), ZRIT(:,D%NKTB:D%NKTE), &
+!                        PCLDFR(:,D%NKTB:D%NKTE), ZT(:,D%NKTB:D%NKTE), ZSIGMA_RC(:,D%NKTB:D%NKTE), &
+!                        ZHLC_HCF(:,D%NKTB:D%NKTE), ZHLC_LCF(:,D%NKTB:D%NKTE), ZHLC_HRC(:,D%NKTB:D%NKTE), ZHLC_LRC(:,D%NKTB:D%NKTE), &
+!                        ZHLI_HCF(:,D%NKTB:D%NKTE), ZHLI_LCF(:,D%NKTB:D%NKTE), ZHLI_HRI(:,D%NKTB:D%NKTE), ZHLI_LRI(:,D%NKTB:D%NKTE), &
+!                        PPRCFR(:,D%NKTB:D%NKTE))
+!  CALL LIMA_RAINFR_VERT(D, LIMAP, PPRCFR, ZRRT, ZRST, ZRGT, ZRHT)
 ELSE
    PPRCFR(:,:)=1.
    ZHLC_LRC(:,:)=0.

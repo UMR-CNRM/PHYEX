@@ -93,6 +93,8 @@ INTEGER :: IRANK, ISIZE
 LOGICAL :: LLVERBOSE, LLSTAT, LLBIND
 REAL (KIND=JPHOOK) :: ZHOOK_HANDLE
 
+print *, "TEST 0"
+
 CALL INITOPTIONS ()
 NGPBLKS = 296
 CALL GETOPTION ("--blocks", NGPBLKS)
@@ -127,6 +129,7 @@ IF (LLBIND) THEN
   CALL LINUX_BIND      (IRANK, ISIZE)
   CALL LINUX_BIND_DUMP (IRANK, ISIZE)
 ENDIF
+print *, "TEST 1"
 
 CALL GETDATA_LIMA_ADJUST (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, NSP, NCARB, NSOA, &
                          &PRHODREF, PRHODJ, PEXNREF, ZSIGQSAT, PSIGS, PMFCONV, PPABSM, ZZZ, &                             
@@ -135,17 +138,21 @@ CALL GETDATA_LIMA_ADJUST (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, NSP, NCARB, NSOA, &
                          &PSRCS, PCLDFR, PICEFR, &
                          &PSRCS_OUT, PCLDFR_OUT, PICEFR_OUT, &
                          &PAERO, PSOLORG, PMI,&                                                          
+                         &ZICE_CLD_WGT, PWEIGHT_MF_CLOUD,&
+                         &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, &
+                         &PHLC_HRC_OUT, PHLC_HCF_OUT, PHLI_HRI_OUT, PHLI_HCF_OUT, &
                          &LLVERBOSE)
 
+print *, "TEST 2"
 PWEIGHT_MF_CLOUD(:,:,:)=0.5
-PHLC_HRC       (:,:,:)=PRT(:,:,:,2) 
-PHLC_HCF       (:,:,:)=PCLDFR(:,:,:)
-PHLI_HRI       (:,:,:)=PRT(:,:,:,4)
-PHLI_HCF       (:,:,:)=1.
-PHLC_HRC_OUT   (:,:,:)=PRT(:,:,:,2)
-PHLC_HCF_OUT   (:,:,:)=PCLDFR(:,:,:)
-PHLI_HRI_OUT   (:,:,:)=PRT(:,:,:,4)
-PHLI_HCF_OUT   (:,:,:)=1.
+!PHLC_HRC       (:,:,:)=PRT(:,:,:,2) 
+!PHLC_HCF       (:,:,:)=PCLDFR(:,:,:)
+!PHLI_HRI       (:,:,:)=PRT(:,:,:,4)
+!PHLI_HCF       (:,:,:)=1.
+!PHLC_HRC_OUT   (:,:,:)=PRT(:,:,:,2)
+!PHLC_HCF_OUT   (:,:,:)=PCLDFR(:,:,:)
+!PHLI_HRI_OUT   (:,:,:)=PRT(:,:,:,4)
+!PHLI_HCF_OUT   (:,:,:)=1.
 
 KLEV = SIZE (PRS, 2)
 

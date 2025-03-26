@@ -466,12 +466,12 @@ END WHERE
 !
 ! Compute pdf & control PRCFR
 ZSIGMA_RC(:)=0.
-CALL LIMA_COMPUTE_PDF(CST, LIMAP, KSIZE, 'ADJU', 'ADJU', 'NONE',&
-                      ODCOMPUTE, PRHODREF, PRCT, PRIT, &
-                      PCF1D, ZT, ZSIGMA_RC, &
-                      PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
-                      PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, &
-                      PPF1D)
+!CALL LIMA_COMPUTE_PDF(CST, LIMAP, KSIZE, 'ADJU', 'ADJU', 'NONE',&
+!                      ODCOMPUTE, PRHODREF, PRCT, PRIT, &
+!                      PCF1D, ZT, ZSIGMA_RC, &
+!                      PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
+!                      PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, &
+!                      PPF1D)
 WHERE(PRRT(:)+PRST(:)+PRGT(:)+PRHT(:).GE.LIMAP%XRTMIN(3) .AND. PPF1D.LE.0.01)
    PPF1D(:)=1.
 END WHERE
