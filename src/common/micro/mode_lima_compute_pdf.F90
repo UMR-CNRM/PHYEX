@@ -42,8 +42,8 @@ TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(PARAM_LIMA_T),       INTENT(IN)    :: LIMAP
 INTEGER,                INTENT(IN)  :: KSIZE
 CHARACTER(LEN=4),       INTENT(IN)  :: HSUBG_AUCV_RC     ! Kind of Subgrid autoconversion method for cloud water
-CHARACTER(LEN=80),      INTENT(IN)  :: HSUBG_AUCV_RI     ! Kind of Subgrid autoconversion method for cloud ice
-CHARACTER(LEN=80),      INTENT(IN)  :: HSUBG_PR_PDF   ! pdf for subgrid precipitation
+CHARACTER(LEN=4),      INTENT(IN)   :: HSUBG_AUCV_RI     ! Kind of Subgrid autoconversion method for cloud ice
+CHARACTER(LEN=4),      INTENT(IN)  :: HSUBG_PR_PDF   ! pdf for subgrid precipitation
 LOGICAL, DIMENSION(KSIZE), INTENT(IN)  :: LDMICRO    ! Computation mask
 REAL, DIMENSION(KSIZE), INTENT(IN)  :: PRHODREF   ! Reference density
 REAL, DIMENSION(KSIZE), INTENT(IN)  :: PRCT       ! Cloud water m.r. at t

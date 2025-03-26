@@ -140,6 +140,7 @@ CALL GETDATA_LIMA (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, NMOD_CCN, NMOD_IFN, NMOD_I
                   &PPRCFR_OUT, PFPR_OUT, &
                   &ZINPRC, ZINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, PEVAP, &
                   &PAERO, PSOLORG, PMI, &
+                  &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, &
                   &LLVERBOSE)
 PHLC_HRC(:,:,:)=PRT(:,:,:,2)
 PHLC_HCF(:,:,:)=PCLDFR(:,:,:)
