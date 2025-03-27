@@ -92,6 +92,7 @@ ZZW3(:) = 0.
 !
 P_RI_AGGS(:) = 0.
 P_CI_AGGS(:) = 0.
+P_SHCI_AGGS(:,:) = 0.
 !
 !
 IF (LIMAP%NMOM_I.EQ.1) THEN
