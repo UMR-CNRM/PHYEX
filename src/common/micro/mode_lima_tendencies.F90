@@ -432,46 +432,17 @@ IF (LHOOK) CALL DR_HOOK('LIMA_TENDENCIES', 0, ZHOOK_HANDLE)
 !
 WHERE (ODCOMPUTE(:))
    ZT(:) = PTHT(:) * ( PPABST(:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
-!
-   ZW(:) = PEXNREF(:)*( CST%XCPD &
-                               +CST%XCPV*PRVT(:) &
-                               +CST%XCL*(ZRCT(:)+ZRRT(:)) &
-                               +CST%XCI*(ZRIT(:)+ZRST(:)+ZRGT(:)+ZRHT(:)) )
-!
-   ZLV(:) = CST%XLVTT + (CST%XCPV-CST%XCL)*(ZT(:)-CST%XTT)
-   ZLVFACT(:) = ZLV(:)/ZW(:)               ! L_v/(Pi_ref*C_ph)
-   ZLS(:) = CST%XLSTT + (CST%XCPV-CST%XCI)*(ZT(:)-CST%XTT)
-   ZLSFACT(:) = ZLS(:)/ZW(:)               ! L_s/(Pi_ref*C_ph)
-!
-   ZEVSAT(:)  = EXP( CST%XALPW - CST%XBETAW/ZT(:) - CST%XGAMW*LOG(ZT(:) ) )
-   ZEISAT(:)  = EXP( CST%XALPI - CST%XBETAI/ZT(:) - CST%XGAMI*LOG(ZT(:) ) )
-   !
-   ZEPS= CST%XMV / CST%XMD
-   ZRVSAT(:) = ZEPS * ZEVSAT(:) / (PPABST(:) - ZEVSAT(:))
-   ZRISAT(:) = ZEPS * ZEISAT(:) / (PPABST(:) - ZEISAT(:))
-   !
-   ZSSI(:)  = PRVT(:)/ZRISAT(:) - 1.0             ! Si  =  rv/rsi - 1
-   ZSSIW(:) = ZRVSAT(:)/ZRISAT(:) - 1.0 ! Siw = rsw/rsi - 1
-!
-   ZKA(:) = 2.38E-2 + 0.0071E-2 * ( ZT(:) - CST%XTT )
-!
-   ZDV(:) = 0.211E-4 * (ZT(:)/CST%XTT)**1.94 * (CST%XP00/PPABST(:))
-!
-   ZAI(:) =   ( CST%XLSTT + (CST%XCPV-CST%XCI)*(ZT(:)-CST%XTT) )**2 / (ZKA(:)*CST%XRV*ZT(:)**2) &
-                + ( CST%XRV*ZT(:) ) / (ZDV(:)*ZEISAT(:))
-!
-   ZCJ(:) = LIMAC%XSCFAC * PRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZT(:)-CST%XTT) )
-!
 END WHERE
 !
 ! Compute pdf & control PRCFR
+!
 ZSIGMA_RC(:)=0.
-!CALL LIMA_COMPUTE_PDF(CST, LIMAP, KSIZE, 'ADJU', 'ADJU', 'NONE',&
-!                      ODCOMPUTE, PRHODREF, PRCT, PRIT, &
-!                      PCF1D, ZT, ZSIGMA_RC, &
-!                      PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
-!                      PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, &
-!                      PPF1D)
+CALL LIMA_COMPUTE_PDF(CST, LIMAP, KSIZE, 'ADJU', 'ADJU', 'NONE',&
+                      ODCOMPUTE, PRHODREF, PRCT, PRIT, &
+                      PCF1D, ZT, ZSIGMA_RC, &
+                      PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
+                      PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, &
+                      PPF1D)
 WHERE(PRRT(:)+PRST(:)+PRGT(:)+PRHT(:).GE.LIMAP%XRTMIN(3) .AND. PPF1D.LE.0.01)
    PPF1D(:)=1.
 END WHERE
@@ -481,10 +452,10 @@ END WHERE
 ZCF1D(:) = MAX(PCF1D(:),0.01)
 ZIF1D(:) = MAX(PIF1D(:),0.01)
 ZPF1D(:) = MAX(PPF1D(:),0.01)
-ZHLC_HCF(:) = MAX(ZHLC_HCF(:),0.01)
-ZHLC_LCF(:) = MAX(ZHLC_LCF(:),0.01)
-ZHLI_HCF(:) = MAX(ZHLI_HCF(:),0.01)
-ZHLI_LCF(:) = MAX(ZHLI_LCF(:),0.01)
+ZHLC_HCF(:) = MAX(PHLC_HCF(:),0.01)
+ZHLC_LCF(:) = MAX(PHLC_LCF(:),0.01)
+ZHLI_HCF(:) = MAX(PHLI_HCF(:),0.01)
+ZHLI_LCF(:) = MAX(PHLI_LCF(:),0.01)
 !
 !
 !
@@ -531,6 +502,41 @@ ELSEWHERE
    ZRHT(:)=0.
 END WHERE
 !
+! thermodynamical variables
+!
+WHERE (ODCOMPUTE(:))
+   ZW(:) = PEXNREF(:)*( CST%XCPD &
+                               +CST%XCPV*PRVT(:) &
+                               +CST%XCL*(ZRCT(:)+ZRRT(:)) &
+                               +CST%XCI*(ZRIT(:)+ZRST(:)+ZRGT(:)+ZRHT(:)) )
+!
+   ZLV(:) = CST%XLVTT + (CST%XCPV-CST%XCL)*(ZT(:)-CST%XTT)
+   ZLVFACT(:) = ZLV(:)/ZW(:)               ! L_v/(Pi_ref*C_ph)
+   ZLS(:) = CST%XLSTT + (CST%XCPV-CST%XCI)*(ZT(:)-CST%XTT)
+   ZLSFACT(:) = ZLS(:)/ZW(:)               ! L_s/(Pi_ref*C_ph)
+!
+   ZEVSAT(:)  = EXP( CST%XALPW - CST%XBETAW/ZT(:) - CST%XGAMW*LOG(ZT(:) ) )
+   ZEISAT(:)  = EXP( CST%XALPI - CST%XBETAI/ZT(:) - CST%XGAMI*LOG(ZT(:) ) )
+   !
+   ZEPS= CST%XMV / CST%XMD
+   ZRVSAT(:) = ZEPS * ZEVSAT(:) / (PPABST(:) - ZEVSAT(:))
+   ZRISAT(:) = ZEPS * ZEISAT(:) / (PPABST(:) - ZEISAT(:))
+   !
+   ZSSI(:)  = PRVT(:)/ZRISAT(:) - 1.0             ! Si  =  rv/rsi - 1
+   ZSSIW(:) = ZRVSAT(:)/ZRISAT(:) - 1.0 ! Siw = rsw/rsi - 1
+!
+   ZKA(:) = 2.38E-2 + 0.0071E-2 * ( ZT(:) - CST%XTT )
+!
+   ZDV(:) = 0.211E-4 * (ZT(:)/CST%XTT)**1.94 * (CST%XP00/PPABST(:))
+!
+   ZAI(:) =   ( CST%XLSTT + (CST%XCPV-CST%XCI)*(ZT(:)-CST%XTT) )**2 / (ZKA(:)*CST%XRV*ZT(:)**2) &
+                + ( CST%XRV*ZT(:) ) / (ZDV(:)*ZEISAT(:))
+!
+   ZCJ(:) = LIMAC%XSCFAC * PRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZT(:)-CST%XTT) )
+!
+END WHERE
+!
+! Lambda computation
 ! Cloud droplets : same formula for 1 and 2 moments, but using real or fixed Nc value
 ZLBDC(:)  = 1.E10
 ZLBDC_LRC(:)  = 1.E10
@@ -787,6 +793,12 @@ END IF
 IF (LIMAP%NMOM_I.GE.1) THEN
    !
    ! Includes vapour deposition on ice, ice -> snow conversion
+   P_RI_DEPI(:) = 0.
+   P_RI_CNVS(:) = 0.
+   P_CI_CNVS(:) = 0.
+   P_TH_DEPI(:) = 0.
+   P_SHCI_HACH(:,:) = 0.
+   P_SHCI_CNVS(:,:) = 0.
    !
    ! In low content part
    CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF

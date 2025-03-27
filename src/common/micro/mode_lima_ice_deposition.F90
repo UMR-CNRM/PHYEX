@@ -98,6 +98,8 @@ P_TH_DEPI(:) = 0.
 P_RI_DEPI(:) = 0.
 P_RI_CNVS(:) = 0.
 P_CI_CNVS(:) = 0.
+P_SHCI_HACH(:,:) = 0.
+P_SHCI_CNVS(:,:) = 0.
 !
 ! Physical limitations
 !

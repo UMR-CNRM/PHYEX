@@ -142,9 +142,9 @@ CALL GETDATA_LIMA (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, NMOD_CCN, NMOD_IFN, NMOD_I
                   &PAERO, PSOLORG, PMI, &
                   &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, &
                   &LLVERBOSE)
-PHLC_HRC(:,:,:)=PRT(:,:,:,2)
+PHLC_HRC(:,:,:)=PRT(:,:,2,:)
 PHLC_HCF(:,:,:)=PCLDFR(:,:,:)
-PHLI_HRI(:,:,:)=PRT(:,:,:,4)
+PHLI_HRI(:,:,:)=PRT(:,:,4,:)
 PHLI_HCF(:,:,:)=1.
 
 KLEV = SIZE (PRS, 2)
