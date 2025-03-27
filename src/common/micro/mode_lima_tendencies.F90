@@ -388,18 +388,18 @@ REAL,    DIMENSION(SIZE(PRCT))  :: ZCHT
 REAL,    DIMENSION(SIZE(PRCT))  :: ZSIGMOIDE
 !
 REAL,    DIMENSION(SIZE(PRCT))  :: ZSIGMA_RC
-REAL, DIMENSION(KSIZE)   :: P_RC_AUTO_2
-REAL, DIMENSION(KSIZE)   :: P_CC_AUTO_2
-REAL, DIMENSION(KSIZE)   :: P_CR_AUTO_2 ! autoconversion of cloud droplets (AUTO) : rc, Nc, rr=-rc, Nr
-REAL, DIMENSION(KSIZE)   :: P_RC_ACCR_2
-REAL, DIMENSION(KSIZE)   :: P_CC_ACCR_2 ! accretion of droplets by rain drops (ACCR) : rc, Nc, rr=-rr
-REAL, DIMENSION(KSIZE)   :: P_TH_DEPI_2
-REAL, DIMENSION(KSIZE)   :: P_RI_DEPI_2  ! deposition of vapor on ice (DEPI) : rv=-ri, ri, th
-REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: P_SHCI_HACH_2
+REAL, DIMENSION(KSIZE)   :: Z_RC_AUTO_2
+REAL, DIMENSION(KSIZE)   :: Z_CC_AUTO_2
+REAL, DIMENSION(KSIZE)   :: Z_CR_AUTO_2 ! autoconversion of cloud droplets (AUTO) : rc, Nc, rr=-rc, Nr
+REAL, DIMENSION(KSIZE)   :: Z_RC_ACCR_2
+REAL, DIMENSION(KSIZE)   :: Z_CC_ACCR_2 ! accretion of droplets by rain drops (ACCR) : rc, Nc, rr=-rr
+REAL, DIMENSION(KSIZE)   :: Z_TH_DEPI_2
+REAL, DIMENSION(KSIZE)   :: Z_RI_DEPI_2  ! deposition of vapor on ice (DEPI) : rv=-ri, ri, th
+REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: Z_SHCI_HACH_2
 !
-REAL, DIMENSION(KSIZE)   :: P_RI_CNVS_2
-REAL, DIMENSION(KSIZE)   :: P_CI_CNVS_2  ! conversion ice -> snow (CNVS) : ri, Ni, rs=-ri
-REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: P_SHCI_CNVS_2
+REAL, DIMENSION(KSIZE)   :: Z_RI_CNVS_2
+REAL, DIMENSION(KSIZE)   :: Z_CI_CNVS_2  ! conversion ice -> snow (CNVS) : ri, Ni, rs=-ri
+REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: Z_SHCI_CNVS_2
 !
 !
 INTEGER :: ISIZE ! size of 1D array
@@ -711,10 +711,10 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
 !!$   CALL LIMA_DROPLETS_AUTOCONVERSION (CST, LIMAP, LIMAW, KSIZE, ODCOMPUTE,   & ! depends on CF
 !!$                                      PRHODREF,                              &
 !!$                                      PHLC_LRC/ZHLC_LCF, ZCCT/ZCF1D, ZLBDC_LRC, ZLBDR,  &
-!!$                                      P_RC_AUTO_2, P_CC_AUTO_2, P_CR_AUTO_2        )
-!!$   P_RC_AUTO(:) = P_RC_AUTO_2(:) * PHLC_LCF(:)
-!!$   P_CC_AUTO(:) = P_CC_AUTO_2(:) * PHLC_LCF(:)
-!!$   P_CR_AUTO(:) = P_CR_AUTO_2(:) * PHLC_LCF(:)
+!!$                                      Z_RC_AUTO_2, Z_CC_AUTO_2, Z_CR_AUTO_2        )
+!!$   P_RC_AUTO(:) = Z_RC_AUTO_2(:) * PHLC_LCF(:)
+!!$   P_CC_AUTO(:) = Z_CC_AUTO_2(:) * PHLC_LCF(:)
+!!$   P_CR_AUTO(:) = Z_CR_AUTO_2(:) * PHLC_LCF(:)
    !
    !PA_RC(:) = PA_RC(:) + P_RC_AUTO(:)
    !IF (LIMAP%NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_AUTO(:)
@@ -724,10 +724,10 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
    CALL LIMA_DROPLETS_AUTOCONVERSION (CST, LIMAP, LIMAW, KSIZE, ODCOMPUTE,   & ! depends on CF
                                       PRHODREF,                              &
                                       PHLC_HRC/ZHLC_HCF, ZCCT/ZCF1D, ZLBDC_HRC, ZLBDR,  &
-                                      P_RC_AUTO_2, P_CC_AUTO_2, P_CR_AUTO_2        )
-   P_RC_AUTO(:) = P_RC_AUTO(:) + P_RC_AUTO_2(:) * PHLC_HCF(:)
-   P_CC_AUTO(:) = P_CC_AUTO(:) + P_CC_AUTO_2(:) * PHLC_HCF(:)
-   P_CR_AUTO(:) = P_CR_AUTO(:) + P_CR_AUTO_2(:) * PHLC_HCF(:)
+                                      Z_RC_AUTO_2, Z_CC_AUTO_2, Z_CR_AUTO_2        )
+   P_RC_AUTO(:) = P_RC_AUTO(:) + Z_RC_AUTO_2(:) * PHLC_HCF(:)
+   P_CC_AUTO(:) = P_CC_AUTO(:) + Z_CC_AUTO_2(:) * PHLC_HCF(:)
+   P_CR_AUTO(:) = P_CR_AUTO(:) + Z_CR_AUTO_2(:) * PHLC_HCF(:)
    !
    PA_RC(:) = PA_RC(:) + P_RC_AUTO(:)
    IF (LIMAP%NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_AUTO(:)
@@ -743,19 +743,19 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
                                  PRHODREF,                                      &
                                  PHLC_HRC/ZHLC_HCF, ZRRT/ZPF1D, ZCCT/ZCF1D, ZCRT/ZPF1D,&
                                  ZLBDC_HRC, ZLBDC3_HRC, ZLBDR, ZLBDR3,                 &
-                                 P_RC_ACCR_2, P_CC_ACCR_2                           )
+                                 Z_RC_ACCR_2, Z_CC_ACCR_2                           )
    !
-   P_CC_ACCR(:) = P_CC_ACCR_2(:) * MIN(PHLC_HCF(:),ZPF1D(:))
-   P_RC_ACCR(:) = P_RC_ACCR_2(:) * MIN(PHLC_HCF(:),ZPF1D(:))
+   P_CC_ACCR(:) = Z_CC_ACCR_2(:) * MIN(PHLC_HCF(:),ZPF1D(:))
+   P_RC_ACCR(:) = Z_RC_ACCR_2(:) * MIN(PHLC_HCF(:),ZPF1D(:))
    ! In low content cloud
    CALL LIMA_DROPLETS_ACCRETION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,                & ! depends on CF, PF
                                  PRHODREF,                                      &
                                  PHLC_LRC/ZHLC_LCF, ZRRT/ZPF1D, ZCCT/ZCF1D, ZCRT/ZPF1D,&
                                  ZLBDC_LRC, ZLBDC3_LRC, ZLBDR, ZLBDR3,                  &
-                                 P_RC_ACCR_2, P_CC_ACCR_2                           )
+                                 Z_RC_ACCR_2, Z_CC_ACCR_2                           )
    !
-   P_CC_ACCR(:) = P_CC_ACCR(:) + P_CC_ACCR_2(:) * MIN(MAX(ZPF1D(:)-PHLC_HCF(:),0.),PHLC_LCF(:))
-   P_RC_ACCR(:) = P_RC_ACCR(:) + P_RC_ACCR_2(:) * MIN(MAX(ZPF1D(:)-PHLC_HCF(:),0.),PHLC_LCF(:))
+   P_CC_ACCR(:) = P_CC_ACCR(:) + Z_CC_ACCR_2(:) * MIN(MAX(ZPF1D(:)-PHLC_HCF(:),0.),PHLC_LCF(:))
+   P_RC_ACCR(:) = P_RC_ACCR(:) + Z_RC_ACCR_2(:) * MIN(MAX(ZPF1D(:)-PHLC_HCF(:),0.),PHLC_LCF(:))
    !
    PA_RC(:) = PA_RC(:) + P_RC_ACCR(:)
    IF (LIMAP%NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_ACCR(:)
@@ -804,33 +804,33 @@ IF (LIMAP%NMOM_I.GE.1) THEN
    CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF
                              PRHODREF, ZT, ZSSI, ZAI, ZCJ, ZLSFACT,           &
                              PHLI_LRI/ZHLI_LCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_LRI,    &
-                             P_TH_DEPI_2, P_RI_DEPI_2, P_SHCI_HACH_2,         &
-                             P_RI_CNVS_2, P_CI_CNVS_2, P_SHCI_CNVS_2          )
+                             Z_TH_DEPI_2, Z_RI_DEPI_2, Z_SHCI_HACH_2,         &
+                             Z_RI_CNVS_2, Z_CI_CNVS_2, Z_SHCI_CNVS_2          )
    !
-   IF (LIMAP%LCRYSTAL_SHAPE) P_CI_CNVS_2(:) = SUM(P_SHCI_CNVS_2,DIM=2)
+   IF (LIMAP%LCRYSTAL_SHAPE) Z_CI_CNVS_2(:) = SUM(Z_SHCI_CNVS_2,DIM=2)
    !
-   P_RI_DEPI(:) = P_RI_DEPI_2(:) * PHLI_LCF(:)
-   P_RI_CNVS(:) = P_RI_CNVS_2(:) * PHLI_LCF(:)
-   P_CI_CNVS(:) = P_CI_CNVS_2(:) * PHLI_LCF(:)
-   P_TH_DEPI(:) = P_RI_DEPI_2(:) * ZLSFACT(:)
-   P_SHCI_HACH(:,:) = P_SHCI_HACH_2(:,:) 
-   P_SHCI_CNVS(:,:) = P_SHCI_CNVS_2(:,:) 
+   P_RI_DEPI(:) = Z_RI_DEPI_2(:) * PHLI_LCF(:)
+   P_RI_CNVS(:) = Z_RI_CNVS_2(:) * PHLI_LCF(:)
+   P_CI_CNVS(:) = Z_CI_CNVS_2(:) * PHLI_LCF(:)
+   P_TH_DEPI(:) = Z_RI_DEPI_2(:) * ZLSFACT(:)
+   P_SHCI_HACH(:,:) = Z_SHCI_HACH_2(:,:) 
+   P_SHCI_CNVS(:,:) = Z_SHCI_CNVS_2(:,:) 
    !
    ! In high content part
    CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF
                              PRHODREF, ZT, ZSSI, ZAI, ZCJ, ZLSFACT,           &
                              PHLI_HRI/ZHLI_HCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_HRI,    &
-                             P_TH_DEPI_2, P_RI_DEPI_2, P_SHCI_HACH_2,         &
-                             P_RI_CNVS_2, P_CI_CNVS_2, P_SHCI_CNVS_2          )
+                             Z_TH_DEPI_2, Z_RI_DEPI_2, Z_SHCI_HACH_2,         &
+                             Z_RI_CNVS_2, Z_CI_CNVS_2, Z_SHCI_CNVS_2          )
    !
-   IF (LIMAP%LCRYSTAL_SHAPE) P_CI_CNVS_2(:) = SUM(P_SHCI_CNVS_2,DIM=2)
+   IF (LIMAP%LCRYSTAL_SHAPE) Z_CI_CNVS_2(:) = SUM(Z_SHCI_CNVS_2,DIM=2)
    !
-   P_RI_DEPI(:) = P_RI_DEPI(:) + P_RI_DEPI_2(:) * PHLI_HCF(:)
-   P_RI_CNVS(:) = P_RI_CNVS(:) + P_RI_CNVS_2(:) * PHLI_HCF(:)
-   P_CI_CNVS(:) = P_CI_CNVS(:) + P_CI_CNVS_2(:) * PHLI_HCF(:)
-   P_TH_DEPI(:) = P_TH_DEPI(:) + P_RI_DEPI_2(:) * ZLSFACT(:)
-   P_SHCI_HACH(:,:) = P_SHCI_HACH(:,:) + P_SHCI_HACH_2(:,:) 
-   P_SHCI_CNVS(:,:) = P_SHCI_CNVS(:,:) + P_SHCI_CNVS_2(:,:) 
+   P_RI_DEPI(:) = P_RI_DEPI(:) + Z_RI_DEPI_2(:) * PHLI_HCF(:)
+   P_RI_CNVS(:) = P_RI_CNVS(:) + Z_RI_CNVS_2(:) * PHLI_HCF(:)
+   P_CI_CNVS(:) = P_CI_CNVS(:) + Z_CI_CNVS_2(:) * PHLI_HCF(:)
+   P_TH_DEPI(:) = P_TH_DEPI(:) + Z_RI_DEPI_2(:) * ZLSFACT(:)
+   P_SHCI_HACH(:,:) = P_SHCI_HACH(:,:) + Z_SHCI_HACH_2(:,:) 
+   P_SHCI_CNVS(:,:) = P_SHCI_CNVS(:,:) + Z_SHCI_CNVS_2(:,:) 
    !
    PA_TH(:) = PA_TH(:) + P_TH_DEPI(:)
    PA_RV(:) = PA_RV(:) - P_RI_DEPI(:) 
