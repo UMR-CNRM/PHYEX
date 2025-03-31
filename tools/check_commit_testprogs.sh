@@ -122,7 +122,8 @@ function usage {
   echo "                to access performance statistics."
   echo "-a arch ARCH    architecture name to use to build and run the commit (=$defaultarchfile)"
   echo "-A arch ARCH    architecture name to use for the reference simulation (=$defaultarchfile)"
-  #echo "--buildSys      build system to use (=$defaultBuildSystem)"
+  echo "--buildSys      build system to use (=$defaultBuildSystem)"
+  echo "                fcm and ecbuild are available"
   echo "--perf FILE     add performance statistics in file FILE"
   echo "-e EXTRAPOLATION"
   echo "                extrapolate data. EXTRAPOLATION corresponds to a configuration:"
@@ -180,7 +181,7 @@ while [ -n "$1" ]; do
     '--remove') remove=1;;
     '-a') archfile="$2"; shift;;
     '-A') refarchfile="$2"; shift;;
-    #'--buildSys') buildSys="$2"; shift;;
+    '--buildSys') buildSys="$2"; shift;;
     '--onlyIfNeeded') onlyIfNeeded=1;;
     '--computeRefIfNeeded') computeRefIfNeeded=1;;
     '--no-perf') perf=0;;
@@ -599,12 +600,18 @@ if [ $check -eq 1 ]; then
     if echo $allowedTests | grep -w $t > /dev/null; then
       #Run the reference if needed
       if [ $computeRefIfNeeded -eq 1 ]; then
-        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${refByTest[$t]}
+        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${refByTest[$t]} --buildSys ${buildSys}
       fi
 
       #File comparison
       file1=$TESTDIR/$name/tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag}/Output_run
       file2=$TESTDIR/${refnameByTest[$t]}/tests/with_${buildSys}/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run
+      if [ ! -f $file2 ]; then
+        # If the reference has not been run with this buildSystem, pick a result from another one
+        if ls $TESTDIR/${refnameByTest[$t]}/tests/with_*/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run > /dev/null 2>&1; then
+          file2=$(ls $TESTDIR/${refnameByTest[$t]}/tests/with_*/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run | head -1)
+        fi
+      fi
       mess=""
       te=0
       if [ ! -f "$file1" ]; then
