@@ -11,13 +11,13 @@ SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                      PTSTEP, KRR, OSAVE_MICRO, ODMICRO, OELEC, PEXN,       &
                      PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
                      PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
-                     PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,             &
+                     PTHS, PRS, &
                      PEVAP3D,                                              &
                      PRAINFR, PSIGS,                                       &
                      PRVHENI, PLVFACT, PLSFACT,                            &
-                     PWR,                                                  &
+                     PWTH, PWR, &
                      TBUDGETS, KBUDGETS,                                   &
-                     PMICRO_TEND, PLATHAM_IAGGS, PRHS                      )
+                     PMICRO_TEND, PLATHAM_IAGGS)
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -51,7 +51,6 @@ USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
-      & ITH,     & ! Potential temperature
       & IRV,     & ! Water vapor
       & IRC,     & ! Cloud water
       & IRR,     & ! Rain water
@@ -119,12 +118,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLI_HRI
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLI_HCF
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHS    ! Theta source
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRRS    ! Rain water m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRIS    ! Pristine ice m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRSS    ! Snow/aggregate m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRGS    ! Graupel m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT,KRR),   INTENT(INOUT) :: PRS    ! m.r. source
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PEVAP3D! Rain evap profile
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRAINFR !Precipitation fraction
@@ -132,7 +126,8 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRVHENI ! heterogeneous nucleation
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PLVFACT
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PLSFACT
-REAL, DIMENSION(D%NIJT,D%NKT,0:7), INTENT(INOUT) :: PWR
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PWTH
+REAL, DIMENSION(D%NIJT,D%NKT,7), INTENT(INOUT) :: PWR
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(MERGE(D%NIJT,0,OSAVE_MICRO),MERGE(D%NKT,0,OSAVE_MICRO),MERGE(IBUNUM-IBUNUM_EXTRA,0,OSAVE_MICRO)), &
@@ -140,7 +135,6 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OSAVE_MICRO),MERGE(D%NKT,0,OSAVE_MICRO),MERGE(IBU
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), &
                                           INTENT(IN)    :: PLATHAM_IAGGS  ! E Function to simulate
                                                                           ! enhancement of IAGGS
-REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,  INTENT(INOUT) :: PRHS    ! Hail m.r. source
 !
 !
 !*       0.2   Declarations of local variables :
@@ -150,8 +144,6 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: JIJ, JK
 INTEGER :: IKT, IKTB, IKTE, IIJT, IIJB, IIJE
 INTEGER :: ISTIJ, ISTK
-!
-LOGICAL :: GEXT_TEND
 !
 !Output packed total mixing ratio change (for budgets only)
 REAL, DIMENSION(KSIZE, IBUNUM-IBUNUM_EXTRA) :: ZBU_PACK
@@ -178,8 +170,10 @@ LOGICAL, DIMENSION(KPROMA) :: LLMICRO
 REAL, DIMENSION(KPROMA, IBUNUM-IBUNUM_EXTRA) :: ZBU_SUM
 !
 !For mixing-ratio-splitting
-REAL, DIMENSION(KPROMA,0:7) :: ZVART !Packed variables
-REAL, DIMENSION(KSIZE2,0:7) :: ZEXTPK   !To take into acount external tendencies inside the splitting
+REAL, DIMENSION(KPROMA) :: ZTH ! Packed variable
+REAL, DIMENSION(KPROMA,7) :: ZVART !Packed variables
+REAL, DIMENSION(KSIZE2)   :: ZEXTTH   !To take into acount external tendencies inside the splitting
+REAL, DIMENSION(KSIZE2,7) :: ZEXTPK   !To take into acount external tendencies inside the splitting
 !
 !For retroaction of E on IAGGS
 REAL, DIMENSION(MERGE(KPROMA,0,OELEC)) :: ZLATHAM_IAGGS
@@ -202,7 +196,6 @@ IKTE=D%NKTE
 IIJT=D%NIJT
 IIJB=D%NIJB
 IIJE=D%NIJE
-GEXT_TEND=.TRUE.
 LLSIGMA_RC=(PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')
 LL_AUCV_ADJU=(PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')
 !
@@ -249,13 +242,13 @@ IF(PARAMI%LPACK_MICRO) THEN
           !$acc loop gang vector independent
           DO JIJ = ISTIJ, IIJE
             IF (ODMICRO(JIJ,JK)) THEN
-	    !$acc atomic capture
+              !$acc atomic capture
               IC=IC+1
               IDX=IC !change of variable to use acc atomic capture (IC is shared)
-             !$acc end atomic
+              !$acc end atomic
               LLMICRO(IDX)=.TRUE.
               ! Initialization of variables in packed format :
-              ZVART(IDX, ITH)=PWR(JIJ, JK, ITH)
+              ZTH(IDX)=PWTH(JIJ, JK)
               ZVART(IDX, IRV)=PWR(JIJ, JK, IRV)
               ZVART(IDX, IRC)=PWR(JIJ, JK, IRC)
               ZVART(IDX, IRR)=PWR(JIJ, JK, IRR)
@@ -265,17 +258,17 @@ IF(PARAMI%LPACK_MICRO) THEN
               IF (KRR==7) THEN
                 ZVART(IDX, IRH)=PWR(JIJ, JK, IRH)
               ENDIF
-              IF (GEXT_TEND) THEN
+              IF (PARAMI%LEXT_TEND) THEN
                 !The th tendency is not related to a mixing ratio change, there is no exn/exnref issue here
-                ZEXTPK(IDX, ITH)=PTHS(JIJ, JK)
-                ZEXTPK(IDX, IRV)=PRVS(JIJ, JK)
-                ZEXTPK(IDX, IRC)=PRCS(JIJ, JK)
-                ZEXTPK(IDX, IRR)=PRRS(JIJ, JK)
-                ZEXTPK(IDX, IRI)=PRIS(JIJ, JK)
-                ZEXTPK(IDX, IRS)=PRSS(JIJ, JK)
-                ZEXTPK(IDX, IRG)=PRGS(JIJ, JK)
+                ZEXTTH(IDX)=PTHS(JIJ, JK)
+                ZEXTPK(IDX, IRV)=PRS(JIJ, JK, IRV)
+                ZEXTPK(IDX, IRC)=PRS(JIJ, JK, IRC)
+                ZEXTPK(IDX, IRR)=PRS(JIJ, JK, IRR)
+                ZEXTPK(IDX, IRI)=PRS(JIJ, JK, IRI)
+                ZEXTPK(IDX, IRS)=PRS(JIJ, JK, IRS)
+                ZEXTPK(IDX, IRG)=PRS(JIJ, JK, IRG)
                 IF (KRR==7) THEN
-                  ZEXTPK(IDX, IRH)=PRHS(JIJ, JK)
+                  ZEXTPK(IDX, IRH)=PRS(JIJ, JK, IRH)
                 ENDIF
               ENDIF
               ZCIT       (IDX)=PCIT    (JIJ, JK)
@@ -305,20 +298,20 @@ IF(PARAMI%LPACK_MICRO) THEN
                 ! the end of the chunk has been reached, then reset the starting index :
                 ISTIJ=JIJ+1
                 IF (ISTIJ <= IIJE) THEN
-	    !$acc atomic write
+                  !$acc atomic write
                   ISTK=JK
-            !$acc end atomic
+                  !$acc end atomic
                 ELSE
                   ! end of line, restart from 1 and increment upper loop
                   ISTIJ=D%NIJB
-	    !$acc atomic write
+                  !$acc atomic write
                   ISTK=JK+1
-            !$acc end atomic
+                  !$acc end atomic
                   IF (ISTK > IKTE) THEN
                     ! end of line, restart from 1
-	    !$acc atomic write
+                    !$acc atomic write
                     ISTK=IKTB
-            !$acc end atomic
+                    !$acc end atomic
                   ENDIF
                 ENDIF
 #ifndef MNH_OPENACC
@@ -337,17 +330,17 @@ IF(PARAMI%LPACK_MICRO) THEN
       !*       5.     TENDENCIES COMPUTATION
       !               ----------------------
       !
-      CALL ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
-                        &LLSIGMA_RC, LL_AUCV_ADJU, GEXT_TEND, &
-                        &KPROMA, IMICRO, LLMICRO, PTSTEP, &
-                        &KRR, OSAVE_MICRO, OELEC, &
+      CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
+                        &KPROMA, IMICRO, PTSTEP, &
+                        &KRR, OSAVE_MICRO, LLMICRO, OELEC, &
                         &ZEXN, ZRHODREF, I1, I2, &
-                        &ZPRES, ZCF, ZSIGMA_RC, &
-                        &ZCIT, &
-                        &ZVART, &
+                        &ZPRES, ZCIT, ZCF, &
                         &ZHLC_HCF, ZHLC_HRC, &
-                        &ZHLI_HCF, ZHLI_HRI, ZRAINFR, &
-                        &ZEXTPK, ZBU_SUM, ZRREVAV, &
+                        &ZHLI_HCF, ZHLI_HRI, &
+                        &ZEXTTH, ZEXTPK, ZRREVAV, &
+                        &ZRAINFR, ZSIGMA_RC, &
+                        &ZTH, ZVART, &
+                        &ZBU_SUM, &
                         &ZLATHAM_IAGGS)
       !
       !*       6.     UNPACKING
@@ -357,9 +350,7 @@ IF(PARAMI%LPACK_MICRO) THEN
 !$acc loop independent
       DO JL=1, IMICRO
         PCIT  (I1(JL),I2(JL))=ZCIT   (JL)
-        IF(PARAMI%LWARM) THEN
-          PEVAP3D(I1(JL),I2(JL))=ZRREVAV(JL)
-        ENDIF
+        PEVAP3D(I1(JL),I2(JL))=ZRREVAV(JL)
         PWR(I1(JL),I2(JL),IRV)=ZVART(JL, IRV)
         PWR(I1(JL),I2(JL),IRC)=ZVART(JL, IRC)
         PWR(I1(JL),I2(JL),IRR)=ZVART(JL, IRR)
@@ -405,17 +396,17 @@ ELSE ! PARAMI%LPACK_MICRO
       IC=IC+1
       I1TOT(IC)=JIJ
       I2TOT(IC)=JK
-      IF (GEXT_TEND) THEN
+      IF (PARAMI%LEXT_TEND) THEN
         !The th tendency is not related to a mixing ratio change, there is no exn/exnref issue here
-        ZEXTPK(IC, ITH)=PTHS(JIJ, JK)
-        ZEXTPK(IC, IRV)=PRVS(JIJ, JK)
-        ZEXTPK(IC, IRC)=PRCS(JIJ, JK)
-        ZEXTPK(IC, IRR)=PRRS(JIJ, JK)
-        ZEXTPK(IC, IRI)=PRIS(JIJ, JK)
-        ZEXTPK(IC, IRS)=PRSS(JIJ, JK)
-        ZEXTPK(IC, IRG)=PRGS(JIJ, JK)
+        ZEXTTH(IC)=PTHS(JIJ, JK)
+        ZEXTPK(IC, IRV)=PRS(JIJ, JK, IRV)
+        ZEXTPK(IC, IRC)=PRS(JIJ, JK, IRC)
+        ZEXTPK(IC, IRR)=PRS(JIJ, JK, IRR)
+        ZEXTPK(IC, IRI)=PRS(JIJ, JK, IRI)
+        ZEXTPK(IC, IRS)=PRS(JIJ, JK, IRS)
+        ZEXTPK(IC, IRG)=PRS(JIJ, JK, IRG)
         IF (KRR==7) THEN
-          ZEXTPK(IC, IRH)=PRHS(JIJ, JK)
+          ZEXTPK(IC, IRH)=PRS(JIJ, JK, IRH)
         ENDIF
       ENDIF
       IF(LLSIGMA_RC) THEN
@@ -454,17 +445,17 @@ ELSE ! PARAMI%LPACK_MICRO
   !*       5bis.  TENDENCIES COMPUTATION
   !               ----------------------
   !
-  CALL ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
-                    &LLSIGMA_RC, LL_AUCV_ADJU, GEXT_TEND, &
-                    &KSIZE, KSIZE, ODMICRO, PTSTEP, &
-                    &KRR, OSAVE_MICRO, OELEC, &
+  CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
+                    &KSIZE, KSIZE, PTSTEP, &
+                    &KRR, OSAVE_MICRO, ODMICRO, OELEC, &
                     &PEXN, PRHODREF, I1TOT, I2TOT, &
-                    &PPABST, PCLDFR, ZSIGMA_RC, &
-                    &PCIT, &
-                    &PWR, &
+                    &PPABST, PCIT, PCLDFR, &
                     &PHLC_HCF, PHLC_HRC, &
-                    &PHLI_HCF, PHLI_HRI, PRAINFR, &
-                    &ZEXTPK, ZBU_PACK, PEVAP3D, &
+                    &PHLI_HCF, PHLI_HRI,  &
+                    &ZEXTTH, ZEXTPK, PEVAP3D, &
+                    &PRAINFR, ZSIGMA_RC, &
+                    &PWTH, PWR, &
+                    &ZBU_PACK, &
                     &ZLATHAM_IAGGS)
 
 ENDIF ! PARAMI%LPACK_MICRO

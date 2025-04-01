@@ -379,19 +379,13 @@ IF (CMICRO=='ICE4' .AND. PHYEX%PARAM_ICEN%LRED) THEN
                  &  PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR,  &
                  &  PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, &
                  &  PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF, &
-                 &  PTHT=PTHT,PRVT= PRT(:,:,:,1),PRCT= PRT(:,:,:,2), &
-                 &  PRRT=PRT(:,:,:,3), &
-                 &  PRIT=PRT(:,:,:,4), PRST=PRT(:,:,:,5), &
-                 &  PRGT=PRT(:,:,:,6),       &
-                 &  PTHS=PTHS, PRVS=PRS(:,:,:,1),PRCS=PRS(:,:,:,2),&
-                 &  PRRS=PRS(:,:,:,3),&
-                 &  PRIS=PRS(:,:,:,4),PRSS= PRS(:,:,:,5),PRGS= PRS(:,:,:,6),&
+                 &  PTHT=PTHT,PRT=PRT, PTHS=PTHS, PRS=PRS, &
                  &  PINPRC=ZINPRC,PINPRR=PINPRR,PEVAP3D=PEVAP,&
                  &  PINPRS=PINPRS, PINPRG=PINPRG, PINDEP=ZINDEP, PRAINFR=ZRAINFR, &
                  &  PSIGS=PSIGS, &
                  &  TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
                  &  PSEA=PSEA, PTOWN=PTOWN, &
-                 &  PRHT=PRT(:,:,:,7), PRHS=PRS(:,:,:,7), PINPRH=PINPRH, PFPR=PFPR)
+                 &  PINPRH=PINPRH, PFPR=PFPR)
 ELSEIF (CMICRO=='ICE3' .AND. PHYEX%PARAM_ICEN%LRED) THEN
     CALL RAIN_ICE(  YLDIMPHYEX, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, &
                  &  PHYEX%RAIN_ICE_DESCRN,  PHYEX%ELEC_PARAM, PHYEX%ELEC_DESCR, &
@@ -402,13 +396,7 @@ ELSEIF (CMICRO=='ICE3' .AND. PHYEX%PARAM_ICEN%LRED) THEN
                  &  PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR,  &
                  &  PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, &
                  &  PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF, &
-                 &  PTHT=PTHT,PRVT=PRT(:,:,:,1),PRCT=PRT(:,:,:,2), &
-                 &  PRRT=PRT(:,:,:,3), &
-                 &  PRIT=PRT(:,:,:,4), PRST=PRT(:,:,:,5), &
-                 &  PRGT=PRT(:,:,:,6),       &
-                 &  PTHS=PTHS, PRVS=PRS(:,:,:,1),PRCS=PRS(:,:,:,2),&
-                 &  PRRS=PRS(:,:,:,3),&
-                 &  PRIS=PRS(:,:,:,4),PRSS= PRS(:,:,:,5),PRGS= PRS(:,:,:,6),&
+                 &  PTHT=PTHT,PRT=PRT, PTHS=PTHS, PRS=PRS, &
                  &  PINPRC=ZINPRC,PINPRR=PINPRR,PEVAP3D=PEVAP,&
                  &  PINPRS=PINPRS, PINPRG=PINPRG, PINDEP=ZINDEP, PRAINFR=ZRAINFR, &
                  &  PSIGS=PSIGS, &

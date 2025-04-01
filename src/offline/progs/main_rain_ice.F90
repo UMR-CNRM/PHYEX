@@ -240,13 +240,7 @@ CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, &
              & PPABST=PPABSM(:,:,IBL), PCIT=PCIT(:,:,IBL), PCLDFR=PCLDFR(:,:,IBL),  &
              & PHLC_HRC=PHLC_HRC(:,:,IBL), PHLC_HCF=PHLC_HCF(:,:,IBL), &
              & PHLI_HRI=PHLI_HRI(:,:,IBL), PHLI_HCF=PHLI_HCF(:,:,IBL), &
-             & PTHT=PTHT(:,:,IBL),PRVT=PRT(:,:,1,IBL),PRCT=PRT(:,:,2,IBL), &
-             & PRRT=PRT(:,:,3,IBL), &
-             & PRIT=PRT(:,:,4,IBL), PRST=PRT(:,:,5,IBL), &
-             & PRGT=PRT(:,:,6,IBL),       &
-             & PTHS=PTHS(:,:,IBL), PRVS=PRS(:,:,1,IBL),PRCS=PRS(:,:,2,IBL),&
-             & PRRS=PRS(:,:,3,IBL),&
-             & PRIS=PRS(:,:,4,IBL),PRSS= PRS(:,:,5,IBL),PRGS= PRS(:,:,6,IBL),&
+             & PTHT=PTHT(:,:,IBL),PRT=PRT(:,:,:,IBL), PTHS=PTHS(:,:,IBL), PRS=PRS(:,:,:,IBL), &
              & PINPRC=ZINPRC(:,IBL),PINPRR=PINPRR(:,IBL),PEVAP3D=PEVAP(:,:,IBL),&
              & PINPRS=PINPRS(:,IBL), PINPRG=PINPRG(:,IBL), PINDEP=ZINDEP(:,IBL), PRAINFR=ZRAINFR(:,:,IBL), &
              & PSIGS=PSIGS(:,:,IBL), &

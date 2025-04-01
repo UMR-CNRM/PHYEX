@@ -2386,7 +2386,7 @@ IF (OELEC) THEN
 !                         PRCDRYH=ZTOT_RC_DRYH, PRIDRYH=ZTOT_RI_DRYH, PRSDRYH=ZTOT_RS_DRYH,              &
 !                         PRRDRYH=ZTOT_RR_DRYH, PRGDRYH=ZTOT_RG_DRYH,                                    &
                          PRDRYHG=ZTOT_RG_COHG, PRHMLTR=ZTOT_RR_HMLT,                                    &
-                         PRHT=ZRHT, PRHS=ZRHS, PQHT=ZQHT, PQHS=ZQHS, PCHT=ZCHT,                         &
+                         PRHT=ZRHT, PQHT=ZQHT, PQHS=ZQHS, PCHT=ZCHT,                         &
 ! variables et processus optionnels propres a lima
                          PCCT=ZCCT_ELEC, PCRT=ZCRT_ELEC, PCST=ZCST_ELEC, PCGT=ZCGT_ELEC,                &
                          PRVHENC=ZTOT_RV_HENU*ZINV_TSTEP,    PRCHINC=-ZTOT_RC_HINC*ZINV_TSTEP,          &

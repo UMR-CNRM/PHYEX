@@ -100,6 +100,7 @@ REAL :: XRDEPGRED_NAM   !< Tuning factor of sublimation of graupel
 !
 LOGICAL :: LOCND2       !< Logical switch to separate liquid and ice
 REAL, DIMENSION(40) :: XFRMIN_NAM
+LOGICAL :: LEXT_TEND=.TRUE.        !< Use external tendencies during the time-splitting
 !
 END TYPE PARAM_ICE_t
 !

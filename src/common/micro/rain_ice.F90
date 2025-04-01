@@ -9,16 +9,15 @@
                             PTSTEP, KRR, PEXN,                                    &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
-                            PTHT, PRVT, PRCT, PRRT, PRIT, PRST,                   &
-                            PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,       &
+                            PTHT, PRT, PTHS, PRS, &
                             PINPRC, PINPRR, PEVAP3D,                              &
                             PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,               &
                             TBUDGETS, KBUDGETS,                                   &
                             PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,           &
-                            PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &                            
+                            PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &
                             PEFIELDW, PLATHAM_IAGGS,                              &
                             PSEA, PTOWN,                                          &
-                            PRHT, PRHS, PINPRH, PFPR, PQHT, PQHS                  )
+                            PINPRH, PFPR, PQHT, PQHS                  )
 !     #############################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -197,6 +196,7 @@ TYPE(ELEC_DESCR_t),       INTENT(IN)    :: ELECD   ! electrical descriptive csts
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 LOGICAL,                  INTENT(IN)    :: OELEC  ! Switch for cloud electricity
 LOGICAL,                  INTENT(IN)    :: OSEDIM_BEARD  ! Switch for effect of electrical forces on sedim.
+REAL,                     INTENT(IN)    :: PTHVREFZIKB ! Reference thv at IKB for electricity
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 !
@@ -215,20 +215,10 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLI_HRI
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLI_HCF
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PTHT    ! Theta at time t
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRVT    ! Water vapor m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRCT    ! Cloud water m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRIT    ! Pristine ice m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRGT    ! Graupel/hail m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT,KRR),   INTENT(IN)    :: PRT    ! m.r. at t
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHS    ! Theta source
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRRS    ! Rain water m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRIS    ! Pristine ice m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRSS    ! Snow/aggregate m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRGS    ! Graupel m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT,KRR),   INTENT(INOUT) :: PRS    ! m.r. source
 !
 REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRC! Cloud instant precip
 REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRR! Rain instant precip
@@ -238,7 +228,6 @@ REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRG! Graupel instant precip
 REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PINDEP  ! Cloud instant deposition
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) :: PRAINFR !Precipitation fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
-REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity
 !
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
@@ -267,8 +256,6 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(IN
 ! optional variables
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(IN)    :: PSEA    ! Sea Mask
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(IN)    :: PTOWN   ! Fraction that is town
-REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-air precipitation fluxes
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHT ! Hail electric charge at t
@@ -295,7 +282,8 @@ REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LRI
 !
 REAL :: ZINV_TSTEP ! Inverse ov PTSTEP
 !For total tendencies computation
-REAL, DIMENSION(D%NIJT,D%NKT,0:7) :: ZWR
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZWTH
+REAL, DIMENSION(D%NIJT,D%NKT,7) :: ZWR
 REAL, DIMENSION(KRR) :: ZICEDRTMIN
 !
 REAL :: ZDEVIDE, ZRICE
@@ -346,29 +334,29 @@ DO JK = IKTB,IKTE
   DO JIJ = IIJB,IIJE
     !LSFACT and LVFACT
     IF (KRR==7) THEN
-      ZRICE=PRIT(JIJ,JK)+PRST(JIJ,JK)+PRGT(JIJ,JK)+PRHT(JIJ,JK)
+      ZRICE=PRT(JIJ,JK,IRI)+PRT(JIJ,JK,IRS)+PRT(JIJ,JK,IRG)+PRT(JIJ,JK,IRH)
     ELSE
-      ZRICE=PRIT(JIJ,JK)+PRST(JIJ,JK)+PRGT(JIJ,JK)
+      ZRICE=PRT(JIJ,JK,IRI)+PRT(JIJ,JK,IRS)+PRT(JIJ,JK,IRG)
     ENDIF
-    ZDEVIDE = CST%XCPD + CST%XCPV*PRVT(JIJ,JK) + CST%XCL*(PRCT(JIJ,JK)+PRRT(JIJ,JK)) + CST%XCI*ZRICE
+    ZDEVIDE = CST%XCPD + CST%XCPV*PRT(JIJ,JK,IRV) + CST%XCL*(PRT(JIJ,JK,IRC)+PRT(JIJ,JK,IRR)) + CST%XCI*ZRICE
     ZT(JIJ,JK) = PTHT(JIJ,JK) * PEXN(JIJ,JK)
     ZZ_LSFACT(JIJ,JK)=(CST%XLSTT+(CST%XCPV-CST%XCI)*(ZT(JIJ,JK)-CST%XTT)) / ZDEVIDE
     ZZ_LVFACT(JIJ,JK)=(CST%XLVTT+(CST%XCPV-CST%XCL)*(ZT(JIJ,JK)-CST%XTT)) / ZDEVIDE
 
     !LLMICRO
     IF (KRR==7) THEN
-      LLMICRO(JIJ,JK)=PRCT(JIJ,JK)>ICED%XRTMIN(2) .OR. &
-                      PRRT(JIJ,JK)>ICED%XRTMIN(3) .OR. &
-                      PRIT(JIJ,JK)>ICED%XRTMIN(4) .OR. &
-                      PRST(JIJ,JK)>ICED%XRTMIN(5) .OR. &
-                      PRGT(JIJ,JK)>ICED%XRTMIN(6) .OR. &
-                      PRHT(JIJ,JK)>ICED%XRTMIN(7)
+      LLMICRO(JIJ,JK)=PRT(JIJ,JK,IRC)>ICED%XRTMIN(IRC) .OR. &
+                      PRT(JIJ,JK,IRR)>ICED%XRTMIN(IRR) .OR. &
+                      PRT(JIJ,JK,IRI)>ICED%XRTMIN(IRI) .OR. &
+                      PRT(JIJ,JK,IRS)>ICED%XRTMIN(IRS) .OR. &
+                      PRT(JIJ,JK,IRG)>ICED%XRTMIN(IRG) .OR. &
+                      PRT(JIJ,JK,IRH)>ICED%XRTMIN(IRH)
     ELSE
-      LLMICRO(JIJ,JK)=PRCT(JIJ,JK)>ICED%XRTMIN(2) .OR. &
-                      PRRT(JIJ,JK)>ICED%XRTMIN(3) .OR. &
-                      PRIT(JIJ,JK)>ICED%XRTMIN(4) .OR. &
-                      PRST(JIJ,JK)>ICED%XRTMIN(5) .OR. &
-                      PRGT(JIJ,JK)>ICED%XRTMIN(6)
+      LLMICRO(JIJ,JK)=PRT(JIJ,JK,IRC)>ICED%XRTMIN(IRC) .OR. &
+                      PRT(JIJ,JK,IRR)>ICED%XRTMIN(IRR) .OR. &
+                      PRT(JIJ,JK,IRI)>ICED%XRTMIN(IRI) .OR. &
+                      PRT(JIJ,JK,IRS)>ICED%XRTMIN(IRS) .OR. &
+                      PRT(JIJ,JK,IRG)>ICED%XRTMIN(IRG)
     ENDIF
   ENDDO
 ENDDO
@@ -384,12 +372,12 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
   CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, BUCONF, &
                          &OELEC, OSEDIM_BEARD, PTSTEP, KRR, PDZZ, PTHVREFZIKB, &
                          &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
-                         &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
+                         &PTHS, PRT, PRS, &
                          &PINPRC, PINPRR, PINPRS, PINPRG, &
                          &PQCT, PQRT, PQIT, PQST, PQGT, PQCS, PQRS, PQIS, PQSS, PQGS, PEFIELDW, &
                          &TBUDGETS, KBUDGETS, &
                          &PSEA=PSEA, PTOWN=PTOWN, &
-                         &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR, &
+                         &PINPRH=PINPRH, PFPR=PFPR, &
                          &PQHT=PQHT, PQHS=PQHS)
 ENDIF
 !
@@ -403,15 +391,15 @@ ENDIF
 DO JK = IKTB,IKTE
 !$mnh_expand_array(JIJ=1:D%NIJT)
   !Copy of T variables to keep untouched the prognostic variables
-  ZWR(:,JK,ITH)=PTHT(:,JK)
-  ZWR(:,JK,IRV)=PRVT(:,JK)
-  ZWR(:,JK,IRC)=PRCT(:,JK)
-  ZWR(:,JK,IRR)=PRRT(:,JK)
-  ZWR(:,JK,IRI)=PRIT(:,JK)
-  ZWR(:,JK,IRS)=PRST(:,JK)
-  ZWR(:,JK,IRG)=PRGT(:,JK)
+  ZWTH(:,JK)=PTHT(:,JK)
+  ZWR(:,JK,IRV)=PRT(:,JK,IRV)
+  ZWR(:,JK,IRC)=PRT(:,JK,IRC)
+  ZWR(:,JK,IRR)=PRT(:,JK,IRR)
+  ZWR(:,JK,IRI)=PRT(:,JK,IRI)
+  ZWR(:,JK,IRS)=PRT(:,JK,IRS)
+  ZWR(:,JK,IRG)=PRT(:,JK,IRG)
   IF (KRR==7) THEN
-    ZWR(:,JK,IRH)=PRHT(:,JK)
+    ZWR(:,JK,IRH)=PRT(:,JK,IRH)
   ELSE
     ZWR(:,JK,IRH)=0.
   ENDIF
@@ -454,7 +442,7 @@ DO JK=IKTB,IKTE
     CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(JIJ, JK), &
                          PTHT(JIJ, JK), PPABST(JIJ, JK), PRHODREF(JIJ, JK), &                                       
                          PEXN(JIJ, JK), ZW3D(JIJ, JK), ZT(JIJ, JK), &                                                           
-                         PRVT(JIJ, JK), &                                                                                 
+                         PRT(JIJ, JK,IRV), &                                                                                 
                          PCIT(JIJ, JK), ZZ_RVHENI(JIJ, JK))
   ENDDO
 ENDDO
@@ -464,7 +452,7 @@ ENDDO
 !$acc loop independent collapse(2)
 DO JK = IKTB, IKTE
   DO JIJ=IIJB, IIJE
-    ZZ_RVHENI(JIJ,JK) = MIN(PRVS(JIJ,JK), ZZ_RVHENI(JIJ,JK)/PTSTEP)
+    ZZ_RVHENI(JIJ,JK) = MIN(PRS(JIJ,JK,IRV), ZZ_RVHENI(JIJ,JK)/PTSTEP)
   ENDDO
 ENDDO
 !$acc end kernels
@@ -509,7 +497,7 @@ IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
   ENDIF
   !We cannot use ZWR(:,IKTB:IKTE,IRC) which is not contiguous
   CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, IIJT*(IKTE-IKTB+1), PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF,&
-                        LLMICRO(:,IKTB:IKTE), PRHODREF(:,IKTB:IKTE), PRCT(:,IKTB:IKTE), PRIT(:,IKTB:IKTE), &
+                        LLMICRO(:,IKTB:IKTE), PRHODREF(:,IKTB:IKTE), PRT(:,IKTB:IKTE,IRC), PRT(:,IKTB:IKTE,IRI), &
                         PCLDFR(:,IKTB:IKTE), ZT(:,IKTB:IKTE), ZSIGMA_RC(:,IKTB:IKTE), &
                         PHLC_HCF(:,IKTB:IKTE), ZHLC_LCF(:,IKTB:IKTE), PHLC_HRC(:,IKTB:IKTE), ZHLC_LRC(:,IKTB:IKTE), &
                         PHLI_HCF(:,IKTB:IKTE), ZHLI_LCF(:,IKTB:IKTE), PHLI_HRI(:,IKTB:IKTE), ZHLI_LRI(:,IKTB:IKTE), &
@@ -518,7 +506,7 @@ IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
 !                        LLMICRO, PRHODREF, ZWR(:,:,IRC), ZWR(:,:,IRI), PCLDFR, ZT, ZSIGMA_RC,&
 !                            PHLC_HCF, ZHLC_LCF, PHLC_HRC, ZHLC_LRC, &
 !                            PHLI_HCF, ZHLI_LCF, PHLI_HRI, ZHLI_LRI, PRAINFR)
-  IF (PRESENT(PRHS)) THEN
+  IF (KRR==7) THEN
     CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, ZWR(:,:,IRR), &
                          &ZWR(:,:,IRS), ZWR(:,:,IRG), ZWR(:,:,IRH))
   ELSE
@@ -573,13 +561,13 @@ CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                PTSTEP, KRR, LSAVE_MICRO, LLMICRO, OELEC, PEXN,       &
                PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
                PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
-               PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,             &
+               PTHS, PRS, &
                PEVAP3D,                                              &
                PRAINFR, PSIGS,                                       &
                ZZ_RVHENI, ZZ_LVFACT, ZZ_LSFACT,                      &
-               ZWR,                                                  &
+               ZWTH, ZWR, &
                TBUDGETS, KBUDGETS,                                   &
-               ZMICRO_TEND, PLATHAM_IAGGS, PRHS                      )
+               ZMICRO_TEND, PLATHAM_IAGGS)
 !
 !
 !-------------------------------------------------------------------------------
@@ -613,7 +601,7 @@ IF (OELEC) THEN
                          KRR, IELEC, PTSTEP, GMASK_ELEC,                                      &
                          BUCONF, TBUDGETS, KBUDGETS,                                          &
                          'ICE4', PTHVREFZIKB, PRHODREF, PRHODJ, ZT, PCIT,                     &
-                         PRVT, PRCT, PRRT, PRIT, PRST, PRGT,                                  &
+                         PRT(:,:,IRV), PRT(:,:,IRC), PRT(:,:,IRR), PRT(:,:,IRI), PRT(:,:,IRS), PRT(:,:,IRG), &
                          PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,                          &
                          PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,                          &
                          ZMICRO_TEND(:,:,IRVHENI_MR), ZMICRO_TEND(:,:,IRRHONG_MR),            &
@@ -640,13 +628,13 @@ IF (OELEC) THEN
                          PRSDRYH=ZMICRO_TEND(:,:,IRSDRYH),                                    &
                          PRRDRYH=ZMICRO_TEND(:,:,IRRDRYH), PRGDRYH=ZMICRO_TEND(:,:,IRGDRYH),  &
                          PRDRYHG=ZMICRO_TEND(:,:,IRDRYHG), PRHMLTR=ZMICRO_TEND(:,:,IRHMLTR),  &
-                         PRHT=PRHT, PRHS=PRHS, PQHT=PQHT, PQHS=PQHS                       )
+                         PRHT=PRT(:,:,IRH), PQHT=PQHT, PQHS=PQHS                       )
   ELSE
     CALL ELEC_TENDENCIES(D, CST, ICED, ICEP, ELECD, ELECP,                                   &
                          KRR, ISIZE, PTSTEP, LLMICRO,                                        &
                          BUCONF, TBUDGETS, KBUDGETS,                                         &
                          'ICE3', PTHVREFZIKB, PRHODREF, PRHODJ, ZT, PCIT,                    &
-                         PRVT, PRCT, PRRT, PRIT, PRST, PRGT,                                 &
+                         PRT(:,:,IRV), PRT(:,:,IRC), PRT(:,:,IRR), PRT(:,:,IRI), PRT(:,:,IRS), PRT(:,:,IRG), &
                          PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,                         &
                          PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,                         &
                          ZMICRO_TEND(:,:,IRVHENI_MR), ZMICRO_TEND(:,:,IRRHONG_MR),           &
@@ -692,32 +680,32 @@ DO JK = IKTB, IKTE
     ZZ_LVFACT(JIJ,JK)=ZZ_LVFACT(JIJ,JK)/PEXNREF(JIJ,JK)
 
     !Hydrometeor tendencies is the difference between new state and old state (can be negative)
-    ZWR(JIJ,JK,IRV)=(ZWR(JIJ,JK,IRV)-PRVT(JIJ,JK))*ZINV_TSTEP
-    ZWR(JIJ,JK,IRC)=(ZWR(JIJ,JK,IRC)-PRCT(JIJ,JK))*ZINV_TSTEP
-    ZWR(JIJ,JK,IRR)=(ZWR(JIJ,JK,IRR)-PRRT(JIJ,JK))*ZINV_TSTEP
-    ZWR(JIJ,JK,IRI)=(ZWR(JIJ,JK,IRI)-PRIT(JIJ,JK))*ZINV_TSTEP
-    ZWR(JIJ,JK,IRS)=(ZWR(JIJ,JK,IRS)-PRST(JIJ,JK))*ZINV_TSTEP
-    ZWR(JIJ,JK,IRG)=(ZWR(JIJ,JK,IRG)-PRGT(JIJ,JK))*ZINV_TSTEP
+    ZWR(JIJ,JK,IRV)=(ZWR(JIJ,JK,IRV)-PRT(JIJ,JK,IRV))*ZINV_TSTEP
+    ZWR(JIJ,JK,IRC)=(ZWR(JIJ,JK,IRC)-PRT(JIJ,JK,IRC))*ZINV_TSTEP
+    ZWR(JIJ,JK,IRR)=(ZWR(JIJ,JK,IRR)-PRT(JIJ,JK,IRR))*ZINV_TSTEP
+    ZWR(JIJ,JK,IRI)=(ZWR(JIJ,JK,IRI)-PRT(JIJ,JK,IRI))*ZINV_TSTEP
+    ZWR(JIJ,JK,IRS)=(ZWR(JIJ,JK,IRS)-PRT(JIJ,JK,IRS))*ZINV_TSTEP
+    ZWR(JIJ,JK,IRG)=(ZWR(JIJ,JK,IRG)-PRT(JIJ,JK,IRG))*ZINV_TSTEP
     IF(KRR==7) THEN
-      ZWR(JIJ,JK,IRH)=(ZWR(JIJ,JK,IRH)-PRHT(JIJ,JK))*ZINV_TSTEP
+      ZWR(JIJ,JK,IRH)=(ZWR(JIJ,JK,IRH)-PRT(JIJ,JK,IRH))*ZINV_TSTEP
     ENDIF
 
     !Theta tendency computed from hydrometeors tendencies
-    ZWR(JIJ,JK, ITH) = (ZWR(JIJ,JK,IRC)+ZWR(JIJ,JK,IRR))*ZZ_LVFACT(JIJ,JK)+ &
-                       & (ZWR(JIJ,JK,IRI)+ZWR(JIJ,JK,IRS)+ZWR(JIJ,JK,IRG)+ &
-                       &  ZWR(JIJ,JK,IRH))*ZZ_LSFACT(JIJ,JK)
+    ZWTH(JIJ,JK) = (ZWR(JIJ,JK,IRC)+ZWR(JIJ,JK,IRR))*ZZ_LVFACT(JIJ,JK)+ &
+                 & (ZWR(JIJ,JK,IRI)+ZWR(JIJ,JK,IRS)+ZWR(JIJ,JK,IRG)+ &
+                 &  ZWR(JIJ,JK,IRH))*ZZ_LSFACT(JIJ,JK)
 
     !We apply these tendencies to the S variables
     !including the nucleation part
-    PTHS(JIJ,JK) = PTHS(JIJ,JK) + ZWR(JIJ,JK,ITH)+ZZ_RVHENI(JIJ,JK)*ZZ_LSFACT(JIJ,JK)
-    PRVS(JIJ,JK) = PRVS(JIJ,JK) + ZWR(JIJ,JK,IRV)-ZZ_RVHENI(JIJ,JK)
-    PRCS(JIJ,JK) = PRCS(JIJ,JK) + ZWR(JIJ,JK,IRC)
-    PRRS(JIJ,JK) = PRRS(JIJ,JK) + ZWR(JIJ,JK,IRR)
-    PRIS(JIJ,JK) = PRIS(JIJ,JK) + ZWR(JIJ,JK,IRI)+ZZ_RVHENI(JIJ,JK)
-    PRSS(JIJ,JK) = PRSS(JIJ,JK) + ZWR(JIJ,JK,IRS)
-    PRGS(JIJ,JK) = PRGS(JIJ,JK) + ZWR(JIJ,JK,IRG)
+    PTHS(JIJ,JK) = PTHS(JIJ,JK) + ZWTH(JIJ,JK)+ZZ_RVHENI(JIJ,JK)*ZZ_LSFACT(JIJ,JK)
+    PRS(JIJ,JK,IRV) = PRS(JIJ,JK,IRV) + ZWR(JIJ,JK,IRV)-ZZ_RVHENI(JIJ,JK)
+    PRS(JIJ,JK,IRC) = PRS(JIJ,JK,IRC) + ZWR(JIJ,JK,IRC)
+    PRS(JIJ,JK,IRR) = PRS(JIJ,JK,IRR) + ZWR(JIJ,JK,IRR)
+    PRS(JIJ,JK,IRI) = PRS(JIJ,JK,IRI) + ZWR(JIJ,JK,IRI)+ZZ_RVHENI(JIJ,JK)
+    PRS(JIJ,JK,IRS) = PRS(JIJ,JK,IRS) + ZWR(JIJ,JK,IRS)
+    PRS(JIJ,JK,IRG) = PRS(JIJ,JK,IRG) + ZWR(JIJ,JK,IRG)
     IF (KRR==7) THEN
-      PRHS(JIJ,JK) = PRHS(JIJ,JK) + ZWR(JIJ,JK,IRH)
+      PRS(JIJ,JK,IRH) = PRS(JIJ,JK,IRH) + ZWR(JIJ,JK,IRH)
     ENDIF
   ENDDO
 ENDDO
@@ -737,34 +725,32 @@ ENDDO
 !
 IF(BUCONF%LBU_ENABLE) THEN
   IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'CORR', PTHS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'CORR', PRVS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', PRCS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', PRRS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', PRIS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'CORR', PRSS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'CORR', PRGS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'CORR', PRHS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'CORR', PRS(:, :, IRV)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', PRS(:, :, IRC)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', PRS(:, :, IRR)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', PRS(:, :, IRI)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'CORR', PRS(:, :, IRS)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'CORR', PRS(:, :, IRG)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'CORR', PRS(:, :, IRH)*PRHODJ(:, :))
 END IF
 !++cb-- ajouter les bilans pour l'elec !!!
 
 !We correct negativities with conservation
-CALL ICE4_CORRECT_NEGATIVITIES(D, ICED, KRR, PRVS, PRCS, PRRS, &
-                              &PRIS, PRSS, PRGS, &
-                              &PTHS, ZZ_LVFACT, ZZ_LSFACT, PRHS)
-!CALL ICE4_CORRECT_NEGATIVITIES(D, ICED, KRR, OELEC, PRVS, PRCS, PRRS, &
-!                              &PRIS, PRSS, PRGS, &
+CALL ICE4_CORRECT_NEGATIVITIES(D, ICED, KRR, PRS, &
+                              &PTHS, ZZ_LVFACT, ZZ_LSFACT)
+!CALL ICE4_CORRECT_NEGATIVITIES(D, ICED, KRR, OELEC, PRS, &
 !                              &PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS, &                              
-!                              &PTHS, ZZ_LVFACT, ZZ_LSFACT, PRHS, PQHS)
+!                              &PTHS, ZZ_LVFACT, ZZ_LSFACT, PQHS)
 
 IF (BUCONF%LBU_ENABLE) THEN
   IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'CORR', PTHS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'CORR', PRVS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', PRCS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', PRRS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', PRIS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'CORR', PRSS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RG), 'CORR', PRGS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'CORR', PRHS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'CORR', PRS(:, :, IRV)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', PRS(:, :, IRC)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', PRS(:, :, IRR)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', PRS(:, :, IRI)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'CORR', PRS(:, :, IRS)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RG), 'CORR', PRS(:, :, IRG)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'CORR', PRS(:, :, IRH)*PRHODJ(:, :))
 END IF
 !
 !-------------------------------------------------------------------------------
@@ -776,12 +762,12 @@ IF(PARAMI%LSEDIM_AFTER) THEN
   CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, BUCONF, &
                          &OELEC, OSEDIM_BEARD, PTSTEP, KRR, PDZZ, PTHVREFZIKB, &
                          &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
-                         &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
+                         &PTHS, PRT, PRS, &
                          &PINPRC, PINPRR, PINPRS, PINPRG, &
                          &PQCT, PQRT, PQIT, PQST, PQGT, PQCS, PQRS, PQIS, PQSS, PQGS, PEFIELDW, &
                          &TBUDGETS, KBUDGETS, &
                          &PSEA=PSEA, PTOWN=PTOWN, &
-                         &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR, &
+                         &PINPRH=PINPRH, PFPR=PFPR, &
                          &PQHT=PQHT, PQHS=PQHS)
         
   !"sedimentation" of rain fraction
@@ -789,16 +775,16 @@ IF(PARAMI%LSEDIM_AFTER) THEN
 !$acc loop independent collapse(2)
   DO JK = IKTB, IKTE
     DO JIJ=IIJB,IIJE
-      ZWR(JIJ,JK,IRR)=PRRS(JIJ,JK)*PTSTEP
-      ZWR(JIJ,JK,IRS)=PRSS(JIJ,JK)*PTSTEP
-      ZWR(JIJ,JK,IRG)=PRGS(JIJ,JK)*PTSTEP
+      ZWR(JIJ,JK,IRR)=PRS(JIJ,JK,IRR)*PTSTEP
+      ZWR(JIJ,JK,IRS)=PRS(JIJ,JK,IRS)*PTSTEP
+      ZWR(JIJ,JK,IRG)=PRS(JIJ,JK,IRG)*PTSTEP
       IF(KRR==7) THEN
-        ZWR(JIJ,JK,IRH)=PRHS(JIJ,JK)*PTSTEP
+        ZWR(JIJ,JK,IRH)=PRS(JIJ,JK,IRH)*PTSTEP
       ENDIF
     ENDDO
   ENDDO
 !$acc end kernels
-  IF (PRESENT(PRHS)) THEN
+  IF (KRR==7) THEN
     CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, ZWR(:,:,IRR), &
                          &ZWR(:,:,IRS), ZWR(:,:,IRG), ZWR(:,:,IRH))
   ELSE
@@ -814,20 +800,20 @@ ENDIF
 !
 IF (PARAMI%LDEPOSC) THEN !cloud water deposition on vegetation
   IF (BUCONF%LBU_ENABLE .AND. BUCONF%LBUDGET_RC) &
-     & CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'DEPO', PRCS(:, :)*PRHODJ(:, :))
+     & CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'DEPO', PRS(:, :,IRC)*PRHODJ(:, :))
 !$acc kernels
   PINDEP(:)=0.
 !DEC$ IVDEP
 !$acc loop independent
   DO JIJ = IIJB, IIJE
-    PINDEP(JIJ) = PARAMI%XVDEPOSC * PRCT(JIJ, IKB) * PRHODREF(JIJ, IKB) / CST%XRHOLW
-    PRCS(JIJ, IKB) = PRCS(JIJ, IKB) - PARAMI%XVDEPOSC * PRCT(JIJ, IKB) / PDZZ(JIJ, IKB)
+    PINDEP(JIJ) = PARAMI%XVDEPOSC * PRT(JIJ, IKB, IRC) * PRHODREF(JIJ, IKB) / CST%XRHOLW
+    PRS(JIJ, IKB,IRC) = PRS(JIJ, IKB, IRC) - PARAMI%XVDEPOSC * PRT(JIJ, IKB, IRC) / PDZZ(JIJ, IKB)
     PINPRC(JIJ) = PINPRC(JIJ) + PINDEP(JIJ)
   ENDDO
 !$acc end kernels
 
   IF (BUCONF%LBU_ENABLE .AND. BUCONF%LBUDGET_RC) &
-     & CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'DEPO', PRCS(:, :)*PRHODJ(:, :))
+     & CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'DEPO', PRS(:, :, IRC)*PRHODJ(:, :))
 ENDIF
 
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 1, ZHOOK_HANDLE)

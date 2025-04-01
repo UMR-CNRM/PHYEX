@@ -544,8 +544,7 @@ CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, PHYEX%RAIN
                pdtphys, KRR, ZEXN,                                                                                &
                zdzf, PRHODJ, ZRHOD, ZEXN, ZPABST, ZCIT, ZCLDFR,                                                   &
                ZHLC_HRC, ZHLC_HCF, ZHLI_HRI, ZHLI_HCF,                                                            &
-               ztheta, ZRX(:,:,1), ZRX(:,:,2), ZRX(:,:,3), ZRX(:,:,4), ZRX(:,:,5),                                &
-               ZRX(:,:,6), zthetas, ZRXS(:,:,1), ZRXS(:,:,2), ZRXS(:,:,3), ZRXS(:,:,4), ZRXS(:,:,5), ZRXS(:,:,6), &
+               ztheta, ZRX, zthetas, ZRXS, &
                ZINPRC, ZINPRR, ZEVAP3D,                                                                           &
                ZINPRS, ZINPRG, ZINDEP, ZRAINFR, PSIGS,                                                            &
                PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET,                                                           &
