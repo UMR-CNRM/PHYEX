@@ -292,6 +292,7 @@ REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_LCF
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_LRC
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LCF
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LRI
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZCLDFR
 !
 REAL :: ZINV_TSTEP ! Inverse ov PTSTEP
 !For total tendencies computation
@@ -481,6 +482,8 @@ ENDDO
 !diagnostic does not evolve too much during a time-step.
 !ICE4_RAINFR_VERT needs the output of ICE4_COMPUTE_PDF; thus this routine
 !is called here but it's still called from within ice4_tendencies.
+ZCLDFR(:,:)=MAX(PCLDFR(:,:),PHLC_HCF(:,:))
+PHLC_HRC(:,:)=MIN(PHLC_HRC(:,:),PRCT(:,:))
 IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
   IF (PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM') THEN
     DO JK = IKTB, IKTE                                                                                                                  
