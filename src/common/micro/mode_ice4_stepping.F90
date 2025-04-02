@@ -9,7 +9,7 @@ CONTAINS
 SUBROUTINE ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, KMICRO, PTSTEP, &
                         &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
-                        &PEXN, PRHODREF, K1, K2, &
+                        &PEXN, PRHODREF, &
                         &PPRES, PCIT, PCF, &
                         &PHLC_HCF, PHLC_HRC, &
                         &PHLI_HCF, PHLI_HRI, &
@@ -83,7 +83,6 @@ LOGICAL,                  INTENT(IN)    :: OELEC         ! if true, cloud electr
 !
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PEXN    ! Exner function
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PRHODREF! Reference density
-INTEGER, DIMENSION(KPROMA),                     INTENT(IN)    :: K1,K2 ! Used to replace the COUNT and PACK intrinsics on variables
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PPRES
 REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PCIT
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PCF ! Cloud fraction
@@ -139,7 +138,7 @@ LOGICAL :: LLCPZ0RT
 REAL :: ZTIME_THRESHOLD1D(KPROMA) ! Time to reach threshold
 REAL, DIMENSION(KPROMA, KRR) :: Z0RT ! Mixing-ratios at the beginig of the current loop
 !
-REAL, DIMENSION(KPROMA,7) :: ZA, ZB
+REAL, DIMENSION(KPROMA,KRR) :: ZA, ZB
 REAL, DIMENSION(KPROMA)   :: ZATH, ZBTH
 !
 REAL, DIMENSION(KPROMA, 8) :: ZRS_TEND, ZRG_TEND
@@ -287,7 +286,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
                         &KPROMA, KMICRO, &
                         &KRR, LSOFT, LLCOMPUTE, &
                         &OSAVE_MICRO, OELEC, &
-                        &PEXN, PRHODREF, ZLVFACT, ZLSFACT, K1, K2, &
+                        &PEXN, PRHODREF, ZLVFACT, ZLSFACT, &
                         &PPRES, PCF, PSIGMA_RC, &
                         &PCIT, &
                         &ZZT, PTH, PVART, &

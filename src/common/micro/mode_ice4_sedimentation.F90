@@ -116,9 +116,9 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(IN
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZRCT, ZRRT, ZRIT, ZRST, ZRGT, ZRHT
+REAL, DIMENSION(D%NIJT,D%NKT,KRR) :: ZRT
 REAL, DIMENSION(D%NIJT) :: ZINPRI
-INTEGER :: JK, JIJ, IKTB, IKTE, IIJB, IIJE
+INTEGER :: JK, JIJ, IKTB, IKTE, IIJB, IIJE, JRR
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION', 0, ZHOOK_HANDLE)
@@ -157,26 +157,22 @@ IF(PARAMI%CSEDIM=='STAT') THEN
     CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', "OELEC=.T. not allowed with CSEDIM='STAT'")
   ENDIF
 !$acc kernels
-!$acc loop independent collapse(2)
-  DO JK = IKTB,IKTE
-    DO JIJ = IIJB,IIJE
-      ZRCT(JIJ,JK)=PRS(JIJ,JK,IRC)*PTSTEP
-      ZRRT(JIJ,JK)=PRS(JIJ,JK,IRR)*PTSTEP
-      ZRIT(JIJ,JK)=PRS(JIJ,JK,IRI)*PTSTEP
-      ZRST(JIJ,JK)=PRS(JIJ,JK,IRS)*PTSTEP
-      ZRGT(JIJ,JK)=PRS(JIJ,JK,IRG)*PTSTEP
-      IF (KRR==7) ZRHT(JIJ,JK)=PRS(JIJ,JK,IRH)*PTSTEP
+!$acc loop independent collapse(3)
+  DO JRR=2, KRR
+    DO JK = IKTB,IKTE
+      DO JIJ = IIJB,IIJE
+        ZRT(JIJ,JK,JRR)=PRS(JIJ,JK,JRR)*PTSTEP
+      ENDDO
     ENDDO
   ENDDO
 !$acc end kernels
   CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, PARAMI, &
                               &PTSTEP, KRR, PDZZ, &
                               &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
-                              &PRS(:,:,IRC), ZRCT, PRS(:,:,IRR), ZRRT, PRS(:,:,IRI), ZRIT,&
-                              &PRS(:,:,IRS), ZRST, PRS(:,:,IRG), ZRGT,&
+                              &PRS, ZRT, &
                               &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                               &PSEA=PSEA, PTOWN=PTOWN, &
-                              &PINPRH=PINPRH, PRHT=ZRHT, PRHS=PRS(:,:,IRH), PFPR=PFPR)
+                              &PINPRH=PINPRH, PFPR=PFPR)
 !$acc kernels
   PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)
 !$acc end kernels
@@ -185,13 +181,12 @@ ELSEIF(PARAMI%CSEDIM=='SPLI') THEN
   CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
                                &OELEC, OSEDIM_BEARD, PTHVREFZIKB, PTSTEP, KRR, PDZZ, &
                                &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
-                               &PRS(:,:,IRC), PRT(:,:,IRC), PRS(:,:,IRR), PRT(:,:,IRR), PRS(:,:,IRI), PRT(:,:,IRI), &
-                               &PRS(:,:,IRS), PRT(:,:,IRS), PRS(:,:,IRG), PRT(:,:,IRG),&
+                               &PRS, PRT, &
                                &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                                &PQCT, PQRT, PQIT, PQST, PQGT, PQCS, PQRS, PQIS, PQSS, PQGS, &
                                &PEFIELDW, &
                                &PSEA=PSEA, PTOWN=PTOWN, &
-                               &PINPRH=PINPRH, PRHT=PRT(:,:,IRH), PRHS=PRS(:,:,IRH), PFPR=PFPR, &
+                               &PINPRH=PINPRH, PFPR=PFPR, &
                                &PQHT=PQHT, PQHS=PQHS)
 !$acc kernels
   PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)

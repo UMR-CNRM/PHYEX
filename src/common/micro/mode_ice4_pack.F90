@@ -333,7 +333,7 @@ IF(PARAMI%LPACK_MICRO) THEN
       CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, IMICRO, PTSTEP, &
                         &KRR, OSAVE_MICRO, LLMICRO, OELEC, &
-                        &ZEXN, ZRHODREF, I1, I2, &
+                        &ZEXN, ZRHODREF, &
                         &ZPRES, ZCIT, ZCF, &
                         &ZHLC_HCF, ZHLC_HRC, &
                         &ZHLI_HCF, ZHLI_HRI, &
@@ -448,7 +448,7 @@ ELSE ! PARAMI%LPACK_MICRO
   CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
                     &KSIZE, KSIZE, PTSTEP, &
                     &KRR, OSAVE_MICRO, ODMICRO, OELEC, &
-                    &PEXN, PRHODREF, I1TOT, I2TOT, &
+                    &PEXN, PRHODREF, &
                     &PPABST, PCIT, PCLDFR, &
                     &PHLC_HCF, PHLC_HRC, &
                     &PHLI_HCF, PHLI_HRI,  &
