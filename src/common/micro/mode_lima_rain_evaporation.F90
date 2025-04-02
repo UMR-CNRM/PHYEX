@@ -7,8 +7,9 @@ MODULE MODE_LIMA_RAIN_EVAPORATION
   IMPLICIT NONE
 CONTAINS
 !     ###############################################################################
-  SUBROUTINE LIMA_RAIN_EVAPORATION (CST, LIMAP, LIMAW, KSIZE, PTSTEP, ODCOMPUTE,                   &
+  SUBROUTINE LIMA_RAIN_EVAPORATION (CST, LIMAP, LIMAW, KSIZE, PTSTEP, ODCOMPUTE,&
                                     PRHODREF, PT, PLV, PLVFACT, PEVSAT, PRVSAT, &
+                                    PKA, PDV, PCJ,                              &
                                     PRVT, PRCT, PRRT, PCRT, PLBDR,              &
                                     P_TH_EVAP, P_RR_EVAP, P_CR_EVAP,            &
                                     PEVAP3D                                     )
@@ -60,6 +61,9 @@ REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLV        !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLVFACT    !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PEVSAT     !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRVSAT     !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PKA        !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PDV        !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ        !
 !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRVT       ! Water vapor m.r. at t 
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRCT       ! Cloud water m.r. at t 
@@ -78,7 +82,7 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: PEVAP3D    ! Rain evap profile
 ! 
 LOGICAL, DIMENSION(SIZE(PRHODREF)) :: GEVAP
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-REAL, DIMENSION(SIZE(PRHODREF))    :: ZZW1, ZZW2
+REAL, DIMENSION(SIZE(PRHODREF))    :: ZZW1, ZZW2, ZKA, ZDV
 !
 !-------------------------------------------------------------------------------
 !
@@ -93,6 +97,8 @@ P_CR_EVAP(:) = 0.
 !
 ZZW1(:) = 0.
 ZZW2(:) = 0.
+ZKA(:)  = 0.
+ZDV(:)  = 0.
 !
 GEVAP(:) = .FALSE.
 GEVAP(:) = ODCOMPUTE(:)      .AND. &
@@ -124,12 +130,12 @@ ELSE
 !
 ! Compute the function G(T)
 !
-      ZZW2(:) = 1. / ( CST%XRHOLW*((((PLV(:)/PT(:))**2)/(LIMAW%XTHCO*CST%XRV)) + (CST%XRV*PT(:))/(LIMAW%XDIVA*PEVSAT(:))))
+      ZZW2(:) = 1. / ( CST%XRHOLW*((((PLV(:)/PT(:))**2)/(PKA(:)*CST%XRV)) + (CST%XRV*PT(:))/(PDV(:)*PEVSAT(:))))
 !
 ! Compute the evaporation tendency
 !
       ZZW2(:) = ZZW2(:) * ZZW1(:) * PRRT(:) *        &
-           (LIMAW%X0EVAR * PLBDR(:)**LIMAW%XEX0EVAR + LIMAW%X1EVAR * PRHODREF(:)**LIMAW%XEX2EVAR * PLBDR(:)**LIMAW%XEX1EVAR)
+           (LIMAW%X0EVAR * PLBDR(:)**LIMAW%XEX0EVAR + LIMAW%X1EVAR * PCJ(:) * PLBDR(:)**LIMAW%XEX1EVAR)
       ZZW2(:) = MAX(ZZW2(:),0.0)
 !
       P_RR_EVAP(:) = - ZZW2(:)

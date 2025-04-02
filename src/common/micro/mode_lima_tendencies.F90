@@ -414,6 +414,10 @@ REAL, DIMENSION(KSIZE) :: ZHLC_LCF
 REAL, DIMENSION(KSIZE) :: ZHLI_HCF
 REAL, DIMENSION(KSIZE) :: ZHLI_LCF
 !
+REAL, DIMENSION(KSIZE) :: ZTHLT, ZT_CS, ZLV_CS, ZLS_CS
+REAL, DIMENSION(KSIZE) :: ZEVSAT_CS, ZRVSAT_CS, ZEISAT_CS, ZRISAT_CS, ZSSI_CS, ZSSIW_CS
+REAL, DIMENSION(KSIZE) :: ZKA_CS, ZAI_CS, ZDV_CS, ZCJ_CS
+!
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 ! Pre-compute quantities
@@ -534,6 +538,26 @@ WHERE (ODCOMPUTE(:))
 !
    ZCJ(:) = LIMAC%XSCFAC * PRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZT(:)-CST%XTT) )
 !
+!
+! same computations in clear sky condition 
+!
+!
+   ZTHLT(:) = PTHT(:) - CST%XLVTT*PTHT(:)/CST%XCPD/ZT(:)*ZRCT(:)
+   ZT_CS(:) = ZTHLT(:) * ZT(:) / PTHT(:)
+   ZLV_CS(:) = CST%XLVTT + (CST%XCPV-CST%XCL)*(ZT_CS(:)-CST%XTT)
+   ZLS_CS(:) = CST%XLSTT + (CST%XCPV-CST%XCI)*(ZT_CS(:)-CST%XTT)
+   ZEVSAT_CS(:)  = EXP( CST%XALPW - CST%XBETAW/ZT_CS(:) - CST%XGAMW*LOG(ZT_CS(:) ) )
+   ZRVSAT_CS(:) = ZEPS * ZEVSAT_CS(:) / (PPABST(:) - ZEVSAT_CS(:))
+   ZEISAT_CS(:)  = EXP( CST%XALPI - CST%XBETAI/ZT_CS(:) - CST%XGAMI*LOG(ZT_CS(:) ) )
+   ZRISAT_CS(:) = ZEPS * ZEISAT_CS(:) / (PPABST(:) - ZEISAT_CS(:))
+   ZSSI_CS(:)  = PRVT(:)/ZRISAT_CS(:) - 1.0             ! Si  =  rv/rsi - 1
+   ZSSIW_CS(:) = ZRVSAT_CS(:)/ZRISAT_CS(:) - 1.0 ! Siw = rsw/rsi - 1
+   ZKA_CS(:) = 2.38E-2 + 0.0071E-2 * ( ZT_CS(:) - CST%XTT )
+   ZDV_CS(:) = 0.211E-4 * (ZT_CS(:)/CST%XTT)**1.94 * (CST%XP00/PPABST(:))
+   ZAI_CS(:) =   ( CST%XLSTT + (CST%XCPV-CST%XCI)*(ZT_CS(:)-CST%XTT) )**2 / (ZKA_CS(:)*CST%XRV*ZT_CS(:)**2) &
+                + ( CST%XRV*ZT_CS(:) ) / (ZDV_CS(:)*ZEISAT_CS(:))
+   ZCJ_CS(:) = LIMAC%XSCFAC * PRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZT_CS(:)-CST%XTT) )
+!
 END WHERE
 !
 ! Lambda computation
@@ -566,7 +590,7 @@ ZLBDR3(:) = 1.E30
 ZCRT(:)=0.
 IF (LIMAP%NMOM_R.EQ.1) THEN
    WHERE (ZRRT(:)>LIMAP%XRTMIN(3) .AND. ODCOMPUTE(:) )
-      ZLBDR(:) = LIMAW%XLBR*(PRHODREF(:)*ZRRT(:) )**LIMAW%XLBEXR
+      ZLBDR(:) = LIMAW%XLBR*(PRHODREF(:)*ZRRT(:)/ZPF1D(:) )**LIMAW%XLBEXR
       ZLBDR3(:) = ZLBDR(:)**3.
       ZCRT(:) = LIMAW%XCCR * ZLBDR(:)**LIMAW%XCXR / PRHODREF(:)
    END WHERE
@@ -774,8 +798,9 @@ IF ((.NOT. LIMAP%LKHKO) .AND. LIMAP%NMOM_R.GE.2) THEN
 END IF
 !
 IF (LIMAP%NMOM_R.GE.1) THEN
-   CALL LIMA_RAIN_EVAPORATION (CST, LIMAP, LIMAW, KSIZE, PTSTEP, ODCOMPUTE,                        & ! depends on PF > CF 
-                               PRHODREF, ZT, ZLV, ZLVFACT, ZEVSAT, ZRVSAT,      &
+   CALL LIMA_RAIN_EVAPORATION (CST, LIMAP, LIMAW, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on PF > CF 
+                               PRHODREF, ZT_CS, ZLV_CS, ZLVFACT, ZEVSAT_CS, ZRVSAT_CS,      &
+                               ZKA_CS, ZDV_CS, ZCJ_CS,                                   &
                                PRVT, ZRCT/ZPF1D, ZRRT/ZPF1D, ZCRT/ZPF1D, ZLBDR, &
                                P_TH_EVAP, P_RR_EVAP, P_CR_EVAP,                 &
                                PEVAP3D                                          )

@@ -904,6 +904,7 @@ IF ( BUCONF%LBU_ENABLE ) THEN
 END IF
 !
 PFPR(:,:,:)=0.
+IF (.FALSE.) THEN
 !
 ! sedimentation of cloud droplets
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
@@ -1023,6 +1024,7 @@ IF (LIMAP%NMOM_H.GE.1) THEN
 END IF
 !
 ZTHS(:,:) = ZT(:,:) / ZEXN(:,:) * ZINV_TSTEP
+END IF
 !
 ! Call budgets
 !
@@ -1247,7 +1249,10 @@ END IF
 !               ------------------------------
 !
 LLMICRO(:,:)=.TRUE.
-IF ( .FALSE. .AND. NEBN%LSUBG_COND ) THEN
+! PHLC_HRC should never be larger than PRCT
+PCLDFR(:,:)=MAX(PCLDFR(:,:),PHLC_HCF(:,:))
+PHLC_HRC(:,:)=MIN(PHLC_HRC(:,:),ZRCT(:,:))
+IF ( NEBN%LSUBG_COND ) THEN
 !IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
 !  IF (PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM') THEN
 !    DO IK = D%NKTB, D%NKTE                                                                                                         !         
