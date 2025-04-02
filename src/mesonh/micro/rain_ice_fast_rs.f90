@@ -186,15 +186,15 @@ IGRIM = COUNTJV( GWORK(:), I1(:) )
 CALL COUNTJV_DEVICE( GWORK(:), I1(:), IGRIM )
 #endif
   !
+if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'RIM', Unpack ( pths(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'RIM', Unpack ( prcs(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rs ) call Budget_store_init( tbudgets(NBUDGET_RS), 'RIM', Unpack ( prss(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rg ) call Budget_store_init( tbudgets(NBUDGET_RG), 'RIM', Unpack ( prgs(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
   IF( IGRIM>0 ) THEN
-    if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'RIM', Unpack ( pths(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'RIM', Unpack ( prcs(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rs ) call Budget_store_init( tbudgets(NBUDGET_RS), 'RIM', Unpack ( prss(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rg ) call Budget_store_init( tbudgets(NBUDGET_RG), 'RIM', Unpack ( prgs(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
 
 !
 !        5.1.0  allocations
@@ -339,17 +339,6 @@ IF (MPPDB_INITIALIZED) THEN
 END IF
 !$acc end data
 
-    !Remark: not possible to use Budget_store_add here
-    !        because variables modified a second time but with a if on prss + jl/=jj
-    if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'RIM', Unpack ( pths(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'RIM', Unpack ( prcs(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rs ) call Budget_store_end( tbudgets(NBUDGET_RS), 'RIM', Unpack ( prss(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rg ) call Budget_store_end( tbudgets(NBUDGET_RG), 'RIM', Unpack ( prgs(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
-
 #ifndef MNH_OPENACC
     DEALLOCATE(ZZW3)
     DEALLOCATE(ZZW2)
@@ -363,6 +352,17 @@ END IF
     CALL MNH_MEM_RELEASE( 'RAIN_ICE_FAST_RS 2' )
 #endif
   END IF
+!Remark: not possible to use Budget_store_add here
+!        because variables modified a second time but with a if on prss + jl/=jj
+if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'RIM', Unpack ( pths(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'RIM', Unpack ( prcs(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rs ) call Budget_store_end( tbudgets(NBUDGET_RS), 'RIM', Unpack ( prss(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rg ) call Budget_store_end( tbudgets(NBUDGET_RG), 'RIM', Unpack ( prgs(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
+
 !
 !*       5.2    rain accretion onto the aggregates
 !
@@ -375,15 +375,15 @@ END IF
   CALL COUNTJV_DEVICE( GWORK(:), I1(:), IGACC )
 #endif
   !
+if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'ACC', Unpack ( pths(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rr ) call Budget_store_init( tbudgets(NBUDGET_RR), 'ACC', Unpack ( prrs(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rs ) call Budget_store_init( tbudgets(NBUDGET_RS), 'ACC', Unpack ( prss(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rg ) call Budget_store_init( tbudgets(NBUDGET_RG), 'ACC', Unpack ( prgs(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
   IF( IGACC>0 ) THEN
-    if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'ACC', Unpack ( pths(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rr ) call Budget_store_init( tbudgets(NBUDGET_RR), 'ACC', Unpack ( prrs(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rs ) call Budget_store_init( tbudgets(NBUDGET_RS), 'ACC', Unpack ( prss(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rg ) call Budget_store_init( tbudgets(NBUDGET_RG), 'ACC', Unpack ( prgs(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
 !
 !        5.2.0  allocations
 !
@@ -555,16 +555,6 @@ END IF
 
 !$acc end data
 
-    !Remark: not possible to use Budget_store_add here
-    !        because variables modified a second time but with a if on prss + jl/=jj
-    if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'ACC', Unpack ( pths(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rr ) call Budget_store_end( tbudgets(NBUDGET_RR), 'ACC', Unpack ( prrs(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rs ) call Budget_store_end( tbudgets(NBUDGET_RS), 'ACC', Unpack ( prss(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rg ) call Budget_store_end( tbudgets(NBUDGET_RG), 'ACC', Unpack ( prgs(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
 
 #ifndef MNH_OPENACC
     DEALLOCATE(ZZW4)
@@ -582,6 +572,17 @@ END IF
     CALL MNH_MEM_RELEASE( 'RAIN_ICE_FAST_RS 3' )
 #endif
   END IF
+    
+!Remark: not possible to use Budget_store_add here
+!        because variables modified a second time but with a if on prss + jl/=jj
+if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'ACC', Unpack ( pths(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rr ) call Budget_store_end( tbudgets(NBUDGET_RR), 'ACC', Unpack ( prrs(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rs ) call Budget_store_end( tbudgets(NBUDGET_RS), 'ACC', Unpack ( prss(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rg ) call Budget_store_end( tbudgets(NBUDGET_RG), 'ACC', Unpack ( prgs(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
 !
 !*       5.3    Conversion-Melting of the aggregates
 !
