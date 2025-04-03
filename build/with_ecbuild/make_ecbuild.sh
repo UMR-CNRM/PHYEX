@@ -151,7 +151,9 @@ cat <<EOF > compilation.sh
 
 level=Release #Release or Debug
 
+# ecbuild
 export PATH=$PWD/../ecbuild/bin/:\$PATH
+[ ! -f src/ecbuild ] && ln -s $PWD/../ecbuild src/
 
 if [ \$(head -1 src/pyphyex.F90 | grep MODULE | wc -l) == 0 ]; then
   content=\$(cat src/pyphyex.F90)
@@ -165,25 +167,23 @@ cd \$BUILDDIR
 #fiat compilation
 mkdir build_fiat
 cd build_fiat
-cmake ../../src/fiat -DCMAKE_INSTALL_PREFIX=\$BUILDDIR \
-                     -DCMAKE_CXX_FLAGS=-lstdc++ \
-                     -DCMAKE_BUILD_TYPE=\$level \
-                     -DBUILD_SHARED_LIBS=OFF \
+cmake ../../src/fiat -DCMAKE_INSTALL_PREFIX=\$BUILDDIR \\
+                     -DCMAKE_CXX_FLAGS=-lstdc++ \\
+                     -DCMAKE_BUILD_TYPE=\$level \\
+                     -DBUILD_SHARED_LIBS=OFF \\
                      --toolchain \$BUILDDIR/../arch.ecbuild
 make -j
 make install
 cd ..
 
-#PHYEX common compilation
+#PHYEX compilation
 mkdir build_PHYEX
 cd build_PHYEX
-cmake ../../src -DCMAKE_INSTALL_PREFIX=\$BUILDDIR \
-                -DFIAT_MODULE_DIR=\$BUILDDIR/module \
-                -DFIAT_INCLUDE_DIR=\$BUILDDIR/include \
-                -DFIAT_LIB_DIR=\$BUILDDIR/lib \
-                -DCMAKE_BUILD_TYPE=\$level \
+cmake ../../src -DCMAKE_INSTALL_PREFIX=\$BUILDDIR \\
+                -Dfiat_ROOT=\$BUILDDIR \\
+                -DCMAKE_BUILD_TYPE=\$level \\
                 --toolchain \$BUILDDIR/../arch.ecbuild
-make -j VERBOSE=1
+make -j
 make install
 cd ..
 EOF

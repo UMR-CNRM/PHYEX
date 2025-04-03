@@ -3,18 +3,40 @@ project(PHYEX)
 enable_language(Fortran)
 
 #################################################################################
-# Fiat
-set(FIAT_MODULE_DIR "" CACHE FILEPATH "Path to fiat modules")
-if(NOT EXISTS ${FIAT_MODULE_DIR})
-  message(FATAL_ERROR "FIAT_MODULE_DIR is not set correctly!")
+# Progs compilation
+set(PHYEX_BUILD_PROGS AUTO CACHE STRING "Build the program executables AUTO|ON|OFF")
+set_property(CACHE PHYEX_BUILD_PROGS PROPERTY STRINGS AUTO ON OFF)
+if(${PHYEX_BUILD_PROGS} STREQUAL "AUTO")
+  if(EXISTS ${CMAKE_SOURCE_DIR}/progs)
+    set(PHYEX_BUILD_PROGS ON)
+  else()
+    set(PHYEX_BUILD_PROGS OFF)
+  endif()
 endif()
-include_directories(${FIAT_MODULE_DIR}/fiat)
 
-set(FIAT_INCLUDE_DIR "" CACHE FILEPATH "Path to fiat includes")
-if(NOT EXISTS ${FIAT_INCLUDE_DIR})
-  message(FATAL_ERROR "FIAT_INCLUDE_DIR is not set correctly!")
+#################################################################################
+# Library building
+set(ENABLE_SHARED_LIB BOTH CACHE STRING "Build shared lib ON|OFF|BOTH|NONE")
+set_property(CACHE ENABLE_SHARED_LIB PROPERTY STRINGS ON OFF BOTH NONE)
+if(${ENABLE_SHARED_LIB} STREQUAL "ON" OR ${ENABLE_SHARED_LIB} STREQUAL "BOTH")
+  set(BUILD_SHARED ON)
+else()
+  set(BUILD_SHARED OFF)
 endif()
-include_directories(${FIAT_INCLUDE_DIR}/fiat)
+if(${ENABLE_SHARED_LIB} STREQUAL "OFF" OR ${ENABLE_SHARED_LIB} STREQUAL "BOTH")
+  set(BUILD_STATIC ON)
+else()
+  set(BUILD_STATIC OFF)
+endif()
+
+#################################################################################
+# Fiat
+set(fiat_ROOT "" CACHE FILEPATH "Path to fiat installation directory")
+if(NOT EXISTS ${fiat_ROOT})
+  message(FATAL_ERROR "fiat_ROOT is not set correctly!")
+endif()
+include_directories(${fiat_ROOT}/module/fiat)
+include_directories(${fiat_ROOT}/include/fiat)
 
 #################################################################################
 # Default real type
@@ -35,11 +57,10 @@ foreach(ONESIZE 4 8)
     set(REALDEFAULTSIZE ${ONESIZE})
   endif()
 endforeach()
-message(STATUS ${REALDEFAULTSIZE})
 if(${REALDEFAULTSIZE} EQUAL 4)
-  include_directories(${FIAT_MODULE_DIR}/parkind_sp)
+  include_directories(${fiat_ROOT}/module/parkind_sp)
 elseif(${REALDEFAULTSIZE} EQUAL 8)
-  include_directories(${FIAT_MODULE_DIR}/parkind_dp)
+  include_directories(${fiat_ROOT}/module/parkind_dp)
 else()
   message(FATAL_ERROR "Unable to determine default real size")
 endif()
@@ -88,36 +109,39 @@ target_include_directories(objlib PRIVATE ${LIB_DIRECTORY_LIST})
 set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
 
 # Static library
-add_library(phyexStatic STATIC ${LIB_ENTRYPOINTS} $<TARGET_OBJECTS:objlib>)
-target_include_directories(phyexStatic PRIVATE ${LIB_DIRECTORY_LIST})
+if(${BUILD_STATIC} OR ${PHYEX_BUILD_PROGS})
+  add_library(phyexStatic STATIC ${LIB_ENTRYPOINTS} $<TARGET_OBJECTS:objlib>)
+  target_include_directories(phyexStatic PRIVATE ${LIB_DIRECTORY_LIST})
+endif()
+if(${BUILD_STATIC})
+  set_target_properties(phyexStatic PROPERTIES OUTPUT_NAME phyex)
+  install(TARGETS phyexStatic LIBRARY DESTINATION lib)
+endif()
 
 # Shared library
-add_library(phyexShared SHARED ${LIB_ENTRYPOINTS})
-set_property(TARGET phyexShared PROPERTY POSITION_INDEPENDENT_CODE 1)
-target_link_libraries(phyexShared PRIVATE fiat mpi_serial)
-target_link_libraries(phyexShared PRIVATE $<TARGET_OBJECTS:objlib>)
-target_include_directories(phyexShared PRIVATE ${LIB_DIRECTORY_LIST})
+if(${BUILD_SHARED})
+  add_library(phyexShared SHARED ${LIB_ENTRYPOINTS})
+  set_property(TARGET phyexShared PROPERTY POSITION_INDEPENDENT_CODE 1)
+  target_link_directories(phyexShared PRIVATE ${fiat_ROOT}/lib)
+  target_link_libraries(phyexShared PRIVATE fiat mpi_serial)
+  target_link_libraries(phyexShared PRIVATE $<TARGET_OBJECTS:objlib>)
+  target_include_directories(phyexShared PRIVATE ${LIB_DIRECTORY_LIST})
+  set_target_properties(phyexShared PROPERTIES OUTPUT_NAME phyex)
+  install(TARGETS phyexShared LIBRARY DESTINATION lib)
+endif()
 
 # Installation
-set_target_properties(phyexShared PROPERTIES OUTPUT_NAME phyex)
-set_target_properties(phyexStatic PROPERTIES OUTPUT_NAME phyex)
-install(TARGETS phyexShared phyexStatic LIBRARY DESTINATION lib)
-install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/
-        DESTINATION module/phyex)
-install(FILES ${HEADER_FILES}
-        DESTINATION include/phyex)
+if(${BUILD_SHARED} OR ${BUILD_STATIC})
+  install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/
+          DESTINATION module/phyex)
+  install(FILES ${HEADER_FILES}
+          DESTINATION include/phyex)
+endif()
 
 #################################################################################
-# Build and install progs (if present)
+# Build and install progs
 
-if(EXISTS ${CMAKE_SOURCE_DIR}/progs)
-  # Fiat lib
-  set(FIAT_LIB_DIR "" CACHE FILEPATH "Path to fiat library")
-  if(NOT EXISTS ${FIAT_LIB_DIR})
-    message(FATAL_ERROR "FIAT_LIB_DIR is not set correctly!")
-  endif()
-  link_directories(${FIAT_LIB_DIR})
-
+if(${PHYEX_BUILD_PROGS})
   # Source file directories
   set(PROGS_DIRECTORY_LIST support progs)
 
@@ -144,6 +168,7 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/progs)
     get_filename_component(NAME ${EP} NAME_WLE)
     add_executable(${NAME})
     target_sources(${NAME} PRIVATE ${EP})
+    target_link_directories(${NAME} PRIVATE ${fiat_ROOT}/lib)
     target_link_libraries(${NAME} PRIVATE phyexStatic progsobj fiat mpi_serial)
     if(DEFINED FPP_FLAGS_TESTPROGS)
       target_compile_definitions(${NAME} PUBLIC ${FPP_FLAGS_TESTPROGS})
