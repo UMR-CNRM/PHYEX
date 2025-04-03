@@ -192,6 +192,7 @@ DO JK=1, IKT
       !#### Compute parametrized variances
       ! Contribution to the environment internal variance
       PSIGMF(JIJ, JK)=PARAMMF%XSIGMA_ENV*(1. -ZFRAC_UP_M(JIJ, JK))*(ZSBAR_ENV-ZSBAR_MEAN)**2
+      PSIGMF(JIJ, JK)=SQRT(ABS(PSIGMF(JIJ, JK)))
 
       ! Updraft internal variance
       ZSIGS_UP =PARAMMF%XSIGMA_MF*ZFRAC_UP_M(JIJ, JK)*(ZSBAR_UP-ZSBAR_MEAN)**2
