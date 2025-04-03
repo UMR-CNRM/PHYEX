@@ -277,100 +277,101 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>      <span class="comment">!#### Compute parametrized variances</span></div>
 <div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>      <span class="comment">! Contribution to the environment internal variance</span></div>
 <div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>      psigmf(jij, jk)=parammf%XSIGMA_ENV*(1. -zfrac_up_m(jij, jk))*(zsbar_env-zsbar_mean)**2</div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span> </div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>      <span class="comment">! Updraft internal variance</span></div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>      zsigs_up =parammf%XSIGMA_MF*zfrac_up_m(jij, jk)*(zsbar_up-zsbar_mean)**2</div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>      zsigs_up = sqrt(max(abs(zsigs_up), 1.e-40))</div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span> </div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>      <span class="comment">!*      2. PDF integration</span></div>
-<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>      <span class="comment">!          ------------------------------------------------</span></div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>      <span class="comment">!</span></div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>      pweight_mf_cloud(jij, jk) = zfrac_up_m(jij, jk)*parammf%XALPHA_MF <span class="comment">! XALPHA_MF = 1 --&gt; EDMF :: XALPHA_MF &gt; 1 --&gt; PARAM</span></div>
-<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>      pweight_mf_cloud(jij, jk) = max(0., min(pweight_mf_cloud(jij, jk), 1.))</div>
-<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span> </div>
-<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>      <span class="comment">!The mean of the distribution is ZSBAR_UP</span></div>
-<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>      <span class="comment">!Computation of ZA and ZGAM (=efrc(ZA)) coefficient</span></div>
-<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span> </div>
-<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>      <span class="comment">!Gaussian computation for S variable</span></div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>      zq1 = zsbar_up/zsigs_up</div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>      za = -zq1/sqrt(2.)</div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span> </div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>      zgam = 1 + erf(-za)</div>
-<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>      zcond = (exp(-za**2)-za*sqrt(cst%XPI)*zgam)*zsigs_up/sqrt(2.*cst%XPI) * pweight_mf_cloud(jij, jk)</div>
-<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span> </div>
-<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>      <span class="comment">!Cloud fraction</span></div>
-<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>      pcf_mf(jij, jk) = max(0., min(1., 0.5*zgam * pweight_mf_cloud(jij, jk)))</div>
-<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>      <span class="comment">!computation of condensate, then PRC and PRI</span></div>
-<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>      zcond = max(zcond, 0.)</div>
-<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>      <span class="keywordflow">IF</span>(zcond &lt; 1.e-12 .OR. pcf_mf(jij, jk) == 0.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>        pcf_mf(jij, jk)=0.</div>
-<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>        zcond=0.</div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span><span class="keywordflow">      ENDIF</span></div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>      prc_mf(jij, jk) = (1.-zfrac_ice_up_m) * zcond</div>
-<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>      pri_mf(jij, jk) = zfrac_ice_up_m * zcond</div>
-<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span> </div>
-<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>      <span class="comment">! For low/high cloud diagnostics</span></div>
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>      <span class="keywordflow">IF</span>(1-zfrac_ice_up_m &gt; 1.e-20)<span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>        zautc = (zsbar_up - icep%XCRIAUTC/(prhodref(jij, jk)*(1-zfrac_ice_up_m)))/zsigs_up</div>
-<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>        zgautc = -zautc/sqrt(2.)</div>
-<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span> </div>
-<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>        zgauc = 1 + erf(-zgautc)</div>
-<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>        phlc_hrc(jij, jk) = (1-zfrac_ice_up_m)*(exp(-zgautc**2)-zgautc*sqrt(cst%XPI)*zgauc)*zsigs_up/sqrt(2.*cst%XPI) &amp;</div>
-<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>         * pweight_mf_cloud(jij, jk)</div>
-<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span> </div>
-<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>        phlc_hcf(jij, jk) = max( 0., min(1., 0.5*zgauc)) * pweight_mf_cloud(jij, jk)</div>
-<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>        phlc_hrc(jij, jk) = phlc_hrc(jij, jk) + icep%XCRIAUTC/prhodref(jij, jk) * phlc_hcf(jij, jk)</div>
-<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>        phlc_hrc(jij, jk) = max(phlc_hrc(jij, jk), 0.)</div>
-<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>        <span class="keywordflow">IF</span>(phlc_hrc(jij,jk) &lt; 1.e-12 .OR. phlc_hcf(jij,jk) &lt; 1.e-6) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>          phlc_hrc(jij,jk)=0.</div>
-<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>          phlc_hcf(jij,jk)=0.</div>
-<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span><span class="keywordflow">        ENDIF</span></div>
-<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>      <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>        phlc_hcf(jij, jk)=0.</div>
-<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>        phlc_hrc(jij, jk)=0.</div>
-<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span><span class="keywordflow">      ENDIF</span></div>
-<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span> </div>
-<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>      <span class="keywordflow">IF</span>(zfrac_ice_up_m &gt; 1.e-20)<span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>        zcriauti = min(icep%XCRIAUTI, 10**(icep%XACRIAUTI*(ztemp_up-cst%XTT)+icep%XBCRIAUTI))</div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>        zauti = (zsbar_up - zcriauti/zfrac_ice_up_m)/zsigs_up</div>
-<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>        zgauti = -zauti/sqrt(2.)</div>
-<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span> </div>
-<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>        zgaui = 1 + erf(-zgauti)</div>
-<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>        phli_hri(jij, jk) = zfrac_ice_up_m*(exp(-zgauti**2)-zgauti*sqrt(cst%XPI)*zgaui)*zsigs_up/sqrt(2.*cst%XPI) &amp;</div>
-<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>        * pweight_mf_cloud(jij, jk)</div>
-<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span> </div>
-<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>        phli_hcf(jij, jk) = max( 0., min(1., 0.5*zgaui)) * pweight_mf_cloud(jij, jk)</div>
-<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>        phli_hri(jij, jk) = phli_hri(jij, jk) + zcriauti*phli_hcf(jij, jk)</div>
-<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>        phli_hri(jij, jk) = max(phli_hri(jij, jk), 0.)</div>
-<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>        <span class="keywordflow">IF</span>(phli_hri(jij,jk) &lt; 1.e-12 .OR. phli_hcf(jij,jk) &lt; 1.e-6) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>          phli_hri(jij,jk)=0.</div>
-<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>          phli_hcf(jij,jk)=0.</div>
-<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span><span class="keywordflow">        ENDIF</span></div>
-<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>      <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>        phli_hcf(jij, jk)=0.</div>
-<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>        phli_hri(jij, jk)=0.</div>
-<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span><span class="keywordflow">      ENDIF</span></div>
-<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>    <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>      pcf_mf(jij, jk) = 0.</div>
-<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>      prc_mf(jij, jk) = 0.</div>
-<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>      pri_mf(jij, jk) = 0.</div>
-<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>      phlc_hcf(jij, jk) = 0.</div>
-<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>      phlc_hrc(jij, jk) = 0.</div>
-<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>      phli_hcf(jij, jk) = 0.</div>
-<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>      phli_hri(jij, jk) = 0.</div>
-<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span><span class="keywordflow">    ENDIF</span></div>
-<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span><span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span><span class="keywordflow">ENDDO</span></div>
-<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span> </div>
-<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span><span class="keywordflow">IF</span>(.NOT. parammf%LRELAX_ALPHA_MF) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>  pweight_mf_cloud(:,:)=0.</div>
-<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span><span class="keywordflow">ENDIF</span></div>
-<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span><span class="comment">!</span></div>
-<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;COMPUTE_MF_CLOUD_BIGAUS&#39;</span>,1,zhook_handle)</div>
-<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span> </div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>      psigmf(jij, jk)=sqrt(abs(psigmf(jij, jk)))</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span> </div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>      <span class="comment">! Updraft internal variance</span></div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>      zsigs_up =parammf%XSIGMA_MF*zfrac_up_m(jij, jk)*(zsbar_up-zsbar_mean)**2</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>      zsigs_up = sqrt(max(abs(zsigs_up), 1.e-40))</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span> </div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>      <span class="comment">!*      2. PDF integration</span></div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>      <span class="comment">!          ------------------------------------------------</span></div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>      <span class="comment">!</span></div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>      pweight_mf_cloud(jij, jk) = zfrac_up_m(jij, jk)*parammf%XALPHA_MF <span class="comment">! XALPHA_MF = 1 --&gt; EDMF :: XALPHA_MF &gt; 1 --&gt; PARAM</span></div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>      pweight_mf_cloud(jij, jk) = max(0., min(pweight_mf_cloud(jij, jk), 1.))</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span> </div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>      <span class="comment">!The mean of the distribution is ZSBAR_UP</span></div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>      <span class="comment">!Computation of ZA and ZGAM (=efrc(ZA)) coefficient</span></div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span> </div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>      <span class="comment">!Gaussian computation for S variable</span></div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>      zq1 = zsbar_up/zsigs_up</div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>      za = -zq1/sqrt(2.)</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span> </div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>      zgam = 1 + erf(-za)</div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>      zcond = (exp(-za**2)-za*sqrt(cst%XPI)*zgam)*zsigs_up/sqrt(2.*cst%XPI) * pweight_mf_cloud(jij, jk)</div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span> </div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>      <span class="comment">!Cloud fraction</span></div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>      pcf_mf(jij, jk) = max(0., min(1., 0.5*zgam * pweight_mf_cloud(jij, jk)))</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>      <span class="comment">!computation of condensate, then PRC and PRI</span></div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>      zcond = max(zcond, 0.)</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>      <span class="keywordflow">IF</span>(zcond &lt; 1.e-12 .OR. pcf_mf(jij, jk) == 0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>        pcf_mf(jij, jk)=0.</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>        zcond=0.</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span><span class="keywordflow">      ENDIF</span></div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>      prc_mf(jij, jk) = (1.-zfrac_ice_up_m) * zcond</div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>      pri_mf(jij, jk) = zfrac_ice_up_m * zcond</div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span> </div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>      <span class="comment">! For low/high cloud diagnostics</span></div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>      <span class="keywordflow">IF</span>(1-zfrac_ice_up_m &gt; 1.e-20)<span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>        zautc = (zsbar_up - icep%XCRIAUTC/(prhodref(jij, jk)*(1-zfrac_ice_up_m)))/zsigs_up</div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>        zgautc = -zautc/sqrt(2.)</div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span> </div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>        zgauc = 1 + erf(-zgautc)</div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>        phlc_hrc(jij, jk) = (1-zfrac_ice_up_m)*(exp(-zgautc**2)-zgautc*sqrt(cst%XPI)*zgauc)*zsigs_up/sqrt(2.*cst%XPI) &amp;</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>         * pweight_mf_cloud(jij, jk)</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span> </div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>        phlc_hcf(jij, jk) = max( 0., min(1., 0.5*zgauc)) * pweight_mf_cloud(jij, jk)</div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>        phlc_hrc(jij, jk) = phlc_hrc(jij, jk) + icep%XCRIAUTC/prhodref(jij, jk) * phlc_hcf(jij, jk)</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>        phlc_hrc(jij, jk) = max(phlc_hrc(jij, jk), 0.)</div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>        <span class="keywordflow">IF</span>(phlc_hrc(jij,jk) &lt; 1.e-12 .OR. phlc_hcf(jij,jk) &lt; 1.e-6) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>          phlc_hrc(jij,jk)=0.</div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>          phlc_hcf(jij,jk)=0.</div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span><span class="keywordflow">        ENDIF</span></div>
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>      <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>        phlc_hcf(jij, jk)=0.</div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>        phlc_hrc(jij, jk)=0.</div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span><span class="keywordflow">      ENDIF</span></div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span> </div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>      <span class="keywordflow">IF</span>(zfrac_ice_up_m &gt; 1.e-20)<span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>        zcriauti = min(icep%XCRIAUTI, 10**(icep%XACRIAUTI*(ztemp_up-cst%XTT)+icep%XBCRIAUTI))</div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>        zauti = (zsbar_up - zcriauti/zfrac_ice_up_m)/zsigs_up</div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>        zgauti = -zauti/sqrt(2.)</div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span> </div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>        zgaui = 1 + erf(-zgauti)</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>        phli_hri(jij, jk) = zfrac_ice_up_m*(exp(-zgauti**2)-zgauti*sqrt(cst%XPI)*zgaui)*zsigs_up/sqrt(2.*cst%XPI) &amp;</div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>        * pweight_mf_cloud(jij, jk)</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span> </div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>        phli_hcf(jij, jk) = max( 0., min(1., 0.5*zgaui)) * pweight_mf_cloud(jij, jk)</div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>        phli_hri(jij, jk) = phli_hri(jij, jk) + zcriauti*phli_hcf(jij, jk)</div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>        phli_hri(jij, jk) = max(phli_hri(jij, jk), 0.)</div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>        <span class="keywordflow">IF</span>(phli_hri(jij,jk) &lt; 1.e-12 .OR. phli_hcf(jij,jk) &lt; 1.e-6) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>          phli_hri(jij,jk)=0.</div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>          phli_hcf(jij,jk)=0.</div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span><span class="keywordflow">        ENDIF</span></div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>      <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>        phli_hcf(jij, jk)=0.</div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>        phli_hri(jij, jk)=0.</div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span><span class="keywordflow">      ENDIF</span></div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>    <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>      pcf_mf(jij, jk) = 0.</div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>      prc_mf(jij, jk) = 0.</div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>      pri_mf(jij, jk) = 0.</div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>      phlc_hcf(jij, jk) = 0.</div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>      phlc_hrc(jij, jk) = 0.</div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>      phli_hcf(jij, jk) = 0.</div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>      phli_hri(jij, jk) = 0.</div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span><span class="keywordflow">    ENDIF</span></div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span><span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span><span class="keywordflow">ENDDO</span></div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span> </div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span><span class="keywordflow">IF</span>(.NOT. parammf%LRELAX_ALPHA_MF) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>  pweight_mf_cloud(:,:)=0.</div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span><span class="keywordflow">ENDIF</span></div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span><span class="comment">!</span></div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;COMPUTE_MF_CLOUD_BIGAUS&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span> </div>
 </div>
-<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__compute__mf__cloud__bigaus.html#a385182a7d77aa984e5a07421a1a222c1">compute_mf_cloud_bigaus</a></div>
-<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__compute__mf__cloud__bigaus.html">mode_compute_mf_cloud_bigaus</a></div>
+<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__compute__mf__cloud__bigaus.html#a385182a7d77aa984e5a07421a1a222c1">compute_mf_cloud_bigaus</a></div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__compute__mf__cloud__bigaus.html">mode_compute_mf_cloud_bigaus</a></div>
 <div class="ttc" id="ainterfacemodi__shuman__mf_1_1gz__m__w__mf_html"><div class="ttname"><a href="interfacemodi__shuman__mf_1_1gz__m__w__mf.html">modi_shuman_mf::gz_m_w_mf</a></div><div class="ttdef"><b>Definition</b> <a href="shuman__mf_8F90_source.html#l00047">shuman_mf.F90:47</a></div></div>
 <div class="ttc" id="ainterfacemodi__shuman__mf_1_1mzf__mf_html"><div class="ttname"><a href="interfacemodi__shuman__mf_1_1mzf__mf.html">modi_shuman_mf::mzf_mf</a></div><div class="ttdef"><b>Definition</b> <a href="shuman__mf_8F90_source.html#l00030">shuman_mf.F90:30</a></div></div>
 <div class="ttc" id="anamespacemodd__cst_html"><div class="ttname"><a href="namespacemodd__cst.html">modd_cst</a></div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00007">modd_cst.F90:7</a></div></div>
