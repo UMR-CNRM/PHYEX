@@ -100,9 +100,9 @@ IF (LIMAP%NMOM_I.EQ.1) THEN
       ZZW1(:) = LIMAC%XFIAGGS * EXP( LIMAC%XCOLEXIS*(PT(:)-CST%XTT) ) &
                         * PLATHAM_IAGGS(:)            &
                         * PRIT(:)                     &
-                        * PCST(:) * (1+(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEXIAGGS/LIMAP%XALPHAS) &
+                        * PRST(:) * (1+(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEXIAGGS/LIMAP%XALPHAS) &
                         * PRHODREF(:)**(-LIMAP%XCEXVT+1.) &
-                        * PLBDS(:)**LIMAC%XEXIAGGS
+                        * PLBDS(:)**(LIMAC%XBS+LIMAC%XEXIAGGS)
 !
       P_RI_AGGS(:) = - ZZW1(:)
    END WHERE

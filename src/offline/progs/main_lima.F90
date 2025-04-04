@@ -66,6 +66,7 @@ REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PHLC_HRC
 REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PHLC_HCF
 REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PHLI_HRI
 REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PHLI_HCF
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PCIT, PCIT_OUT
 
 INTEGER :: NPROMA, NGPBLKS, NFLEVG
 INTEGER :: JLON, JLEV
@@ -134,8 +135,8 @@ ENDIF
 
 CALL GETDATA_LIMA (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, NMOD_CCN, NMOD_IFN, NMOD_IMM, NSP, NCARB, NSOA, &
                   &ZTHVREFZIKB, PRHODREF, PEXNREF, PDZZ, PRHODJ, PPABSM, PDTHRAD, PTHT, &
-                  &PRT, PSVT, PW_NU, PTHS, PRS, PSVS, PCLDFR, PICEFR, PPRCFR, PFPR, &
-                  &PTHS_OUT, PRS_OUT, PSVS_OUT, ZINPRC_OUT, ZINDEP_OUT, PINPRR_OUT, ZINPRI_OUT, &
+                  &PRT, PSVT, PCIT, PW_NU, PTHS, PRS, PSVS, PCLDFR, PICEFR, PPRCFR, PFPR, &
+                  &PTHS_OUT, PRS_OUT, PSVS_OUT, PCIT_OUT, ZINPRC_OUT, ZINDEP_OUT, PINPRR_OUT, ZINPRI_OUT, &
                   &PINPRS_OUT, PINPRG_OUT, PINPRH_OUT, PEVAP_OUT, PCLDFR_OUT, PICEFR_OUT, &
                   &PPRCFR_OUT, PFPR_OUT, &
                   &ZINPRC, ZINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, PEVAP, &
@@ -146,6 +147,8 @@ PHLC_HRC(:,:,:)=PRT(:,:,2,:)
 PHLC_HCF(:,:,:)=PCLDFR(:,:,:)
 PHLI_HRI(:,:,:)=PRT(:,:,4,:)
 PHLI_HCF(:,:,:)=1.
+PCIT(:,:,:)=0.
+PCIT_OUT(:,:,:)=0.
 
 KLEV = SIZE (PRS, 2)
 
@@ -274,7 +277,7 @@ DO ITIME = 1, NTIME
                PRHODJ=PRHODJ(:, :, IBL), PPABST=PPABSM(:, :, IBL),                                 &
                KCARB=NCARB, KSOA=NSOA, KSP=NSP, ODUST=LDUST, OSALT=LSALT, OORILAM=LORILAM,  &
                ODTHRAD=.TRUE., PDTHRAD=PDTHRAD(:, :, IBL), PTHT=PTHT(:, :, IBL), PRT=PRT(:, :, :, IBL), PSVT=PSVT(:, :, :, IBL), &
-               PW_NU=PW_NU(:, :, IBL),                  &
+               PCIT=PCIT(:, :, IBL), PW_NU=PW_NU(:, :, IBL),                  &
                PAERO=PAERO(:,:,:, IBL), PSOLORG=PSOLORG(:,:,:,IBL), PMI=PMI(:,:,:,IBL), &
                PTHS=PTHS(:, :, IBL), PRS=PRS(:, :, :, IBL), PSVS=PSVS(:, :, :, IBL),                                &
                PINPRC=ZINPRC(:, IBL), PINDEP=ZINDEP(:, IBL), PINPRR=PINPRR(:, IBL), PINPRI=ZINPRI(:, IBL), PINPRS=PINPRS(:, IBL), &

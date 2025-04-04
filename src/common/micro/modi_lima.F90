@@ -9,7 +9,7 @@ INTERFACE
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
                   KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,                &
-                  ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
+                  ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PCIT, PW_NU,         &
                   PAERO,PSOLORG, PMI, PTHS, PRS, PSVS,                    &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
                   PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
@@ -72,6 +72,7 @@ REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, TNSV%NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT), INTENT(INOUT) :: PCIT    ! 
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa

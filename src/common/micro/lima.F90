@@ -11,7 +11,7 @@ SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV, D, CST, NEBN,         &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
                   KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,                &
-                  ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
+                  ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PCIT, PW_NU,         &
                   PAERO,PSOLORG, PMI, PTHS, PRS, PSVS,                    &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
                   PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
@@ -70,6 +70,7 @@ USE MODD_NEB_N,           ONLY: NEB_T
 USE MODE_BUDGET_PHY,      ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 USE MODE_TOOLS,           only: COUNTJV
 
+USE MODE_LIMA_ICE4_NUCLEATION, ONLY: LIMA_ICE4_NUCLEATION
 USE MODE_LIMA_COMPUTE_PDF, ONLY: LIMA_COMPUTE_PDF
 USE MODE_LIMA_RAINFR_VERT, ONLY: LIMA_RAINFR_VERT
 USE MODE_LIMA_COMPUTE_CLOUD_FRACTIONS, ONLY: LIMA_COMPUTE_CLOUD_FRACTIONS
@@ -123,6 +124,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,ODTHRAD), &
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
 REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
+REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT)    :: PCIT       ! Theta at time t
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
 REAL, DIMENSION(D%NIJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
 REAL, DIMENSION(D%NIJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
@@ -180,7 +182,7 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZCIT_SHAPE  ! Nb concentration for each i
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZRIT_SHAPE  ! Mixing ratio for each ice habit (at t)
 !
 ! Other 3D thermodynamical variables
-REAL, DIMENSION(D%NIJT,D%NKT)      :: ZEXN, ZT
+REAL, DIMENSION(D%NIJT,D%NKT)      :: ZEXN, ZT, ZLSFACT, ZW, ZTMP
 
 !
 ! Packed prognostic & thermo variables
@@ -626,6 +628,9 @@ ALLOCATE (ZTOT_RC_HINC(D%NIJT,D%NKT)) ; ZTOT_RC_HINC(:,:) = 0.
 ALLOCATE (ZTOT_RV_HENU(D%NIJT,D%NKT)) ; ZTOT_RV_HENU(:,:) = 0.
 ALLOCATE (ZTOT_RV_HONH(D%NIJT,D%NKT)) ; ZTOT_RV_HONH(:,:) = 0.
 !
+ZINV_TSTEP  = 1./PTSTEP
+ZEXN(:,:) = (PPABST(:,:)/CST%XP00)**(CST%XRD/CST%XCPD)
+ZT(:,:)   = ZTHT(:,:) * ZEXN(:,:)
 !
 ! Initial values computed as source * PTSTEP
 !
@@ -673,6 +678,9 @@ IF ( LIMAP%NMOM_I.GE.2) THEN
       ZCIS_SHAPE(:,:,ISH) = PSVS(:,:,ISV_LIMA_NI+ISH-1)
     END DO
   END IF
+ELSE
+   ZCIT(:,:)=PCIT(:,:)
+   ZCIS(:,:)=PCIT(:,:)*ZINV_TSTEP
 END IF
 IF ( LIMAP%NMOM_R.GE.2) ZCRT(:,:)   = PSVS(:,:,ISV_LIMA_NR) * PTSTEP
 IF ( LIMAP%NMOM_R.GE.2) ZCRS(:,:)   = PSVS(:,:,ISV_LIMA_NR)
@@ -700,10 +708,6 @@ IF ( LIMAP%NMOD_IMM .GE. 1 ) ZIMMNS(:,:,:) = PSVS(:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA
 !
 IF ( LIMAP%LHHONI ) ZHOMFT(:,:) = PSVS(:,:,ISV_LIMA_HOM_HAZE) * PTSTEP
 IF ( LIMAP%LHHONI ) ZHOMFS(:,:) = PSVS(:,:,ISV_LIMA_HOM_HAZE)
-!
-ZINV_TSTEP  = 1./PTSTEP
-ZEXN(:,:) = (PPABST(:,:)/CST%XP00)**(CST%XRD/CST%XCPD)
-ZT(:,:)   = ZTHT(:,:) * ZEXN(:,:)
 !
 ! Electric charge density
 !
@@ -1204,6 +1208,8 @@ ZRIS(:,:) = ZRIT(:,:) *ZINV_TSTEP
 ZRSS(:,:) = ZRST(:,:) *ZINV_TSTEP
 ZRGS(:,:) = ZRGT(:,:) *ZINV_TSTEP
 ZRHS(:,:) = ZRHT(:,:) *ZINV_TSTEP
+!
+IF (LIMAP%NMOM_I.EQ.1) PCIT(:,:) = ZCIT(:,:)
 !
 IF (LIMAP%NMOM_C.GE.2) ZCCS(:,:) = ZCCT(:,:) *ZINV_TSTEP
 IF (LIMAP%NMOM_R.GE.2) ZCRS(:,:) = ZCRT(:,:) *ZINV_TSTEP

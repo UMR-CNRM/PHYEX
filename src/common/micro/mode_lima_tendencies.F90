@@ -824,6 +824,7 @@ IF (LIMAP%NMOM_I.GE.1) THEN
    P_TH_DEPI(:) = 0.
    P_SHCI_HACH(:,:) = 0.
    P_SHCI_CNVS(:,:) = 0.
+   IF (LIMAP%NMOM_I.GE.2) THEN
    !
    ! In low content part
    CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF
@@ -840,6 +841,7 @@ IF (LIMAP%NMOM_I.GE.1) THEN
    P_TH_DEPI(:) = Z_RI_DEPI_2(:) * ZLSFACT(:)
    P_SHCI_HACH(:,:) = Z_SHCI_HACH_2(:,:) 
    P_SHCI_CNVS(:,:) = Z_SHCI_CNVS_2(:,:) 
+   END IF
    !
    ! In high content part
    CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF
@@ -983,7 +985,7 @@ END IF
 IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_I.EQ.1) THEN
    CALL LIMA_BERGERON (LIMAP, LIMAC, KSIZE, ODCOMPUTE,                          & ! depends on CF, IF
                        ZRCT/ZCF1D, ZRIT/ZIF1D, ZCIT/ZIF1D, ZLBDI, &
-                       ZSSIW, ZAI, ZCJ, ZLVFACT, ZLSFACT,         &
+                       ZSSI, ZAI, ZCJ, ZLVFACT, ZLSFACT,          &
                        P_TH_BERFI, P_RC_BERFI                     )
    P_TH_BERFI(:) = P_TH_BERFI(:) * MIN(ZCF1D,ZIF1D)
    P_RC_BERFI(:) = P_RC_BERFI(:) * MIN(ZCF1D,ZIF1D)
@@ -1074,14 +1076,15 @@ IF (LIMAP%NMOM_S.GE.1) THEN
 END IF
 !
 IF (LIMAP%NMOM_R.GE.1) THEN
+   ZPF1D(:)=1.
    CALL LIMA_RAIN_FREEZING (CST, LIMAP, LIMAM, KSIZE, ODCOMPUTE,                                      & ! depends on PF, IF
                             PRHODREF, ZT, ZLVFACT, ZLSFACT,                        &
                             ZRRT/ZPF1D, ZCRT/ZPF1D, ZRIT/ZIF1D, ZCIT/ZIF1D, ZLBDR, &
                             P_TH_CFRZ, P_RR_CFRZ, P_CR_CFRZ, P_RI_CFRZ, P_CI_CFRZ  )
-   P_RR_CFRZ(:) = P_RR_CFRZ(:) * ZIF1D(:)
-   P_CR_CFRZ(:) = P_CR_CFRZ(:) * ZIF1D(:)
-   P_RI_CFRZ(:) = P_RI_CFRZ(:) * ZIF1D(:)
-   P_CI_CFRZ(:) = P_CI_CFRZ(:) * ZIF1D(:)
+   P_RR_CFRZ(:) = P_RR_CFRZ(:) * MIN(ZIF1D(:),ZPF1D(:))
+   P_CR_CFRZ(:) = P_CR_CFRZ(:) * MIN(ZIF1D(:),ZPF1D(:))
+   P_RI_CFRZ(:) = P_RI_CFRZ(:) * MIN(ZIF1D(:),ZPF1D(:))
+   P_CI_CFRZ(:) = P_CI_CFRZ(:) * MIN(ZIF1D(:),ZPF1D(:))
    P_TH_CFRZ(:) = - P_RR_CFRZ(:) * (ZLSFACT(:)-ZLVFACT(:))
 !
    PA_TH(:) = PA_TH(:) + P_TH_CFRZ(:)

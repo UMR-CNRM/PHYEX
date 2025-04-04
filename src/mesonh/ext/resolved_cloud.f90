@@ -1459,7 +1459,7 @@ SELECT CASE ( HCLOUD )
                    PRHODJ, PPABST,                                         &
                    NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                &
                    LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
-                   PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
+                   PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PCIT, PW_ACT,    &
                    PSVT, PSOLORG, PMI,                                     &
                    PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),       &
                    PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, &
@@ -1479,7 +1479,7 @@ SELECT CASE ( HCLOUD )
                    PRHODJ, PPABST,                                         &
                    NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                &
                    LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
-                   PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
+                   PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PCIT, PW_ACT,    &
                    PSVT, PSOLORG, PMI,                                     &
                    PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),       &
                    PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, &

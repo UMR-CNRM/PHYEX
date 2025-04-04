@@ -1,7 +1,7 @@
 !     ######spl
       SUBROUTINE  ARO_LIMA(PHYEX,KKA,KKU,KKL,KLON,KLEV,KFDIA,KRR, KSV, &
                                   PTSTEP, PDZZ, PRHODJ, PRHODREF, PEXNREF,&
-                                  PPABSM, PW_NU, PDTHRAD, PTHT, PRT, PSVT, &
+                                  PPABSM, PW_NU, PDTHRAD, PTHT, PRT, PSVT, PCIT, &
                                   PTHS, PRS, PSVS, PEVAP,  &
                                   PINPRR,PINPRS,                 &
                                   PINPRG,PINPRH,PFPR,     &
@@ -93,6 +93,7 @@ REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PDTHRAD ! radiative Theta tenden
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PTHT    ! Theta at time t
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT):: PRT   ! Moist variables at time t
 REAL, DIMENSION(KLON,1,KLEV,KSV), INTENT(INOUT):: PSVT   ! LIMA variables at time t
+REAL, DIMENSION(KLON,1,KLEV), INTENT(INOUT)   :: PCIT  ! Pristine ice number
 !
 !
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT) :: PTHS    ! Theta source
@@ -317,7 +318,7 @@ CALL LIMA (LIMAP=PHYEX%PARAM_LIMA, LIMAW=PHYEX%PARAM_LIMA_WARM, LIMAC=PHYEX%PARA
            PRHODREF=PRHODREF, PEXNREF=PEXNREF, PDZZ=PDZZ, PTHVREFZIKB=ZTHVREFZIKB,       &
            PRHODJ=PRHODJ, PPABST=PPABSM,                                 &
            KCARB=NCARB, KSOA=NSOA, KSP=NSP, ODUST=LDUST, OSALT=LSALT, OORILAM=LORILAM,  &
-           ODTHRAD=.TRUE., PDTHRAD=PDTHRAD, PTHT=PTHT, PRT=PRT, PSVT=PSVT, PW_NU=PW_NU,                  &
+           ODTHRAD=.TRUE., PDTHRAD=PDTHRAD, PTHT=PTHT, PRT=PRT, PSVT=PSVT, PCIT=PCIT, PW_NU=PW_NU,  &
            PAERO=PSVT, PSOLORG=ZSOLORG, PMI=ZMI, &
            PTHS=PTHS, PRS=PRS, PSVS=PSVS,                                &
            PINPRC=ZINPRC, PINDEP=ZINDEP, PINPRR=PINPRR, PINPRI=ZINPRI, PINPRS=PINPRS, PINPRG=PINPRG, PINPRH=PINPRH, &
