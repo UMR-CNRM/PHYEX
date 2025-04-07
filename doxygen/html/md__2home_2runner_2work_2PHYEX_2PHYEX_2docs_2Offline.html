@@ -79,17 +79,16 @@ About this section</h1>
 <p>This document is intended for persons who want to use PHYEX in an offline mode. Some offline test programs are provided with the package and a library suitable for use with python is also available.</p>
 <h1><a class="anchor" id="autotoc_md57"></a>
 Compilation</h1>
-<p>The build/with_fcm directory in the master branch contains a build system. This build system has two dependencies (installation is done automatically by the compilation script):</p>
-<ul>
-<li><a href="https://metomi.github.io/fcm/doc/user_guide/">fcm</a></li>
-<li><a href="https://github.com/ecmwf-ifs/fiat">fiat</a></li>
-</ul>
-<p>The script build/with_fcm/make_fcm.sh uses configuration files and build the library and test programs. These executables can be found in the build/bin subdirectory in the architecture specific directory arch_&lt;architecture name&gt;.</p>
-<p>Some configuration files are stored in build/with_fcm/arch but other can be maintained by the end users in their ${HOME}/.phyex/fcm_arch.</p>
-<p>Some more details on the build system can be found in <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2build_2with__fcm_2README.html">build/with_fcm/README.md file</a>.</p>
+<p>The compilation can be achieved using different build systems. In the following explanations, the build system name is replaced by &lt;bs&gt;.</p>
+<p>The PHYEX source code needs the <a href="https://github.com/ecmwf-ifs/fiat">fiat</a> package installation is done automatically by the compilation script).</p>
+<p>The different build/with_&lt;bs&gt; directories in the master branch contains the build environments.</p>
+<p>The <a href="https://metomi.github.io/fcm/doc/user_guide/">fcm</a> build system needs to be installed, this is done automatically by the compilation script.</p>
+<p>The script build/with_&lt;bs&gt;/make_&lt;bs&gt;.sh uses configuration files and build the library and test programs. These executables can be found in the build/bin subdirectory in the architecture specific directory arch_&lt;architecture name&gt;.</p>
+<p>Some configuration files are stored in build/with_&lt;bs&gt;/arch but other can be maintained by the end users in their ${HOME}/.phyex/&lt;bs&gt;_arch.</p>
+<p>Some more details on the build system can be found in build/README.md file.</p>
 <h2><a class="anchor" id="autotoc_md58"></a>
 Compilation directly in the repository without execution (or manual execution)</h2>
-<p>When on a master commit, the build/with_fcm/make_fcm.sh script can be used to compile the offline tools.</p>
+<p>When on a master commit, the build/with_&lt;bs&gt;/make_&lt;bs&gt;.sh script can be used to compile the offline tools.</p>
 <h2><a class="anchor" id="autotoc_md59"></a>
 Compilation and execution</h2>
 <p>When on a master commit, the tools/check_commit_testprogs.sh script can be used to compile and execute the testprogs (offline tests). The check_commit_testprogs.sh script uses the PHYEX source code:</p>
