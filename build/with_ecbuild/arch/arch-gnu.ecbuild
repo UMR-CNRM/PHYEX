@@ -1,0 +1,14 @@
+# Compilation
+set(CMAKE_Fortran_COMPILER gfortran)
+set(CMAKE_Fortran_FLAGS "-fPIC -fdefault-real-8 -fdefault-double-8 -ffree-line-length-none -fopenmp -fconvert=swap -fallow-argument-mismatch")
+set(CMAKE_Fortran_FLAGS_RELEASE "-O2")
+set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -g -fbounds-check -finit-real=snan -ffpe-trap=invalid,zero,overflow")
+set(CMAKE_C_COMPILER gcc)
+set(CMAKE_C_FLAGS "-fPIC -fopenmp")
+set(CMAKE_C_FLAGS_RELEASE "-O2")
+set(CMAKE_C_FLAGS_DEBUG "-fbounds-check")
+
+# Preprocessor
+add_compile_definitions("$<$<COMPILE_LANGUAGE:Fortran>:-DLINUX -DLITTLE_ENDIAN -DLITTLE -DREPRO48>")
+add_compile_definitions("$<$<COMPILE_LANGUAGE:C,CXX>:-DLINUX -DLITTLE_ENDIAN -DLITTLE -DWITHOUT_CXXDEMANGLE>")
+set(FPP_FLAGS_TESTPROGS USE_OPENMP)

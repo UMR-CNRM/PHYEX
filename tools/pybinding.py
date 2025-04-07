@@ -384,9 +384,9 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             elif vartype.startswith('REAL'):
                 npkind = {4:'numpy.float32', 8:'numpy.float64'}
             elif vartype.startswith('LOGICAL(KIND=1)'):
-                npkind = {1:'numpy.bool'}
+                npkind = {1:'bool'}
             elif vartype.startswith('CHARACTER'):
-                npkind = {0:'numpy.str'}
+                npkind = {0:'str'}
             else:
                 raise NotImplementedError('Argument type not yet implemented: ' + vartype)
             if intent in ('IN', 'INOUT'):
