@@ -1007,8 +1007,9 @@ XITAUTS_THRESHOLD = 7.5
 !
 !*       6.4    Constants for snow aggregation
 !
+XCOLIS   = 0.25 ! Collection efficiency of I+S
 XCOLEXIS = 0.05    ! Temperature factor of the I+S collection efficiency
-XFIAGGS  = XNS*(XPI/4.0)*0.25*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
+XFIAGGS  = XNS*(XPI/4.0)*XCOLIS*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
 XEXIAGGS = -XDS - 2.0
 XAGGS_CLARGE1 = XKER_ZRNIC_A2*ZGAMI(2)
 XAGGS_CLARGE2 = XKER_ZRNIC_A2*ZGAMS(2)
@@ -1569,11 +1570,9 @@ XCOLIR    = 1.0
 ! values of these coeficients differ from the single-momemt rain_ice case
 !
 XEXRCFRI  = -XDR-5.0
-XRCFRI    = ((XPI**2)/24.0)*XRHOLW*XCOLIR*XCR*(ZRHO00**XCEXVT)     &
-                                                     *MOMG(XALPHAR,XNUR,XDR+5.0)
+XRCFRI    = ((XPI**2)/24.0)*XRHOLW*XCOLIR*XCR*(ZRHO00**XCEXVT)*MOMG(XALPHAR,XNUR,XDR+5.0)
 XEXICFRR  = -XDR-2.0
-XICFRR    = (XPI/4.0)*XCOLIR*XCR*(ZRHO00**XCEXVT)                  &
-                                                     *MOMG(XALPHAR,XNUR,XDR+2.0)
+XICFRR    = (XPI/4.0)*XCOLIR*XCR*(ZRHO00**XCEXVT)*MOMG(XALPHAR,XNUR,XDR+2.0)
 !
 !!$GFLAG = .TRUE.
 !!$IF (GFLAG) THEN
@@ -1593,6 +1592,7 @@ XMAXLBDG = MOMG(XALPHAG,XNUG,XBG)**(1./XBG)/XMVDMIN_G
 !               and for the Hallett-Mossop process
 !
 XCOLCG  = 0.6  !  Estimated from Cober and List (1993)
+IF (NMOM_G.EQ.1) XCOLCG  = 1.
 XFCDRYG = (XPI/4.0)*XCOLCG*XCG*(ZRHO00**XCEXVT)*MOMG(XALPHAG,XNUG,XDG+2.0)
 !
 XHM_COLLCG= 0.9   ! Collision efficiency graupel/droplet (with Dc>25 microns)
