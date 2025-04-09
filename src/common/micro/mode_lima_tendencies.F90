@@ -995,7 +995,7 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_I.EQ.1) THEN
    PA_TH(:) = PA_TH(:) + P_TH_BERFI(:)
 END IF
 !
-IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
+IF (.FALSE. .AND. LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
      !
      ! Graupel production as tendency (or should be tendency + instant to stick to the previous version ?)
      ! Includes the Hallett Mossop process for riming of droplets by snow (HMS)
@@ -1020,10 +1020,8 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
    IF (LIMAP%NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_RIM(:) 
    PA_RI(:) = PA_RI(:)               + P_RI_HMS(:)
    IF (LIMAP%NMOM_I.GE.2) PA_CI(:) = PA_CI(:)               + P_CI_HMS(:)
-!   PA_RS(:) = PA_RS(:) + P_RS_RIM(:) + P_RS_HMS(:)
    PA_RS(:) = PA_RS(:) - P_RC_RIMSS(:) - P_RS_RIMCG(:) + P_RS_HMS(:) ! RCRIMSS < 0 (gain for rs), RSRIMCG > 0 (loss for rs)
    IF (LIMAP%NMOM_S.GE.2) PA_CS(:) = PA_CS(:) + P_CS_RIM(:)
-!   PA_RG(:) = PA_RG(:) + P_RG_RIM(:)
    PA_RG(:) = PA_RG(:) - P_RC_RIMSG(:) + P_RS_RIMCG(:) ! RCRIMSG < 0 (gain for rg), RSRIMCG > 0 (gain for rg)
    IF (LIMAP%NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CS_RIM(:)
    PA_TH(:) = PA_TH(:) + P_TH_RIM(:)
@@ -1034,19 +1032,37 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
    END IF
 END IF
 !
-IF (LIMAP%NMOM_R.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
-!++cb++
-   CALL LIMA_RAIN_ACCR_SNOW (CST, LIMAP, LIMAW, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                         & ! depends on PF
-                             PRHODREF, ZT,                                     &
-                             ZRRT/ZPF1D, ZCRT/ZPF1D, ZRST/ZPF1D, ZCST/ZPF1D, ZLBDR, ZLBDS, ZLVFACT, ZLSFACT, &
-                             P_TH_ACC, P_CR_ACC, P_CS_ACC, P_RR_ACCSS, P_RR_ACCSG, P_RS_ACCRG )
-   P_CR_ACC(:) = P_CR_ACC(:) * ZPF1D(:)
-   P_CS_ACC(:) = P_CS_ACC(:) * ZPF1D(:)
-   P_RR_ACCSS(:) = P_RR_ACCSS(:) * ZPF1D(:)
-   P_RR_ACCSG(:) = P_RR_ACCSG(:) * ZPF1D(:)
-   P_RS_ACCRG(:) = P_RS_ACCRG(:) * ZPF1D(:)
-   P_TH_ACC(:)   = (P_RR_ACCSS(:) + P_RR_ACCSG(:)) * (ZLSFACT(:)-ZLVFACT(:))
-!   PA_RR(:) = PA_RR(:) + P_RR_ACC(:)
+IF ((LIMAP%NMOM_C.GE.1 .OR. LIMAP%NMOM_R.GE.1) .AND. LIMAP%NMOM_S.GE.1) THEN
+   !
+   CALL LIMA_RAIN_ACCR_SNOW (CST, LIMAP, LIMAW, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,        & ! depends on CF, PF
+                             PRHODREF, ZT,                                                     &
+                             ZRCT, ZCCT, ZRRT, ZCRT, ZRST, ZCST, ZLBDC, ZLBDR, ZLBDS,          &
+                             ZCF1D, ZPF1D, ZLVFACT, ZLSFACT,                                   &
+                             P_TH_RIM, P_CC_RIM, P_CS_RIM, P_RC_RIMSS, P_RC_RIMSG, P_RS_RIMCG, &
+                             P_RI_HMS, P_CI_HMS, P_RS_HMS,                                     &
+                             P_TH_ACC, P_CR_ACC, P_CS_ACC, P_RR_ACCSS, P_RR_ACCSG, P_RS_ACCRG  )
+!   P_CR_ACC(:) = P_CR_ACC(:) * ZPF1D(:)
+!   P_CS_ACC(:) = P_CS_ACC(:) * ZPF1D(:)
+!   P_RR_ACCSS(:) = P_RR_ACCSS(:) * ZPF1D(:)
+!   P_RR_ACCSG(:) = P_RR_ACCSG(:) * ZPF1D(:)
+!   P_RS_ACCRG(:) = P_RS_ACCRG(:) * ZPF1D(:)
+!   P_TH_ACC(:)   = (P_RR_ACCSS(:) + P_RR_ACCSG(:)) * (ZLSFACT(:)-ZLVFACT(:))
+!
+   PA_RC(:) = PA_RC(:) + P_RC_RIMSS(:) + P_RC_RIMSG(:) ! RCRIMSS < 0 and RCRIMSG < 0 (both loss for rc)
+   IF (LIMAP%NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_RIM(:) 
+   PA_RI(:) = PA_RI(:)               + P_RI_HMS(:)
+   IF (LIMAP%NMOM_I.GE.2) PA_CI(:) = PA_CI(:)               + P_CI_HMS(:)
+   PA_RS(:) = PA_RS(:) - P_RC_RIMSS(:) - P_RS_RIMCG(:) + P_RS_HMS(:) ! RCRIMSS < 0 (gain for rs), RSRIMCG > 0 (loss for rs)
+   IF (LIMAP%NMOM_S.GE.2) PA_CS(:) = PA_CS(:) + P_CS_RIM(:)
+   PA_RG(:) = PA_RG(:) - P_RC_RIMSG(:) + P_RS_RIMCG(:) ! RCRIMSG < 0 (gain for rg), RSRIMCG > 0 (gain for rg)
+   IF (LIMAP%NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CS_RIM(:)
+   PA_TH(:) = PA_TH(:) + P_TH_RIM(:)
+! ice crystals produced during HM are assumed to be columns (jsh=2) due to the temperature regime
+   IF (LIMAP%LCRYSTAL_SHAPE) THEN
+     P_SHCI_HMS(:,2)  = P_CI_HMS(:)
+     PA_CI_SHAPE(:,2) = PA_CI_SHAPE(:,2) + P_SHCI_HMS(:,2) ! P_CI_HMS(:)
+   END IF
+!
    PA_RR(:) = PA_RR(:) - P_RR_ACCSS(:) - P_RR_ACCSG(:)
    IF (LIMAP%NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_ACC(:)
    PA_RS(:) = PA_RS(:) + P_RR_ACCSS(:) - P_RS_ACCRG(:)
@@ -1181,7 +1197,7 @@ IF (LIMAP%NMOM_G.GE.1) THEN
      ! Includes Hallett-Mossop  process for riming of droplets by graupel (HMG)
      ! Some thermodynamical computations inside, to externalize ?
      !
-   CALL LIMA_GRAUPEL (CST, LIMAP, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                              & ! depends on PF, CF, IF
+   CALL LIMA_GRAUPEL (CST, LIMAP, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,    & ! depends on PF, CF, IF
                       PRHODREF, PPABST, ZT, ZKA, ZDV, ZCJ,                   &
                       PRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT,                    &
                       ZCCT, ZCRT, ZCIT, ZCST, ZCGT,                          &
@@ -1212,7 +1228,7 @@ IF (LIMAP%NMOM_G.GE.1) THEN
 END IF
 !
 IF (LIMAP%NMOM_H.GE.1) THEN
-   CALL LIMA_HAIL_DEPOSITION (LIMAP, LIMAM, KSIZE, ODCOMPUTE, PRHODREF,                             & ! depends on PF ?
+   CALL LIMA_HAIL_DEPOSITION (LIMAP, LIMAM, KSIZE, ODCOMPUTE, PRHODREF,               & ! depends on PF ?
                               ZRHT/ZPF1D, ZCHT/ZPF1D, ZSSI, ZLBDH, ZAI, ZCJ, ZLSFACT, &
                               P_TH_DEPH, P_RH_DEPH                                    )
    P_RH_DEPH(:) = P_RH_DEPH(:) * ZPF1D(:)
@@ -1222,7 +1238,7 @@ IF (LIMAP%NMOM_H.GE.1) THEN
    PA_RH(:) = PA_RH(:) + P_RH_DEPH(:)
    PA_TH(:) = PA_TH(:) + P_TH_DEPH(:)
 !     CALL LIMA_HAIL_GROWTH   LIMA_HAIL_CONVERSION   LIMA_HAIL_MELTING
-   CALL LIMA_HAIL (CST, LIMAP, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                              & ! depends on PF, CF, IF
+   CALL LIMA_HAIL (CST, LIMAP, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,           & ! depends on PF, CF, IF
                    PRHODREF, PPABST, ZT, ZKA, ZDV, ZCJ,                   &
                    PRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, ZRHT,              &
                    ZCCT, ZCRT, ZCIT, ZCST, ZCGT, ZCHT,                    &
