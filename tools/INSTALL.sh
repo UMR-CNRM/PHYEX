@@ -19,6 +19,7 @@ function usage {
   echo "  --dataset          Install or clean a reduced dataset for the test programs"
   echo "  --pyfortool        Install or clean the pyfortool tool"
   echo "  --fiatfcm          Install or clean the fiat and fcm tools"
+  echo "  --fiatecbuild      Install or clean the fiat and ecbuild tools"
   echo "  --clean            Clean instead of installing"
   echo "  --test             Perform a test"
   echo "  --ssh              Use the ssh protocol to clone the pyfortool, fxtran, fiat and fcm"
@@ -35,6 +36,7 @@ clean=0
 dotest=0
 ssh=0
 fiatfcm=0
+fiatecbuild=0
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -42,6 +44,7 @@ while [ -n "$1" ]; do
     '--dataset') dataset=1;;
     '--pyfortool') pyfortool=1;;
     '--fiatfcm') fiatfcm=1;;
+    '--fiatecbuild') fiatecbuild=1;;
     '--clean') clean=1;;
     '--test') dotest=1;;
     '--ssh') ssh=1;;
@@ -55,6 +58,7 @@ if [ $ALL == 1 ]; then
   dataset=1
   pyfortool=1
   fiatfcm=1
+  fiatecbuild=1
 fi
 
 #################################
@@ -127,6 +131,19 @@ if [ $fiatfcm -eq 1 ]; then
       $PHYEXTOOLSDIR/../build/with_fcm/make_fcm.sh --inplace-install --ssh
     else
       $PHYEXTOOLSDIR/../build/with_fcm/make_fcm.sh --inplace-install
+    fi
+  fi
+fi
+
+if [ $fiatecbuild -eq 1 ]; then
+  if [ $clean -eq 1 ]; then
+    $PHYEXTOOLSDIR/../build/with_ecbuild/make_ecbuild.sh --inplace-clean
+  else
+    #Install/update
+    if [ $ssh -eq 1 ]; then
+      $PHYEXTOOLSDIR/../build/with_ecbuild/make_ecbuild.sh --inplace-install --ssh
+    else
+      $PHYEXTOOLSDIR/../build/with_ecbuild/make_ecbuild.sh --inplace-install
     fi
   fi
 fi

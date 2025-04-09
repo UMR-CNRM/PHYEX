@@ -3,7 +3,7 @@
 set -e
 #set -x
 
-. ../make_util.sh
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/../make_util.sh
 
 fcm_version=tags/2021.05.0
 
