@@ -34,7 +34,7 @@ CONTAINS
                                   PRWETGH, PRCWETH, PRIWETH, PRSWETH, PRGWETH, PRRWETH,       & !--  optional
                                   PRCDRYH, PRIDRYH, PRSDRYH, PRRDRYH, PRGDRYH,                & !|  parameters
                                   PRHMLTR, PRDRYHG,                                           & !|     for
-                                  PRHT, PRHS, PCHT, PQHT, PQHS)                                 !--    hail
+                                  PRHT, PCHT, PQHT, PQHS)                                 !--    hail
 !     ##########################################################################################
 !
 !!****  * - compute the explicit cloud electrification sources
@@ -205,7 +205,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(IN)    :: PCGT   ! Graupel 
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(IN)    :: PCHT   ! Hail conc. at t
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(IN)    :: PRHT   ! Hail m.r. at t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(INOUT) :: PRHS   ! Hail m.r. source
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(IN)    :: PQHT   ! Hail charge at t
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(INOUT) :: PQHS   ! Hail charge source
 REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity

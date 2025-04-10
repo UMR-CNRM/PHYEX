@@ -1014,10 +1014,7 @@ SELECT CASE ( HCLOUD )
                     PTSTEP, KRR, ZEXN,                                          &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
                     PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                     &
-                    PTHT, PRT(:,:,:,1), PRT(:,:,:,2), PRT(:,:,:,3),             &
-                    PRT(:,:,:,4), PRT(:,:,:,5), PRT(:,:,:,6),                   &
-                    PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),             &
-                    PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),                   &
+                    PTHT, PRT, PTHS, PRS, &
                     PINPRC,PINPRR, PEVAP3D,                                     &
                     PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,                     &
                     TBUDGETS,SIZE(TBUDGETS),                                    &
@@ -1306,10 +1303,7 @@ SELECT CASE ( HCLOUD )
                      PTSTEP, KRR, ZEXN,                                          &
                      ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
                      PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                     &
-                     PTHT, PRT(:,:,:,1), PRT(:,:,:,2), PRT(:,:,:,3),             &
-                     PRT(:,:,:,4), PRT(:,:,:,5), PRT(:,:,:,6),                   &
-                     PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),             &
-                     PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),                   &
+                     PTHT, PRT, PTHS, PRS, &
                      PINPRC, PINPRR, PEVAP3D,                                    &
                      PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,                     &
                      TBUDGETS,SIZE(TBUDGETS),                                    &
@@ -1317,7 +1311,7 @@ SELECT CASE ( HCLOUD )
                      ZQPIS, ZQCS, ZQRS, ZQIS, ZQSS, ZQGS, ZQNIS,                 &
                      ZEFIELDW, ZLATHAM_IAGGS,                                    &
                      PSEA, PTOWN,                                                &
-                     PRT(:,:,:,7), PRS(:,:,:,7), PINPRH, PFPR=ZFPR,              &
+                     PINPRH, PFPR=ZFPR, &
                      PQHT=ZQHT, PQHS=ZQHS                                        )
       !
       IF (HELEC == 'ELE4') THEN
