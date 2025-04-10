@@ -176,6 +176,7 @@ USE MODE_ICE4_RAINFR_VERT,   ONLY: ICE4_RAINFR_VERT
 USE MODE_ICE4_COMPUTE_PDF,   ONLY: ICE4_COMPUTE_PDF
 USE MODE_ICE4_SEDIMENTATION, ONLY: ICE4_SEDIMENTATION
 USE MODE_ICE4_PACK, ONLY: ICE4_PACK
+USE MODE_ICE4_BUDGETS, ONLY: ICE4_BUDGETS
 USE MODE_ICE4_CORRECT_NEGATIVITIES, ONLY: ICE4_CORRECT_NEGATIVITIES
 !
 USE MODE_ELEC_TENDENCIES, ONLY : ELEC_TENDENCIES
@@ -294,8 +295,10 @@ REAL, DIMENSION(KRR) :: ZRSMIN
 INTEGER :: ISIZE, IPROMA, IGPBLKS, ISIZE2
 !
 LOGICAL :: LSAVE_MICRO ! if true, microphysical tendencies are saved for cloud electricity
-REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC),MERGE(IBUNUM-IBUNUM_EXTRA,0,OELEC)) :: &
-           ZMICRO_TEND ! Total mixing ratio change, used for electric charge tendencies
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC .OR. BUCONF%LBU_ENABLE), &
+                MERGE(D%NKT,0,OELEC .OR. BUCONF%LBU_ENABLE), &
+                MERGE(IBUNUM-IBUNUM_EXTRA,0,OELEC .OR. BUCONF%LBU_ENABLE)) :: &
+           ZBUDGETS ! Total mixing ratio change
 LOGICAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)) :: GMASK_ELEC
 INTEGER :: IELEC ! nb of points where microphysical tendencies are not null
 INTEGER :: JM    ! loop index
@@ -540,34 +543,41 @@ IF(PARAMI%LPACK_MICRO) THEN
   ELSE
     IPROMA=ISIZE ! no cache-blocking
   ENDIF
-  ISIZE2=IPROMA
 ELSE
   ISIZE=D%NIJT*D%NKT
   IPROMA=0
-  ISIZE2=ISIZE
 ENDIF
-!
-!Microphysical tendencies must be saved for some physical parameterizations
-IF (OELEC) THEN
-  LSAVE_MICRO = .TRUE.
-  ZMICRO_TEND(:,:,:) = 0.
-ELSE
-  LSAVE_MICRO = .FALSE.
-END IF
 !
 !This part is put in another routine to separate pack/unpack operations from computations
 CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
-               IPROMA, ISIZE, ISIZE2,                                &
-               PTSTEP, KRR, LSAVE_MICRO, LLMICRO, OELEC, PEXN,       &
-               PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
-               PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
+               IPROMA, ISIZE, &
+               PTSTEP, KRR, OELEC, LLMICRO, OELEC, PEXN, &
+               PRHODREF, PPABST, PCIT, PCLDFR, &
+               PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI,               &
                PTHS, PRS, &
                PEVAP3D,                                              &
                PRAINFR, PSIGS,                                       &
-               ZZ_RVHENI, ZZ_LVFACT, ZZ_LSFACT,                      &
                ZWTH, ZWR, &
-               TBUDGETS, KBUDGETS,                                   &
-               ZMICRO_TEND, PLATHAM_IAGGS)
+               ZBUDGETS, PLATHAM_IAGGS)
+!
+IF(BUCONF%LBU_ENABLE .OR. OELEC) THEN
+  DO JK = IKTB, IKTE
+    DO JIJ = IIJB, IIJE
+      DO JM = 1, IBUNUM-IBUNUM_EXTRA
+        ZBUDGETS(JIJ,JK,JM) = ZBUDGETS(JIJ,JK,JM) * ZINV_TSTEP
+      ENDDO
+    ENDDO
+  ENDDO
+ENDIF
+!
+IF(BUCONF%LBU_ENABLE) THEN
+  !Budgets for the different processes
+  CALL ICE4_BUDGETS(D, PARAMI, BUCONF, KRR, &
+                    ZZ_LVFACT, ZZ_LSFACT, PRHODJ, PEXNREF, &
+                    ZZ_RVHENI, ZBUDGETS, &
+                    TBUDGETS, KBUDGETS)
+ENDIF
+
 !
 !
 !-------------------------------------------------------------------------------
@@ -584,10 +594,8 @@ IF (OELEC) THEN
   DO JK = IKTB, IKTE
     DO JIJ = IIJB, IIJE
       DO JM = 1, IBUNUM-IBUNUM_EXTRA
-        ZMICRO_TEND(JIJ,JK,JM) = ZMICRO_TEND(JIJ,JK,JM) * ZINV_TSTEP
-        !
         ! transfer of electric charges occurs only where transfer of mass is non null
-        GMASK_ELEC(JIJ,JK) = GMASK_ELEC(JIJ,JK) .OR. (ZMICRO_TEND(JIJ,JK,JM) .NE. 0.)
+        GMASK_ELEC(JIJ,JK) = GMASK_ELEC(JIJ,JK) .OR. (ZBUDGETS(JIJ,JK,JM) .NE. 0.)
       END DO
     END DO
   END DO
@@ -604,30 +612,30 @@ IF (OELEC) THEN
                          PRT(:,:,IRV), PRT(:,:,IRC), PRT(:,:,IRR), PRT(:,:,IRI), PRT(:,:,IRS), PRT(:,:,IRG), &
                          PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,                          &
                          PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,                          &
-                         ZMICRO_TEND(:,:,IRVHENI_MR), ZMICRO_TEND(:,:,IRRHONG_MR),            &
-                         ZMICRO_TEND(:,:,IRIMLTC_MR), ZMICRO_TEND(:,:,IRCHONI),               &
-                         ZMICRO_TEND(:,:,IRVDEPS), ZMICRO_TEND(:,:,IRIAGGS),                  &
-                         ZMICRO_TEND(:,:,IRIAUTS), ZMICRO_TEND(:,:,IRVDEPG),                  &
-                         ZMICRO_TEND(:,:,IRCAUTR), ZMICRO_TEND(:,:,IRCACCR),                  &
-                         ZMICRO_TEND(:,:,IRREVAV), ZMICRO_TEND(:,:,IRCRIMSS),                 &
-                         ZMICRO_TEND(:,:,IRCRIMSG), ZMICRO_TEND(:,:,IRSRIMCG),                &
-                         ZMICRO_TEND(:,:,IRRACCSS), ZMICRO_TEND(:,:,IRRACCSG),                &
-                         ZMICRO_TEND(:,:,IRSACCRG), ZMICRO_TEND(:,:,IRSMLTG),                 &
-                         ZMICRO_TEND(:,:,IRICFRRG), ZMICRO_TEND(:,:,IRRCFRIG),                &
-                         ZMICRO_TEND(:,:,IRCWETG), ZMICRO_TEND(:,:,IRIWETG),                  &
-                         ZMICRO_TEND(:,:,IRRWETG), ZMICRO_TEND(:,:,IRSWETG),                  &
-                         ZMICRO_TEND(:,:,IRCDRYG), ZMICRO_TEND(:,:,IRIDRYG),                  &
-                         ZMICRO_TEND(:,:,IRRDRYG), ZMICRO_TEND(:,:,IRSDRYG),                  &
-                         ZMICRO_TEND(:,:,IRGMLTR), ZMICRO_TEND(:,:,IRCBERI),                  &
-                         PRCMLTSR=ZMICRO_TEND(:,:,IRCMLTSR), PRICFRR=ZMICRO_TEND(:,:,IRICFRR),&
-                         PRWETGH=ZMICRO_TEND(:,:,IRWETGH),                                    &
-                         PRCWETH=ZMICRO_TEND(:,:,IRCWETH), PRIWETH=ZMICRO_TEND(:,:,IRIWETH),  &
-                         PRSWETH=ZMICRO_TEND(:,:,IRSWETH),                                    &
-                         PRGWETH=ZMICRO_TEND(:,:,IRGWETH), PRRWETH=ZMICRO_TEND(:,:,IRRWETH),  &
-                         PRCDRYH=ZMICRO_TEND(:,:,IRCDRYH), PRIDRYH=ZMICRO_TEND(:,:,IRIDRYH),  &
-                         PRSDRYH=ZMICRO_TEND(:,:,IRSDRYH),                                    &
-                         PRRDRYH=ZMICRO_TEND(:,:,IRRDRYH), PRGDRYH=ZMICRO_TEND(:,:,IRGDRYH),  &
-                         PRDRYHG=ZMICRO_TEND(:,:,IRDRYHG), PRHMLTR=ZMICRO_TEND(:,:,IRHMLTR),  &
+                         ZBUDGETS(:,:,IRVHENI_MR), ZBUDGETS(:,:,IRRHONG_MR),            &
+                         ZBUDGETS(:,:,IRIMLTC_MR), ZBUDGETS(:,:,IRCHONI),               &
+                         ZBUDGETS(:,:,IRVDEPS), ZBUDGETS(:,:,IRIAGGS),                  &
+                         ZBUDGETS(:,:,IRIAUTS), ZBUDGETS(:,:,IRVDEPG),                  &
+                         ZBUDGETS(:,:,IRCAUTR), ZBUDGETS(:,:,IRCACCR),                  &
+                         ZBUDGETS(:,:,IRREVAV), ZBUDGETS(:,:,IRCRIMSS),                 &
+                         ZBUDGETS(:,:,IRCRIMSG), ZBUDGETS(:,:,IRSRIMCG),                &
+                         ZBUDGETS(:,:,IRRACCSS), ZBUDGETS(:,:,IRRACCSG),                &
+                         ZBUDGETS(:,:,IRSACCRG), ZBUDGETS(:,:,IRSMLTG),                 &
+                         ZBUDGETS(:,:,IRICFRRG), ZBUDGETS(:,:,IRRCFRIG),                &
+                         ZBUDGETS(:,:,IRCWETG), ZBUDGETS(:,:,IRIWETG),                  &
+                         ZBUDGETS(:,:,IRRWETG), ZBUDGETS(:,:,IRSWETG),                  &
+                         ZBUDGETS(:,:,IRCDRYG), ZBUDGETS(:,:,IRIDRYG),                  &
+                         ZBUDGETS(:,:,IRRDRYG), ZBUDGETS(:,:,IRSDRYG),                  &
+                         ZBUDGETS(:,:,IRGMLTR), ZBUDGETS(:,:,IRCBERI),                  &
+                         PRCMLTSR=ZBUDGETS(:,:,IRCMLTSR), PRICFRR=ZBUDGETS(:,:,IRICFRR),&
+                         PRWETGH=ZBUDGETS(:,:,IRWETGH),                                    &
+                         PRCWETH=ZBUDGETS(:,:,IRCWETH), PRIWETH=ZBUDGETS(:,:,IRIWETH),  &
+                         PRSWETH=ZBUDGETS(:,:,IRSWETH),                                    &
+                         PRGWETH=ZBUDGETS(:,:,IRGWETH), PRRWETH=ZBUDGETS(:,:,IRRWETH),  &
+                         PRCDRYH=ZBUDGETS(:,:,IRCDRYH), PRIDRYH=ZBUDGETS(:,:,IRIDRYH),  &
+                         PRSDRYH=ZBUDGETS(:,:,IRSDRYH),                                    &
+                         PRRDRYH=ZBUDGETS(:,:,IRRDRYH), PRGDRYH=ZBUDGETS(:,:,IRGDRYH),  &
+                         PRDRYHG=ZBUDGETS(:,:,IRDRYHG), PRHMLTR=ZBUDGETS(:,:,IRHMLTR),  &
                          PRHT=PRT(:,:,IRH), PQHT=PQHT, PQHS=PQHS                       )
   ELSE
     CALL ELEC_TENDENCIES(D, CST, ICED, ICEP, ELECD, ELECP,                                   &
@@ -637,22 +645,22 @@ IF (OELEC) THEN
                          PRT(:,:,IRV), PRT(:,:,IRC), PRT(:,:,IRR), PRT(:,:,IRI), PRT(:,:,IRS), PRT(:,:,IRG), &
                          PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,                         &
                          PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,                         &
-                         ZMICRO_TEND(:,:,IRVHENI_MR), ZMICRO_TEND(:,:,IRRHONG_MR),           &
-                         ZMICRO_TEND(:,:,IRIMLTC_MR), ZMICRO_TEND(:,:,IRCHONI),              &
-                         ZMICRO_TEND(:,:,IRVDEPS), ZMICRO_TEND(:,:,IRIAGGS),                 &
-                         ZMICRO_TEND(:,:,IRIAUTS), ZMICRO_TEND(:,:,IRVDEPG),                 &
-                         ZMICRO_TEND(:,:,IRCAUTR), ZMICRO_TEND(:,:,IRCACCR),                 &
-                         ZMICRO_TEND(:,:,IRREVAV), ZMICRO_TEND(:,:,IRCRIMSS),                &
-                         ZMICRO_TEND(:,:,IRCRIMSG), ZMICRO_TEND(:,:,IRSRIMCG),               &
-                         ZMICRO_TEND(:,:,IRRACCSS), ZMICRO_TEND(:,:,IRRACCSG),               &
-                         ZMICRO_TEND(:,:,IRSACCRG), ZMICRO_TEND(:,:,IRSMLTG),                &
-                         ZMICRO_TEND(:,:,IRICFRRG), ZMICRO_TEND(:,:,IRRCFRIG),               &
-                         ZMICRO_TEND(:,:,IRCWETG), ZMICRO_TEND(:,:,IRIWETG),                 &
-                         ZMICRO_TEND(:,:,IRRWETG), ZMICRO_TEND(:,:,IRSWETG),                 &
-                         ZMICRO_TEND(:,:,IRCDRYG), ZMICRO_TEND(:,:,IRIDRYG),                 &
-                         ZMICRO_TEND(:,:,IRRDRYG), ZMICRO_TEND(:,:,IRSDRYG),                 &
-                         ZMICRO_TEND(:,:,IRGMLTR), ZMICRO_TEND(:,:,IRCBERI),                 &
-                         PRCMLTSR=ZMICRO_TEND(:,:,IRCMLTSR), PRICFRR=ZMICRO_TEND(:,:,IRICFRR))
+                         ZBUDGETS(:,:,IRVHENI_MR), ZBUDGETS(:,:,IRRHONG_MR),           &
+                         ZBUDGETS(:,:,IRIMLTC_MR), ZBUDGETS(:,:,IRCHONI),              &
+                         ZBUDGETS(:,:,IRVDEPS), ZBUDGETS(:,:,IRIAGGS),                 &
+                         ZBUDGETS(:,:,IRIAUTS), ZBUDGETS(:,:,IRVDEPG),                 &
+                         ZBUDGETS(:,:,IRCAUTR), ZBUDGETS(:,:,IRCACCR),                 &
+                         ZBUDGETS(:,:,IRREVAV), ZBUDGETS(:,:,IRCRIMSS),                &
+                         ZBUDGETS(:,:,IRCRIMSG), ZBUDGETS(:,:,IRSRIMCG),               &
+                         ZBUDGETS(:,:,IRRACCSS), ZBUDGETS(:,:,IRRACCSG),               &
+                         ZBUDGETS(:,:,IRSACCRG), ZBUDGETS(:,:,IRSMLTG),                &
+                         ZBUDGETS(:,:,IRICFRRG), ZBUDGETS(:,:,IRRCFRIG),               &
+                         ZBUDGETS(:,:,IRCWETG), ZBUDGETS(:,:,IRIWETG),                 &
+                         ZBUDGETS(:,:,IRRWETG), ZBUDGETS(:,:,IRSWETG),                 &
+                         ZBUDGETS(:,:,IRCDRYG), ZBUDGETS(:,:,IRIDRYG),                 &
+                         ZBUDGETS(:,:,IRRDRYG), ZBUDGETS(:,:,IRSDRYG),                 &
+                         ZBUDGETS(:,:,IRGMLTR), ZBUDGETS(:,:,IRCBERI),                 &
+                         PRCMLTSR=ZBUDGETS(:,:,IRCMLTSR), PRICFRR=ZBUDGETS(:,:,IRICFRR))
   END IF
 END IF
 !

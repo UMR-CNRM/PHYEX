@@ -90,14 +90,15 @@ REAL,    DIMENSION(MERGE(KPROMA,0,PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG
                                                                                                                   & PHLC_HCF, &
                                                                                                                   & PHLI_HRI, &
                                                                                                                   & PHLI_HCF
-REAL,    DIMENSION(MERGE(KPROMA,0,PARAMI%LEXT_TEND)),   INTENT(INOUT) :: PEXTTH !To take into acount external tendencies inside the splitting
-REAL,    DIMENSION(MERGE(KPROMA,0,PARAMI%LEXT_TEND),7), INTENT(INOUT) :: PEXTPK !To take into acount external tendencies inside the splitting
+REAL,    DIMENSION(MERGE(KPROMA,0,PARAMI%LEXT_TEND)),   INTENT(IN) :: PEXTTH !To take into acount external tendencies inside the splitting
+REAL,    DIMENSION(MERGE(KPROMA,0,PARAMI%LEXT_TEND),7), INTENT(IN) :: PEXTPK !To take into acount external tendencies inside the splitting
 REAL,    DIMENSION(KPROMA),                     INTENT(OUT)   :: PRREVAV
 REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PRAINFR
-REAL,    DIMENSION(MERGE(KPROMA,0,PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')), INTENT(INOUT) :: PSIGMA_RC
+REAL,    DIMENSION(MERGE(KPROMA,0,PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')), INTENT(IN) :: PSIGMA_RC
 REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PTH
 REAL,    DIMENSION(KPROMA,7),                   INTENT(INOUT) :: PVART !Packed variables
-REAL,    DIMENSION(KPROMA, IBUNUM-IBUNUM_EXTRA),INTENT(OUT)   :: PBU_SUM
+REAL,    DIMENSION(MERGE(KPROMA,0,BUCONF%LBU_ENABLE .OR. OSAVE_MICRO), &
+                   MERGE(IBUNUM-IBUNUM_EXTRA,0,BUCONF%LBU_ENABLE .OR. OSAVE_MICRO)),INTENT(OUT)   :: PBU_SUM
 REAL,    DIMENSION(MERGE(KPROMA,0,OELEC)),      INTENT(IN)    :: PLATHAM_IAGGS ! E Function to simulate
                                                                                ! enhancement of IAGGS
 !
@@ -126,7 +127,10 @@ REAL, DIMENSION(KPROMA) :: &
                         & ZHLC_LRC, & ! HLCLOUDS : LWC that is Low  LWC in grid
                                       !    note that ZRC = PHLC_HRC + ZHLC_LRC
                         & ZHLI_LCF, &
-                        & ZHLI_LRI
+                        & ZHLI_LRI, &
+                        & ZSIGMA_RC, &
+                        & ZEXTTH
+REAL, DIMENSION(KPROMA,7) :: ZEXTPK
 LOGICAL, DIMENSION(KPROMA) :: LLCOMPUTE ! .TRUE. or points where we must compute tendencies,
 REAL, DIMENSION(SIZE(ICED%XRTMIN))   :: ZRSMIN
 !
@@ -178,14 +182,14 @@ ENDIF
 IF (PARAMI%LEXT_TEND) THEN
 !$acc kernels
   DO JL=1, KMICRO
-    PEXTTH(JL)=PEXTTH(JL)-PTH(JL)*ZINV_TSTEP
+    ZEXTTH(JL)=PEXTTH(JL)-PTH(JL)*ZINV_TSTEP
   ENDDO
 !$acc end kernels
 !$acc kernels
 !$acc loop independent collapse(2)
   DO JV=1, KRR
     DO JL=1, KMICRO
-      PEXTPK(JL, JV)=PEXTPK(JL, JV)-PVART(JL, JV)*ZINV_TSTEP
+      ZEXTPK(JL, JV)=PEXTPK(JL, JV)-PVART(JL, JV)*ZINV_TSTEP
     ENDDO
   ENDDO
 !$acc end kernels
@@ -194,7 +198,7 @@ IF (PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM') THEN
 !$acc kernels
 !$acc loop independent
   DO JL=1, KMICRO
-    PSIGMA_RC(JL)=PSIGMA_RC(JL)*2.
+    ZSIGMA_RC(JL)=PSIGMA_RC(JL)*2.
   ENDDO
 !$acc end kernels
 ENDIF
@@ -287,7 +291,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
                         &KRR, LSOFT, LLCOMPUTE, &
                         &OSAVE_MICRO, OELEC, &
                         &PEXN, PRHODREF, ZLVFACT, ZLSFACT, &
-                        &PPRES, PCF, PSIGMA_RC, &
+                        &PPRES, PCF, ZSIGMA_RC, &
                         &PCIT, &
                         &ZZT, PTH, PVART, &
                         &PLATHAM_IAGGS, &
@@ -301,14 +305,14 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     IF(PARAMI%LEXT_TEND) THEN
 !$acc kernels
       DO JL=1, KMICRO
-        ZATH(JL) = ZATH(JL) + PEXTTH(JL)
+        ZATH(JL) = ZATH(JL) + ZEXTTH(JL)
       ENDDO
 !$acc end kernels
 !$acc kernels
 !$acc loop independent
       DO JV=1, KRR
         DO JL=1, KMICRO
-          ZA(JL, JV) = ZA(JL, JV) + PEXTPK(JL, JV)
+          ZA(JL, JV) = ZA(JL, JV) + ZEXTPK(JL, JV)
         ENDDO
       ENDDO
 !$acc end kernels
@@ -518,7 +522,7 @@ IF(PARAMI%LEXT_TEND) THEN
 !$acc kernels
   DO JL=1, KMICRO
     IF(LDMICRO(JL)) THEN
-      PTH(JL)=PTH(JL) - PEXTTH(JL) * PTSTEP
+      PTH(JL)=PTH(JL) - ZEXTTH(JL) * PTSTEP
     ENDIF
   ENDDO
 !$acc end kernels
@@ -527,7 +531,7 @@ IF(PARAMI%LEXT_TEND) THEN
   DO JV=1, KRR
     DO JL=1, KMICRO
       IF(LDMICRO(JL)) THEN
-        PVART(JL, JV) = PVART(JL, JV) - PEXTPK(JL, JV) * PTSTEP
+        PVART(JL, JV) = PVART(JL, JV) - ZEXTPK(JL, JV) * PTSTEP
       ENDIF
     ENDDO
   ENDDO
