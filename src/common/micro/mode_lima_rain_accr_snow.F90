@@ -8,9 +8,10 @@ MODULE MODE_LIMA_RAIN_ACCR_SNOW
 CONTAINS
 !     ######################################################################################
   SUBROUTINE LIMA_RAIN_ACCR_SNOW (CST, LIMAP, LIMAW, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,&
-                                  PRHODREF, PT,                                             &
+                                  PRHODREF, PPRES, PT, PRVT,                                &
                                   PRCT, PCCT, PRRT, PCRT, PRST, PCST, PLBDC, PLBDR, PLBDS,  &
                                   PCF1D, PPF1D, PLVFACT, PLSFACT,                           &
+                                  PDV, PKA, PCJ, PRIAGGS,                                   &
                                   P_TH_RIM, P_CC_RIM, P_CS_RIM,                             &
                                   P_RC_RIMSS, P_RC_RIMSG, P_RS_RIMCG,                       &
                                   P_RI_HMS, P_CI_HMS, P_RS_HMS,                             &
@@ -66,7 +67,9 @@ REAL,                 INTENT(IN)    :: PTSTEP
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PPRES   ! 
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRVT    ! Vapour mr at t
 !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRCT    ! Cloud water mr at t
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCCT    ! Cloud water C. at t
@@ -81,6 +84,11 @@ REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCF1D   !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PPF1D   ! 
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLVFACT ! 
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT ! 
+!
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PDV      ! Diffusivity of water vapor in the air
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PKA      ! Thermal conductivity of the air
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIAGGS  ! r_i aggregation on r_s
 !
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_RIM
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CS_RIM
@@ -105,7 +113,7 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_ACCRG
 LOGICAL, DIMENSION(SIZE(PRRT))  :: GACC
 !
 REAL,    DIMENSION(SIZE(PRRT))  :: Z1, Z2, Z3, Z4
-REAL,    DIMENSION(SIZE(PRRT))  :: ZZW1, ZZW2, ZZW3, ZZW4, ZZW5
+REAL,    DIMENSION(SIZE(PRRT))  :: ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZFREEZ_RATE
 REAL,    DIMENSION(SIZE(PRRT))  :: ZZWC1, ZZWC2, ZZWC3, ZZWC4, ZZWC5
 REAL,    DIMENSION(SIZE(PRCT))  :: Z_RC_RIM
 !
@@ -143,6 +151,7 @@ ZZW2(:) = 0.
 ZZW3(:) = 0.
 ZZW4(:) = 0.
 ZZW5(:) = 0.
+ZFREEZ_RATE(:) = 0.
 !
 ZZWC1(:) = 0.
 ZZWC2(:) = 0.
@@ -158,13 +167,38 @@ ZVEC2(:) = 0.
 ZVEC3(:) = 0.
 !
 !
+!*       Maximum freezing rate  
+!        ---------------------
+!
+! but what happens to collected liquid water and snow when this limit is reached ?
+DO II=1, KSIZE
+   IF ( PRST(II)/PPF1D(II)>LIMAP%XRTMIN(5) .AND. PCST(II)/PPF1D(II)>LIMAP%XCTMIN(5) .AND. ODCOMPUTE(II) ) THEN
+      ZZW1(II) = PRVT(II)*PPRES(II)/(CST%XEPSILO+PRVT(II)) ! Vapor pressure ev
+!      ZZW1(II) = MIN(ZZW1(II), EXP(CST%XALPI-CST%XBETAI/PT(II)-CST%XGAMI*LOG(PT(II)))) ! min(ev, es_i(T))
+      ZZW1(II) = PKA(II)*(CST%XTT-PT(II)) +                              &
+           (PDV(II)*(CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(II)-CST%XTT)) &
+           *(CST%XESTT-ZZW1(II))/(CST%XRV*PT(II))           )
+      ZZW1(II) = ZZW1(II) * PCST(II)/PPF1D(II) *(LIMAC%X0DEPS * PLBDS(II)**LIMAC%XEX0DEPS + &
+                                       LIMAC%X1DEPS*PCJ(II)*PLBDS(II)**(LIMAC%XEX1DEPS )* &
+           (1+0.5*(LIMAC%XFVELOS/PLBDS(II))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEX1DEPS/LIMAP%XALPHAS))/ &
+           ((CST%XLMTT-CST%XCL*(CST%XTT-PT(II))))
+      ZZW2(II) =(PRHODREF(II)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-PT(II)))   ) / &
+           &(PRHODREF(II)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(II))))
+      ! PRIAGGS has an opposite sign in ICE3 and LIMA
+      ZFREEZ_RATE(II)=MAX(0., MAX(0., ZZW1(II) - ZZW2(II) * PRIAGGS(II)) + PRIAGGS(II))
+   END IF
+ENDDO
+ZZW1(:) = 0.
+ZZW2(:) = 0.  
+!
+!
 !*       Cloud droplet riming of the aggregates  
 !        --------------------------------------
 !
 !
 DO II = 1, SIZE(PRCT)
    IF ( PRCT(II)/PCF1D(II)>LIMAP%XRTMIN(2) .AND. PRST(II)/PPF1D(II)>LIMAP%XRTMIN(5) .AND. PT(II)<CST%XTT .AND. &
-        PCCT(II)/PCF1D(II)>LIMAP%XCTMIN(2) .AND. PCST(II/PPF1D(II))>LIMAP%XCTMIN(5) .AND. ODCOMPUTE(II) ) THEN
+        PCCT(II)/PCF1D(II)>LIMAP%XCTMIN(2) .AND. PCST(II)/PPF1D(II)>LIMAP%XCTMIN(5) .AND. ODCOMPUTE(II) ) THEN
 !
       ZVEC1(II) = PLBDS(II)
       ZVEC1W(II)= ( LIMAC%XFVELOS**LIMAP%XALPHAS + PLBDS(II)**LIMAP%XALPHAS ) ** (1./LIMAP%XALPHAS) ! modified equivalent lambda
@@ -251,10 +285,6 @@ DO II = 1, SIZE(PRCT)
 !
          P_RI_HMS(II) = P_CI_HMS(II) * LIMAC%XMNU0                                     ! RCHMSI
          P_RS_HMS(II) = - P_RI_HMS(II)
-      ELSE
-         P_RI_HMS(II) = 0.
-         P_CI_HMS(II) = 0.
-         P_RS_HMS(II) = 0.
       END IF
    END IF
 END DO
@@ -272,7 +302,6 @@ ZZW5(:) = 0.
 IVEC1(:) = 0
 IVEC2(:) = 0
 ZVEC1(:) = 0.
-ZVEC1W(:)= 0.
 ZVEC2(:) = 0.
 ZVEC3(:) = 0.
 !
@@ -438,7 +467,35 @@ WHERE( GACC )
 !
 END WHERE
 !
+! apply maximum freezing rate
+! P_RC_RIMSS and P_RC_RIMSG are negative
+! P_RR_ACCSS and P_RR_ACCSG are positive due to electricity !
 !
+ZZW1(:)=0.
+IF (LIMAP%LICE3) THEN
+   ZZW1(:)=0.
+   P_RC_RIMSS(:) = - MIN(ZFREEZ_RATE(:), -P_RC_RIMSS(:))
+   ZFREEZ_RATE(:) = MAX(0., ZFREEZ_RATE(:)+P_RC_RIMSS(:))
+   ZZW1(:) = MIN(1., ZFREEZ_RATE(:) / MAX(1.E-20, -P_RC_RIMSG(:) ) )
+   P_RC_RIMSG(:) = ZZW1(:) * P_RC_RIMSG(:)
+   P_RS_RIMCG(:) = ZZW1(:) * P_RS_RIMCG(:)
+   ZFREEZ_RATE(:) = MAX(0., ZFREEZ_RATE(:)+P_RC_RIMSG(:))
+   P_RR_ACCSS(:) = MIN(ZFREEZ_RATE(:), P_RR_ACCSS(:))
+   ZFREEZ_RATE(:) = MAX(0., ZFREEZ_RATE(:)-P_RR_ACCSS(:))
+   ZZW1(:) = MIN(1., ZFREEZ_RATE(:) / MAX(1.E-20, P_RR_ACCSG(:) ) )
+   P_RR_ACCSG(:) = ZZW1(:) * P_RR_ACCSG(:)
+   P_RS_ACCRG(:) = ZZW1(:) * P_RS_ACCRG(:)
+ELSE
+   ZZW1(:) = MIN(1., ZFREEZ_RATE(:) / MAX(1.E-20, P_RR_ACCSG(:)+P_RR_ACCSS(:)-P_RC_RIMSS(:)-P_RC_RIMSG(:) ) )
+   P_RC_RIMSS(:) = ZZW1(:) * P_RC_RIMSS(:)
+   P_RC_RIMSG(:) = ZZW1(:) * P_RC_RIMSG(:)
+   P_RR_ACCSS(:) = ZZW1(:) * P_RR_ACCSS(:)
+   P_RS_RIMCG(:) = ZZW1(:) * P_RS_RIMCG(:)
+   P_RR_ACCSG(:) = ZZW1(:) * P_RR_ACCSG(:)
+   P_RS_ACCRG(:) = ZZW1(:) * P_RS_ACCRG(:)
+END IF
+!
+! account for cloud / precip fraction
 !
 P_CC_RIM(:) = P_CC_RIM(:) * PCF1D(:)
 P_CS_RIM(:) = P_CS_RIM(:) * PCF1D(:)

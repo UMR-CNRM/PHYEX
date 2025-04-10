@@ -1035,9 +1035,10 @@ END IF
 IF ((LIMAP%NMOM_C.GE.1 .OR. LIMAP%NMOM_R.GE.1) .AND. LIMAP%NMOM_S.GE.1) THEN
    !
    CALL LIMA_RAIN_ACCR_SNOW (CST, LIMAP, LIMAW, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,        & ! depends on CF, PF
-                             PRHODREF, ZT,                                                     &
+                             PRHODREF, PPABST, ZT, PRVT,                                       &
                              ZRCT, ZCCT, ZRRT, ZCRT, ZRST, ZCST, ZLBDC, ZLBDR, ZLBDS,          &
                              ZCF1D, ZPF1D, ZLVFACT, ZLSFACT,                                   &
+                             ZDV, ZKA, ZCJ, P_RI_AGGS,                                         &
                              P_TH_RIM, P_CC_RIM, P_CS_RIM, P_RC_RIMSS, P_RC_RIMSG, P_RS_RIMCG, &
                              P_RI_HMS, P_CI_HMS, P_RS_HMS,                                     &
                              P_TH_ACC, P_CR_ACC, P_CS_ACC, P_RR_ACCSS, P_RR_ACCSG, P_RS_ACCRG  )
