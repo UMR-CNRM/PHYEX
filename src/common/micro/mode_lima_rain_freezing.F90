@@ -95,11 +95,11 @@ WHERE( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRRT(:)>LIMAP%XRTMIN(3) .AND. PT(:)<CST%XTT
 !
    ZW1(:) = LIMAM%XICFRR * PRIT(:) * PCRT(:)                    & ! RICFRRG
                                      * PLBDR(:)**LIMAM%XEXICFRR         &
-                                     * PRHODREF(:)**(-LIMAP%XCEXVT-1.0)
+                                     * PRHODREF(:)**(-LIMAP%XCEXVT+1.0)
 !
    ZW2(:) = LIMAM%XRCFRI * PCIT(:) * PCRT(:)                    & ! RRCFRIG
                                      * PLBDR(:)**LIMAM%XEXRCFRI         &
-                                     * PRHODREF(:)**(-LIMAP%XCEXVT-1.0)
+                                     * PRHODREF(:)**(-LIMAP%XCEXVT+1.0)
 !
 ! Comparison between heat to be released (to freeze rain) and heat sink (rain and ice temperature change)
 ! ZW0 is the proportion of process that can take place
