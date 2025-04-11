@@ -338,6 +338,8 @@ REAL,    DIMENSION(SIZE(PRCT))  :: ZLBDC3_HRC
 REAL,    DIMENSION(SIZE(PRCT))  :: ZLBDC3_LRC
 REAL,    DIMENSION(SIZE(PRCT))  :: ZLBDR
 REAL,    DIMENSION(SIZE(PRCT))  :: ZLBDR3
+REAL,    DIMENSION(SIZE(PRCT))  :: ZLBDR_NOPF
+REAL,    DIMENSION(SIZE(PRCT))  :: ZLBDR3_NOPF
 REAL,    DIMENSION(SIZE(PRCT))  :: ZLBDI
 REAL,    DIMENSION(SIZE(PRCT))  :: ZLBDI_HRI
 REAL,    DIMENSION(SIZE(PRCT))  :: ZLBDI_LRI
@@ -380,6 +382,7 @@ REAL,    DIMENSION(SIZE(PRCT))  :: ZRHT
 !
 REAL,    DIMENSION(SIZE(PRCT))  :: ZCCT
 REAL,    DIMENSION(SIZE(PRCT))  :: ZCRT
+REAL,    DIMENSION(SIZE(PRCT))  :: ZCRT_NOPF
 REAL,    DIMENSION(SIZE(PRCT))  :: ZCIT
 REAL,    DIMENSION(SIZE(PRCT))  :: ZCST
 REAL,    DIMENSION(SIZE(PRCT))  :: ZCGT
@@ -586,10 +589,16 @@ END WHERE
 !
 ! Rain drops
 ZLBDR(:)  = 1.E10
+ZLBDR_NOPF(:)  = 1.E10
 ZLBDR3(:) = 1.E30
+ZLBDR3_NOPF(:) = 1.E30
 ZCRT(:)=0.
+ZCRT_NOPF(:)=0.
 IF (LIMAP%NMOM_R.EQ.1) THEN
    WHERE (ZRRT(:)>LIMAP%XRTMIN(3) .AND. ODCOMPUTE(:) )
+      ZLBDR_NOPF(:) = LIMAW%XLBR*(PRHODREF(:)*ZRRT(:) )**LIMAW%XLBEXR
+      ZLBDR3_NOPF(:) = ZLBDR_NOPF(:)**3.
+      ZCRT_NOPF(:) = LIMAW%XCCR * ZLBDR_NOPF(:)**LIMAW%XCXR / PRHODREF(:)
       ZLBDR(:) = LIMAW%XLBR*(PRHODREF(:)*ZRRT(:)/ZPF1D(:) )**LIMAW%XLBEXR
       ZLBDR3(:) = ZLBDR(:)**3.
       ZCRT(:) = LIMAW%XCCR * ZLBDR(:)**LIMAW%XCXR / PRHODREF(:)
@@ -815,6 +824,13 @@ IF (LIMAP%NMOM_R.GE.1) THEN
    IF (LIMAP%NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_EVAP(:)
 END IF
 !
+IF (LIMAP%LICE3) THEN
+   ZPF1D(:)=1.
+   ZLBDR(:)=ZLBDR_NOPF(:)
+   ZLBDR3(:)=ZLBDR3_NOPF(:)
+   ZCRT(:)=ZCRT_NOPF(:)
+END IF
+!
 IF (LIMAP%NMOM_I.GE.1) THEN
    !
    ! Includes vapour deposition on ice, ice -> snow conversion
@@ -829,7 +845,7 @@ IF (LIMAP%NMOM_I.GE.1) THEN
    ! In low content part
    CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF
                              PRHODREF, ZT, ZSSI, ZAI, ZCJ, ZLSFACT,           &
-                             PHLI_LRI/ZHLI_LCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_LRI,    &
+                             ZHLI_LCF, PHLI_LRI/ZHLI_LCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_LRI,    &
                              Z_TH_DEPI_2, Z_RI_DEPI_2, Z_SHCI_HACH_2,         &
                              Z_RI_CNVS_2, Z_CI_CNVS_2, Z_SHCI_CNVS_2          )
    !
@@ -846,7 +862,7 @@ IF (LIMAP%NMOM_I.GE.1) THEN
    ! In high content part
    CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF
                              PRHODREF, ZT, ZSSI, ZAI, ZCJ, ZLSFACT,           &
-                             PHLI_HRI/ZHLI_HCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_HRI,    &
+                             ZHLI_HCF, PHLI_HRI/ZHLI_HCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_HRI,    &
                              Z_TH_DEPI_2, Z_RI_DEPI_2, Z_SHCI_HACH_2,         &
                              Z_RI_CNVS_2, Z_CI_CNVS_2, Z_SHCI_CNVS_2          )
    !
@@ -1093,7 +1109,6 @@ IF (LIMAP%NMOM_S.GE.1) THEN
 END IF
 !
 IF (LIMAP%NMOM_R.GE.1) THEN
-   ZPF1D(:)=1.
    CALL LIMA_RAIN_FREEZING (CST, LIMAP, LIMAM, KSIZE, ODCOMPUTE,                                      & ! depends on PF, IF
                             PRHODREF, ZT, ZLVFACT, ZLSFACT,                        &
                             ZRRT/ZPF1D, ZCRT/ZPF1D, ZRIT/ZIF1D, ZCIT/ZIF1D, ZLBDR, &

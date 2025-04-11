@@ -376,6 +376,7 @@ XC1S = 1./XPI
 XAG = 19.6  ! Lump graupel case
 XBG = 2.8   ! Lump graupel case
 XCG = 122.  ! Lump graupel case
+IF (LICE3) XCG = 124.  ! Lump graupel case
 XDG = 0.66  ! Lump graupel case
 !
 XCCG = 5.E5

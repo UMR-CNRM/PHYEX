@@ -9,7 +9,7 @@ CONTAINS
 !     ##########################################################################
   SUBROUTINE LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE, &
                                   PRHODREF, PT,  PSSI, PAI, PCJ, PLSFACT,   &
-                                  PRIT, PCIT, PCIT_SHAPE, PLBDI,            &
+                                  PIF, PRIT, PCIT, PCIT_SHAPE, PLBDI,       &
                                   P_TH_DEPI, P_RI_DEPI, P_SHCI_HACH,        &
                                   P_RI_CNVS, P_CI_CNVS, P_SHCI_CNVS         )
 !     ##########################################################################
@@ -66,6 +66,7 @@ REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PAI  ! abs. pressure at time t
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ  ! abs. pressure at time t
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  ! abs. pressure at time t
 !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PIF     ! Ice cloud fraction 
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIT    ! Cloud ice m.r. at t 
 !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT    ! Ice crystal C. at t
@@ -118,7 +119,7 @@ IF (LIMAP%NMOM_I.EQ.1) THEN
 !
    WHERE( GMICRO )
       ZCRIAUTI(:)=MIN(LIMAP%XCRIAUTI,10**(LIMAP%XACRIAUTI*(PT(:)-CST%XTT)+LIMAP%XBCRIAUTI))
-      ZZW(:)   = LIMAC%XTIMAUTI * EXP( LIMAC%XTEXAUTI*(PT(:)-CST%XTT) ) * MAX( PRIT(:)-ZCRIAUTI(:),0.0 )
+      ZZW(:)   = LIMAC%XTIMAUTI * EXP( LIMAC%XTEXAUTI*(PT(:)-CST%XTT) ) * MAX( PRIT(:)-ZCRIAUTI(:)*PIF(:),0.0 )
       P_RI_CNVS(:) = - ZZW(:)
    END WHERE
 ELSE

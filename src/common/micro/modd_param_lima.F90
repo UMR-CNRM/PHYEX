@@ -53,6 +53,7 @@ REAL    :: XTSTEP_TS              ! maximum time for the sub-time-step
 !
 ! 1.1 Cold scheme configuration
 !
+LOGICAL :: LICE3                  ! TRUE to mimic the ICE3 scheme
 LOGICAL :: LNUCL                  ! TRUE to enable ice nucleation
 LOGICAL :: LSEDI                  ! TRUE to enable pristine ice sedimentation
 LOGICAL :: LHHONI                 ! TRUE to enable freezing of haze particules
@@ -254,6 +255,7 @@ TYPE(PARAM_LIMA_T), TARGET, SAVE :: PARAM_LIMA
 LOGICAL, POINTER :: LLIMA_DIAG => NULL(), &
                     LPTSPLIT => NULL(), &
                     LFEEDBACKT => NULL(), &
+                    LICE3 => NULL(), &
                     LNUCL => NULL(), &
                     LSEDI => NULL(), &
                     LHHONI => NULL(), &
@@ -390,7 +392,7 @@ CHARACTER(LEN=3), POINTER :: HPARAM_CCN => NULL()
 CHARACTER(LEN=3), POINTER :: HINI_CCN => NULL()
 CHARACTER(LEN=10), DIMENSION(:), POINTER :: HTYPE_CCN
 
-NAMELIST/NAM_PARAM_LIMA/LNUCL, LSEDI, LHHONI, LMEYERS,                     &         
+NAMELIST/NAM_PARAM_LIMA/LICE3, LNUCL, LSEDI, LHHONI, LMEYERS,              &         
                         NMOM_I, NMOM_S, NMOM_G, NMOM_H,                    & 
                         NMOD_IFN, XIFN_CONC, LIFN_HOM,                     &
                         CIFN_SPECIES, CINT_MIXING, NMOD_IMM, NIND_SPECIE,  &
@@ -422,6 +424,7 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   LLIMA_DIAG         => PARAM_LIMA%LLIMA_DIAG          
   LPTSPLIT           => PARAM_LIMA%LPTSPLIT
   LFEEDBACKT         => PARAM_LIMA%LFEEDBACKT
+  LICE3              => PARAM_LIMA%LICE3
   LNUCL              => PARAM_LIMA%LNUCL
   LSEDI              => PARAM_LIMA%LSEDI
   LHHONI             => PARAM_LIMA%LHHONI
@@ -713,6 +716,7 @@ IF(GLDEFAULTVAL) THEN
   !- To change the default value for a given application,                                                 
   !  an "IF(HPROGRAM=='...')" condition must be used.
 
+  LICE3=.FALSE.
   LNUCL=.TRUE.
   LSEDI=.TRUE.
   LHHONI = .FALSE.
@@ -803,6 +807,20 @@ ENDIF
 IF(GLREADNAM) THEN
   CALL POSNAM_PHY(TFILENAM, 'NAM_PARAM_LIMA', ODNEEDNAM, GLFOUND)
   IF(GLFOUND) READ(UNIT=TFILENAM%NLU, NML=NAM_PARAM_LIMA)
+  IF (LICE3) THEN
+     NMOM_C=1
+     NMOM_R=1
+     NMOM_I=1
+     NMOM_S=1
+     NMOM_G=1
+     NMOM_H=MIN(NMOM_H,1)
+     NMOD_CCN=0
+     NMOD_IFN=0
+     LMURAKAMI=.TRUE.
+     LKESSLERAC=.TRUE.
+     XALPHAR=1.
+     XNUR=1.
+  END IF
 ENDIF
 !
 !*      3. CHECKS
