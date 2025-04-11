@@ -139,7 +139,8 @@ IF(LIMAP%LFEEDBACKT) THEN
 ENDIF
 !$mnh_expand_where(II=1:KSIZE)
 WHERE(GNEGT(:))
-  PCIT(:)=MAX(ZZW(:)+PCIT(:), PCIT(:))
+  ! convert from m-3 (ICE3) to kg-1 (LIMA)
+  PCIT(:)=MAX(ZZW(:)/PRHODREF(:)+PCIT(:), PCIT(:))
 END WHERE
 !$mnh_end_expand_where(II=1:KSIZE)
 !
