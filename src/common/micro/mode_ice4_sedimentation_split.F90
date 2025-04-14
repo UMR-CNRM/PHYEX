@@ -48,7 +48,6 @@ USE MODD_ELEC_DESCR,     ONLY: ELEC_DESCR_t
 USE MODD_ELEC_PARAM,     ONLY: ELEC_PARAM_t
 !
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
-USE MODE_ELEC_BEARD_EFFECT, ONLY: ELEC_BEARD_EFFECT
 !
 !USE MODI_GAMMA, ONLY: GAMMA
 #ifndef MNH_COMPILER_CCE
@@ -56,6 +55,11 @@ USE MODI_GAMMA
 #endif
 #if defined(TARGET_NV70)
 USE MODI_GAMMA
+#endif
+!
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+!$mnh_undef(OPENACC)
 #endif
 !
 IMPLICIT NONE
@@ -287,7 +291,7 @@ ENDDO
 !
 IF (GSEDIC) THEN
     CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
-                          &KRR, OELEC, OSEDIM_BEARD, &
+                          &KRR, OELEC, OSEDIM_BEARD, PTHVREFZIKB, HCLOUD, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
                           &2, &
                           &ZRCT, PRCS, PINPRC, ZPRCS, &
@@ -299,7 +303,7 @@ ENDIF
 !*       2.2   for rain
 !
   CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
-                          &KRR, OELEC, OSEDIM_BEARD, &
+                          &KRR, OELEC, OSEDIM_BEARD, PTHVREFZIKB, HCLOUD, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
                           &3, &
                           &ZRRT, PRRS, PINPRR, ZPRRS, &
@@ -309,7 +313,7 @@ ENDIF
 !*       2.3   for pristine ice
 !
   CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI,  ELECP, ELECD, &
-                          &KRR, OELEC, OSEDIM_BEARD, &
+                          &KRR, OELEC, OSEDIM_BEARD, PTHVREFZIKB, HCLOUD, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
                           &4, &
                           &ZRIT, PRIS, PINPRI, ZPRIS, &
@@ -319,7 +323,7 @@ ENDIF
 !*       2.4   for aggregates/snow
 !
   CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI,  ELECP, ELECD, &
-                          &KRR, OELEC, OSEDIM_BEARD, &
+                          &KRR, OELEC, OSEDIM_BEARD, PTHVREFZIKB, HCLOUD, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
                           &5, &
                           &ZRST, PRSS, PINPRS, ZPRSS, &
@@ -329,7 +333,7 @@ ENDIF
 !*       2.5   for graupeln
 !
   CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI,  ELECP, ELECD, &
-                          &KRR, OELEC, OSEDIM_BEARD, &
+                          &KRR, OELEC, OSEDIM_BEARD, PTHVREFZIKB, HCLOUD, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
                           &6, &
                           &ZRGT, PRGS, PINPRG, ZPRGS, &
@@ -340,7 +344,7 @@ ENDIF
 !
 IF (IRR==7) THEN
     CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
-                            &KRR, OELEC, OSEDIM_BEARD, &
+                            &KRR, OELEC, OSEDIM_BEARD, PTHVREFZIKB, HCLOUD, &
                             &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
                             &7, &
                             &ZRHT, PRHS, PINPRH, ZPRHS, &
@@ -350,24 +354,27 @@ ENDIF
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT', 1, ZHOOK_HANDLE)
 !
-CONTAINS
+!!$CONTAINS
+END SUBROUTINE ICE4_SEDIMENTATION_SPLIT
 !
 !
 !-------------------------------------------------------------------------------
 !
 !
 SUBROUTINE INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
-                              &KRR, OELEC, OSEDIM_BEARD, &
+                              &KRR, OELEC, OSEDIM_BEARD, PTHVREFZIKB, HCLOUD, &
                               &PRHODREF, POORHODZ, PDZZ, PPABST, PTHT, PT, PTSTEP, &
                               &KSPE, &
                               &PRXT, PRXS, PINPRX, PPRXS, &
                               &PQXT, PQXS, PPQXS, PEFIELDW, &
-                              &PRAY, PLBC, PFSEDC, PCONC3D, PFPR)
+                              &PRAY, PLBC, PFSEDC, PCONC3D, PFPR )
 !
 !*      0. DECLARATIONS
 !          ------------
 !
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK  
 USE MODD_CST,            ONLY: CST_t
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t  
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
@@ -377,6 +384,8 @@ USE MODD_ELEC_PARAM,     ONLY: ELEC_PARAM_t
 USE MODD_ELEC_DESCR,     ONLY: ELEC_DESCR_t
 !
 USE MODI_MOMG
+!
+USE MODE_ELEC_BEARD_EFFECT, ONLY: ELEC_BEARD_EFFECT
 !
 IMPLICIT NONE
 !
@@ -389,6 +398,7 @@ TYPE(RAIN_ICE_DESCR_t),       INTENT(IN)              :: ICED
 TYPE(PARAM_ICE_t),            INTENT(IN)              :: PARAMI
 TYPE(ELEC_PARAM_t),           INTENT(IN)              :: ELECP        ! electrical parameters
 TYPE(ELEC_DESCR_t),           INTENT(IN)              :: ELECD        ! electrical descriptive csts
+CHARACTER (LEN=4),            INTENT(IN)              :: HCLOUD  ! Kind of microphysical scheme
 INTEGER,                      INTENT(IN)              :: KRR
 LOGICAL,                      INTENT(IN)              :: OELEC        ! if true, sedimentation of elec. charges
 LOGICAL,                      INTENT(IN)              :: OSEDIM_BEARD ! if true, effect of electric forces on sedim.
@@ -411,6 +421,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(IN)    :: PP
 REAL, DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(D%NKT,0,OSEDIM_BEARD)), INTENT(IN) :: PEFIELDW ! Vertical E field
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN), OPTIONAL    :: PRAY, PLBC, PFSEDC, PCONC3D
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT), OPTIONAL :: PFPR    ! upper-air precipitation fluxes
+REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity
 !
 !*       0.2  declaration of local variables
 !
@@ -425,7 +436,8 @@ REAL                            :: ZMRCHANGE
 REAL, DIMENSION(D%NIJT)       :: ZMAX_TSTEP ! Maximum CFL in column
 REAL, DIMENSION(SIZE(ICED%XRTMIN))   :: ZRSMIN
 REAL, DIMENSION(D%NIJT)       :: ZREMAINT   ! Remaining time until the timestep end
-LOGICAL :: ZANYREMAINT
+LOGICAL :: GANYREMAINT
+REAL    :: ZANYREMAINT
 REAL, DIMENSION(D%NIJT, 0:D%NKT+1) :: ZWSED   ! Sedimentation fluxes
 INTEGER :: IKTB, IKTE, IKB, IKL, IIJE, IIJB
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -476,16 +488,17 @@ END IF
 !$acc kernels
 PINPRX(:) = 0.
 ZINVTSTEP=1./PTSTEP
-DO JI = 1, SIZE(ICED%XRTMIN)
-  ZRSMIN(JI) = ICED%XRTMIN(JI) * ZINVTSTEP
-END DO
+ZRSMIN(:) = ICED%XRTMIN(:) * ZINVTSTEP
+!!$DO JI = 1, SIZE(ICED%XRTMIN)
+!!$  ZRSMIN(JI) = ICED%XRTMIN(JI) * ZINVTSTEP
+!!$END DO
 ZREMAINT(:) = 0.
 ZREMAINT(IIJB:IIJE) = PTSTEP
 !$acc end kernels
 !$acc update self(ZREMAINT)
 !
-ZANYREMAINT = .TRUE.
-DO WHILE (ZANYREMAINT)
+GANYREMAINT = .TRUE.
+DO WHILE (GANYREMAINT)
   !
   ! Effect of electrical forces on sedimentation
   IF (OELEC .AND. OSEDIM_BEARD) THEN
@@ -516,9 +529,8 @@ DO WHILE (ZANYREMAINT)
     END IF
 !$acc end kernels
 !$acc kernels
-!$acc loop independent collapse(2)
-    DO JK = IKTB,IKTE
-      DO JIJ = IIJB,IIJE
+    !$acc_cr loop independent
+    !$mnh_do_concurrent(JIJ = IIJB:IIJE , JK = IKTB:IKTE )
         IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
           ZZWLBDC = PLBC(JIJ,JK) * PCONC3D(JIJ,JK) / &
                    &(PRHODREF(JIJ,JK) * PRXT(JIJ,JK))
@@ -542,8 +554,7 @@ DO WHILE (ZANYREMAINT)
           ENDIF
         ENDIF
 !--cb--
-      ENDDO
-    ENDDO
+    !$mnh_end_do()
 !$acc end kernels
     IF (OELEC .AND. OSEDIM_BEARD) THEN
       CALL ELEC_BEARD_EFFECT(D, CST, ICED, HCLOUD, KSPE, GMASK, PT, PRHODREF, PTHVREFZIKB, &
@@ -627,9 +638,8 @@ DO WHILE (ZANYREMAINT)
     ENDDO
 #else
 !$acc kernels
-!$acc loop independent collapse(2)
-    DO JK = IKTB,IKTE
-      DO JIJ = IIJB,IIJE
+    !$acc_cr loop independent
+    !$mnh_do_concurrent(JIJ = IIJB:IIJE , JK = IKTB:IKTE )
         IF(PRXT(JIJ,JK)> ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
           IF (PARAMI%LSNOW_T .AND. PT(JIJ,JK)>263.15) THEN
             ZLBDA = MAX(MIN(ICED%XLBDAS_MAX, 10**(14.554-0.0423*PT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
@@ -654,8 +664,7 @@ DO WHILE (ZANYREMAINT)
             ENDIF
           ENDIF
         ENDIF
-      ENDDO
-    ENDDO
+    !$mnh_end_do()
 !$acc end kernels
     IF (OELEC .AND. OSEDIM_BEARD) THEN
       CALL ELEC_BEARD_EFFECT(D, CST, ICED, HCLOUD, KSPE, GMASK, PT, PRHODREF, PTHVREFZIKB,&
@@ -731,9 +740,8 @@ DO WHILE (ZANYREMAINT)
     END IF
 !$acc end kernels
 !$acc kernels
-!$acc loop independent collapse(2)
-    DO JK = IKTB,IKTE
-      DO JIJ = IIJB,IIJE
+    !$acc_cr loop independent
+    !$mnh_do_concurrent(JIJ = IIJB:IIJE , JK = IKTB:IKTE )
         IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
           ZWSED(JIJ, JK) = ZFSED  * PRXT(JIJ, JK)**ZEXSED            &
                          &        * PRHODREF(JIJ, JK)**(ZEXSED-ICED%XCEXVT)
@@ -752,8 +760,7 @@ DO WHILE (ZANYREMAINT)
             END IF
           ENDIF
         ENDIF
-      ENDDO
-    ENDDO
+    !$mnh_end_do()
 !$acc end kernels
     IF (OELEC .AND. OSEDIM_BEARD) THEN
       CALL ELEC_BEARD_EFFECT(D, CST, ICED, HCLOUD, KSPE, GMASK, PT, PRHODREF, PTHVREFZIKB, &
@@ -790,9 +797,10 @@ DO WHILE (ZANYREMAINT)
   ENDDO
 !$acc end kernels
 !$acc kernels
-  DO JK = IKTB , IKTE
-!$acc loop independent
-    DO JIJ = IIJB, IIJE
+!$acc loop independent private(ZMRCHANGE,ZQCHANGE)
+DO CONCURRENT(JK = IKTB:IKTE , JIJ = IIJB:IIJE )
+!!$  DO JK = IKTB , IKTE
+!!$    DO JIJ = IIJB, IIJE
       ZMRCHANGE = ZMAX_TSTEP(JIJ) * POORHODZ(JIJ,JK)*(ZWSED(JIJ,JK+IKL)-ZWSED(JIJ,JK))
       PRXT(JIJ,JK) = PRXT(JIJ,JK) + ZMRCHANGE + PPRXS(JIJ,JK) * ZMAX_TSTEP(JIJ)
       PRXS(JIJ,JK) = PRXS(JIJ,JK) + ZMRCHANGE * ZINVTSTEP
@@ -804,21 +812,25 @@ DO WHILE (ZANYREMAINT)
         PQXT(JIJ,JK) = PQXT(JIJ,JK) + ZQCHANGE + PPQXS(JIJ,JK) * ZMAX_TSTEP(JIJ)
         PQXS(JIJ,JK) = PQXS(JIJ,JK) + ZQCHANGE * ZINVTSTEP
       ENDIF
-    ENDDO
-  ENDDO
+!!$    ENDDO
+!!$  ENDDO
+ENDDO
 !$acc end kernels
 !
   !
-  ZANYREMAINT = .FALSE.
+!$acc kernels
+  GANYREMAINT = .FALSE.
+  ZANYREMAINT = 0.0
+!$acc loop independent reduction(max:ZANYREMAINT)
   DO JIJ=IIJB,IIJE
-    IF(ZREMAINT(JIJ)>0.) THEN
-      ZANYREMAINT = .TRUE.
-    END IF
+    ZANYREMAINT=MAX(ZANYREMAINT,ZREMAINT(JIJ))
   END DO
+  IF(ZANYREMAINT>0.) GANYREMAINT = .TRUE.
+!$acc end kernels
 END DO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT', 1, ZHOOK_HANDLE)
 END SUBROUTINE INTERNAL_SEDIM_SPLI
 !
-END SUBROUTINE ICE4_SEDIMENTATION_SPLIT
+!!$END SUBROUTINE ICE4_SEDIMENTATION_SPLIT
 END MODULE MODE_ICE4_SEDIMENTATION_SPLIT
