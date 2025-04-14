@@ -112,7 +112,7 @@ REAL, DIMENSION(KPROMA) :: ZT, &
                         & ZKA, ZDV, ZAI, ZCJ, &
                         & ZLBDAR, ZLBDAS, ZLBDAG, ZLBDAH, ZLBDAR_RF, &
                         & ZRGSI, ZRGSI_MR, ZRAINFR
-INTEGER :: JL, JV
+INTEGER :: JL, JV, JP
 LOGICAL, DIMENSION(KPROMA) :: LLWETG ! .TRUE. if graupel growths in wet mode
 LOGICAL :: LLMASK
 REAL :: ZZW
@@ -121,16 +121,20 @@ LOGICAL :: LLRFR
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
 IF (LHOOK) CALL DR_HOOK('ICE4_TENDENCIES', 0, ZHOOK_HANDLE)
-
-
+!
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+#endif
 !
 !$acc kernels
 ZT(:)=PT(:)
 DO JV=0,KRR
+ !$mnh_expand_array(JP=1:KPROMA)
   ZVART(:,JV)=PVART(:,JV)
   PA(:,JV)=0.
   PB(:,JV)=0.
-ENDDO
+ !$mnh_end_expand_array()
+ENDDO  
 !$acc end kernels
 !
 IF(ODSOFT) THEN
@@ -145,22 +149,18 @@ ELSE
   !*       2.     COMPUTES THE SLOW COLD PROCESS SOURCES
   !               --------------------------------------
 !$acc kernels
-!$acc loop independent
-  DO JL=1, KSIZE
+  !$mnh_do_concurrent( JL=1:KSIZE )
     CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LDCOMPUTE(JL), &
                      ZVART(JL,ITH), PPRES(JL), PRHODREF(JL), PEXN(JL), PLSFACT(JL), ZT(JL), &
                      ZVART(JL,IRV), &
                      PCIT(JL), PBU_INST(JL, IRVHENI_MR))
-  ENDDO
-!$acc end kernels  
-!$acc kernels
-!$acc loop independent
-  DO JL=1, KSIZE
+  !$mnh_end_do()
+  !$mnh_do_concurrent( JL=1:KSIZE )
     ZVART(JL,ITH)=ZVART(JL,ITH) + PBU_INST(JL, IRVHENI_MR)*PLSFACT(JL)
     ZT(JL) = ZVART(JL,ITH) * PEXN(JL)
     ZVART(JL,IRV)=ZVART(JL,IRV) - PBU_INST(JL, IRVHENI_MR)
     ZVART(JL,IRI)=ZVART(JL,IRI) + PBU_INST(JL, IRVHENI_MR)
-  ENDDO
+  !$mnh_end_do()
 !$acc end kernels
   !
   !*       3.3     compute the spontaneous freezing source: RRHONG
@@ -171,13 +171,12 @@ ELSE
                   &ZVART(:,ITH), &
                   &PBU_INST(:, IRRHONG_MR))
 !$acc kernels
-!$acc loop independent
-  DO JL=1, KSIZE
+  !$mnh_do_concurrent( JL=1:KSIZE )
     ZVART(JL,ITH) = ZVART(JL,ITH) + PBU_INST(JL, IRRHONG_MR)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(RRHONG))
     ZT(JL) = ZVART(JL,ITH) * PEXN(JL)
     ZVART(JL,IRR) = ZVART(JL,IRR) - PBU_INST(JL, IRRHONG_MR)
     ZVART(JL,IRG) = ZVART(JL,IRG) + PBU_INST(JL, IRRHONG_MR)
-  ENDDO
+  !$mnh_end_do()
 !$acc end kernels
   !
   !*       7.1    cloud ice melting
@@ -188,13 +187,12 @@ ELSE
                   &ZVART(:,ITH), ZVART(:,IRI), &
                   &PBU_INST(:, IRIMLTC_MR))
 !$acc kernels
-!$acc loop independent
-  DO JL=1, KSIZE
+  !$mnh_do_concurrent( JL=1:KSIZE )
     ZVART(JL,ITH) = ZVART(JL,ITH) - PBU_INST(JL, IRIMLTC_MR)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(-RIMLTC))
     ZT(JL) = ZVART(JL,ITH) * PEXN(JL)
     ZVART(JL,IRC) = ZVART(JL,IRC) + PBU_INST(JL, IRIMLTC_MR)
     ZVART(JL,IRI) = ZVART(JL,IRI) - PBU_INST(JL, IRIMLTC_MR)
-  ENDDO
+  !$mnh_end_do()
 !$acc end kernels
   !
   !        5.1.6  riming-conversion of the large sized aggregates into graupel (old parametrisation)
@@ -225,11 +223,10 @@ ELSE
                          &ZT, ZVART(:,IRC), ZVART(:,IRS), &
                          &PBU_INST(:, IRSRIMCG_MR))
 !$acc kernels
-!$acc loop independent
-    DO JL=1, KSIZE
+    !$mnh_do_concurrent( JL=1:KSIZE )
       ZVART(JL,IRS) = ZVART(JL,IRS) - PBU_INST(JL, IRSRIMCG_MR)
       ZVART(JL,IRG) = ZVART(JL,IRG) + PBU_INST(JL, IRSRIMCG_MR)
-    ENDDO
+    !$mnh_end_do()
 !$acc end kernels
   ELSE
 !$acc kernels
@@ -238,8 +235,7 @@ ELSE
   ENDIF
  
 !$acc kernels
-!$acc loop independent
-  DO JL=1, KSIZE
+  !$mnh_do_concurrent( JL=1:KSIZE )
     PB(JL, ITH)=PB(JL, ITH) + PBU_INST(JL, IRVHENI_MR)*PLSFACT(JL)
     PB(JL, ITH)=PB(JL, ITH) + PBU_INST(JL, IRRHONG_MR)*(PLSFACT(JL)-PLVFACT(JL))
     PB(JL, ITH)=PB(JL, ITH) - PBU_INST(JL, IRIMLTC_MR)*(PLSFACT(JL)-PLVFACT(JL))
@@ -257,14 +253,13 @@ ELSE
 
     PB(JL, IRG)=PB(JL, IRG) + PBU_INST(JL, IRRHONG_MR)
     PB(JL, IRG)=PB(JL, IRG) + PBU_INST(JL, IRSRIMCG_MR)
-  ENDDO
+  !$mnh_end_do()
 !$acc end kernels
  !
   !* Derived fields
   !
 !$acc kernels
-!$acc loop independent
-  DO JL=1, KSIZE
+  !$mnh_do_concurrent( JL=1:KSIZE )
     ZZW = EXP(CST%XALPI-CST%XBETAI/ZT(JL)-CST%XGAMI*ALOG(ZT(JL)))
     PSSI(JL) = ZVART(JL,IRV)*( PPRES(JL)-ZZW ) / ( CST%XEPSILO * ZZW ) - 1.0
                                                       ! Supersaturation over ice
@@ -273,7 +268,7 @@ ELSE
     ZAI(JL) = (CST%XLSTT+(CST%XCPV-CST%XCI)*(ZT(JL)-CST%XTT))**2 / (ZKA(JL)*CST%XRV*ZT(JL)**2) &
                                  + ( CST%XRV*ZT(JL) ) / (ZDV(JL)*ZZW)
     ZCJ(JL) = ICEP%XSCFAC*PRHODREF(JL)**0.3 / SQRT(1.718E-5+0.0049E-5*(ZT(JL)-CST%XTT))
-  ENDDO
+  !$mnh_end_do()
 !$acc end kernels
 ENDIF ! ODSOFT
 !
@@ -290,8 +285,7 @@ IF (LLRFR) THEN
   !
   !We replace the full computation by a small update to ensure consistency
 !$acc kernels
-!$acc loop independent
-  DO JL=1, KSIZE
+  !$mnh_do_concurrent( JL=1:KSIZE )
     PRAINFR(JL)=MAX(PRAINFR(JL), ZRAINFR(JL))
     IF(KRR==7) THEN
       LLMASK=ZVART(JL,IRR) .GT. ICED%XRTMIN(3) .OR. ZVART(JL,IRS) .GT. ICED%XRTMIN(5) .OR. &
@@ -303,7 +297,7 @@ IF (LLRFR) THEN
     IF(LLMASK .AND. PRAINFR(JL)==0.) THEN
       PRAINFR(JL)=1.
     ENDIF
-  ENDDO
+  !$mnh_end_do()
 !$acc end kernels
 ELSE
 !$acc kernels
@@ -314,8 +308,7 @@ ENDIF
 !*  compute the slope parameters
 !
 !$acc kernels
-!$acc loop independent
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   !ZLBDAR will be used when we consider rain diluted over the grid box
   IF(ZVART(JL,IRR)>0.) THEN
     ZLBDAR(JL)=ICED%XLBR*(PRHODREF(JL)*MAX(ZVART(JL,IRR), ICED%XRTMIN(3)))**ICED%XLBEXR
@@ -359,7 +352,7 @@ DO JL=1, KSIZE
       ZLBDAH(JL)=0.
     ENDIF
   ENDIF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !
@@ -420,12 +413,11 @@ CALL ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, &
 !                  ------------------------------------------------------
 !
 !$acc kernels
-!$acc loop independent
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   ZRGSI(JL) = PBU_INST(JL, IRVDEPG) + PBU_INST(JL, IRSMLTG) + PBU_INST(JL, IRRACCSG) + &
             & PBU_INST(JL, IRSACCRG) + PBU_INST(JL, IRCRIMSG) + PBU_INST(JL, IRSRIMCG)
   ZRGSI_MR(JL) = PBU_INST(JL, IRRHONG_MR) + PBU_INST(JL, IRSRIMCG_MR)
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 CALL ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, KRR, &
                  &PRHODREF, PLVFACT, PLSFACT, PPRES, &
@@ -493,8 +485,7 @@ CALL ICE4_FAST_RI(ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, &
 !               -------------------------
 !
 !$acc kernels
-!$acc loop independent
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   PA(JL, ITH) = PA(JL, ITH) + PBU_INST(JL, IRVDEPG)*PLSFACT(JL)
   PA(JL, ITH) = PA(JL, ITH) + PBU_INST(JL, IRCHONI)*(PLSFACT(JL)-PLVFACT(JL))
   PA(JL, ITH) = PA(JL, ITH) + PBU_INST(JL, IRVDEPS)*PLSFACT(JL)
@@ -599,7 +590,7 @@ DO JL=1, KSIZE
                               & PBU_INST(JL, IRRDRYH)+PBU_INST(JL, IRGDRYH) - PBU_INST(JL, IRDRYHG)
     PA(JL, IRH) = PA(JL, IRH) - PBU_INST(JL, IRHMLTR)
   ENDIF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_TENDENCIES', 1, ZHOOK_HANDLE)

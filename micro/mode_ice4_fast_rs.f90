@@ -101,9 +101,12 @@ IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RS', 0, ZHOOK_HANDLE)
 !
 !*       5.0    maximum freezing rate
 !
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+#endif
+!
 !$acc kernels
-!$acc loop independent
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   IF(PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
       PRS_TEND(JL, IFREEZ1)=PRVT(JL)*PPRES(JL)/(CST%XEPSILO+PRVT(JL)) ! Vapor pressure
@@ -136,14 +139,13 @@ DO JL=1, KSIZE
     PRS_TEND(JL, IFREEZ2)=0.
     ZFREEZ_RATE(JL)=0.
   ENDIF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       5.1    cloud droplet riming of the aggregates
 !
 !$acc kernels
-!$acc loop independent
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   IF (PRCT(JL)>ICED%XRTMIN(2) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
 #ifdef REPRO48
     ZZW(JL) = PLBDAS(JL)
@@ -157,7 +159,7 @@ DO JL=1, KSIZE
     PRS_TEND(JL, IRCRIMSS)=0.
     PRS_TEND(JL, IRSRIMCG)=0.
   ENDIF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 ! Collection of cloud droplets by snow: this rate is used for riming (T<0) and for conversion/melting (T>0)
@@ -244,8 +246,7 @@ IF(.NOT. LDSOFT) THEN
 ENDIF
 !
 !$acc kernels
-!$acc loop independent
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   ! More restrictive RIM mask to be used for riming by negative temperature only
   IF(GRIM(JL) .AND. PT(JL)<CST%XTT) THEN
     PRCRIMSS(JL)=MIN(ZFREEZ_RATE(JL), PRS_TEND(JL, IRCRIMSS))
@@ -262,14 +263,13 @@ DO JL=1, KSIZE
     PRCRIMSG(JL)=0.
     PRSRIMCG(JL)=0.
   ENDIF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       5.2    rain accretion onto the aggregates
 !
 !$acc kernels
-!$acc loop independent
-DO JL = 1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   IF (PRRT(JL)>ICED%XRTMIN(3) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     GACC(JL) = .TRUE.
   ELSE
@@ -278,7 +278,7 @@ DO JL = 1, KSIZE
     PRS_TEND(JL, IRRACCSS)=0.
     PRS_TEND(JL, IRSACCRG)=0.
   END IF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 IF(.NOT. LDSOFT) THEN
 !$acc kernels
@@ -349,8 +349,7 @@ IF(.NOT. LDSOFT) THEN
 ENDIF
 !
 !$acc kernels
-!$acc loop independent
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   ! More restrictive ACC mask to be used for accretion by negative temperature only
   IF(GACC(JL) .AND. PT(JL)<CST%XTT) THEN
     PRRACCSS(JL)=MIN(ZFREEZ_RATE(JL), PRS_TEND(JL, IRRACCSS))
@@ -367,15 +366,14 @@ DO JL=1, KSIZE
     PRRACCSG(JL)=0.
     PRSACCRG(JL)=0.
   ENDIF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !
 !*       5.3    Conversion-Melting of the aggregates
 !
 !$acc kernels
-!$acc loop independent
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   IF(PRST(JL)>ICED%XRTMIN(5) .AND. PT(JL)>CST%XTT .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
       PRSMLTG(JL)=PRVT(JL)*PPRES(JL)/(CST%XEPSILO+PRVT(JL)) ! Vapor pressure
@@ -419,7 +417,7 @@ DO JL=1, KSIZE
     PRSMLTG(JL)=0.
     PRCMLTSR(JL)=0.
   ENDIF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RS', 1, ZHOOK_HANDLE)
 !

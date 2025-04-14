@@ -62,12 +62,15 @@ INTEGER :: JL
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RI',0,ZHOOK_HANDLE)
 !
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+#endif
 !-------------------------------------------------------------------------------
 !
 !*       7.2    Bergeron-Findeisen effect: RCBERI
 !
 !$acc kernels
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   IF(PSSI(JL)>0. .AND. PRCT(JL)>ICED%XRTMIN(2) .AND. PRIT(JL)>ICED%XRTMIN(4) &
      .AND. PCIT(JL)>1.E-20 .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -78,7 +81,7 @@ DO JL=1, KSIZE
   ELSE
     PRCBERI(JL) = 0.
   ENDIF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RI', 1, ZHOOK_HANDLE)
