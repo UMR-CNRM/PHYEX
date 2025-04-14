@@ -113,7 +113,7 @@ INTEGER                            :: JJU
 !
 ! IN variables
 !
-!$acc data present( OMICRO, PRHODREF, PRVT, PRCT, PRRT, PRST, PRHODJ, &
+!$acc data present_crm( OMICRO, PRHODREF, PRVT, PRCT, PRRT, PRST, PRHODJ, &
 !$acc &             PPRES, PZT, PLBDAR, PLBDAS, PLSFACT, PLVFACT,     &
 !$acc &             PCJ, PKA, PDV,                                    &
 !
