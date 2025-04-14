@@ -81,8 +81,12 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: JL
 !-------------------------------------------------------------------------------
 !
-IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 0, ZHOOK_HANDLE)!
-
+IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 0, ZHOOK_HANDLE)
+!
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+#endif
+!
 !Cloud water split between high and low content part is done according to autoconversion option
 !$acc kernels
 !$mnh_expand_where(JL=1:KSIZE)

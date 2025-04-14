@@ -82,12 +82,14 @@ IF (LHOOK) CALL DR_HOOK('ICE4_SLOW', 0, ZHOOK_HANDLE)
 !
 !-------------------------------------------------------------------------------
 !
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+#endif
 !
 !*       3.2     compute the homogeneous nucleation source: RCHONI
 !
 !$acc kernels
-!$acc loop independent
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   IF(PT(JL)<CST%XTT-35.0 .AND. PRCT(JL)>ICED%XRTMIN(2) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
       PRCHONI(JL) = MIN(1000.,ICEP%XHON*PRHODREF(JL)*PRCT(JL)       &
@@ -96,7 +98,7 @@ DO JL=1, KSIZE
   ELSE
     PRCHONI(JL) = 0.
   ENDIF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       3.4    compute the deposition, aggregation and autoconversion sources
@@ -116,8 +118,7 @@ ENDDO
 !*       3.4.3  compute the deposition on r_s: RVDEPS
 !
 !$acc kernels
-!$acc loop independent
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   IF(PRVT(JL)>ICED%XRTMIN(1) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
 #ifdef REPRO48
@@ -133,14 +134,13 @@ DO JL=1, KSIZE
   ELSE
     PRVDEPS(JL) = 0.
   ENDIF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       3.4.4  compute the aggregation on r_s: RIAGGS
 !
 !$acc kernels
-!$acc loop independent
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   IF(PRIT(JL)>ICED%XRTMIN(4) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
 #ifdef REPRO48
@@ -161,14 +161,13 @@ DO JL=1, KSIZE
   ELSE
     PRIAGGS(JL) = 0.
   ENDIF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       3.4.5  compute the autoconversion of r_i for r_s production: RIAUTS
 !
 !$acc kernels
-!$acc loop independent
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   IF(PHLI_HRI(JL)>ICED%XRTMIN(4) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
       !ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(0.06*(PT(:)-CST%XTT)-3.5))
@@ -179,15 +178,14 @@ DO JL=1, KSIZE
   ELSE
     PRIAUTS(JL) = 0.
   ENDIF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       3.4.6  compute the deposition on r_g: RVDEPG
 !
 !
 !$acc kernels
-!$acc loop independent
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JL=1:KSIZE )
   IF(PRVT(JL)>ICED%XRTMIN(1) .AND. PRGT(JL)>ICED%XRTMIN(6) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
       PRVDEPG(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
@@ -196,7 +194,7 @@ DO JL=1, KSIZE
   ELSE
     PRVDEPG(JL) = 0.
   ENDIF
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SLOW', 1, ZHOOK_HANDLE)
