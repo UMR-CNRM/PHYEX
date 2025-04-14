@@ -60,8 +60,9 @@ USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & IBUNUM_MR,    & ! Number of tendency terms expressed as mixing ratio changes
       & IBUNUM_EXTRA, & ! Number of extra tendency terms
       & IRREVAV,      & ! Index for the evaporation tendency
-      & IBUEXTRAIND     ! Index indirection
-
+      & IBUEXTRAIND
+! Index indirection
+!
 USE MODE_ICE4_TENDENCIES, ONLY: ICE4_TENDENCIES
 !
 IMPLICIT NONE

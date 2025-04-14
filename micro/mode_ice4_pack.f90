@@ -60,8 +60,9 @@ USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & IRG,     & ! Graupel
       & IRH,     & ! Hail
       & IBUNUM,       & ! Number of tendency terms
-      & IBUNUM_EXTRA    ! Number of extra tendency terms
-
+      & IBUNUM_EXTRA
+! Number of extra tendency terms
+!
 USE MODE_MSG,            ONLY: PRINT_MSG, NVERB_FATAL
 
 USE MODE_ICE4_STEPPING, ONLY: ICE4_STEPPING

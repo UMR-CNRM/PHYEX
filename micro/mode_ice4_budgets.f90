@@ -24,7 +24,8 @@ USE MODD_BUDGET,     ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, N
                            NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
 USE MODD_PARAM_ICE_n,  ONLY: PARAM_ICE_t
 !
-USE MODD_FIELDS_ADDRESS ! index number for prognostic (theta and mixing ratios) and budgets
+USE MODD_FIELDS_ADDRESS
+! index number for prognostic (theta and mixing ratios) and budgets
 !
 USE MODE_BUDGET_PHY,     ONLY: BUDGET_STORE_ADD_PHY
 !
