@@ -100,7 +100,7 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
 !
 ! IN variables
 !
-!$acc data present( OMICRO, PRHODREF, PRVT, PRCT, PRIT, PRST, PRGT, PRHT, &
+!$acc data present_crm( OMICRO, PRHODREF, PRVT, PRCT, PRIT, PRST, PRGT, PRHT, &
 !$acc &             PRHODJ, PPRES, PZT, PLBDAS, PLBDAG, PLSFACT, PLVFACT, &
 !$acc &             PCJ, PKA, PDV,                                        &
 !

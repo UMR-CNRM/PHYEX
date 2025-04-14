@@ -113,7 +113,7 @@ LOGICAL :: GCSUBG_RR_EVAP ! temporary variable for OpenCC character limitation (
 !
 ! IN variables
 !
-!$acc data present( OMICRO, K1, K2, K3, PRHODREF, PRVT, PRCT, PRRT, &
+!$acc data present_crm( OMICRO, K1, K2, K3, PRHODREF, PRVT, PRCT, PRRT, &
 !$acc &             PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC,         &
 !$acc &             PRHODJ, PPRES, PZT, PLBDAR, PLBDAR_RF, PLVFACT, &
 !$acc &             PCJ, PKA, PDV, PRF, PCF, PTHT,PTHLT,            &
