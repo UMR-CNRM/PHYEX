@@ -363,10 +363,13 @@ DO JK = IKTB, IKTE
 END DO
 !$acc end kernels
 !
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+!$mnh_undef(OPENACC)
+#endif
 !$acc kernels
-!$acc loop independent collapse(2)
-DO JK=IKTB,IKTE
-  DO JIJ = IIJB, IIJE
+!$acc loop independent gang vector
+!$mnh_do_concurrent(  JK=IKTB:IKTE , JIJ=IIJB:IIJE )      
   IF (OCND2) THEN
      !  ZDZ(JIJ,JK) = PZZ(JIJ,JKP) - PZZ(JIJ,JKP-IKL)
      !CALL ICECLOUD(D,PPABS(:,JK),PZZ(:,JK),ZDZ(:), &
@@ -598,8 +601,7 @@ DO JK=IKTB,IKTE
 
       PSIGRC(JIJ,JK) = PSIGRC(JIJ,JK)* MIN( 3. , MAX(1.,1.-ZQ1(JIJ,JK)) )
   END IF
-END DO
-END DO
+!$mnh_end_do()
 !$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('CONDENSATION',1,ZHOOK_HANDLE)

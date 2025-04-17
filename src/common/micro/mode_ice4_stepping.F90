@@ -159,6 +159,10 @@ LOGICAL :: LL_ANY_ITER
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_STEPPING', 0, ZHOOK_HANDLE)
 !
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+#endif
+!
 !*       1.     GENERALITIES
 !               ------------
 !
@@ -327,8 +331,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     !We need to adjust tendencies when temperature reaches 0
     IF(PARAMI%LFEEDBACKT) THEN
 !$acc kernels
-!$acc loop independent
-      DO JL=1, KMICRO
+      !$mnh_do_concurrent( JL=1:KMICRO )
         !Is ZB(:, ITH) enough to change temperature sign?
         ZX=CST%XTT/PEXN(JL)
         IF ((PVART(JL, ITH) - ZX) * (PVART(JL, ITH) + ZB(JL, ITH) - ZX) < 0.) THEN
@@ -341,7 +344,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
             ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD)
           ENDIF
         ENDIF
-      ENDDO
+      !$mnh_end_do()  
 !$acc end kernels
     ENDIF
 
