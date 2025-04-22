@@ -368,7 +368,7 @@ END DO
 !$mnh_undef(OPENACC)
 #endif
 !$acc kernels
-!$acc loop independent gang vector
+!$acc_cr loop independent gang vector
 !$mnh_do_concurrent(  JK=IKTB:IKTE , JIJ=IIJB:IIJE )      
   IF (OCND2) THEN
      !  ZDZ(JIJ,JK) = PZZ(JIJ,JKP) - PZZ(JIJ,JKP-IKL)
