@@ -444,7 +444,7 @@ INTEGER :: IKTB, IKTE, IKB, IKL, IIJE, IIJB
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 ! local variables for cloud electricity
-REAL :: ZEXT   ! e_x coefficient of the q(D) relation
+REAL :: ZEXTT   ! e_x coefficient of the q(D) relation
 REAL :: ZNCI   ! N_ci for ice crystal sedimentation
 !REAL,    DIMENSION(D%NIJT,0:D%NKT+1) :: ZWSEDQ ! Sedimentation fluxes for electric charges
 !REAL,    DIMENSION(D%NIJT,0:D%NKT+1) :: ZBEARDCOEFF ! effect of electric forces on sedimentation
@@ -545,9 +545,9 @@ DO WHILE (GANYREMAINT)
 !++cb++ nouveau : traitement de la sedimentation des charges portees par les gouttelettes
 ! A TESTER
           IF (OELEC) THEN
-            ZEXT = PQXT(JIJ,JK) / ELECP%XFQUPDC * PRHODREF(JIJ,JK)
-            IF (ABS(ZEXT) .GT. ELECP%XECMIN) THEN
-              ZWSEDQ(JIJ,JK) = ELECP%XFQSEDC * ZEXT * PCONC3D(JIJ,JK) * &
+            ZEXTT = PQXT(JIJ,JK) / ELECP%XFQUPDC * PRHODREF(JIJ,JK)
+            IF (ABS(ZEXTT) .GT. ELECP%XECMIN) THEN
+              ZWSEDQ(JIJ,JK) = ELECP%XFQSEDC * ZEXTT * PCONC3D(JIJ,JK) * &
                                PRHODREF(JIJ,JK)**(-ICED%XCEXVT) *       &
                                ZZCC * ZZWLBDC**(-ELECP%XEXQSEDC)
               IF (OSEDIM_BEARD) ZLBDA3(JIJ,JK) = ZZWLBDC
@@ -590,11 +590,11 @@ DO WHILE (GANYREMAINT)
             ZNCI = ELECP%XFCI * PRHODREF(JIJ,JK) * PRXT(JIJ,JK) * &
                           MAX(0.05E6,-0.15319E6-0.021454E6*ALOG(PRHODREF(JIJ,JK)*PRXT(JIJ,JK)))**3.
             ! compute e_i of the q - D relationship
-            ZEXT = PQXT(JIJ,JK) / ELECP%XFQUPDI *                         &
+            ZEXTT = PQXT(JIJ,JK) / ELECP%XFQUPDI *                         &
                   (PRHODREF(JIJ,JK) * PRXT(JIJ,JK))**(-ELECP%XEXFQUPDI) * &
                    ZNCI**(ELECP%XEXFQUPDI-1.)
-            IF (ABS(ZEXT) .GT. ELECP%XEIMIN) THEN
-              ZWSEDQ(JIJ,JK) = ELECP%XFQSEDI * ZEXT * PRXT(JIJ,JK) * &
+            IF (ABS(ZEXTT) .GT. ELECP%XEIMIN) THEN
+              ZWSEDQ(JIJ,JK) = ELECP%XFQSEDI * ZEXTT * PRXT(JIJ,JK) * &
                                PRHODREF(JIJ,JK)**(1.-ICED%XCEXVT) *  &
                                MAX( 0.05E6,-0.15319E6-0.021454E6*    & !    McF&H
                                     ALOG(PRHODREF(JIJ,JK)*PRXT(JIJ,JK)) )**(3.*(1-ELECP%XEXQSEDI))
@@ -656,10 +656,10 @@ DO WHILE (GANYREMAINT)
                & ZLBDA ** (ICED%XBS+ICEP%XEXSEDS)
           IF (OELEC .AND. ZLBDA > 0.) THEN
             ! compute the e_x coefficient of the q - D relationship
-            ZEXT = PRHODREF(JIJ,JK) * PQXT(JIJ,JK) / (ELECP%XFQUPDS * ZLBDA**(ICED%XCXS-ELECD%XFS))
-            ZEXT = SIGN( MIN(ABS(ZEXT), ELECP%XESMAX), ZEXT)
-            IF (ABS(ZEXT) > ELECP%XESMIN) THEN
-              ZWSEDQ(JIJ,JK) = ELECP%XFQSEDS * ZEXT * PRXT(JIJ,JK)**ELECP%XEXQSEDS &
+            ZEXTT = PRHODREF(JIJ,JK) * PQXT(JIJ,JK) / (ELECP%XFQUPDS * ZLBDA**(ICED%XCXS-ELECD%XFS))
+            ZEXTT = SIGN( MIN(ABS(ZEXTT), ELECP%XESMAX), ZEXTT)
+            IF (ABS(ZEXTT) > ELECP%XESMIN) THEN
+              ZWSEDQ(JIJ,JK) = ELECP%XFQSEDS * ZEXTT * PRXT(JIJ,JK)**ELECP%XEXQSEDS &
                                        * PRHODREF(JIJ,JK)**(ELECP%XEXQSEDS-ICED%XCEXVT)
               IF (OSEDIM_BEARD) ZLBDA3(JIJ,JK) = ZLBDA
             ENDIF
@@ -751,11 +751,11 @@ DO WHILE (GANYREMAINT)
             ZLBDA = ZLBX * (PRHODREF(JIJ,JK) * MAX(PRXT(JIJ,JK), ICED%XRTMIN(KSPE)))**ZLBEXX
             IF (ZLBDA > 0.) THEN
               ! compute the e_x coefficient of the q - D relationship
-              ZEXT = PRHODREF(JIJ,JK) * PQXT(JIJ,JK) / (ZFQUPDX * ZLBDA**(ZCXX-ZFX))
-              ZEXT = SIGN( MIN(ABS(ZEXT), ZEXMAX), ZEXT)
+              ZEXTT = PRHODREF(JIJ,JK) * PQXT(JIJ,JK) / (ZFQUPDX * ZLBDA**(ZCXX-ZFX))
+              ZEXTT = SIGN( MIN(ABS(ZEXTT), ZEXMAX), ZEXTT)
             END IF
-            IF (ABS(ZEXT) > ZEXMIN) THEN
-              ZWSEDQ(JIJ,JK) = ZFQSED * ZEXT * PRXT(JIJ,JK)**ZEXQSED &
+            IF (ABS(ZEXTT) > ZEXMIN) THEN
+              ZWSEDQ(JIJ,JK) = ZFQSED * ZEXTT * PRXT(JIJ,JK)**ZEXQSED &
                                       * PRHODREF(JIJ,JK)**(ZEXQSED-ICED%XCEXVT)
               IF (OSEDIM_BEARD) ZLBDA3(JIJ,JK) = ZLBDA
             END IF
