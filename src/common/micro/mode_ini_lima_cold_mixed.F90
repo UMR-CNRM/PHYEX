@@ -1010,6 +1010,7 @@ XCOLEXII = 0.025   !  Temperature factor of the I+I collection efficiency
 !
 XTIMAUTI = 1.E-3  !  Time constant at T=T_t
 XTEXAUTI = 0.025   !  Temperature factor of the I+I collection efficiency
+IF (LICE3) XTEXAUTI = 0.015
 IF(LCRIAUTI) THEN
   !second point to determine 10**(aT+b) law
   ZTCRI0=-40.0
