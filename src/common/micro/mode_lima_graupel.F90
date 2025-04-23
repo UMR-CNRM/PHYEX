@@ -144,7 +144,7 @@ REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PA_CH
 LOGICAL, DIMENSION(SIZE(PRCT))  :: GDRY
 !
 REAL,    DIMENSION(SIZE(PRCT))  :: Z1, Z2, Z3, Z4
-REAL,    DIMENSION(SIZE(PRCT))  :: ZZX, ZZW, ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6, ZTMP
+REAL,    DIMENSION(SIZE(PRCT))  :: ZZX, ZZW, ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6
 REAL,    DIMENSION(SIZE(PRCT))  :: ZZW3N, ZZW4N, ZZW6N 
 REAL,    DIMENSION(SIZE(PRCT))  :: ZRDRYG, ZRWETG, ZRLWETG
 REAL,    DIMENSION(SIZE(PRCT))  :: ZSIGMOIDE
@@ -363,11 +363,6 @@ ZRDRYG(:) = ZZW1(:) + ZZW2(:) + ZZW3(:) + ZZW4(:)
 !            ------------------------------
 !
 ZZW(:) = 0.0
-IF (LIMAP%LICE3) THEN
-   ZTMP(:)=CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-PT(:))
-ELSE
-   ZTMP(:)=CST%XCI*(CST%XTT-PT(:))
-END IF
 !
 WHERE( PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:) )
    ZZW5(:) = ZZW2(:) / (LIMAM%XCOLIG*EXP(LIMAM%XCOLEXIG*(PT(:)-CST%XTT)) ) ! RIWETG
@@ -383,7 +378,7 @@ WHERE( PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:) 
    ZRLWETG(:) = MAX( 0.0,                                                        &
                    ( ZZW(:) * PCGT(:) * ( LIMAM%X0DEPG*       PLBDG(:)**LIMAM%XEX0DEPG +     &
                                           LIMAM%X1DEPG*PCJ(:)*PLBDG(:)**LIMAM%XEX1DEPG ) +   &
-                   ( ZZW5(:)+ZZW6(:) ) * ZTMP(:)   )   &
+                   ( ZZW5(:)+ZZW6(:) ) * CST%XCI*(CST%XTT-PT(:))  )   &
                    / (CST%XLMTT-CST%XCL*(CST%XTT-PT(:)))                                     )
   !We must agregate, at least, the cold species
    ZRWETG(:)= ZRLWETG(:) + ZZW5(:) + ZZW6(:)
