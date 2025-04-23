@@ -200,7 +200,6 @@ ZZW4(:) = 0. ! RRDRYG
 ZZW4N(:) = 0.! NRDRYG
 ZZW5(:) = 0. ! RIWETG
 ZZW6(:) = 0. ! RSWETG
-ZTMP(:) = 1. !
 !
 ZRDRYG(:) = 0.
 ZRWETG(:) = 0.
