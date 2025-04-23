@@ -153,6 +153,34 @@ CALL PARAM_LIMA_MIXED_ASSOCIATE()
 !
 !*       1.2    Ice crystal characteristics
 !
+IF (LICE3) THEN
+   SELECT CASE (CPRISTINE_ICE_LIMA)
+   CASE('PLAT')
+      XAI = 0.82      ! Plates
+      XBI = 2.5       ! Plates
+      XC_I = 800.     ! Plates
+      XDI = 1.0       ! Plates
+      XC1I = 1./XPI   ! Plates
+      XGAMMAI = 0.096
+      XDELTAI = 1.83    
+   CASE('COLU')
+      XAI = 2.14E-3   ! Columns
+      XBI = 1.7       ! Columns
+      XC_I = 2.1E5    ! Columns
+      XDI = 1.585     ! Columns
+      XC1I = 0.8      ! Columns
+      XGAMMAI = 0.659
+      XDELTAI = 2.0
+   CASE('BURO')
+      XAI = 44.0      ! Bullet rosettes
+      XBI = 3.0       ! Bullet rosettes
+      XC_I = 4.3E5    ! Bullet rosettes
+      XDI = 1.663     ! Bullet rosettes
+      XC1I = 0.5      ! Bullet rosettes
+      XGAMMAI = 0.062
+      XDELTAI = 1.81    
+   END SELECT
+ELSE
 SELECT CASE (CPRISTINE_ICE_LIMA)
   CASE('PLAT')
     XAI = 0.82      ! Plates
@@ -233,6 +261,7 @@ SELECT CASE (CPRISTINE_ICE_LIMA)
     XDELTAI = 1.8    
     XC1I = 0.5      ! Hollow_Bullet rosettes_from Yang et al (2013)    
 END SELECT
+END IF
 !
 IF (LCRYSTAL_SHAPE) THEN
   CALL PARAM_LIMA_COLD_ALLOCATE_1D('XAI_SHAPE',  NNB_CRYSTAL_SHAPE)
