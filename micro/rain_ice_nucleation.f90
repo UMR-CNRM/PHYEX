@@ -310,6 +310,7 @@ IF( INEGT >= 1 ) THEN
     !$mnh_do_concurrent ( JL=1:INEGT )
       ZW(I1(JL), I2(JL), I3(JL)) = ZZW( JL )
     !$mnh_end_do()
+  !$mnh_expand(JI=1:JIU,JJ=1:JJU,JK=1:JKU)
     ZW(:,:,:) = MAX( ZW(:,:,:) ,0.0 ) *XMNU0/(PRHODREF(:,:,:)*PTSTEP)
     PRIS(:,:,:) = PRIS(:,:,:) + ZW(:,:,:)
     PRVS(:,:,:) = PRVS(:,:,:) - ZW(:,:,:)
@@ -323,6 +324,7 @@ IF( INEGT >= 1 ) THEN
                    + XCI*(PRIT(:,:,:)+PRST(:,:,:)+PRGT(:,:,:)))*PEXNREF(:,:,:) )
     END IF
                                  ! f(L_s*(RVHENI))
+  !$mnh_end_expand(JI=1:JIU,JJ=1:JJU,JK=1:JKU)
     !$mnh_do_concurrent ( JL=1:INEGT )
        ZZW(JL) = MAX( ZZW(JL)+ZCIT(JL),ZCIT(JL) )
     !$mnh_end_do()
