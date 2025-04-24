@@ -321,6 +321,11 @@ if ( lbudget_rh )              call Budget_store_init( tbudgets(NBUDGET_RH), 'SE
 !
 !        O. Initialization of for sedimentation
 !
+IF ( OSEDIC ) THEN
+  ZTMP1 = 0.5 * GAMMA( XNUC  + 1.0 / XALPHAC  ) / ( GAMMA( XNUC  ) )
+  ZTMP2 = 0.5 * GAMMA( XNUC2 + 1.0 / XALPHAC2 ) / ( GAMMA( XNUC2 ) )
+END IF
+!
 !$acc kernels present_cr(ZOMPSEA,ZTMP1_2D,zconc_tmp,ztmp3_2d,ztmp2_2d,ztmp4_2d,ZLBC,ZFSEDC) &
 !$acc & present_cr(zconc3d,zray,zprrs,zprss)
 ZINVTSTEP=1./PTSTEP
@@ -338,9 +343,6 @@ IF ( GPRESENT_PFPR ) PFPR(:,:,:,:) = 0.
 !*       1. Parameters for cloud sedimentation
 !
 IF ( OSEDIC ) THEN
-  ZTMP1 = 0.5 * GAMMA( XNUC  + 1.0 / XALPHAC  ) / ( GAMMA( XNUC  ) )
-  ZTMP2 = 0.5 * GAMMA( XNUC2 + 1.0 / XALPHAC2 ) / ( GAMMA( XNUC2 ) )
-
   IF ( GPRESENT_PSEA ) THEN
      !$mnh_do_concurrent( JI=1:IIU , JJ=1:IJU )
         ZOMPSEA  (JI,JJ) = 1.-PSEA(JI,JJ)
@@ -357,11 +359,13 @@ IF ( OSEDIC ) THEN
           ZRAY   (JI,JJ,JK) = ZTMP4_2D(JI,JJ)
       !$mnh_end_do()
   ELSE
+    ZTMP3 = MAX(1.,ZTMP1)
+    !$mnh_expand_array( JI=1:IIU ,  JJ=1:IJU , JK=1:IKU )
     ZLBC   (:,:,:) = XLBC(1)
     ZFSEDC (:,:,:) = XFSEDC(1)
     ZCONC3D(:,:,:) = XCONC_LAND
-    ZTMP3 = MAX(1.,ZTMP1)
     ZRAY   (:,:,:) = ZTMP3
+    !$mnh_end_expand_array()
   END IF
 END IF
 !
