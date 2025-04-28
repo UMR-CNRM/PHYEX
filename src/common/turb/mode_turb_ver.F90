@@ -18,6 +18,7 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
                       PRHODJ,PTHVREF,PSFUM,PSFVM,                   &
                       PSFTHM,PSFRM,PSFSVM,PSFTHP,PSFRP,PSFSVP,      &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
+                      PSEA_UCU,PSEA_VCU,                            &
                       PUM,PVM,PWM,PUSLOPEM,PVSLOPEM,PTHLM,PRM,PSVM, &
                       PTKEM,PLM,PLENGTHM,PLENGTHH,PLEPS,MFMOIST,    &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PFRAC_ICE,    &
@@ -297,6 +298,8 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes link
        ! at time t - dt
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSEA_UCU     ! ocean current along X
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSEA_VCU     ! ocean current along Y
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PUM,PVM,PWM,PTHLM 
   ! Wind and potential temperature at t-Delta t
@@ -570,6 +573,7 @@ CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,TLES,KSV,O2D,OFLAT,      &
                       PEXPL,PTSTEP,TPFILE,                          &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
+                      PSEA_UCU,PSEA_VCU,                            &
                       PRHODJ,PSFUM,PSFVM,                           &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
                       PTHLM,PRM,PSVM,PUM,PVM,PWM,PUSLOPEM,PVSLOPEM, &

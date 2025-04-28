@@ -10,6 +10,7 @@ SUBROUTINE TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,TLES,KSV,O2D,OFLAT, &
                       PEXPL,PTSTEP,TPFILE,                          &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
+                      PSEA_UCU,PSEA_VCU,                            &
                       PRHODJ,                                       &
                       PSFUM,PSFVM,                                  &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
@@ -276,6 +277,9 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes link
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
 !
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSEA_UCU      ! ocean current along X
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSEA_VCU      ! ocean current along Y
+!
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PUM,PVM,PWM, PTHLM
   ! Wind at t-Delta t
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM
@@ -484,7 +488,7 @@ ENDIF
 !
 ! Obtention of the split U at t+ deltat
 !
-CALL TRIDIAG_WIND(D,PUM,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,   &
+CALL TRIDIAG_WIND(D,PUM,PSEA_UCU,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,   &
                   MXM(PRHODJ),ZSOURCE,ZRES)
 !
 !  Compute the equivalent tendency for the U wind component
@@ -744,7 +748,7 @@ ELSE ! Atmos case
 ENDIF ! End of Ocean or Atmospher Cases
 ! 
 !  Obtention of the split V at t+ deltat 
-CALL TRIDIAG_WIND(D,PVM,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,  &
+CALL TRIDIAG_WIND(D,PVM,PSEA_VCU,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,  &
                   MYM(PRHODJ),ZSOURCE,ZRES)
 !
 ! Compute the equivalent tendency for the V wind component
