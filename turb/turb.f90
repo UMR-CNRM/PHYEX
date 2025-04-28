@@ -16,6 +16,7 @@
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
               & PRHODJ,PTHVREF,PHGRAD,PZS,                            &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
+              & PSEA_UCU,PSEA_VCU,                                    &
               & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
               & PBL_DEPTH,PSBL_DEPTH,                                 &
@@ -349,6 +350,8 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of (u,v) parallel to the orography
 REAL, DIMENSION(D%NIJT,KSV), INTENT(IN)      ::  PSFSV
 ! normal surface fluxes of Scalar var.
+!
+REAL, DIMENSION(D%NIJT), INTENT(IN)      ::  PSEA_UCU,PSEA_VCU !Sea surface currents
 !
 !    prognostic variables at t- deltat
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABST      ! Pressure at time t
@@ -975,6 +978,9 @@ IF (GOCEAN) THEN
 !$acc end kernels
 END IF
 !
+! relative wind over ocean
+ZUSLOPE=ZUSLOPE-PSEA_UCU
+ZVSLOPE=ZVSLOPE-PSEA_VCU
 !
 !*      4.2 compute the proportionality coefficient between wind and stress
 !
@@ -1112,6 +1118,7 @@ CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
           PRHODJ,PTHVREF,PSFU,PSFV,                      &
           PSFTH,PSFRV,ZWORKSFSV,PSFTH,PSFRV,ZWORKSFSV,   &
           ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU33M,               &
+          PSEA_UCU,PSEA_VCU,                             &
           PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,ZWORKT,  &
           PTKET,ZLM,PLENGTHM,PLENGTHH,ZLEPS,MFMOIST,     &
           ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,     &

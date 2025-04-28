@@ -18,6 +18,7 @@ INTERFACE
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
               & PRHODJ,PTHVREF,PHGRAD,PZS,                            &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
+              & PSEA_UCU,PSEA_VCU,                                    &
               & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
               & PBL_DEPTH,PSBL_DEPTH,                                 &
@@ -100,6 +101,8 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of (u,v) parallel to the orography
 REAL, DIMENSION(D%NIJT,KSV), INTENT(IN)      ::  PSFSV
 ! normal surface fluxes of Scalar var.
+!
+REAL, DIMENSION(D%NIJT), INTENT(IN)      ::  PSEA_UCU,PSEA_VCU ! Sea surface currents
 !
 !    prognostic variables at t- deltat
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABST      ! Pressure at time t

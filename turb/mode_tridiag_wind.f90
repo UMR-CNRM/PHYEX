@@ -5,7 +5,7 @@
 MODULE MODE_TRIDIAG_WIND
 IMPLICIT NONE
 CONTAINS       
-SUBROUTINE TRIDIAG_WIND(D,PVARM,PA,PCOEFS,PTSTEP,PEXPL,PIMPL, &
+SUBROUTINE TRIDIAG_WIND(D,PVARM,PSEA_CU,PA,PCOEFS,PTSTEP,PEXPL,PIMPL, &
                                              PRHODJA,PSOURCE,PVARP )
        USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !      #############################################################
@@ -125,7 +125,8 @@ IMPLICIT NONE
 !*       0.1 declarations of arguments
 !
 TYPE(DIMPHYEX_t),     INTENT(IN)   :: D
-REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN)  :: PVARM       ! variable at t-1  
+REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN)  :: PVARM       ! variable at t-1
+REAL, DIMENSION(D%NIJT),    INTENT(IN)  :: PSEA_CU    ! surface oceanic current
 REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN)  :: PA          ! upper diag. elements
 REAL, DIMENSION(D%NIJT),      INTENT(IN)  :: PCOEFS      ! implicit coeff for the
                                                       ! surface flux
@@ -172,7 +173,8 @@ IIJE=D%NIJE
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZY(:,IKB) = PVARM(:,IKB)  + PTSTEP*PSOURCE(:,IKB) -   &
   PEXPL / PRHODJA(:,IKB) * PA(:,IKB+IKL) * &
-  (PVARM(:,IKB+IKL) - PVARM(:,IKB))
+  (PVARM(:,IKB+IKL) - PVARM(:,IKB)) &
+ - PIMPL*PCOEFS(:)*PTSTEP*PSEA_CU(:)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
 
