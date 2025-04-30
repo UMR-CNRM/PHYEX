@@ -979,8 +979,11 @@ IF (GOCEAN) THEN
 END IF
 !
 ! relative wind over ocean
-ZUSLOPE=ZUSLOPE-PSEA_UCU
-ZVSLOPE=ZVSLOPE-PSEA_VCU
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+ZUSLOPE(:)=ZUSLOPE(:)-PSEA_UCU(:)
+ZVSLOPE(:)=ZVSLOPE(:)-PSEA_VCU(:)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
+
 !
 !*      4.2 compute the proportionality coefficient between wind and stress
 !
