@@ -6,16 +6,13 @@
 MODULE MODE_ICE4_PACK
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
-                     KPROMA, KSIZE,                                        &
-                     PTSTEP, KRR, OSAVE_MICRO, ODMICRO, OELEC, PEXN,       &
-                     PRHODREF, PPABST, PCIT, PCLDFR,      &
-                     PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI,               &
-                     PTHS, PRS, &
-                     PEVAP3D,                                              &
-                     PRAINFR, PSIGS,                                       &
-                     PWTH, PWR, &
-                     PBUDGETS, PLATHAM_IAGGS)
+SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF, &
+                    &KPROMA, KSIZE, PTSTEP, &
+                    &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
+                    &PEXN, PRHODREF, PPABST, PCIT, PCLDFR, &
+                    &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
+                    &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
+                    &PBUDGETS, PLATHAM_IAGGS)
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -94,7 +91,7 @@ REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 LOGICAL,                  INTENT(IN)    :: OSAVE_MICRO  ! If true, microphysical tendencies are saved
 LOGICAL,                  INTENT(IN)    :: OELEC        ! if true, cloud electricity is activated
-LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: ODMICRO ! mask to limit computation
+LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: LDMICRO ! mask to limit computation
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXN    ! Exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF! Reference density
@@ -110,11 +107,11 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLI_HRI
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHS    ! Theta source
 REAL, DIMENSION(D%NIJT,D%NKT,KRR),   INTENT(INOUT) :: PRS    ! m.r. source
 !
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PEVAP3D! Rain evap profile
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRREVAV! Rain evap profile
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRAINFR !Precipitation fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PWTH
-REAL, DIMENSION(D%NIJT,D%NKT,7), INTENT(INOUT) :: PWR
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHT
+REAL, DIMENSION(D%NIJT,D%NKT,7), INTENT(INOUT) :: PRT
 REAL, DIMENSION(MERGE(D%NIJT,0,OSAVE_MICRO .OR. BUCONF%LBU_ENABLE), &
                 MERGE(D%NKT,0,OSAVE_MICRO .OR. BUCONF%LBU_ENABLE), &
                 MERGE(IBUNUM-IBUNUM_EXTRA,0,OSAVE_MICRO .OR. BUCONF%LBU_ENABLE)), &
@@ -138,26 +135,25 @@ INTEGER :: JL, JV
 REAL, DIMENSION(KPROMA) :: &
                         & ZCIT,     & ! Pristine ice conc. at t
                         & ZRHODREF, & ! RHO Dry REFerence
-                        & ZPRES,    & ! Pressure
+                        & ZPABST,   & ! Pressure
                         & ZEXN,     & ! EXNer Pressure
-                        & ZCF,      & ! Cloud fraction
+                        & ZCLDFR,   & ! Cloud fraction
                         & ZHLC_HCF, & ! HLCLOUDS : fraction of High Cloud Fraction in grid
                         & ZHLC_HRC, & ! HLCLOUDS : LWC that is High LWC in grid
                         & ZHLI_HCF, &
                         & ZHLI_HRI, &
                         & ZRAINFR,  &
                         & ZRREVAV,  &
-                        & ZSIGMA_RC ! Standard deviation of rc at time t
+                        & ZSIGS,    & ! Standard deviation of rc at time t
+                        & ZTHT,     &
+                        & ZTHS
 LOGICAL, DIMENSION(KPROMA) :: LLMICRO
 !
 !Output packed tendencies (for budgets only)
-REAL, DIMENSION(KPROMA, IBUNUM-IBUNUM_EXTRA) :: ZBU_SUM
+REAL, DIMENSION(KPROMA, IBUNUM-IBUNUM_EXTRA) :: ZBUDGETS
 !
-!For mixing-ratio-splitting
-REAL, DIMENSION(KPROMA) :: ZTH ! Packed variable
-REAL, DIMENSION(KPROMA,7) :: ZVART !Packed variables
-REAL, DIMENSION(KPROMA)   :: ZEXTTH   !To take into acount external tendencies inside the splitting
-REAL, DIMENSION(KPROMA,7) :: ZEXTPK   !To take into acount external tendencies inside the splitting
+REAL, DIMENSION(KPROMA,7) :: ZRT !Packed variables
+REAL, DIMENSION(KPROMA,7) :: ZRS !To take into acount external tendencies inside the splitting
 !
 !For retroaction of E on IAGGS
 REAL, DIMENSION(MERGE(KPROMA,0,OELEC)) :: ZLATHAM_IAGGS
@@ -190,8 +186,8 @@ IF(PARAMI%LPACK_MICRO) THEN
   !  optimization by looking for locations where
   !  the microphysical fields are larger than a minimal value only !!!
   !
-  IF (KSIZE /= COUNT(ODMICRO(IIJB:IIJE,IKTB:IKTE))) THEN
-      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'ICE4_PACK', 'ICE4_PACK : KSIZE /= COUNT(ODMICRO)')
+  IF (KSIZE /= COUNT(LDMICRO(IIJB:IIJE,IKTB:IKTE))) THEN
+      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'ICE4_PACK', 'ICE4_PACK : KSIZE /= COUNT(LDMICRO)')
   ENDIF
 
   PBUDGETS(:,:,:)=0.
@@ -218,46 +214,46 @@ IF(PARAMI%LPACK_MICRO) THEN
 !$acc kernels
 !$acc loop seq
       OUTER_LOOP: DO JK = ISTK, IKTE
-        IF (ANY(ODMICRO(IIJB:IIJE,JK))) THEN
+        IF (ANY(LDMICRO(IIJB:IIJE,JK))) THEN
           !$acc loop gang vector independent
           DO JIJ = ISTIJ, IIJE
-            IF (ODMICRO(JIJ,JK)) THEN
+            IF (LDMICRO(JIJ,JK)) THEN
               !$acc atomic capture
               IC=IC+1
               IDX=IC !change of variable to use acc atomic capture (IC is shared)
               !$acc end atomic
               LLMICRO(IDX)=.TRUE.
               ! Initialization of variables in packed format :
-              ZTH(IDX)=PWTH(JIJ, JK)
-              ZVART(IDX, IRV)=PWR(JIJ, JK, IRV)
-              ZVART(IDX, IRC)=PWR(JIJ, JK, IRC)
-              ZVART(IDX, IRR)=PWR(JIJ, JK, IRR)
-              ZVART(IDX, IRI)=PWR(JIJ, JK, IRI)
-              ZVART(IDX, IRS)=PWR(JIJ, JK, IRS)
-              ZVART(IDX, IRG)=PWR(JIJ, JK, IRG)
+              ZTHT(IDX)=PTHT(JIJ, JK)
+              ZRT(IDX, IRV)=PRT(JIJ, JK, IRV)
+              ZRT(IDX, IRC)=PRT(JIJ, JK, IRC)
+              ZRT(IDX, IRR)=PRT(JIJ, JK, IRR)
+              ZRT(IDX, IRI)=PRT(JIJ, JK, IRI)
+              ZRT(IDX, IRS)=PRT(JIJ, JK, IRS)
+              ZRT(IDX, IRG)=PRT(JIJ, JK, IRG)
               IF (KRR==7) THEN
-                ZVART(IDX, IRH)=PWR(JIJ, JK, IRH)
+                ZRT(IDX, IRH)=PRT(JIJ, JK, IRH)
               ENDIF
               IF (PARAMI%LEXT_TEND) THEN
                 !The th tendency is not related to a mixing ratio change, there is no exn/exnref issue here
-                ZEXTTH(IDX)=PTHS(JIJ, JK)
-                ZEXTPK(IDX, IRV)=PRS(JIJ, JK, IRV)
-                ZEXTPK(IDX, IRC)=PRS(JIJ, JK, IRC)
-                ZEXTPK(IDX, IRR)=PRS(JIJ, JK, IRR)
-                ZEXTPK(IDX, IRI)=PRS(JIJ, JK, IRI)
-                ZEXTPK(IDX, IRS)=PRS(JIJ, JK, IRS)
-                ZEXTPK(IDX, IRG)=PRS(JIJ, JK, IRG)
+                ZTHS(IDX)=PTHS(JIJ, JK)
+                ZRS(IDX, IRV)=PRS(JIJ, JK, IRV)
+                ZRS(IDX, IRC)=PRS(JIJ, JK, IRC)
+                ZRS(IDX, IRR)=PRS(JIJ, JK, IRR)
+                ZRS(IDX, IRI)=PRS(JIJ, JK, IRI)
+                ZRS(IDX, IRS)=PRS(JIJ, JK, IRS)
+                ZRS(IDX, IRG)=PRS(JIJ, JK, IRG)
                 IF (KRR==7) THEN
-                  ZEXTPK(IDX, IRH)=PRS(JIJ, JK, IRH)
+                  ZRS(IDX, IRH)=PRS(JIJ, JK, IRH)
                 ENDIF
               ENDIF
               ZCIT       (IDX)=PCIT    (JIJ, JK)
-              ZCF        (IDX)=PCLDFR  (JIJ, JK)
+              ZCLDFR     (IDX)=PCLDFR  (JIJ, JK)
               ZRHODREF   (IDX)=PRHODREF(JIJ, JK)
-              ZPRES      (IDX)=PPABST  (JIJ, JK)
+              ZPABST     (IDX)=PPABST  (JIJ, JK)
               ZEXN       (IDX)=PEXN    (JIJ, JK)
               IF(LLSIGMA_RC) THEN
-                ZSIGMA_RC(IDX)=PSIGS   (JIJ, JK)
+                ZSIGS(IDX)    =PSIGS   (JIJ, JK)
               ENDIF
               IF (LL_AUCV_ADJU) THEN
                 ZHLC_HCF(IDX) = PHLC_HCF(JIJ, JK)
@@ -310,13 +306,13 @@ IF(PARAMI%LPACK_MICRO) THEN
                         &KPROMA, IMICRO, PTSTEP, &
                         &KRR, OSAVE_MICRO, LLMICRO, OELEC, &
                         &ZEXN, ZRHODREF, &
-                        &ZPRES, ZCIT, ZCF, &
+                        &ZPABST, ZCIT, ZCLDFR, &
                         &ZHLC_HCF, ZHLC_HRC, &
                         &ZHLI_HCF, ZHLI_HRI, &
-                        &ZEXTTH, ZEXTPK, ZRREVAV, &
-                        &ZRAINFR, ZSIGMA_RC, &
-                        &ZTH, ZVART, &
-                        &ZBU_SUM, &
+                        &ZTHS, ZRS, ZRREVAV, &
+                        &ZRAINFR, ZSIGS, &
+                        &ZTHT, ZRT, &
+                        &ZBUDGETS, &
                         &ZLATHAM_IAGGS)
       !
       !*       6.     UNPACKING
@@ -326,15 +322,15 @@ IF(PARAMI%LPACK_MICRO) THEN
 !$acc loop independent
       DO JL=1, IMICRO
         PCIT  (I1(JL),I2(JL))=ZCIT   (JL)
-        PEVAP3D(I1(JL),I2(JL))=ZRREVAV(JL)
-        PWR(I1(JL),I2(JL),IRV)=ZVART(JL, IRV)
-        PWR(I1(JL),I2(JL),IRC)=ZVART(JL, IRC)
-        PWR(I1(JL),I2(JL),IRR)=ZVART(JL, IRR)
-        PWR(I1(JL),I2(JL),IRI)=ZVART(JL, IRI)
-        PWR(I1(JL),I2(JL),IRS)=ZVART(JL, IRS)
-        PWR(I1(JL),I2(JL),IRG)=ZVART(JL, IRG)
+        PRREVAV(I1(JL),I2(JL))=ZRREVAV(JL)
+        PRT(I1(JL),I2(JL),IRV)=ZRT(JL, IRV)
+        PRT(I1(JL),I2(JL),IRC)=ZRT(JL, IRC)
+        PRT(I1(JL),I2(JL),IRR)=ZRT(JL, IRR)
+        PRT(I1(JL),I2(JL),IRI)=ZRT(JL, IRI)
+        PRT(I1(JL),I2(JL),IRS)=ZRT(JL, IRS)
+        PRT(I1(JL),I2(JL),IRG)=ZRT(JL, IRG)
         IF (KRR==7) THEN
-          PWR(I1(JL),I2(JL),IRH)=ZVART(JL, IRH)
+          PRT(I1(JL),I2(JL),IRH)=ZRT(JL, IRH)
         ENDIF
         PRAINFR(I1(JL),I2(JL))=ZRAINFR(JL)
       ENDDO
@@ -344,7 +340,7 @@ IF(PARAMI%LPACK_MICRO) THEN
 !$acc loop independent collapse(2)
         DO JV=1, IBUNUM-IBUNUM_EXTRA
           DO JL=1, IMICRO
-            PBUDGETS(I1(JL),I2(JL),JV)=ZBU_SUM(JL, JV)
+            PBUDGETS(I1(JL),I2(JL),JV)=ZBUDGETS(JL, JV)
           ENDDO
         ENDDO
 !$acc end kernels
@@ -371,22 +367,22 @@ ELSE ! PARAMI%LPACK_MICRO
   !The same applies for the first points and last points on the horizontal dimension.
   IF (IKTB /= 1) THEN
     DO JK=1, IKTB-1
-      PWR(:, JK, :)=PWR(:, IKTB, :)
+      PRT(:, JK, :)=PRT(:, IKTB, :)
     ENDDO
   ENDIF
   IF (IKTE /= IKT) THEN
     DO JK=IKTE+1, IKT
-      PWR(:, JK, :)=PWR(:, IKTE, :)
+      PRT(:, JK, :)=PRT(:, IKTE, :)
     ENDDO
   ENDIF
   IF (IIJB /= 1) THEN
     DO JIJ=1, IIJB-1
-      PWR(JIJ, :, :)=PWR(IIJB, :, :)
+      PRT(JIJ, :, :)=PRT(IIJB, :, :)
     ENDDO
   ENDIF
   IF (IIJE /= IIJT) THEN
     DO JIJ=IIJE+1, IIJT
-      PWR(JIJ, :, :)=PWR(IIJE, :, :) 
+      PRT(JIJ, :, :)=PRT(IIJE, :, :) 
     ENDDO
   ENDIF
   !
@@ -395,14 +391,14 @@ ELSE ! PARAMI%LPACK_MICRO
   !
   CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
                     &KSIZE, KSIZE, PTSTEP, &
-                    &KRR, OSAVE_MICRO, ODMICRO, OELEC, &
+                    &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
                     &PEXN, PRHODREF, &
                     &PPABST, PCIT, PCLDFR, &
                     &PHLC_HCF, PHLC_HRC, &
                     &PHLI_HCF, PHLI_HRI,  &
-                    &PTHS, PRS, PEVAP3D, &
+                    &PTHS, PRS, PRREVAV, &
                     &PRAINFR, PSIGS, &
-                    &PWTH, PWR, &
+                    &PTHT, PRT, &
                     &PBUDGETS, &
                     &PLATHAM_IAGGS)
 
