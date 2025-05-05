@@ -17,6 +17,7 @@ USE MODD_CONVPAREXT, ONLY: CONVPAREXT
 USE MODD_CST, ONLY: CST_T
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
 USE MODD_NSV, ONLY: NSV_T
+USE MODE_CONVECT_CHEM_TRANSPORT, ONLY: CONVECT_CHEM_TRANSPORT
 
 IMPLICIT NONE
 !
@@ -126,7 +127,6 @@ INTEGER                          :: IFTSTEPS ! only used for chemical tracers
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
 #include "convect_updraft_shal.h"
-#include "convect_chem_transport.h"
 #include "convect_closure_shal.h"
 
 IF (LHOOK) CALL DR_HOOK('SHALLOW_CONVECTION_PART2',0,ZHOOK_HANDLE)
