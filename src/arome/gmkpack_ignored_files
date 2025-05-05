@@ -7,3 +7,5 @@ mpa/conv/module/modi_shallow_convection_part2.F90
 mpa/conv/module/modi_shallow_convection_part2_select.F90
 phyex/conv/convect_chem_transport.F90
 phyex/conv/convect_chem_transport.h
+phyex/conv/convect_closure_adjust_shal.F90
+phyex/conv/convect_closure_adjust_shal.h
