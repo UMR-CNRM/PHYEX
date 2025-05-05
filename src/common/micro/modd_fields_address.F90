@@ -31,11 +31,8 @@
 IMPLICIT NONE
 !
 ! Pointer of fields in microphysic species arrays. Microphysics species are
-! usually counted as KRR=6 or KRR=7. The extra "zero" adress for potential
-! temperature is a trick to improve vectorization when all these fields needs
-! the same treatement.
+! usually counted as KRR=6 or KRR=7.
 INTEGER, PARAMETER :: & ! pointer of fields in microphysic species arrays :
-      & ITH=0,     & ! Potential temperature
       & IRV=1,     & ! Water vapor
       & IRC=2,     & ! Cloud water
       & IRR=3,     & ! Rain water

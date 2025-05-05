@@ -6,18 +6,13 @@
 MODULE MODE_ICE4_STEPPING
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
-                        &LDSIGMA_RC, LDAUCV_ADJU, LDEXT_TEND, &
-                        &KPROMA, KMICRO, LDMICRO, PTSTEP, &
-                        &KRR, OSAVE_MICRO, OELEC, &
-                        &PEXN, PRHODREF, K1, K2, &
-                        &PPRES, PCF, PSIGMA_RC, &
-                        &PCIT, &
-                        &PVART, &
-                        &PHLC_HCF, PHLC_HRC, &
-                        &PHLI_HCF, PHLI_HRI, PRAINFR, &
-                        &PEXTPK, PBU_SUM, PRREVAV, &
-                        &PLATHAM_IAGGS)
+SUBROUTINE ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
+                        &KPROMA, KMICRO, PTSTEP, &
+                        &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
+                        &PEXN, PRHODREF, PPABST, PCIT, PCLDFR, &
+                        &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
+                        &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
+                        &PBUDGETS, PLATHAM_IAGGS)
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -43,7 +38,6 @@ SUBROUTINE ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
 !              ------------
 !
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
-USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 
 USE MODD_BUDGET,         ONLY: TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
@@ -51,7 +45,6 @@ USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
-      & ITH,     & ! Potential temperature
       & IRV,     & ! Water vapor
       & IRC,     & ! Cloud water
       & IRR,     & ! Rain water
@@ -70,39 +63,37 @@ IMPLICIT NONE
 !
 !
 !
-TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
-LOGICAL,                  INTENT(IN)    :: LDSIGMA_RC
-LOGICAL,                  INTENT(IN)    :: LDAUCV_ADJU
-LOGICAL,                  INTENT(IN)    :: LDEXT_TEND
 INTEGER,                  INTENT(IN)    :: KPROMA ! cache-blocking factor for microphysic loop
 INTEGER,                  INTENT(IN)    :: KMICRO ! Case r_x>0 locations
-LOGICAL, DIMENSION(KPROMA), INTENT(IN)  :: LDMICRO
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 LOGICAL,                  INTENT(IN)    :: OSAVE_MICRO   ! if true, save the microphysical tendencies
+LOGICAL, DIMENSION(KPROMA), INTENT(IN)  :: LDMICRO
 LOGICAL,                  INTENT(IN)    :: OELEC         ! if true, cloud electricity is activated
 !
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PEXN    ! Exner function
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PRHODREF! Reference density
-INTEGER, DIMENSION(KPROMA),                     INTENT(IN)    :: K1,K2 ! Used to replace the COUNT and PACK intrinsics on variables
-REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PPRES
-REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PCF ! Cloud fraction
-REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PSIGMA_RC
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PPABST
 REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PCIT
-REAL,    DIMENSION(KPROMA,0:7),                 INTENT(INOUT) :: PVART !Packed variables
-REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PHLC_HRC
-REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PHLC_HCF
-REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PHLI_HRI
-REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PHLI_HCF
-REAL,    DIMENSION(D%NIJT,D%NKT),               INTENT(INOUT) :: PRAINFR
-REAL,    DIMENSION(KPROMA,0:7),                 INTENT(INOUT) :: PEXTPK !To take into acount external tendencies inside the splitting
-REAL,    DIMENSION(KPROMA, IBUNUM-IBUNUM_EXTRA),INTENT(OUT)   :: PBU_SUM
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PCLDFR ! Cloud fraction
+REAL,    DIMENSION(MERGE(KPROMA,0,PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')), INTENT(INOUT) :: PHLC_HRC, &
+                                                                                                                  & PHLC_HCF, &
+                                                                                                                  & PHLI_HRI, &
+                                                                                                                  & PHLI_HCF
+REAL,    DIMENSION(MERGE(KPROMA,0,PARAMI%LEXT_TEND)),   INTENT(IN) :: PTHS !To take into acount external tendencies inside the splitting
+REAL,    DIMENSION(MERGE(KPROMA,0,PARAMI%LEXT_TEND),7), INTENT(IN) :: PRS !To take into acount external tendencies inside the splitting
 REAL,    DIMENSION(KPROMA),                     INTENT(OUT)   :: PRREVAV
+REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PRAINFR
+REAL,    DIMENSION(MERGE(KPROMA,0,PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')), INTENT(IN) :: PSIGS
+REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PTHT
+REAL,    DIMENSION(KPROMA,7),                   INTENT(INOUT) :: PRT !Packed variables
+REAL,    DIMENSION(MERGE(KPROMA,0,BUCONF%LBU_ENABLE .OR. OSAVE_MICRO), &
+                   MERGE(IBUNUM-IBUNUM_EXTRA,0,BUCONF%LBU_ENABLE .OR. OSAVE_MICRO)),INTENT(OUT)   :: PBUDGETS
 REAL,    DIMENSION(MERGE(KPROMA,0,OELEC)),      INTENT(IN)    :: PLATHAM_IAGGS ! E Function to simulate
                                                                                ! enhancement of IAGGS
 !
@@ -127,11 +118,14 @@ REAL, DIMENSION(KPROMA) :: &
                         & ZLSFACT,  & ! L_s/(Pi*C_ph)
                         & ZLVFACT,  & ! L_v/(Pi*C_ph)
                         & ZHLC_LCF, & ! HLCLOUDS : fraction of Low  Cloud Fraction in grid
-                                      !    note that PCF = PHLC_HCF + ZHLC_LCF
+                                      !    note that PCLDFR = PHLC_HCF + ZHLC_LCF
                         & ZHLC_LRC, & ! HLCLOUDS : LWC that is Low  LWC in grid
                                       !    note that ZRC = PHLC_HRC + ZHLC_LRC
                         & ZHLI_LCF, &
-                        & ZHLI_LRI
+                        & ZHLI_LRI, &
+                        & ZSIGMA_RC, &
+                        & ZEXTTH
+REAL, DIMENSION(KPROMA,7) :: ZEXTPK
 LOGICAL, DIMENSION(KPROMA) :: LLCOMPUTE ! .TRUE. or points where we must compute tendencies,
 REAL, DIMENSION(SIZE(ICED%XRTMIN))   :: ZRSMIN
 !
@@ -143,7 +137,8 @@ LOGICAL :: LLCPZ0RT
 REAL :: ZTIME_THRESHOLD1D(KPROMA) ! Time to reach threshold
 REAL, DIMENSION(KPROMA, KRR) :: Z0RT ! Mixing-ratios at the beginig of the current loop
 !
-REAL, DIMENSION(KPROMA,0:7) :: ZA, ZB
+REAL, DIMENSION(KPROMA,KRR) :: ZA, ZB
+REAL, DIMENSION(KPROMA)   :: ZATH, ZBTH
 !
 REAL, DIMENSION(KPROMA, 8) :: ZRS_TEND, ZRG_TEND
 REAL, DIMENSION(KPROMA,10) :: ZRH_TEND
@@ -166,7 +161,7 @@ ZRSMIN = ICED%XRTMIN
 !
 IF(BUCONF%LBU_ENABLE .OR. OSAVE_MICRO) THEN
   DO JV=1, IBUNUM-IBUNUM_EXTRA
-    PBU_SUM(:, JV)=0.
+    PBUDGETS(:, JV)=0.
   ENDDO
 ENDIF
 
@@ -179,37 +174,42 @@ IF(PARAMI%XTSTEP_TS/=0.)THEN
   INB_ITER_MAX=MAX(PARAMI%NMAXITER_MICRO, INB_ITER_MAX) !For the case XMRSTEP/=0. at the same time
 ENDIF
 
-IF (LDEXT_TEND) THEN
+IF (PARAMI%LEXT_TEND) THEN
+!$acc kernels
+  DO JL=1, KMICRO
+    ZEXTTH(JL)=PTHS(JL)-PTHT(JL)*ZINV_TSTEP
+  ENDDO
+!$acc end kernels
 !$acc kernels
 !$acc loop independent collapse(2)
-  DO JV=0, KRR
+  DO JV=1, KRR
     DO JL=1, KMICRO
-      PEXTPK(JL, JV)=PEXTPK(JL, JV)-PVART(JL, JV)*ZINV_TSTEP
+      ZEXTPK(JL, JV)=PRS(JL, JV)-PRT(JL, JV)*ZINV_TSTEP
     ENDDO
   ENDDO
 !$acc end kernels
 ENDIF
-IF (LDSIGMA_RC) THEN
+IF (PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM') THEN
 !$acc kernels
 !$acc loop independent
   DO JL=1, KMICRO
-    PSIGMA_RC(JL)=PSIGMA_RC(JL)*2.
+    ZSIGMA_RC(JL)=PSIGS(JL)*2.
   ENDDO
 !$acc end kernels
 ENDIF
-IF (LDAUCV_ADJU) THEN
+IF (PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU') THEN
 !$acc kernels
 !$acc loop independent
   DO JL=1, KMICRO
-    ZHLC_LRC(JL) = PVART(JL, IRC) - PHLC_HRC(JL)
-    ZHLI_LRI(JL) = PVART(JL, IRI) - PHLI_HRI(JL)
-    IF(PVART(JL, IRC)>0.) THEN
-      ZHLC_LCF(JL) = PCF(JL)- PHLC_HCF(JL)
+    ZHLC_LRC(JL) = PRT(JL, IRC) - PHLC_HRC(JL)
+    ZHLI_LRI(JL) = PRT(JL, IRI) - PHLI_HRI(JL)
+    IF(PRT(JL, IRC)>0.) THEN
+      ZHLC_LCF(JL) = PCLDFR(JL)- PHLC_HCF(JL)
     ELSE
       ZHLC_LCF(JL)=0.
     ENDIF
-    IF(PVART(JL, IRI)>0.) THEN
-      ZHLI_LCF(JL) = PCF(JL)- PHLI_HCF(JL)
+    IF(PRT(JL, IRI)>0.) THEN
+      ZHLI_LCF(JL) = PCLDFR(JL)- PHLI_HCF(JL)
     ELSE
       ZHLI_LCF(JL)=0.
     ENDIF
@@ -258,19 +258,19 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 
   DO WHILE(ANY(LLCOMPUTE(1:KMICRO))) ! Loop to adjust tendencies when we cross the 0°C or when a species disappears
 !$acc kernels
-    ZSUM2(1:KMICRO)=PVART(1:KMICRO, IRI)
+    ZSUM2(1:KMICRO)=PRT(1:KMICRO, IRI)
 !$acc loop independent collapse(2)
     DO JV=IRI+1,KRR
       DO JL=1, KMICRO
-        ZSUM2(JL)=ZSUM2(JL)+PVART(JL, JV)
+        ZSUM2(JL)=ZSUM2(JL)+PRT(JL, JV)
       ENDDO
     ENDDO
 !$acc end kernels
 !$acc kernels
 !$acc loop independent
     DO JL=1, KMICRO
-      ZDEVIDE=(CST%XCPD + CST%XCPV*PVART(JL, IRV) + CST%XCL*(PVART(JL, IRC)+PVART(JL, IRR)) + CST%XCI*ZSUM2(JL)) * PEXN(JL)
-      ZZT(JL) = PVART(JL, ITH) * PEXN(JL)
+      ZDEVIDE=(CST%XCPD + CST%XCPV*PRT(JL, IRV) + CST%XCL*(PRT(JL, IRC)+PRT(JL, IRR)) + CST%XCI*ZSUM2(JL)) * PEXN(JL)
+      ZZT(JL) = PTHT(JL) * PEXN(JL)
       ZLSFACT(JL)=(CST%XLSTT+(CST%XCPV-CST%XCI)*(ZZT(JL)-CST%XTT)) / ZDEVIDE
       ZLVFACT(JL)=(CST%XLVTT+(CST%XCPV-CST%XCL)*(ZZT(JL)-CST%XTT)) / ZDEVIDE
     ENDDO
@@ -285,24 +285,29 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
                         &KPROMA, KMICRO, &
                         &KRR, LSOFT, LLCOMPUTE, &
                         &OSAVE_MICRO, OELEC, &
-                        &PEXN, PRHODREF, ZLVFACT, ZLSFACT, K1, K2, &
-                        &PPRES, PCF, PSIGMA_RC, &
+                        &PEXN, PRHODREF, ZLVFACT, ZLSFACT, &
+                        &PPABST, PCLDFR, ZSIGMA_RC, &
                         &PCIT, &
-                        &ZZT, PVART, &
+                        &ZZT, PTHT, PRT, &
                         &PLATHAM_IAGGS, &
                         &ZBU_INST, &
                         &ZRS_TEND, ZRG_TEND, ZRH_TEND, ZSSI, &
-                        &ZA, ZB, &
+                        &ZA, ZB, ZATH, ZBTH, &
                         &PHLC_HCF, ZHLC_LCF, PHLC_HRC, ZHLC_LRC, &
                         &PHLI_HCF, ZHLI_LCF, PHLI_HRI, ZHLI_LRI, PRAINFR)
 
     ! External tendencies
-    IF(LDEXT_TEND) THEN
+    IF(PARAMI%LEXT_TEND) THEN
+!$acc kernels
+      DO JL=1, KMICRO
+        ZATH(JL) = ZATH(JL) + ZEXTTH(JL)
+      ENDDO
+!$acc end kernels
 !$acc kernels
 !$acc loop independent
-      DO JV=0, KRR
+      DO JV=1, KRR
         DO JL=1, KMICRO
-          ZA(JL, JV) = ZA(JL, JV) + PEXTPK(JL, JV)
+          ZA(JL, JV) = ZA(JL, JV) + ZEXTPK(JL, JV)
         ENDDO
       ENDDO
 !$acc end kernels
@@ -328,14 +333,14 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 !$acc kernels
 !$acc loop independent
       DO JL=1, KMICRO
-        !Is ZB(:, ITH) enough to change temperature sign?
+        !Is ZBTH(:) enough to change temperature sign?
         ZX=CST%XTT/PEXN(JL)
-        IF ((PVART(JL, ITH) - ZX) * (PVART(JL, ITH) + ZB(JL, ITH) - ZX) < 0.) THEN
+        IF ((PTHT(JL) - ZX) * (PTHT(JL) + ZBTH(JL) - ZX) < 0.) THEN
           ZMAXTIME(JL)=0.
         ENDIF
-        !Can ZA(:, ITH) make temperature change of sign?
-        IF (ABS(ZA(JL,ITH)) > 1.E-20 ) THEN
-          ZTIME_THRESHOLD=(ZX - ZB(JL, ITH) - PVART(JL, ITH))/ZA(JL, ITH)
+        !Can ZATH(:) make temperature change of sign?
+        IF (ABS(ZATH(JL)) > 1.E-20 ) THEN
+          ZTIME_THRESHOLD=(ZX - ZBTH(JL) - PTHT(JL))/ZATH(JL)
           IF (ZTIME_THRESHOLD > 0.) THEN
             ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD)
           ENDIF
@@ -350,8 +355,8 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     DO JV=1, KRR
 !$acc loop independent
       DO JL=1, KMICRO
-        IF (ZA(JL, JV) < -1.E-20 .AND. PVART(JL, JV) > ZRSMIN(JV)) THEN
-          ZMAXTIME(JL)=MIN(ZMAXTIME(JL), -(ZB(JL, JV)+PVART(JL, JV))/ZA(JL, JV))
+        IF (ZA(JL, JV) < -1.E-20 .AND. PRT(JL, JV) > ZRSMIN(JV)) THEN
+          ZMAXTIME(JL)=MIN(ZMAXTIME(JL), -(ZB(JL, JV)+PRT(JL, JV))/ZA(JL, JV))
           ZMAXTIME(JL)=MAX(ZMAXTIME(JL), CST%XMNH_TINY) !to prevent rounding errors
         ENDIF
       ENDDO
@@ -386,17 +391,17 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
       IF (LL_ANY_ITER) THEN
         ! In this case we need to remember the initial mixing ratios used to compute the tendencies
         ! because when mixing ratio has evolved more than a threshold, we must re-compute tendencies
-        ! Thus, at first iteration (ie when LLCPZ0RT=.TRUE.) we copy PVART into Z0RT
+        ! Thus, at first iteration (ie when LLCPZ0RT=.TRUE.) we copy PRT into Z0RT
         DO JV=1,KRR
 !$acc kernels
           IF (LLCPZ0RT) THEN
-            Z0RT(1:KMICRO, JV)=PVART(1:KMICRO, JV)
+            Z0RT(1:KMICRO, JV)=PRT(1:KMICRO, JV)
           ENDIF
 !$acc loop independent
           DO JL=1, KMICRO
             IF (IITER(JL)<INB_ITER_MAX .AND. ABS(ZA(JL,JV))>1.E-20) THEN
               ZTIME_THRESHOLD1D(JL)=(SIGN(1., ZA(JL, JV))*PARAMI%XMRSTEP+ &
-                                    &Z0RT(JL, JV)-PVART(JL, JV)-ZB(JL, JV))/ZA(JL, JV)
+                                    &Z0RT(JL, JV)-PRT(JL, JV)-ZB(JL, JV))/ZA(JL, JV)
             ELSE
               ZTIME_THRESHOLD1D(JL)=-1.
             ENDIF
@@ -404,7 +409,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 !$acc loop independent
           DO JL=1, KMICRO
             IF (ZTIME_THRESHOLD1D(JL)>=0 .AND. ZTIME_THRESHOLD1D(JL)<ZMAXTIME(JL) .AND. &
-               &(PVART(JL, JV)>ZRSMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
+               &(PRT(JL, JV)>ZRSMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
               ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD1D(JL))
               LLCOMPUTE(JL)=.FALSE.
             ENDIF
@@ -440,11 +445,18 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     !
     !
 !$acc kernels
+    DO JL=1, KMICRO
+      IF(LDMICRO(JL)) THEN
+        PTHT(JL)=PTHT(JL)+ZATH(JL)*ZMAXTIME(JL)+ZBTH(JL)
+      ENDIF
+    ENDDO
+!$acc end kernels
+!$acc kernels
 !$acc loop independent collapse(2)
-    DO JV=0, KRR
+    DO JV=1, KRR
       DO JL=1, KMICRO
         IF(LDMICRO(JL)) THEN
-          PVART(JL, JV)=PVART(JL, JV)+ZA(JL, JV)*ZMAXTIME(JL)+ZB(JL, JV)
+          PRT(JL, JV)=PRT(JL, JV)+ZA(JL, JV)*ZMAXTIME(JL)+ZB(JL, JV)
         ENDIF
       ENDDO
     ENDDO
@@ -452,7 +464,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 !$acc kernels
 !$acc loop independent
     DO JL=1, KMICRO
-      IF (PVART(JL,IRI)<=0. .AND. LDMICRO(JL)) PCIT(JL) = 0.
+      IF (PRT(JL,IRI)<=0. .AND. LDMICRO(JL)) PCIT(JL) = 0.
       ZTIME(JL)=ZTIME(JL)+ZMAXTIME(JL)
     ENDDO
 !$acc end kernels
@@ -466,7 +478,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 !$acc loop independent collapse(2)
       DO JV=1, IBUNUM-IBUNUM_MR-IBUNUM_EXTRA
         DO JL=1, KMICRO
-          PBU_SUM(JL, JV) = PBU_SUM(JL, JV) + ZBU_INST(JL, JV)*ZMAXTIME(JL)
+          PBUDGETS(JL, JV) = PBUDGETS(JL, JV) + ZBU_INST(JL, JV)*ZMAXTIME(JL)
         ENDDO
       ENDDO
 !$acc end kernels
@@ -476,7 +488,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 !$acc loop independent collapse(2)
       DO JV=IBUNUM-IBUNUM_MR-IBUNUM_EXTRA+1, IBUNUM-IBUNUM_EXTRA
         DO JL=1, KMICRO
-          PBU_SUM(JL, JV) = PBU_SUM(JL, JV) + ZBU_INST(JL, JV)
+          PBUDGETS(JL, JV) = PBUDGETS(JL, JV) + ZBU_INST(JL, JV)
         ENDDO
       ENDDO
 !$acc end kernels
@@ -487,7 +499,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 !$acc kernels
 !$acc loop independent
         DO JL=1, KMICRO
-          PBU_SUM(JL, JJV) = PBU_SUM(JL, JJV) + ZBU_INST(JL, JV)
+          PBUDGETS(JL, JJV) = PBUDGETS(JL, JJV) + ZBU_INST(JL, JV)
         ENDDO
 !$acc end kernels
       ENDDO
@@ -500,14 +512,21 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
   ENDDO !Iterations on tendency computations (WHILE ANY(LLCOMPUTE))
 ENDDO !Temporal loop
 
-IF(LDEXT_TEND) THEN
+IF(PARAMI%LEXT_TEND) THEN
   !Z..T variables contain the external tendency, we substract it
 !$acc kernels
+  DO JL=1, KMICRO
+    IF(LDMICRO(JL)) THEN
+      PTHT(JL)=PTHT(JL) - ZEXTTH(JL) * PTSTEP
+    ENDIF
+  ENDDO
+!$acc end kernels
+!$acc kernels
 !$acc loop independent collapse(2)
-  DO JV=0, KRR
+  DO JV=1, KRR
     DO JL=1, KMICRO
       IF(LDMICRO(JL)) THEN
-        PVART(JL, JV) = PVART(JL, JV) - PEXTPK(JL, JV) * PTSTEP
+        PRT(JL, JV) = PRT(JL, JV) - ZEXTPK(JL, JV) * PTSTEP
       ENDIF
     ENDDO
   ENDDO
