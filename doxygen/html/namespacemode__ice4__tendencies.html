@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:accd3a6e40fae254a7fa20df1ca8f047d" id="r_accd3a6e40fae254a7fa20df1ca8f047d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__ice4__tendencies.html#accd3a6e40fae254a7fa20df1ca8f047d">ice4_tendencies</a> (cst, parami, icep, iced, buconf, kproma, ksize, krr, odsoft, ldcompute, osave_micro, oelec, pexn, prhodref, plvfact, plsfact, k1, k2, ppres, pcf, psigma_rc, pcit, pt, pvart, platham_iaggs, pbu_inst, prs_tend, prg_tend, prh_tend, pssi, pa, pb, phlc_hcf, phlc_lcf, phlc_hrc, phlc_lrc, phli_hcf, phli_lcf, phli_hri, phli_lri, prainfr)</td></tr>
-<tr class="separator:accd3a6e40fae254a7fa20df1ca8f047d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8ffae14f37f38a16179b01d9e0c657bc" id="r_a8ffae14f37f38a16179b01d9e0c657bc"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__ice4__tendencies.html#a8ffae14f37f38a16179b01d9e0c657bc">ice4_tendencies</a> (cst, parami, icep, iced, buconf, kproma, ksize, krr, odsoft, ldcompute, osave_micro, oelec, pexn, prhodref, plvfact, plsfact, ppres, pcf, psigma_rc, pcit, pt, pth, pvart, platham_iaggs, pbu_inst, prs_tend, prg_tend, prh_tend, pssi, pa, pb, path, pbth, phlc_hcf, phlc_lcf, phlc_hrc, phlc_lrc, phli_hcf, phli_lcf, phli_hri, phli_lri, prainfr)</td></tr>
+<tr class="separator:a8ffae14f37f38a16179b01d9e0c657bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="accd3a6e40fae254a7fa20df1ca8f047d" name="accd3a6e40fae254a7fa20df1ca8f047d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#accd3a6e40fae254a7fa20df1ca8f047d">&#9670;&#160;</a></span>ice4_tendencies()</h2>
+<a id="a8ffae14f37f38a16179b01d9e0c657bc" name="a8ffae14f37f38a16179b01d9e0c657bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8ffae14f37f38a16179b01d9e0c657bc">&#9670;&#160;</a></span>ice4_tendencies()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -187,18 +187,6 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer, dimension(kproma), intent(in)&#160;</td>
-          <td class="paramname"><em>k1</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">integer, dimension(kproma), intent(in)&#160;</td>
-          <td class="paramname"><em>k2</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
           <td class="paramname"><em>ppres</em>, </td>
         </tr>
@@ -229,7 +217,13 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma,0:krr), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramname"><em>pth</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(kproma,krr), intent(in)&#160;</td>
           <td class="paramname"><em>pvart</em>, </td>
         </tr>
         <tr>
@@ -271,14 +265,26 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma,0:7), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(kproma,krr), intent(out)&#160;</td>
           <td class="paramname"><em>pa</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma,0:7), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(kproma,krr), intent(out)&#160;</td>
           <td class="paramname"><em>pb</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(kproma), intent(out)&#160;</td>
+          <td class="paramname"><em>path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(kproma), intent(out)&#160;</td>
+          <td class="paramname"><em>pbth</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -346,8 +352,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__ice4__tendencies_accd3a6e40fae254a7fa20df1ca8f047d_cgraph.png" border="0" usemap="#anamespacemode__ice4__tendencies_accd3a6e40fae254a7fa20df1ca8f047d_cgraph" alt=""/></div>
-<map name="anamespacemode__ice4__tendencies_accd3a6e40fae254a7fa20df1ca8f047d_cgraph" id="anamespacemode__ice4__tendencies_accd3a6e40fae254a7fa20df1ca8f047d_cgraph">
+<div class="center"><img src="namespacemode__ice4__tendencies_a8ffae14f37f38a16179b01d9e0c657bc_cgraph.png" border="0" usemap="#anamespacemode__ice4__tendencies_a8ffae14f37f38a16179b01d9e0c657bc_cgraph" alt=""/></div>
+<map name="anamespacemode__ice4__tendencies_a8ffae14f37f38a16179b01d9e0c657bc_cgraph" id="anamespacemode__ice4__tendencies_a8ffae14f37f38a16179b01d9e0c657bc_cgraph">
 <area shape="rect" title=" " alt="" coords="5,319,176,359"/>
 <area shape="rect" href="namespacemode__ice4__compute__pdf.html#a8bf8e3623142cb41513630efddab358c" title=" " alt="" coords="239,5,425,45"/>
 <area shape="poly" title=" " alt="" coords="93,318,106,266,130,195,147,157,168,120,193,86,222,55,228,51,231,55,226,59,197,89,172,123,152,159,135,197,111,267,98,319"/>
@@ -383,14 +389,14 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__ice4__tendencies_accd3a6e40fae254a7fa20df1ca8f047d_icgraph.png" border="0" usemap="#anamespacemode__ice4__tendencies_accd3a6e40fae254a7fa20df1ca8f047d_icgraph" alt=""/></div>
-<map name="anamespacemode__ice4__tendencies_accd3a6e40fae254a7fa20df1ca8f047d_icgraph" id="anamespacemode__ice4__tendencies_accd3a6e40fae254a7fa20df1ca8f047d_icgraph">
+<div class="center"><img src="namespacemode__ice4__tendencies_a8ffae14f37f38a16179b01d9e0c657bc_icgraph.png" border="0" usemap="#anamespacemode__ice4__tendencies_a8ffae14f37f38a16179b01d9e0c657bc_icgraph" alt=""/></div>
+<map name="anamespacemode__ice4__tendencies_a8ffae14f37f38a16179b01d9e0c657bc_icgraph" id="anamespacemode__ice4__tendencies_a8ffae14f37f38a16179b01d9e0c657bc_icgraph">
 <area shape="rect" title=" " alt="" coords="583,5,753,45"/>
-<area shape="rect" href="namespacemode__ice4__stepping.html#ac79469dcca5dcc68b2b8c0199872db7f" title=" " alt="" coords="379,5,535,45"/>
+<area shape="rect" href="namespacemode__ice4__stepping.html#aec02f03168d34eb68867cca11aa33b1f" title=" " alt="" coords="379,5,535,45"/>
 <area shape="poly" title=" " alt="" coords="569,28,535,28,535,23,569,23"/>
-<area shape="rect" href="namespacemode__ice4__pack.html#a08ca9e3319aaadfc1230c68e980b654e" title=" " alt="" coords="127,13,331,38"/>
+<area shape="rect" href="namespacemode__ice4__pack.html#a3eaaa6c667d55d8b04780a33e29d077a" title=" " alt="" coords="127,13,331,38"/>
 <area shape="poly" title=" " alt="" coords="365,28,331,28,331,23,365,23"/>
-<area shape="rect" href="rain__ice_8F90.html#a02941f082f8e2db69d2f2bc4f0e4f073" title=" " alt="" coords="5,13,79,38"/>
+<area shape="rect" href="rain__ice_8F90.html#a4c98d01f9eb6670ffb925eaac51533d3" title=" " alt="" coords="5,13,79,38"/>
 <area shape="poly" title=" " alt="" coords="113,28,79,28,79,23,113,23"/>
 </map>
 </div>

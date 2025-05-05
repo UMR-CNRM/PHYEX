@@ -83,15 +83,15 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a303089f7286dbb7ed7f1eaa096fa5dee" id="r_a303089f7286dbb7ed7f1eaa096fa5dee"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__rain__ice_1_1rain__ice.html#a303089f7286dbb7ed7f1eaa096fa5dee">rain_ice</a> (d, cst, parami, icep, iced, elecp, elecd, buconf, oelec, osedim_beard, pthvrefzikb, ptstep, krr, pexn, pdzz, prhodj, prhodref, pexnref, ppabst, pcit, pcldfr, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, ptht, prvt, prct, prrt, prit, prst, prgt, pths, prvs, prcs, prrs, pris, prss, prgs, pinprc, pinprr, pevap3d, pinprs, pinprg, pindep, prainfr, psigs, tbudgets, kbudgets, pqpit, pqct, pqrt, pqit, pqst, pqgt, pqnit, pqpis, pqcs, pqrs, pqis, pqss, pqgs, pqnis, pefieldw, platham_iaggs, psea, ptown, prht, prhs, pinprh, pfpr, pqht, pqhs)</td></tr>
-<tr class="separator:a303089f7286dbb7ed7f1eaa096fa5dee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8837459f2ead09457b343e63160d14e1" id="r_a8837459f2ead09457b343e63160d14e1"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__rain__ice_1_1rain__ice.html#a8837459f2ead09457b343e63160d14e1">rain_ice</a> (d, cst, parami, icep, iced, elecp, elecd, buconf, oelec, osedim_beard, pthvrefzikb, ptstep, krr, pexn, pdzz, prhodj, prhodref, pexnref, ppabst, pcit, pcldfr, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, ptht, prt, pths, prs, pinprc, pinprr, pevap3d, pinprs, pinprg, pindep, prainfr, psigs, tbudgets, kbudgets, pqpit, pqct, pqrt, pqit, pqst, pqgt, pqnit, pqpis, pqcs, pqrs, pqis, pqss, pqgs, pqnis, pefieldw, platham_iaggs, psea, ptown, pinprh, pfpr, pqht, pqhs)</td></tr>
+<tr class="separator:a8837459f2ead09457b343e63160d14e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
 <p class="definition">Definition at line <a class="el" href="modi__rain__ice_8F90_source.html#l00007">7</a> of file <a class="el" href="modi__rain__ice_8F90_source.html">modi_rain_ice.F90</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a303089f7286dbb7ed7f1eaa096fa5dee" name="a303089f7286dbb7ed7f1eaa096fa5dee"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a303089f7286dbb7ed7f1eaa096fa5dee">&#9670;&#160;</a></span>rain_ice()</h2>
+<a id="a8837459f2ead09457b343e63160d14e1" name="a8837459f2ead09457b343e63160d14e1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8837459f2ead09457b343e63160d14e1">&#9670;&#160;</a></span>rain_ice()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -255,38 +255,8 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>prvt</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>prct</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>prrt</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>prit</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>prst</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>prgt</em>, </td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,krr), intent(in)&#160;</td>
+          <td class="paramname"><em>prt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -297,38 +267,8 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
-          <td class="paramname"><em>prvs</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
-          <td class="paramname"><em>prcs</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
-          <td class="paramname"><em>prrs</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
-          <td class="paramname"><em>pris</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
-          <td class="paramname"><em>prss</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
-          <td class="paramname"><em>prgs</em>, </td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,krr), intent(inout)&#160;</td>
+          <td class="paramname"><em>prs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -497,18 +437,6 @@ Public Member Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt), intent(in), optional&#160;</td>
           <td class="paramname"><em>ptown</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
-          <td class="paramname"><em>prht</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout), optional&#160;</td>
-          <td class="paramname"><em>prhs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

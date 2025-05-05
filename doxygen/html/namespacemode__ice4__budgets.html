@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a006c05a7b0cd702a6d167df99bf73e03" id="r_a006c05a7b0cd702a6d167df99bf73e03"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__ice4__budgets.html#a006c05a7b0cd702a6d167df99bf73e03">ice4_budgets</a> (d, parami, buconf, ksize, ptstep, krr, k1, k2, plvfact, plsfact, prhodj, pexnref, prvheni, pbu_pack, tbudgets, kbudgets)</td></tr>
-<tr class="separator:a006c05a7b0cd702a6d167df99bf73e03"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37b6cc0f511a96b6f56a2cdf1ecb2e0a" id="r_a37b6cc0f511a96b6f56a2cdf1ecb2e0a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__ice4__budgets.html#a37b6cc0f511a96b6f56a2cdf1ecb2e0a">ice4_budgets</a> (d, parami, buconf, krr, plvfact, plsfact, prhodj, pexnref, prvheni, pbudgets, tbudgets, kbudgets)</td></tr>
+<tr class="separator:a37b6cc0f511a96b6f56a2cdf1ecb2e0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a006c05a7b0cd702a6d167df99bf73e03" name="a006c05a7b0cd702a6d167df99bf73e03"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a006c05a7b0cd702a6d167df99bf73e03">&#9670;&#160;</a></span>ice4_budgets()</h2>
+<a id="a37b6cc0f511a96b6f56a2cdf1ecb2e0a" name="a37b6cc0f511a96b6f56a2cdf1ecb2e0a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a37b6cc0f511a96b6f56a2cdf1ecb2e0a">&#9670;&#160;</a></span>ice4_budgets()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -110,31 +110,7 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">integer, intent(in)&#160;</td>
-          <td class="paramname"><em>ksize</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, intent(in)&#160;</td>
-          <td class="paramname"><em>ptstep</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">integer, intent(in)&#160;</td>
           <td class="paramname"><em>krr</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">integer, dimension(ksize), intent(in)&#160;</td>
-          <td class="paramname"><em>k1</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">integer, dimension(ksize), intent(in)&#160;</td>
-          <td class="paramname"><em>k2</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -169,8 +145,8 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(ksize, ibunum-ibunum_extra), intent(in)&#160;</td>
-          <td class="paramname"><em>pbu_pack</em>, </td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, ibunum-ibunum_extra), intent(in)&#160;</td>
+          <td class="paramname"><em>pbudgets</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -196,8 +172,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__ice4__budgets_a006c05a7b0cd702a6d167df99bf73e03_cgraph.png" border="0" usemap="#anamespacemode__ice4__budgets_a006c05a7b0cd702a6d167df99bf73e03_cgraph" alt=""/></div>
-<map name="anamespacemode__ice4__budgets_a006c05a7b0cd702a6d167df99bf73e03_cgraph" id="anamespacemode__ice4__budgets_a006c05a7b0cd702a6d167df99bf73e03_cgraph">
+<div class="center"><img src="namespacemode__ice4__budgets_a37b6cc0f511a96b6f56a2cdf1ecb2e0a_cgraph.png" border="0" usemap="#anamespacemode__ice4__budgets_a37b6cc0f511a96b6f56a2cdf1ecb2e0a_cgraph" alt=""/></div>
+<map name="anamespacemode__ice4__budgets_a37b6cc0f511a96b6f56a2cdf1ecb2e0a_cgraph" id="anamespacemode__ice4__budgets_a37b6cc0f511a96b6f56a2cdf1ecb2e0a_cgraph">
 <area shape="rect" title=" " alt="" coords="5,5,165,45"/>
 <area shape="rect" href="namespacemode__budget__phy.html#aa498d2363e7683e361ea7dfdc83cf561" title=" " alt="" coords="213,5,408,45"/>
 <area shape="poly" title=" " alt="" coords="166,23,200,23,200,28,166,28"/>
@@ -208,12 +184,10 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__ice4__budgets_a006c05a7b0cd702a6d167df99bf73e03_icgraph.png" border="0" usemap="#anamespacemode__ice4__budgets_a006c05a7b0cd702a6d167df99bf73e03_icgraph" alt=""/></div>
-<map name="anamespacemode__ice4__budgets_a006c05a7b0cd702a6d167df99bf73e03_icgraph" id="anamespacemode__ice4__budgets_a006c05a7b0cd702a6d167df99bf73e03_icgraph">
-<area shape="rect" title=" " alt="" coords="379,5,539,45"/>
-<area shape="rect" href="namespacemode__ice4__pack.html#a08ca9e3319aaadfc1230c68e980b654e" title=" " alt="" coords="127,13,331,38"/>
-<area shape="poly" title=" " alt="" coords="365,28,331,28,331,23,365,23"/>
-<area shape="rect" href="rain__ice_8F90.html#a02941f082f8e2db69d2f2bc4f0e4f073" title=" " alt="" coords="5,13,79,38"/>
+<div class="center"><img src="namespacemode__ice4__budgets_a37b6cc0f511a96b6f56a2cdf1ecb2e0a_icgraph.png" border="0" usemap="#anamespacemode__ice4__budgets_a37b6cc0f511a96b6f56a2cdf1ecb2e0a_icgraph" alt=""/></div>
+<map name="anamespacemode__ice4__budgets_a37b6cc0f511a96b6f56a2cdf1ecb2e0a_icgraph" id="anamespacemode__ice4__budgets_a37b6cc0f511a96b6f56a2cdf1ecb2e0a_icgraph">
+<area shape="rect" title=" " alt="" coords="127,5,287,45"/>
+<area shape="rect" href="rain__ice_8F90.html#a4c98d01f9eb6670ffb925eaac51533d3" title=" " alt="" coords="5,13,79,38"/>
 <area shape="poly" title=" " alt="" coords="113,28,79,28,79,23,113,23"/>
 </map>
 </div>
