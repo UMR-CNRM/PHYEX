@@ -18,7 +18,7 @@ USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_CONVPAR, ONLY : INI_CONVPAR
 USE MODI_SHALLOW_CONVECTION, ONLY : SHALLOW_CONVECTION
-
+USE MODI_DEEP_CONVECTION, ONLY: DEEP_CONVECTION
 
 ! Purpose:
 ! -------
@@ -334,26 +334,26 @@ IF(LDEEP) THEN
 
   CALL INI_CONVPAR
 
-
-  CALL DEEP_CONVECTION( KLON, ILEV_MNH, IIDIA, IFDIA, IBDIA, ITDIA,&
-                        &PDTCONV, KICE, LREFRESH_ALL, LDOWN, LSETTADJ,& 
-                        &PAPRSF, PZZF,&
-                        &PDXDY,ZTIMEC,&
-                        &PT, PRV,& 
-                        &PRC, PRI,&
-                        &PU,PV,&
-                        &PW,&
-                        &ICOUNT, ZTTEN,&
-                        &ZRVTEN, ZRCTEN,&
-                        & ZRITEN,&
-                        &ZPRLTEN, ZPRSTEN,&
-                        &ICLTOP, ICLBAS,&
-                        & ZPRLFLX, ZPRSFLX,& 
-                        &ZUMF, ZDMF,&
-                        &ZCAPE,&
-                        &OCHTRANS, ICH1, ZCH1,&
-                        & ZCH1TEN,&
-                        &OUSECHEM, OCH_CONV_SCAV, PRHOREF)
+  CALL ABOR1('FIXME: THE INTERFACE IS WRONG')
+  !CALL DEEP_CONVECTION( KLON, ILEV_MNH, IIDIA, IFDIA, IBDIA, ITDIA,&
+  !                      &PDTCONV, KICE, LREFRESH_ALL, LDOWN, LSETTADJ,& 
+  !                      &PAPRSF, PZZF,&
+  !                      &PDXDY,ZTIMEC,&
+  !                      &PT, PRV,& 
+  !                      &PRC, PRI,&
+  !                      &PU,PV,&
+  !                      &PW,&
+  !                      &ICOUNT, ZTTEN,&
+  !                      &ZRVTEN, ZRCTEN,&
+  !                      & ZRITEN,&
+  !                      &ZPRLTEN, ZPRSTEN,&
+  !                      &ICLTOP, ICLBAS,&
+  !                      & ZPRLFLX, ZPRSFLX,& 
+  !                      &ZUMF, ZDMF,&
+  !                      &ZCAPE,&
+  !                      &OCHTRANS, ICH1, ZCH1,&
+  !                      & ZCH1TEN,&
+  !                      &OUSECHEM, OCH_CONV_SCAV, PRHOREF)
 !  3.2. Additional Ensemble members
  
     IF ( IENS > 0 ) THEN
@@ -362,17 +362,18 @@ IF(LDEEP) THEN
  
 !* first member - changes in MODD_CONVPAR (cloud radius of 500 m)
  
-     CALL DEEP_CONVECTION( KLON, ILEV_MNH, IIDIA, IFDIA, IBDIA, ITDIA,&
-                           &PDTCONV, KICE, LREFRESH_ALL, LDOWN, LSETTADJ,&
-                           &PAPRSF,  PZZF, PDXDY, ZTIMEC,&
+     CALL ABOR1('FIXME: THE INTERFACE IS WRONG')
+     !CALL DEEP_CONVECTION( KLON, ILEV_MNH, IIDIA, IFDIA, IBDIA, ITDIA,&
+     !                      &PDTCONV, KICE, LREFRESH_ALL, LDOWN, LSETTADJ,&
+     !                      &PAPRSF,  PZZF, PDXDY, ZTIMEC,&
  
-                          &PT, PRV, PRC, PRI, PU, PV, PW,&
-                          &IEDUMMY, ZTTENE(:,:,1), ZRVTENE(:,:,1), ZRCTENE(:,:,1), ZRITENE(:,:,1),&
-                          &ZPRLTENE(:,1), ZPRSTENE(:,1),&
-                          &IEDUMMY, IEDUMMY, ZPRLFLXE(:,:,1), ZPRSFLXE(:,:,1),&
-                          &ZUMFE(:,:,1), ZDMFE(:,:,1), ZEDUMMY,&
-                          &OCHTRANS, ICH1, ZCH1, ZCH1TENE(:,:,:,1),&
-                          &OUSECHEM, OCH_CONV_SCAV, PRHOREF)                  
+     !                     &PT, PRV, PRC, PRI, PU, PV, PW,&
+     !                     &IEDUMMY, ZTTENE(:,:,1), ZRVTENE(:,:,1), ZRCTENE(:,:,1), ZRITENE(:,:,1),&
+     !                     &ZPRLTENE(:,1), ZPRSTENE(:,1),&
+     !                     &IEDUMMY, IEDUMMY, ZPRLFLXE(:,:,1), ZPRSFLXE(:,:,1),&
+     !                     &ZUMFE(:,:,1), ZDMFE(:,:,1), ZEDUMMY,&
+     !                     &OCHTRANS, ICH1, ZCH1, ZCH1TENE(:,:,:,1),&
+     !                     &OUSECHEM, OCH_CONV_SCAV, PRHOREF)                  
     ENDIF
  
     IF (  IENS > 1 ) THEN
@@ -381,32 +382,34 @@ IF(LDEEP) THEN
  
 !* second member (positive vertical velocity perturb for Trigger)
  
-    CALL DEEP_CONVECTION( KLON, ILEV_MNH, IIDIA, IFDIA, IBDIA, ITDIA,&
-                          &PDTCONV, KICE, LREFRESH_ALL, LDOWN, LSETTADJ,&
-                          &PAPRSF, PZZF, PDXDY, ZTIMEC,&
-                          &PT, PRV, PRC, PRI, PU, PV, PW*1.5+1.E-4,&
-                          &IEDUMMY, ZTTENE(:,:,2), ZRVTENE(:,:,2), ZRCTENE(:,:,2), ZRITENE(:,:,2),&
-                          &ZPRLTENE(:,2), ZPRSTENE(:,2),&
-                          &IEDUMMY, IEDUMMY, ZPRLFLXE(:,:,2), ZPRSFLXE(:,:,2),&
-                          &ZUMFE(:,:,2), ZDMFE(:,:,2), ZEDUMMY,&
-                          &OCHTRANS, ICH1, ZCH1, ZCH1TENE(:,:,:,2),&
-                          &OUSECHEM, OCH_CONV_SCAV, PRHOREF)                  
+    CALL ABOR1('FIXME: THE INTERFACE IS WRONG')
+    !CALL DEEP_CONVECTION( KLON, ILEV_MNH, IIDIA, IFDIA, IBDIA, ITDIA,&
+    !                      &PDTCONV, KICE, LREFRESH_ALL, LDOWN, LSETTADJ,&
+    !                      &PAPRSF, PZZF, PDXDY, ZTIMEC,&
+    !                      &PT, PRV, PRC, PRI, PU, PV, PW*1.5+1.E-4,&
+    !                      &IEDUMMY, ZTTENE(:,:,2), ZRVTENE(:,:,2), ZRCTENE(:,:,2), ZRITENE(:,:,2),&
+    !                      &ZPRLTENE(:,2), ZPRSTENE(:,2),&
+    !                      &IEDUMMY, IEDUMMY, ZPRLFLXE(:,:,2), ZPRSFLXE(:,:,2),&
+    !                      &ZUMFE(:,:,2), ZDMFE(:,:,2), ZEDUMMY,&
+    !                      &OCHTRANS, ICH1, ZCH1, ZCH1TENE(:,:,:,2),&
+    !                      &OUSECHEM, OCH_CONV_SCAV, PRHOREF)                  
     ENDIF
 !
     IF ( IENS > 2 ) THEN
  
 !* third member (positive vertical velocity perturb for Trigger)
  
-     CALL DEEP_CONVECTION( KLON, ILEV_MNH, IIDIA, IFDIA, IBDIA, ITDIA,&
-                          &PDTCONV, KICE, LREFRESH_ALL, LDOWN, LSETTADJ,&
-                          &PAPRSF, PZZF, PDXDY, ZTIMEC,&
-                          &PT, PRV, PRC, PRI, PU, PV, PW*.5-1.E-4,&
-                          &IEDUMMY, ZTTENE(:,:,3), ZRVTENE(:,:,3), ZRCTENE(:,:,3), ZRITENE(:,:,3),&
-                          &ZPRLTENE(:,3), ZPRSTENE(:,3),&
-                          &IEDUMMY, IEDUMMY, ZPRLFLXE(:,:,3), ZPRSFLXE(:,:,3),&
-                          &ZUMFE(:,:,3), ZDMFE(:,:,3), ZEDUMMY,&
-                          &OCHTRANS, ICH1, ZCH1, ZCH1TENE(:,:,:,3),&
-                          &OUSECHEM, OCH_CONV_SCAV, PRHOREF)                  
+     CALL ABOR1('FIXME: THE INTERFACE IS WRONG')
+     !CALL DEEP_CONVECTION( KLON, ILEV_MNH, IIDIA, IFDIA, IBDIA, ITDIA,&
+     !                     &PDTCONV, KICE, LREFRESH_ALL, LDOWN, LSETTADJ,&
+     !                     &PAPRSF, PZZF, PDXDY, ZTIMEC,&
+     !                     &PT, PRV, PRC, PRI, PU, PV, PW*.5-1.E-4,&
+     !                     &IEDUMMY, ZTTENE(:,:,3), ZRVTENE(:,:,3), ZRCTENE(:,:,3), ZRITENE(:,:,3),&
+     !                     &ZPRLTENE(:,3), ZPRSTENE(:,3),&
+     !                     &IEDUMMY, IEDUMMY, ZPRLFLXE(:,:,3), ZPRSFLXE(:,:,3),&
+     !                     &ZUMFE(:,:,3), ZDMFE(:,:,3), ZEDUMMY,&
+     !                     &OCHTRANS, ICH1, ZCH1, ZCH1TENE(:,:,:,3),&
+     !                     &OUSECHEM, OCH_CONV_SCAV, PRHOREF)                  
     ENDIF
  
 ENDIF
