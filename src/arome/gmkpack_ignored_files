@@ -19,3 +19,5 @@ conv/convect_mixing_funct.F90
 conv/convect_mixing_funct.h
 conv/convect_trigger_shal.F90
 conv/convect_trigger_shal.h
+conv/convect_updraft_shal.F90
+conv/convect_updraft_shal.h
