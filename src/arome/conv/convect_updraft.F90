@@ -81,6 +81,7 @@ USE MODD_CONVPAR
 USE MODD_CONVPAREXT
 USE MODD_DIMPHYEX
 USE MODE_CONVECT_CONDENS, ONLY: CONVECT_CONDENS
+USE MODE_CONVECT_MIXING_FUNCT, ONLY: CONVECT_MIXING_FUNCT
 !
 !
 IMPLICIT NONE
@@ -166,8 +167,6 @@ TYPE(DIMPHYEX_T) :: D
 TYPE(CONVPAR_T)  :: CONVPAR
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-
-#include "convect_mixing_funct.h"
 !-------------------------------------------------------------------------------
 !
 !        0.3   Set loop bounds

@@ -15,3 +15,5 @@ phyex/conv/convect_closure_thrvlcl.F90
 phyex/conv/convect_closure_thrvlcl.h
 conv/convect_condens.F90
 conv/convect_condens.h
+conv/convect_mixing_funct.F90
+conv/convect_mixing_funct.h
