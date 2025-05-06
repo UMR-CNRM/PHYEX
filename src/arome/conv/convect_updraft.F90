@@ -80,6 +80,7 @@ USE MODD_CST
 USE MODD_CONVPAR
 USE MODD_CONVPAREXT
 USE MODD_DIMPHYEX
+USE MODE_CONVECT_CONDENS, ONLY: CONVECT_CONDENS
 !
 !
 IMPLICIT NONE
@@ -166,7 +167,6 @@ TYPE(CONVPAR_T)  :: CONVPAR
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
-#include "convect_condens.h"
 #include "convect_mixing_funct.h"
 !-------------------------------------------------------------------------------
 !
