@@ -740,19 +740,16 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
    P_RC_AUTO(:) = 0.
    P_CC_AUTO(:) = 0.
    P_CR_AUTO(:) = 0.
-!!$   ! In low content cloud
-!!$   CALL LIMA_DROPLETS_AUTOCONVERSION (CST, LIMAP, LIMAW, KSIZE, ODCOMPUTE,   & ! depends on CF
-!!$                                      PRHODREF,                              &
-!!$                                      PHLC_LRC/ZHLC_LCF, ZCCT/ZCF1D, ZLBDC_LRC, ZLBDR,  &
-!!$                                      Z_RC_AUTO_2, Z_CC_AUTO_2, Z_CR_AUTO_2        )
-!!$   P_RC_AUTO(:) = Z_RC_AUTO_2(:) * PHLC_LCF(:)
-!!$   P_CC_AUTO(:) = Z_CC_AUTO_2(:) * PHLC_LCF(:)
-!!$   P_CR_AUTO(:) = Z_CR_AUTO_2(:) * PHLC_LCF(:)
-   !
-   !PA_RC(:) = PA_RC(:) + P_RC_AUTO(:)
-   !IF (LIMAP%NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_AUTO(:)
-   !PA_RR(:) = PA_RR(:) - P_RC_AUTO(:)
-   !IF (LIMAP%NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_AUTO(:)
+IF (.NOT. LIMAP%LICE3) THEN
+   ! In low content cloud
+   CALL LIMA_DROPLETS_AUTOCONVERSION (CST, LIMAP, LIMAW, KSIZE, ODCOMPUTE,   & ! depends on CF
+                                      PRHODREF,                              &
+                                      PHLC_LRC/ZHLC_LCF, ZCCT/ZCF1D, ZLBDC_LRC, ZLBDR,  &
+                                      Z_RC_AUTO_2, Z_CC_AUTO_2, Z_CR_AUTO_2        )
+   P_RC_AUTO(:) = Z_RC_AUTO_2(:) * PHLC_LCF(:)
+   P_CC_AUTO(:) = Z_CC_AUTO_2(:) * PHLC_LCF(:)
+   P_CR_AUTO(:) = Z_CR_AUTO_2(:) * PHLC_LCF(:)
+END IF
    ! In high content cloud
    CALL LIMA_DROPLETS_AUTOCONVERSION (CST, LIMAP, LIMAW, KSIZE, ODCOMPUTE,   & ! depends on CF
                                       PRHODREF,                              &

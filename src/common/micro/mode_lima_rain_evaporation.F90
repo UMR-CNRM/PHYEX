@@ -82,7 +82,7 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: PEVAP3D    ! Rain evap profile
 ! 
 LOGICAL, DIMENSION(SIZE(PRHODREF)) :: GEVAP
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-REAL, DIMENSION(SIZE(PRHODREF))    :: ZZW1, ZZW2, ZKA, ZDV
+REAL, DIMENSION(SIZE(PRHODREF))    :: ZZW1, ZZW2
 !
 !-------------------------------------------------------------------------------
 !
@@ -97,8 +97,6 @@ P_CR_EVAP(:) = 0.
 !
 ZZW1(:) = 0.
 ZZW2(:) = 0.
-ZKA(:)  = 0.
-ZDV(:)  = 0.
 !
 GEVAP(:) = .FALSE.
 GEVAP(:) = ODCOMPUTE(:)      .AND. &

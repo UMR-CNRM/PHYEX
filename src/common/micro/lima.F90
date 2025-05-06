@@ -908,7 +908,6 @@ IF ( BUCONF%LBU_ENABLE ) THEN
 END IF
 !
 PFPR(:,:,:)=0.
-IF (.FALSE.) THEN
 !
 ! sedimentation of cloud droplets
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
@@ -1028,7 +1027,6 @@ IF (LIMAP%NMOM_H.GE.1) THEN
 END IF
 !
 ZTHS(:,:) = ZT(:,:) / ZEXN(:,:) * ZINV_TSTEP
-END IF
 !
 ! Call budgets
 !
@@ -1209,7 +1207,6 @@ ZRSS(:,:) = ZRST(:,:) *ZINV_TSTEP
 ZRGS(:,:) = ZRGT(:,:) *ZINV_TSTEP
 ZRHS(:,:) = ZRHT(:,:) *ZINV_TSTEP
 !
-!
 IF (LIMAP%NMOM_C.GE.2) ZCCS(:,:) = ZCCT(:,:) *ZINV_TSTEP
 IF (LIMAP%NMOM_R.GE.2) ZCRS(:,:) = ZCRT(:,:) *ZINV_TSTEP
 IF (LIMAP%NMOM_I.GE.2) ZCIS(:,:) = ZCIT(:,:) *ZINV_TSTEP
@@ -1255,20 +1252,11 @@ END IF
 !
 LLMICRO(:,:)=.TRUE.
 ! PHLC_HRC should never be larger than PRCT
-PCLDFR(:,:)=MAX(PCLDFR(:,:),PHLC_HCF(:,:))
-PHLC_HRC(:,:)=MIN(PHLC_HRC(:,:),ZRCT(:,:))
-PICEFR(:,:)=MAX(PICEFR(:,:),PHLI_HCF(:,:))
-PHLI_HRI(:,:)=MIN(PHLI_HRI(:,:),ZRIT(:,:))
+!PCLDFR(:,:)=MAX(PCLDFR(:,:),PHLC_HCF(:,:))
+!PHLC_HRC(:,:)=MIN(PHLC_HRC(:,:),ZRCT(:,:))
+!PICEFR(:,:)=MAX(PICEFR(:,:),PHLI_HCF(:,:))
+!PHLI_HRI(:,:)=MIN(PHLI_HRI(:,:),ZRIT(:,:))
 IF ( NEBN%LSUBG_COND ) THEN
-!IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
-!  IF (PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM') THEN
-!    DO IK = D%NKTB, D%NKTE                                                                                                         !         
-!      DO II=D%NIJB, D%NIJE
-!        ZSIGMA_RC(II, IK)=PSIGS(II, IK)**2
-!      ENDDO
-!    ENDDO
-!  ENDIF
-   !  IF (PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU') THEN
    IF (PRESENT(PHLC_HRC)) THEN
       ZHLC_HRC(:,:)=PHLC_HRC(:,:)
       ZHLC_HCF(:,:)=PHLC_HCF(:,:)
@@ -1300,7 +1288,6 @@ IF ( NEBN%LSUBG_COND ) THEN
       ZHLI_HRI(:,:)=ZRIT(:,:)
       ZHLI_HCF(:,:)=PICEFR(:,:)
    END IF
-!  CALL LIMA_COMPUTE_PDF(CST, LIMAP, D%NIJT*(D%NKTE-D%NKTB+1), 'ADJU', 'ADJU', 'NONE',&
   CALL LIMA_COMPUTE_PDF(CST, LIMAP, D%NIJT*(D%NKTE-D%NKTB+1), 'ADJU', 'ADJU', 'NONE',&
                         LLMICRO(:,D%NKTB:D%NKTE), PRHODREF(:,D%NKTB:D%NKTE), ZRCT(:,D%NKTB:D%NKTE), ZRIT(:,D%NKTB:D%NKTE), &
                         PCLDFR(:,D%NKTB:D%NKTE), ZT(:,D%NKTB:D%NKTE), ZSIGMA_RC(:,D%NKTB:D%NKTE), &
@@ -1642,7 +1629,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       ALLOCATE(Z_CR_CORR2(IPACK))         ; Z_CR_CORR2(:) = 0.
       ALLOCATE(Z_CI_CORR2(IPACK))         ; Z_CI_CORR2(:) = 0.
 !
-!!$      IF (LIMAP%LCRYSTAL_SHAPE) THEN
+      IF (LIMAP%LCRYSTAL_SHAPE) THEN
         ALLOCATE(ZA_CI_SHAPE(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; ZA_CI_SHAPE(:,:) = 0.
         ALLOCATE(ZB_CI_SHAPE(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; ZB_CI_SHAPE(:,:) = 0.
         ALLOCATE(Z_SHCI_IMLT(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_IMLT(:,:) = 0.
@@ -1662,27 +1649,27 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
         ALLOCATE(Z_SHCI_ISC(IPACK,LIMAP%NNB_CRYSTAL_SHAPE))  ; Z_SHCI_ISC(:,:)  = 0.
         ALLOCATE(Z_SHCI_ISCS(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_ISCS(:,:) = 0.
         ALLOCATE(Z_SHRI_ISCS(IPACK))                   ; Z_SHRI_ISCS(:) = 0.
-!!$      ELSE
-!!$        ALLOCATE(ZA_CI_SHAPE(0,0))
-!!$        ALLOCATE(ZB_CI_SHAPE(0,0))
-!!$        ALLOCATE(Z_SHCI_IMLT(0,0))
-!!$        ALLOCATE(Z_SHCI_HONC(0,0))
-!!$        ALLOCATE(Z_SHCI_CNVI(0,0))
-!!$        ALLOCATE(Z_SHCI_HACH(0,0))
-!!$        ALLOCATE(Z_SHCI_CNVS(0,0))
-!!$        ALLOCATE(Z_SHCI_AGGS(0,0))
-!!$        ALLOCATE(Z_SHCI_HMS(0,0))
-!!$        ALLOCATE(Z_SHCI_CFRZ(0,0))
-!!$        ALLOCATE(Z_SHCI_CIBU(0,0))
-!!$        ALLOCATE(Z_SHCI_RDSF(0,0))
-!!$        ALLOCATE(Z_SHCI_WETG(0,0))
-!!$        ALLOCATE(Z_SHCI_DRYG(0,0))
-!!$        ALLOCATE(Z_SHCI_HMG(0,0))
-!!$        ALLOCATE(Z_SHCI_CORR2(0,0))
-!!$        ALLOCATE(Z_SHCI_ISC(0,0))
-!!$        ALLOCATE(Z_SHCI_ISCS(0,0))
-!!$        ALLOCATE(Z_SHRI_ISCS(0))
-!!$      END IF
+      ELSE
+        ALLOCATE(ZA_CI_SHAPE(0,0))
+        ALLOCATE(ZB_CI_SHAPE(0,0))
+        ALLOCATE(Z_SHCI_IMLT(0,0))
+        ALLOCATE(Z_SHCI_HONC(0,0))
+        ALLOCATE(Z_SHCI_CNVI(0,0))
+        ALLOCATE(Z_SHCI_HACH(0,0))
+        ALLOCATE(Z_SHCI_CNVS(0,0))
+        ALLOCATE(Z_SHCI_AGGS(0,0))
+        ALLOCATE(Z_SHCI_HMS(0,0))
+        ALLOCATE(Z_SHCI_CFRZ(0,0))
+        ALLOCATE(Z_SHCI_CIBU(0,0))
+        ALLOCATE(Z_SHCI_RDSF(0,0))
+        ALLOCATE(Z_SHCI_WETG(0,0))
+        ALLOCATE(Z_SHCI_DRYG(0,0))
+        ALLOCATE(Z_SHCI_HMG(0,0))
+        ALLOCATE(Z_SHCI_CORR2(0,0))
+        ALLOCATE(Z_SHCI_ISC(0,0))
+        ALLOCATE(Z_SHCI_ISCS(0,0))
+        ALLOCATE(Z_SHRI_ISCS(0))
+      END IF
       !
       !***       4.1 Tendencies computation
       !
