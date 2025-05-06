@@ -11,3 +11,5 @@ phyex/conv/convect_closure_adjust_shal.F90
 phyex/conv/convect_closure_adjust_shal.h
 phyex/conv/convect_closure_shal.F90
 phyex/conv/convect_closure_shal.h
+phyex/conv/convect_closure_thrvlcl.F90
+phyex/conv/convect_closure_thrvlcl.h

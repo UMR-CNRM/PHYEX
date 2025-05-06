@@ -83,6 +83,7 @@ USE MODD_CONVPAR_SHAL, ONLY : CONVPAR_SHAL
 USE MODD_CONVPAREXT, ONLY : CONVPAREXT
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
 USE MODE_CONVECT_CLOSURE_ADJUST_SHAL, ONLY: CONVECT_CLOSURE_ADJUST_SHAL
+USE MODE_CONVECT_CLOSURE_THRVLCL, ONLY: CONVECT_CLOSURE_THRVLCL
 !
 !
 IMPLICIT NONE
@@ -178,7 +179,6 @@ LOGICAL, DIMENSION(D%NIT,D%NKT) :: GWORK4    ! work array
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
-#include "convect_closure_thrvlcl.h"
 !-------------------------------------------------------------------------------
 !
 !*       0.2    Initialize  local variables
