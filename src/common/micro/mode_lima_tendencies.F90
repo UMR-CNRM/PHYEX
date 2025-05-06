@@ -840,23 +840,23 @@ IF (LIMAP%NMOM_I.GE.1) THEN
    P_TH_DEPI(:) = 0.
    P_SHCI_HACH(:,:) = 0.
    P_SHCI_CNVS(:,:) = 0.
-   IF (LIMAP%NMOM_I.GE.2) THEN
+   IF (.NOT. LIMAP%LICE3) THEN
    !
    ! In low content part
-   CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF
-                             PRHODREF, ZT, ZSSI, ZAI, ZCJ, ZLSFACT,           &
-                             ZHLI_LCF, PHLI_LRI/ZHLI_LCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_LRI,    &
-                             Z_TH_DEPI_2, Z_RI_DEPI_2, Z_SHCI_HACH_2,         &
-                             Z_RI_CNVS_2, Z_CI_CNVS_2, Z_SHCI_CNVS_2          )
+      CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF
+                                PRHODREF, ZT, ZSSI, ZAI, ZCJ, ZLSFACT,           &
+                                ZHLI_LCF, PHLI_LRI/ZHLI_LCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_LRI,    &
+                                Z_TH_DEPI_2, Z_RI_DEPI_2, Z_SHCI_HACH_2,         &
+                                Z_RI_CNVS_2, Z_CI_CNVS_2, Z_SHCI_CNVS_2          )
    !
-   IF (LIMAP%LCRYSTAL_SHAPE) Z_CI_CNVS_2(:) = SUM(Z_SHCI_CNVS_2,DIM=2)
+      IF (LIMAP%LCRYSTAL_SHAPE) Z_CI_CNVS_2(:) = SUM(Z_SHCI_CNVS_2,DIM=2)
    !
-   P_RI_DEPI(:) = Z_RI_DEPI_2(:) * PHLI_LCF(:)
-   P_RI_CNVS(:) = Z_RI_CNVS_2(:) * PHLI_LCF(:)
-   P_CI_CNVS(:) = Z_CI_CNVS_2(:) * PHLI_LCF(:)
-   P_TH_DEPI(:) = Z_RI_DEPI_2(:) * ZLSFACT(:)
-   P_SHCI_HACH(:,:) = Z_SHCI_HACH_2(:,:) 
-   P_SHCI_CNVS(:,:) = Z_SHCI_CNVS_2(:,:) 
+      P_RI_DEPI(:) = Z_RI_DEPI_2(:) * PHLI_LCF(:)
+      P_RI_CNVS(:) = Z_RI_CNVS_2(:) * PHLI_LCF(:)
+      P_CI_CNVS(:) = Z_CI_CNVS_2(:) * PHLI_LCF(:)
+      P_TH_DEPI(:) = Z_RI_DEPI_2(:) * ZLSFACT(:)
+      P_SHCI_HACH(:,:) = Z_SHCI_HACH_2(:,:) 
+      P_SHCI_CNVS(:,:) = Z_SHCI_CNVS_2(:,:) 
    END IF
    !
    ! In high content part

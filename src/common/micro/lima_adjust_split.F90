@@ -438,7 +438,7 @@ IF (LIMAP%LADJ) THEN
       LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
       LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
       DO IK=D%NKTB,D%NKTE
-         DO II=D%NJB,D%NIJE
+         DO II=D%NIJB,D%NIJE
             ZRC(II,IK)=ZRC(II,IK)*(1.-PWEIGHT_MF_CLOUD(II,IK))
             ZRI(II,IK)=ZRI(II,IK)*(1.-PWEIGHT_MF_CLOUD(II,IK))
             PCLDFR(II,IK)=PCLDFR(II,IK)*(1.-PWEIGHT_MF_CLOUD(II,IK))
@@ -457,7 +457,7 @@ IF (LIMAP%LADJ) THEN
       ENDDO
       ! Compute the variation of mixing ratio from condensation
       DO IK=D%NKTB,D%NKTE
-         DO II=D%NJB,D%NIJE
+         DO II=D%NIJB,D%NIJE
             IF (LIMAP%NMOM_C.GE.1) THEN
                ZW1 = (ZRC(II,IK) - ZRCS(II,IK)*PTSTEP) / PTSTEP
                IF( ZW1 < 0.0 ) THEN
@@ -491,7 +491,7 @@ IF (LIMAP%LADJ) THEN
       END DO
       ! compute the mass flux scheme cloud contribution with option 'BIGA' (see ice_adjust to implement other options)
       DO IK=D%NKTB,D%NKTE
-         DO II=D%NJB,D%NIJE
+         DO II=D%NIJB,D%NIJE
             ZW1=PRC_MF(II,IK)/PTSTEP
             ZW2=0.
             IF (LIMAP%NMOM_I.EQ.1) ZW2=PRI_MF(II,IK)/PTSTEP
