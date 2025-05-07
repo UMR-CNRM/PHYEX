@@ -82,6 +82,7 @@
 USE MODD_CST
 USE MODD_CONVPAR
 USE MODD_CONVPAREXT
+USE MODE_CONVECT_CLOSURE_THRVLCL, ONLY: CONVECT_CLOSURE_THRVLCL
 !
 !
 IMPLICIT NONE
@@ -207,7 +208,6 @@ LOGICAL, DIMENSION(KLON,KLEV) :: GWORK4    ! work array
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
-#include "convect_closure_thrvlcl.h"
 !-------------------------------------------------------------------------------
 !
 !*       0.2    Initialize  local variables

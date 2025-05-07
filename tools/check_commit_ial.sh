@@ -397,7 +397,7 @@ fi
 if [ ! -z "${reference-}" ]; then
   declare -A refnameByTest
   #Reference to use for each test
-  for t in $(echo $ALLTests | sed 's/,/ /g'); do
+  for t in $(echo $allowedTests | sed 's/,/ /g'); do
     #Name of the reference
     if [ "$reference" == 'REF' ]; then
       if [[ ! -z "${refByTest[$t]+unset}" ]]; then #the -v approach is valid only with bash > 4.3:  if [[ -v gmkpack_o[$cycle] ]]; then
@@ -852,7 +852,6 @@ fi
 ####################
 #### COMPARISON ####
 ####################
-
 if [ $check -eq 1 ]; then
   echo "### Check commit $commit against commit $reference"
 

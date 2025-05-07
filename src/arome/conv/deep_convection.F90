@@ -108,6 +108,8 @@ USE MODD_NSV,       ONLY : NSV_LGBEG,NSV_LGEND, &
                            NSV_LNOXBEG
 USE MODD_CH_M9,           ONLY : CNAMES
 USE MODI_CH_CONVECT_LINOX
+USE MODE_CONVECT_CHEM_TRANSPORT, ONLY: CONVECT_CHEM_TRANSPORT
+USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
 !
 IMPLICIT NONE
@@ -1070,11 +1072,12 @@ IF ( ICONV1 > 0 )  THEN
 !
     ELSE
 !
-      CALL CONVECT_CHEM_TRANSPORT( ICONV, KLEV, KCH1, ZCH1, ZCH1C,      &
-                                   IDPL, IPBL, ILCL, ICTL, ILFS, IDBL,  &
-                                   ZUMF, ZUER, ZUDR, ZDMF, ZDER, ZDDR,  &
-                                   ZTIMEC, ZDXDY, ZMIXF, ZLMASS, ZWSUB, &
-                                   IFTSTEPS )
+      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'DEEP_CONVECTION', 'FIXME: THE INTERFACE IS WRONG')
+      !CALL CONVECT_CHEM_TRANSPORT( ICONV, KLEV, KCH1, ZCH1, ZCH1C,      &
+      !                             IDPL, IPBL, ILCL, ICTL, ILFS, IDBL,  &
+      !                             ZUMF, ZUER, ZUDR, ZDMF, ZDER, ZDDR,  &
+      !                             ZTIMEC, ZDXDY, ZMIXF, ZLMASS, ZWSUB, &
+      !                             IFTSTEPS )
 !
       IF (OCH_CONV_LINOX) THEN
         ZCH1C(:,:,JN_NO) = ZWORK4C(:,:)
