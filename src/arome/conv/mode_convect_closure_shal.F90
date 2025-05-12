@@ -1,3 +1,6 @@
+MODULE MODE_CONVECT_CLOSURE_SHAL
+IMPLICIT NONE
+CONTAINS
 !     ######spl
      SUBROUTINE CONVECT_CLOSURE_SHAL( CVP_SHAL, CVPEXT, CST, D,         &
                                       PPRES, PDPRES, PZ, PLMASS,           &
@@ -79,6 +82,8 @@ USE MODD_CST, ONLY : CST_T
 USE MODD_CONVPAR_SHAL, ONLY : CONVPAR_SHAL
 USE MODD_CONVPAREXT, ONLY : CONVPAREXT
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
+USE MODE_CONVECT_CLOSURE_ADJUST_SHAL, ONLY: CONVECT_CLOSURE_ADJUST_SHAL
+USE MODE_CONVECT_CLOSURE_THRVLCL, ONLY: CONVECT_CLOSURE_THRVLCL
 !
 !
 IMPLICIT NONE
@@ -174,8 +179,6 @@ LOGICAL, DIMENSION(D%NIT,D%NKT) :: GWORK4    ! work array
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
-#include "convect_closure_adjust_shal.h"
-#include "convect_closure_thrvlcl.h"
 !-------------------------------------------------------------------------------
 !
 !*       0.2    Initialize  local variables
@@ -591,3 +594,4 @@ CONTAINS
 INCLUDE "convect_satmixratio.h"
 !
 END SUBROUTINE CONVECT_CLOSURE_SHAL
+END MODULE MODE_CONVECT_CLOSURE_SHAL
