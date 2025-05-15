@@ -287,6 +287,16 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
   fi
   . "${WORKDIR}/PHYEX/tools/env.sh"
 
+  #Install requirements in a virtual env
+  log 1 "Installing requirements"
+  TEMPDIR=$(mktemp -d)
+  trap "\rm -rf $TEMPDIR; exit_error $?" EXIT
+  cd $TEMPDIR
+  python3 -m venv phyex.env
+  . phyex.env/bin/activate
+  cd ${WORKDIR}/PHYEX
+  pip install -r requirements.txt
+
   #Enable the gihub project pages
   if [ $enableghpages -eq 1 ]; then
     log 1 "Test if github project pages are enabled"

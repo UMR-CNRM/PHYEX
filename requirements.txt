@@ -1,0 +1,7 @@
+matplotlib
+pyfortool==2.2.4
+numpy
+pandas
+xarray
+epygram
+ctypesForFortran

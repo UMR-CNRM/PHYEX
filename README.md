@@ -9,7 +9,8 @@ Prerequisites:
   - an internet connexion (with access to the github servers) is needed only for the installation
     and, for offline tests (testprogs), when the fiat version to use change
   - python > 3.8 (but only tested with version 3.10)
-  - some python packages (available on PyPI):
+  - some python packages (available on PyPI). All these modules can be installed by ```pip install -r requirements.txt```:
+    - pyfortool to transform the source code
     - numpy and pandas for the testprogs
     - epygram and matplotlib for AROME
     - xarray for Meso-NH

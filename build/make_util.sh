@@ -40,7 +40,7 @@ $0 [options]
 -c                    performs compilation
 --inplace-install     install or update, if needed, fiat and the build system in the directory where the current script is
 --inplace-clean       remove the fiat and the build system installation present in the directory where the current script is
---ssh                 use the ssh protocol to clone the pyfortool and fxtran repositories instead of https"
+--ssh                 use the ssh protocol to clone the fiat repository instead of https"
 
 Unrecognized options are passed to the the build system. Useful options for FCM include:
 --new                   clean build tree before building
