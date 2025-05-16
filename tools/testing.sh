@@ -295,7 +295,17 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
   python3 -m venv phyex.env
   . phyex.env/bin/activate
   cd ${WORKDIR}/PHYEX
+  set +e
   pip install -r requirements.txt
+  result=$?
+  set -e
+  log 0 "virtual env installation"
+  if [ ${result} -ne 0 ]; then
+    ret=1
+    log 0 "  virtual env: error"
+  else
+    log 0 "  virtual env: OK"
+  fi
 
   #Enable the gihub project pages
   if [ $enableghpages -eq 1 ]; then
