@@ -108,17 +108,19 @@ GEVAP(:) = ODCOMPUTE(:)      .AND. &
 !
 IF (LIMAP%LKHKO) THEN
 
-   ZZW1(:) = MAX((1.0 - PRVT(:)/ZZW1(:)),0.0)  ! Subsaturation
+   WHERE ( GEVAP )
+      ZZW1(:) = MAX((1.0 - PRVT(:)/ZZW1(:)),0.0)  ! Subsaturation
     
-   ZZW2(:) = 1. / ( CST%XRHOLW*((((PLV(:)/PT(:))**2)/(LIMAW%XTHCO*CST%XRV)) +          & ! G
-        (CST%XRV*PT(:))/(LIMAW%XDIVA*PEVSAT(:))))
+      ZZW2(:) = 1. / ( CST%XRHOLW*((((PLV(:)/PT(:))**2)/(LIMAW%XTHCO*CST%XRV)) +          & ! G
+           (CST%XRV*PT(:))/(LIMAW%XDIVA*PEVSAT(:))))
 
-   ZZW2(:) = 3.0 * LIMAW%XCEVAP * ZZW2(:) * (4.*CST%XPI*CST%XRHOLW/(3.))**(2./3.) *    &
-        (PRRT(:))**(1./3.) * (PCRT(:))**(2./3.) * ZZW1(:)                            
-   P_RR_EVAP(:) = - ZZW2(:)
+      ZZW2(:) = 3.0 * LIMAW%XCEVAP * ZZW2(:) * (4.*CST%XPI*CST%XRHOLW/(3.))**(2./3.) *    &
+           (PRRT(:))**(1./3.) * (PCRT(:))**(2./3.) * ZZW1(:)                            
+      P_RR_EVAP(:) = - ZZW2(:)
 
-   ZZW2(:) = ZZW2(:) * PCRT(:)/PRRT(:)
-   P_CR_EVAP = - ZZW2(:)
+      ZZW2(:) = ZZW2(:) * PCRT(:)/PRRT(:)
+      P_CR_EVAP = - ZZW2(:)
+   END WHERE
 
 ELSE
 
