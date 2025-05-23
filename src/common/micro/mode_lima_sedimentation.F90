@@ -169,7 +169,7 @@ IF (HPHASE=='I') ZC=CST%XCI
 ! McFarquhar and Heymsfield (1997) for columns as in ICE3
 IF (KID==4 .AND. IMOMENTS==1) THEN
    IMOMENTS=2
-   WHERE(PRS(:,:)>0) PCS(:,:)=1/(4*CST%XPI*900.) * PRS(:,:) * &
+   WHERE(PRS(:,:)>LIMAP%XRTMIN(KID)) PCS(:,:)=1/(4*CST%XPI*900.) * PRS(:,:) * &
         MAX(0.05E6,-0.15319E6-0.021454E6*LOG(PRHODREF(:,:)*PRS(:,:)))**3
 END IF
 !
