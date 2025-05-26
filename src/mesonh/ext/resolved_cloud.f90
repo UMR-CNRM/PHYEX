@@ -318,6 +318,11 @@ USE MODD_REF,              ONLY: XTHVREFZ
 USE MODD_SALT,             ONLY: LSALT
 USE MODD_TURB_n,           ONLY: TURBN
 !
+#ifndef MNH_OPENACC
+use mode_tools,                        only: Countjv
+#else
+use mode_tools,                        only: Countjv_device
+#endif
 USE MODE_ll
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 use mode_sources_neg_correct, only: Sources_neg_correct
@@ -477,7 +482,10 @@ INTEGER :: IKU
 INTEGER :: IINFO_ll      ! return code of parallel routine
 INTEGER :: JK,JI,JL
 !
-!
+INTEGER, DIMENSION(SIZE(PEXNREF)) :: I1,I2,I3 ! Used to replace the COUNT
+LOGICAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3)) &
+                                  :: GMICRO ! Test where to compute all processes
+INTEGER   :: IMICRO ! Test where to compute all processes
 !
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZDZZ
 real, dimension(:,:,:), allocatable :: ZEXN
@@ -1040,7 +1048,26 @@ SELECT CASE ( HCLOUD )
                             PSVS(:,:,:,NSV_ELECEND),                              &
                             PSEA, PTOWN                                           )
       ELSE
-        CALL RAIN_ICE_OLD (YLDIMPHYEX, OSEDIC, CSEDIM, HSUBG_AUCV, OWARM, 1, IKU, 1,&
+        !
+        !  optimization by looking for locations where
+        !  the microphysical fields are larger than a minimal value only !!!
+        !
+        !$acc kernels present_cr(GMICRO)
+        GMICRO(:,:,:) = .FALSE.
+        GMICRO(IIB:IIE,IJB:IJE,:) =                          &
+                PRT(IIB:IIE,IJB:IJE,:,2)>XRTMIN(2) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,3)>XRTMIN(3) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,4)>XRTMIN(4) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,5)>XRTMIN(5) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,6)>XRTMIN(6)
+        !$acc end kernels
+#ifndef MNH_OPENACC
+        IMICRO = COUNTJV( GMICRO(:,:,:),I1(:),I2(:),I3(:))
+#else
+        CALL COUNTJV_DEVICE(GMICRO(:,:,:),I1(:),I2(:),I3(:),IMICRO)
+#endif
+        CALL RAIN_ICE_OLD (YLDIMPHYEX, IMICRO, I1, I2, I3, GMICRO,                  &
+                      OSEDIC, CSEDIM, HSUBG_AUCV, OWARM, 1, IKU, 1,                 &
                       KSPLITR, PTSTEP, KRR,                                         &
                       ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,        &
                       PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                             &
@@ -1303,7 +1330,27 @@ SELECT CASE ( HCLOUD )
       DEALLOCATE(ZEFIELDW)
       !
     ELSE
-      CALL RAIN_ICE_OLD (YLDIMPHYEX, OSEDIC, CSEDIM, HSUBG_AUCV, OWARM, 1, IKU, 1,    &
+      !
+      !  optimization by looking for locations where
+      !  the microphysical fields are larger than a minimal value only !!!
+      !
+      !$acc kernels present_cr(GMICRO)
+      GMICRO(:,:,:) = .FALSE.
+      GMICRO(IIB:IIE,IJB:IJE,:) =                          &
+                PRT(IIB:IIE,IJB:IJE,:,2)>XRTMIN(2) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,3)>XRTMIN(3) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,4)>XRTMIN(4) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,5)>XRTMIN(5) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,6)>XRTMIN(6) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,7)>XRTMIN(7)
+      !$acc end kernels
+#ifndef MNH_OPENACC
+        IMICRO = COUNTJV( GMICRO(:,:,:),I1(:),I2(:),I3(:))
+#else
+        CALL COUNTJV_DEVICE(GMICRO(:,:,:),I1(:),I2(:),I3(:),IMICRO)
+#endif
+      CALL RAIN_ICE_OLD (YLDIMPHYEX, IMICRO, I1, I2, I3, GMICRO,        &
+                    OSEDIC, CSEDIM, HSUBG_AUCV, OWARM, 1, IKU, 1,         &
                     KSPLITR, PTSTEP, KRR,                                 &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                     PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                     &
