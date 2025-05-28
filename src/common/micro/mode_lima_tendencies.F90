@@ -835,8 +835,10 @@ IF (LIMAP%NMOM_I.GE.1) THEN
    P_RI_CNVS(:) = 0.
    P_CI_CNVS(:) = 0.
    P_TH_DEPI(:) = 0.
-   P_SHCI_HACH(:,:) = 0.
-   P_SHCI_CNVS(:,:) = 0.
+   IF (LIMAP%LCRYSTAL_SHAPE) THEN
+      P_SHCI_HACH(:,:) = 0.
+      P_SHCI_CNVS(:,:) = 0.
+   END IF
    IF (.NOT. LIMAP%LICE3) THEN
    !
    ! In low content part
@@ -846,14 +848,16 @@ IF (LIMAP%NMOM_I.GE.1) THEN
                                 Z_TH_DEPI_2, Z_RI_DEPI_2, Z_SHCI_HACH_2,         &
                                 Z_RI_CNVS_2, Z_CI_CNVS_2, Z_SHCI_CNVS_2          )
    !
-      IF (LIMAP%LCRYSTAL_SHAPE) Z_CI_CNVS_2(:) = SUM(Z_SHCI_CNVS_2,DIM=2)
+      IF (LIMAP%LCRYSTAL_SHAPE) THEN
+         Z_CI_CNVS_2(:) = SUM(Z_SHCI_CNVS_2,DIM=2)
+         P_SHCI_HACH(:,:) = Z_SHCI_HACH_2(:,:) 
+         P_SHCI_CNVS(:,:) = Z_SHCI_CNVS_2(:,:)
+      END IF
    !
       P_RI_DEPI(:) = Z_RI_DEPI_2(:) * PHLI_LCF(:)
       P_RI_CNVS(:) = Z_RI_CNVS_2(:) * PHLI_LCF(:)
       P_CI_CNVS(:) = Z_CI_CNVS_2(:) * PHLI_LCF(:)
-      P_TH_DEPI(:) = Z_RI_DEPI_2(:) * ZLSFACT(:)
-      P_SHCI_HACH(:,:) = Z_SHCI_HACH_2(:,:) 
-      P_SHCI_CNVS(:,:) = Z_SHCI_CNVS_2(:,:) 
+      P_TH_DEPI(:) = P_RI_DEPI(:) * ZLSFACT(:)
    END IF
    !
    ! In high content part
@@ -863,14 +867,16 @@ IF (LIMAP%NMOM_I.GE.1) THEN
                              Z_TH_DEPI_2, Z_RI_DEPI_2, Z_SHCI_HACH_2,         &
                              Z_RI_CNVS_2, Z_CI_CNVS_2, Z_SHCI_CNVS_2          )
    !
-   IF (LIMAP%LCRYSTAL_SHAPE) Z_CI_CNVS_2(:) = SUM(Z_SHCI_CNVS_2,DIM=2)
+   IF (LIMAP%LCRYSTAL_SHAPE) THEN
+      Z_CI_CNVS_2(:) = SUM(Z_SHCI_CNVS_2,DIM=2)
+      P_SHCI_HACH(:,:) = P_SHCI_HACH(:,:) + Z_SHCI_HACH_2(:,:) 
+      P_SHCI_CNVS(:,:) = P_SHCI_CNVS(:,:) + Z_SHCI_CNVS_2(:,:)
+   END IF
    !
    P_RI_DEPI(:) = P_RI_DEPI(:) + Z_RI_DEPI_2(:) * PHLI_HCF(:)
    P_RI_CNVS(:) = P_RI_CNVS(:) + Z_RI_CNVS_2(:) * PHLI_HCF(:)
    P_CI_CNVS(:) = P_CI_CNVS(:) + Z_CI_CNVS_2(:) * PHLI_HCF(:)
-   P_TH_DEPI(:) = P_TH_DEPI(:) + Z_RI_DEPI_2(:) * ZLSFACT(:)
-   P_SHCI_HACH(:,:) = P_SHCI_HACH(:,:) + Z_SHCI_HACH_2(:,:) 
-   P_SHCI_CNVS(:,:) = P_SHCI_CNVS(:,:) + Z_SHCI_CNVS_2(:,:) 
+   P_TH_DEPI(:) = P_TH_DEPI(:) + P_RI_DEPI(:) * ZLSFACT(:)
    !
    PA_TH(:) = PA_TH(:) + P_TH_DEPI(:)
    PA_RV(:) = PA_RV(:) - P_RI_DEPI(:) 

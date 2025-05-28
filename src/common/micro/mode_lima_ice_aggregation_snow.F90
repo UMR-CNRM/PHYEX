@@ -92,7 +92,6 @@ ZZW3(:) = 0.
 !
 P_RI_AGGS(:) = 0.
 P_CI_AGGS(:) = 0.
-P_SHCI_AGGS(:,:) = 0.
 !
 !
 IF (LIMAP%NMOM_I.EQ.1) THEN
@@ -122,6 +121,7 @@ ELSE
          P_RI_AGGS(:) = - ZZW2(:)
       END WHERE
    ELSE
+      P_SHCI_AGGS(:,:) = 0.
       DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
          WHERE ( PRIT(:) > LIMAP%XRTMIN(4) .AND. PRST(:) > LIMAP%XRTMIN(5) .AND. PCST(:) > LIMAP%XCTMIN(5) .AND. &
               PCIT_SHAPE(:,ISH) > 0. .AND. PRIT_SHAPE(:,ISH) > 0. .AND. &
