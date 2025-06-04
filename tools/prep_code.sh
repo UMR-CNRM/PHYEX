@@ -296,13 +296,6 @@ fi
 if [ "$pyfortool_opts_env" != "" -o -n "${pyfortool_options-}" ]; then
   [ $verbose -gt 0 ] && echo "Applying pyfortool"
 
-  #Update PATH and PYTHONPATH if needed
-  if [ $useParallelPyForTool -eq 1 ]; then
-    which pyfortool_parallel > /dev/null || . $PHYEXTOOLSDIR/site/pyfortool/bin/env.sh
-  else
-    which pyfortool > /dev/null || . $PHYEXTOOLSDIR/site/pyfortool/bin/env.sh
-  fi
-
   if [ -n "${model-}" ]; then
     reps=$subs
   else

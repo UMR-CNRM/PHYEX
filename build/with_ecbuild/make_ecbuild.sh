@@ -161,7 +161,7 @@ if [ \$(head -1 src/pyphyex.F90 | grep MODULE | wc -l) == 0 ]; then
 fi
 
 BUILDDIR=$PWD/build
-mkdir \$BUILDDIR
+[ ! -d \$BUILDDIR ] && mkdir \$BUILDDIR
 cd \$BUILDDIR
 
 #fiat compilation
@@ -171,7 +171,7 @@ cmake ../../src/fiat -DCMAKE_INSTALL_PREFIX=\$BUILDDIR \\
                      -DCMAKE_CXX_FLAGS=-lstdc++ \\
                      -DCMAKE_BUILD_TYPE=\$level \\
                      -DBUILD_SHARED_LIBS=OFF \\
-                     --toolchain \$BUILDDIR/../arch.ecbuild
+                     -DCMAKE_TOOLCHAIN_FILE=\$BUILDDIR/../arch.ecbuild
 make -j
 make install
 cd ..
@@ -182,7 +182,7 @@ cd build_PHYEX
 cmake ../../src -DCMAKE_INSTALL_PREFIX=\$BUILDDIR \\
                 -Dfiat_ROOT=\$BUILDDIR \\
                 -DCMAKE_BUILD_TYPE=\$level \\
-                --toolchain \$BUILDDIR/../arch.ecbuild
+                -DCMAKE_TOOLCHAIN_FILE=\$BUILDDIR/../arch.ecbuild
 make -j
 make install
 cd ..
