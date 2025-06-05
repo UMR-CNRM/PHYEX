@@ -442,6 +442,7 @@ ENDDO
 !$acc loop independent collapse(2)
 DO JK=IKTB,IKTE                                                                                                                     
   DO JIJ=IIJB,IIJE
+!NEC$ noinline
     CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(JIJ, JK), &
                          PTHT(JIJ, JK), PPABST(JIJ, JK), PRHODREF(JIJ, JK), &                                       
                          PEXN(JIJ, JK), ZW3D(JIJ, JK), ZT(JIJ, JK), &                                                           

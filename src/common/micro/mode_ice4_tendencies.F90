@@ -149,6 +149,7 @@ ELSE
   !*       2.     COMPUTES THE SLOW COLD PROCESS SOURCES
   !               --------------------------------------
   DO JL=1, KSIZE
+!NEC$ noinline
     CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LDCOMPUTE(JL), &
                      ZTH(JL), PPRES(JL), PRHODREF(JL), PEXN(JL), PLSFACT(JL), ZT(JL), &
                      ZVART(JL,IRV), &
