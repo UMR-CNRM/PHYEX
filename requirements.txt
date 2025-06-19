@@ -1,3 +1,4 @@
+python>=3.10
 matplotlib
 pyfortool>=0.2.5
 numpy
