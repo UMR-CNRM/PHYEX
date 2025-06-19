@@ -174,7 +174,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             #This is the variable we will receive (given by ctypesforfortran)
             replvar = var.copy()
             replvar['as'] = [(None, str(charlen))] + var['as']
-            replvar['t'] = 'CHARACTER'
+            replvar['t'] = 'CHARACTER(KIND=C_CHAR)'
             argList1.append((replvar['n'], replvar['t'],
                              replvar['opt'], replvar['i'].upper(), replvar['as']))
             docstr = ', OPTIONAL' if replvar['opt'] else ''
@@ -220,7 +220,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             replvar = var.copy()
             localvar = var.copy()
             if vartype.startswith('LOGICAL'):
-                replvar['t'] = 'LOGICAL(KIND=1)'
+                replvar['t'] = 'LOGICAL(KIND=C_BOOL)'
                 localvar['n'] = 'SLOCAL_' + var['n']
                 localvar['i'] = None
                 localvar['arg'] = False
@@ -288,6 +288,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
         else:
             f.write(f'\nUSE MODI_{name}\n')
         f.write('\n'.join(moduleList) + '\n')
+        f.write('\nUSE, INTRINSIC :: ISO_C_BINDING, ONLY: C_CHAR, C_BOOL\n')
         f.write('\nIMPLICIT NONE\n')
         f.write('\n'.join(declList) + '\n')
         f.write('\n'.join(copyList) + '\n')
@@ -304,6 +305,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                                                        argList=', '.join(argList1name + extraname),
                                                        name=name))
         f.write('\n'.join(moduleListHelper) + '\n')
+        f.write('\nUSE, INTRINSIC :: ISO_C_BINDING, ONLY: C_CHAR, C_BOOL\n')
         f.write('INTEGER(KIND=4), INTENT(OUT) :: ' + (', '.join(argList1name + extraname)) + '\n')
         for varname, vartype, _, _, _ in argList1:
             f.write(vartype + ' :: ' + 'K_' + varname + '\n')
@@ -323,6 +325,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             f.write('#!/usr/bin/env python3\n')
             f.write('import numpy\n')
             f.write('import ctypesForFortran\n')
+            f.write('from ctypesForFortran import string2array, array2string\n')
             f.write('import sys\n')
             f.write('from functools import lru_cache\n')
             f.write('\n')
@@ -380,17 +383,24 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
         alllist = []
         for ivar, (varname, vartype, opt, intent, dim) in enumerate(argList1):
             if vartype.startswith('INTEGER'):
-                npkind = {4:'numpy.int32', 8:'numpy.int64'}
+                npkind = {4: 'numpy.int32', 8: 'numpy.int64'}
             elif vartype.startswith('REAL'):
-                npkind = {4:'numpy.float32', 8:'numpy.float64'}
-            elif vartype.startswith('LOGICAL(KIND=1)'):
-                npkind = {1:'bool'}
+                npkind = {4: 'numpy.float32', 8: 'numpy.float64'}
+            elif vartype.startswith('LOGICAL(KIND=C_BOOL)'):
+                npkind = {1: 'bool'}
             elif vartype.startswith('CHARACTER'):
-                npkind = {0:'str'}
+                npkind = {0: 'str'}
             else:
                 raise NotImplementedError('Argument type not yet implemented: ' + vartype)
+            if vartype.startswith('CHARACTER') and intent in ('OUT', 'INOUT'):
+                # In this case, the array2string decorator must me added with
+                # the indexes of output strings
+                raise NotImplementedError('Character strings in OUT/INOUT')
             if intent in ('IN', 'INOUT'):
-                inlist.append('{varname}, #{varname}'.format(varname=varname))
+                if vartype.startswith('CHARACTER'):
+                    inlist.append(f'string2array({varname}, {dim[0][1]}), #{varname}')
+                else:
+                    inlist.append(f'{varname}, #{varname}')
             strdim = []
             if not (dim is None or len(dim) == 0):
                 for d in dim:
@@ -405,7 +415,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                         elif elem == 'NKT':
                             pass
                         elif elem in argList1name:
-                            pass # This dimension is a dummy argument
+                            pass  # This dimension is a dummy argument
                         elif elem in ('JPSVMAX', 'NSV', 'NSP', 'NCARB', 'NSOA'):
                             strdimpart = re.sub(rf'\b{elem}\b', f'_{elem}', strdimpart)
                         else:
@@ -422,7 +432,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                     strdim = '(' + ', '.join(strdim) + ',)'
                 else:
                     if vartype.startswith('CHARACTER'):
-                        strdim = '(' + ', '.join([strdim[0]] + strdim[1:][::-1]) + ',)'
+                        strdim = '(' + ', '.join(['1'] + strdim[1:][::-1] + [strdim[0]]) + ',)'
                     else:
                         strdim = '(' + ', '.join(strdim[::-1]) + ',)'
             kind = repr(npkind).replace("'", "") + f'[kinds[{ivar}]]'
