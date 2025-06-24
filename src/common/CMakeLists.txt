@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(PHYEX)
 enable_language(Fortran)
+# set(CMAKE_VERBOSE_MAKEFILE on)
 
 #################################################################################
 # Progs compilation
@@ -101,16 +102,21 @@ list(REMOVE_ITEM LIB_FILES ${LIB_ENTRYPOINTS})
 
 # This is the objlib target; this intermediary library is used
 # by both the static and the shared libs. This way, the sources are
-# compiled only once (except source files representing entry points).
-# Because the same objects are use for static and shared, they must be
+# compiled only once.
+# Because the same objects are used for static and shared, they must be
 # compiled with the PIC option.
 add_library(objlib OBJECT ${LIB_FILES})
 target_include_directories(objlib PRIVATE ${LIB_DIRECTORY_LIST})
 set_property(TARGET objlib PROPERTY POSITION_INDEPENDENT_CODE 1)
 
+add_library(entrypointlib OBJECT ${LIB_ENTRYPOINTS})
+add_dependencies(entrypointlib objlib)
+target_include_directories(entrypointlib PRIVATE ${LIB_DIRECTORY_LIST})
+set_property(TARGET entrypointlib PROPERTY POSITION_INDEPENDENT_CODE 1)
+
 # Static library
 if(${BUILD_STATIC} OR ${PHYEX_BUILD_PROGS})
-  add_library(phyexStatic STATIC ${LIB_ENTRYPOINTS} $<TARGET_OBJECTS:objlib>)
+  add_library(phyexStatic STATIC $<TARGET_OBJECTS:entrypointlib> $<TARGET_OBJECTS:objlib>)
   target_include_directories(phyexStatic PRIVATE ${LIB_DIRECTORY_LIST})
 endif()
 if(${BUILD_STATIC})
@@ -120,10 +126,12 @@ endif()
 
 # Shared library
 if(${BUILD_SHARED})
-  add_library(phyexShared SHARED ${LIB_ENTRYPOINTS})
+  add_library(phyexShared SHARED $<TARGET_OBJECTS:entrypointlib>)
   set_property(TARGET phyexShared PROPERTY POSITION_INDEPENDENT_CODE 1)
   target_link_directories(phyexShared PRIVATE ${fiat_ROOT}/lib)
-  target_link_libraries(phyexShared PRIVATE fiat mpi_serial)
+  target_link_directories(phyexShared PRIVATE ${fiat_ROOT}/lib64)
+  target_link_libraries(phyexShared PRIVATE fiat)
+  target_link_libraries(phyexShared PRIVATE mpi_serial)
   target_link_libraries(phyexShared PRIVATE $<TARGET_OBJECTS:objlib>)
   target_include_directories(phyexShared PRIVATE ${LIB_DIRECTORY_LIST})
   set_target_properties(phyexShared PROPERTIES OUTPUT_NAME phyex)
@@ -169,6 +177,7 @@ if(${PHYEX_BUILD_PROGS})
     add_executable(${NAME})
     target_sources(${NAME} PRIVATE ${EP})
     target_link_directories(${NAME} PRIVATE ${fiat_ROOT}/lib)
+    target_link_directories(${NAME} PRIVATE ${fiat_ROOT}/lib64)
     target_link_libraries(${NAME} PRIVATE phyexStatic progsobj fiat mpi_serial)
     if(DEFINED FPP_FLAGS_TESTPROGS)
       target_compile_definitions(${NAME} PUBLIC ${FPP_FLAGS_TESTPROGS})

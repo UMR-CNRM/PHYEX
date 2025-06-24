@@ -9,6 +9,13 @@ set(CMAKE_C_FLAGS_RELEASE "-O2")
 set(CMAKE_C_FLAGS_DEBUG "-fbounds-check")
 
 # Preprocessor
-add_compile_definitions("$<$<COMPILE_LANGUAGE:Fortran>:-DLINUX -DLITTLE_ENDIAN -DLITTLE -DREPRO48>")
-add_compile_definitions("$<$<COMPILE_LANGUAGE:C,CXX>:-DLINUX -DLITTLE_ENDIAN -DLITTLE -DWITHOUT_CXXDEMANGLE>")
+add_compile_definitions("LINUX")
+add_compile_definitions("LITTLE_ENDIAN")
+add_compile_definitions("LITTLE")
+add_compile_definitions("$<$<COMPILE_LANGUAGE:Fortran>:REPRO48>")
+add_compile_definitions("$<$<COMPILE_LANGUAGE:C,CXX>:WITHOUT_CXXDEMANGLE>")
 set(FPP_FLAGS_TESTPROGS USE_OPENMP)
+
+# Link
+link_libraries('rt')
+link_libraries('dl')

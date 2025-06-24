@@ -307,6 +307,11 @@ function main() {
     . arch.env
     build_compilation_script src
     ./compilation.sh
+
+    if [ ! -f build/lib/libphyex.so ]; then
+      echo "Shared lib libphyex.so was not built!"
+      exit 5
+    fi
     
     # Check if python can open the resulting shared lib
     set +e
