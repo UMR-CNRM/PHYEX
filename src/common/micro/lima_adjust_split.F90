@@ -420,6 +420,42 @@ IF (LIMAP%LADJ) THEN
            PCLDFR                                                )      
    END IF
    !
+   ! Compute the variation of mixing ratio from condensation
+   DO IK=D%NKTB,D%NKTE
+      DO II=D%NIJB,D%NIJE
+         IF (LIMAP%NMOM_C.GE.1) THEN
+            ZW1 = (ZRC(II,IK) - ZRC_IN(II,IK)) / PTSTEP
+            IF( ZW1 < 0.0 ) THEN
+               ZW1 = MAX ( ZW1, -ZRCS(II,IK) )
+            ELSE
+               ZW1 = MIN ( ZW1,  ZRVS(II,IK) )
+            ENDIF
+            ZRVS(II,IK) = ZRVS(II,IK) - ZW1
+            ZRCS(II,IK) = ZRCS(II,IK) + ZW1
+            PTHS(II,IK) = PTHS(II,IK) +        &
+                 ZW1 * ZLV(II,IK) / (ZCPH(II,IK) * PEXNREF(II,IK))
+            ! ZCCS only includes contribution from PCLDFR out of condensation so far
+            IF (LIMAP%NMOM_C.GE.2) ZCCS(II,IK)=ZCCT(II,IK) / PTSTEP
+            IF (LIMAP%NMOD_CCN.GE.1) ZNFS(II,IK,:) = ZNFT(II,IK,:) / PTSTEP
+            IF (LIMAP%NMOD_CCN.GE.1) ZNAS(II,IK,:) = ZNAT(II,IK,:) / PTSTEP
+         END IF
+         IF (LIMAP%NMOM_I.EQ.1) THEN
+            PICEFR(II,IK)=PCLDFR(II,IK)
+            ZW2 = (ZRI(II,IK) - ZRI_IN(II,IK)) / PTSTEP
+            IF( ZW2 < 0.0 ) THEN
+               ZW2 = MAX ( ZW2, -ZRIS(II,IK) )
+            ELSE
+               ZW2 = MIN ( ZW2,  ZRVS(II,IK) )
+            ENDIF
+            ZRVS(II,IK) = ZRVS(II,IK) - ZW2
+            ZRIS(II,IK) = ZRIS(II,IK) + ZW2
+            PTHS(II,IK) = PTHS(II,IK) +        &
+                 ZW2 * ZLS(II,IK) / (ZCPH(II,IK) * PEXNREF(II,IK))
+         END IF
+      END DO
+   END DO
+   !
+   ! Compute the cloud fraction
    IF ( .NOT. NEBN%LSUBG_COND ) THEN
       WHERE (ZRCS(:,:) + ZRIS(:,:) > 1.E-12 / PTSTEP)
          PCLDFR(:,:)  = 1.
@@ -455,40 +491,6 @@ IF (LIMAP%LADJ) THEN
             ENDIF
          ENDDO
       ENDDO
-      ! Compute the variation of mixing ratio from condensation
-      DO IK=D%NKTB,D%NKTE
-         DO II=D%NIJB,D%NIJE
-            IF (LIMAP%NMOM_C.GE.1) THEN
-               ZW1 = (ZRC(II,IK) - ZRCS(II,IK)*PTSTEP) / PTSTEP
-               IF( ZW1 < 0.0 ) THEN
-                  ZW1 = MAX ( ZW1, -ZRCS(II,IK) )
-               ELSE
-                  ZW1 = MIN ( ZW1,  ZRVS(II,IK) )
-               ENDIF
-               ZRVS(II,IK) = ZRVS(II,IK) - ZW1
-               ZRCS(II,IK) = ZRCS(II,IK) + ZW1
-               PTHS(II,IK) = PTHS(II,IK) +        &
-                    ZW1 * ZLV(II,IK) / (ZCPH(II,IK) * PEXNREF(II,IK))
-               ! ZCCS only includes contribution from PCLDFR out of condensation so far
-               IF (LIMAP%NMOM_C.GE.2) ZCCS(II,IK)=ZCCT(II,IK) / PTSTEP
-               IF (LIMAP%NMOD_CCN.GE.1) ZNFS(II,IK,:) = ZNFT(II,IK,:) / PTSTEP
-               IF (LIMAP%NMOD_CCN.GE.1) ZNAS(II,IK,:) = ZNAT(II,IK,:) / PTSTEP
-            END IF
-            IF (LIMAP%NMOM_I.EQ.1) THEN
-               PICEFR(II,IK)=PCLDFR(II,IK)
-               ZW2 = (ZRI(II,IK) - ZRIS(II,IK)*PTSTEP) / PTSTEP
-               IF( ZW2 < 0.0 ) THEN
-                  ZW2 = MAX ( ZW2, -ZRIS(II,IK) )
-               ELSE
-                  ZW2 = MIN ( ZW2,  ZRVS(II,IK) )
-               ENDIF
-               ZRVS(II,IK) = ZRVS(II,IK) - ZW2
-               ZRIS(II,IK) = ZRIS(II,IK) + ZW2
-               PTHS(II,IK) = PTHS(II,IK) +        &
-                    ZW2 * ZLS(II,IK) / (ZCPH(II,IK) * PEXNREF(II,IK))
-            END IF
-         END DO
-      END DO
       ! compute the mass flux scheme cloud contribution with option 'BIGA' (see ice_adjust to implement other options)
       DO IK=D%NKTB,D%NKTE
          DO II=D%NIJB,D%NIJE
