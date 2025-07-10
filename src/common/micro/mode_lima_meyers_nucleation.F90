@@ -86,7 +86,6 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PICEFR
 !*       0.2   Declarations of local variables :
 !
 !
-INTEGER :: IIJB, IIJE, IKB, IKE               ! Physical domain
 INTEGER :: IL     ! Loop index
 INTEGER :: INEGT  ! Case number of nucleation
 !

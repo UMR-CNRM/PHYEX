@@ -113,8 +113,6 @@ MODULE MODE_RAIN_ICE_OLD_WARM
     REAL, DIMENSION(KSIZE) :: ZZW4     ! Work array
     REAL, DIMENSION(KSIZE) :: ZARTMP   ! temporary work array
 
-    REAL, DIMENSION(D%NIT,D%NKT) :: ZW ! work array
-
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
     INTEGER :: JK

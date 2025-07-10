@@ -127,8 +127,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PICEFR
 !*       0.2   Declarations of local variables :
 !
 !
-INTEGER :: IIJB, IIJE, IKB, IKE               ! Physical domain
-INTEGER :: IL, IMOD_CCN, IMOD_IFN, ISPECIE, IMOD_IMM, ISH  ! Loop index
+INTEGER :: IL, IMOD_CCN, IMOD_IFN, ISPECIE, IMOD_IMM       ! Loop index
 INTEGER :: INEGT  ! Case number of sedimentation, nucleation,
 !
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) &

@@ -51,7 +51,6 @@ CONTAINS
 !
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_T
 USE MODD_CST,              ONLY: CST_T
-USE MODD_RAIN_ICE_DESCR_N, ONLY: RAIN_ICE_DESCR_T
 USE MODD_ELEC_DESCR,       ONLY: ELEC_DESCR_t
 USE MODD_ELEC_PARAM,       ONLY: ELEC_PARAM_t
 
@@ -119,7 +118,7 @@ REAL, DIMENSION(:), ALLOCATABLE         &
                               ZLBDA,    & ! Slope parameter
                               ZCC         ! Cunningham corrective term for droplets fall speed
 !
-INTEGER , DIMENSION(D%NIJT*D%NKT) :: I1,I2,I3 ! Indexes for PACK replacement
+INTEGER , DIMENSION(D%NIJT*D%NKT) :: I1,I3 ! Indexes for PACK replacement
 !
 REAL    :: ZTSPLITG                       ! Small time step for rain sedimentation
 REAL    :: ZC                             ! Cpl or Cpi

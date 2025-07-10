@@ -1131,7 +1131,6 @@ END SUBROUTINE DZF_PHY
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS, ONLY: JPHEXT
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
@@ -1149,12 +1148,6 @@ REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDXM   ! result at flux
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-!
-INTEGER :: JI             ! Loop index in x direction
-INTEGER :: IIU            ! upper bound in x direction of PA 
-!             
-INTEGER :: JJ,IJU
-!            
 !-------------------------------------------------------------------------------
 !
 !*       1.    DEFINITION OF DXM
@@ -1263,7 +1256,6 @@ END SUBROUTINE DYM_PHY
       SUBROUTINE DYM2D_PHY(D,PA,PDYM)
 !     ###############################
 !
-USE MODD_PARAMETERS, ONLY: JPHEXT
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
@@ -1578,7 +1570,6 @@ END SUBROUTINE DYF_PHY
 !              ------------
 !
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODD_PARAMETERS, ONLY: JPHEXT
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
 IMPLICIT NONE
@@ -1595,12 +1586,6 @@ REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDYF   ! result at mass
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ ,JI           ! Loop index in y direction
-INTEGER :: IJU           ! upper bound in y direction of PA 
-!
-!          
-INTEGER :: IIU
-!            
 !-------------------------------------------------------------------------------
 !
 !*       1.    DEFINITION OF DYF

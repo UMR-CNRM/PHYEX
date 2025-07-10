@@ -227,8 +227,7 @@ REAL, DIMENSION(:), ALLOCATABLE ::                          &
      Z_RG_COHG, Z_CG_COHG,                                  & ! conversion of hail into graupel (COHG) : rg, rh
      Z_TH_HMLT, Z_RR_HMLT, Z_CR_HMLT, Z_CH_HMLT,            & ! hail melting (HMLT) : rr, Nr, rh=-rr, th
      Z_RV_CORR2, Z_RC_CORR2, Z_RR_CORR2, Z_RI_CORR2,        &
-     Z_CC_CORR2, Z_CR_CORR2, Z_CI_CORR2,                    &
-     Z_RI_HIND, Z_RC_HINC, Z_RV_HENU, Z_RV_HONH
+     Z_CC_CORR2, Z_CR_CORR2, Z_CI_CORR2
 !--cb--
 !
 ! for the conversion from rain to cloud, we need a 3D variable instead of a 1D packed variable
@@ -367,7 +366,6 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 ! Variables for the electrification scheme
 LOGICAL, DIMENSION(:,:), ALLOCATABLE :: GMASK_ELEC
-INTEGER :: IL    ! loop index
 INTEGER :: IELEC ! nb of points where the electrification scheme may apply
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZQPIT, ZQNIT, ZQCT, ZQRT, ZQIT, ZQST, ZQGT, ZQHT
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZQPIS, ZQNIS, ZQCS, ZQRS, ZQIS, ZQSS, ZQGS, ZQHS

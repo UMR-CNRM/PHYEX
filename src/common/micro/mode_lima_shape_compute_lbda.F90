@@ -50,17 +50,11 @@ REAL,    DIMENSION(KLOOP,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(INOUT) :: PLBDAI_SHAPE
 !
 !*      0.2   Declaration of local variables
 !
-INTEGER :: II, ISH, &    ! loop counter
-           ICOUNT_SHAPE  ! count the number of points where a shape dominates
+INTEGER :: ISH       ! loop counter
 !
-INTEGER, DIMENSION(KLOOP)                   :: ISHAPE_MAX  ! Nb of the dominant habit per mesh
 REAL,    DIMENSION(KLOOP)                   :: ZCI         ! Total nb conc. of ice crystals
-REAL,    DIMENSION(LIMAP%NNB_CRYSTAL_SHAPE)       :: ZLBDAI_AVG  ! mean value of lambda per habit
-REAL,    DIMENSION(KLOOP)                   :: ZLBDAI
-REAL,    DIMENSION(KLOOP)                   :: ZAUX, ZSUM
 REAL,    DIMENSION(KLOOP)                   :: ZONEOVER_VAR
 REAL,    DIMENSION(KLOOP,LIMAP%NNB_CRYSTAL_SHAPE) :: ZCSHAPE  ! nb conc. ratio for each habit
-REAL,    DIMENSION(KLOOP,LIMAP%NNB_CRYSTAL_SHAPE) :: ZRSHAPE  ! mass ratio for each habit
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-----------------------------------------------------------------------------
@@ -158,18 +152,11 @@ REAL,    DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(INOUT) :: PLBDA
 !
 !*      0.2   Declaration of local variables
 !
-INTEGER :: II, IJ, IK, ISH, &    ! loop counter
-           ICOUNT_SHAPE, &  ! count the number of points where a shape dominates
-           ISHMAX
+INTEGER :: ISH       ! loop counter
 !
-INTEGER, DIMENSION(SIZE(PRI,1),SIZE(PRI,2)) :: ISHAPE_MAX  ! Nb of the dominant habit per mesh
 REAL,    DIMENSION(SIZE(PRI,1),SIZE(PRI,2)) :: ZCI         ! Total nb conc. of ice crystals
-REAL,    DIMENSION(LIMAP%NNB_CRYSTAL_SHAPE) :: ZLBDAI_AVG  ! mean value of lambda per habit
-REAL,    DIMENSION(SIZE(PRI,1),SIZE(PRI,2)) :: ZLBDAI
-REAL,    DIMENSION(SIZE(PRI,1),SIZE(PRI,2)) :: ZAUX, ZSUM
 REAL,    DIMENSION(SIZE(PRI,1),SIZE(PRI,2)) :: ZONEOVER_VAR
 REAL,    DIMENSION(SIZE(PRI,1),SIZE(PRI,2),LIMAP%NNB_CRYSTAL_SHAPE) :: ZCSHAPE  ! nb conc. ratio for each habit
-REAL,    DIMENSION(SIZE(PRI,1),SIZE(PRI,2),LIMAP%NNB_CRYSTAL_SHAPE) :: ZRSHAPE  ! mass ratio for each habit
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-----------------------------------------------------------------------------

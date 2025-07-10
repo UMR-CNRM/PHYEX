@@ -159,7 +159,7 @@ REAL, DIMENSION(D%NIJT),       OPTIONAL, INTENT(IN)    :: PICE_CLD_WGT
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: JIJ, JK, JKP, JKM                    ! loop index
+INTEGER :: JIJ, JK, JKP                         ! loop index
 INTEGER :: IKTB, IKTE, IKB, IKE, IKL, IIJB, IIJE
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZTLK, ZRT     ! work arrays for T_l and total water mixing ratio
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZL            ! length scale

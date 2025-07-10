@@ -327,8 +327,6 @@ REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
        PLEPSF,   & ! estimate full level diss length scale from half levels (sub optimal)
        ZWORK1,ZWORK2,&
        ZWORK3,ZWORK4,&
-       ZWORK5,ZWORK6,&
-       ZWORK7,ZWORK8,&
        ZWKPHIPSI1,ZWKPHIPSI2,&
        ZWKPHIPSI3,ZWKPHIPSI4       ! working var. for shuman operators (array syntax)
 

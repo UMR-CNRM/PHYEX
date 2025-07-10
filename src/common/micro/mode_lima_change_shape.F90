@@ -41,8 +41,6 @@ CONTAINS
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 USE MODD_CST, ONLY:CST_T
 USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
-
-USE MODD_CST, ONLY : XTT
 !
 IMPLICIT NONE
 !
@@ -78,9 +76,6 @@ REAL, DIMENSION(SIZE(PT)) :: ZGAM_CHEN_T
 REAL, DIMENSION(121)      :: ZGAM_CHEN ! Lookup table gamma(T) (Chen and Lamb, 1994)
                                        ! Index_GAM_CHEN = MAX( 1,MIN( 121,INT((XTT-T)*4.0)+1 ) )
                                        ! XTT = 273.16 and T is the temperature
-!
-REAL, DIMENSION(SIZE(PT)) :: ZDGAMMA_COL_IRR !
-REAL, DIMENSION(SIZE(PT)) :: ZDGAMMA_PLA_IRR !
 !
 REAL, DIMENSION(SIZE(PT)) :: ZZW1, ZZW2
 !

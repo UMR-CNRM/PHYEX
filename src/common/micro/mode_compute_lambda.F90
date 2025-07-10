@@ -33,8 +33,8 @@ CONTAINS
 !*      0.      DECLARATIONS
 !               ------------
 !
-USE MODD_RAIN_ICE_DESCR_n, ONLY: XLBC_I=>XLBC, XLBR_I=>XLBR, XLBI_I=>XLBI, XLBS_I=>XLBS, XLBG_I=>XLBG, XLBH_I=>XLBH, &
-                                 XLBEXC_I=>XLBEXC, XLBEXR_I=>XLBEXR, XLBEXI_I=>XLBEXI, XLBEXS_I=>XLBEXS,             &
+USE MODD_RAIN_ICE_DESCR_n, ONLY: XLBR_I=>XLBR, XLBI_I=>XLBI, XLBS_I=>XLBS, XLBG_I=>XLBG, XLBH_I=>XLBH, &
+                                 XLBEXR_I=>XLBEXR, XLBEXI_I=>XLBEXI, XLBEXS_I=>XLBEXS,             &
                                  XLBEXG_I=>XLBEXG, XLBEXH_I=>XLBEXH,                                                 &
                                  XLBDAS_MAX_I=>XLBDAS_MAX,                                                           &
                                  XCCR_I=>XCCR, XCCS_I=>XCCS, XCCG_I=>XCCG, XCCH_I=>XCCH,                             &

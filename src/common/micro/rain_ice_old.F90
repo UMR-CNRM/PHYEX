@@ -293,7 +293,6 @@ INTEGER :: IKB           !
 INTEGER :: IKE           !
 !
 INTEGER :: IMICRO ! Case number of sedimentation, T>0 (for HEN) and r_x>0 locations
-REAL, DIMENSION(D%NIT,D%NKT) :: ZW        ! work array
 REAL, DIMENSION(D%NIT)       :: ZCONC_TMP ! Weighted concentration
 REAL, DIMENSION(D%NIT,D%NKT) :: ZT        ! Temperature
 REAL, DIMENSION(D%NIT,D%NKT) :: ZRAY      ! Cloud Mean radius

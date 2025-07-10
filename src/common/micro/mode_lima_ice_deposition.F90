@@ -89,7 +89,6 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZRIT_SHAPE
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZLBDAI_SHAPE
 INTEGER                           :: ISH
-INTEGER                           :: ISIZE
 !
 !-------------------------------------------------------------------------------
 !

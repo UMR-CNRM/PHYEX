@@ -129,20 +129,13 @@ REAL, DIMENSION(D%NIJT),   INTENT(INOUT) :: PINPAP
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: IIB           !  Define the domain where is 
-INTEGER :: IIE           !  the microphysical sources have to be computed
-INTEGER :: IJB           ! 
-INTEGER :: IJE           !
-INTEGER :: IKB           ! 
-INTEGER :: IKE           !
-!
 INTEGER :: ISV               ! CCN or IFN mode 
 INTEGER :: J1, J2, IMOD
 !
 LOGICAL, DIMENSION(D%NIJT,D%NKT) &
                                  :: GRAIN,  &! Test where rain is present
                                     GSCAV    ! Test where rain is present
-INTEGER , DIMENSION(SIZE(GSCAV)) :: I1,I2,I3 ! Used to replace the COUNT
+INTEGER , DIMENSION(SIZE(GSCAV)) :: I1,I3    ! Used to replace the COUNT
 INTEGER                          :: IL       ! and PACK intrinsics
 INTEGER                          :: ISCAV
 !
@@ -646,7 +639,7 @@ REAL, DIMENSION(D%NIJT),     INTENT(INOUT) :: PINPAP
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: IK, IN                         ! Loop indexes 
-INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE   ! Physical domain
+INTEGER :: IKB, IKE   ! Physical domain
 !
 REAL    :: ZTSPLITR      ! Small time step for rain sedimentation
 REAL    :: ZTSTEP        ! Large time step for rain sedimentation
@@ -655,7 +648,7 @@ REAL    :: ZTSTEP        ! Large time step for rain sedimentation
 LOGICAL, DIMENSION(D%NIJT,D%NKT) &
                                 :: GSEDIM   ! where to compute the SED processes
 INTEGER :: ISEDIM 
-INTEGER , DIMENSION(SIZE(GSEDIM)) :: I1,I2,I3 ! Used to replace the COUNT
+INTEGER , DIMENSION(SIZE(GSEDIM)) :: I1,I3    ! Used to replace the COUNT
 INTEGER                           :: IL       ! and PACK intrinsics
 !
 !

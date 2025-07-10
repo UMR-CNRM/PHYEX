@@ -110,7 +110,7 @@ REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electr
 !
 !
 INTEGER :: JIJ, JK
-INTEGER :: IKTB, IKTE, IKB, IKL, IIJE, IIJB
+INTEGER :: IKTB, IKTE, IIJE, IIJB
 INTEGER :: IKRR !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL :: GSEDIC !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL :: GPRESENT_PFPR, GPRESENT_PSEA

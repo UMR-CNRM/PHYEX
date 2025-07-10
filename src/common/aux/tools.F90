@@ -170,7 +170,7 @@ subroutine Countjv1d_device(ltab, i1,ic)
 
   use mode_mppdb, only: mppdb_initialized
 #ifndef _FAKEOPENACC
-  use MODE_OPENACC_SET_DEVICE, only : mnh_idevice_type_current, acc_device_nvidia, acc_device_host
+  use MODE_OPENACC_SET_DEVICE, only : mnh_idevice_type_current, acc_device_host
 #endif
 
   implicit none
@@ -241,7 +241,7 @@ subroutine Countjv2d_device(ltab, i1, i2, ic)
 
   use mode_mppdb, only: mppdb_initialized
 #ifndef _FAKEOPENACC
-  use MODE_OPENACC_SET_DEVICE, only : mnh_idevice_type_current, acc_device_nvidia, acc_device_host
+  use MODE_OPENACC_SET_DEVICE, only : mnh_idevice_type_current, acc_device_host
 #endif
 
   implicit none
@@ -319,7 +319,7 @@ end subroutine Countjv2d_device
 subroutine Countjv3d_device(ltab, i1, i2, i3, ic)
   use mode_mppdb, only: mppdb_initialized
 #ifndef _FAKEOPENACC
-  use MODE_OPENACC_SET_DEVICE, only : mnh_idevice_type_current, acc_device_nvidia, acc_device_host
+  use MODE_OPENACC_SET_DEVICE, only : mnh_idevice_type_current, acc_device_host
 #endif
 
   implicit none

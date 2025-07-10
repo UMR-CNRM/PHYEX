@@ -201,7 +201,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) &
                             ZRHS,        & ! Hail       m.r. source
 !
                             ZCCT,        & ! Cloud water conc. at t
-                            ZCIT,        & ! Cloud ice   conc. at t
 !
                             ZCCS,        & ! Cloud water C. source
                             ZMAS           ! Mass of scavenged AP
@@ -243,10 +242,6 @@ INTEGER :: ISV_LIMA_NC
 INTEGER :: ISV_LIMA_CCN_FREE
 INTEGER :: ISV_LIMA_CCN_ACTI
 INTEGER :: ISV_LIMA_SCAVMASS
-INTEGER :: ISV_LIMA_NI
-INTEGER :: ISV_LIMA_IFN_FREE
-INTEGER :: ISV_LIMA_IFN_NUCL
-INTEGER :: ISV_LIMA_IMM_NUCL
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !

@@ -873,7 +873,6 @@ subroutine fdjac2 ( fcn, m, n, x, fvec, fjac, ldfjac, iflag, epsfcn )
   real ( kind = 8 ), intent(out) :: fjac(ldfjac,n)
   real ( kind = 8 ), intent(in) :: fvec(m)
   real ( kind = 8 ) h
-  integer ( kind = 4 ) i
   integer ( kind = 4 ), intent(out) :: iflag
   integer ( kind = 4 ) j
   real ( kind = 8 ) temp
@@ -1530,7 +1529,6 @@ subroutine hybrd1 ( fcn, n, x, fvec, tol, info )
 !
   implicit none
 
-  integer ( kind = 4 ) lwa
   integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) diag(n)
@@ -1540,7 +1538,6 @@ subroutine hybrd1 ( fcn, n, x, fvec, tol, info )
   real ( kind = 8 ) fjac(n,n)
   real ( kind = 8 ), intent(out) :: fvec(n)
   integer ( kind = 4 ), intent(out) :: info
-  integer ( kind = 4 ) j
   integer ( kind = 4 ) ldfjac
   integer ( kind = 4 ) lr
   integer ( kind = 4 ) maxfev
@@ -2255,7 +2252,6 @@ subroutine hybrj1 ( fcn, n, x, fvec, fjac, ldfjac, tol, info )
   real ( kind = 8 ), intent(out) :: fjac(ldfjac,n)
   real ( kind = 8 ), intent(out) :: fvec(n)
   integer ( kind = 4 ), intent(out) :: info
-  integer ( kind = 4 ) j
   integer ( kind = 4 ) lr
   integer ( kind = 4 ) maxfev
   integer ( kind = 4 ) mode
@@ -2463,7 +2459,6 @@ subroutine lmder ( fcn, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, &
   real ( kind = 8 ), intent(out) :: fvec(m)
   real ( kind = 8 ) gnorm
   real ( kind = 8 ), intent(in) :: gtol
-  integer ( kind = 4 ) i
   integer ( kind = 4 ) iflag
   integer ( kind = 4 ), intent(out) :: info
   integer ( kind = 4 ), intent(out) :: ipvt(n)
@@ -3755,7 +3750,6 @@ subroutine lmpar ( n, r, ldr, ipvt, diag, qtb, delta, par, x, sdiag )
   real ( kind = 8 ) enorm
   real ( kind = 8 ) gnorm
   real ( kind = 8 ) fp
-  integer ( kind = 4 ) i
   integer ( kind = 4 ), intent(in) :: ipvt(n)
   integer ( kind = 4 ) iter
   integer ( kind = 4 ) j
@@ -3766,7 +3760,6 @@ subroutine lmpar ( n, r, ldr, ipvt, diag, qtb, delta, par, x, sdiag )
   real ( kind = 8 ) parc
   real ( kind = 8 ) parl
   real ( kind = 8 ) paru
-  real ( kind = 8 ) qnorm
   real ( kind = 8 ), intent(in) :: qtb(n)
   real ( kind = 8 ), intent(inout) :: r(ldr,n)
   real ( kind = 8 ), intent(out) :: sdiag(n)
@@ -4855,7 +4848,6 @@ subroutine qrfac ( m, n, a, lda, pivot, ipvt, lipvt, rdiag, acnorm )
   real ( kind = 8 ) ajnorm
   real ( kind = 8 ) enorm
   real ( kind = 8 ) epsmch
-  integer ( kind = 4 ) i
   integer ( kind = 4 ) i4_temp
   integer ( kind = 4 ), intent(out) :: ipvt(lipvt)
   integer ( kind = 4 ) j

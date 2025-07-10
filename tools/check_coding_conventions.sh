@@ -37,8 +37,9 @@ done
 JSONDIR=$(mktemp -d)
 trap "\rm -rf $JSONDIR" EXIT
 result=$(pyfortool_parallel --tree $SOURCEDIR --descTree $JSONDIR/tree.json \
-                            --wrapH \
-                            --checkIMPLICIT Warn --checkINTENT Warn 2>&1)
+                            --wrapH --enableCache \
+                            --checkIMPLICIT Warn --checkINTENT Warn \
+                            --checkPHYEXUnusedLocalVar Warn 2>&1)
 if [ "$result" == "" ]; then
   exit 0
 else

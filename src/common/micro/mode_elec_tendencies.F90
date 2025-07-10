@@ -63,9 +63,7 @@ CONTAINS
 !*      0.    DECLARATIONS
 !             ------------
 !
-USE MODD_BUDGET,     ONLY:  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, &
-                            NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1,            &
-                            TBUDGETDATA, TBUDGETCONF_t
+USE MODD_BUDGET,     ONLY:  NBUDGET_SV1, TBUDGETDATA, TBUDGETCONF_t
 !
 USE MODD_CST,              ONLY: CST_t
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
@@ -78,7 +76,7 @@ USE MODD_ELEC_n
 USE MODD_PARAM_LIMA,       ONLY: XALPHAI_L=>XALPHAI, XNUI_L=>XNUI,   &
                                  XCEXVT_L=>XCEXVT, XRTMIN_L=>XRTMIN, &
                                  LCIBU, LRDSF,                       &
-                                 NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
+                                 NMOM_C, NMOM_R, NMOM_S, NMOM_G, NMOM_H
 USE MODD_PARAM_LIMA_COLD,  ONLY: XAI_L=>XAI, XBI_L=>XBI,   &
                                  XDS_L=>XDS, XCXS_L=>XCXS, &
                                  XCOLEXIS_L=>XCOLEXIS
@@ -314,7 +312,7 @@ REAL                    :: ZRHO00, ZCOR00   ! Surface reference air density
 REAL, DIMENSION(KMICRO) :: ZRHOCOR  ! Density correction for fallspeed
 !
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1, IVEC2                   ! Vectors of indices for interpolation
-REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1, ZVEC2, ZVEC3            ! Work vectors for interpolation
+REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1, ZVEC2                   ! Work vectors for interpolation
 REAL,    DIMENSION(:), ALLOCATABLE :: ZVECQ1, ZVECQ2, ZVECQ3, ZVECQ4 ! Work vectors for interpolation
 !
 REAL,    DIMENSION(KMICRO)   :: ZWQ, ZWQ_NI                    !  Work arrays

@@ -125,7 +125,6 @@ REAL, DIMENSION(:), ALLOCATABLE &
                               ZFREECCN, &
                               ZCCNFROZEN
 !
-INTEGER :: IIJB, IIJE, IKB, IKE   ! Physical domain
 INTEGER :: IL, IMOD_CCN, ISH      ! Loop index
 !
 INTEGER :: INEGT                          ! Case number of hom. nucleation

@@ -484,10 +484,6 @@ INTEGER                                           :: ITER    ! iteration number 
 REAL                                              :: ZEPS    ! a small number
 INTEGER,DIMENSION(1)                              :: IMAXLOC ! localisation of
                                                              ! a maximum
-INTEGER                                           :: ILUOUT,IRESP
-                                                             ! logical unit for
-                                                             ! output-listing
-                                                             ! and error code
 CHARACTER(LEN=20) :: HITERMAX, HZEPS, HMAXVALZDT, HPMRIMAXLOC, HZTIMAXLOC
 !-------------------------------------------------------------------------------
 !

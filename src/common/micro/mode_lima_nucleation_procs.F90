@@ -130,7 +130,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: Z_TH_HIND, Z_CI_HIND, Z_TH_HINC, Z_CC_HINC, &
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: Z_SHCI_HIND, Z_SHCI_HINC
 !
 INTEGER :: IDX, IL
-INTEGER :: II,IJ,ISH
+INTEGER :: II,ISH
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------

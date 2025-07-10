@@ -127,7 +127,7 @@ CONTAINS
 !*       0.   DECLARATIONS
 !             ------------
 !
-USE MODE_SHUMAN_PHY, ONLY: MZM_PHY, MZF_PHY, DZF_PHY, DZM_PHY
+USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
 USE YOMHOOK,    ONLY: LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
@@ -210,9 +210,8 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::         &
        ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
        ZTR,      & ! Transport term
-       ZMWORK1,ZMWORK2,& ! working var. for MZM/MZF operators (array syntax)
-       ZDWORK1,ZDWORK2,& ! working var. for DZM/DZF operators (array syntax)
-       ZW                ! working array
+       ZMWORK1,  & ! working var. for MZM/MZF operators (array syntax)
+       ZW          ! working array
 
 LOGICAL,DIMENSION(D%NIJT,D%NKT) :: GTKENEG
                    ! 3D mask .T. if TKE < CSTURB%XTKEMIN

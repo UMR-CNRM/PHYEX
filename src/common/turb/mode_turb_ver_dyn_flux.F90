@@ -205,7 +205,7 @@ SUBROUTINE TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,TLES,KSV,O2D,OFLAT, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODE_SHUMAN_PHY
+USE MODE_SHUMAN_PHY, ONLY: MZM_PHY
 USE YOMHOOK,    ONLY: LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_CST,            ONLY: CST_t
@@ -217,10 +217,6 @@ USE MODD_LES,            ONLY: TLES_t
 USE MODD_PARAMETERS,     ONLY: XUNDEF
 USE MODD_TURB_n,         ONLY: TURB_t
 !
-USE MODE_GRADIENT_U_PHY, ONLY : GZ_U_UW_PHY, GX_U_M_PHY
-USE MODE_GRADIENT_V_PHY, ONLY : GZ_V_VW_PHY, GY_V_M_PHY
-USE MODE_GRADIENT_W_PHY, ONLY : GX_W_UW_PHY, GY_W_VW_PHY, GZ_W_M_PHY
-USE MODE_GRADIENT_M_PHY, ONLY : GX_M_U_PHY, GY_M_V_PHY
 USE MODE_IO_FIELD_WRITE_PHY, only: IO_FIELD_WRITE_PHY
 USE MODE_ll
 USE MODE_TRIDIAG_WIND,   ONLY: TRIDIAG_WIND
@@ -308,8 +304,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSVFL  !
 !
 REAL, DIMENSION(D%NIJT)  :: ZDIRSINZW ! sinus of the angle
                    ! between the normal and the vertical at the surface
-REAL, DIMENSION(D%NIJT):: ZCOEFS, &    ! coeff. for the implicit scheme for the wind at the surface
-                          ZWORK11D,ZWORK21D,ZWORK31D,ZWORK41D,ZWORK51D,ZWORK61D
+REAL, DIMENSION(D%NIJT):: ZCOEFS    ! coeff. for the implicit scheme for the wind at the surface
 REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
        ZA, &       ! under diagonal elements of the tri-diagonal matrix involved
                    ! in the temporal implicit scheme (also used to store coefficient
@@ -320,14 +315,12 @@ REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
        ZFLXZ,  &   ! vertical flux of the treated variable
        ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
-       ZWORK1,ZWORK2,&
-       ZWORK3,ZWORK4,&
-       ZWORK5        ! working var. for shuman operators (array syntax)
+       ZWORK1        ! working var. for shuman operators (array syntax)
 !
 INTEGER             :: IIJE,IIJB,IKB,IKE,IKA,IKU ! index value for the mass points of the domain 
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
-INTEGER             :: JSV,JIJ,JK,JI,JJ          ! scalar loop counter
+INTEGER             :: JSV,JIJ,JK   ! scalar loop counter
 INTEGER             :: IKL
 REAL, DIMENSION(D%NIJT)   :: ZCOEFFLXU, &
                              ZCOEFFLXV, ZUSLOPEM, ZVSLOPEM, &

@@ -74,7 +74,6 @@ USE MODD_CST,            ONLY: CST_T
 !USE MODD_IO,              ONLY: TFILEDATA
 !USE MODD_LUNIT_n,         ONLY: TLUOUT
 USE MODD_NEB_N,           ONLY: NEB_T
-USE MODD_NEB_n,           ONLY: LSUBG_COND
 USE MODD_NSV,        ONLY : NSV_T
 USE MODI_CH_AER_ACTIVATION
 
@@ -165,7 +164,6 @@ REAL, DIMENSION(:,:), ALLOCATABLE  :: ZAERO, ZSOLORG, ZMI
 REAL    :: ZEPS                                ! molar mass ratio
 REAL    :: ZS1, ZS2, ZXACC 
 INTEGER :: IMOD
-INTEGER :: IIJB, IIJE, IKB, IKE        ! Physical domain
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !!$INTEGER                  :: ILUOUT     ! Logical unit of output listing 
