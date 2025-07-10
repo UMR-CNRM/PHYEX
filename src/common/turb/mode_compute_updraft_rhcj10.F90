@@ -247,11 +247,11 @@ PRSAT_UP(IIJB:IIJE,1:IKT)=PRVM(IIJB:IIJE,1:IKT) ! should be initialised correctl
 ! Initialisation of environment variables at t-dt
 
 ! variables at flux level
-CALL MZM_MF(D, PTHLM(:,:), ZTHLM_F(:,:))
-CALL MZM_MF(D, PRTM(:,:), ZRTM_F(:,:))
-CALL MZM_MF(D, PUM(:,:), ZUM_F(:,:))
-CALL MZM_MF(D, PVM(:,:), ZVM_F(:,:))
-CALL MZM_MF(D, PTKEM(:,:), ZTKEM_F(:,:))
+CALL MZM_MF(D, PTHLM, ZTHLM_F)
+CALL MZM_MF(D, PRTM, ZRTM_F)
+CALL MZM_MF(D, PUM, ZUM_F)
+CALL MZM_MF(D, PVM, ZVM_F)
+CALL MZM_MF(D, PTKEM, ZTKEM_F)
 
 ! This updraft is not yet ready to use scalar variables
 !DO JSV=1,ISV
@@ -288,10 +288,10 @@ DO JIJ=IIJB,IIJE
   !ZTHS_UP(JIJ,KKB)=PTHL_UP(JIJ,KKB)*(1.+XLAMBDA_MF*ZQT_UP(JIJ))
 ENDDO
 
-CALL MZM_MF(D, PTHM (:,:), ZTHM_F(:,:))
-CALL MZM_MF(D, PPABSM(:,:), ZPRES_F(:,:))
-CALL MZM_MF(D, PRHODREF(:,:), ZRHO_F(:,:))
-CALL MZM_MF(D, PRVM(:,:), ZRVM_F(:,:))
+CALL MZM_MF(D, PTHM , ZTHM_F)
+CALL MZM_MF(D, PPABSM, ZPRES_F)
+CALL MZM_MF(D, PRHODREF, ZRHO_F)
+CALL MZM_MF(D, PRVM, ZRVM_F)
 
 ! thetav at mass and flux levels 
 DO JK=1,IKT

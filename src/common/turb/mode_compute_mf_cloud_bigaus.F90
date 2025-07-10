@@ -111,12 +111,12 @@ IKT=D%NKT
 !
 !Computation is done on mass points
 !Interpolation on mass points
-CALL MZF_MF(D, PRC_UP(:,:), ZRC_UP_M(:,:))
-CALL MZF_MF(D, PRI_UP(:,:), ZRI_UP_M(:,:))
-CALL MZF_MF(D, PRT_UP(:,:), ZRT_UP_M(:,:))
-CALL MZF_MF(D, PRV_UP(:,:), ZRV_UP_M(:,:))
-CALL MZF_MF(D, PFRAC_UP(:,:), ZFRAC_UP_M(:,:))
-CALL MZF_MF(D, PTH_UP(:,:), ZTH_UP_M(:,:))
+CALL MZF_MF(D, PRC_UP, ZRC_UP_M)
+CALL MZF_MF(D, PRI_UP, ZRI_UP_M)
+CALL MZF_MF(D, PRT_UP, ZRT_UP_M)
+CALL MZF_MF(D, PRV_UP, ZRV_UP_M)
+CALL MZF_MF(D, PFRAC_UP, ZFRAC_UP_M)
+CALL MZF_MF(D, PTH_UP, ZTH_UP_M)
 PWEIGHT_MF_CLOUD(:,:)=0.
 
 DO JK=1, IKT

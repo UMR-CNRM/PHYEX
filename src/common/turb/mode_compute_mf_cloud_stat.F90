@@ -126,8 +126,8 @@ IF (KRRL > 0)  THEN
 !
 
 !
-    CALL MZM_MF(D, PTHLM(:,:), ZFLXZ(:,:))
-    CALL GZ_M_W_MF(D, PTHLM(:,:), PDZZ(:,:), ZWK(:,:))
+    CALL MZM_MF(D, PTHLM, ZFLXZ)
+    CALL GZ_M_W_MF(D, PTHLM, PDZZ, ZWK)
     IF (OSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZFLXZ(IIJB:IIJE,1:IKT) = -2 * TURBN%XCTV* PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
@@ -146,7 +146,7 @@ IF (KRRL > 0)  THEN
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
 
-    CALL MZF_MF(D, ZFLXZ(:,:), PSIGMF(:,:))
+    CALL MZF_MF(D, ZFLXZ, PSIGMF)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     PSIGMF(IIJB:IIJE,1:IKT) = PSIGMF(IIJB:IIJE,1:IKT) * ZATHETA(IIJB:IIJE,1:IKT)**2
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -158,8 +158,8 @@ IF (KRRL > 0)  THEN
 !
 !
 !
-    CALL MZM_MF(D, PRTM(:,:), ZFLXZ2(:,:))
-    CALL GZ_M_W_MF(D, PRTM(:,:), PDZZ(:,:), ZWK2(:,:))
+    CALL MZM_MF(D, PRTM, ZFLXZ2)
+    CALL GZ_M_W_MF(D, PRTM, PDZZ, ZWK2)
     IF (OSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZFLXZ2(IIJB:IIJE,1:IKT) = -2 * TURBN%XCTV * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
@@ -177,7 +177,7 @@ IF (KRRL > 0)  THEN
     ZFLXZ2(IIJB:IIJE,1:IKT) = MAX(0.,ZFLXZ2(IIJB:IIJE,1:IKT))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
-    CALL MZF_MF(D, ZFLXZ2(:,:), ZWK2(:,:))
+    CALL MZF_MF(D, ZFLXZ2, ZWK2)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     PSIGMF(IIJB:IIJE,1:IKT) = PSIGMF(IIJB:IIJE,1:IKT) + ZAMOIST(IIJB:IIJE,1:IKT) **2 *ZWK2(IIJB:IIJE,1:IKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)

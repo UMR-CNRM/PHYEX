@@ -97,7 +97,7 @@ IKA=D%NKA
 IKE=D%NKE
 IKL=D%NKL
 !
-CALL DZM_MF(D, PVPT(:,:), ZDELTVPT(:,:))
+CALL DZM_MF(D, PVPT, ZDELTVPT)
 ZDELTVPT(IIJB:IIJE,IKA)=0.
 !$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
 WHERE (ABS(ZDELTVPT(IIJB:IIJE,1:IKT))<CSTURB%XLINF)
@@ -105,7 +105,7 @@ WHERE (ABS(ZDELTVPT(IIJB:IIJE,1:IKT))<CSTURB%XLINF)
 END WHERE
 !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
 !
-CALL MZM_MF(D, PVPT(:,:), ZHLVPT(:,:))
+CALL MZM_MF(D, PVPT, ZHLVPT)
 !
 !We consider that gradient between mass levels KKB and KKB+KKL is the same as
 !the gradient between flux level KKB and mass level KKB

@@ -234,11 +234,11 @@ PRSAT_UP(IIJB:IIJE,1:IKT)=PRVM(IIJB:IIJE,1:IKT) ! should be initialised correctl
 ! Initialisation of environment variables at t-dt
 
 ! variables at flux level
-CALL MZM_MF(D, PTHLM(:,:), ZTHLM_F(:,:))
-CALL MZM_MF(D, PRTM(:,:), ZRTM_F(:,:))
-CALL MZM_MF(D, PUM(:,:), ZUM_F(:,:))
-CALL MZM_MF(D, PVM(:,:), ZVM_F(:,:))
-CALL MZM_MF(D, PTKEM(:,:), ZTKEM_F(:,:))
+CALL MZM_MF(D, PTHLM, ZTHLM_F)
+CALL MZM_MF(D, PRTM, ZRTM_F)
+CALL MZM_MF(D, PUM, ZUM_F)
+CALL MZM_MF(D, PVM, ZVM_F)
+CALL MZM_MF(D, PTKEM, ZTKEM_F)
 
 !DO JSV=1,ISV 
 ! IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
@@ -271,10 +271,10 @@ ZQT_UP(IIJB:IIJE) = PRT_UP(IIJB:IIJE,IKB)/(1.+PRT_UP(IIJB:IIJE,IKB))
 ZTHS_UP(IIJB:IIJE,IKB)=PTHL_UP(IIJB:IIJE,IKB)*(1.+PARAMMF%XLAMBDA_MF*ZQT_UP(IIJB:IIJE))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
-CALL MZM_MF(D, PTHM (:,:), ZTHM_F(:,:))
-CALL MZM_MF(D, PPABSM(:,:), ZPRES_F(:,:))
-CALL MZM_MF(D, PRHODREF(:,:), ZRHO_F(:,:))
-CALL MZM_MF(D, PRVM(:,:), ZRVM_F(:,:))
+CALL MZM_MF(D, PTHM , ZTHM_F)
+CALL MZM_MF(D, PPABSM, ZPRES_F)
+CALL MZM_MF(D, PRHODREF, ZRHO_F)
+CALL MZM_MF(D, PRVM, ZRVM_F)
 
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ! thetav at mass and flux levels 
