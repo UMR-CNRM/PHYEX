@@ -429,135 +429,130 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span><span class="comment">!*       0. DECLARATIONS</span></div>
 <div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span><span class="comment">!</span></div>
 <div class="line"><a id="l00344" name="l00344"></a><span class="lineno">  344</span><span class="keywordtype">USE </span>yomhook, <span class="keywordtype">ONLY</span>:lhook, dr_hook, jphook</div>
-<div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__cst.html">modd_cst</a>, <span class="keywordtype">ONLY</span> : <a class="code hl_variable" href="namespacemodd__cst.html#abc8d535960a477e00b81d2fad677603e">xmv</a>, <a class="code hl_variable" href="namespacemodd__cst.html#aceba1c02e73a79b117a07331d4eedded">xavogadro</a>, <a class="code hl_variable" href="namespacemodd__cst.html#ad6b033dd09ca1b0497e36eef300eb6b9">xboltz</a>, <a class="code hl_variable" href="namespacemodd__cst.html#ae7e677ceccf0a1bad6a88ebd191fc1d1">xrholw</a></div>
-<div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__precision.html">modd_precision</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_variable" href="namespacemodd__precision.html#a388789af3de604f258e76af2363d4c57">mnhreal64</a></div>
-<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span><span class="comment">!</span></div>
-<div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span>    <span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span><span class="comment">!</span></div>
-<div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span><span class="comment">!*       0.1 declarations of arguments and result</span></div>
-<div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span><span class="comment">!</span></div>
-<div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">INTENT(IN)</span>  :: pd     <span class="comment">! supersaturation is already in no units</span></div>
-<div class="line"><a id="l00353" name="l00353"></a><span class="lineno">  353</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">INTENT(IN)</span>  :: pddry  <span class="comment">! supersaturation is already in no units</span></div>
-<div class="line"><a id="l00354" name="l00354"></a><span class="lineno">  354</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">INTENT(IN)</span>  :: pkappa <span class="comment">! supersaturation is already in no units</span></div>
-<div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">INTENT(IN)</span>  :: pt     <span class="comment">! supersaturation is already in no units</span></div>
-<div class="line"><a id="l00356" name="l00356"></a><span class="lineno">  356</span><span class="comment">!</span></div>
-<div class="line"><a id="l00357" name="l00357"></a><span class="lineno">  357</span><span class="keywordtype">    REAL</span>              :: zds     <span class="comment">! result</span></div>
-<div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span><span class="comment">!</span></div>
-<div class="line"><a id="l00359" name="l00359"></a><span class="lineno">  359</span><span class="comment">!*       0.2 declarations of local variables</span></div>
-<div class="line"><a id="l00360" name="l00360"></a><span class="lineno">  360</span><span class="comment">!</span></div>
-<div class="line"><a id="l00361" name="l00361"></a><span class="lineno">  361</span><span class="keywordtype">    REAL</span>(kind=jphook) :: zhook_handle</div>
-<div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span><span class="keywordtype">    REAL</span>              :: za     <span class="comment">! factor inside the exponential</span></div>
-<div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span><span class="keywordtype">    REAL</span>(kind=<a class="code hl_variable" href="namespacemodd__precision.html#a388789af3de604f258e76af2363d4c57">mnhreal64</a>)      :: z</div>
-<div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span><span class="comment">!    </span></div>
-<div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span>    <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DSDD&#39;</span>, 0, zhook_handle)</div>
-<div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span>    za = 4 * 0.072 * cst%XMV / cst%XAVOGADRO / cst%XBOLTZ / pt / cst%XRHOLW</div>
-<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span>    z = (pd**3-pddry**3) * (pd**3-(1._mnhreal64-pkappa)*pddry**3) * za - 3._mnhreal64 * pkappa * dble(pd)**4 * dble(pddry)**3</div>
-<div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span>    z = z * exp(za/pd) / (pd**3-(1-pkappa)*pddry**3)**2</div>
-<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>    zds = z</div>
-<div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span><span class="comment">!</span></div>
-<div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DSDD&#39;</span>, 1, zhook_handle)</div>
-<div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span><span class="keyword">END FUNCTION </span>dsdd</div>
-<div class="line"><a id="l00373" name="l00373"></a><span class="lineno">  373</span><span class="comment">!</span></div>
-<div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00375" name="l00375"></a><span class="lineno">  375</span><span class="comment">!</span></div>
-<div class="line"><a id="l00376" name="l00376"></a><span class="lineno">  376</span><span class="comment">!*       7.     Functions used to fit the CCN activation spectra with C s**k F()</span></div>
-<div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span><span class="comment">!               ----------------------------------------------------------------</span></div>
-<div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span><span class="comment">!</span></div>
-<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span>  <span class="keyword">SUBROUTINE </span>distance(KM,KN,PX,PFVEC,IFLAG)</div>
-<div class="line"><a id="l00380" name="l00380"></a><span class="lineno">  380</span><span class="keywordtype">USE </span>yomhook, <span class="keywordtype">ONLY</span>:lhook, dr_hook, jphook</div>
-<div class="line"><a id="l00381" name="l00381"></a><span class="lineno">  381</span><span class="comment">!!</span></div>
-<div class="line"><a id="l00382" name="l00382"></a><span class="lineno">  382</span><span class="comment">!!    PURPOSE</span></div>
-<div class="line"><a id="l00383" name="l00383"></a><span class="lineno">  383</span><span class="comment">!!    -------</span></div>
-<div class="line"><a id="l00384" name="l00384"></a><span class="lineno">  384</span><span class="comment">!!       Derivative of S(D) from Petters and Kreidenweis 2007 (eq. 6) to get Dcrit and Scrit</span></div>
-<div class="line"><a id="l00385" name="l00385"></a><span class="lineno">  385</span><span class="comment">!!    </span></div>
-<div class="line"><a id="l00386" name="l00386"></a><span class="lineno">  386</span><span class="comment">!!**  METHOD</span></div>
-<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span><span class="comment">!!    ------</span></div>
-<div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span><span class="comment">!!       This function is called by zriddr</span></div>
-<div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span><span class="comment">!!</span></div>
-<div class="line"><a id="l00390" name="l00390"></a><span class="lineno">  390</span><span class="comment">!!    EXTERNAL</span></div>
-<div class="line"><a id="l00391" name="l00391"></a><span class="lineno">  391</span><span class="comment">!!    --------</span></div>
-<div class="line"><a id="l00392" name="l00392"></a><span class="lineno">  392</span><span class="comment">!!</span></div>
-<div class="line"><a id="l00393" name="l00393"></a><span class="lineno">  393</span><span class="comment">!!    IMPLICIT ARGUMENTS</span></div>
-<div class="line"><a id="l00394" name="l00394"></a><span class="lineno">  394</span><span class="comment">!!    ------------------</span></div>
-<div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span><span class="comment">!!       </span></div>
-<div class="line"><a id="l00396" name="l00396"></a><span class="lineno">  396</span><span class="comment">!!    REFERENCE</span></div>
-<div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span><span class="comment">!!    ---------</span></div>
-<div class="line"><a id="l00398" name="l00398"></a><span class="lineno">  398</span><span class="comment">!!    Petters and Kreidenweis, 2007: &quot;A single parameter representation of hygroscopic </span></div>
-<div class="line"><a id="l00399" name="l00399"></a><span class="lineno">  399</span><span class="comment">!!             growth and cloud condensation nucleus activity&quot;,</span></div>
-<div class="line"><a id="l00400" name="l00400"></a><span class="lineno">  400</span><span class="comment">!!             ACP, 7, 1961-1971</span></div>
-<div class="line"><a id="l00401" name="l00401"></a><span class="lineno">  401</span><span class="comment">!!</span></div>
-<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span><span class="comment">!!    AUTHOR</span></div>
-<div class="line"><a id="l00403" name="l00403"></a><span class="lineno">  403</span><span class="comment">!!    ------</span></div>
-<div class="line"><a id="l00404" name="l00404"></a><span class="lineno">  404</span><span class="comment">!!      Benoit Vie *CNRM*</span></div>
-<div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span><span class="comment">!!</span></div>
-<div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span><span class="comment">!!    MODIFICATIONS</span></div>
-<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span><span class="comment">!!    -------------</span></div>
-<div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span><span class="comment">!!      Original     13/11/17</span></div>
-<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span><span class="comment">!!</span></div>
-<div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span><span class="comment">!------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span><span class="comment">!</span></div>
-<div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span><span class="comment">!*       0. DECLARATIONS</span></div>
-<div class="line"><a id="l00413" name="l00413"></a><span class="lineno">  413</span><span class="comment">!</span></div>
-<div class="line"><a id="l00414" name="l00414"></a><span class="lineno">  414</span><span class="comment">!*       0.1 declarations of arguments and result</span></div>
-<div class="line"><a id="l00415" name="l00415"></a><span class="lineno">  415</span><span class="comment">!</span></div>
-<div class="line"><a id="l00416" name="l00416"></a><span class="lineno">  416</span>    <span class="comment">!DISTANCE must use KIND 8 reals and KIND 4 integers to be used by LMDIF1</span></div>
-<div class="line"><a id="l00417" name="l00417"></a><span class="lineno">  417</span>    <span class="keywordtype">INTEGER(KIND=4)</span>, <span class="keywordtype">INTENT(IN)</span> :: km</div>
-<div class="line"><a id="l00418" name="l00418"></a><span class="lineno">  418</span>    <span class="keywordtype">INTEGER(KIND=4)</span>, <span class="keywordtype">INTENT(IN)</span> :: kn</div>
-<div class="line"><a id="l00419" name="l00419"></a><span class="lineno">  419</span><span class="keywordtype">    REAL</span>(kind=mnhreal64), <span class="keywordtype">INTENT(IN)</span> ::    px(kn)</div>
-<div class="line"><a id="l00420" name="l00420"></a><span class="lineno">  420</span><span class="keywordtype">    REAL</span>(kind=mnhreal64), <span class="keywordtype">INTENT(OUT)</span> ::    pfvec(km)</div>
-<div class="line"><a id="l00421" name="l00421"></a><span class="lineno">  421</span>    <span class="keywordtype">INTEGER(KIND=4)</span>, <span class="keywordtype">INTENT(INOUT)</span> :: iflag</div>
-<div class="line"><a id="l00422" name="l00422"></a><span class="lineno">  422</span><span class="comment">!</span></div>
-<div class="line"><a id="l00423" name="l00423"></a><span class="lineno">  423</span><span class="comment">!*       0.2 declarations of local variables</span></div>
-<div class="line"><a id="l00424" name="l00424"></a><span class="lineno">  424</span><span class="comment">!</span></div>
-<div class="line"><a id="l00425" name="l00425"></a><span class="lineno">  425</span>    <span class="keywordtype">INTEGER</span> ii</div>
-<div class="line"><a id="l00426" name="l00426"></a><span class="lineno">  426</span><span class="keywordtype">    REAL</span>    zc</div>
-<div class="line"><a id="l00427" name="l00427"></a><span class="lineno">  427</span><span class="keywordtype">    REAL</span>    zw</div>
-<div class="line"><a id="l00428" name="l00428"></a><span class="lineno">  428</span><span class="keywordtype">    REAL</span>(kind=jphook) :: zhook_handle</div>
-<div class="line"><a id="l00429" name="l00429"></a><span class="lineno">  429</span><span class="comment">!    </span></div>
-<div class="line"><a id="l00430" name="l00430"></a><span class="lineno">  430</span>    <span class="comment">! print *, &quot;X = &quot;, X</span></div>
-<div class="line"><a id="l00431" name="l00431"></a><span class="lineno">  431</span>    <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DISTANCE&#39;</span>, 0, zhook_handle)</div>
-<div class="line"><a id="l00432" name="l00432"></a><span class="lineno">  432</span>    <span class="keywordflow">IF</span> ( any(px .LT.0.) .OR. px(1).GT.2*px(2)) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00433" name="l00433"></a><span class="lineno">  433</span>       pfvec(:) = 999999.</div>
-<div class="line"><a id="l00434" name="l00434"></a><span class="lineno">  434</span>    <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00435" name="l00435"></a><span class="lineno">  435</span>       zc=gamma(px(2))*px(3)**(px(1)/2)/gamma(1+px(1)/2)/gamma(px(2)-px(1)/2)</div>
-<div class="line"><a id="l00436" name="l00436"></a><span class="lineno">  436</span>       <span class="keywordflow">DO</span> ii=1, km</div>
-<div class="line"><a id="l00437" name="l00437"></a><span class="lineno">  437</span>          <span class="comment">! ZS in &quot;no units&quot;, ie ZS=0.01 for a 1% suersaturation</span></div>
-<div class="line"><a id="l00438" name="l00438"></a><span class="lineno">  438</span>          <span class="comment">!       ZW= C * (ZS(I)/100)**X(1) * HYPGEO(X(2),X(1)/2,X(1)/2+1,X(3),ZS(I)/100)</span></div>
-<div class="line"><a id="l00439" name="l00439"></a><span class="lineno">  439</span>          zw= zc * (zs(ii))**px(1) * <a class="code hl_interface" href="interfacemodi__hypgeo_1_1hypgeo.html">hypgeo</a>(real(px(2)),real(px(1)/2),real(px(1)/2+1),real(px(3)),real(zs(ii)))</div>
-<div class="line"><a id="l00440" name="l00440"></a><span class="lineno">  440</span><span class="comment">!!$       IF (X(3)*(ZS(I)/100)**2 .LT. 0.98) THEN</span></div>
-<div class="line"><a id="l00441" name="l00441"></a><span class="lineno">  441</span><span class="comment">!!$          CALL HYPSER(X(2),X(1)/2,X(1)/2+1,-X(3)*(ZS(I)/100)**2,ZW2)</span></div>
-<div class="line"><a id="l00442" name="l00442"></a><span class="lineno">  442</span><span class="comment">!!$          print *, &quot;args= &quot;, X(2), X(1)/2, X(1)/2+1, -X(3)*(ZS(I)/100)**2, &quot; hypser = &quot;, ZW2</span></div>
-<div class="line"><a id="l00443" name="l00443"></a><span class="lineno">  443</span><span class="comment">!!$          CALL HYPSER(27.288,0.82/2,0.82/2+1,-38726*(0.5/100)**2,ZW2)</span></div>
-<div class="line"><a id="l00444" name="l00444"></a><span class="lineno">  444</span><span class="comment">!!$          print *, &quot;args= &quot;, 27.288, 0.82/2, 0.82/2+1, -38726*(0.5/100)**2, &quot; hypser = &quot;, ZW2</span></div>
-<div class="line"><a id="l00445" name="l00445"></a><span class="lineno">  445</span><span class="comment">!!$       END IF</span></div>
-<div class="line"><a id="l00446" name="l00446"></a><span class="lineno">  446</span>          <span class="comment">!       print *, I, ZS(I), C, ZW, ZNCCN(I)</span></div>
-<div class="line"><a id="l00447" name="l00447"></a><span class="lineno">  447</span>          <span class="keywordflow">IF</span> ( zw.GT.0. .AND. znccn(ii).GT.0.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00448" name="l00448"></a><span class="lineno">  448</span>             pfvec(ii) = log(zw) - log(znccn(ii))</div>
-<div class="line"><a id="l00449" name="l00449"></a><span class="lineno">  449</span>          <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00450" name="l00450"></a><span class="lineno">  450</span>             pfvec(ii) = 0.</div>
-<div class="line"><a id="l00451" name="l00451"></a><span class="lineno">  451</span><span class="keywordflow">          END IF</span></div>
-<div class="line"><a id="l00452" name="l00452"></a><span class="lineno">  452</span>          <span class="comment">!FVEC(I) = LOG(MAX(ZW,1.E-24)) - LOG(MAX(ZNCCN(I),1.E-24))</span></div>
-<div class="line"><a id="l00453" name="l00453"></a><span class="lineno">  453</span>          <span class="comment">!FVEC(I) = ZW - ZNCCN(I)</span></div>
-<div class="line"><a id="l00454" name="l00454"></a><span class="lineno">  454</span><span class="keywordflow">       END DO</span></div>
-<div class="line"><a id="l00455" name="l00455"></a><span class="lineno">  455</span><span class="keywordflow">    END IF</span></div>
-<div class="line"><a id="l00456" name="l00456"></a><span class="lineno">  456</span><span class="comment">!    print *, &quot;distance : &quot;, SUM(FVEC*FVEC)</span></div>
-<div class="line"><a id="l00457" name="l00457"></a><span class="lineno">  457</span><span class="comment">!</span></div>
-<div class="line"><a id="l00458" name="l00458"></a><span class="lineno">  458</span>  <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DISTANCE&#39;</span>, 1, zhook_handle)</div>
-<div class="line"><a id="l00459" name="l00459"></a><span class="lineno">  459</span>  <span class="keyword">END SUBROUTINE </span>distance</div>
-<div class="line"><a id="l00460" name="l00460"></a><span class="lineno">  460</span><span class="comment">!</span></div>
-<div class="line"><a id="l00461" name="l00461"></a><span class="lineno">  461</span><span class="comment">!------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__precision.html">modd_precision</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_variable" href="namespacemodd__precision.html#a388789af3de604f258e76af2363d4c57">mnhreal64</a></div>
+<div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span><span class="comment">!</span></div>
+<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span>    <span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span><span class="comment">!</span></div>
+<div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span><span class="comment">!*       0.1 declarations of arguments and result</span></div>
+<div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span><span class="comment">!</span></div>
+<div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">INTENT(IN)</span>  :: pd     <span class="comment">! supersaturation is already in no units</span></div>
+<div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">INTENT(IN)</span>  :: pddry  <span class="comment">! supersaturation is already in no units</span></div>
+<div class="line"><a id="l00353" name="l00353"></a><span class="lineno">  353</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">INTENT(IN)</span>  :: pkappa <span class="comment">! supersaturation is already in no units</span></div>
+<div class="line"><a id="l00354" name="l00354"></a><span class="lineno">  354</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">INTENT(IN)</span>  :: pt     <span class="comment">! supersaturation is already in no units</span></div>
+<div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span><span class="comment">!</span></div>
+<div class="line"><a id="l00356" name="l00356"></a><span class="lineno">  356</span><span class="keywordtype">    REAL</span>              :: zds     <span class="comment">! result</span></div>
+<div class="line"><a id="l00357" name="l00357"></a><span class="lineno">  357</span><span class="comment">!</span></div>
+<div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span><span class="comment">!*       0.2 declarations of local variables</span></div>
+<div class="line"><a id="l00359" name="l00359"></a><span class="lineno">  359</span><span class="comment">!</span></div>
+<div class="line"><a id="l00360" name="l00360"></a><span class="lineno">  360</span><span class="keywordtype">    REAL</span>(kind=jphook) :: zhook_handle</div>
+<div class="line"><a id="l00361" name="l00361"></a><span class="lineno">  361</span><span class="keywordtype">    REAL</span>              :: za     <span class="comment">! factor inside the exponential</span></div>
+<div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span><span class="keywordtype">    REAL</span>(kind=<a class="code hl_variable" href="namespacemodd__precision.html#a388789af3de604f258e76af2363d4c57">mnhreal64</a>)      :: z</div>
+<div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span><span class="comment">!    </span></div>
+<div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span>    <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DSDD&#39;</span>, 0, zhook_handle)</div>
+<div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span>    za = 4 * 0.072 * cst%XMV / cst%XAVOGADRO / cst%XBOLTZ / pt / cst%XRHOLW</div>
+<div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span>    z = (pd**3-pddry**3) * (pd**3-(1._mnhreal64-pkappa)*pddry**3) * za - 3._mnhreal64 * pkappa * dble(pd)**4 * dble(pddry)**3</div>
+<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span>    z = z * exp(za/pd) / (pd**3-(1-pkappa)*pddry**3)**2</div>
+<div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span>    zds = z</div>
+<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span><span class="comment">!</span></div>
+<div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DSDD&#39;</span>, 1, zhook_handle)</div>
+<div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span><span class="keyword">END FUNCTION </span>dsdd</div>
+<div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span><span class="comment">!</span></div>
+<div class="line"><a id="l00373" name="l00373"></a><span class="lineno">  373</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span><span class="comment">!</span></div>
+<div class="line"><a id="l00375" name="l00375"></a><span class="lineno">  375</span><span class="comment">!*       7.     Functions used to fit the CCN activation spectra with C s**k F()</span></div>
+<div class="line"><a id="l00376" name="l00376"></a><span class="lineno">  376</span><span class="comment">!               ----------------------------------------------------------------</span></div>
+<div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span><span class="comment">!</span></div>
+<div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span>  <span class="keyword">SUBROUTINE </span>distance(KM,KN,PX,PFVEC,IFLAG)</div>
+<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span><span class="keywordtype">USE </span>yomhook, <span class="keywordtype">ONLY</span>:lhook, dr_hook, jphook</div>
+<div class="line"><a id="l00380" name="l00380"></a><span class="lineno">  380</span><span class="comment">!!</span></div>
+<div class="line"><a id="l00381" name="l00381"></a><span class="lineno">  381</span><span class="comment">!!    PURPOSE</span></div>
+<div class="line"><a id="l00382" name="l00382"></a><span class="lineno">  382</span><span class="comment">!!    -------</span></div>
+<div class="line"><a id="l00383" name="l00383"></a><span class="lineno">  383</span><span class="comment">!!       Derivative of S(D) from Petters and Kreidenweis 2007 (eq. 6) to get Dcrit and Scrit</span></div>
+<div class="line"><a id="l00384" name="l00384"></a><span class="lineno">  384</span><span class="comment">!!    </span></div>
+<div class="line"><a id="l00385" name="l00385"></a><span class="lineno">  385</span><span class="comment">!!**  METHOD</span></div>
+<div class="line"><a id="l00386" name="l00386"></a><span class="lineno">  386</span><span class="comment">!!    ------</span></div>
+<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span><span class="comment">!!       This function is called by zriddr</span></div>
+<div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span><span class="comment">!!</span></div>
+<div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span><span class="comment">!!    EXTERNAL</span></div>
+<div class="line"><a id="l00390" name="l00390"></a><span class="lineno">  390</span><span class="comment">!!    --------</span></div>
+<div class="line"><a id="l00391" name="l00391"></a><span class="lineno">  391</span><span class="comment">!!</span></div>
+<div class="line"><a id="l00392" name="l00392"></a><span class="lineno">  392</span><span class="comment">!!    IMPLICIT ARGUMENTS</span></div>
+<div class="line"><a id="l00393" name="l00393"></a><span class="lineno">  393</span><span class="comment">!!    ------------------</span></div>
+<div class="line"><a id="l00394" name="l00394"></a><span class="lineno">  394</span><span class="comment">!!       </span></div>
+<div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span><span class="comment">!!    REFERENCE</span></div>
+<div class="line"><a id="l00396" name="l00396"></a><span class="lineno">  396</span><span class="comment">!!    ---------</span></div>
+<div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span><span class="comment">!!    Petters and Kreidenweis, 2007: &quot;A single parameter representation of hygroscopic </span></div>
+<div class="line"><a id="l00398" name="l00398"></a><span class="lineno">  398</span><span class="comment">!!             growth and cloud condensation nucleus activity&quot;,</span></div>
+<div class="line"><a id="l00399" name="l00399"></a><span class="lineno">  399</span><span class="comment">!!             ACP, 7, 1961-1971</span></div>
+<div class="line"><a id="l00400" name="l00400"></a><span class="lineno">  400</span><span class="comment">!!</span></div>
+<div class="line"><a id="l00401" name="l00401"></a><span class="lineno">  401</span><span class="comment">!!    AUTHOR</span></div>
+<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span><span class="comment">!!    ------</span></div>
+<div class="line"><a id="l00403" name="l00403"></a><span class="lineno">  403</span><span class="comment">!!      Benoit Vie *CNRM*</span></div>
+<div class="line"><a id="l00404" name="l00404"></a><span class="lineno">  404</span><span class="comment">!!</span></div>
+<div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span><span class="comment">!!    MODIFICATIONS</span></div>
+<div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span><span class="comment">!!    -------------</span></div>
+<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span><span class="comment">!!      Original     13/11/17</span></div>
+<div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span><span class="comment">!!</span></div>
+<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span><span class="comment">!------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span><span class="comment">!</span></div>
+<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span><span class="comment">!*       0. DECLARATIONS</span></div>
+<div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span><span class="comment">!</span></div>
+<div class="line"><a id="l00413" name="l00413"></a><span class="lineno">  413</span><span class="comment">!*       0.1 declarations of arguments and result</span></div>
+<div class="line"><a id="l00414" name="l00414"></a><span class="lineno">  414</span><span class="comment">!</span></div>
+<div class="line"><a id="l00415" name="l00415"></a><span class="lineno">  415</span>    <span class="comment">!DISTANCE must use KIND 8 reals and KIND 4 integers to be used by LMDIF1</span></div>
+<div class="line"><a id="l00416" name="l00416"></a><span class="lineno">  416</span>    <span class="keywordtype">INTEGER(KIND=4)</span>, <span class="keywordtype">INTENT(IN)</span> :: km</div>
+<div class="line"><a id="l00417" name="l00417"></a><span class="lineno">  417</span>    <span class="keywordtype">INTEGER(KIND=4)</span>, <span class="keywordtype">INTENT(IN)</span> :: kn</div>
+<div class="line"><a id="l00418" name="l00418"></a><span class="lineno">  418</span><span class="keywordtype">    REAL</span>(kind=mnhreal64), <span class="keywordtype">INTENT(IN)</span> ::    px(kn)</div>
+<div class="line"><a id="l00419" name="l00419"></a><span class="lineno">  419</span><span class="keywordtype">    REAL</span>(kind=mnhreal64), <span class="keywordtype">INTENT(OUT)</span> ::    pfvec(km)</div>
+<div class="line"><a id="l00420" name="l00420"></a><span class="lineno">  420</span>    <span class="keywordtype">INTEGER(KIND=4)</span>, <span class="keywordtype">INTENT(INOUT)</span> :: iflag</div>
+<div class="line"><a id="l00421" name="l00421"></a><span class="lineno">  421</span><span class="comment">!</span></div>
+<div class="line"><a id="l00422" name="l00422"></a><span class="lineno">  422</span><span class="comment">!*       0.2 declarations of local variables</span></div>
+<div class="line"><a id="l00423" name="l00423"></a><span class="lineno">  423</span><span class="comment">!</span></div>
+<div class="line"><a id="l00424" name="l00424"></a><span class="lineno">  424</span>    <span class="keywordtype">INTEGER</span> ii</div>
+<div class="line"><a id="l00425" name="l00425"></a><span class="lineno">  425</span><span class="keywordtype">    REAL</span>    zc</div>
+<div class="line"><a id="l00426" name="l00426"></a><span class="lineno">  426</span><span class="keywordtype">    REAL</span>    zw</div>
+<div class="line"><a id="l00427" name="l00427"></a><span class="lineno">  427</span><span class="keywordtype">    REAL</span>(kind=jphook) :: zhook_handle</div>
+<div class="line"><a id="l00428" name="l00428"></a><span class="lineno">  428</span><span class="comment">!    </span></div>
+<div class="line"><a id="l00429" name="l00429"></a><span class="lineno">  429</span>    <span class="comment">! print *, &quot;X = &quot;, X</span></div>
+<div class="line"><a id="l00430" name="l00430"></a><span class="lineno">  430</span>    <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DISTANCE&#39;</span>, 0, zhook_handle)</div>
+<div class="line"><a id="l00431" name="l00431"></a><span class="lineno">  431</span>    <span class="keywordflow">IF</span> ( any(px .LT.0.) .OR. px(1).GT.2*px(2)) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00432" name="l00432"></a><span class="lineno">  432</span>       pfvec(:) = 999999.</div>
+<div class="line"><a id="l00433" name="l00433"></a><span class="lineno">  433</span>    <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00434" name="l00434"></a><span class="lineno">  434</span>       zc=gamma(px(2))*px(3)**(px(1)/2)/gamma(1+px(1)/2)/gamma(px(2)-px(1)/2)</div>
+<div class="line"><a id="l00435" name="l00435"></a><span class="lineno">  435</span>       <span class="keywordflow">DO</span> ii=1, km</div>
+<div class="line"><a id="l00436" name="l00436"></a><span class="lineno">  436</span>          <span class="comment">! ZS in &quot;no units&quot;, ie ZS=0.01 for a 1% suersaturation</span></div>
+<div class="line"><a id="l00437" name="l00437"></a><span class="lineno">  437</span>          <span class="comment">!       ZW= C * (ZS(I)/100)**X(1) * HYPGEO(X(2),X(1)/2,X(1)/2+1,X(3),ZS(I)/100)</span></div>
+<div class="line"><a id="l00438" name="l00438"></a><span class="lineno">  438</span>          zw= zc * (zs(ii))**px(1) * <a class="code hl_interface" href="interfacemodi__hypgeo_1_1hypgeo.html">hypgeo</a>(real(px(2)),real(px(1)/2),real(px(1)/2+1),real(px(3)),real(zs(ii)))</div>
+<div class="line"><a id="l00439" name="l00439"></a><span class="lineno">  439</span><span class="comment">!!$       IF (X(3)*(ZS(I)/100)**2 .LT. 0.98) THEN</span></div>
+<div class="line"><a id="l00440" name="l00440"></a><span class="lineno">  440</span><span class="comment">!!$          CALL HYPSER(X(2),X(1)/2,X(1)/2+1,-X(3)*(ZS(I)/100)**2,ZW2)</span></div>
+<div class="line"><a id="l00441" name="l00441"></a><span class="lineno">  441</span><span class="comment">!!$          print *, &quot;args= &quot;, X(2), X(1)/2, X(1)/2+1, -X(3)*(ZS(I)/100)**2, &quot; hypser = &quot;, ZW2</span></div>
+<div class="line"><a id="l00442" name="l00442"></a><span class="lineno">  442</span><span class="comment">!!$          CALL HYPSER(27.288,0.82/2,0.82/2+1,-38726*(0.5/100)**2,ZW2)</span></div>
+<div class="line"><a id="l00443" name="l00443"></a><span class="lineno">  443</span><span class="comment">!!$          print *, &quot;args= &quot;, 27.288, 0.82/2, 0.82/2+1, -38726*(0.5/100)**2, &quot; hypser = &quot;, ZW2</span></div>
+<div class="line"><a id="l00444" name="l00444"></a><span class="lineno">  444</span><span class="comment">!!$       END IF</span></div>
+<div class="line"><a id="l00445" name="l00445"></a><span class="lineno">  445</span>          <span class="comment">!       print *, I, ZS(I), C, ZW, ZNCCN(I)</span></div>
+<div class="line"><a id="l00446" name="l00446"></a><span class="lineno">  446</span>          <span class="keywordflow">IF</span> ( zw.GT.0. .AND. znccn(ii).GT.0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00447" name="l00447"></a><span class="lineno">  447</span>             pfvec(ii) = log(zw) - log(znccn(ii))</div>
+<div class="line"><a id="l00448" name="l00448"></a><span class="lineno">  448</span>          <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00449" name="l00449"></a><span class="lineno">  449</span>             pfvec(ii) = 0.</div>
+<div class="line"><a id="l00450" name="l00450"></a><span class="lineno">  450</span><span class="keywordflow">          END IF</span></div>
+<div class="line"><a id="l00451" name="l00451"></a><span class="lineno">  451</span>          <span class="comment">!FVEC(I) = LOG(MAX(ZW,1.E-24)) - LOG(MAX(ZNCCN(I),1.E-24))</span></div>
+<div class="line"><a id="l00452" name="l00452"></a><span class="lineno">  452</span>          <span class="comment">!FVEC(I) = ZW - ZNCCN(I)</span></div>
+<div class="line"><a id="l00453" name="l00453"></a><span class="lineno">  453</span><span class="keywordflow">       END DO</span></div>
+<div class="line"><a id="l00454" name="l00454"></a><span class="lineno">  454</span><span class="keywordflow">    END IF</span></div>
+<div class="line"><a id="l00455" name="l00455"></a><span class="lineno">  455</span><span class="comment">!    print *, &quot;distance : &quot;, SUM(FVEC*FVEC)</span></div>
+<div class="line"><a id="l00456" name="l00456"></a><span class="lineno">  456</span><span class="comment">!</span></div>
+<div class="line"><a id="l00457" name="l00457"></a><span class="lineno">  457</span>  <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DISTANCE&#39;</span>, 1, zhook_handle)</div>
+<div class="line"><a id="l00458" name="l00458"></a><span class="lineno">  458</span>  <span class="keyword">END SUBROUTINE </span>distance</div>
+<div class="line"><a id="l00459" name="l00459"></a><span class="lineno">  459</span><span class="comment">!</span></div>
+<div class="line"><a id="l00460" name="l00460"></a><span class="lineno">  460</span><span class="comment">!------------------------------------------------------------------------------</span></div>
 </div>
-<div class="line"><a id="l00462" name="l00462"></a><span class="lineno">  462</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__lima__init__ccn__activation__spectrum.html#ae5f734a34f7322fd9e078d7d9e0d77e6">lima_init_ccn_activation_spectrum</a></div>
-<div class="line"><a id="l00463" name="l00463"></a><span class="lineno">  463</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__lima__init__ccn__activation__spectrum.html">mode_lima_init_ccn_activation_spectrum</a></div>
+<div class="line"><a id="l00461" name="l00461"></a><span class="lineno">  461</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__lima__init__ccn__activation__spectrum.html#ae5f734a34f7322fd9e078d7d9e0d77e6">lima_init_ccn_activation_spectrum</a></div>
+<div class="line"><a id="l00462" name="l00462"></a><span class="lineno">  462</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__lima__init__ccn__activation__spectrum.html">mode_lima_init_ccn_activation_spectrum</a></div>
 <div class="ttc" id="ainterfacemodi__gamma__inc_1_1gamma__inc_html"><div class="ttname"><a href="interfacemodi__gamma__inc_1_1gamma__inc.html">modi_gamma_inc::gamma_inc</a></div><div class="ttdef"><b>Definition</b> <a href="modi__gamma__inc_8F90_source.html#l00012">modi_gamma_inc.F90:12</a></div></div>
 <div class="ttc" id="ainterfacemodi__hypgeo_1_1hypgeo_html"><div class="ttname"><a href="interfacemodi__hypgeo_1_1hypgeo.html">modi_hypgeo::hypgeo</a></div><div class="ttdef"><b>Definition</b> <a href="hypgeo_8F90_source.html#l00013">hypgeo.F90:13</a></div></div>
 <div class="ttc" id="ainterfacemodi__minpack_1_1lmdif1_html"><div class="ttname"><a href="interfacemodi__minpack_1_1lmdif1.html">modi_minpack::lmdif1</a></div><div class="ttdef"><b>Definition</b> <a href="modi__minpack_8F90_source.html#l00204">modi_minpack.F90:204</a></div></div>
-<div class="ttc" id="amode__lima__ccn__activation_8F90_html_a1fc2197bb5e03d994cf4624b9a88ab44"><div class="ttname"><a href="mode__lima__ccn__activation_8F90.html#a1fc2197bb5e03d994cf4624b9a88ab44">zriddr</a></div><div class="ttdeci">real function, dimension(kpts) zriddr(px1, px2init, pxacc, pzzw3, pzzw6, kpts)</div><div class="ttdef"><b>Definition</b> <a href="mode__lima__ccn__activation_8F90_source.html#l00589">mode_lima_ccn_activation.F90:590</a></div></div>
+<div class="ttc" id="amode__lima__ccn__activation_8F90_html_a1fc2197bb5e03d994cf4624b9a88ab44"><div class="ttname"><a href="mode__lima__ccn__activation_8F90.html#a1fc2197bb5e03d994cf4624b9a88ab44">zriddr</a></div><div class="ttdeci">real function, dimension(kpts) zriddr(px1, px2init, pxacc, pzzw3, pzzw6, kpts)</div><div class="ttdef"><b>Definition</b> <a href="mode__lima__ccn__activation_8F90_source.html#l00587">mode_lima_ccn_activation.F90:588</a></div></div>
 <div class="ttc" id="anamespacemodd__cst_html"><div class="ttname"><a href="namespacemodd__cst.html">modd_cst</a></div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00007">modd_cst.F90:7</a></div></div>
-<div class="ttc" id="anamespacemodd__cst_html_abc8d535960a477e00b81d2fad677603e"><div class="ttname"><a href="namespacemodd__cst.html#abc8d535960a477e00b81d2fad677603e">modd_cst::xmv</a></div><div class="ttdeci">real, pointer xmv</div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00149">modd_cst.F90:149</a></div></div>
-<div class="ttc" id="anamespacemodd__cst_html_aceba1c02e73a79b117a07331d4eedded"><div class="ttname"><a href="namespacemodd__cst.html#aceba1c02e73a79b117a07331d4eedded">modd_cst::xavogadro</a></div><div class="ttdeci">real, pointer xavogadro</div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00142">modd_cst.F90:142</a></div></div>
-<div class="ttc" id="anamespacemodd__cst_html_ad6b033dd09ca1b0497e36eef300eb6b9"><div class="ttname"><a href="namespacemodd__cst.html#ad6b033dd09ca1b0497e36eef300eb6b9">modd_cst::xboltz</a></div><div class="ttdeci">real, pointer xboltz</div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00141">modd_cst.F90:141</a></div></div>
-<div class="ttc" id="anamespacemodd__cst_html_ae7e677ceccf0a1bad6a88ebd191fc1d1"><div class="ttname"><a href="namespacemodd__cst.html#ae7e677ceccf0a1bad6a88ebd191fc1d1">modd_cst::xrholw</a></div><div class="ttdeci">real, pointer xrholw</div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00153">modd_cst.F90:153</a></div></div>
 <div class="ttc" id="anamespacemodd__precision_html"><div class="ttname"><a href="namespacemodd__precision.html">modd_precision</a></div><div class="ttdef"><b>Definition</b> <a href="modd__precision_8F90_source.html#l00001">modd_precision.F90:1</a></div></div>
 <div class="ttc" id="anamespacemodd__precision_html_a388789af3de604f258e76af2363d4c57"><div class="ttname"><a href="namespacemodd__precision.html#a388789af3de604f258e76af2363d4c57">modd_precision::mnhreal64</a></div><div class="ttdeci">integer, parameter mnhreal64</div><div class="ttdef"><b>Definition</b> <a href="modd__precision_8F90_source.html#l00007">modd_precision.F90:7</a></div></div>
 <div class="ttc" id="anamespacemode__lima__init__ccn__activation__spectrum_html"><div class="ttname"><a href="namespacemode__lima__init__ccn__activation__spectrum.html">mode_lima_init_ccn_activation_spectrum</a></div><div class="ttdef"><b>Definition</b> <a href="mode__lima__init__ccn__activation__spectrum_8F90_source.html#l00006">mode_lima_init_ccn_activation_spectrum.F90:6</a></div></div>

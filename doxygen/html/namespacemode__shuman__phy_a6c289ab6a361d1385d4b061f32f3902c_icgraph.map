@@ -1,28 +1,5 @@
 <map id="mode_shuman_phy::dxm_phy" name="mode_shuman_phy::dxm_phy">
-<area shape="rect" id="Node000001" title=" " alt="" coords="1031,205,1247,230"/>
-<area shape="rect" id="Node000002" href="$namespacemode__gradient__w__phy.html#abc70f65183a5a309b3554844b6ce5457" title=" " alt="" coords="813,165,983,205"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="1029,205,982,199,983,194,1030,200"/>
-<area shape="rect" id="Node000008" href="$namespacemode__turb__hor__thermo__flux.html#ab5817124da7d1a2433cc5d3fd28e19d8" title=" " alt="" coords="564,261,764,301"/>
-<area shape="poly" id="edge15_Node000001_Node000008" title=" " alt="" coords="1030,235,765,271,764,265,1030,229"/>
-<area shape="rect" id="Node000003" href="$namespacemode__turb__hor__sv__flux.html#afa6e8f229e1939ca208908b5f6adefa1" title=" " alt="" coords="577,69,751,109"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="846,161,764,124,732,112,733,107,766,119,848,156"/>
-<area shape="rect" id="Node000007" href="$namespacemode__turb__hor__thermo__corr.html#a63564dc2f9ebe3952970c1e1ca01853f" title=" " alt="" coords="563,133,765,173"/>
-<area shape="poly" id="edge6_Node000002_Node000007" title=" " alt="" coords="799,175,765,170,766,165,800,169"/>
-<area shape="poly" id="edge8_Node000002_Node000008" title=" " alt="" coords="845,214,766,252,733,264,732,259,764,247,843,209"/>
-<area shape="rect" id="Node000009" href="$namespacemode__turb__hor__uw.html#a314f7ab4b969412f9f1f88035919fc31" title=" " alt="" coords="575,197,753,237"/>
-<area shape="poly" id="edge10_Node000002_Node000009" title=" " alt="" coords="800,201,754,208,753,203,799,196"/>
-<area shape="rect" id="Node000010" href="$namespacemode__turb__ver__dyn__flux.html#a3c9f2de641870f3cbae768327606e3af" title=" " alt="" coords="573,5,755,45"/>
-<area shape="poly" id="edge12_Node000002_Node000010" title=" " alt="" coords="871,157,824,107,795,82,764,60,740,48,742,43,767,55,798,77,828,103,874,153"/>
-<area shape="rect" id="Node000004" href="$namespacemode__turb__hor.html#a392ed5235673e3faa3d5c1f17974a7cc" title=" " alt="" coords="332,141,515,166"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="576,116,473,143,471,138,574,110"/>
-<area shape="rect" id="Node000005" href="$namespacemode__turb__hor__splt.html#af567a0992241afa9a2e5ad86eb96f424" title=" " alt="" coords="117,99,268,139"/>
-<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="324,141,268,133,269,127,325,136"/>
-<area shape="rect" id="Node000006" href="$turb_8F90.html#a808c1b84c0353e66a4b430000939bc16" title=" " alt="" coords="5,78,53,103"/>
-<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="103,106,53,97,54,92,104,101"/>
-<area shape="poly" id="edge7_Node000007_Node000004" title=" " alt="" coords="549,156,515,156,515,151,549,151"/>
-<area shape="poly" id="edge9_Node000008_Node000004" title=" " alt="" coords="577,259,561,252,491,209,438,168,441,164,494,204,564,247,579,254"/>
-<area shape="poly" id="edge11_Node000009_Node000004" title=" " alt="" coords="574,196,471,169,473,164,576,191"/>
-<area shape="rect" id="Node000011" href="$namespacemode__turb__ver.html#a6a55f740dcd7870f2e64d634483cc1e8" title=" " alt="" coords="101,31,284,57"/>
-<area shape="poly" id="edge13_Node000010_Node000011" title=" " alt="" coords="559,32,284,43,284,38,559,27"/>
-<area shape="poly" id="edge14_Node000011_Node000006" title=" " alt="" coords="135,63,54,87,53,81,134,58"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="223,13,439,38"/>
+<area shape="rect" id="Node000002" href="$namespacemode__gradient__w__phy.html#abc70f65183a5a309b3554844b6ce5457" title=" " alt="" coords="5,5,175,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="209,28,175,28,175,23,209,23"/>
 </map>
