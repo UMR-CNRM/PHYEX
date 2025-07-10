@@ -99,55 +99,55 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">subroutine modi_minpack::qrfac::qrfac </td>
           <td>(</td>
-          <td class="paramtype">integer ( kind = 4 )&#160;</td>
+          <td class="paramtype">integer ( kind = 4 ), intent(in)&#160;</td>
           <td class="paramname"><em>m</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer ( kind = 4 )&#160;</td>
+          <td class="paramtype">integer ( kind = 4 ), intent(in)&#160;</td>
           <td class="paramname"><em>n</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real ( kind = 8 ), dimension(lda, n)&#160;</td>
+          <td class="paramtype">real ( kind = 8 ), dimension(lda, n), intent(inout)&#160;</td>
           <td class="paramname"><em>a</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer ( kind = 4 )&#160;</td>
+          <td class="paramtype">integer ( kind = 4 ), intent(in)&#160;</td>
           <td class="paramname"><em>lda</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">logical&#160;</td>
+          <td class="paramtype">logical, intent(in)&#160;</td>
           <td class="paramname"><em>pivot</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer ( kind = 4 ), dimension(lipvt)&#160;</td>
+          <td class="paramtype">integer ( kind = 4 ), dimension(lipvt), intent(out)&#160;</td>
           <td class="paramname"><em>ipvt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer ( kind = 4 )&#160;</td>
+          <td class="paramtype">integer ( kind = 4 ), intent(in)&#160;</td>
           <td class="paramname"><em>lipvt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real ( kind = 8 ), dimension(n)&#160;</td>
+          <td class="paramtype">real ( kind = 8 ), dimension(n), intent(out)&#160;</td>
           <td class="paramname"><em>rdiag</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real ( kind = 8 ), dimension(n)&#160;</td>
+          <td class="paramtype">real ( kind = 8 ), dimension(n), intent(out)&#160;</td>
           <td class="paramname"><em>acnorm</em>&#160;</td>
         </tr>
         <tr>

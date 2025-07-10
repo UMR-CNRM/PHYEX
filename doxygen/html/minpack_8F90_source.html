@@ -228,24 +228,24 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span><span class="comment">!</span></div>
 <div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span> </div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldfjac</div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>  <span class="keywordtype">integer ( kind = 4 )</span> m</div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldfjac</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: m</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span> </div>
 <div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span><span class="keywordtype">  real</span> ( kind = 8 ) eps</div>
 <div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span><span class="keywordtype">  real</span> ( kind = 8 ) epsf</div>
 <div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span><span class="keywordtype">  real</span> ( kind = 8 ) epslog</div>
 <div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span><span class="keywordtype">  real</span> ( kind = 8 ) epsmch</div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span><span class="keywordtype">  real</span> ( kind = 8 ) err(m)</div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span><span class="keywordtype">  real</span> ( kind = 8 ) fjac(ldfjac,n)</div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="keywordtype">  real</span> ( kind = 8 ) fvec(m)</div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="keywordtype">  real</span> ( kind = 8 ) fvecp(m)</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: err(m)</div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: fjac(ldfjac,n)</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: fvec(m)</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: fvecp(m)</div>
 <div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
 <div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>  <span class="keywordtype">integer ( kind = 4 )</span> mode</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: mode</div>
 <div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span><span class="keywordtype">  real</span> ( kind = 8 ) temp</div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span><span class="keywordtype">  real</span> ( kind = 8 ) xp(n)</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: x(n)</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: xp(n)</div>
 <div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span> </div>
 <div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>  epsmch = epsilon( epsmch )</div>
 <div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>  eps = sqrt( epsmch )</div>
@@ -371,13 +371,13 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span><span class="comment">!</span></div>
 <div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span> </div>
-<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span>  <span class="keywordtype">integer ( kind = 4 )</span> lr</div>
-<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: lr</div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span> </div>
 <div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span><span class="keywordtype">  real</span> ( kind = 8 ) alpha</div>
 <div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span><span class="keywordtype">  real</span> ( kind = 8 ) bnorm</div>
-<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span><span class="keywordtype">  real</span> ( kind = 8 ) delta</div>
-<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span><span class="keywordtype">  real</span> ( kind = 8 ) diag(n)</div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: delta</div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: diag(n)</div>
 <div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span><span class="keywordtype">  real</span> ( kind = 8 ) <a class="code hl_function" href="minpack_8F90.html#a77bab828c23542feaca9eb2756475b89">enorm</a></div>
 <div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span><span class="keywordtype">  real</span> ( kind = 8 ) epsmch</div>
 <div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span><span class="keywordtype">  real</span> ( kind = 8 ) gnorm</div>
@@ -387,14 +387,14 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>  <span class="keywordtype">integer ( kind = 4 )</span> k</div>
 <div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span>  <span class="keywordtype">integer ( kind = 4 )</span> l</div>
 <div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span><span class="keywordtype">  real</span> ( kind = 8 ) qnorm</div>
-<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span><span class="keywordtype">  real</span> ( kind = 8 ) qtb(n)</div>
-<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span><span class="keywordtype">  real</span> ( kind = 8 ) r(lr)</div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: qtb(n)</div>
+<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: r(lr)</div>
 <div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span><span class="keywordtype">  real</span> ( kind = 8 ) sgnorm</div>
 <div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span><span class="keywordtype">  real</span> ( kind = 8 ) sum2</div>
 <div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span><span class="keywordtype">  real</span> ( kind = 8 ) temp</div>
 <div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span><span class="keywordtype">  real</span> ( kind = 8 ) wa1(n)</div>
 <div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span><span class="keywordtype">  real</span> ( kind = 8 ) wa2(n)</div>
-<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: x(n)</div>
 <div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span> </div>
 <div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>  epsmch = epsilon( epsmch )</div>
 <div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span><span class="comment">!</span></div>
@@ -560,8 +560,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00471" name="l00471"></a><span class="lineno">  471</span><span class="comment">!</span></div>
 <div class="line"><a id="l00472" name="l00472"></a><span class="lineno">  472</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l00473" name="l00473"></a><span class="lineno">  473</span> </div>
-<div class="line"><a id="l00474" name="l00474"></a><span class="lineno">  474</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
-<div class="line"><a id="l00475" name="l00475"></a><span class="lineno">  475</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l00474" name="l00474"></a><span class="lineno">  474</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
+<div class="line"><a id="l00475" name="l00475"></a><span class="lineno">  475</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: x(n)</div>
 <div class="line"><a id="l00476" name="l00476"></a><span class="lineno">  476</span><span class="keywordtype">  real</span> ( kind = 8 ) <a class="code hl_function" href="minpack_8F90.html#a77bab828c23542feaca9eb2756475b89">enorm</a></div>
 <div class="line"><a id="l00477" name="l00477"></a><span class="lineno">  477</span> </div>
 <div class="line"><a id="l00478" name="l00478"></a><span class="lineno">  478</span>  <a class="code hl_function" href="minpack_8F90.html#a77bab828c23542feaca9eb2756475b89">enorm</a> = sqrt( sum( x(1:n) ** 2 ))</div>
@@ -623,7 +623,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00532" name="l00532"></a><span class="lineno">  532</span><span class="comment">!</span></div>
 <div class="line"><a id="l00533" name="l00533"></a><span class="lineno">  533</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l00534" name="l00534"></a><span class="lineno">  534</span> </div>
-<div class="line"><a id="l00535" name="l00535"></a><span class="lineno">  535</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l00535" name="l00535"></a><span class="lineno">  535</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span> </div>
 <div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span><span class="keywordtype">  real</span> ( kind = 8 ) agiant</div>
 <div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span><span class="keywordtype">  real</span> ( kind = 8 ) <a class="code hl_function" href="minpack_8F90.html#a83e8b436deaf6a3de9bdf38fc2962d9a">enorm2</a></div>
@@ -633,7 +633,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span><span class="keywordtype">  real</span> ( kind = 8 ) s1</div>
 <div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span><span class="keywordtype">  real</span> ( kind = 8 ) s2</div>
 <div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span><span class="keywordtype">  real</span> ( kind = 8 ) s3</div>
-<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: x(n)</div>
 <div class="line"><a id="l00546" name="l00546"></a><span class="lineno">  546</span><span class="keywordtype">  real</span> ( kind = 8 ) xabs</div>
 <div class="line"><a id="l00547" name="l00547"></a><span class="lineno">  547</span><span class="keywordtype">  real</span> ( kind = 8 ) x1max</div>
 <div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span><span class="keywordtype">  real</span> ( kind = 8 ) x3max</div>
@@ -780,27 +780,27 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span><span class="comment">!</span></div>
 <div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span> </div>
-<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldfjac</div>
-<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldfjac</div>
+<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span> </div>
 <div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span><span class="keywordtype">  real</span> ( kind = 8 ) eps</div>
-<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span><span class="keywordtype">  real</span> ( kind = 8 ) epsfcn</div>
+<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: epsfcn</div>
 <div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span><span class="keywordtype">  real</span> ( kind = 8 ) epsmch</div>
 <div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span>  <span class="keywordtype">external</span> fcn</div>
-<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span><span class="keywordtype">  real</span> ( kind = 8 ) fjac(ldfjac,n)</div>
-<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span><span class="keywordtype">  real</span> ( kind = 8 ) fvec(n)</div>
+<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fjac(ldfjac,n)</div>
+<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: fvec(n)</div>
 <div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span><span class="keywordtype">  real</span> ( kind = 8 ) h</div>
 <div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
-<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>  <span class="keywordtype">integer ( kind = 4 )</span> iflag</div>
+<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: iflag</div>
 <div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>  <span class="keywordtype">integer ( kind = 4 )</span> k</div>
-<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>  <span class="keywordtype">integer ( kind = 4 )</span> ml</div>
+<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ml</div>
 <div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>  <span class="keywordtype">integer ( kind = 4 )</span> msum</div>
-<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span>  <span class="keywordtype">integer ( kind = 4 )</span> mu</div>
+<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: mu</div>
 <div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span><span class="keywordtype">  real</span> ( kind = 8 ) temp</div>
 <div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span><span class="keywordtype">  real</span> ( kind = 8 ) wa1(n)</div>
 <div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span><span class="keywordtype">  real</span> ( kind = 8 ) wa2(n)</div>
-<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: x(n)</div>
 <div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span> </div>
 <div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>  epsmch = epsilon( epsmch )</div>
 <div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span> </div>
@@ -957,23 +957,23 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00862" name="l00862"></a><span class="lineno">  862</span><span class="comment">!</span></div>
 <div class="line"><a id="l00863" name="l00863"></a><span class="lineno">  863</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l00864" name="l00864"></a><span class="lineno">  864</span> </div>
-<div class="line"><a id="l00865" name="l00865"></a><span class="lineno">  865</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldfjac</div>
-<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span>  <span class="keywordtype">integer ( kind = 4 )</span> m</div>
-<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l00865" name="l00865"></a><span class="lineno">  865</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldfjac</div>
+<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: m</div>
+<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l00868" name="l00868"></a><span class="lineno">  868</span> </div>
 <div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span><span class="keywordtype">  real</span> ( kind = 8 ) eps</div>
-<div class="line"><a id="l00870" name="l00870"></a><span class="lineno">  870</span><span class="keywordtype">  real</span> ( kind = 8 ) epsfcn</div>
+<div class="line"><a id="l00870" name="l00870"></a><span class="lineno">  870</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: epsfcn</div>
 <div class="line"><a id="l00871" name="l00871"></a><span class="lineno">  871</span><span class="keywordtype">  real</span> ( kind = 8 ) epsmch</div>
 <div class="line"><a id="l00872" name="l00872"></a><span class="lineno">  872</span>  <span class="keywordtype">external</span> fcn</div>
-<div class="line"><a id="l00873" name="l00873"></a><span class="lineno">  873</span><span class="keywordtype">  real</span> ( kind = 8 ) fjac(ldfjac,n)</div>
-<div class="line"><a id="l00874" name="l00874"></a><span class="lineno">  874</span><span class="keywordtype">  real</span> ( kind = 8 ) fvec(m)</div>
+<div class="line"><a id="l00873" name="l00873"></a><span class="lineno">  873</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fjac(ldfjac,n)</div>
+<div class="line"><a id="l00874" name="l00874"></a><span class="lineno">  874</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: fvec(m)</div>
 <div class="line"><a id="l00875" name="l00875"></a><span class="lineno">  875</span><span class="keywordtype">  real</span> ( kind = 8 ) h</div>
 <div class="line"><a id="l00876" name="l00876"></a><span class="lineno">  876</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
-<div class="line"><a id="l00877" name="l00877"></a><span class="lineno">  877</span>  <span class="keywordtype">integer ( kind = 4 )</span> iflag</div>
+<div class="line"><a id="l00877" name="l00877"></a><span class="lineno">  877</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: iflag</div>
 <div class="line"><a id="l00878" name="l00878"></a><span class="lineno">  878</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l00879" name="l00879"></a><span class="lineno">  879</span><span class="keywordtype">  real</span> ( kind = 8 ) temp</div>
 <div class="line"><a id="l00880" name="l00880"></a><span class="lineno">  880</span><span class="keywordtype">  real</span> ( kind = 8 ) wa(m)</div>
-<div class="line"><a id="l00881" name="l00881"></a><span class="lineno">  881</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l00881" name="l00881"></a><span class="lineno">  881</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: x(n)</div>
 <div class="line"><a id="l00882" name="l00882"></a><span class="lineno">  882</span> </div>
 <div class="line"><a id="l00883" name="l00883"></a><span class="lineno">  883</span>  epsmch = epsilon( epsmch )</div>
 <div class="line"><a id="l00884" name="l00884"></a><span class="lineno">  884</span> </div>
@@ -1133,46 +1133,46 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01036" name="l01036"></a><span class="lineno"> 1036</span><span class="comment">!</span></div>
 <div class="line"><a id="l01037" name="l01037"></a><span class="lineno"> 1037</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l01038" name="l01038"></a><span class="lineno"> 1038</span> </div>
-<div class="line"><a id="l01039" name="l01039"></a><span class="lineno"> 1039</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldfjac</div>
-<div class="line"><a id="l01040" name="l01040"></a><span class="lineno"> 1040</span>  <span class="keywordtype">integer ( kind = 4 )</span> lr</div>
-<div class="line"><a id="l01041" name="l01041"></a><span class="lineno"> 1041</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l01039" name="l01039"></a><span class="lineno"> 1039</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldfjac</div>
+<div class="line"><a id="l01040" name="l01040"></a><span class="lineno"> 1040</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: lr</div>
+<div class="line"><a id="l01041" name="l01041"></a><span class="lineno"> 1041</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l01042" name="l01042"></a><span class="lineno"> 1042</span> </div>
 <div class="line"><a id="l01043" name="l01043"></a><span class="lineno"> 1043</span><span class="keywordtype">  real</span> ( kind = 8 ) actred</div>
 <div class="line"><a id="l01044" name="l01044"></a><span class="lineno"> 1044</span><span class="keywordtype">  real</span> ( kind = 8 ) delta</div>
-<div class="line"><a id="l01045" name="l01045"></a><span class="lineno"> 1045</span><span class="keywordtype">  real</span> ( kind = 8 ) diag(n)</div>
+<div class="line"><a id="l01045" name="l01045"></a><span class="lineno"> 1045</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: diag(n)</div>
 <div class="line"><a id="l01046" name="l01046"></a><span class="lineno"> 1046</span><span class="keywordtype">  real</span> ( kind = 8 ) <a class="code hl_function" href="minpack_8F90.html#a77bab828c23542feaca9eb2756475b89">enorm</a></div>
-<div class="line"><a id="l01047" name="l01047"></a><span class="lineno"> 1047</span><span class="keywordtype">  real</span> ( kind = 8 ) epsfcn</div>
+<div class="line"><a id="l01047" name="l01047"></a><span class="lineno"> 1047</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: epsfcn</div>
 <div class="line"><a id="l01048" name="l01048"></a><span class="lineno"> 1048</span><span class="keywordtype">  real</span> ( kind = 8 ) epsmch</div>
-<div class="line"><a id="l01049" name="l01049"></a><span class="lineno"> 1049</span><span class="keywordtype">  real</span> ( kind = 8 ) factor</div>
+<div class="line"><a id="l01049" name="l01049"></a><span class="lineno"> 1049</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: factor</div>
 <div class="line"><a id="l01050" name="l01050"></a><span class="lineno"> 1050</span>  <span class="keywordtype">external</span> fcn</div>
-<div class="line"><a id="l01051" name="l01051"></a><span class="lineno"> 1051</span><span class="keywordtype">  real</span> ( kind = 8 ) fjac(ldfjac,n)</div>
+<div class="line"><a id="l01051" name="l01051"></a><span class="lineno"> 1051</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fjac(ldfjac,n)</div>
 <div class="line"><a id="l01052" name="l01052"></a><span class="lineno"> 1052</span><span class="keywordtype">  real</span> ( kind = 8 ) fnorm</div>
 <div class="line"><a id="l01053" name="l01053"></a><span class="lineno"> 1053</span><span class="keywordtype">  real</span> ( kind = 8 ) fnorm1</div>
-<div class="line"><a id="l01054" name="l01054"></a><span class="lineno"> 1054</span><span class="keywordtype">  real</span> ( kind = 8 ) fvec(n)</div>
+<div class="line"><a id="l01054" name="l01054"></a><span class="lineno"> 1054</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fvec(n)</div>
 <div class="line"><a id="l01055" name="l01055"></a><span class="lineno"> 1055</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
 <div class="line"><a id="l01056" name="l01056"></a><span class="lineno"> 1056</span>  <span class="keywordtype">integer ( kind = 4 )</span> iflag</div>
-<div class="line"><a id="l01057" name="l01057"></a><span class="lineno"> 1057</span>  <span class="keywordtype">integer ( kind = 4 )</span> info</div>
+<div class="line"><a id="l01057" name="l01057"></a><span class="lineno"> 1057</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: info</div>
 <div class="line"><a id="l01058" name="l01058"></a><span class="lineno"> 1058</span>  <span class="keywordtype">integer ( kind = 4 )</span> iter</div>
 <div class="line"><a id="l01059" name="l01059"></a><span class="lineno"> 1059</span>  <span class="keywordtype">integer ( kind = 4 )</span> iwa(1)</div>
 <div class="line"><a id="l01060" name="l01060"></a><span class="lineno"> 1060</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l01061" name="l01061"></a><span class="lineno"> 1061</span>  <span class="keywordtype">logical</span> jeval</div>
 <div class="line"><a id="l01062" name="l01062"></a><span class="lineno"> 1062</span>  <span class="keywordtype">integer ( kind = 4 )</span> l</div>
-<div class="line"><a id="l01063" name="l01063"></a><span class="lineno"> 1063</span>  <span class="keywordtype">integer ( kind = 4 )</span> maxfev</div>
-<div class="line"><a id="l01064" name="l01064"></a><span class="lineno"> 1064</span>  <span class="keywordtype">integer ( kind = 4 )</span> ml</div>
-<div class="line"><a id="l01065" name="l01065"></a><span class="lineno"> 1065</span>  <span class="keywordtype">integer ( kind = 4 )</span> mode</div>
+<div class="line"><a id="l01063" name="l01063"></a><span class="lineno"> 1063</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: maxfev</div>
+<div class="line"><a id="l01064" name="l01064"></a><span class="lineno"> 1064</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ml</div>
+<div class="line"><a id="l01065" name="l01065"></a><span class="lineno"> 1065</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: mode</div>
 <div class="line"><a id="l01066" name="l01066"></a><span class="lineno"> 1066</span>  <span class="keywordtype">integer ( kind = 4 )</span> msum</div>
-<div class="line"><a id="l01067" name="l01067"></a><span class="lineno"> 1067</span>  <span class="keywordtype">integer ( kind = 4 )</span> mu</div>
+<div class="line"><a id="l01067" name="l01067"></a><span class="lineno"> 1067</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: mu</div>
 <div class="line"><a id="l01068" name="l01068"></a><span class="lineno"> 1068</span>  <span class="keywordtype">integer ( kind = 4 )</span> ncfail</div>
 <div class="line"><a id="l01069" name="l01069"></a><span class="lineno"> 1069</span>  <span class="keywordtype">integer ( kind = 4 )</span> nslow1</div>
 <div class="line"><a id="l01070" name="l01070"></a><span class="lineno"> 1070</span>  <span class="keywordtype">integer ( kind = 4 )</span> nslow2</div>
 <div class="line"><a id="l01071" name="l01071"></a><span class="lineno"> 1071</span>  <span class="keywordtype">integer ( kind = 4 )</span> ncsuc</div>
-<div class="line"><a id="l01072" name="l01072"></a><span class="lineno"> 1072</span>  <span class="keywordtype">integer ( kind = 4 )</span> nfev</div>
-<div class="line"><a id="l01073" name="l01073"></a><span class="lineno"> 1073</span>  <span class="keywordtype">integer ( kind = 4 )</span> nprint</div>
+<div class="line"><a id="l01072" name="l01072"></a><span class="lineno"> 1072</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: nfev</div>
+<div class="line"><a id="l01073" name="l01073"></a><span class="lineno"> 1073</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: nprint</div>
 <div class="line"><a id="l01074" name="l01074"></a><span class="lineno"> 1074</span>  <span class="keywordtype">logical</span> pivot</div>
 <div class="line"><a id="l01075" name="l01075"></a><span class="lineno"> 1075</span><span class="keywordtype">  real</span> ( kind = 8 ) pnorm</div>
 <div class="line"><a id="l01076" name="l01076"></a><span class="lineno"> 1076</span><span class="keywordtype">  real</span> ( kind = 8 ) prered</div>
-<div class="line"><a id="l01077" name="l01077"></a><span class="lineno"> 1077</span><span class="keywordtype">  real</span> ( kind = 8 ) qtf(n)</div>
-<div class="line"><a id="l01078" name="l01078"></a><span class="lineno"> 1078</span><span class="keywordtype">  real</span> ( kind = 8 ) r(lr)</div>
+<div class="line"><a id="l01077" name="l01077"></a><span class="lineno"> 1077</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: qtf(n)</div>
+<div class="line"><a id="l01078" name="l01078"></a><span class="lineno"> 1078</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: r(lr)</div>
 <div class="line"><a id="l01079" name="l01079"></a><span class="lineno"> 1079</span><span class="keywordtype">  real</span> ( kind = 8 ) ratio</div>
 <div class="line"><a id="l01080" name="l01080"></a><span class="lineno"> 1080</span>  <span class="keywordtype">logical</span> sing</div>
 <div class="line"><a id="l01081" name="l01081"></a><span class="lineno"> 1081</span><span class="keywordtype">  real</span> ( kind = 8 ) sum2</div>
@@ -1181,9 +1181,9 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01084" name="l01084"></a><span class="lineno"> 1084</span><span class="keywordtype">  real</span> ( kind = 8 ) wa2(n)</div>
 <div class="line"><a id="l01085" name="l01085"></a><span class="lineno"> 1085</span><span class="keywordtype">  real</span> ( kind = 8 ) wa3(n)</div>
 <div class="line"><a id="l01086" name="l01086"></a><span class="lineno"> 1086</span><span class="keywordtype">  real</span> ( kind = 8 ) wa4(n)</div>
-<div class="line"><a id="l01087" name="l01087"></a><span class="lineno"> 1087</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l01087" name="l01087"></a><span class="lineno"> 1087</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: x(n)</div>
 <div class="line"><a id="l01088" name="l01088"></a><span class="lineno"> 1088</span><span class="keywordtype">  real</span> ( kind = 8 ) xnorm</div>
-<div class="line"><a id="l01089" name="l01089"></a><span class="lineno"> 1089</span><span class="keywordtype">  real</span> ( kind = 8 ) xtol</div>
+<div class="line"><a id="l01089" name="l01089"></a><span class="lineno"> 1089</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: xtol</div>
 <div class="line"><a id="l01090" name="l01090"></a><span class="lineno"> 1090</span> </div>
 <div class="line"><a id="l01091" name="l01091"></a><span class="lineno"> 1091</span>  epsmch = epsilon( epsmch )</div>
 <div class="line"><a id="l01092" name="l01092"></a><span class="lineno"> 1092</span> </div>
@@ -1630,15 +1630,15 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01531" name="l01531"></a><span class="lineno"> 1531</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l01532" name="l01532"></a><span class="lineno"> 1532</span> </div>
 <div class="line"><a id="l01533" name="l01533"></a><span class="lineno"> 1533</span>  <span class="keywordtype">integer ( kind = 4 )</span> lwa</div>
-<div class="line"><a id="l01534" name="l01534"></a><span class="lineno"> 1534</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l01534" name="l01534"></a><span class="lineno"> 1534</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l01535" name="l01535"></a><span class="lineno"> 1535</span> </div>
 <div class="line"><a id="l01536" name="l01536"></a><span class="lineno"> 1536</span><span class="keywordtype">  real</span> ( kind = 8 ) diag(n)</div>
 <div class="line"><a id="l01537" name="l01537"></a><span class="lineno"> 1537</span><span class="keywordtype">  real</span> ( kind = 8 ) epsfcn</div>
 <div class="line"><a id="l01538" name="l01538"></a><span class="lineno"> 1538</span><span class="keywordtype">  real</span> ( kind = 8 ) factor</div>
 <div class="line"><a id="l01539" name="l01539"></a><span class="lineno"> 1539</span>  <span class="keywordtype">external</span> fcn</div>
 <div class="line"><a id="l01540" name="l01540"></a><span class="lineno"> 1540</span><span class="keywordtype">  real</span> ( kind = 8 ) fjac(n,n)</div>
-<div class="line"><a id="l01541" name="l01541"></a><span class="lineno"> 1541</span><span class="keywordtype">  real</span> ( kind = 8 ) fvec(n)</div>
-<div class="line"><a id="l01542" name="l01542"></a><span class="lineno"> 1542</span>  <span class="keywordtype">integer ( kind = 4 )</span> info</div>
+<div class="line"><a id="l01541" name="l01541"></a><span class="lineno"> 1541</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fvec(n)</div>
+<div class="line"><a id="l01542" name="l01542"></a><span class="lineno"> 1542</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: info</div>
 <div class="line"><a id="l01543" name="l01543"></a><span class="lineno"> 1543</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l01544" name="l01544"></a><span class="lineno"> 1544</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldfjac</div>
 <div class="line"><a id="l01545" name="l01545"></a><span class="lineno"> 1545</span>  <span class="keywordtype">integer ( kind = 4 )</span> lr</div>
@@ -1650,8 +1650,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01551" name="l01551"></a><span class="lineno"> 1551</span>  <span class="keywordtype">integer ( kind = 4 )</span> nprint</div>
 <div class="line"><a id="l01552" name="l01552"></a><span class="lineno"> 1552</span><span class="keywordtype">  real</span> ( kind = 8 ) qtf(n)</div>
 <div class="line"><a id="l01553" name="l01553"></a><span class="lineno"> 1553</span><span class="keywordtype">  real</span> ( kind = 8 ) r((n*(n+1))/2)</div>
-<div class="line"><a id="l01554" name="l01554"></a><span class="lineno"> 1554</span><span class="keywordtype">  real</span> ( kind = 8 ) tol</div>
-<div class="line"><a id="l01555" name="l01555"></a><span class="lineno"> 1555</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l01554" name="l01554"></a><span class="lineno"> 1554</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: tol</div>
+<div class="line"><a id="l01555" name="l01555"></a><span class="lineno"> 1555</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: x(n)</div>
 <div class="line"><a id="l01556" name="l01556"></a><span class="lineno"> 1556</span><span class="keywordtype">  real</span> ( kind = 8 ) xtol</div>
 <div class="line"><a id="l01557" name="l01557"></a><span class="lineno"> 1557</span> </div>
 <div class="line"><a id="l01558" name="l01558"></a><span class="lineno"> 1558</span>  <span class="keywordflow">if</span> ( n &lt;= 0 ) <span class="keywordflow">then</span></div>
@@ -1817,43 +1817,43 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01716" name="l01716"></a><span class="lineno"> 1716</span><span class="comment">!</span></div>
 <div class="line"><a id="l01717" name="l01717"></a><span class="lineno"> 1717</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l01718" name="l01718"></a><span class="lineno"> 1718</span> </div>
-<div class="line"><a id="l01719" name="l01719"></a><span class="lineno"> 1719</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldfjac</div>
-<div class="line"><a id="l01720" name="l01720"></a><span class="lineno"> 1720</span>  <span class="keywordtype">integer ( kind = 4 )</span> lr</div>
-<div class="line"><a id="l01721" name="l01721"></a><span class="lineno"> 1721</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l01719" name="l01719"></a><span class="lineno"> 1719</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldfjac</div>
+<div class="line"><a id="l01720" name="l01720"></a><span class="lineno"> 1720</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: lr</div>
+<div class="line"><a id="l01721" name="l01721"></a><span class="lineno"> 1721</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l01722" name="l01722"></a><span class="lineno"> 1722</span> </div>
 <div class="line"><a id="l01723" name="l01723"></a><span class="lineno"> 1723</span><span class="keywordtype">  real</span> ( kind = 8 ) actred</div>
 <div class="line"><a id="l01724" name="l01724"></a><span class="lineno"> 1724</span><span class="keywordtype">  real</span> ( kind = 8 ) delta</div>
-<div class="line"><a id="l01725" name="l01725"></a><span class="lineno"> 1725</span><span class="keywordtype">  real</span> ( kind = 8 ) diag(n)</div>
+<div class="line"><a id="l01725" name="l01725"></a><span class="lineno"> 1725</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: diag(n)</div>
 <div class="line"><a id="l01726" name="l01726"></a><span class="lineno"> 1726</span><span class="keywordtype">  real</span> ( kind = 8 ) <a class="code hl_function" href="minpack_8F90.html#a77bab828c23542feaca9eb2756475b89">enorm</a></div>
 <div class="line"><a id="l01727" name="l01727"></a><span class="lineno"> 1727</span><span class="keywordtype">  real</span> ( kind = 8 ) epsmch</div>
-<div class="line"><a id="l01728" name="l01728"></a><span class="lineno"> 1728</span><span class="keywordtype">  real</span> ( kind = 8 ) factor</div>
+<div class="line"><a id="l01728" name="l01728"></a><span class="lineno"> 1728</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: factor</div>
 <div class="line"><a id="l01729" name="l01729"></a><span class="lineno"> 1729</span>  <span class="keywordtype">external</span> fcn</div>
-<div class="line"><a id="l01730" name="l01730"></a><span class="lineno"> 1730</span><span class="keywordtype">  real</span> ( kind = 8 ) fjac(ldfjac,n)</div>
+<div class="line"><a id="l01730" name="l01730"></a><span class="lineno"> 1730</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fjac(ldfjac,n)</div>
 <div class="line"><a id="l01731" name="l01731"></a><span class="lineno"> 1731</span><span class="keywordtype">  real</span> ( kind = 8 ) fnorm</div>
 <div class="line"><a id="l01732" name="l01732"></a><span class="lineno"> 1732</span><span class="keywordtype">  real</span> ( kind = 8 ) fnorm1</div>
-<div class="line"><a id="l01733" name="l01733"></a><span class="lineno"> 1733</span><span class="keywordtype">  real</span> ( kind = 8 ) fvec(n)</div>
+<div class="line"><a id="l01733" name="l01733"></a><span class="lineno"> 1733</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fvec(n)</div>
 <div class="line"><a id="l01734" name="l01734"></a><span class="lineno"> 1734</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
 <div class="line"><a id="l01735" name="l01735"></a><span class="lineno"> 1735</span>  <span class="keywordtype">integer ( kind = 4 )</span> iflag</div>
-<div class="line"><a id="l01736" name="l01736"></a><span class="lineno"> 1736</span>  <span class="keywordtype">integer ( kind = 4 )</span> info</div>
+<div class="line"><a id="l01736" name="l01736"></a><span class="lineno"> 1736</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: info</div>
 <div class="line"><a id="l01737" name="l01737"></a><span class="lineno"> 1737</span>  <span class="keywordtype">integer ( kind = 4 )</span> iter</div>
 <div class="line"><a id="l01738" name="l01738"></a><span class="lineno"> 1738</span>  <span class="keywordtype">integer ( kind = 4 )</span> iwa(1)</div>
 <div class="line"><a id="l01739" name="l01739"></a><span class="lineno"> 1739</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l01740" name="l01740"></a><span class="lineno"> 1740</span>  <span class="keywordtype">logical</span> jeval</div>
 <div class="line"><a id="l01741" name="l01741"></a><span class="lineno"> 1741</span>  <span class="keywordtype">integer ( kind = 4 )</span> l</div>
-<div class="line"><a id="l01742" name="l01742"></a><span class="lineno"> 1742</span>  <span class="keywordtype">integer ( kind = 4 )</span> maxfev</div>
-<div class="line"><a id="l01743" name="l01743"></a><span class="lineno"> 1743</span>  <span class="keywordtype">integer ( kind = 4 )</span> mode</div>
+<div class="line"><a id="l01742" name="l01742"></a><span class="lineno"> 1742</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: maxfev</div>
+<div class="line"><a id="l01743" name="l01743"></a><span class="lineno"> 1743</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: mode</div>
 <div class="line"><a id="l01744" name="l01744"></a><span class="lineno"> 1744</span>  <span class="keywordtype">integer ( kind = 4 )</span> ncfail</div>
 <div class="line"><a id="l01745" name="l01745"></a><span class="lineno"> 1745</span>  <span class="keywordtype">integer ( kind = 4 )</span> nslow1</div>
 <div class="line"><a id="l01746" name="l01746"></a><span class="lineno"> 1746</span>  <span class="keywordtype">integer ( kind = 4 )</span> nslow2</div>
 <div class="line"><a id="l01747" name="l01747"></a><span class="lineno"> 1747</span>  <span class="keywordtype">integer ( kind = 4 )</span> ncsuc</div>
-<div class="line"><a id="l01748" name="l01748"></a><span class="lineno"> 1748</span>  <span class="keywordtype">integer ( kind = 4 )</span> nfev</div>
-<div class="line"><a id="l01749" name="l01749"></a><span class="lineno"> 1749</span>  <span class="keywordtype">integer ( kind = 4 )</span> njev</div>
-<div class="line"><a id="l01750" name="l01750"></a><span class="lineno"> 1750</span>  <span class="keywordtype">integer ( kind = 4 )</span> nprint</div>
+<div class="line"><a id="l01748" name="l01748"></a><span class="lineno"> 1748</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: nfev</div>
+<div class="line"><a id="l01749" name="l01749"></a><span class="lineno"> 1749</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: njev</div>
+<div class="line"><a id="l01750" name="l01750"></a><span class="lineno"> 1750</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: nprint</div>
 <div class="line"><a id="l01751" name="l01751"></a><span class="lineno"> 1751</span>  <span class="keywordtype">logical</span> pivot</div>
 <div class="line"><a id="l01752" name="l01752"></a><span class="lineno"> 1752</span><span class="keywordtype">  real</span> ( kind = 8 ) pnorm</div>
 <div class="line"><a id="l01753" name="l01753"></a><span class="lineno"> 1753</span><span class="keywordtype">  real</span> ( kind = 8 ) prered</div>
-<div class="line"><a id="l01754" name="l01754"></a><span class="lineno"> 1754</span><span class="keywordtype">  real</span> ( kind = 8 ) qtf(n)</div>
-<div class="line"><a id="l01755" name="l01755"></a><span class="lineno"> 1755</span><span class="keywordtype">  real</span> ( kind = 8 ) r(lr)</div>
+<div class="line"><a id="l01754" name="l01754"></a><span class="lineno"> 1754</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: qtf(n)</div>
+<div class="line"><a id="l01755" name="l01755"></a><span class="lineno"> 1755</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: r(lr)</div>
 <div class="line"><a id="l01756" name="l01756"></a><span class="lineno"> 1756</span><span class="keywordtype">  real</span> ( kind = 8 ) ratio</div>
 <div class="line"><a id="l01757" name="l01757"></a><span class="lineno"> 1757</span>  <span class="keywordtype">logical</span> sing</div>
 <div class="line"><a id="l01758" name="l01758"></a><span class="lineno"> 1758</span><span class="keywordtype">  real</span> ( kind = 8 ) sum2</div>
@@ -1862,9 +1862,9 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01761" name="l01761"></a><span class="lineno"> 1761</span><span class="keywordtype">  real</span> ( kind = 8 ) wa2(n)</div>
 <div class="line"><a id="l01762" name="l01762"></a><span class="lineno"> 1762</span><span class="keywordtype">  real</span> ( kind = 8 ) wa3(n)</div>
 <div class="line"><a id="l01763" name="l01763"></a><span class="lineno"> 1763</span><span class="keywordtype">  real</span> ( kind = 8 ) wa4(n)</div>
-<div class="line"><a id="l01764" name="l01764"></a><span class="lineno"> 1764</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l01764" name="l01764"></a><span class="lineno"> 1764</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: x(n)</div>
 <div class="line"><a id="l01765" name="l01765"></a><span class="lineno"> 1765</span><span class="keywordtype">  real</span> ( kind = 8 ) xnorm</div>
-<div class="line"><a id="l01766" name="l01766"></a><span class="lineno"> 1766</span><span class="keywordtype">  real</span> ( kind = 8 ) xtol</div>
+<div class="line"><a id="l01766" name="l01766"></a><span class="lineno"> 1766</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: xtol</div>
 <div class="line"><a id="l01767" name="l01767"></a><span class="lineno"> 1767</span> </div>
 <div class="line"><a id="l01768" name="l01768"></a><span class="lineno"> 1768</span>  epsmch = epsilon( epsmch )</div>
 <div class="line"><a id="l01769" name="l01769"></a><span class="lineno"> 1769</span> </div>
@@ -2349,15 +2349,15 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l02246" name="l02246"></a><span class="lineno"> 2246</span><span class="comment">!</span></div>
 <div class="line"><a id="l02247" name="l02247"></a><span class="lineno"> 2247</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l02248" name="l02248"></a><span class="lineno"> 2248</span> </div>
-<div class="line"><a id="l02249" name="l02249"></a><span class="lineno"> 2249</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldfjac</div>
-<div class="line"><a id="l02250" name="l02250"></a><span class="lineno"> 2250</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l02249" name="l02249"></a><span class="lineno"> 2249</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldfjac</div>
+<div class="line"><a id="l02250" name="l02250"></a><span class="lineno"> 2250</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l02251" name="l02251"></a><span class="lineno"> 2251</span> </div>
 <div class="line"><a id="l02252" name="l02252"></a><span class="lineno"> 2252</span><span class="keywordtype">  real</span> ( kind = 8 ) diag(n)</div>
 <div class="line"><a id="l02253" name="l02253"></a><span class="lineno"> 2253</span><span class="keywordtype">  real</span> ( kind = 8 ) factor</div>
 <div class="line"><a id="l02254" name="l02254"></a><span class="lineno"> 2254</span>  <span class="keywordtype">external</span> fcn</div>
-<div class="line"><a id="l02255" name="l02255"></a><span class="lineno"> 2255</span><span class="keywordtype">  real</span> ( kind = 8 ) fjac(ldfjac,n)</div>
-<div class="line"><a id="l02256" name="l02256"></a><span class="lineno"> 2256</span><span class="keywordtype">  real</span> ( kind = 8 ) fvec(n)</div>
-<div class="line"><a id="l02257" name="l02257"></a><span class="lineno"> 2257</span>  <span class="keywordtype">integer ( kind = 4 )</span> info</div>
+<div class="line"><a id="l02255" name="l02255"></a><span class="lineno"> 2255</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fjac(ldfjac,n)</div>
+<div class="line"><a id="l02256" name="l02256"></a><span class="lineno"> 2256</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fvec(n)</div>
+<div class="line"><a id="l02257" name="l02257"></a><span class="lineno"> 2257</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: info</div>
 <div class="line"><a id="l02258" name="l02258"></a><span class="lineno"> 2258</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l02259" name="l02259"></a><span class="lineno"> 2259</span>  <span class="keywordtype">integer ( kind = 4 )</span> lr</div>
 <div class="line"><a id="l02260" name="l02260"></a><span class="lineno"> 2260</span>  <span class="keywordtype">integer ( kind = 4 )</span> maxfev</div>
@@ -2367,8 +2367,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l02264" name="l02264"></a><span class="lineno"> 2264</span>  <span class="keywordtype">integer ( kind = 4 )</span> nprint</div>
 <div class="line"><a id="l02265" name="l02265"></a><span class="lineno"> 2265</span><span class="keywordtype">  real</span> ( kind = 8 ) qtf(n)</div>
 <div class="line"><a id="l02266" name="l02266"></a><span class="lineno"> 2266</span><span class="keywordtype">  real</span> ( kind = 8 ) r((n*(n+1))/2)</div>
-<div class="line"><a id="l02267" name="l02267"></a><span class="lineno"> 2267</span><span class="keywordtype">  real</span> ( kind = 8 ) tol</div>
-<div class="line"><a id="l02268" name="l02268"></a><span class="lineno"> 2268</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l02267" name="l02267"></a><span class="lineno"> 2267</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: tol</div>
+<div class="line"><a id="l02268" name="l02268"></a><span class="lineno"> 2268</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: x(n)</div>
 <div class="line"><a id="l02269" name="l02269"></a><span class="lineno"> 2269</span><span class="keywordtype">  real</span> ( kind = 8 ) xtol</div>
 <div class="line"><a id="l02270" name="l02270"></a><span class="lineno"> 2270</span> </div>
 <div class="line"><a id="l02271" name="l02271"></a><span class="lineno"> 2271</span>  info = 0</div>
@@ -2549,42 +2549,42 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l02444" name="l02444"></a><span class="lineno"> 2444</span><span class="comment">!</span></div>
 <div class="line"><a id="l02445" name="l02445"></a><span class="lineno"> 2445</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l02446" name="l02446"></a><span class="lineno"> 2446</span> </div>
-<div class="line"><a id="l02447" name="l02447"></a><span class="lineno"> 2447</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldfjac</div>
-<div class="line"><a id="l02448" name="l02448"></a><span class="lineno"> 2448</span>  <span class="keywordtype">integer ( kind = 4 )</span> m</div>
-<div class="line"><a id="l02449" name="l02449"></a><span class="lineno"> 2449</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l02447" name="l02447"></a><span class="lineno"> 2447</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldfjac</div>
+<div class="line"><a id="l02448" name="l02448"></a><span class="lineno"> 2448</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: m</div>
+<div class="line"><a id="l02449" name="l02449"></a><span class="lineno"> 2449</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l02450" name="l02450"></a><span class="lineno"> 2450</span> </div>
 <div class="line"><a id="l02451" name="l02451"></a><span class="lineno"> 2451</span><span class="keywordtype">  real</span> ( kind = 8 ) actred</div>
 <div class="line"><a id="l02452" name="l02452"></a><span class="lineno"> 2452</span><span class="keywordtype">  real</span> ( kind = 8 ) delta</div>
-<div class="line"><a id="l02453" name="l02453"></a><span class="lineno"> 2453</span><span class="keywordtype">  real</span> ( kind = 8 ) diag(n)</div>
+<div class="line"><a id="l02453" name="l02453"></a><span class="lineno"> 2453</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: diag(n)</div>
 <div class="line"><a id="l02454" name="l02454"></a><span class="lineno"> 2454</span><span class="keywordtype">  real</span> ( kind = 8 ) dirder</div>
 <div class="line"><a id="l02455" name="l02455"></a><span class="lineno"> 2455</span><span class="keywordtype">  real</span> ( kind = 8 ) <a class="code hl_function" href="minpack_8F90.html#a77bab828c23542feaca9eb2756475b89">enorm</a></div>
 <div class="line"><a id="l02456" name="l02456"></a><span class="lineno"> 2456</span><span class="keywordtype">  real</span> ( kind = 8 ) epsmch</div>
-<div class="line"><a id="l02457" name="l02457"></a><span class="lineno"> 2457</span><span class="keywordtype">  real</span> ( kind = 8 ) factor</div>
+<div class="line"><a id="l02457" name="l02457"></a><span class="lineno"> 2457</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: factor</div>
 <div class="line"><a id="l02458" name="l02458"></a><span class="lineno"> 2458</span>  <span class="keywordtype">external</span> fcn</div>
-<div class="line"><a id="l02459" name="l02459"></a><span class="lineno"> 2459</span><span class="keywordtype">  real</span> ( kind = 8 ) fjac(ldfjac,n)</div>
+<div class="line"><a id="l02459" name="l02459"></a><span class="lineno"> 2459</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fjac(ldfjac,n)</div>
 <div class="line"><a id="l02460" name="l02460"></a><span class="lineno"> 2460</span><span class="keywordtype">  real</span> ( kind = 8 ) fnorm</div>
 <div class="line"><a id="l02461" name="l02461"></a><span class="lineno"> 2461</span><span class="keywordtype">  real</span> ( kind = 8 ) fnorm1</div>
-<div class="line"><a id="l02462" name="l02462"></a><span class="lineno"> 2462</span><span class="keywordtype">  real</span> ( kind = 8 ) ftol</div>
-<div class="line"><a id="l02463" name="l02463"></a><span class="lineno"> 2463</span><span class="keywordtype">  real</span> ( kind = 8 ) fvec(m)</div>
+<div class="line"><a id="l02462" name="l02462"></a><span class="lineno"> 2462</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: ftol</div>
+<div class="line"><a id="l02463" name="l02463"></a><span class="lineno"> 2463</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fvec(m)</div>
 <div class="line"><a id="l02464" name="l02464"></a><span class="lineno"> 2464</span><span class="keywordtype">  real</span> ( kind = 8 ) gnorm</div>
-<div class="line"><a id="l02465" name="l02465"></a><span class="lineno"> 2465</span><span class="keywordtype">  real</span> ( kind = 8 ) gtol</div>
+<div class="line"><a id="l02465" name="l02465"></a><span class="lineno"> 2465</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: gtol</div>
 <div class="line"><a id="l02466" name="l02466"></a><span class="lineno"> 2466</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
 <div class="line"><a id="l02467" name="l02467"></a><span class="lineno"> 2467</span>  <span class="keywordtype">integer ( kind = 4 )</span> iflag</div>
-<div class="line"><a id="l02468" name="l02468"></a><span class="lineno"> 2468</span>  <span class="keywordtype">integer ( kind = 4 )</span> info</div>
-<div class="line"><a id="l02469" name="l02469"></a><span class="lineno"> 2469</span>  <span class="keywordtype">integer ( kind = 4 )</span> ipvt(n)</div>
+<div class="line"><a id="l02468" name="l02468"></a><span class="lineno"> 2468</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: info</div>
+<div class="line"><a id="l02469" name="l02469"></a><span class="lineno"> 2469</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: ipvt(n)</div>
 <div class="line"><a id="l02470" name="l02470"></a><span class="lineno"> 2470</span>  <span class="keywordtype">integer ( kind = 4 )</span> iter</div>
 <div class="line"><a id="l02471" name="l02471"></a><span class="lineno"> 2471</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l02472" name="l02472"></a><span class="lineno"> 2472</span>  <span class="keywordtype">integer ( kind = 4 )</span> l</div>
-<div class="line"><a id="l02473" name="l02473"></a><span class="lineno"> 2473</span>  <span class="keywordtype">integer ( kind = 4 )</span> maxfev</div>
-<div class="line"><a id="l02474" name="l02474"></a><span class="lineno"> 2474</span>  <span class="keywordtype">integer ( kind = 4 )</span> mode</div>
-<div class="line"><a id="l02475" name="l02475"></a><span class="lineno"> 2475</span>  <span class="keywordtype">integer ( kind = 4 )</span> nfev</div>
-<div class="line"><a id="l02476" name="l02476"></a><span class="lineno"> 2476</span>  <span class="keywordtype">integer ( kind = 4 )</span> njev</div>
-<div class="line"><a id="l02477" name="l02477"></a><span class="lineno"> 2477</span>  <span class="keywordtype">integer ( kind = 4 )</span> nprint</div>
+<div class="line"><a id="l02473" name="l02473"></a><span class="lineno"> 2473</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: maxfev</div>
+<div class="line"><a id="l02474" name="l02474"></a><span class="lineno"> 2474</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: mode</div>
+<div class="line"><a id="l02475" name="l02475"></a><span class="lineno"> 2475</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: nfev</div>
+<div class="line"><a id="l02476" name="l02476"></a><span class="lineno"> 2476</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: njev</div>
+<div class="line"><a id="l02477" name="l02477"></a><span class="lineno"> 2477</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: nprint</div>
 <div class="line"><a id="l02478" name="l02478"></a><span class="lineno"> 2478</span><span class="keywordtype">  real</span> ( kind = 8 ) par</div>
 <div class="line"><a id="l02479" name="l02479"></a><span class="lineno"> 2479</span>  <span class="keywordtype">logical</span> pivot</div>
 <div class="line"><a id="l02480" name="l02480"></a><span class="lineno"> 2480</span><span class="keywordtype">  real</span> ( kind = 8 ) pnorm</div>
 <div class="line"><a id="l02481" name="l02481"></a><span class="lineno"> 2481</span><span class="keywordtype">  real</span> ( kind = 8 ) prered</div>
-<div class="line"><a id="l02482" name="l02482"></a><span class="lineno"> 2482</span><span class="keywordtype">  real</span> ( kind = 8 ) qtf(n)</div>
+<div class="line"><a id="l02482" name="l02482"></a><span class="lineno"> 2482</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: qtf(n)</div>
 <div class="line"><a id="l02483" name="l02483"></a><span class="lineno"> 2483</span><span class="keywordtype">  real</span> ( kind = 8 ) ratio</div>
 <div class="line"><a id="l02484" name="l02484"></a><span class="lineno"> 2484</span><span class="keywordtype">  real</span> ( kind = 8 ) sum2</div>
 <div class="line"><a id="l02485" name="l02485"></a><span class="lineno"> 2485</span><span class="keywordtype">  real</span> ( kind = 8 ) temp</div>
@@ -2595,8 +2595,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l02490" name="l02490"></a><span class="lineno"> 2490</span><span class="keywordtype">  real</span> ( kind = 8 ) wa3(n)</div>
 <div class="line"><a id="l02491" name="l02491"></a><span class="lineno"> 2491</span><span class="keywordtype">  real</span> ( kind = 8 ) wa4(m)</div>
 <div class="line"><a id="l02492" name="l02492"></a><span class="lineno"> 2492</span><span class="keywordtype">  real</span> ( kind = 8 ) xnorm</div>
-<div class="line"><a id="l02493" name="l02493"></a><span class="lineno"> 2493</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
-<div class="line"><a id="l02494" name="l02494"></a><span class="lineno"> 2494</span><span class="keywordtype">  real</span> ( kind = 8 ) xtol</div>
+<div class="line"><a id="l02493" name="l02493"></a><span class="lineno"> 2493</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: x(n)</div>
+<div class="line"><a id="l02494" name="l02494"></a><span class="lineno"> 2494</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: xtol</div>
 <div class="line"><a id="l02495" name="l02495"></a><span class="lineno"> 2495</span> </div>
 <div class="line"><a id="l02496" name="l02496"></a><span class="lineno"> 2496</span>  epsmch = epsilon( epsmch )</div>
 <div class="line"><a id="l02497" name="l02497"></a><span class="lineno"> 2497</span> </div>
@@ -3030,18 +3030,18 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l02923" name="l02923"></a><span class="lineno"> 2923</span><span class="comment">!</span></div>
 <div class="line"><a id="l02924" name="l02924"></a><span class="lineno"> 2924</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l02925" name="l02925"></a><span class="lineno"> 2925</span> </div>
-<div class="line"><a id="l02926" name="l02926"></a><span class="lineno"> 2926</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldfjac</div>
-<div class="line"><a id="l02927" name="l02927"></a><span class="lineno"> 2927</span>  <span class="keywordtype">integer ( kind = 4 )</span> m</div>
-<div class="line"><a id="l02928" name="l02928"></a><span class="lineno"> 2928</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l02926" name="l02926"></a><span class="lineno"> 2926</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldfjac</div>
+<div class="line"><a id="l02927" name="l02927"></a><span class="lineno"> 2927</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: m</div>
+<div class="line"><a id="l02928" name="l02928"></a><span class="lineno"> 2928</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l02929" name="l02929"></a><span class="lineno"> 2929</span> </div>
 <div class="line"><a id="l02930" name="l02930"></a><span class="lineno"> 2930</span><span class="keywordtype">  real</span> ( kind = 8 ) diag(n)</div>
 <div class="line"><a id="l02931" name="l02931"></a><span class="lineno"> 2931</span><span class="keywordtype">  real</span> ( kind = 8 ) factor</div>
 <div class="line"><a id="l02932" name="l02932"></a><span class="lineno"> 2932</span>  <span class="keywordtype">external</span> fcn</div>
-<div class="line"><a id="l02933" name="l02933"></a><span class="lineno"> 2933</span><span class="keywordtype">  real</span> ( kind = 8 ) fjac(ldfjac,n)</div>
+<div class="line"><a id="l02933" name="l02933"></a><span class="lineno"> 2933</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fjac(ldfjac,n)</div>
 <div class="line"><a id="l02934" name="l02934"></a><span class="lineno"> 2934</span><span class="keywordtype">  real</span> ( kind = 8 ) ftol</div>
-<div class="line"><a id="l02935" name="l02935"></a><span class="lineno"> 2935</span><span class="keywordtype">  real</span> ( kind = 8 ) fvec(m)</div>
+<div class="line"><a id="l02935" name="l02935"></a><span class="lineno"> 2935</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fvec(m)</div>
 <div class="line"><a id="l02936" name="l02936"></a><span class="lineno"> 2936</span><span class="keywordtype">  real</span> ( kind = 8 ) gtol</div>
-<div class="line"><a id="l02937" name="l02937"></a><span class="lineno"> 2937</span>  <span class="keywordtype">integer ( kind = 4 )</span> info</div>
+<div class="line"><a id="l02937" name="l02937"></a><span class="lineno"> 2937</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: info</div>
 <div class="line"><a id="l02938" name="l02938"></a><span class="lineno"> 2938</span>  <span class="keywordtype">integer ( kind = 4 )</span> ipvt(n)</div>
 <div class="line"><a id="l02939" name="l02939"></a><span class="lineno"> 2939</span>  <span class="keywordtype">integer ( kind = 4 )</span> maxfev</div>
 <div class="line"><a id="l02940" name="l02940"></a><span class="lineno"> 2940</span>  <span class="keywordtype">integer ( kind = 4 )</span> mode</div>
@@ -3049,8 +3049,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l02942" name="l02942"></a><span class="lineno"> 2942</span>  <span class="keywordtype">integer ( kind = 4 )</span> njev</div>
 <div class="line"><a id="l02943" name="l02943"></a><span class="lineno"> 2943</span>  <span class="keywordtype">integer ( kind = 4 )</span> nprint</div>
 <div class="line"><a id="l02944" name="l02944"></a><span class="lineno"> 2944</span><span class="keywordtype">  real</span> ( kind = 8 ) qtf(n)</div>
-<div class="line"><a id="l02945" name="l02945"></a><span class="lineno"> 2945</span><span class="keywordtype">  real</span> ( kind = 8 ) tol</div>
-<div class="line"><a id="l02946" name="l02946"></a><span class="lineno"> 2946</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l02945" name="l02945"></a><span class="lineno"> 2945</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: tol</div>
+<div class="line"><a id="l02946" name="l02946"></a><span class="lineno"> 2946</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: x(n)</div>
 <div class="line"><a id="l02947" name="l02947"></a><span class="lineno"> 2947</span><span class="keywordtype">  real</span> ( kind = 8 ) xtol</div>
 <div class="line"><a id="l02948" name="l02948"></a><span class="lineno"> 2948</span> </div>
 <div class="line"><a id="l02949" name="l02949"></a><span class="lineno"> 2949</span>  info = 0</div>
@@ -3235,42 +3235,42 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l03126" name="l03126"></a><span class="lineno"> 3126</span><span class="comment">!</span></div>
 <div class="line"><a id="l03127" name="l03127"></a><span class="lineno"> 3127</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l03128" name="l03128"></a><span class="lineno"> 3128</span> </div>
-<div class="line"><a id="l03129" name="l03129"></a><span class="lineno"> 3129</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldfjac</div>
-<div class="line"><a id="l03130" name="l03130"></a><span class="lineno"> 3130</span>  <span class="keywordtype">integer ( kind = 4 )</span> m</div>
-<div class="line"><a id="l03131" name="l03131"></a><span class="lineno"> 3131</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l03129" name="l03129"></a><span class="lineno"> 3129</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldfjac</div>
+<div class="line"><a id="l03130" name="l03130"></a><span class="lineno"> 3130</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: m</div>
+<div class="line"><a id="l03131" name="l03131"></a><span class="lineno"> 3131</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l03132" name="l03132"></a><span class="lineno"> 3132</span> </div>
 <div class="line"><a id="l03133" name="l03133"></a><span class="lineno"> 3133</span><span class="keywordtype">  real</span> ( kind = 8 ) actred</div>
 <div class="line"><a id="l03134" name="l03134"></a><span class="lineno"> 3134</span><span class="keywordtype">  real</span> ( kind = 8 ) delta</div>
-<div class="line"><a id="l03135" name="l03135"></a><span class="lineno"> 3135</span><span class="keywordtype">  real</span> ( kind = 8 ) diag(n)</div>
+<div class="line"><a id="l03135" name="l03135"></a><span class="lineno"> 3135</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: diag(n)</div>
 <div class="line"><a id="l03136" name="l03136"></a><span class="lineno"> 3136</span><span class="keywordtype">  real</span> ( kind = 8 ) dirder</div>
 <div class="line"><a id="l03137" name="l03137"></a><span class="lineno"> 3137</span><span class="keywordtype">  real</span> ( kind = 8 ) <a class="code hl_function" href="minpack_8F90.html#a77bab828c23542feaca9eb2756475b89">enorm</a></div>
-<div class="line"><a id="l03138" name="l03138"></a><span class="lineno"> 3138</span><span class="keywordtype">  real</span> ( kind = 8 ) epsfcn</div>
+<div class="line"><a id="l03138" name="l03138"></a><span class="lineno"> 3138</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: epsfcn</div>
 <div class="line"><a id="l03139" name="l03139"></a><span class="lineno"> 3139</span><span class="keywordtype">  real</span> ( kind = 8 ) epsmch</div>
-<div class="line"><a id="l03140" name="l03140"></a><span class="lineno"> 3140</span><span class="keywordtype">  real</span> ( kind = 8 ) factor</div>
+<div class="line"><a id="l03140" name="l03140"></a><span class="lineno"> 3140</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: factor</div>
 <div class="line"><a id="l03141" name="l03141"></a><span class="lineno"> 3141</span>  <span class="keywordtype">external</span> fcn</div>
-<div class="line"><a id="l03142" name="l03142"></a><span class="lineno"> 3142</span><span class="keywordtype">  real</span> ( kind = 8 ) fjac(ldfjac,n)</div>
+<div class="line"><a id="l03142" name="l03142"></a><span class="lineno"> 3142</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fjac(ldfjac,n)</div>
 <div class="line"><a id="l03143" name="l03143"></a><span class="lineno"> 3143</span><span class="keywordtype">  real</span> ( kind = 8 ) fnorm</div>
 <div class="line"><a id="l03144" name="l03144"></a><span class="lineno"> 3144</span><span class="keywordtype">  real</span> ( kind = 8 ) fnorm1</div>
-<div class="line"><a id="l03145" name="l03145"></a><span class="lineno"> 3145</span><span class="keywordtype">  real</span> ( kind = 8 ) ftol</div>
-<div class="line"><a id="l03146" name="l03146"></a><span class="lineno"> 3146</span><span class="keywordtype">  real</span> ( kind = 8 ) fvec(m)</div>
+<div class="line"><a id="l03145" name="l03145"></a><span class="lineno"> 3145</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: ftol</div>
+<div class="line"><a id="l03146" name="l03146"></a><span class="lineno"> 3146</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fvec(m)</div>
 <div class="line"><a id="l03147" name="l03147"></a><span class="lineno"> 3147</span><span class="keywordtype">  real</span> ( kind = 8 ) gnorm</div>
-<div class="line"><a id="l03148" name="l03148"></a><span class="lineno"> 3148</span><span class="keywordtype">  real</span> ( kind = 8 ) gtol</div>
+<div class="line"><a id="l03148" name="l03148"></a><span class="lineno"> 3148</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: gtol</div>
 <div class="line"><a id="l03149" name="l03149"></a><span class="lineno"> 3149</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
 <div class="line"><a id="l03150" name="l03150"></a><span class="lineno"> 3150</span>  <span class="keywordtype">integer ( kind = 4 )</span> iflag</div>
 <div class="line"><a id="l03151" name="l03151"></a><span class="lineno"> 3151</span>  <span class="keywordtype">integer ( kind = 4 )</span> iter</div>
-<div class="line"><a id="l03152" name="l03152"></a><span class="lineno"> 3152</span>  <span class="keywordtype">integer ( kind = 4 )</span> info</div>
-<div class="line"><a id="l03153" name="l03153"></a><span class="lineno"> 3153</span>  <span class="keywordtype">integer ( kind = 4 )</span> ipvt(n)</div>
+<div class="line"><a id="l03152" name="l03152"></a><span class="lineno"> 3152</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: info</div>
+<div class="line"><a id="l03153" name="l03153"></a><span class="lineno"> 3153</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: ipvt(n)</div>
 <div class="line"><a id="l03154" name="l03154"></a><span class="lineno"> 3154</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l03155" name="l03155"></a><span class="lineno"> 3155</span>  <span class="keywordtype">integer ( kind = 4 )</span> l</div>
-<div class="line"><a id="l03156" name="l03156"></a><span class="lineno"> 3156</span>  <span class="keywordtype">integer ( kind = 4 )</span> maxfev</div>
-<div class="line"><a id="l03157" name="l03157"></a><span class="lineno"> 3157</span>  <span class="keywordtype">integer ( kind = 4 )</span> mode</div>
-<div class="line"><a id="l03158" name="l03158"></a><span class="lineno"> 3158</span>  <span class="keywordtype">integer ( kind = 4 )</span> nfev</div>
-<div class="line"><a id="l03159" name="l03159"></a><span class="lineno"> 3159</span>  <span class="keywordtype">integer ( kind = 4 )</span> nprint</div>
+<div class="line"><a id="l03156" name="l03156"></a><span class="lineno"> 3156</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: maxfev</div>
+<div class="line"><a id="l03157" name="l03157"></a><span class="lineno"> 3157</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: mode</div>
+<div class="line"><a id="l03158" name="l03158"></a><span class="lineno"> 3158</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: nfev</div>
+<div class="line"><a id="l03159" name="l03159"></a><span class="lineno"> 3159</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: nprint</div>
 <div class="line"><a id="l03160" name="l03160"></a><span class="lineno"> 3160</span><span class="keywordtype">  real</span> ( kind = 8 ) par</div>
 <div class="line"><a id="l03161" name="l03161"></a><span class="lineno"> 3161</span>  <span class="keywordtype">logical</span> pivot</div>
 <div class="line"><a id="l03162" name="l03162"></a><span class="lineno"> 3162</span><span class="keywordtype">  real</span> ( kind = 8 ) pnorm</div>
 <div class="line"><a id="l03163" name="l03163"></a><span class="lineno"> 3163</span><span class="keywordtype">  real</span> ( kind = 8 ) prered</div>
-<div class="line"><a id="l03164" name="l03164"></a><span class="lineno"> 3164</span><span class="keywordtype">  real</span> ( kind = 8 ) qtf(n)</div>
+<div class="line"><a id="l03164" name="l03164"></a><span class="lineno"> 3164</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: qtf(n)</div>
 <div class="line"><a id="l03165" name="l03165"></a><span class="lineno"> 3165</span><span class="keywordtype">  real</span> ( kind = 8 ) ratio</div>
 <div class="line"><a id="l03166" name="l03166"></a><span class="lineno"> 3166</span><span class="keywordtype">  real</span> ( kind = 8 ) sum2</div>
 <div class="line"><a id="l03167" name="l03167"></a><span class="lineno"> 3167</span><span class="keywordtype">  real</span> ( kind = 8 ) temp</div>
@@ -3280,9 +3280,9 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l03171" name="l03171"></a><span class="lineno"> 3171</span><span class="keywordtype">  real</span> ( kind = 8 ) wa2(n)</div>
 <div class="line"><a id="l03172" name="l03172"></a><span class="lineno"> 3172</span><span class="keywordtype">  real</span> ( kind = 8 ) wa3(n)</div>
 <div class="line"><a id="l03173" name="l03173"></a><span class="lineno"> 3173</span><span class="keywordtype">  real</span> ( kind = 8 ) wa4(m)</div>
-<div class="line"><a id="l03174" name="l03174"></a><span class="lineno"> 3174</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l03174" name="l03174"></a><span class="lineno"> 3174</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: x(n)</div>
 <div class="line"><a id="l03175" name="l03175"></a><span class="lineno"> 3175</span><span class="keywordtype">  real</span> ( kind = 8 ) xnorm</div>
-<div class="line"><a id="l03176" name="l03176"></a><span class="lineno"> 3176</span><span class="keywordtype">  real</span> ( kind = 8 ) xtol</div>
+<div class="line"><a id="l03176" name="l03176"></a><span class="lineno"> 3176</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: xtol</div>
 <div class="line"><a id="l03177" name="l03177"></a><span class="lineno"> 3177</span> </div>
 <div class="line"><a id="l03178" name="l03178"></a><span class="lineno"> 3178</span>  epsmch = epsilon( epsmch )</div>
 <div class="line"><a id="l03179" name="l03179"></a><span class="lineno"> 3179</span> </div>
@@ -3701,8 +3701,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l03590" name="l03590"></a><span class="lineno"> 3590</span><span class="comment">!</span></div>
 <div class="line"><a id="l03591" name="l03591"></a><span class="lineno"> 3591</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l03592" name="l03592"></a><span class="lineno"> 3592</span> </div>
-<div class="line"><a id="l03593" name="l03593"></a><span class="lineno"> 3593</span>  <span class="keywordtype">integer ( kind = 4 )</span> m</div>
-<div class="line"><a id="l03594" name="l03594"></a><span class="lineno"> 3594</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l03593" name="l03593"></a><span class="lineno"> 3593</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: m</div>
+<div class="line"><a id="l03594" name="l03594"></a><span class="lineno"> 3594</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l03595" name="l03595"></a><span class="lineno"> 3595</span> </div>
 <div class="line"><a id="l03596" name="l03596"></a><span class="lineno"> 3596</span><span class="keywordtype">  real</span> ( kind = 8 ) diag(n)</div>
 <div class="line"><a id="l03597" name="l03597"></a><span class="lineno"> 3597</span><span class="keywordtype">  real</span> ( kind = 8 ) epsfcn</div>
@@ -3710,9 +3710,9 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l03599" name="l03599"></a><span class="lineno"> 3599</span>  <span class="keywordtype">external</span> fcn</div>
 <div class="line"><a id="l03600" name="l03600"></a><span class="lineno"> 3600</span><span class="keywordtype">  real</span> ( kind = 8 ) fjac(m,n)</div>
 <div class="line"><a id="l03601" name="l03601"></a><span class="lineno"> 3601</span><span class="keywordtype">  real</span> ( kind = 8 ) ftol</div>
-<div class="line"><a id="l03602" name="l03602"></a><span class="lineno"> 3602</span><span class="keywordtype">  real</span> ( kind = 8 ) fvec(m)</div>
+<div class="line"><a id="l03602" name="l03602"></a><span class="lineno"> 3602</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fvec(m)</div>
 <div class="line"><a id="l03603" name="l03603"></a><span class="lineno"> 3603</span><span class="keywordtype">  real</span> ( kind = 8 ) gtol</div>
-<div class="line"><a id="l03604" name="l03604"></a><span class="lineno"> 3604</span>  <span class="keywordtype">integer ( kind = 4 )</span> info</div>
+<div class="line"><a id="l03604" name="l03604"></a><span class="lineno"> 3604</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: info</div>
 <div class="line"><a id="l03605" name="l03605"></a><span class="lineno"> 3605</span>  <span class="keywordtype">integer ( kind = 4 )</span> ipvt(n)</div>
 <div class="line"><a id="l03606" name="l03606"></a><span class="lineno"> 3606</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldfjac</div>
 <div class="line"><a id="l03607" name="l03607"></a><span class="lineno"> 3607</span>  <span class="keywordtype">integer ( kind = 4 )</span> maxfev</div>
@@ -3720,8 +3720,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l03609" name="l03609"></a><span class="lineno"> 3609</span>  <span class="keywordtype">integer ( kind = 4 )</span> nfev</div>
 <div class="line"><a id="l03610" name="l03610"></a><span class="lineno"> 3610</span>  <span class="keywordtype">integer ( kind = 4 )</span> nprint</div>
 <div class="line"><a id="l03611" name="l03611"></a><span class="lineno"> 3611</span><span class="keywordtype">  real</span> ( kind = 8 ) qtf(n)</div>
-<div class="line"><a id="l03612" name="l03612"></a><span class="lineno"> 3612</span><span class="keywordtype">  real</span> ( kind = 8 ) tol</div>
-<div class="line"><a id="l03613" name="l03613"></a><span class="lineno"> 3613</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l03612" name="l03612"></a><span class="lineno"> 3612</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: tol</div>
+<div class="line"><a id="l03613" name="l03613"></a><span class="lineno"> 3613</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: x(n)</div>
 <div class="line"><a id="l03614" name="l03614"></a><span class="lineno"> 3614</span><span class="keywordtype">  real</span> ( kind = 8 ) xtol</div>
 <div class="line"><a id="l03615" name="l03615"></a><span class="lineno"> 3615</span> </div>
 <div class="line"><a id="l03616" name="l03616"></a><span class="lineno"> 3616</span>  info = 0</div>
@@ -3858,36 +3858,36 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l03745" name="l03745"></a><span class="lineno"> 3745</span><span class="comment">!</span></div>
 <div class="line"><a id="l03746" name="l03746"></a><span class="lineno"> 3746</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l03747" name="l03747"></a><span class="lineno"> 3747</span> </div>
-<div class="line"><a id="l03748" name="l03748"></a><span class="lineno"> 3748</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldr</div>
-<div class="line"><a id="l03749" name="l03749"></a><span class="lineno"> 3749</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l03748" name="l03748"></a><span class="lineno"> 3748</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldr</div>
+<div class="line"><a id="l03749" name="l03749"></a><span class="lineno"> 3749</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l03750" name="l03750"></a><span class="lineno"> 3750</span> </div>
-<div class="line"><a id="l03751" name="l03751"></a><span class="lineno"> 3751</span><span class="keywordtype">  real</span> ( kind = 8 ) delta</div>
-<div class="line"><a id="l03752" name="l03752"></a><span class="lineno"> 3752</span><span class="keywordtype">  real</span> ( kind = 8 ) diag(n)</div>
+<div class="line"><a id="l03751" name="l03751"></a><span class="lineno"> 3751</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: delta</div>
+<div class="line"><a id="l03752" name="l03752"></a><span class="lineno"> 3752</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: diag(n)</div>
 <div class="line"><a id="l03753" name="l03753"></a><span class="lineno"> 3753</span><span class="keywordtype">  real</span> ( kind = 8 ) dwarf</div>
 <div class="line"><a id="l03754" name="l03754"></a><span class="lineno"> 3754</span><span class="keywordtype">  real</span> ( kind = 8 ) dxnorm</div>
 <div class="line"><a id="l03755" name="l03755"></a><span class="lineno"> 3755</span><span class="keywordtype">  real</span> ( kind = 8 ) <a class="code hl_function" href="minpack_8F90.html#a77bab828c23542feaca9eb2756475b89">enorm</a></div>
 <div class="line"><a id="l03756" name="l03756"></a><span class="lineno"> 3756</span><span class="keywordtype">  real</span> ( kind = 8 ) gnorm</div>
 <div class="line"><a id="l03757" name="l03757"></a><span class="lineno"> 3757</span><span class="keywordtype">  real</span> ( kind = 8 ) fp</div>
 <div class="line"><a id="l03758" name="l03758"></a><span class="lineno"> 3758</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
-<div class="line"><a id="l03759" name="l03759"></a><span class="lineno"> 3759</span>  <span class="keywordtype">integer ( kind = 4 )</span> ipvt(n)</div>
+<div class="line"><a id="l03759" name="l03759"></a><span class="lineno"> 3759</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ipvt(n)</div>
 <div class="line"><a id="l03760" name="l03760"></a><span class="lineno"> 3760</span>  <span class="keywordtype">integer ( kind = 4 )</span> iter</div>
 <div class="line"><a id="l03761" name="l03761"></a><span class="lineno"> 3761</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l03762" name="l03762"></a><span class="lineno"> 3762</span>  <span class="keywordtype">integer ( kind = 4 )</span> k</div>
 <div class="line"><a id="l03763" name="l03763"></a><span class="lineno"> 3763</span>  <span class="keywordtype">integer ( kind = 4 )</span> l</div>
 <div class="line"><a id="l03764" name="l03764"></a><span class="lineno"> 3764</span>  <span class="keywordtype">integer ( kind = 4 )</span> nsing</div>
-<div class="line"><a id="l03765" name="l03765"></a><span class="lineno"> 3765</span><span class="keywordtype">  real</span> ( kind = 8 ) par</div>
+<div class="line"><a id="l03765" name="l03765"></a><span class="lineno"> 3765</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: par</div>
 <div class="line"><a id="l03766" name="l03766"></a><span class="lineno"> 3766</span><span class="keywordtype">  real</span> ( kind = 8 ) parc</div>
 <div class="line"><a id="l03767" name="l03767"></a><span class="lineno"> 3767</span><span class="keywordtype">  real</span> ( kind = 8 ) parl</div>
 <div class="line"><a id="l03768" name="l03768"></a><span class="lineno"> 3768</span><span class="keywordtype">  real</span> ( kind = 8 ) paru</div>
 <div class="line"><a id="l03769" name="l03769"></a><span class="lineno"> 3769</span><span class="keywordtype">  real</span> ( kind = 8 ) qnorm</div>
-<div class="line"><a id="l03770" name="l03770"></a><span class="lineno"> 3770</span><span class="keywordtype">  real</span> ( kind = 8 ) qtb(n)</div>
-<div class="line"><a id="l03771" name="l03771"></a><span class="lineno"> 3771</span><span class="keywordtype">  real</span> ( kind = 8 ) r(ldr,n)</div>
-<div class="line"><a id="l03772" name="l03772"></a><span class="lineno"> 3772</span><span class="keywordtype">  real</span> ( kind = 8 ) sdiag(n)</div>
+<div class="line"><a id="l03770" name="l03770"></a><span class="lineno"> 3770</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: qtb(n)</div>
+<div class="line"><a id="l03771" name="l03771"></a><span class="lineno"> 3771</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: r(ldr,n)</div>
+<div class="line"><a id="l03772" name="l03772"></a><span class="lineno"> 3772</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: sdiag(n)</div>
 <div class="line"><a id="l03773" name="l03773"></a><span class="lineno"> 3773</span><span class="keywordtype">  real</span> ( kind = 8 ) sum2</div>
 <div class="line"><a id="l03774" name="l03774"></a><span class="lineno"> 3774</span><span class="keywordtype">  real</span> ( kind = 8 ) temp</div>
 <div class="line"><a id="l03775" name="l03775"></a><span class="lineno"> 3775</span><span class="keywordtype">  real</span> ( kind = 8 ) wa1(n)</div>
 <div class="line"><a id="l03776" name="l03776"></a><span class="lineno"> 3776</span><span class="keywordtype">  real</span> ( kind = 8 ) wa2(n)</div>
-<div class="line"><a id="l03777" name="l03777"></a><span class="lineno"> 3777</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l03777" name="l03777"></a><span class="lineno"> 3777</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: x(n)</div>
 <div class="line"><a id="l03778" name="l03778"></a><span class="lineno"> 3778</span><span class="comment">!</span></div>
 <div class="line"><a id="l03779" name="l03779"></a><span class="lineno"> 3779</span><span class="comment">!  DWARF is the smallest positive magnitude.</span></div>
 <div class="line"><a id="l03780" name="l03780"></a><span class="lineno"> 3780</span><span class="comment">!</span></div>
@@ -4216,42 +4216,42 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l04101" name="l04101"></a><span class="lineno"> 4101</span><span class="comment">!</span></div>
 <div class="line"><a id="l04102" name="l04102"></a><span class="lineno"> 4102</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l04103" name="l04103"></a><span class="lineno"> 4103</span> </div>
-<div class="line"><a id="l04104" name="l04104"></a><span class="lineno"> 4104</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldfjac</div>
-<div class="line"><a id="l04105" name="l04105"></a><span class="lineno"> 4105</span>  <span class="keywordtype">integer ( kind = 4 )</span> m</div>
-<div class="line"><a id="l04106" name="l04106"></a><span class="lineno"> 4106</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l04104" name="l04104"></a><span class="lineno"> 4104</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldfjac</div>
+<div class="line"><a id="l04105" name="l04105"></a><span class="lineno"> 4105</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: m</div>
+<div class="line"><a id="l04106" name="l04106"></a><span class="lineno"> 4106</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l04107" name="l04107"></a><span class="lineno"> 4107</span> </div>
 <div class="line"><a id="l04108" name="l04108"></a><span class="lineno"> 4108</span><span class="keywordtype">  real</span> ( kind = 8 ) actred</div>
 <div class="line"><a id="l04109" name="l04109"></a><span class="lineno"> 4109</span><span class="keywordtype">  real</span> ( kind = 8 ) delta</div>
-<div class="line"><a id="l04110" name="l04110"></a><span class="lineno"> 4110</span><span class="keywordtype">  real</span> ( kind = 8 ) diag(n)</div>
+<div class="line"><a id="l04110" name="l04110"></a><span class="lineno"> 4110</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: diag(n)</div>
 <div class="line"><a id="l04111" name="l04111"></a><span class="lineno"> 4111</span><span class="keywordtype">  real</span> ( kind = 8 ) dirder</div>
 <div class="line"><a id="l04112" name="l04112"></a><span class="lineno"> 4112</span><span class="keywordtype">  real</span> ( kind = 8 ) <a class="code hl_function" href="minpack_8F90.html#a77bab828c23542feaca9eb2756475b89">enorm</a></div>
 <div class="line"><a id="l04113" name="l04113"></a><span class="lineno"> 4113</span><span class="keywordtype">  real</span> ( kind = 8 ) epsmch</div>
-<div class="line"><a id="l04114" name="l04114"></a><span class="lineno"> 4114</span><span class="keywordtype">  real</span> ( kind = 8 ) factor</div>
+<div class="line"><a id="l04114" name="l04114"></a><span class="lineno"> 4114</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: factor</div>
 <div class="line"><a id="l04115" name="l04115"></a><span class="lineno"> 4115</span>  <span class="keywordtype">external</span> fcn</div>
-<div class="line"><a id="l04116" name="l04116"></a><span class="lineno"> 4116</span><span class="keywordtype">  real</span> ( kind = 8 ) fjac(ldfjac,n)</div>
+<div class="line"><a id="l04116" name="l04116"></a><span class="lineno"> 4116</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fjac(ldfjac,n)</div>
 <div class="line"><a id="l04117" name="l04117"></a><span class="lineno"> 4117</span><span class="keywordtype">  real</span> ( kind = 8 ) fnorm</div>
 <div class="line"><a id="l04118" name="l04118"></a><span class="lineno"> 4118</span><span class="keywordtype">  real</span> ( kind = 8 ) fnorm1</div>
-<div class="line"><a id="l04119" name="l04119"></a><span class="lineno"> 4119</span><span class="keywordtype">  real</span> ( kind = 8 ) ftol</div>
-<div class="line"><a id="l04120" name="l04120"></a><span class="lineno"> 4120</span><span class="keywordtype">  real</span> ( kind = 8 ) fvec(m)</div>
+<div class="line"><a id="l04119" name="l04119"></a><span class="lineno"> 4119</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: ftol</div>
+<div class="line"><a id="l04120" name="l04120"></a><span class="lineno"> 4120</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fvec(m)</div>
 <div class="line"><a id="l04121" name="l04121"></a><span class="lineno"> 4121</span><span class="keywordtype">  real</span> ( kind = 8 ) gnorm</div>
-<div class="line"><a id="l04122" name="l04122"></a><span class="lineno"> 4122</span><span class="keywordtype">  real</span> ( kind = 8 ) gtol</div>
+<div class="line"><a id="l04122" name="l04122"></a><span class="lineno"> 4122</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: gtol</div>
 <div class="line"><a id="l04123" name="l04123"></a><span class="lineno"> 4123</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
 <div class="line"><a id="l04124" name="l04124"></a><span class="lineno"> 4124</span>  <span class="keywordtype">integer ( kind = 4 )</span> iflag</div>
-<div class="line"><a id="l04125" name="l04125"></a><span class="lineno"> 4125</span>  <span class="keywordtype">integer ( kind = 4 )</span> info</div>
-<div class="line"><a id="l04126" name="l04126"></a><span class="lineno"> 4126</span>  <span class="keywordtype">integer ( kind = 4 )</span> ipvt(n)</div>
+<div class="line"><a id="l04125" name="l04125"></a><span class="lineno"> 4125</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: info</div>
+<div class="line"><a id="l04126" name="l04126"></a><span class="lineno"> 4126</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: ipvt(n)</div>
 <div class="line"><a id="l04127" name="l04127"></a><span class="lineno"> 4127</span>  <span class="keywordtype">integer ( kind = 4 )</span> iter</div>
 <div class="line"><a id="l04128" name="l04128"></a><span class="lineno"> 4128</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l04129" name="l04129"></a><span class="lineno"> 4129</span>  <span class="keywordtype">integer ( kind = 4 )</span> l</div>
-<div class="line"><a id="l04130" name="l04130"></a><span class="lineno"> 4130</span>  <span class="keywordtype">integer ( kind = 4 )</span> maxfev</div>
-<div class="line"><a id="l04131" name="l04131"></a><span class="lineno"> 4131</span>  <span class="keywordtype">integer ( kind = 4 )</span> mode</div>
-<div class="line"><a id="l04132" name="l04132"></a><span class="lineno"> 4132</span>  <span class="keywordtype">integer ( kind = 4 )</span> nfev</div>
-<div class="line"><a id="l04133" name="l04133"></a><span class="lineno"> 4133</span>  <span class="keywordtype">integer ( kind = 4 )</span> njev</div>
-<div class="line"><a id="l04134" name="l04134"></a><span class="lineno"> 4134</span>  <span class="keywordtype">integer ( kind = 4 )</span> nprint</div>
+<div class="line"><a id="l04130" name="l04130"></a><span class="lineno"> 4130</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: maxfev</div>
+<div class="line"><a id="l04131" name="l04131"></a><span class="lineno"> 4131</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: mode</div>
+<div class="line"><a id="l04132" name="l04132"></a><span class="lineno"> 4132</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: nfev</div>
+<div class="line"><a id="l04133" name="l04133"></a><span class="lineno"> 4133</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: njev</div>
+<div class="line"><a id="l04134" name="l04134"></a><span class="lineno"> 4134</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: nprint</div>
 <div class="line"><a id="l04135" name="l04135"></a><span class="lineno"> 4135</span><span class="keywordtype">  real</span> ( kind = 8 ) par</div>
 <div class="line"><a id="l04136" name="l04136"></a><span class="lineno"> 4136</span>  <span class="keywordtype">logical</span> pivot</div>
 <div class="line"><a id="l04137" name="l04137"></a><span class="lineno"> 4137</span><span class="keywordtype">  real</span> ( kind = 8 ) pnorm</div>
 <div class="line"><a id="l04138" name="l04138"></a><span class="lineno"> 4138</span><span class="keywordtype">  real</span> ( kind = 8 ) prered</div>
-<div class="line"><a id="l04139" name="l04139"></a><span class="lineno"> 4139</span><span class="keywordtype">  real</span> ( kind = 8 ) qtf(n)</div>
+<div class="line"><a id="l04139" name="l04139"></a><span class="lineno"> 4139</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: qtf(n)</div>
 <div class="line"><a id="l04140" name="l04140"></a><span class="lineno"> 4140</span><span class="keywordtype">  real</span> ( kind = 8 ) ratio</div>
 <div class="line"><a id="l04141" name="l04141"></a><span class="lineno"> 4141</span>  <span class="keywordtype">logical</span> sing</div>
 <div class="line"><a id="l04142" name="l04142"></a><span class="lineno"> 4142</span><span class="keywordtype">  real</span> ( kind = 8 ) sum2</div>
@@ -4262,9 +4262,9 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l04147" name="l04147"></a><span class="lineno"> 4147</span><span class="keywordtype">  real</span> ( kind = 8 ) wa2(n)</div>
 <div class="line"><a id="l04148" name="l04148"></a><span class="lineno"> 4148</span><span class="keywordtype">  real</span> ( kind = 8 ) wa3(n)</div>
 <div class="line"><a id="l04149" name="l04149"></a><span class="lineno"> 4149</span><span class="keywordtype">  real</span> ( kind = 8 ) wa4(m)</div>
-<div class="line"><a id="l04150" name="l04150"></a><span class="lineno"> 4150</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l04150" name="l04150"></a><span class="lineno"> 4150</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: x(n)</div>
 <div class="line"><a id="l04151" name="l04151"></a><span class="lineno"> 4151</span><span class="keywordtype">  real</span> ( kind = 8 ) xnorm</div>
-<div class="line"><a id="l04152" name="l04152"></a><span class="lineno"> 4152</span><span class="keywordtype">  real</span> ( kind = 8 ) xtol</div>
+<div class="line"><a id="l04152" name="l04152"></a><span class="lineno"> 4152</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: xtol</div>
 <div class="line"><a id="l04153" name="l04153"></a><span class="lineno"> 4153</span> </div>
 <div class="line"><a id="l04154" name="l04154"></a><span class="lineno"> 4154</span>  epsmch = epsilon( epsmch )</div>
 <div class="line"><a id="l04155" name="l04155"></a><span class="lineno"> 4155</span> </div>
@@ -4718,18 +4718,18 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l04601" name="l04601"></a><span class="lineno"> 4601</span><span class="comment">!</span></div>
 <div class="line"><a id="l04602" name="l04602"></a><span class="lineno"> 4602</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l04603" name="l04603"></a><span class="lineno"> 4603</span> </div>
-<div class="line"><a id="l04604" name="l04604"></a><span class="lineno"> 4604</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldfjac</div>
-<div class="line"><a id="l04605" name="l04605"></a><span class="lineno"> 4605</span>  <span class="keywordtype">integer ( kind = 4 )</span> m</div>
-<div class="line"><a id="l04606" name="l04606"></a><span class="lineno"> 4606</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l04604" name="l04604"></a><span class="lineno"> 4604</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldfjac</div>
+<div class="line"><a id="l04605" name="l04605"></a><span class="lineno"> 4605</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: m</div>
+<div class="line"><a id="l04606" name="l04606"></a><span class="lineno"> 4606</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l04607" name="l04607"></a><span class="lineno"> 4607</span> </div>
 <div class="line"><a id="l04608" name="l04608"></a><span class="lineno"> 4608</span><span class="keywordtype">  real</span> ( kind = 8 ) diag(n)</div>
 <div class="line"><a id="l04609" name="l04609"></a><span class="lineno"> 4609</span><span class="keywordtype">  real</span> ( kind = 8 ) factor</div>
 <div class="line"><a id="l04610" name="l04610"></a><span class="lineno"> 4610</span>  <span class="keywordtype">external</span> fcn</div>
-<div class="line"><a id="l04611" name="l04611"></a><span class="lineno"> 4611</span><span class="keywordtype">  real</span> ( kind = 8 ) fjac(ldfjac,n)</div>
+<div class="line"><a id="l04611" name="l04611"></a><span class="lineno"> 4611</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fjac(ldfjac,n)</div>
 <div class="line"><a id="l04612" name="l04612"></a><span class="lineno"> 4612</span><span class="keywordtype">  real</span> ( kind = 8 ) ftol</div>
-<div class="line"><a id="l04613" name="l04613"></a><span class="lineno"> 4613</span><span class="keywordtype">  real</span> ( kind = 8 ) fvec(m)</div>
+<div class="line"><a id="l04613" name="l04613"></a><span class="lineno"> 4613</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: fvec(m)</div>
 <div class="line"><a id="l04614" name="l04614"></a><span class="lineno"> 4614</span><span class="keywordtype">  real</span> ( kind = 8 ) gtol</div>
-<div class="line"><a id="l04615" name="l04615"></a><span class="lineno"> 4615</span>  <span class="keywordtype">integer ( kind = 4 )</span> info</div>
+<div class="line"><a id="l04615" name="l04615"></a><span class="lineno"> 4615</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: info</div>
 <div class="line"><a id="l04616" name="l04616"></a><span class="lineno"> 4616</span>  <span class="keywordtype">integer ( kind = 4 )</span> ipvt(n)</div>
 <div class="line"><a id="l04617" name="l04617"></a><span class="lineno"> 4617</span>  <span class="keywordtype">integer ( kind = 4 )</span> maxfev</div>
 <div class="line"><a id="l04618" name="l04618"></a><span class="lineno"> 4618</span>  <span class="keywordtype">integer ( kind = 4 )</span> mode</div>
@@ -4737,8 +4737,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l04620" name="l04620"></a><span class="lineno"> 4620</span>  <span class="keywordtype">integer ( kind = 4 )</span> njev</div>
 <div class="line"><a id="l04621" name="l04621"></a><span class="lineno"> 4621</span>  <span class="keywordtype">integer ( kind = 4 )</span> nprint</div>
 <div class="line"><a id="l04622" name="l04622"></a><span class="lineno"> 4622</span><span class="keywordtype">  real</span> ( kind = 8 ) qtf(n)</div>
-<div class="line"><a id="l04623" name="l04623"></a><span class="lineno"> 4623</span><span class="keywordtype">  real</span> ( kind = 8 ) tol</div>
-<div class="line"><a id="l04624" name="l04624"></a><span class="lineno"> 4624</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l04623" name="l04623"></a><span class="lineno"> 4623</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: tol</div>
+<div class="line"><a id="l04624" name="l04624"></a><span class="lineno"> 4624</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: x(n)</div>
 <div class="line"><a id="l04625" name="l04625"></a><span class="lineno"> 4625</span><span class="keywordtype">  real</span> ( kind = 8 ) xtol</div>
 <div class="line"><a id="l04626" name="l04626"></a><span class="lineno"> 4626</span> </div>
 <div class="line"><a id="l04627" name="l04627"></a><span class="lineno"> 4627</span>  <span class="keywordflow">if</span> ( n &lt;= 0 ) <span class="keywordflow">then</span></div>
@@ -4839,15 +4839,15 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l04720" name="l04720"></a><span class="lineno"> 4720</span><span class="comment">!</span></div>
 <div class="line"><a id="l04721" name="l04721"></a><span class="lineno"> 4721</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l04722" name="l04722"></a><span class="lineno"> 4722</span> </div>
-<div class="line"><a id="l04723" name="l04723"></a><span class="lineno"> 4723</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldq</div>
-<div class="line"><a id="l04724" name="l04724"></a><span class="lineno"> 4724</span>  <span class="keywordtype">integer ( kind = 4 )</span> m</div>
-<div class="line"><a id="l04725" name="l04725"></a><span class="lineno"> 4725</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l04723" name="l04723"></a><span class="lineno"> 4723</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldq</div>
+<div class="line"><a id="l04724" name="l04724"></a><span class="lineno"> 4724</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: m</div>
+<div class="line"><a id="l04725" name="l04725"></a><span class="lineno"> 4725</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l04726" name="l04726"></a><span class="lineno"> 4726</span> </div>
 <div class="line"><a id="l04727" name="l04727"></a><span class="lineno"> 4727</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l04728" name="l04728"></a><span class="lineno"> 4728</span>  <span class="keywordtype">integer ( kind = 4 )</span> k</div>
 <div class="line"><a id="l04729" name="l04729"></a><span class="lineno"> 4729</span>  <span class="keywordtype">integer ( kind = 4 )</span> l</div>
 <div class="line"><a id="l04730" name="l04730"></a><span class="lineno"> 4730</span>  <span class="keywordtype">integer ( kind = 4 )</span> minmn</div>
-<div class="line"><a id="l04731" name="l04731"></a><span class="lineno"> 4731</span><span class="keywordtype">  real</span> ( kind = 8 ) q(ldq,m)</div>
+<div class="line"><a id="l04731" name="l04731"></a><span class="lineno"> 4731</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: q(ldq,m)</div>
 <div class="line"><a id="l04732" name="l04732"></a><span class="lineno"> 4732</span><span class="keywordtype">  real</span> ( kind = 8 ) temp</div>
 <div class="line"><a id="l04733" name="l04733"></a><span class="lineno"> 4733</span><span class="keywordtype">  real</span> ( kind = 8 ) wa(m)</div>
 <div class="line"><a id="l04734" name="l04734"></a><span class="lineno"> 4734</span> </div>
@@ -4966,26 +4966,26 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l04845" name="l04845"></a><span class="lineno"> 4845</span><span class="comment">!</span></div>
 <div class="line"><a id="l04846" name="l04846"></a><span class="lineno"> 4846</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l04847" name="l04847"></a><span class="lineno"> 4847</span> </div>
-<div class="line"><a id="l04848" name="l04848"></a><span class="lineno"> 4848</span>  <span class="keywordtype">integer ( kind = 4 )</span> lda</div>
-<div class="line"><a id="l04849" name="l04849"></a><span class="lineno"> 4849</span>  <span class="keywordtype">integer ( kind = 4 )</span> lipvt</div>
-<div class="line"><a id="l04850" name="l04850"></a><span class="lineno"> 4850</span>  <span class="keywordtype">integer ( kind = 4 )</span> m</div>
-<div class="line"><a id="l04851" name="l04851"></a><span class="lineno"> 4851</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l04848" name="l04848"></a><span class="lineno"> 4848</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: lda</div>
+<div class="line"><a id="l04849" name="l04849"></a><span class="lineno"> 4849</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: lipvt</div>
+<div class="line"><a id="l04850" name="l04850"></a><span class="lineno"> 4850</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: m</div>
+<div class="line"><a id="l04851" name="l04851"></a><span class="lineno"> 4851</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l04852" name="l04852"></a><span class="lineno"> 4852</span> </div>
-<div class="line"><a id="l04853" name="l04853"></a><span class="lineno"> 4853</span><span class="keywordtype">  real</span> ( kind = 8 ) a(lda,n)</div>
-<div class="line"><a id="l04854" name="l04854"></a><span class="lineno"> 4854</span><span class="keywordtype">  real</span> ( kind = 8 ) acnorm(n)</div>
+<div class="line"><a id="l04853" name="l04853"></a><span class="lineno"> 4853</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: a(lda,n)</div>
+<div class="line"><a id="l04854" name="l04854"></a><span class="lineno"> 4854</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: acnorm(n)</div>
 <div class="line"><a id="l04855" name="l04855"></a><span class="lineno"> 4855</span><span class="keywordtype">  real</span> ( kind = 8 ) ajnorm</div>
 <div class="line"><a id="l04856" name="l04856"></a><span class="lineno"> 4856</span><span class="keywordtype">  real</span> ( kind = 8 ) <a class="code hl_function" href="minpack_8F90.html#a77bab828c23542feaca9eb2756475b89">enorm</a></div>
 <div class="line"><a id="l04857" name="l04857"></a><span class="lineno"> 4857</span><span class="keywordtype">  real</span> ( kind = 8 ) epsmch</div>
 <div class="line"><a id="l04858" name="l04858"></a><span class="lineno"> 4858</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
 <div class="line"><a id="l04859" name="l04859"></a><span class="lineno"> 4859</span>  <span class="keywordtype">integer ( kind = 4 )</span> i4_temp</div>
-<div class="line"><a id="l04860" name="l04860"></a><span class="lineno"> 4860</span>  <span class="keywordtype">integer ( kind = 4 )</span> ipvt(lipvt)</div>
+<div class="line"><a id="l04860" name="l04860"></a><span class="lineno"> 4860</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(out)</span> :: ipvt(lipvt)</div>
 <div class="line"><a id="l04861" name="l04861"></a><span class="lineno"> 4861</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l04862" name="l04862"></a><span class="lineno"> 4862</span>  <span class="keywordtype">integer ( kind = 4 )</span> k</div>
 <div class="line"><a id="l04863" name="l04863"></a><span class="lineno"> 4863</span>  <span class="keywordtype">integer ( kind = 4 )</span> kmax</div>
 <div class="line"><a id="l04864" name="l04864"></a><span class="lineno"> 4864</span>  <span class="keywordtype">integer ( kind = 4 )</span> minmn</div>
-<div class="line"><a id="l04865" name="l04865"></a><span class="lineno"> 4865</span>  <span class="keywordtype">logical</span> pivot</div>
+<div class="line"><a id="l04865" name="l04865"></a><span class="lineno"> 4865</span>  <span class="keywordtype">logical</span>, <span class="keywordtype">intent(in)</span> :: pivot</div>
 <div class="line"><a id="l04866" name="l04866"></a><span class="lineno"> 4866</span><span class="keywordtype">  real</span> ( kind = 8 ) r8_temp(m)</div>
-<div class="line"><a id="l04867" name="l04867"></a><span class="lineno"> 4867</span><span class="keywordtype">  real</span> ( kind = 8 ) rdiag(n)</div>
+<div class="line"><a id="l04867" name="l04867"></a><span class="lineno"> 4867</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: rdiag(n)</div>
 <div class="line"><a id="l04868" name="l04868"></a><span class="lineno"> 4868</span><span class="keywordtype">  real</span> ( kind = 8 ) temp</div>
 <div class="line"><a id="l04869" name="l04869"></a><span class="lineno"> 4869</span><span class="keywordtype">  real</span> ( kind = 8 ) wa(n)</div>
 <div class="line"><a id="l04870" name="l04870"></a><span class="lineno"> 4870</span> </div>
@@ -5173,28 +5173,28 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l05050" name="l05050"></a><span class="lineno"> 5050</span><span class="comment">!</span></div>
 <div class="line"><a id="l05051" name="l05051"></a><span class="lineno"> 5051</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l05052" name="l05052"></a><span class="lineno"> 5052</span> </div>
-<div class="line"><a id="l05053" name="l05053"></a><span class="lineno"> 5053</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldr</div>
-<div class="line"><a id="l05054" name="l05054"></a><span class="lineno"> 5054</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l05053" name="l05053"></a><span class="lineno"> 5053</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldr</div>
+<div class="line"><a id="l05054" name="l05054"></a><span class="lineno"> 5054</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l05055" name="l05055"></a><span class="lineno"> 5055</span> </div>
 <div class="line"><a id="l05056" name="l05056"></a><span class="lineno"> 5056</span><span class="keywordtype">  real</span> ( kind = 8 ) c</div>
 <div class="line"><a id="l05057" name="l05057"></a><span class="lineno"> 5057</span><span class="keywordtype">  real</span> ( kind = 8 ) cotan</div>
-<div class="line"><a id="l05058" name="l05058"></a><span class="lineno"> 5058</span><span class="keywordtype">  real</span> ( kind = 8 ) diag(n)</div>
+<div class="line"><a id="l05058" name="l05058"></a><span class="lineno"> 5058</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: diag(n)</div>
 <div class="line"><a id="l05059" name="l05059"></a><span class="lineno"> 5059</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
-<div class="line"><a id="l05060" name="l05060"></a><span class="lineno"> 5060</span>  <span class="keywordtype">integer ( kind = 4 )</span> ipvt(n)</div>
+<div class="line"><a id="l05060" name="l05060"></a><span class="lineno"> 5060</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ipvt(n)</div>
 <div class="line"><a id="l05061" name="l05061"></a><span class="lineno"> 5061</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l05062" name="l05062"></a><span class="lineno"> 5062</span>  <span class="keywordtype">integer ( kind = 4 )</span> k</div>
 <div class="line"><a id="l05063" name="l05063"></a><span class="lineno"> 5063</span>  <span class="keywordtype">integer ( kind = 4 )</span> l</div>
 <div class="line"><a id="l05064" name="l05064"></a><span class="lineno"> 5064</span>  <span class="keywordtype">integer ( kind = 4 )</span> nsing</div>
-<div class="line"><a id="l05065" name="l05065"></a><span class="lineno"> 5065</span><span class="keywordtype">  real</span> ( kind = 8 ) qtb(n)</div>
+<div class="line"><a id="l05065" name="l05065"></a><span class="lineno"> 5065</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: qtb(n)</div>
 <div class="line"><a id="l05066" name="l05066"></a><span class="lineno"> 5066</span><span class="keywordtype">  real</span> ( kind = 8 ) qtbpj</div>
-<div class="line"><a id="l05067" name="l05067"></a><span class="lineno"> 5067</span><span class="keywordtype">  real</span> ( kind = 8 ) r(ldr,n)</div>
+<div class="line"><a id="l05067" name="l05067"></a><span class="lineno"> 5067</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: r(ldr,n)</div>
 <div class="line"><a id="l05068" name="l05068"></a><span class="lineno"> 5068</span><span class="keywordtype">  real</span> ( kind = 8 ) s</div>
-<div class="line"><a id="l05069" name="l05069"></a><span class="lineno"> 5069</span><span class="keywordtype">  real</span> ( kind = 8 ) sdiag(n)</div>
+<div class="line"><a id="l05069" name="l05069"></a><span class="lineno"> 5069</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: sdiag(n)</div>
 <div class="line"><a id="l05070" name="l05070"></a><span class="lineno"> 5070</span><span class="keywordtype">  real</span> ( kind = 8 ) sum2</div>
 <div class="line"><a id="l05071" name="l05071"></a><span class="lineno"> 5071</span><span class="keywordtype">  real</span> ( kind = 8 ) t</div>
 <div class="line"><a id="l05072" name="l05072"></a><span class="lineno"> 5072</span><span class="keywordtype">  real</span> ( kind = 8 ) temp</div>
 <div class="line"><a id="l05073" name="l05073"></a><span class="lineno"> 5073</span><span class="keywordtype">  real</span> ( kind = 8 ) wa(n)</div>
-<div class="line"><a id="l05074" name="l05074"></a><span class="lineno"> 5074</span><span class="keywordtype">  real</span> ( kind = 8 ) x(n)</div>
+<div class="line"><a id="l05074" name="l05074"></a><span class="lineno"> 5074</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: x(n)</div>
 <div class="line"><a id="l05075" name="l05075"></a><span class="lineno"> 5075</span><span class="comment">!</span></div>
 <div class="line"><a id="l05076" name="l05076"></a><span class="lineno"> 5076</span><span class="comment">!  Copy R and Q&#39;*B to preserve input and initialize S.</span></div>
 <div class="line"><a id="l05077" name="l05077"></a><span class="lineno"> 5077</span><span class="comment">!</span></div>
@@ -5363,18 +5363,18 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l05238" name="l05238"></a><span class="lineno"> 5238</span><span class="comment">!</span></div>
 <div class="line"><a id="l05239" name="l05239"></a><span class="lineno"> 5239</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l05240" name="l05240"></a><span class="lineno"> 5240</span> </div>
-<div class="line"><a id="l05241" name="l05241"></a><span class="lineno"> 5241</span>  <span class="keywordtype">integer ( kind = 4 )</span> lda</div>
-<div class="line"><a id="l05242" name="l05242"></a><span class="lineno"> 5242</span>  <span class="keywordtype">integer ( kind = 4 )</span> m</div>
-<div class="line"><a id="l05243" name="l05243"></a><span class="lineno"> 5243</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l05241" name="l05241"></a><span class="lineno"> 5241</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: lda</div>
+<div class="line"><a id="l05242" name="l05242"></a><span class="lineno"> 5242</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: m</div>
+<div class="line"><a id="l05243" name="l05243"></a><span class="lineno"> 5243</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l05244" name="l05244"></a><span class="lineno"> 5244</span> </div>
-<div class="line"><a id="l05245" name="l05245"></a><span class="lineno"> 5245</span><span class="keywordtype">  real</span> ( kind = 8 ) a(lda,n)</div>
+<div class="line"><a id="l05245" name="l05245"></a><span class="lineno"> 5245</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: a(lda,n)</div>
 <div class="line"><a id="l05246" name="l05246"></a><span class="lineno"> 5246</span><span class="keywordtype">  real</span> ( kind = 8 ) c</div>
 <div class="line"><a id="l05247" name="l05247"></a><span class="lineno"> 5247</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
 <div class="line"><a id="l05248" name="l05248"></a><span class="lineno"> 5248</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l05249" name="l05249"></a><span class="lineno"> 5249</span><span class="keywordtype">  real</span> ( kind = 8 ) s</div>
 <div class="line"><a id="l05250" name="l05250"></a><span class="lineno"> 5250</span><span class="keywordtype">  real</span> ( kind = 8 ) temp</div>
-<div class="line"><a id="l05251" name="l05251"></a><span class="lineno"> 5251</span><span class="keywordtype">  real</span> ( kind = 8 ) v(n)</div>
-<div class="line"><a id="l05252" name="l05252"></a><span class="lineno"> 5252</span><span class="keywordtype">  real</span> ( kind = 8 ) w(n)</div>
+<div class="line"><a id="l05251" name="l05251"></a><span class="lineno"> 5251</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: v(n)</div>
+<div class="line"><a id="l05252" name="l05252"></a><span class="lineno"> 5252</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: w(n)</div>
 <div class="line"><a id="l05253" name="l05253"></a><span class="lineno"> 5253</span><span class="comment">!</span></div>
 <div class="line"><a id="l05254" name="l05254"></a><span class="lineno"> 5254</span><span class="comment">!  Apply the first set of Givens rotations to A.</span></div>
 <div class="line"><a id="l05255" name="l05255"></a><span class="lineno"> 5255</span><span class="comment">!</span></div>
@@ -5493,9 +5493,9 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l05366" name="l05366"></a><span class="lineno"> 5366</span><span class="comment">!</span></div>
 <div class="line"><a id="l05367" name="l05367"></a><span class="lineno"> 5367</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l05368" name="l05368"></a><span class="lineno"> 5368</span> </div>
-<div class="line"><a id="l05369" name="l05369"></a><span class="lineno"> 5369</span>  <span class="keywordtype">integer ( kind = 4 )</span> ls</div>
-<div class="line"><a id="l05370" name="l05370"></a><span class="lineno"> 5370</span>  <span class="keywordtype">integer ( kind = 4 )</span> m</div>
-<div class="line"><a id="l05371" name="l05371"></a><span class="lineno"> 5371</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l05369" name="l05369"></a><span class="lineno"> 5369</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ls</div>
+<div class="line"><a id="l05370" name="l05370"></a><span class="lineno"> 5370</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: m</div>
+<div class="line"><a id="l05371" name="l05371"></a><span class="lineno"> 5371</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l05372" name="l05372"></a><span class="lineno"> 5372</span> </div>
 <div class="line"><a id="l05373" name="l05373"></a><span class="lineno"> 5373</span><span class="keywordtype">  real</span> ( kind = 8 ) cos</div>
 <div class="line"><a id="l05374" name="l05374"></a><span class="lineno"> 5374</span><span class="keywordtype">  real</span> ( kind = 8 ) cotan</div>
@@ -5504,15 +5504,15 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l05377" name="l05377"></a><span class="lineno"> 5377</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
 <div class="line"><a id="l05378" name="l05378"></a><span class="lineno"> 5378</span>  <span class="keywordtype">integer ( kind = 4 )</span> jj</div>
 <div class="line"><a id="l05379" name="l05379"></a><span class="lineno"> 5379</span>  <span class="keywordtype">integer ( kind = 4 )</span> l</div>
-<div class="line"><a id="l05380" name="l05380"></a><span class="lineno"> 5380</span><span class="keywordtype">  real</span> ( kind = 8 ) s(ls)</div>
+<div class="line"><a id="l05380" name="l05380"></a><span class="lineno"> 5380</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: s(ls)</div>
 <div class="line"><a id="l05381" name="l05381"></a><span class="lineno"> 5381</span><span class="keywordtype">  real</span> ( kind = 8 ) sin</div>
-<div class="line"><a id="l05382" name="l05382"></a><span class="lineno"> 5382</span>  <span class="keywordtype">logical</span> sing</div>
+<div class="line"><a id="l05382" name="l05382"></a><span class="lineno"> 5382</span>  <span class="keywordtype">logical</span>, <span class="keywordtype">intent(out)</span> :: sing</div>
 <div class="line"><a id="l05383" name="l05383"></a><span class="lineno"> 5383</span><span class="keywordtype">  real</span> ( kind = 8 ) tan</div>
 <div class="line"><a id="l05384" name="l05384"></a><span class="lineno"> 5384</span><span class="keywordtype">  real</span> ( kind = 8 ) tau</div>
 <div class="line"><a id="l05385" name="l05385"></a><span class="lineno"> 5385</span><span class="keywordtype">  real</span> ( kind = 8 ) temp</div>
-<div class="line"><a id="l05386" name="l05386"></a><span class="lineno"> 5386</span><span class="keywordtype">  real</span> ( kind = 8 ) u(m)</div>
-<div class="line"><a id="l05387" name="l05387"></a><span class="lineno"> 5387</span><span class="keywordtype">  real</span> ( kind = 8 ) v(n)</div>
-<div class="line"><a id="l05388" name="l05388"></a><span class="lineno"> 5388</span><span class="keywordtype">  real</span> ( kind = 8 ) w(m)</div>
+<div class="line"><a id="l05386" name="l05386"></a><span class="lineno"> 5386</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: u(m)</div>
+<div class="line"><a id="l05387" name="l05387"></a><span class="lineno"> 5387</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: v(n)</div>
+<div class="line"><a id="l05388" name="l05388"></a><span class="lineno"> 5388</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: w(m)</div>
 <div class="line"><a id="l05389" name="l05389"></a><span class="lineno"> 5389</span><span class="comment">!</span></div>
 <div class="line"><a id="l05390" name="l05390"></a><span class="lineno"> 5390</span><span class="comment">!  GIANT is the largest magnitude.</span></div>
 <div class="line"><a id="l05391" name="l05391"></a><span class="lineno"> 5391</span><span class="comment">!</span></div>
@@ -5688,11 +5688,11 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l05559" name="l05559"></a><span class="lineno"> 5559</span><span class="comment">!</span></div>
 <div class="line"><a id="l05560" name="l05560"></a><span class="lineno"> 5560</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l05561" name="l05561"></a><span class="lineno"> 5561</span> </div>
-<div class="line"><a id="l05562" name="l05562"></a><span class="lineno"> 5562</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l05562" name="l05562"></a><span class="lineno"> 5562</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l05563" name="l05563"></a><span class="lineno"> 5563</span> </div>
-<div class="line"><a id="l05564" name="l05564"></a><span class="lineno"> 5564</span><span class="keywordtype">  real</span> ( kind = 8 ) a(n)</div>
+<div class="line"><a id="l05564" name="l05564"></a><span class="lineno"> 5564</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: a(n)</div>
 <div class="line"><a id="l05565" name="l05565"></a><span class="lineno"> 5565</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
-<div class="line"><a id="l05566" name="l05566"></a><span class="lineno"> 5566</span>  <span class="keywordtype">character ( len = * )</span> title</div>
+<div class="line"><a id="l05566" name="l05566"></a><span class="lineno"> 5566</span>  <span class="keywordtype">character ( len = * )</span>, <span class="keywordtype">intent(in)</span> :: title</div>
 <div class="line"><a id="l05567" name="l05567"></a><span class="lineno"> 5567</span> </div>
 <div class="line"><a id="l05568" name="l05568"></a><span class="lineno"> 5568</span>  <span class="keyword">write</span> ( *, <span class="stringliteral">&#39;(a)&#39;</span> ) <span class="stringliteral">&#39; &#39;</span></div>
 <div class="line"><a id="l05569" name="l05569"></a><span class="lineno"> 5569</span>  <span class="keyword">write</span> ( *, <span class="stringliteral">&#39;(a)&#39;</span> ) trim( title )</div>
@@ -5773,21 +5773,21 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l05642" name="l05642"></a><span class="lineno"> 5642</span><span class="comment">!</span></div>
 <div class="line"><a id="l05643" name="l05643"></a><span class="lineno"> 5643</span>  <span class="keywordtype">implicit none</span></div>
 <div class="line"><a id="l05644" name="l05644"></a><span class="lineno"> 5644</span> </div>
-<div class="line"><a id="l05645" name="l05645"></a><span class="lineno"> 5645</span>  <span class="keywordtype">integer ( kind = 4 )</span> ldr</div>
-<div class="line"><a id="l05646" name="l05646"></a><span class="lineno"> 5646</span>  <span class="keywordtype">integer ( kind = 4 )</span> n</div>
+<div class="line"><a id="l05645" name="l05645"></a><span class="lineno"> 5645</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: ldr</div>
+<div class="line"><a id="l05646" name="l05646"></a><span class="lineno"> 5646</span>  <span class="keywordtype">integer ( kind = 4 )</span>, <span class="keywordtype">intent(in)</span> :: n</div>
 <div class="line"><a id="l05647" name="l05647"></a><span class="lineno"> 5647</span> </div>
-<div class="line"><a id="l05648" name="l05648"></a><span class="lineno"> 5648</span><span class="keywordtype">  real</span> ( kind = 8 ) alpha</div>
-<div class="line"><a id="l05649" name="l05649"></a><span class="lineno"> 5649</span><span class="keywordtype">  real</span> ( kind = 8 ) b(n)</div>
-<div class="line"><a id="l05650" name="l05650"></a><span class="lineno"> 5650</span><span class="keywordtype">  real</span> ( kind = 8 ) c(n)</div>
+<div class="line"><a id="l05648" name="l05648"></a><span class="lineno"> 5648</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: alpha</div>
+<div class="line"><a id="l05649" name="l05649"></a><span class="lineno"> 5649</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: b(n)</div>
+<div class="line"><a id="l05650" name="l05650"></a><span class="lineno"> 5650</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: c(n)</div>
 <div class="line"><a id="l05651" name="l05651"></a><span class="lineno"> 5651</span><span class="keywordtype">  real</span> ( kind = 8 ) cotan</div>
 <div class="line"><a id="l05652" name="l05652"></a><span class="lineno"> 5652</span>  <span class="keywordtype">integer ( kind = 4 )</span> i</div>
 <div class="line"><a id="l05653" name="l05653"></a><span class="lineno"> 5653</span>  <span class="keywordtype">integer ( kind = 4 )</span> j</div>
-<div class="line"><a id="l05654" name="l05654"></a><span class="lineno"> 5654</span><span class="keywordtype">  real</span> ( kind = 8 ) r(ldr,n)</div>
+<div class="line"><a id="l05654" name="l05654"></a><span class="lineno"> 5654</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(inout) :: r(ldr,n)</div>
 <div class="line"><a id="l05655" name="l05655"></a><span class="lineno"> 5655</span><span class="keywordtype">  real</span> ( kind = 8 ) rowj</div>
-<div class="line"><a id="l05656" name="l05656"></a><span class="lineno"> 5656</span><span class="keywordtype">  real</span> ( kind = 8 ) s(n)</div>
+<div class="line"><a id="l05656" name="l05656"></a><span class="lineno"> 5656</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(out) :: s(n)</div>
 <div class="line"><a id="l05657" name="l05657"></a><span class="lineno"> 5657</span><span class="keywordtype">  real</span> ( kind = 8 ) tan</div>
 <div class="line"><a id="l05658" name="l05658"></a><span class="lineno"> 5658</span><span class="keywordtype">  real</span> ( kind = 8 ) temp</div>
-<div class="line"><a id="l05659" name="l05659"></a><span class="lineno"> 5659</span><span class="keywordtype">  real</span> ( kind = 8 ) w(n)</div>
+<div class="line"><a id="l05659" name="l05659"></a><span class="lineno"> 5659</span><span class="keywordtype">  real</span> ( kind = 8 ), intent(in) :: w(n)</div>
 <div class="line"><a id="l05660" name="l05660"></a><span class="lineno"> 5660</span> </div>
 <div class="line"><a id="l05661" name="l05661"></a><span class="lineno"> 5661</span>  <span class="keywordflow">do</span> j = 1, n</div>
 <div class="line"><a id="l05662" name="l05662"></a><span class="lineno"> 5662</span> </div>
