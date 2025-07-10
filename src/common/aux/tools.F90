@@ -9,6 +9,7 @@ module modi_tools
   ! /!\ This 'empty' module is here to avoid 'automatic' generation of wrong interface modi_quisort + modi_upcase
   ! /!\ in futur version rename all 'use mode_tools' -> 'use modi_tools'
   ! /!\ and change the module name below  mode_tools -> modi_tools
+  implicit none
 end module modi_tools
 !################
 module mode_tools
@@ -37,6 +38,7 @@ private
 public :: Quicksort
 interface
    recursive subroutine Quicksort( ka, kbeg, kend, kpos )
+     implicit none
      integer, dimension(:),           intent(inout) :: ka
      integer,                         intent(in)    :: kbeg, kend
      integer, dimension(:), optional, intent(inout) :: kpos
@@ -46,6 +48,7 @@ end interface
 public :: Upcase
 interface
    function Upcase(hstring)
+     implicit none
      character(len=*), intent(in) :: hstring
      character(len=len(hstring))  :: upcase
    end function Upcase
@@ -54,16 +57,19 @@ end interface
 public :: Countjv
 interface Countjv
    function Countjv1d(ltab,i1) result(ic)
+     implicit none
      logical, dimension(:), intent(in)  :: ltab ! Mask
      integer, dimension(:), intent(out) :: i1   ! Positions of elements with 'true' value
      integer                            :: ic   ! Total number of 'true' values
    end function Countjv1d
    function Countjv2d(ltab,i1,i2) result(ic)
+     implicit none
      logical, dimension(:,:), intent(in)  :: ltab   ! Mask
      integer, dimension(:),   intent(out) :: i1, i2 ! Positions of elements with 'true' value
      integer                              :: ic     ! Total number of 'true' values
    end function Countjv2d
    function Countjv3d(ltab,i1,i2,i3) result(ic)
+     implicit none
      logical, dimension(:,:,:), intent(in)  :: ltab       ! Mask
      integer, dimension(:),     intent(out) :: i1, i2, i3 ! Positions of elements with 'true' value
      integer                                :: ic         ! Total number of 'true' values
@@ -74,16 +80,19 @@ end interface Countjv
 public :: Countjv_device
 interface Countjv_device
    subroutine Countjv1d_device(ltab, i1,ic)
+     implicit none
      logical, dimension(:), intent(in)  :: ltab ! Mask
      integer, dimension(:), intent(out) :: i1   ! Positions of elements with 'true' value
      integer,               intent(out) :: ic   ! Total number of 'true' values
    end subroutine Countjv1d_device
    subroutine Countjv2d_device(ltab, i1, i2, ic)
+     implicit none
      logical, dimension(:,:), intent(in)  :: ltab   ! Mask
      integer, dimension(:),   intent(out) :: i1, i2 ! Positions of elements with 'true' value
      integer,                 intent(out) :: ic     ! Total number of 'true' values
    end subroutine Countjv2d_device
    subroutine Countjv3d_device(ltab, i1, i2, i3, ic)
+     implicit none
      logical, dimension(:,:,:), intent(in)  :: ltab       ! Mask
      integer, dimension(:),     intent(out) :: i1, i2, i3 ! Positions of elements with 'true' value
      integer,                   intent(out) :: ic         ! Total number of 'true' values
@@ -94,6 +103,7 @@ end interface
 end module mode_tools
 
 function Countjv1d(ltab,i1) result(ic)
+  implicit none
   logical, dimension(:), intent(in)  :: ltab ! Mask
   integer, dimension(:), intent(out) :: i1   ! Positions of elements with 'true' value
   integer                            :: ic   ! Total number of 'true' values
@@ -111,6 +121,7 @@ function Countjv1d(ltab,i1) result(ic)
 end function Countjv1d
 
 function Countjv2d(ltab,i1,i2) result(ic)
+  implicit none
   logical, dimension(:,:), intent(in)  :: ltab   ! Mask
   integer, dimension(:),   intent(out) :: i1, i2 ! Positions of elements with 'true' value
   integer                              :: ic     ! Total number of 'true' values
@@ -131,6 +142,7 @@ function Countjv2d(ltab,i1,i2) result(ic)
 end function Countjv2d
 
 function Countjv3d(ltab,i1,i2,i3) result(ic)
+  implicit none
   logical, dimension(:,:,:), intent(in)  :: ltab       ! Mask
   integer, dimension(:),     intent(out) :: i1, i2, i3 ! Positions of elements with 'true' value
   integer                                :: ic         ! Total number of 'true' values
@@ -161,6 +173,7 @@ subroutine Countjv1d_device(ltab, i1,ic)
   use MODE_OPENACC_SET_DEVICE, only : mnh_idevice_type_current, acc_device_nvidia, acc_device_host
 #endif
 
+  implicit none
   logical, dimension(:), intent(in)  :: ltab ! Mask
   integer, dimension(:), intent(out) :: i1   ! Positions of elements with 'true' value
   integer,               intent(out) :: ic   ! Total number of 'true' values
@@ -231,6 +244,7 @@ subroutine Countjv2d_device(ltab, i1, i2, ic)
   use MODE_OPENACC_SET_DEVICE, only : mnh_idevice_type_current, acc_device_nvidia, acc_device_host
 #endif
 
+  implicit none
   logical, dimension(:,:), intent(in)  :: ltab   ! Mask
   integer, dimension(:),   intent(out) :: i1, i2 ! Positions of elements with 'true' value
   integer,                 intent(out) :: ic     ! Total number of 'true' values
@@ -308,6 +322,7 @@ subroutine Countjv3d_device(ltab, i1, i2, i3, ic)
   use MODE_OPENACC_SET_DEVICE, only : mnh_idevice_type_current, acc_device_nvidia, acc_device_host
 #endif
 
+  implicit none
   logical, dimension(:,:,:), intent(in)  :: ltab       ! Mask
   integer, dimension(:),     intent(out) :: i1, i2, i3 ! Positions of elements with 'true' value
   integer,                   intent(out) :: ic         ! Total number of 'true' values
@@ -389,6 +404,7 @@ end subroutine Countjv3d_device
 #endif
 
 recursive subroutine Quicksort( ka, kbeg, kend, kpos )
+  implicit none
   integer, dimension(:),           intent(inout) :: ka
   integer,                         intent(in)    :: kbeg, kend
   integer, dimension(:), optional, intent(inout) :: kpos
@@ -426,6 +442,7 @@ recursive subroutine Quicksort( ka, kbeg, kend, kpos )
 end subroutine Quicksort
 
 function Upcase(hstring)
+  implicit none
   character(len=*), intent(in) :: hstring
   character(len=len(hstring))  :: upcase
 

@@ -10,6 +10,7 @@ MODULE MODE_ARGSLIST_ll_PHY
  USE MODE_ll
  USE MODD_ARGSLIST_ll, ONLY : LIST_ll
  USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
+ IMPLICIT NONE
 !
  CONTAINS
 !
@@ -49,8 +50,8 @@ MODULE MODE_ARGSLIST_ll_PHY
   IMPLICIT NONE
 !
   TYPE(DIMPHYEX_t),        INTENT(IN)   :: D
-  TYPE(LIST_ll), POINTER         :: TPLIST   ! list of fields
-  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), TARGET :: PFIELD   ! field which is unpaked here
+  TYPE(LIST_ll), POINTER, INTENT(INOUT) :: TPLIST   ! list of fields
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), TARGET, INTENT(IN) :: PFIELD   ! field which is unpaked here
 !                                              of fields
   CHARACTER(LEN=*), INTENT(IN) :: HNAME ! Name of the field to be added
 
