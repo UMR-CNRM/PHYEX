@@ -248,14 +248,12 @@ END MODULE MODI_RESOLVED_CLOUD
 !!                                  modify the  correction of negative values
 !!      Modifications: June 08, 00  (J.-P. Pinty and J.-M. Cohard)
 !!                                  add the C2R2 scheme
-!!      Modifications: April 08, 01  (J.-P. Pinty)
-!!                                  add the C3R5 scheme
 !!      Modifications: July  21, 01  (J.-P. Pinty)
 !!                                  Add OHHONI and PW_ACT (for haze freezing)
 !!      Modifications: Sept 21, 01  (J.-P. Pinty)
 !!                                  Add XCONC_CCN limitation
 !!      Modifications: Nov  21, 02  (J.-P. Pinty)
-!!                                  Add ICE4 and C3R5 options
+!!                                  Add ICE4 option
 !!                     June, 2005   (V. Masson)
 !!                                  Technical change in interface for scalar arguments
 !!      Modifications : March, 2006 (O.Geoffroy)
@@ -303,7 +301,7 @@ USE MODD_ELEC_n,           ONLY: XEFIELDU, XEFIELDV, XEFIELDW
 USE MODD_ELEC_PARAM,       ONLY: ELEC_PARAM
 USE MODD_IO,               ONLY: TFILEDATA
 USE MODD_NEB_n,            ONLY: NEBN, CCONDENS, CLAMBDA3
-USE MODD_NSV,              ONLY: NSV, NSV_C1R3END, NSV_C2R2BEG, NSV_C2R2END,                       &
+USE MODD_NSV,              ONLY: NSV, NSV_C2R2BEG, NSV_C2R2END,                                    &
                                  NSV_LIMA_BEG, NSV_LIMA_END, NSV_LIMA_CCN_FREE, NSV_LIMA_IFN_FREE, &
                                  NSV_LIMA_NC, NSV_LIMA_NI, NSV_LIMA_NR,                            &
                                  NSV_AEREND, NSV_DSTEND, NSV_SLTEND,                               &
@@ -548,9 +546,6 @@ LMFCONV=(SIZE(PMFCONV)/=0)
 IF (HCLOUD == 'C2R2' .OR. HCLOUD == 'KHKO') THEN
   ISVBEG = NSV_C2R2BEG
   ISVEND = NSV_C2R2END
-ELSE IF (HCLOUD == 'C3R5') THEN
-  ISVBEG = NSV_C2R2BEG
-  ISVEND = NSV_C1R3END
 ELSE IF (HCLOUD == 'LIMA') THEN
   ISVBEG = NSV_LIMA_BEG
   IF (.NOT. LDUST .AND. .NOT. LSALT .AND. .NOT. LORILAM) THEN
@@ -616,7 +611,9 @@ DO JRR = 1,KRR
   PRS(:,:,:,JRR)  = PRS(:,:,:,JRR) / PRHODJ(:,:,:)
 END DO
 !
-IF (HCLOUD=='C2R2' .OR. HCLOUD=='C3R5' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
+IF (HCLOUD=='C2R2' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
+!$acc kernels
+!$acc loop independent
   DO JSV = ISVBEG, ISVEND
     PSVS(:,:,:,JSV) = PSVS(:,:,:,JSV) / PRHODJ(:,:,:)
   ENDDO
@@ -643,7 +640,8 @@ IF(GEAST  .AND. HLBCX(2) /= 'CYCL')  PRT(IIE+1:,:,:,2:) = 0.0
 IF(GSOUTH .AND. HLBCY(1) /= 'CYCL')  PRT(:,:IJB-1,:,2:) = 0.0
 IF(GNORTH .AND. HLBCY(2) /= 'CYCL')  PRT(:,IJE+1:,:,2:) = 0.0
 !
-IF (HCLOUD=='C2R2' .OR. HCLOUD=='C3R5' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
+IF (HCLOUD=='C2R2' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
+!$acc loop independent
 DO JI=1,JPHEXT
   PSVS(JI,     :,      :, ISVBEG:ISVEND) = PSVS(IIB, :,   :, ISVBEG:ISVEND)
   PSVS(IIE+JI, :,      :, ISVBEG:ISVEND) = PSVS(IIE, :,   :, ISVBEG:ISVEND)
@@ -670,8 +668,7 @@ PRS(:,:,IKE+1,:) = PRS(:,:,IKE,:)
 PRT(:,:,IKB-1,:) = PRT(:,:,IKB,:)
 PRT(:,:,IKE+1,:) = PRT(:,:,IKE,:)
 !
-IF (HCLOUD == 'C2R2' .OR. HCLOUD == 'C3R5' .OR. HCLOUD == 'KHKO' &
-                                           .OR. HCLOUD == 'LIMA') THEN
+IF (HCLOUD == 'C2R2' .OR. HCLOUD == 'KHKO' .OR. HCLOUD == 'LIMA') THEN
   PSVS(:,:,IKB-1,ISVBEG:ISVEND) = PSVS(:,:,IKB,ISVBEG:ISVEND)
   PSVS(:,:,IKE+1,ISVBEG:ISVEND) = PSVS(:,:,IKE,ISVBEG:ISVEND)
   PSVT(:,:,IKB-1,ISVBEG:ISVEND) = PSVT(:,:,IKB,ISVBEG:ISVEND)
@@ -1586,7 +1583,7 @@ DO JRR = 1,KRR
   PRS(:,:,:,JRR)  = PRS(:,:,:,JRR) * PRHODJ(:,:,:)
 END DO
 !
-IF (HCLOUD=='C2R2' .OR. HCLOUD=='C3R5' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
+IF (HCLOUD=='C2R2' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
   DO JSV = ISVBEG, ISVEND
     PSVS(:,:,:,JSV) = PSVS(:,:,:,JSV) * PRHODJ(:,:,:)
   ENDDO

@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2001-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2001-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -20,7 +20,7 @@
 !!    MODIFICATIONS
 !!    -------------
 !!      Original  01/02/01
-!!       J.-P. Pinty   29/11/02 add C3R5, ELEC
+!!       J.-P. Pinty   29/11/02 add ELEC
 !!       V. Masson     01/2004  add scalar names
 !!       M. Leriche    12/04/07 add aqueous chemistry
 !!       M. Leriche    08/07/10 add ice phase chemistry
@@ -62,13 +62,8 @@ INTEGER,DIMENSION(JPMODELMAX)::NSV_USER_A = 0  ! number of user scalar variables
                                                ! indices in the range : 1...NSV_USER_A
 !
 INTEGER,DIMENSION(JPMODELMAX)::NSV_C2R2_A = 0    ! number of liq scalar in C2R2
-                                                 !                  and in C3R5
 INTEGER,DIMENSION(JPMODELMAX)::NSV_C2R2BEG_A = 0 ! with indices in the range :
 INTEGER,DIMENSION(JPMODELMAX)::NSV_C2R2END_A = 0 ! NSV_C2R2BEG_A...NSV_C2R2END_A
-!
-INTEGER,DIMENSION(JPMODELMAX)::NSV_C1R3_A = 0    ! number of ice scalar in C3R5
-INTEGER,DIMENSION(JPMODELMAX)::NSV_C1R3BEG_A = 0 ! with indices in the range :
-INTEGER,DIMENSION(JPMODELMAX)::NSV_C1R3END_A = 0 ! NSV_C1R3BEG_A...NSV_C1R3END_A
 !
 INTEGER,DIMENSION(JPMODELMAX)::NSV_ELEC_A = 0    ! number of scalar in ELEC
 INTEGER,DIMENSION(JPMODELMAX)::NSV_ELECBEG_A = 0 ! with indices in the range :
@@ -177,13 +172,9 @@ INTEGER :: NSV_CHEM_LIST = 0 ! total number of chemical variables (including dus
 !
 INTEGER :: NSV_USER    = 0 ! number of user scalar variables with indices
                            ! in the range : 1...NSV_USER
-INTEGER :: NSV_C2R2    = 0 ! number of liq scalar used in C2R2 and in C3R5
+INTEGER :: NSV_C2R2    = 0 ! number of liq scalar used in C2R2
 INTEGER :: NSV_C2R2BEG = 0 ! with indices in the range :
 INTEGER :: NSV_C2R2END = 0 ! NSV_C2R2BEG...NSV_C2R2END
-!
-INTEGER :: NSV_C1R3    = 0 ! number of ice scalar used in C3R5
-INTEGER :: NSV_C1R3BEG = 0 ! with indices in the range :
-INTEGER :: NSV_C1R3END = 0 ! NSV_C1R3BEG...NSV_C1R3END
 !
 INTEGER :: NSV_ELEC    = 0 ! number of scalar variables used in ELEC
 INTEGER :: NSV_ELECBEG = 0 ! with indices in the range :
@@ -298,9 +289,6 @@ INTEGER, DIMENSION(:), POINTER ::NSV_A => NULL(), &
                                  NSV_C2R2_A => NULL(), &
                                  NSV_C2R2BEG_A => NULL(), &
                                  NSV_C2R2END_A => NULL(), &
-                                 NSV_C1R3_A => NULL(), &
-                                 NSV_C1R3BEG_A => NULL(), &
-                                 NSV_C1R3END_A => NULL(), &
                                  NSV_ELEC_A => NULL(), &
                                  NSV_ELECBEG_A => NULL(), &
                                  NSV_ELECEND_A => NULL(), &
@@ -386,9 +374,6 @@ INTEGER, POINTER :: NSV         => NULL(), &
                     NSV_C2R2    => NULL(), &
                     NSV_C2R2BEG => NULL(), &
                     NSV_C2R2END => NULL(), &
-                    NSV_C1R3    => NULL(), &
-                    NSV_C1R3BEG => NULL(), &
-                    NSV_C1R3END => NULL(), &
                     NSV_ELEC    => NULL(), &
                     NSV_ELECBEG => NULL(), &
                     NSV_ELECEND => NULL(), &
@@ -479,9 +464,6 @@ IF(.NOT. ASSOCIATED(NSV)) THEN
   NSV_C2R2_A          =>  TNSV%NSV_C2R2_A 
   NSV_C2R2BEG_A       =>  TNSV%NSV_C2R2BEG_A 
   NSV_C2R2END_A       =>  TNSV%NSV_C2R2END_A 
-  NSV_C1R3_A          =>  TNSV%NSV_C1R3_A 
-  NSV_C1R3BEG_A       =>  TNSV%NSV_C1R3BEG_A 
-  NSV_C1R3END_A       =>  TNSV%NSV_C1R3END_A 
   NSV_ELEC_A          =>  TNSV%NSV_ELEC_A 
   NSV_ELECBEG_A       =>  TNSV%NSV_ELECBEG_A 
   NSV_ELECEND_A       =>  TNSV%NSV_ELECEND_A 
@@ -566,9 +548,6 @@ IF(.NOT. ASSOCIATED(NSV)) THEN
   NSV_C2R2            =>  TNSV%NSV_C2R2    
   NSV_C2R2BEG         =>  TNSV%NSV_C2R2BEG 
   NSV_C2R2END         =>  TNSV%NSV_C2R2END 
-  NSV_C1R3            =>  TNSV%NSV_C1R3    
-  NSV_C1R3BEG         =>  TNSV%NSV_C1R3BEG 
-  NSV_C1R3END         =>  TNSV%NSV_C1R3END 
   NSV_ELEC            =>  TNSV%NSV_ELEC    
   NSV_ELECBEG         =>  TNSV%NSV_ELECBEG 
   NSV_ELECEND         =>  TNSV%NSV_ELECEND 
