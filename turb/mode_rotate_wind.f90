@@ -155,6 +155,7 @@ JLOC(:,:)=NINT(SIGN(1.,-PSINSLOPE(:,:)))
 !
 ! interpolation in x direction
 !
+!$acc loop collapse(2) independent
 DO JJ=1,IJU
   DO JI=IIB,IIE
     ZCOEFF(JI,JJ) =                                                  &
@@ -176,6 +177,7 @@ END DO
 !
 ! interpolation in y direction
 !
+!$acc loop collapse(2) independent
 DO JJ=IJB,IJE
   DO JI=IIB,IIE
     ZCOEFF(JI,JJ) =                                                     &
