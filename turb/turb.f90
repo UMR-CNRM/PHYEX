@@ -592,14 +592,14 @@ IF (KRR > 0) ZCP(:,:) = ZCP(:,:) + CST%XCPV * PRT(:,:,1)
 ! PGI20.5 BUG or reproductibility problem , with pointer this loop on JRR parallelize whitout reduction 
 !$acc loop seq
 DO JRR = 2,1+KRRL                          ! loop on the liquid components
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)  
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT,OPENACC='gang')  
   ZCP(:,:)  = ZCP(:,:) + CST%XCL * PRT(:,:,JRR)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END DO
 !
 !$acc loop seq
 DO JRR = 2+KRRL,1+KRRL+KRRI                ! loop on the solid components   
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT,OPENACC='gang')
   ZCP(:,:)  = ZCP(:,:)  + CST%XCI * PRT(:,:,JRR)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END DO
