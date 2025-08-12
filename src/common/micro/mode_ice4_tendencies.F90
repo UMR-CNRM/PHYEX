@@ -168,7 +168,7 @@ ELSE
   CALL ICE4_RRHONG(CST, PARAMI, ICED, KPROMA, KSIZE, LDCOMPUTE, &
                   &PEXN, PLVFACT, PLSFACT, &
                   &ZT, ZVART(:,IRR), &
-                  &ZTH(:), &
+                  &ZTH, &
                   &PBU_INST(:, IRRHONG_MR))
 !$acc kernels
 !$acc loop independent
@@ -185,7 +185,7 @@ ELSE
   CALL ICE4_RIMLTC(CST, PARAMI, KPROMA, KSIZE, LDCOMPUTE, &
                   &PEXN, PLVFACT, PLSFACT, &
                   &ZT, &
-                  &ZTH(:), ZVART(:,IRI), &
+                  &ZTH, ZVART(:,IRI), &
                   &PBU_INST(:, IRIMLTC_MR))
 !$acc kernels
 !$acc loop independent
@@ -382,7 +382,7 @@ IF(PARAMI%LWARM) THEN    !  Check if the formation of the raindrops by the slow
                   !  warm processes is allowed
   CALL ICE4_WARM(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT,LDCOMPUTE, &
                 &PARAMI%CSUBG_RC_RR_ACCR, PARAMI%CSUBG_RR_EVAP, &
-                &PRHODREF, PLVFACT, ZT, PPRES, ZTH(:),&
+                &PRHODREF, PLVFACT, ZT, PPRES, ZTH,&
                 &ZLBDAR, ZLBDAR_RF, ZKA, ZDV, ZCJ, &
                 &PHLC_LCF, PHLC_HCF, PHLC_LRC, PHLC_HRC, &
                 &PCF, PRAINFR, &
@@ -432,7 +432,7 @@ CALL ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, KRR
                  &ZDV, ZKA, ZCJ, PCIT, &
                  &ZLBDAR, ZLBDAS, ZLBDAG, &
                  &ZT, ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRR), ZVART(:,IRI), ZVART(:,IRS), ZVART(:,IRG), &
-                 &ZRGSI, ZRGSI_MR(:), &
+                 &ZRGSI, ZRGSI_MR, &
                  &LLWETG, &
                  &PBU_INST(:, IRICFRRG), PBU_INST(:, IRRCFRIG), PBU_INST(:, IRICFRR), PBU_INST(:, IRCWETG), &
                  &PBU_INST(:, IRIWETG), PBU_INST(:, IRRWETG), PBU_INST(:, IRSWETG), &

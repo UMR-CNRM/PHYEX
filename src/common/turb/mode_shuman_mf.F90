@@ -3,59 +3,16 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
 !     ##################
-      MODULE MODI_SHUMAN_MF
+MODULE MODE_SHUMAN_MF
+
+!$ACDC singlecolumn 
+
 !     ##################
 !
 IMPLICIT NONE
-INTERFACE
-!
-SUBROUTINE DZF_MF(D, PA, PDZF)
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-IMPLICIT NONE
-TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass
-                                                 ! localization
-END SUBROUTINE DZF_MF
-!
-SUBROUTINE DZM_MF(D, PA, PDZM)
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-IMPLICIT NONE
-TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
-                                                 ! side
-END SUBROUTINE DZM_MF
-!
-SUBROUTINE MZF_MF(D, PA, PMZF)
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-IMPLICIT NONE
-TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZF   ! result at mass
-                                                 ! localization
-END SUBROUTINE MZF_MF
-!
-SUBROUTINE MZM_MF(D, PA, PMZM)
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-IMPLICIT NONE
-TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZM   ! result at flux localization
-END SUBROUTINE MZM_MF
-!
-SUBROUTINE GZ_M_W_MF(D, PY, PDZZ, PGZ_M_W)
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-IMPLICIT NONE
-TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PDZZ ! Metric coefficient d*zz
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PY   ! variable at mass localization
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux side
-END SUBROUTINE GZ_M_W_MF
-!
-END INTERFACE
-!
-END MODULE MODI_SHUMAN_MF
+
+CONTAINS
+
 !
 !     ###############################
       SUBROUTINE MZF_MF(D, PA, PMZF)
@@ -137,14 +94,14 @@ IKL=D%NKL
 !              ------------------
 !
 DO JK=2,IKT-1
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PMZF(IIJB:IIJE,JK) = 0.5*( PA(IIJB:IIJE,JK)+PA(IIJB:IIJE,JK+IKL) )
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  DO JIJ=IIJB, IIJE
+    PMZF(JIJ, JK) = 0.5*( PA(JIJ, JK)+PA(JIJ, JK+IKL) )
+  END DO
 END DO
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-PMZF(IIJB:IIJE,IKA) = 0.5*( PA(IIJB:IIJE,IKA)+PA(IIJB:IIJE,IKA+IKL) )
-PMZF(IIJB:IIJE,IKU) = PA(IIJB:IIJE,IKU)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
+DO JIJ=IIJB, IIJE
+  PMZF(JIJ, IKA) = 0.5*( PA(JIJ, IKA)+PA(JIJ, IKA+IKL) )
+  PMZF(JIJ, IKU) = PA(JIJ, IKU)
+END DO
 !
 !-------------------------------------------------------------------------------
 !
@@ -227,14 +184,15 @@ IKL=D%NKL
 !              ------------------
 !
 DO JK=2,IKT-1
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PMZM(IIJB:IIJE,JK) = 0.5*( PA(IIJB:IIJE,JK)+PA(IIJB:IIJE,JK-IKL) )
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  DO JIJ=IIJB, IIJE
+
+    PMZM(JIJ, JK) = 0.5*( PA(JIJ, JK)+PA(JIJ, JK-IKL) )
+  END DO
 END DO
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-PMZM(IIJB:IIJE,IKA) = PA(IIJB:IIJE,IKA)
-PMZM(IIJB:IIJE,IKU) = 0.5*( PA(IIJB:IIJE,IKU)+PA(IIJB:IIJE,IKU-IKL) )
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
+DO JIJ=IIJB, IIJE
+  PMZM(JIJ, IKA) = PA(JIJ, IKA)
+  PMZM(JIJ, IKU) = 0.5*( PA(JIJ, IKU)+PA(JIJ, IKU-IKL) )
+END DO
 !
 !-------------------------------------------------------------------------------
 !
@@ -317,14 +275,14 @@ IKL=D%NKL
 !              ------------------
 !
 DO JK=2,IKT-1
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PDZF(IIJB:IIJE,JK) = PA(IIJB:IIJE,JK+IKL) - PA(IIJB:IIJE,JK)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  DO JIJ=IIJB, IIJE
+    PDZF(JIJ, JK) = PA(JIJ, JK+IKL) - PA(JIJ, JK)
+  END DO
 END DO
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-PDZF(IIJB:IIJE,IKA) = PA(IIJB:IIJE,IKA+IKL) - PA(IIJB:IIJE,IKA)
-PDZF(IIJB:IIJE,IKU) = 0.
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
+DO JIJ=IIJB, IIJE
+  PDZF(JIJ, IKA) = PA(JIJ, IKA+IKL) - PA(JIJ, IKA)
+  PDZF(JIJ, IKU) = 0.
+END DO
 !
 !-------------------------------------------------------------------------------
 !
@@ -407,14 +365,14 @@ IKL=D%NKL
 !              ------------------
 !
 DO JK=2,IKT-1
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PDZM(IIJB:IIJE,JK) = PA(IIJB:IIJE,JK) - PA(IIJB:IIJE,JK-IKL)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  DO JIJ=IIJB, IIJE
+    PDZM(JIJ, JK) = PA(JIJ, JK) - PA(JIJ, JK-IKL)
+  END DO
 END DO
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-PDZM(IIJB:IIJE,IKA) = 0.
-PDZM(IIJB:IIJE,IKU) = PA(IIJB:IIJE,IKU) - PA(IIJB:IIJE,IKU-IKL)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
+DO JIJ=IIJB, IIJE
+  PDZM(JIJ, IKA) = 0.
+  PDZM(JIJ, IKU) = PA(JIJ, IKU) - PA(JIJ, IKU-IKL)
+END DO
 !
 !-------------------------------------------------------------------------------
 !
@@ -497,15 +455,17 @@ IKL=D%NKL
 !              -----------------------------
 !
 DO JK=2,IKT-1
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PGZ_M_W(IIJB:IIJE,JK) = (PY(IIJB:IIJE,JK) - PY(IIJB:IIJE,JK-IKL)) / PDZZ(IIJB:IIJE,JK)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  DO JIJ=IIJB, IIJE
+    PGZ_M_W(JIJ, JK) = (PY(JIJ, JK) - PY(JIJ, JK-IKL)) / PDZZ(JIJ, JK)
+  END DO
 END DO
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-PGZ_M_W(IIJB:IIJE,IKA) = 0.
-PGZ_M_W(IIJB:IIJE,IKU) = (PY(IIJB:IIJE,IKU) - PY(IIJB:IIJE,IKU-IKL)) / PDZZ(IIJB:IIJE,IKU)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
+DO JIJ=IIJB, IIJE
+  PGZ_M_W(JIJ, IKA) = 0.
+  PGZ_M_W(JIJ, IKU) = (PY(JIJ, IKU) - PY(JIJ, IKU-IKL)) / PDZZ(JIJ, IKU)
+END DO
 !
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE GZ_M_W_MF
+
+END MODULE MODE_SHUMAN_MF

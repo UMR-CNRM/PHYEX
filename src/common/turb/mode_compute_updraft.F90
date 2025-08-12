@@ -83,7 +83,7 @@ USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n,          ONLY: TURB_t
 USE MODD_CTURB,           ONLY: CSTURB_t
 !
-USE MODI_SHUMAN_MF, ONLY: MZM_MF, MZF_MF, GZ_M_W_MF
+USE MODE_SHUMAN_MF, ONLY: MZM_MF, MZF_MF, GZ_M_W_MF
 
 USE MODE_COMPUTE_BL89_ML, ONLY: COMPUTE_BL89_ML
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
@@ -314,11 +314,11 @@ END IF
 
 ! Initialisation of environment variables at t-dt
 ! variables at flux level
-CALL MZM_MF(D, PTHLM(:,:), ZTHLM_F(:,:))
-CALL MZM_MF(D, PRTM(:,:), ZRTM_F (:,:))
-CALL MZM_MF(D, PUM(:,:), ZUM_F  (:,:))
-CALL MZM_MF(D, PVM(:,:), ZVM_F  (:,:))
-CALL MZM_MF(D, PTKEM(:,:), ZTKEM_F(:,:))
+CALL MZM_MF(D, PTHLM, ZTHLM_F)
+CALL MZM_MF(D, PRTM, ZRTM_F )
+CALL MZM_MF(D, PUM, ZUM_F  )
+CALL MZM_MF(D, PVM, ZVM_F  )
+CALL MZM_MF(D, PTKEM, ZTKEM_F)
 
 DO JSV=1,KSV
   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
@@ -347,22 +347,22 @@ PRT_UP(IIJB:IIJE,IKB) = ZRTM_F(IIJB:IIJE,IKB)+ &
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
 IF (OENTR_DETR) THEN
-  CALL MZM_MF(D, PTHM (:,:), ZTHM_F (:,:))
-  CALL MZM_MF(D, PEXNM(:,:), ZEXN_F(:,:))
+  CALL MZM_MF(D, PTHM , ZTHM_F )
+  CALL MZM_MF(D, PEXNM, ZEXN_F)
   IF(PARAMMF%LPZ_EXP_LOG) THEN
     !Using a z-like interpolation to be consistent with computed heights
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZWK(IIJB:IIJE,1:IKT)=LOG(PPABSM(IIJB:IIJE,1:IKT))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    CALL MZM_MF(D, ZWK(:,:), ZPRES_F(:,:))
+    CALL MZM_MF(D, ZWK, ZPRES_F)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZPRES_F(IIJB:IIJE,1:IKT)=EXP(ZPRES_F(IIJB:IIJE,1:IKT))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ELSE
-    CALL MZM_MF(D, PPABSM(:,:), ZPRES_F(:,:))
+    CALL MZM_MF(D, PPABSM, ZPRES_F)
   ENDIF
-  CALL MZM_MF(D, PRHODREF(:,:), ZRHO_F (:,:))
-  CALL MZM_MF(D, PRVM(:,:), ZRVM_F (:,:))
+  CALL MZM_MF(D, PRHODREF, ZRHO_F )
+  CALL MZM_MF(D, PRVM, ZRVM_F )
 
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ! thetav at mass and flux levels
@@ -385,8 +385,8 @@ IF (OENTR_DETR) THEN
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, PFRAC_ICE_UP(:,IKB), ZPRES_F(:,IKB), &
              PTHL_UP(:,IKB),PRT_UP(:,IKB),PTH_UP(:,IKB), &
-             PRV_UP(:,IKB),PRC_UP(:,IKB),PRI_UP(:,IKB),ZRSATW(:),ZRSATI(:), OOCEAN=.FALSE., &
-             PBUF=ZBUF(:,:))
+             PRV_UP(:,IKB),PRC_UP(:,IKB),PRI_UP(:,IKB),ZRSATW,ZRSATI, OOCEAN=.FALSE., &
+             PBUF=ZBUF)
 
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ! compute updraft thevav and buoyancy term at KKB level
@@ -506,15 +506,15 @@ DO JK=IKB,IKE-IKL,IKL
     ENDIF
 
     IF (PARAMMF%CWET_MIXING == 'LR01' .OR. PARAMMF%CDETR_DRY_LUP == 'UPDR') THEN
-      CALL MZF_MF(D, PTHV_UP(:,:), ZWK(:,:))
+      CALL MZF_MF(D, PTHV_UP, ZWK)
       CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ, ZTKEM_F(:,JK), ZG_O_THVREF_UP(:,JK), ZWK, JK, .TRUE., .TRUE., ZSHEAR, ZLUP)
       !$mnh_expand_where(JIJ=IIJB:IIJE)
       ZLUP(:) = MAX(ZLUP(:), 1.)
       !$mnh_end_expand_where(JIJ=IIJB:IIJE)
     ENDIF
     IF (PARAMMF%CWET_MIXING == 'LR01') THEN
-      CALL MZF_MF(D, ZTHVM_F(:,:), ZWK(:,:))
-      CALL MZF_MF(D, PTHV_UP(:,:), ZWK2(:,:))
+      CALL MZF_MF(D, ZTHVM_F, ZWK)
+      CALL MZF_MF(D, PTHV_UP, ZWK2)
       ZWK(:,JK) = ZWK2(:,JK)
       CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ, ZTKEM_F(:,JK), ZG_O_THVREF_UP(:,JK), ZWK, JK, .FALSE., .FALSE., ZSHEAR, ZLDOWN)
       !$mnh_expand_where(JIJ=IIJB:IIJE)
@@ -523,14 +523,14 @@ DO JK=IKB,IKE-IKL,IKL
     ENDIF
     CALL COMPUTE_ENTR_DETR(D, CST, NEBN, PARAMMF, JK,IKB,IKE,IKL,GTEST,GTESTLCL,PFRAC_ICE_UP(:,JK),&
                            PRHODREF(:,JK),ZPRES_F(:,JK),ZPRES_F(:,JK+IKL),ZEXN_F(:,JK),&
-                           PZZ(:,:),PDZZ(:,:),ZTHVM(:,:),  &
-                           PTHLM(:,:),PRTM(:,:),ZW_UP2(:,:),PTH_UP(:,JK),   &
-                           PTHL_UP(:,JK),PRT_UP(:,JK),ZLUPSURF(:), ZLUP(:), ZLDOWN(:), &
+                           PZZ,PDZZ,ZTHVM,  &
+                           PTHLM,PRTM,ZW_UP2,PTH_UP(:,JK),   &
+                           PTHL_UP(:,JK),PRT_UP(:,JK),ZLUPSURF, ZLUP, ZLDOWN, &
                            PRC_UP(:,JK),PRI_UP(:,JK),PTHV_UP(:,JK),&
                            PRSAT_UP(:,JK),ZRC_MIX(:,JK),ZRI_MIX(:,JK),                 &
                            PENTR(:,JK),PDETR(:,JK),ZENTR_CLD(:,JK),ZDETR_CLD(:,JK),&
                            ZBUO_INTEG_DRY(:,JK), ZBUO_INTEG_CLD(:,JK), &
-                           ZPART_DRY(:)   )
+                           ZPART_DRY   )
     !$mnh_expand_where(JIJ=IIJB:IIJE)
     PBUO_INTEG(IIJB:IIJE,JK)=ZBUO_INTEG_DRY(IIJB:IIJE,JK)+ZBUO_INTEG_CLD(IIJB:IIJE,JK)
 
@@ -654,8 +654,8 @@ DO JK=IKB,IKE-IKL,IKL
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, PFRAC_ICE_UP(:,JK+IKL), ZPRES_F(:,JK+IKL), &
             PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),PTH_UP(:,JK+IKL),              &
-            ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:), OOCEAN=.FALSE., &
-            PBUF=ZBUF(:,:))
+            ZRV_UP,ZRC_UP,ZRI_UP,ZRSATW,ZRSATI, OOCEAN=.FALSE., &
+            PBUF=ZBUF)
     !$mnh_expand_where(JIJ=IIJB:IIJE)
     WHERE(GTEST(IIJB:IIJE))
       PRC_UP(IIJB:IIJE,JK+IKL)=ZRC_UP(IIJB:IIJE)

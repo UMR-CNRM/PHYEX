@@ -135,8 +135,8 @@ PWEIGHT_MF_CLOUD(:,:) = 0.
 IF (PARAMMF%CMF_CLOUD == 'DIRE') THEN
   !Direct cloud scheme
   CALL COMPUTE_MF_CLOUD_DIRECT(D, PARAMMF, &
-                              &KKLCL(:), PFRAC_UP(:,:), PRC_UP(:,:), PRI_UP(:,:),&
-                              &PRC_MF(:,:), PRI_MF(:,:), PCF_MF(:,:), PWEIGHT_MF_CLOUD(:,:))
+                              &KKLCL, PFRAC_UP, PRC_UP, PRI_UP,&
+                              &PRC_MF, PRI_MF, PCF_MF, PWEIGHT_MF_CLOUD)
   !
 ELSEIF (PARAMMF%CMF_CLOUD == 'STAT') THEN
   !Statistical scheme using the PDF proposed by Bougeault (81, 82) and
@@ -155,7 +155,7 @@ ELSEIF (PARAMMF%CMF_CLOUD == 'BIGA') THEN
                               &PRTM, PTHM, PRM, &
                               &PRHODREF, PEXNM, PPABSM, &
                               &PRC_MF, PRI_MF, PCF_MF, PSIGMF, &
-                              &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PWEIGHT_MF_CLOUD(:,:))
+                              &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PWEIGHT_MF_CLOUD)
   !
 ELSEIF  (PARAMMF%CMF_CLOUD == 'NONE') THEN
   ! No CONVECTIVE CLOUD SCHEME

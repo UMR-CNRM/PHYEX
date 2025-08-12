@@ -378,10 +378,10 @@ IF (OCND2) THEN
     END DO
   END DO
 !$acc end kernels
-  CALL ICECLOUD(D, CST, ICEP, PPABS(:,:),PZZ(:,:),ZDZ(:,:), &
-       & PT(:,:),PRV_IN(:,:),1.,-1., &
-       & ZCLDINI(:,:),PIFR(IIJB,1),PICLDFR(:,:), &
-       & PSSIO(:,:),PSSIU(:,:),ZARDUM2(:,:),ZARDUM(:,:))
+  CALL ICECLOUD(D, CST, ICEP, PPABS,PZZ,ZDZ, &
+       & PT,PRV_IN,1.,-1., &
+       & ZCLDINI,PIFR(IIJB,1),PICLDFR, &
+       & PSSIO,PSSIU,ZARDUM2,ZARDUM)
   ! latent heats
   ! saturated water vapor mixing ratio over liquid water and ice
 !$acc kernels
