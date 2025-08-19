@@ -138,8 +138,9 @@ IIE = IIU - 1
 IJE = IJU - 1
 IKB = 1+JPVEXT
 !
-!
-!$acc kernels
+!$acc kernels present(pdircosyw,zvint,zwfin,zcoefm,zufin,pdxx,pdircosxw) &
+!$acc present (zwint,zwground,zvfin,puslope,pdircoszw,zuint,psinslope,pw,pcosslope) &
+!$acc present (pdyy,pu,pv,pvslope,zwground,zuint,jloc,zwint,pdzz,iloc)
 !$mnh_expand_array(JI=1:IIU,JJ=1:IJU)
 PUSLOPE(:,:)=0.
 PVSLOPE(:,:)=0.
