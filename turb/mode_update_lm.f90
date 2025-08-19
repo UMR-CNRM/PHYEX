@@ -1,6 +1,6 @@
-!MNH_LIC Copyright 2006-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2006-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
-!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
       MODULE MODE_UPDATE_LM
@@ -41,11 +41,11 @@ SUBROUTINE UPDATE_LM(D,HLBCX,HLBCY,PLM,PLEPS)
 !
 !*       0.    DECLARATIONS
 !         
+USE MODD_ARGSLIST_ll, ONLY : LIST_ll
 USE MODD_PARAMETERS
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODE_ll
-USE MODD_ARGSLIST_ll, ONLY : LIST_ll
 !
 IMPLICIT NONE
 !
@@ -65,8 +65,10 @@ INTEGER             :: IIB      ! First physical index in x direction
 INTEGER             :: IJB      ! First physical index in y direction
 INTEGER             :: IIE      ! last  physical index in x direction
 INTEGER             :: IJE      ! last  physical index in y direction
-INTEGER             :: JI       ! loop index
+INTEGER             :: JI,JJ,JK    ! loop index
+INTEGER             :: JIU,JJU,JKU ! dime
 !
+LOGICAL                :: GNORTH, GSOUTH, GWEST, GEAST
 TYPE(LIST_ll), POINTER :: TZLM_ll   ! list of fields to exchange
 INTEGER                :: IINFO_ll       ! return code of parallel routine
 !
@@ -80,8 +82,17 @@ IIB = D%NIB
 IIE = D%NIE
 IJB = D%NJB
 IJE = D%NJE
+JIU=D%NIT
+JJU=D%NJT
+JKU=D%NKT
+!
 NULLIFY(TZLM_ll)
 !
+GWEST  = ( HLBCX(1) /= 'CYCL' .AND. LWEST_ll() )
+GEAST  = ( HLBCX(2) /= 'CYCL' .AND. LEAST_ll() )
+GSOUTH = ( HLBCY(1) /= 'CYCL' .AND. LSOUTH_ll() )
+GNORTH = ( HLBCY(2) /= 'CYCL' .AND. LNORTH_ll() )
+
 !-------------------------------------------------------------------------------
 !
 !*       2.  UPDATE HALOs :
@@ -102,25 +113,38 @@ NULLIFY(TZLM_ll)
 !*       3.  UPDATE EXTERNAL POINTS OF GLOBAL DOMAIN:
 !            ---------------------------------------
 !
-IF ( HLBCX(1) /= "CYCL" .AND. LWEST_ll()) THEN
+
+IF ( GWEST ) THEN
+  !$acc kernels async
+  !$mnh_expand_array(,JJ=1:JJU,JK=1:JKU)
   PLM  (IIB-1,:,:) = PLM  (IIB,:,:)
   PLEPS(IIB-1,:,:) = PLEPS(IIB,:,:)
+  !$mnh_end_expand_array()
+  !$acc end kernels
 END IF
-IF ( HLBCX(2) /= "CYCL" .AND. LEAST_ll()) THEN
+IF ( GEAST ) THEN
+  !$acc kernels async
+  !$mnh_expand_array(,JJ=1:JJU,JK=1:JKU)
   PLM  (IIE+1,:,:) = PLM  (IIE,:,:)
   PLEPS(IIE+1,:,:) = PLEPS(IIE,:,:)
+  !$mnh_end_expand_array()
+  !$acc end kernels
 END IF
-IF ( HLBCY(1) /= "CYCL" .AND. LSOUTH_ll()) THEN
+IF ( GSOUTH ) THEN
+  !$acc kernels async 
   DO JI=1,SIZE(PLM,1)
     PLM  (JI,IJB-1,:) = PLM  (JI,IJB,:)
     PLEPS(JI,IJB-1,:) = PLEPS(JI,IJB,:)
   END DO
+  !$acc end kernels
 END IF
-IF ( HLBCY(2) /= "CYCL" .AND. LNORTH_ll()) THEN
+IF ( GNORTH ) THEN
+  !$acc kernels async
   DO JI=1,SIZE(PLM,1)
     PLM  (JI,IJE+1,:) = PLM  (JI,IJE,:)
     PLEPS(JI,IJE+1,:) = PLEPS(JI,IJE,:)
-  END DO
+ END DO
+ !$acc end kernels
 END IF
 !$acc wait
 
