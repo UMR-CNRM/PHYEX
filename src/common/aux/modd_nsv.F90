@@ -142,12 +142,10 @@ INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_IMM_NUCL_A = 0 ! First Nucl. IMM conc.
 INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_HOM_HAZE_A = 0 ! Hom. freezing of CCN
 INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_SPRO_A = 0     ! Supersaturation
 !
-#ifdef MNH_FOREFIRE
 INTEGER,DIMENSION(JPMODELMAX)::NSV_FF_A = 0    ! number of ForeFire scalar variables
 INTEGER,DIMENSION(JPMODELMAX)::NSV_FFBEG_A = 0 ! with indices in the range :
 INTEGER,DIMENSION(JPMODELMAX)::NSV_FFEND_A = 0 ! NSV_FFBEG_A...NSV_FFEND_A
 !
-#endif
 ! Blaze smoke indexes
 INTEGER,DIMENSION(JPMODELMAX)::NSV_FIRE_A = 0    ! number of Blaze smoke scalar variables
 INTEGER,DIMENSION(JPMODELMAX)::NSV_FIREBEG_A = 0 ! with indices in the range :
@@ -254,12 +252,10 @@ INTEGER :: NSV_LIMA_IMM_NUCL !
 INTEGER :: NSV_LIMA_HOM_HAZE !
 INTEGER :: NSV_LIMA_SPRO     !
 !
-#ifdef MNH_FOREFIRE
 INTEGER :: NSV_FF    = 0 ! number of ForeFire scalar variables
 INTEGER :: NSV_FFBEG = 0 ! with indices in the range :
 INTEGER :: NSV_FFEND = 0 ! NSV_FFBEG...NSV_FFEND
 !
-#endif
 ! Blaze smoke
 INTEGER :: NSV_FIRE    = 0 ! number of Blaze smoke scalar variables
 INTEGER :: NSV_FIREBEG = 0 ! with indices in the range :
@@ -351,11 +347,9 @@ INTEGER, DIMENSION(:), POINTER ::NSV_A => NULL(), &
                                  NSV_LIMA_IMM_NUCL_A => NULL(), &
                                  NSV_LIMA_HOM_HAZE_A => NULL(), &
                                  NSV_LIMA_SPRO_A => NULL(), &
-#ifdef MNH_FOREFIRE
                                  NSV_FF_A => NULL(), &
                                  NSV_FFBEG_A => NULL(), &
                                  NSV_FFEND_A => NULL(), &
-#endif
                                  NSV_FIRE_A => NULL(), &
                                  NSV_FIREBEG_A => NULL(), &
                                  NSV_FIREEND_A => NULL(), &
@@ -436,11 +430,9 @@ INTEGER, POINTER :: NSV         => NULL(), &
                     NSV_LIMA_IMM_NUCL => NULL(), &
                     NSV_LIMA_HOM_HAZE => NULL(), &
                     NSV_LIMA_SPRO     => NULL(), &
-#ifdef MNH_FOREFIRE
                     NSV_FF    => NULL(), &
                     NSV_FFBEG => NULL(), &
                     NSV_FFEND => NULL(), &
-#endif
                     NSV_FIRE    => NULL(), &
                     NSV_FIREBEG => NULL(), &
                     NSV_FIREEND => NULL(), &
@@ -526,11 +518,9 @@ IF(.NOT. ASSOCIATED(NSV)) THEN
   NSV_LIMA_IMM_NUCL_A =>  TNSV%NSV_LIMA_IMM_NUCL_A 
   NSV_LIMA_HOM_HAZE_A =>  TNSV%NSV_LIMA_HOM_HAZE_A 
   NSV_LIMA_SPRO_A     =>  TNSV%NSV_LIMA_SPRO_A 
-#ifdef MNH_FOREFIRE
   NSV_FF_A            =>  TNSV%NSV_FF_A 
   NSV_FFBEG_A         =>  TNSV%NSV_FFBEG_A 
   NSV_FFEND_A         =>  TNSV%NSV_FFEND_A 
-#endif
   NSV_FIRE_A          =>  TNSV%NSV_FIRE_A 
   NSV_FIREBEG_A       =>  TNSV%NSV_FIREBEG_A 
   NSV_FIREEND_A       =>  TNSV%NSV_FIREEND_A 
@@ -610,11 +600,9 @@ IF(.NOT. ASSOCIATED(NSV)) THEN
   NSV_LIMA_IMM_NUCL   =>  TNSV%NSV_LIMA_IMM_NUCL 
   NSV_LIMA_HOM_HAZE   =>  TNSV%NSV_LIMA_HOM_HAZE 
   NSV_LIMA_SPRO       =>  TNSV%NSV_LIMA_SPRO     
-#ifdef MNH_FOREFIRE
   NSV_FF              =>  TNSV%NSV_FF    
   NSV_FFBEG           =>  TNSV%NSV_FFBEG 
   NSV_FFEND           =>  TNSV%NSV_FFEND 
-#endif
   NSV_FIRE            =>  TNSV%NSV_FIRE    
   NSV_FIREBEG         =>  TNSV%NSV_FIREBEG 
   NSV_FIREEND         =>  TNSV%NSV_FIREEND 
