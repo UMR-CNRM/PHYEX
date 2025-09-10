@@ -27,7 +27,7 @@ INTERFACE
                 BUCONF, TBUDGETS, KBUDGETS                            )
 !     #################################################################
 !!
-USE MODD_BUDGET,          ONLY: TBUDGETCONF_t, TBUDGETDATA
+USE MODD_BUDGET,          ONLY: TBUDGETCONF_t, TBUDGETDATA_PTR
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
 USE MODD_NEB_n,           ONLY: NEB_t
@@ -105,7 +105,7 @@ REAL,                          INTENT(IN)  :: PDX, PDY
 REAL, DIMENSION(D%NIJT,D%NKT,KSV),      INTENT(IN),    OPTIONAL :: PRSVS ! sources of sv (for Budgets with lagrangian tracer)
 REAL,DIMENSION(JPSVMAX),                INTENT(IN),    OPTIONAL :: PSVMIN       ! minimum value for SV variables (for Budgets)
 TYPE(TBUDGETCONF_t),                    INTENT(IN),    OPTIONAL :: BUCONF       ! budget structure
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT), OPTIONAL :: TBUDGETS
+TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT), OPTIONAL :: TBUDGETS
 INTEGER,                                INTENT(IN)              :: KBUDGETS     ! option. because not used in arpifs
 
 END SUBROUTINE SHALLOW_MF

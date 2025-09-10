@@ -313,9 +313,13 @@ ZK(:,:,:)         = PLM(:,:,:) * SQRT(PTKEM(:,:,:))
 
 CALL MZM_PHY(D, PRHODJ(:, :, :), ZMZM3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZMZM_PRHODJ(:, :, :) = ZMZM3D_WORK1(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZMZM_PRHODJ(JI, JJ, JK) = ZMZM3D_WORK1(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 !
@@ -402,16 +406,24 @@ IF (KSPLIT>1) THEN
 
     CALL MXM_PHY(D, PRHODJ(:, :, :), ZMXM3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZUM(:, :, :)=PUM(:, :, :)+(ZRUS(:, :, :)/KSPLIT-PRUS(:, :, :))/ZMXM3D_WORK1(:, :, :)*PTSTEP    
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZUM(JI, JJ, JK)=PUM(JI, JJ, JK)+(ZRUS(JI, JJ, JK)/KSPLIT-PRUS(JI, JJ, JK))/ZMXM3D_WORK1(JI, JJ, JK)*PTSTEP    
+    END DO
+  END DO
+END DO
 
 !
 CALL MYM_PHY(D, PRHODJ(:, :, :), ZMYM3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZVM(:, :, :)=PVM(:, :, :)+(ZRVS(:, :, :)/KSPLIT-PRVS(:, :, :))/ZMYM3D_WORK1(:, :, :)*PTSTEP
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZVM(JI, JJ, JK)=PVM(JI, JJ, JK)+(ZRVS(JI, JJ, JK)/KSPLIT-PRVS(JI, JJ, JK))/ZMYM3D_WORK1(JI, JJ, JK)*PTSTEP
+    END DO
+  END DO
+END DO
 
 !
 

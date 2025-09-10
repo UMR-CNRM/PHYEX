@@ -15,6 +15,8 @@ SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                      PEVAP3D,                                              &
                      PRAINFR, PSIGS,                                       &
                      PRVHENI, PLVFACT, PLSFACT,                            &
+                     PICLDFR, PZZZ, PCONC3D,                               &
+                     PSSIO, PSSIU, PIFR,                                   &
                      PWR,                                                  &
                      TBUDGETS, KBUDGETS,                                   &
                      PMICRO_TEND, PLATHAM_IAGGS, PRHS                      )
@@ -45,7 +47,7 @@ SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
-USE MODD_BUDGET,         ONLY: TBUDGETDATA, TBUDGETCONF_t
+USE MODD_BUDGET,         ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
@@ -133,7 +135,13 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRVHENI ! heterogeneous nuclea
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PLVFACT
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PLSFACT
 REAL, DIMENSION(D%NIJT,D%NKT,0:7), INTENT(INOUT) :: PWR
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PICLDFR
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PZZZ
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCONC3D
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the supersaturated fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the  subsaturated fraction 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part 
+TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(MERGE(D%NIJT,0,OSAVE_MICRO),MERGE(D%NKT,0,OSAVE_MICRO),MERGE(IBUNUM-IBUNUM_EXTRA,0,OSAVE_MICRO)), &
                                           INTENT(INOUT) :: PMICRO_TEND  ! Microphysical tendencies
@@ -161,6 +169,12 @@ INTEGER :: IMICRO ! Case r_x>0 locations
 INTEGER :: JL, JV
 REAL, DIMENSION(KPROMA) :: &
                         & ZCIT,     & ! Pristine ice conc. at t
+                        & ZICLDFR,  & ! Ice cloud fraction
+                        & ZZZZ,     & ! model level height
+                        & ZCONC3D,  & ! Cloud droplet number concentration at t
+                        & ZSSIO,    & ! Super-saturation with respect to ice in the supersaturated fraction
+                        & ZSSIU,    & ! Sub-saturation with respect to ice in the  subsaturated fraction
+                        & ZIFR,     & ! Ratio cloud ice moist part to dry part
                         & ZRHODREF, & ! RHO Dry REFerence
                         & ZPRES,    & ! Pressure
                         & ZEXN,     & ! EXNer Pressure
@@ -283,6 +297,12 @@ IF(PARAMI%LPACK_MICRO) THEN
               ZRHODREF   (IDX)=PRHODREF(JIJ, JK)
               ZPRES      (IDX)=PPABST  (JIJ, JK)
               ZEXN       (IDX)=PEXN    (JIJ, JK)
+              ZICLDFR    (IC)=PICLDFR (JIJ, JK)
+              ZZZZ       (IC)=PZZZ    (JIJ, JK)
+              ZCONC3D    (IC)=PCONC3D (JIJ, JK)
+              ZSSIO      (IC)=PSSIO   (JIJ, JK)
+              ZSSIU      (IC)=PSSIU   (JIJ, JK)
+              ZIFR       (IC)=PIFR    (JIJ, JK)
               IF(LLSIGMA_RC) THEN
                 ZSIGMA_RC(IDX)=PSIGS   (JIJ, JK)
               ENDIF
@@ -342,8 +362,9 @@ IF(PARAMI%LPACK_MICRO) THEN
                         &KPROMA, IMICRO, LLMICRO, PTSTEP, &
                         &KRR, OSAVE_MICRO, OELEC, &
                         &ZEXN, ZRHODREF, I1, I2, &
-                        &ZPRES, ZCF, ZSIGMA_RC, &
-                        &ZCIT, &
+                        &ZPRES, ZCF, ZICLDFR, ZZZZ, ZCONC3D, &
+                        &ZSSIO, ZSSIU, ZIFR, &
+                        &ZSIGMA_RC, ZCIT, &
                         &ZVART, &
                         &ZHLC_HCF, ZHLC_HRC, &
                         &ZHLI_HCF, ZHLI_HRI, ZRAINFR, &
@@ -459,8 +480,9 @@ ELSE ! PARAMI%LPACK_MICRO
                     &KSIZE, KSIZE, ODMICRO, PTSTEP, &
                     &KRR, OSAVE_MICRO, OELEC, &
                     &PEXN, PRHODREF, I1TOT, I2TOT, &
-                    &PPABST, PCLDFR, ZSIGMA_RC, &
-                    &PCIT, &
+                    &PPABST, PCLDFR, PICLDFR, PZZZ, PCONC3D, &
+                    &PSSIO, PSSIU, PIFR, &
+                    &ZSIGMA_RC, PCIT, &
                     &PWR, &
                     &PHLC_HCF, PHLC_HRC, &
                     &PHLI_HCF, PHLI_HRI, PRAINFR, &

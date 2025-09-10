@@ -11,6 +11,7 @@ SUBROUTINE ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, PARAMI, &
                                   &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
                                   &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, &
                                   &PRSS, PRST, PRGS, PRGT,&
+                                  &PCONC3D, &
                                   &PINPRC, PINPRR, PINPRI, PINPRS, PINPRG, &
                                   &PSEA, PTOWN, &
                                   &PINPRH, PRHT, PRHS, PFPR)
@@ -73,6 +74,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)           :: PRSS    ! Snow/aggrega
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRST    ! Snow/aggregate m.r. at t
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)           :: PRGS    ! Graupel m.r. source
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRGT    ! Graupel/hail m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PCONC3D ! cloud liquid drop number concentration /m3
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)             :: PINPRC  ! Cloud instant precip
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)             :: PINPRR  ! Rain instant precip
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)             :: PINPRI  ! Pristine ice instant precip
@@ -243,10 +245,6 @@ CONTAINS
     REAL :: ZQP
     REAL :: ZWSEDW1, ZWSEDW2
 
-    !!REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:CLOUD',0,ZHOOK_HANDLE)
-
     DO JIJ = IIJB, IIJE
       !estimation of q' taking into account incoming ZWSED from previous vertical level
       ZQP=ZSED(JIJ,IKPLUS,JRR)*ZTSORHODZ(JIJ)
@@ -255,14 +253,12 @@ CONTAINS
           ZRAY   = MAX(1.,0.5*((1.-PSEA(JIJ))*ZGAC/ZGC+PSEA(JIJ)*ZGAC2/ZGC2))
           ZLBC   = MAX(MIN(ICED%XLBC(1),ICED%XLBC(2)),(PSEA(JIJ)*ICED%XLBC(2)+(1.-PSEA(JIJ))*ICED%XLBC(1)) )
           ZFSEDC = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)), (PSEA(JIJ)*ICEP%XFSEDC(2)+(1.-PSEA(JIJ))*ICEP%XFSEDC(1)) )
-          ZCONC3D= (1.-PTOWN(JIJ))*(PSEA(JIJ)*ICED%XCONC_SEA+(1.-PSEA(JIJ))*ICED%XCONC_LAND) + &
-                    PTOWN(JIJ)  *ICED%XCONC_URBAN
         ELSE
           ZRAY   = ZRAYDEFO
           ZLBC   = ICED%XLBC(1)
           ZFSEDC = ICEP%XFSEDC(1)
-          ZCONC3D= ICED%XCONC_LAND
         ENDIF
+        ZCONC3D= PCONC3D(JIJ,JK)
         !calculation of w
         IF(PRXT(JIJ) > ICED%XRTMIN(JRR)) THEN
           ZZWLBDA=6.6E-8*(101325./PPABST(JIJ,JK))*(PTHT(JIJ,JK)/293.15)
@@ -294,8 +290,6 @@ CONTAINS
 !-------------------------------------------------------------------------------------------
     ENDDO
 
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:CLOUD',1,ZHOOK_HANDLE)
-
   END SUBROUTINE CLOUD
 
   SUBROUTINE PRISTINE_ICE(PRXT)
@@ -304,10 +298,6 @@ CONTAINS
     INTEGER :: JIJ
     REAL :: ZQP
     REAL :: ZWSEDW1, ZWSEDW2
-
-    !!REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:PRISTINE_ICE',0,ZHOOK_HANDLE)
 
     ! ******* for pristine ice
     DO JIJ = IIJB, IIJE
@@ -344,8 +334,6 @@ CONTAINS
 !-------------------------------------------------------------------------------------------
     ENDDO
 
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:PRISTINE_ICE',1,ZHOOK_HANDLE)
-
   END SUBROUTINE PRISTINE_ICE
 
   SUBROUTINE SNOW(PRXT)
@@ -354,10 +342,6 @@ CONTAINS
     INTEGER :: JIJ
     REAL :: ZQP, ZLBDAS
     REAL :: ZWSEDW1, ZWSEDW2
-
-    !!REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:SNOW',0,ZHOOK_HANDLE)
 
     ! ******* for snow
     DO JIJ = IIJB, IIJE
@@ -404,8 +388,6 @@ CONTAINS
 !-------------------------------------------------------------------------------------------
     ENDDO
 
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:SNOW',1,ZHOOK_HANDLE)
-
   END SUBROUTINE SNOW
 
   SUBROUTINE OTHER_SPECIES(PFSED,PEXSED,PRXT)
@@ -416,10 +398,6 @@ CONTAINS
     INTEGER :: JIJ
     REAL :: ZQP
     REAL :: ZWSEDW1, ZWSEDW2
-
-    !!REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:OTHER_SPECIES',0,ZHOOK_HANDLE)
 
     ! for all but cloud and pristine ice :
     DO JIJ = IIJB, IIJE
@@ -449,8 +427,6 @@ CONTAINS
       ENDIF
 !-------------------------------------------------------------------------------------------
     ENDDO
-
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:OTHER_SPECIES',1,ZHOOK_HANDLE)
 
   END SUBROUTINE OTHER_SPECIES
 

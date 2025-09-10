@@ -5,7 +5,7 @@
 MODULE MODE_ICE4_SLOW
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, LDSOFT, OELEC, LDCOMPUTE, PRHODREF, PT, &
+SUBROUTINE ICE4_SLOW(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, OELEC, LDCOMPUTE, PRHODREF, PT, &
                      &PSSI, PLVFACT, PLSFACT, &
                      &PRVT, PRCT, PRIT, PRST, PRGT, &
                      &PLBDAS, PLBDAG, &
@@ -26,6 +26,8 @@ SUBROUTINE ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, LDSOFT, OELEC, LDCOMPUTE, P
 !!
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
+!  K.I.Ivarsson,  02/2023: Introduce possibility to reduce graupel in non-convective conditions and
+!        high ice super saturation (set by namelist)
 !  C. Barthe      06/2023: Add retroaction of electric field on IAGGS
 !
 !
@@ -33,6 +35,7 @@ SUBROUTINE ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, LDSOFT, OELEC, LDCOMPUTE, P
 !          ------------
 !
 USE MODD_CST,            ONLY: CST_t
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
@@ -42,6 +45,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 TYPE(CST_t),                  INTENT(IN)    :: CST
+TYPE(PARAM_ICE_t),            INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),       INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),       INTENT(IN)    :: ICED
 INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
@@ -75,6 +79,7 @@ REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRVDEPG  ! Deposition on r_g
 !
 REAL, DIMENSION(KPROMA) :: ZCRIAUTI
 INTEGER                 :: JL
+REAL            :: ZREDGR,ZREDSN
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
@@ -82,6 +87,17 @@ IF (LHOOK) CALL DR_HOOK('ICE4_SLOW', 0, ZHOOK_HANDLE)
 !
 !-------------------------------------------------------------------------------
 !
+!*       3.1  Tuning possibilties (only for OCND2)
+
+ZREDGR  = 1.      ! Tuning of the deposition of graupel, 1. is ref. value 
+ZREDSN  = 1.      ! Tuning of the deposition of snow, 1. is ref. value
+
+IF(PARAMI%LOCND2) THEN
+  IF(.NOT. PARAMI%LMODICEDEP) THEN
+    ZREDGR  = ICEP%XFRMIN(39)  ! Tuning factor, may be /= 1. 
+    ZREDSN  = ICEP%XFRMIN(40)  ! Tuning factor, may be /= 1.
+  ENDIF
+ENDIF
 !
 !*       3.2     compute the homogeneous nucleation source: RCHONI
 !
@@ -123,6 +139,7 @@ DO JL=1, KSIZE
       IF(.NOT. ICEP%LNEWCOEFF) THEN
         PRVDEPS(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
                    ( ICEP%X0DEPS*PLBDAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS )
+        PRVDEPS(JL) = PRVDEPS(JL)*ZREDSN
       ELSE
         PRVDEPS(JL) = ( PRST(JL)*(PSSI(JL)/PAI(JL)) ) *                               &
                       ( ICEP%X0DEPS*PLBDAS(JL)**(ICED%XBS+ICEP%XEX0DEPS) + ICEP%X1DEPS*PCJ(JL) * &
@@ -192,6 +209,7 @@ DO JL=1, KSIZE
     IF(.NOT. LDSOFT) THEN
       PRVDEPG(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
                  ( ICEP%X0DEPG*PLBDAG(JL)**ICEP%XEX0DEPG + ICEP%X1DEPG*PCJ(JL)*PLBDAG(JL)**ICEP%XEX1DEPG )
+      PRVDEPG(JL) = PRVDEPG(JL)*ZREDGR
     ENDIF
   ELSE
     PRVDEPG(JL) = 0.

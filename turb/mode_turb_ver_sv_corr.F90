@@ -160,16 +160,20 @@ DO JSV=1,KSV
     ! approximation: diagnosed explicitely (without implicit term)
     CALL GZ_M_W_PHY(D, PSVM(:,:,JSV),PDZZ(:, :), ZGZ_M_W2D_WORK1)
 
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZFLXZ(:,:) =  PPSI_SV(:,:,JSV)*ZGZ_M_W2D_WORK1(:, :)**2    
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+DO JK=1, IKT
+  DO JIJ=IIJB, IIJE
+    ZFLXZ(JIJ, JK) =  PPSI_SV(JIJ, JK, JSV)*ZGZ_M_W2D_WORK1(JIJ, JK)**2    
+  END DO
+END DO
 
 !
 CALL MZF_PHY(D, ZFLXZ(:,:), ZMZF2D_WORK1)
 
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZFLXZ(:,:) = ZCSV / ZCSVD * PLM(:, :) * PLEPS(:, :) * ZMZF2D_WORK1(:, :)    
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+DO JK=1, IKT
+  DO JIJ=IIJB, IIJE
+    ZFLXZ(JIJ, JK) = ZCSV / ZCSVD * PLM(JIJ, JK) * PLEPS(JIJ, JK) * ZMZF2D_WORK1(JIJ, JK)    
+  END DO
+END DO
 
 !
 CALL LES_MEAN_SUBGRID_PHY(D,TLES, -2.*ZCSVD*SQRT(PTKEM)*ZFLXZ/PLEPS, TLES%X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV) )
@@ -210,18 +214,22 @@ END IF
       CALL GZ_M_W_PHY(D, PRM(:,:,1),PDZZ(:, :), ZGZ_M_W2D_WORK1)
 CALL GZ_M_W_PHY(D, PSVM(:,:,JSV),PDZZ(:, :), ZGZ_M_W2D_WORK2)
 
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZFLXZ(:,:)= ( ZCSV * PPSI3(:, :) + ZCSV * PPSI_SV(:,:,JSV) )             &
-                    *  ZGZ_M_W2D_WORK1(:, :)                 &
-                    *  ZGZ_M_W2D_WORK2(:, :)      
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+DO JK=1, IKT
+  DO JIJ=IIJB, IIJE
+    ZFLXZ(JIJ, JK)= ( ZCSV * PPSI3(JIJ, JK) + ZCSV * PPSI_SV(JIJ, JK, JSV) )             &
+                        *  ZGZ_M_W2D_WORK1(JIJ, JK)                 &
+                        *  ZGZ_M_W2D_WORK2(JIJ, JK)      
+  END DO
+END DO
 
 !
 CALL MZF_PHY(D, ZFLXZ(:, :), ZMZF2D_WORK1)
 
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZFLXZ(:,:)= PLM(:, :) * PLEPS(:, :) / (2.*ZCQSVD) * ZMZF2D_WORK1(:, :)      
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+DO JK=1, IKT
+  DO JIJ=IIJB, IIJE
+    ZFLXZ(JIJ, JK)= PLM(JIJ, JK) * PLEPS(JIJ, JK) / (2.*ZCQSVD) * ZMZF2D_WORK1(JIJ, JK)      
+  END DO
+END DO
 
 !
 CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZA*ZFLXZ, TLES%X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)

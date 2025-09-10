@@ -182,10 +182,10 @@ DO JK=1, IKT
   END DO
 END DO
 !
-ZA=0.
-ZB=0.
-ZC=0.
-ZY=0.
+ZA(:,:)=0.
+ZB(:,:)=0.
+ZC(:,:)=0.
+ZY(:,:)=0.
 !
 !
 !*      2.  COMPUTE THE RIGHT HAND SIDE

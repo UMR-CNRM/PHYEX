@@ -207,19 +207,27 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
     CALL GX_M_M_PHY(D, OFLAT,PTHLM(:, :, :),PDXX(:, :, :),PDZZ(:, :, :),PDZX(:, :, :), ZGX_M_M3D_WORK1)
 CALL GY_M_M_PHY(D, OFLAT,PTHLM(:, :, :),PDYY(:, :, :),PDZZ(:, :, :),PDZY(:, :, :), ZGY_M_M3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZFLX(:,:,:) = TURBN%XCTV * PLM(:,:,:) * PLEPS(:,:,:) *                           &
-       ( ZGX_M_M3D_WORK1(:, :, :)**2 + ZGY_M_M3D_WORK1(:, :, :)**2 )  
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZFLX(JI, JJ, JK) = TURBN%XCTV * PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *                           &
+             ( ZGX_M_M3D_WORK1(JI, JJ, JK)**2 + ZGY_M_M3D_WORK1(JI, JJ, JK)**2 )  
+    END DO
+  END DO
+END DO
 
 !
 ELSE
     CALL GX_M_M_PHY(D, OFLAT,PTHLM(:, :, :),PDXX(:, :, :),PDZZ(:, :, :),PDZX(:, :, :), ZGX_M_M3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZFLX(:,:,:) = TURBN%XCTV * PLM(:,:,:) * PLEPS(:,:,:) *                           &
-         ZGX_M_M3D_WORK1(:, :, :)**2  
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZFLX(JI, JJ, JK) = TURBN%XCTV * PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *                           &
+               ZGX_M_M3D_WORK1(JI, JJ, JK)**2  
+    END DO
+  END DO
+END DO
 
 !
 END IF
@@ -229,41 +237,47 @@ END IF
 !
   CALL DXM2D_PHY(D, PTHLM(:,:,IKB), ZDXM2D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZSHUGRADWK1_2D(:, :) = ZDXM2D_WORK1(:, :) * PINV_PDXX(:,:,IKB)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+DO JJ=1, IJT
+  DO JI=1, IIT
+    ZSHUGRADWK1_2D(JI, JJ) = ZDXM2D_WORK1(JI, JJ) * PINV_PDXX(JI, JJ, IKB)
+  END DO
+END DO
 
 !
 CALL MXF2D_PHY(D, ZSHUGRADWK1_2D, ZMXF2D_WORK1)
 CALL MXF2D_PHY(D, PDXX(:,:,IKB), ZMXF2D_WORK2)
 CALL DYM2D_PHY(D, PTHLM(:,:,IKB), ZDYM2D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZSHUGRADWK1_2D(:, :) = ZDYM2D_WORK1(:, :) * PINV_PDYY(:,:,IKB)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+DO JJ=1, IJT
+  DO JI=1, IIT
+    ZSHUGRADWK1_2D(JI, JJ) = ZDYM2D_WORK1(JI, JJ) * PINV_PDYY(JI, JJ, IKB)
+  END DO
+END DO
 
 !
 CALL MYF2D_PHY(D, ZSHUGRADWK1_2D, ZMYF2D_WORK1)
 CALL MYF2D_PHY(D, PDYY(:,:,IKB), ZMYF2D_WORK2)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZFLX(:,:,IKB) = TURBN%XCTV * PLM(:,:,IKB)                  &
-  * PLEPS(:,:,IKB) *  (                                    &
-  ( ZMXF2D_WORK1(:, :)      &
-   - ( ZCOEFF(:,:,IKB+2)*PTHLM(:,:,IKB+2)          &
-      +ZCOEFF(:,:,IKB+1)*PTHLM(:,:,IKB+1)          &
-      +ZCOEFF(:,:,IKB)*PTHLM(:,:,IKB)          &
-     ) * 0.5 * ( PDZX(:,:,IKB+1)+PDZX(:,:,IKB) )     &
-     / ZMXF2D_WORK2(:, :)                                  &
-  ) ** 2 +                                                     &
-  ( ZMYF2D_WORK1(:, :)      &
-   - ( ZCOEFF(:,:,IKB+2)*PTHLM(:,:,IKB+2)          &
-      +ZCOEFF(:,:,IKB+1)*PTHLM(:,:,IKB+1)          &
-      +ZCOEFF(:,:,IKB)*PTHLM(:,:,IKB)          &
-     ) * 0.5 * ( PDZY(:,:,IKB+1)+PDZY(:,:,IKB) )     &
-     / ZMYF2D_WORK2(:, :)                                  &
-  ) ** 2                                             )  
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+DO JJ=1, IJT
+  DO JI=1, IIT
+    ZFLX(JI, JJ, IKB) = TURBN%XCTV * PLM(JI, JJ, IKB)                  &
+      * PLEPS(JI, JJ, IKB) *  (                                    &
+      ( ZMXF2D_WORK1(JI, JJ)      &
+       - ( ZCOEFF(JI, JJ, IKB+2)*PTHLM(JI, JJ, IKB+2)          &
+          +ZCOEFF(JI, JJ, IKB+1)*PTHLM(JI, JJ, IKB+1)          &
+          +ZCOEFF(JI, JJ, IKB)*PTHLM(JI, JJ, IKB)          &
+         ) * 0.5 * ( PDZX(JI, JJ, IKB+1)+PDZX(JI, JJ, IKB) )     &
+         / ZMXF2D_WORK2(JI, JJ)                                  &
+      ) ** 2 +                                                     &
+      ( ZMYF2D_WORK1(JI, JJ)      &
+       - ( ZCOEFF(JI, JJ, IKB+2)*PTHLM(JI, JJ, IKB+2)          &
+          +ZCOEFF(JI, JJ, IKB+1)*PTHLM(JI, JJ, IKB+1)          &
+          +ZCOEFF(JI, JJ, IKB)*PTHLM(JI, JJ, IKB)          &
+         ) * 0.5 * ( PDZY(JI, JJ, IKB+1)+PDZY(JI, JJ, IKB) )     &
+         / ZMYF2D_WORK2(JI, JJ)                                  &
+      ) ** 2                                             )  
+  END DO
+END DO
 
 !
 !
@@ -308,8 +322,8 @@ DO JK=1, IKT
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID( ZFLX, TLES%X_LES_SUBGRID_Thl2, .TRUE. ) 
     CALL MZF_PHY(D, PWM(:, :, :), ZMZF3D_WORK1)
-CALL LES_MEAN_SUBGRID( ZMZF3D_WORK1(:, :, :)*ZFLX(:, :, :), TLES%X_LES_RES_W_SBG_Thl2, .TRUE. )    
-CALL LES_MEAN_SUBGRID( -2.*XCTD*SQRT(PTKEM)*ZFLX/PLEPS ,TLES%X_LES_SUBGRID_DISS_Thl2, .TRUE. )
+    CALL LES_MEAN_SUBGRID( ZMZF3D_WORK1(:, :, :)*ZFLX(:, :, :), TLES%X_LES_RES_W_SBG_Thl2, .TRUE. )    
+    CALL LES_MEAN_SUBGRID( -2.*XCTD*SQRT(PTKEM)*ZFLX/PLEPS ,TLES%X_LES_SUBGRID_DISS_Thl2, .TRUE. )
     CALL ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC,ZA)
     CALL LES_MEAN_SUBGRID( ZA*ZFLX, TLES%X_LES_SUBGRID_ThlThv, .TRUE. ) 
     CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLX, TLES%X_LES_SUBGRID_ThlPz, .TRUE. )
@@ -328,25 +342,33 @@ CALL GX_M_M_PHY(D, OFLAT,PRM(:,:,:,1),PDXX(:, :, :),PDZZ(:, :, :),PDZX(:, :, :),
 CALL GY_M_M_PHY(D, OFLAT,PTHLM(:, :, :),PDYY(:, :, :),PDZZ(:, :, :),PDZY(:, :, :), ZGY_M_M3D_WORK1)
 CALL GY_M_M_PHY(D, OFLAT,PRM(:,:,:,1),PDYY(:, :, :),PDZZ(:, :, :),PDZY(:, :, :), ZGY_M_M3D_WORK2)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZFLX(:,:,:)=                                                               &
-            PLM(:,:,:) * PLEPS(:,:,:) *                                          &
-            (ZGX_M_M3D_WORK1(:, :, :) * ZGX_M_M3D_WORK2(:, :, :)  &
-           + ZGY_M_M3D_WORK1(:, :, :) * ZGY_M_M3D_WORK2(:, :, :)  &
-            ) * (TURBN%XCHT1+TURBN%XCHT2)    
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZFLX(JI, JJ, JK)=                                                               &
+                  PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *                                          &
+                  (ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
+                 + ZGY_M_M3D_WORK1(JI, JJ, JK) * ZGY_M_M3D_WORK2(JI, JJ, JK)  &
+                  ) * (TURBN%XCHT1+TURBN%XCHT2)    
+    END DO
+  END DO
+END DO
 
 !
 ELSE
       CALL GX_M_M_PHY(D, OFLAT,PTHLM(:, :, :),PDXX(:, :, :),PDZZ(:, :, :),PDZX(:, :, :), ZGX_M_M3D_WORK1)
 CALL GX_M_M_PHY(D, OFLAT,PRM(:,:,:,1),PDXX(:, :, :),PDZZ(:, :, :),PDZX(:, :, :), ZGX_M_M3D_WORK2)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZFLX(:,:,:)=                                                               &
-            PLM(:,:,:) * PLEPS(:,:,:) *                                          &
-            (ZGX_M_M3D_WORK1(:, :, :) * ZGX_M_M3D_WORK2(:, :, :)  &
-            ) * (TURBN%XCHT1+TURBN%XCHT2)    
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZFLX(JI, JJ, JK)=                                                               &
+                  PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *                                          &
+                  (ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
+                  ) * (TURBN%XCHT1+TURBN%XCHT2)    
+    END DO
+  END DO
+END DO
 
 !
 END IF
@@ -355,73 +377,83 @@ END IF
 ! gradient
     CALL DXM2D_PHY(D, PTHLM(:,:,IKB), ZDXM2D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZSHUGRADWK1_2D(:, :) = ZDXM2D_WORK1(:, :) * PINV_PDXX(:,:,IKB)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+DO JJ=1, IJT
+  DO JI=1, IIT
+    ZSHUGRADWK1_2D(JI, JJ) = ZDXM2D_WORK1(JI, JJ) * PINV_PDXX(JI, JJ, IKB)
+  END DO
+END DO
 
 !
 CALL MXF2D_PHY(D, ZSHUGRADWK1_2D, ZMXF2D_WORK1)
 CALL MXF2D_PHY(D, PDXX(:,:,IKB), ZMXF2D_WORK2)
 CALL DXM2D_PHY(D, PRM(:,:,IKB,1), ZDXM2D_WORK2)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZSHUGRADWK1_2D(:, :) = ZDXM2D_WORK2(:, :) * PINV_PDXX(:,:,IKB)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+DO JJ=1, IJT
+  DO JI=1, IIT
+    ZSHUGRADWK1_2D(JI, JJ) = ZDXM2D_WORK2(JI, JJ) * PINV_PDXX(JI, JJ, IKB)
+  END DO
+END DO
 
 !
 CALL MXF2D_PHY(D, ZSHUGRADWK1_2D, ZMXF2D_WORK3)
 CALL MXF2D_PHY(D, PDXX(:,:,IKB), ZMXF2D_WORK4)
 CALL DYM2D_PHY(D, PTHLM(:,:,IKB), ZDYM2D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZSHUGRADWK1_2D(:, :) = ZDYM2D_WORK1(:, :) * PINV_PDYY(:,:,IKB)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+DO JJ=1, IJT
+  DO JI=1, IIT
+    ZSHUGRADWK1_2D(JI, JJ) = ZDYM2D_WORK1(JI, JJ) * PINV_PDYY(JI, JJ, IKB)
+  END DO
+END DO
 
 !
 CALL MYF2D_PHY(D, ZSHUGRADWK1_2D, ZMYF2D_WORK1)
 CALL MYF2D_PHY(D, PDYY(:,:,IKB), ZMYF2D_WORK2)
 CALL DYM2D_PHY(D, PRM(:,:,IKB,1), ZDYM2D_WORK2)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZSHUGRADWK1_2D(:, :) = ZDYM2D_WORK2(:, :) * PINV_PDYY(:,:,IKB)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+DO JJ=1, IJT
+  DO JI=1, IIT
+    ZSHUGRADWK1_2D(JI, JJ) = ZDYM2D_WORK2(JI, JJ) * PINV_PDYY(JI, JJ, IKB)
+  END DO
+END DO
 
 !
 CALL MYF2D_PHY(D, ZSHUGRADWK1_2D, ZMYF2D_WORK3)
 CALL MYF2D_PHY(D, PDYY(:,:,IKB), ZMYF2D_WORK4)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZFLX(:,:,IKB) = (TURBN%XCHT1+TURBN%XCHT2) * PLM(:,:,IKB)         &
-    * PLEPS(:,:,IKB)  *  (                                   &
-    ( ZMXF2D_WORK1(:, :)      &
-     - ( ZCOEFF(:,:,IKB+2)*PTHLM(:,:,IKB+2)          &
-        +ZCOEFF(:,:,IKB+1)*PTHLM(:,:,IKB+1)          &
-        +ZCOEFF(:,:,IKB)*PTHLM(:,:,IKB)          &
-       ) * 0.5 * ( PDZX(:,:,IKB+1)+PDZX(:,:,IKB) )     &
-       / ZMXF2D_WORK2(:, :)                                  &
-    ) *                                                          &
-    ( ZMXF2D_WORK3(:, :)      &
-     - ( ZCOEFF(:,:,IKB+2)*PRM(:,:,IKB+2,1)          &
-        +ZCOEFF(:,:,IKB+1)*PRM(:,:,IKB+1,1)          &
-        +ZCOEFF(:,:,IKB)*PRM(:,:,IKB,1)          &
-       ) * 0.5 * ( PDZX(:,:,IKB+1)+PDZX(:,:,IKB) )     &
-       / ZMXF2D_WORK4(:, :)                                  &
-    ) +                                                          &
-    ( ZMYF2D_WORK1(:, :)      &
-     - ( ZCOEFF(:,:,IKB+2)*PTHLM(:,:,IKB+2)          &
-        +ZCOEFF(:,:,IKB+1)*PTHLM(:,:,IKB+1)          &
-        +ZCOEFF(:,:,IKB)*PTHLM(:,:,IKB)          &
-       ) * 0.5 * ( PDZY(:,:,IKB+1)+PDZY(:,:,IKB) )     &
-       / ZMYF2D_WORK2(:, :)                                  &
-    ) *                                                          &
-    ( ZMYF2D_WORK3(:, :)           &
-     - ( ZCOEFF(:,:,IKB+2)*PRM(:,:,IKB+2,1)          &
-        +ZCOEFF(:,:,IKB+1)*PRM(:,:,IKB+1,1)          &
-        +ZCOEFF(:,:,IKB)*PRM(:,:,IKB,1)          &
-       ) * 0.5 * ( PDZY(:,:,IKB+1)+PDZY(:,:,IKB) )     &
-       / ZMYF2D_WORK4(:, :)                                  &
-    )                                                          )    
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+DO JJ=1, IJT
+  DO JI=1, IIT
+    ZFLX(JI, JJ, IKB) = (TURBN%XCHT1+TURBN%XCHT2) * PLM(JI, JJ, IKB)         &
+        * PLEPS(JI, JJ, IKB)  *  (                                   &
+        ( ZMXF2D_WORK1(JI, JJ)      &
+         - ( ZCOEFF(JI, JJ, IKB+2)*PTHLM(JI, JJ, IKB+2)          &
+            +ZCOEFF(JI, JJ, IKB+1)*PTHLM(JI, JJ, IKB+1)          &
+            +ZCOEFF(JI, JJ, IKB)*PTHLM(JI, JJ, IKB)          &
+           ) * 0.5 * ( PDZX(JI, JJ, IKB+1)+PDZX(JI, JJ, IKB) )     &
+           / ZMXF2D_WORK2(JI, JJ)                                  &
+        ) *                                                          &
+        ( ZMXF2D_WORK3(JI, JJ)      &
+         - ( ZCOEFF(JI, JJ, IKB+2)*PRM(JI, JJ, IKB+2, 1)          &
+            +ZCOEFF(JI, JJ, IKB+1)*PRM(JI, JJ, IKB+1, 1)          &
+            +ZCOEFF(JI, JJ, IKB)*PRM(JI, JJ, IKB, 1)          &
+           ) * 0.5 * ( PDZX(JI, JJ, IKB+1)+PDZX(JI, JJ, IKB) )     &
+           / ZMXF2D_WORK4(JI, JJ)                                  &
+        ) +                                                          &
+        ( ZMYF2D_WORK1(JI, JJ)      &
+         - ( ZCOEFF(JI, JJ, IKB+2)*PTHLM(JI, JJ, IKB+2)          &
+            +ZCOEFF(JI, JJ, IKB+1)*PTHLM(JI, JJ, IKB+1)          &
+            +ZCOEFF(JI, JJ, IKB)*PTHLM(JI, JJ, IKB)          &
+           ) * 0.5 * ( PDZY(JI, JJ, IKB+1)+PDZY(JI, JJ, IKB) )     &
+           / ZMYF2D_WORK2(JI, JJ)                                  &
+        ) *                                                          &
+        ( ZMYF2D_WORK3(JI, JJ)           &
+         - ( ZCOEFF(JI, JJ, IKB+2)*PRM(JI, JJ, IKB+2, 1)          &
+            +ZCOEFF(JI, JJ, IKB+1)*PRM(JI, JJ, IKB+1, 1)          &
+            +ZCOEFF(JI, JJ, IKB)*PRM(JI, JJ, IKB, 1)          &
+           ) * 0.5 * ( PDZY(JI, JJ, IKB+1)+PDZY(JI, JJ, IKB) )     &
+           / ZMYF2D_WORK4(JI, JJ)                                  &
+        )                                                          )    
+  END DO
+END DO
 
 !
 !
@@ -483,20 +515,28 @@ CALL LES_MEAN_SUBGRID( -XCTD*SQRT(PTKEM)*ZFLX/PLEPS ,TLES%X_LES_SUBGRID_DISS_Thl
       CALL GX_M_M_PHY(D, OFLAT,PRM(:,:,:,1),PDXX(:, :, :),PDZZ(:, :, :),PDZX(:, :, :), ZGX_M_M3D_WORK1)
 CALL GY_M_M_PHY(D, OFLAT,PRM(:,:,:,1),PDYY(:, :, :),PDZZ(:, :, :),PDZY(:, :, :), ZGY_M_M3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZFLX(:,:,:) = TURBN%XCHV * PLM(:,:,:) * PLEPS(:,:,:) *                      &
-           ( ZGX_M_M3D_WORK1(:, :, :)**2 +                       &
-             ZGY_M_M3D_WORK1(:, :, :)**2 )    
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZFLX(JI, JJ, JK) = TURBN%XCHV * PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *                      &
+                 ( ZGX_M_M3D_WORK1(JI, JJ, JK)**2 +                       &
+                   ZGY_M_M3D_WORK1(JI, JJ, JK)**2 )    
+    END DO
+  END DO
+END DO
 
 !
 ELSE
       CALL GX_M_M_PHY(D, OFLAT,PRM(:,:,:,1),PDXX(:, :, :),PDZZ(:, :, :),PDZX(:, :, :), ZGX_M_M3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZFLX(:,:,:) = TURBN%XCHV * PLM(:,:,:) * PLEPS(:,:,:) *                      &
-           ( ZGX_M_M3D_WORK1(:, :, :)**2  )    
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZFLX(JI, JJ, JK) = TURBN%XCHV * PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *                      &
+                 ( ZGX_M_M3D_WORK1(JI, JJ, JK)**2  )    
+    END DO
+  END DO
+END DO
 
 !
 END IF
@@ -505,41 +545,47 @@ END IF
 ! gradient
     CALL DXM2D_PHY(D, PRM(:,:,IKB,1), ZDXM2D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZSHUGRADWK1_2D(:, :) = ZDXM2D_WORK1(:, :) * PINV_PDXX(:,:,IKB)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+DO JJ=1, IJT
+  DO JI=1, IIT
+    ZSHUGRADWK1_2D(JI, JJ) = ZDXM2D_WORK1(JI, JJ) * PINV_PDXX(JI, JJ, IKB)
+  END DO
+END DO
 
 !
 CALL MXF2D_PHY(D, ZSHUGRADWK1_2D, ZMXF2D_WORK1)
 CALL MXF2D_PHY(D, PDXX(:,:,IKB:), ZMXF2D_WORK2)
 CALL DYM2D_PHY(D, PRM(:,:,IKB,1), ZDYM2D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZSHUGRADWK1_2D(:, :) = ZDYM2D_WORK1(:, :) * PINV_PDYY(:,:,IKB)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+DO JJ=1, IJT
+  DO JI=1, IIT
+    ZSHUGRADWK1_2D(JI, JJ) = ZDYM2D_WORK1(JI, JJ) * PINV_PDYY(JI, JJ, IKB)
+  END DO
+END DO
 
 !
 CALL MYF2D_PHY(D, ZSHUGRADWK1_2D, ZMYF2D_WORK1)
 CALL MYF2D_PHY(D, PDYY(:,:,IKB), ZMYF2D_WORK2)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZFLX(:,:,IKB) = TURBN%XCHV * PLM(:,:,IKB)                  &
-    * PLEPS(:,:,IKB) *  (                                    &
-    ( ZMXF2D_WORK1(:, :)      &
-     - ( ZCOEFF(:,:,IKB+2)*PRM(:,:,IKB+2,1)          &
-        +ZCOEFF(:,:,IKB+1)*PRM(:,:,IKB+1,1)          &
-        +ZCOEFF(:,:,IKB)*PRM(:,:,IKB,1)          &
-       ) * 0.5 * ( PDZX(:,:,IKB+1)+PDZX(:,:,IKB) )     &
-       / ZMXF2D_WORK2(:, :)                                  &
-    ) ** 2 +                                                     &
-    ( ZMYF2D_WORK1(:, :)           &
-     - ( ZCOEFF(:,:,IKB+2)*PRM(:,:,IKB+2,1)          &
-        +ZCOEFF(:,:,IKB+1)*PRM(:,:,IKB+1,1)          &
-        +ZCOEFF(:,:,IKB)*PRM(:,:,IKB,1)          &
-       ) * 0.5 * ( PDZY(:,:,IKB+1)+PDZY(:,:,IKB) )     &
-       / ZMYF2D_WORK2(:, :)                                  &
-    ) ** 2                                             )
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+DO JJ=1, IJT
+  DO JI=1, IIT
+    ZFLX(JI, JJ, IKB) = TURBN%XCHV * PLM(JI, JJ, IKB)                  &
+        * PLEPS(JI, JJ, IKB) *  (                                    &
+        ( ZMXF2D_WORK1(JI, JJ)      &
+         - ( ZCOEFF(JI, JJ, IKB+2)*PRM(JI, JJ, IKB+2, 1)          &
+            +ZCOEFF(JI, JJ, IKB+1)*PRM(JI, JJ, IKB+1, 1)          &
+            +ZCOEFF(JI, JJ, IKB)*PRM(JI, JJ, IKB, 1)          &
+           ) * 0.5 * ( PDZX(JI, JJ, IKB+1)+PDZX(JI, JJ, IKB) )     &
+           / ZMXF2D_WORK2(JI, JJ)                                  &
+        ) ** 2 +                                                     &
+        ( ZMYF2D_WORK1(JI, JJ)           &
+         - ( ZCOEFF(JI, JJ, IKB+2)*PRM(JI, JJ, IKB+2, 1)          &
+            +ZCOEFF(JI, JJ, IKB+1)*PRM(JI, JJ, IKB+1, 1)          &
+            +ZCOEFF(JI, JJ, IKB)*PRM(JI, JJ, IKB, 1)          &
+           ) * 0.5 * ( PDZY(JI, JJ, IKB+1)+PDZY(JI, JJ, IKB) )     &
+           / ZMYF2D_WORK2(JI, JJ)                                  &
+        ) ** 2                                             )
+  END DO
+END DO
 
 !
 !

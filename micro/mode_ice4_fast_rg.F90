@@ -31,6 +31,8 @@ SUBROUTINE ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUT
 !  P. Wautelet 29/05/2019: remove PACK/UNPACK intrinsics (to get more performance and better OpenACC support)
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
+!  K.I Ivarsson   02/2023: Some modifications that can be activated from namelist,
+!!                           e.g. for better forecasts of supercooled rain.
 !
 !
 !*      0. DECLARATIONS
@@ -180,6 +182,10 @@ ENDDO
 DO JL = 1, KSIZE
   IF (PRST(JL)>ICED%XRTMIN(5) .AND. PRGT(JL)>ICED%XRTMIN(6) .AND. LDCOMPUTE(JL)) THEN
     GDRY(JL) = .TRUE.
+    IF(PARAMI%LOCND2)THEN
+      PRG_TEND(JL, IRSDRYG)=0.
+      PRG_TEND(JL, IRSWETG)=0.
+    ENDIF
   ELSE
     GDRY(JL) = .FALSE.
     PRG_TEND(JL, IRSDRYG)=0.
@@ -198,7 +204,9 @@ IF(.NOT. LDSOFT) THEN
 
     DO JL=1, KSIZE
       IF(.NOT. ICEP%LNEWCOEFF) THEN
-        IF (GDRY(JL)) THEN
+        IF(GDRY(JL) .AND. .NOT. PARAMI%LOCND2)THEN
+          ! Here, OCND2 option is only used for disregarding collision snow-graupel
+          ! which according to Greg Thompson can be neglected. 
           PRG_TEND(JL, IRSWETG)=ICEP%XFSDRYG*ZZW(JL)                         & ! RSDRYG
                                       / ICEP%XCOLSG &
                       *(PLBDAS(JL)**(ICED%XCXS-ICED%XBS))*( PLBDAG(JL)**ICED%XCXG )    &

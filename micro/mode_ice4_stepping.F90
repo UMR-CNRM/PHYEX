@@ -11,8 +11,9 @@ SUBROUTINE ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, KMICRO, LDMICRO, PTSTEP, &
                         &KRR, OSAVE_MICRO, OELEC, &
                         &PEXN, PRHODREF, K1, K2, &
-                        &PPRES, PCF, PSIGMA_RC, &
-                        &PCIT, &
+                        &PPRES, PCF, PICLDFR, PZZZ, PCONC3D, &
+                        &PSSIO, PSSIU, PIFR, &
+                        &PSIGMA_RC, PCIT, &
                         &PVART, &
                         &PHLC_HCF, PHLC_HRC, &
                         &PHLI_HCF, PHLI_HRI, PRAINFR, &
@@ -92,6 +93,12 @@ REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PRHODREF! Refer
 INTEGER, DIMENSION(KPROMA),                     INTENT(IN)    :: K1,K2 ! Used to replace the COUNT and PACK intrinsics on variables
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PPRES
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PCF ! Cloud fraction
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PICLDFR ! Ice cloud fraction
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PZZZ    ! Model level height
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PCONC3D ! Cloud croplet number concentration
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the supersaturated fraction
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the  subsaturated fraction
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part
 REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PSIGMA_RC
 REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PCIT
 REAL,    DIMENSION(KPROMA,0:7),                 INTENT(INOUT) :: PVART !Packed variables
@@ -288,7 +295,8 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
                         &PEXN, PRHODREF, ZLVFACT, ZLSFACT, K1, K2, &
                         &PPRES, PCF, PSIGMA_RC, &
                         &PCIT, &
-                        &ZZT, PVART, &
+                        &ZZT, PICLDFR, PZZZ, PCONC3D, &
+                        &PSSIO, PSSIU, PIFR, PVART, &
                         &PLATHAM_IAGGS, &
                         &ZBU_INST, &
                         &ZRS_TEND, ZRG_TEND, ZRH_TEND, ZSSI, &

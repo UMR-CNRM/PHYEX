@@ -20,7 +20,7 @@ INTERFACE
                                PICENU, PKGN_ACON, PKGN_SBGR,                          &
                                PRHT, PRHS, PINPRH, PFPR)
 !
-USE MODD_BUDGET,         ONLY: TBUDGETDATA, TBUDGETCONF_t
+USE MODD_BUDGET,         ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
 USE MODD_CST, ONLY: CST_T
 USE MODD_PARAM_ICE_n,    ONLY: PARAM_ICE_t
@@ -83,7 +83,7 @@ REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PSSIO   ! Super-saturation with r
                                                  ! supersaturated fraction
 REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the
                                                  ! subsaturated fraction
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PIFR    ! Ratio cloud ice moist part to dry part
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part
 ! input from aro_adjust / condensation with OCND2 END.
 !
 REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PTHS    ! Theta source
@@ -107,7 +107,7 @@ LOGICAL,                          INTENT(IN)  :: OAEIFN   ! Switch to activate i
 REAL, DIMENSION(D%NIT,D%NKT),     INTENT(IN)  :: PCLDROP  ! Activated Condensation nuclei (CCN) 
 REAL, DIMENSION(D%NIT,D%NKT),     INTENT(IN)  :: PIFNNC   ! Ice freezing nuclei concentration
 !
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(D%NIT), INTENT(IN)            :: PICENU, PKGN_ACON, PKGN_SBGR
 REAL, DIMENSION(D%NIT,D%NKT),   OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t

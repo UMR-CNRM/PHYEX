@@ -157,9 +157,13 @@ END DO
 CALL MXM_PHY(D, PK(:, :, :), ZMXM3D_WORK1)
 CALL GX_M_U_PHY(D, OFLAT,PTKEM(:, :, :),PDXX(:, :, :),PDZZ(:, :, :),PDZX(:, :, :), ZGX_M_U3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZFLX(:, :, :) = -XCET * ZMXM3D_WORK1(:, :, :) * ZGX_M_U3D_WORK1(:, :, :) 
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZFLX(JI, JJ, JK) = -XCET * ZMXM3D_WORK1(JI, JJ, JK) * ZGX_M_U3D_WORK1(JI, JJ, JK) 
+    END DO
+  END DO
+END DO
 
 !
 ! < u'e >
@@ -180,13 +184,15 @@ CALL MXM2D_PHY(D, PK(:,:,IKB), ZMXM2D_WORK1)
 CALL DXM2D_PHY(D, PTKEM(:,:,IKB), ZDXM2D_WORK1)
 CALL MXM2D_PHY(D, ZFLX (:,:,IKB), ZMXM2D_WORK2)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZFLX(:,:,IKB) =                                                      &
-   - XCET * ZMXM2D_WORK1(:, :)                           *  (        &
-       ZDXM2D_WORK1(:, :) * PINV_PDXX(:,:,IKB)               &
-      -ZMXM2D_WORK2(:, :) * PINV_PDXX(:,:,IKB)               &
-       * 0.5 * ( PDZX(:,:,IKB+1) + PDZX(:,:,IKB) )     ) 
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+DO JJ=1, IJT
+  DO JI=1, IIT
+    ZFLX(JI, JJ, IKB) =                                                      &
+       - XCET * ZMXM2D_WORK1(JI, JJ)                           *  (        &
+           ZDXM2D_WORK1(JI, JJ) * PINV_PDXX(JI, JJ, IKB)               &
+          -ZMXM2D_WORK2(JI, JJ) * PINV_PDXX(JI, JJ, IKB)               &
+           * 0.5 * ( PDZX(JI, JJ, IKB+1) + PDZX(JI, JJ, IKB) )     ) 
+  END DO
+END DO
 
 !
 !
@@ -207,55 +213,83 @@ END DO
 IF (.NOT. OFLAT) THEN
   CALL MXM_PHY(D, PRHODJ(:, :, :), ZMXM3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZSHUGRADWK1_3D(:, :, :) = ZMXM3D_WORK1(:, :, :) * ZFLX(:, :, :)                             * PINV_PDXX(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZSHUGRADWK1_3D(JI, JJ, JK) = ZMXM3D_WORK1(JI, JJ, JK) * ZFLX(JI, JJ, JK)                             * PINV_PDXX(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 CALL DXF_PHY(D, ZSHUGRADWK1_3D, ZDXF3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZSHUGRADWK3_3D(:, :, :) = ZFLX(:, :, :)*PINV_PDXX(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZSHUGRADWK3_3D(JI, JJ, JK) = ZFLX(JI, JJ, JK)*PINV_PDXX(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 CALL MZM_PHY(D, ZSHUGRADWK3_3D, ZMZM3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZSHUGRADWK2_3D(:, :, :) = PDZX(:, :, :) * ZMZM3D_WORK1(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZSHUGRADWK2_3D(JI, JJ, JK) = PDZX(JI, JJ, JK) * ZMZM3D_WORK1(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 CALL MXF_PHY(D, ZSHUGRADWK2_3D, ZMXF3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZSHUGRADWK1_3D(:, :, :) = PMZM_PRHODJ(:, :, :) * ZMXF3D_WORK1(:, :, :) * PINV_PDZZ(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZSHUGRADWK1_3D(JI, JJ, JK) = PMZM_PRHODJ(JI, JJ, JK) * ZMXF3D_WORK1(JI, JJ, JK) * PINV_PDZZ(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 CALL DZF_PHY(D, ZSHUGRADWK1_3D, ZDZF3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-PTRH(:, :, :) =-(  ZDXF3D_WORK1(:, :, :)&
-          - ZDZF3D_WORK1(:, :, :)&
-         ) /PRHODJ(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      PTRH(JI, JJ, JK) =-(  ZDXF3D_WORK1(JI, JJ, JK)&
+                - ZDZF3D_WORK1(JI, JJ, JK)&
+               ) /PRHODJ(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 ELSE
   CALL MXM_PHY(D, PRHODJ(:, :, :), ZMXM3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZSHUGRADWK1_3D(:, :, :) = ZMXM3D_WORK1(:, :, :) * ZFLX(:, :, :)                             * PINV_PDXX(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZSHUGRADWK1_3D(JI, JJ, JK) = ZMXM3D_WORK1(JI, JJ, JK) * ZFLX(JI, JJ, JK)                             * PINV_PDXX(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 CALL DXF_PHY(D, ZSHUGRADWK1_3D, ZDXF3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-PTRH(:, :, :) =-(  ZDXF3D_WORK1(:, :, :)&
-         ) /PRHODJ(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      PTRH(JI, JJ, JK) =-(  ZDXF3D_WORK1(JI, JJ, JK)&
+               ) /PRHODJ(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 END IF
@@ -278,9 +312,13 @@ IF (.NOT. O2D) THEN
   CALL MYM_PHY(D, PK(:, :, :), ZMYM3D_WORK1)
 CALL GY_M_V_PHY(D, OFLAT,PTKEM(:, :, :),PDYY(:, :, :),PDZZ(:, :, :),PDZY(:, :, :), ZGY_M_V3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZFLX(:, :, :) =-XCET * ZMYM3D_WORK1(:, :, :) * ZGY_M_V3D_WORK1(:, :, :) 
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZFLX(JI, JJ, JK) =-XCET * ZMYM3D_WORK1(JI, JJ, JK) * ZGY_M_V3D_WORK1(JI, JJ, JK) 
+    END DO
+  END DO
+END DO
 
 !
 ! < v'e >
@@ -301,13 +339,15 @@ DO JJ=1, IJT
 CALL DYM2D_PHY(D, PTKEM(:,:,IKB), ZDYM2D_WORK1)
 CALL MYM2D_PHY(D, ZFLX (:,:,IKB), ZMYM2D_WORK2)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZFLX(:,:,IKB) =                                                      &
-     - XCET * ZMYM2D_WORK1(:, :)                        *  (           &
-       ZDYM2D_WORK1(:, :) * PINV_PDYY(:,:,IKB)                 &
-     - ZMYM2D_WORK2(:, :) * PINV_PDYY(:,:,IKB)                 &
-         * 0.5 * ( PDZY(:,:,IKB+1) + PDZY(:,:,IKB) )  )
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+DO JJ=1, IJT
+  DO JI=1, IIT
+    ZFLX(JI, JJ, IKB) =                                                      &
+         - XCET * ZMYM2D_WORK1(JI, JJ)                        *  (           &
+           ZDYM2D_WORK1(JI, JJ) * PINV_PDYY(JI, JJ, IKB)                 &
+         - ZMYM2D_WORK2(JI, JJ) * PINV_PDYY(JI, JJ, IKB)                 &
+             * 0.5 * ( PDZY(JI, JJ, IKB+1) + PDZY(JI, JJ, IKB) )  )
+  END DO
+END DO
 
 !
 !
@@ -330,55 +370,83 @@ DO JJ=1, IJT
   IF (.NOT. OFLAT) THEN
     CALL MYM_PHY(D, PRHODJ(:, :, :), ZMYM3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZSHUGRADWK1_3D(:, :, :) = ZMYM3D_WORK1(:, :, :) * ZFLX(:, :, :)                              * PINV_PDYY(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZSHUGRADWK1_3D(JI, JJ, JK) = ZMYM3D_WORK1(JI, JJ, JK) * ZFLX(JI, JJ, JK)                              * PINV_PDYY(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 CALL DYF_PHY(D, ZSHUGRADWK1_3D, ZDYF3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZSHUGRADWK3_3D(:, :, :) = ZFLX(:, :, :)*PINV_PDYY(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZSHUGRADWK3_3D(JI, JJ, JK) = ZFLX(JI, JJ, JK)*PINV_PDYY(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 CALL MZM_PHY(D, ZSHUGRADWK3_3D, ZMZM3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZSHUGRADWK2_3D(:, :, :) = PDZY(:, :, :) * ZMZM3D_WORK1(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZSHUGRADWK2_3D(JI, JJ, JK) = PDZY(JI, JJ, JK) * ZMZM3D_WORK1(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 CALL MYF_PHY(D, ZSHUGRADWK2_3D, ZMYF3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZSHUGRADWK1_3D(:, :, :) = PMZM_PRHODJ(:, :, :) * ZMYF3D_WORK1(:, :, :) * PINV_PDZZ(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZSHUGRADWK1_3D(JI, JJ, JK) = PMZM_PRHODJ(JI, JJ, JK) * ZMYF3D_WORK1(JI, JJ, JK) * PINV_PDZZ(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 CALL DZF_PHY(D, ZSHUGRADWK1_3D, ZDZF3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-PTRH(:, :, :) = PTRH(:, :, :) - (  ZDYF3D_WORK1(:, :, :)  &
-                   - ZDZF3D_WORK1(:, :, :)  &
-                  ) /PRHODJ(:, :, :)  
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      PTRH(JI, JJ, JK) = PTRH(JI, JJ, JK) - (  ZDYF3D_WORK1(JI, JJ, JK)  &
+                         - ZDZF3D_WORK1(JI, JJ, JK)  &
+                        ) /PRHODJ(JI, JJ, JK)  
+    END DO
+  END DO
+END DO
 
 !
 ELSE
     CALL MYM_PHY(D, PRHODJ(:, :, :), ZMYM3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZSHUGRADWK1_3D(:, :, :) = ZMYM3D_WORK1(:, :, :) * ZFLX(:, :, :)                              * PINV_PDYY(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZSHUGRADWK1_3D(JI, JJ, JK) = ZMYM3D_WORK1(JI, JJ, JK) * ZFLX(JI, JJ, JK)                              * PINV_PDYY(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 CALL DYF_PHY(D, ZSHUGRADWK1_3D, ZDYF3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-PTRH(:, :, :) = PTRH(:, :, :) - (  ZDYF3D_WORK1(:, :, :)  &
-                  ) /PRHODJ(:, :, :)  
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      PTRH(JI, JJ, JK) = PTRH(JI, JJ, JK) - (  ZDYF3D_WORK1(JI, JJ, JK)  &
+                        ) /PRHODJ(JI, JJ, JK)  
+    END DO
+  END DO
+END DO
 
 !
 END IF

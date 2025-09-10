@@ -309,10 +309,10 @@ IF (OENTR_DETR) THEN
   END DO
 
   !cloud/dry air mixture cloud content
-  ZRC_MIX = 0.
-  ZRI_MIX = 0.
+  ZRC_MIX(:,:) = 0.
+  ZRI_MIX(:,:) = 0.
 
-END IF
+ENDIF
 
 ! Initialisation of environment variables at t-dt
 ! variables at flux level
@@ -325,7 +325,7 @@ CALL MZM_MF(D, PTKEM(:,:), ZTKEM_F(:,:))
 DO JSV=1,KSV
   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
   CALL MZM_MF(D, PSVM(:,:,JSV), ZSVM_F(:,:,JSV))
-END DO
+ENDDO
 !                     
 !          Initialisation of updraft characteristics 
 DO JK=1, IKT
@@ -438,7 +438,7 @@ IF (OENTR_DETR) THEN
     END DO
   ELSE
     ZSHEAR = 0. !no shear in bl89 mixing length
-  END IF
+  ENDIF
   !
   CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ,ZTKEM_F(:,IKB),&
                       &ZG_O_THVREF(:,IKB),ZTHVM,IKB,GLMIX,.TRUE.,ZSHEAR,ZLUPSURF)
@@ -460,7 +460,7 @@ IF (OENTR_DETR) THEN
     END DO
   ELSE
     ZSURF(IIJB:IIJE)=1.
-  END IF
+  ENDIF
   DO JIJ=IIJB, IIJE
     IF (ZWTHVSURF(JIJ)>0.) THEN
       PEMF(JIJ, IKB) = PARAMMF%XCMF * ZSURF(JIJ) * ZRHO_F(JIJ, IKB) *  &
@@ -478,7 +478,7 @@ ELSE
   DO JIJ=IIJB, IIJE
     GTEST(JIJ)=PEMF(JIJ, IKB+IKL)>0.
   END DO
-END IF
+ENDIF
 
 !--------------------------------------------------------------------------
 
@@ -568,7 +568,7 @@ DO JK=IKB,IKE-IKL,IKL
     DO JIJ=IIJB, IIJE
       GTEST(JIJ) = (PEMF(JIJ, JK+IKL)>0.)
     END DO
-  END IF !OENTR_DETR
+  ENDIF !OENTR_DETR
   
   ! stop the updraft if MF becomes negative
   DO JIJ=IIJB, IIJE
@@ -999,8 +999,8 @@ DO JIJ=IIJB,IIJE
     ZDZ_STOP(JIJ) = (PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))*PPART_DRY(JIJ)
   ELSE
     PPART_DRY(JIJ)=0. ! value does not matter, here
-  END IF
-END DO
+  ENDIF
+ENDDO
 
 !               1.5 Gradient and flux values of thetav
 DO JIJ=IIJB, IIJE
@@ -1114,8 +1114,8 @@ DO JIJ=IIJB,IIJE
   ELSE
     !No cloudy part
     PBUO_INTEG_CLD(JIJ)=0.
-  END IF
-END DO
+  ENDIF
+ENDDO
 
 IF(PARAMMF%CKIC_COMPUTE=='KFB') THEN
   !               3.2.a Critical mixed fraction for KK+KKL flux level (ZKIC_F2) and
@@ -1261,21 +1261,6 @@ DO JIJ=IIJB,IIJE
     ZDELTA(JIJ) = (1.-ZKIC(JIJ))**2. !idem
   ENDIF
 ENDDO
-
-!Triangular PDF
-!Calculus must be verified before activating this part, but in this state,
-!results on ARM case are almost identical
-!For this PDF, eq. (5) is also delta Me=0.5*delta Mt
-!WHERE(OTEST(IIJB:IIJE))
-!  !Integration multiplied by 2
-!  WHERE(ZKIC<0.5)
-!    ZEPSI(IIJB:IIJE)=8.*ZKIC(IIJB:IIJE)**3/3.
-!    ZDELTA(IIJB:IIJE)=1.-4.*ZKIC(IIJB:IIJE)**2+8.*ZKIC(IIJB:IIJE)**3/3.
-!  ELSEWHERE
-!    ZEPSI(IIJB:IIJE)=5./3.-4*ZKIC(IIJB:IIJE)**2+8.*ZKIC(IIJB:IIJE)**3/3.
-!    ZDELTA(IIJB:IIJE)=8.*(1.-ZKIC(IIJB:IIJE))**3/3.
-!  ENDWHERE
-!ENDWHERE
 
 !               3.4 Computation of PENTR and PDETR
 IF (PARAMMF%CWET_MIXING == 'PKFB') THEN

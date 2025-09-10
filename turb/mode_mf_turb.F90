@@ -149,7 +149,7 @@ IIJB=D%NIJB
 IKT=D%NKT
 !
 PFLXZSVMF(:,:,:) = 0.
-PSVDT(:,:,:) = 0.
+PSVDT(:,:,:)     = 0.
 !
 IF(PARAMMF%LRELAX_ALPHA_MF) THEN
   DO JK=1, IKT

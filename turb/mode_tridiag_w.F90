@@ -192,9 +192,13 @@ IKE=SIZE(PVARM,3)-JPVEXT
 !
 CALL MZM_PHY(D, PRHODJ(:, :, :), ZMZM3D_WORK1)
 
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZMZM_RHODJ(:, :, :)  = ZMZM3D_WORK1(:, :, :)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+DO JK=1, JKU
+  DO JJ=1, JJU
+    DO JI=1, JIU
+      ZMZM_RHODJ(JI, JJ, JK)  = ZMZM3D_WORK1(JI, JJ, JK)
+    END DO
+  END DO
+END DO
 
 !
 

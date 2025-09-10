@@ -441,24 +441,30 @@ DO JSV=1,KSV
     ! Diagnostic of the cartesian vertical flux
     !
      
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZSHUGRADWK1_2D(:, :) = PLM(:, :)*SQRT(PTKEM(:, :))
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+DO JK=1, IKT
+  DO JIJ=IIJB, IIJE
+    ZSHUGRADWK1_2D(JIJ, JK) = PLM(JIJ, JK)*SQRT(PTKEM(JIJ, JK))
+  END DO
+END DO
 
 !
 CALL MZM_PHY(D, ZSHUGRADWK1_2D, ZMZM2D_WORK1)
 
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZSHUGRADWK1_2D(:, :) = TURBN%XIMPL*ZRES(:,:) + PEXPL*PSVM(:,:,JSV)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+DO JK=1, IKT
+  DO JIJ=IIJB, IIJE
+    ZSHUGRADWK1_2D(JIJ, JK) = TURBN%XIMPL*ZRES(JIJ, JK) + PEXPL*PSVM(JIJ, JK, JSV)
+  END DO
+END DO
 
 !
 CALL DZM_PHY(D, ZSHUGRADWK1_2D, ZDZM2D_WORK1)
 
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZFLXZ(:,:) = -ZCSV * PPSI_SV(:,:,JSV) * ZMZM2D_WORK1(:, :) / PDZZ(:, :) * &
-                  ZDZM2D_WORK1(:, :)    
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+DO JK=1, IKT
+  DO JIJ=IIJB, IIJE
+    ZFLXZ(JIJ, JK) = -ZCSV * PPSI_SV(JIJ, JK, JSV) * ZMZM2D_WORK1(JIJ, JK) / PDZZ(JIJ, JK) * &
+                      ZDZM2D_WORK1(JIJ, JK)    
+  END DO
+END DO
 
 !
 ! surface flux
@@ -535,9 +541,11 @@ CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZGZ_W_M2D_WORK1(:, :)*ZMZF2D_WORK1(:, :), &
                            TLES%X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) )    
 CALL GZ_M_W_PHY(D, PSVM(:,:,JSV),PDZZ(:, :), ZGZ_M_W2D_WORK1)
 
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZSHUGRADWK1_2D(:, :) = ZGZ_M_W2D_WORK1(:, :)*ZFLXZ(:, :)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+DO JK=1, IKT
+  DO JIJ=IIJB, IIJE
+    ZSHUGRADWK1_2D(JIJ, JK) = ZGZ_M_W2D_WORK1(JIJ, JK)*ZFLXZ(JIJ, JK)
+  END DO
+END DO
 
 !
 CALL MZF_PHY(D, ZSHUGRADWK1_2D, ZMZF2D_WORK1)
@@ -546,9 +554,11 @@ CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZMZF2D_WORK1(:, :), &
 CALL MZF_PHY(D, ZFLXZ(:, :), ZMZF2D_WORK1)
 CALL LES_MEAN_SUBGRID_PHY(D, TLES, -ZCSVP*SQRT(PTKEM(:, :))/PLM(:, :)*ZMZF2D_WORK1(:, :), TLES%X_LES_SUBGRID_SvPz(:,:,:,JSV) )    
 
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZSHUGRADWK1_2D(:, :) = PWM(:, :)*ZFLXZ(:, :)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+DO JK=1, IKT
+  DO JIJ=IIJB, IIJE
+    ZSHUGRADWK1_2D(JIJ, JK) = PWM(JIJ, JK)*ZFLXZ(JIJ, JK)
+  END DO
+END DO
 
 !
 CALL MZF_PHY(D, ZSHUGRADWK1_2D, ZMZF2D_WORK1)

@@ -142,7 +142,7 @@ IF (KRRL > 0)  THEN
                                & (PTHL_UP(JIJ, JK)-ZFLXZ(JIJ, JK)) * ZWK(JIJ, JK)
         END DO
       END DO
-    END IF
+    ENDIF
     !
     !   Avoid negative values
     DO JK=1, IKT
@@ -182,7 +182,7 @@ IF (KRRL > 0)  THEN
                                & (PRT_UP(JIJ, JK)-ZFLXZ2(JIJ, JK)) * ZWK2(JIJ, JK) 
         END DO
       END DO
-    END IF
+    ENDIF
     !
     !   Avoid negative values
     DO JK=1, IKT
@@ -229,7 +229,7 @@ IF (KRRL > 0)  THEN
     END DO
 ELSE
   PSIGMF(:,:) = 0.
-END IF
+ENDIF
 !
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_STAT',1,ZHOOK_HANDLE)
 !

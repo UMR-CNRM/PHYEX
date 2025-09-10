@@ -947,6 +947,8 @@ END SUBROUTINE MZF_PHY
 !
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY: JPHEXT
+USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
+
 !
 IMPLICIT NONE
 !
@@ -973,21 +975,7 @@ INTEGER :: JJ,IJU
 !*       1.    DEFINITION OF DXF
 !              ------------------
 !
-IIU = SIZE(PA,1)
-IJU = SIZE(PA,2)
-!
-
-
-  DO JJ=1,IJU
-    DO JI=1+1,IIU
-     PDXF(JI-1,JJ) = PA(JI,JJ) - PA(JI-1,JJ) 
-    END DO
-  END DO
-!
-
-  DO JJ=1,IJU
-    PDXF(IIU,JJ)    = PDXF(2*JPHEXT,JJ) 
-  ENDDO
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'DXF2D_PHY', 'AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE')
 
 !
 !-------------------------------------------------------------------------------

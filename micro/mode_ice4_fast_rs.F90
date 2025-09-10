@@ -8,7 +8,7 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, &
                        &PRHODREF, PLVFACT, PLSFACT, PPRES, &
-                       &PDV, PKA, PCJ, &
+                       &PDV, PKA, PCJ, PCOLF, &
                        &PLBDAR, PLBDAS, &
                        &PT,  PRVT, PRCT, PRRT, PRST, &
                        &PRIAGGS, &
@@ -32,6 +32,8 @@ SUBROUTINE ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUT
 !  P. Wautelet 29/05/2019: remove PACK/UNPACK intrinsics (to get more performance and better OpenACC support)
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
+!  K.I Ivarsson   02/2023: Possibility to use alternative collision factor
+!!                            and tunings for e.g. better forecasting supercooled rain
 !
 !
 !*      0. DECLARATIONS
@@ -61,6 +63,7 @@ REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PPRES    ! absolute pressure at t
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PDV      ! Diffusivity of water vapor in the air
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PKA      ! Thermal conductivity of the air
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
+REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCOLF    ! Collision factor cloud water - snow/graupel
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLBDAR   ! Slope parameter of the raindrop  distribution
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PT       ! Temperature
@@ -174,13 +177,13 @@ IF(.NOT. LDSOFT) THEN
     DO JL=1, KSIZE
       IF(.NOT. ICEP%LNEWCOEFF) THEN
         IF (GRIM(JL)) THEN
-          PRS_TEND(JL, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(JL) * PRCT(JL) & ! RCRIMSS
+          PRS_TEND(JL, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(JL) * PRCT(JL) * PCOLF(JL) & ! RCRIMSS
                                         * PLBDAS(JL)**ICEP%XEXCRIMSS &
                                           * PRHODREF(JL)**(-ICED%XCEXVT)
         END IF
       ELSE
         IF (GRIM(JL)) THEN
-          PRS_TEND(JL, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(JL) * PRCT(JL) & ! RCRIMSS
+          PRS_TEND(JL, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(JL) * PRCT(JL) * PCOLF(JL) & ! RCRIMSS
                                         * PRST(JL)*(1+(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS) &
                                             **(-ICED%XNUS+ICEP%XEXCRIMSS/ICED%XALPHAS) &
                                           * PRHODREF(JL)**(-ICED%XCEXVT+1.) &
@@ -197,13 +200,13 @@ IF(.NOT. LDSOFT) THEN
     DO JL=1, KSIZE
       IF(.NOT. ICEP%LNEWCOEFF) THEN
         IF (GRIM(JL)) THEN
-          PRS_TEND(JL, IRCRIMS)=ICEP%XCRIMSG * PRCT(JL)               & ! RCRIMS
+          PRS_TEND(JL, IRCRIMS)=ICEP%XCRIMSG * PRCT(JL) * PCOLF(JL)     & ! RCRIMS
                                      * PLBDAS(JL)**ICEP%XEXCRIMSG  &
                                        * PRHODREF(JL)**(-ICED%XCEXVT)
         END IF
       ELSE
         IF (GRIM(JL)) THEN
-          PRS_TEND(JL, IRCRIMS)=ICEP%XCRIMSG * PRCT(JL)               & ! RCRIMS
+          PRS_TEND(JL, IRCRIMS)=ICEP%XCRIMSG * PRCT(JL) * PCOLF(JL)              & ! RCRIMS
                                      * PRST(JL)*(1+(ICED%XFVELOS/PLBDAS(JL))**(ICED%XALPHAS)) &
                                          **(-ICED%XNUS+ICEP%XEXCRIMSG/ICED%XALPHAS) &
                                        * PRHODREF(JL)**(-ICED%XCEXVT+1.) &
@@ -321,6 +324,7 @@ IF(.NOT. LDSOFT) THEN
       ENDIF
       IF (GACC(JL)) THEN
         PRS_TEND(JL, IRRACCSS) =ZZW1(JL)*ZZW(JL)
+          IF (PARAMI%LOCND2) PRS_TEND(JL,IRRACCSS) = PRS_TEND(JL,IRRACCSS) * ICEP%XFRMIN(7)
       END IF
     END DO
 
@@ -340,20 +344,22 @@ IF(.NOT. LDSOFT) THEN
     DO JL=1, KSIZE
       IF(.NOT. ICEP%LNEWCOEFF) THEN
         IF (GACC(JL)) THEN
-          PRS_TEND(JL, IRSACCRG) = ICEP%XFSACCRG*ZZW3(JL)*                    & ! RSACCRG
+          IF (.NOT. PARAMI%LOCND2 .OR. PRST(JL)>ICEP%XFRMIN(1) ) THEN
+            PRS_TEND(JL, IRSACCRG) = ICEP%XFSACCRG*ZZW3(JL)*                    & ! RSACCRG
             ( PLBDAS(JL)**(ICED%XCXS-ICED%XBS) )*( PRHODREF(JL)**(-ICED%XCEXVT-1.) ) &
-             *( ICEP%XLBSACCR1/((PLBDAR(JL)**2)               ) +           &
-                ICEP%XLBSACCR2/( PLBDAR(JL)    * PLBDAS(JL)    ) +           &
-                ICEP%XLBSACCR3/(               (PLBDAS(JL)**2)) )/PLBDAR(JL)
-        END IF
-      ELSE
-        IF (GACC(JL)) THEN
-          PRS_TEND(JL, IRSACCRG) = ICEP%XFSACCRG*ZZW3(JL)*                    & ! RSACCRG
-            ( PRST(JL))*( PRHODREF(JL)**(-ICED%XCEXVT) ) &
-             *( ICEP%XLBSACCR1/((PLBDAR(JL)**2)               ) +           &
-                ICEP%XLBSACCR2/( PLBDAR(JL)    * PLBDAS(JL)    ) +           &
-                ICEP%XLBSACCR3/(               (PLBDAS(JL)**2)) )/PLBDAR(JL)
-        END IF
+            *( ICEP%XLBSACCR1/((PLBDAR(JL)**2)               ) +           &
+            ICEP%XLBSACCR2/( PLBDAR(JL)    * PLBDAS(JL)    ) +           &
+            ICEP%XLBSACCR3/(               (PLBDAS(JL)**2)) )/PLBDAR(JL)
+          ENDIF
+        ELSE
+          IF (GACC(JL)) THEN
+            PRS_TEND(JL, IRSACCRG) = ICEP%XFSACCRG*ZZW3(JL)*                    & ! RSACCRG
+              ( PRST(JL))*( PRHODREF(JL)**(-ICED%XCEXVT) ) &
+               *( ICEP%XLBSACCR1/((PLBDAR(JL)**2)               ) +           &
+                  ICEP%XLBSACCR2/( PLBDAR(JL)    * PLBDAS(JL)    ) +           &
+                  ICEP%XLBSACCR3/(               (PLBDAS(JL)**2)) )/PLBDAR(JL)
+          ENDIF
+        ENDIF
       ENDIF
     END DO
 

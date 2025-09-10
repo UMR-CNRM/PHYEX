@@ -124,18 +124,18 @@ DO JRR = 2,1+KRRL  ! loop on the liquid components
    DO JK=IKTB, IKTE
      DO JIJ=IIJB, IIJE
        ZCP(JIJ, JK)  = ZCP(JIJ, JK) + CST%XCL * PR(JIJ, JK, JRR)
-     END DO
-   END DO
-END DO
+     ENDDO
+   ENDDO
+ENDDO
 
 DO JRR = 2+KRRL,1+KRRL+KRRI ! loop on the solid components
   DO JK=IKTB, IKTE
     DO JIJ=IIJB, IIJE
       ZCP(JIJ, JK)  = ZCP(JIJ, JK)  + CST%XCI * PR(JIJ, JK, JRR)
-    END DO
-  END DO
+    ENDDO
+  ENDDO
 
-END DO
+ENDDO
 
 !*      Temperature
 !
