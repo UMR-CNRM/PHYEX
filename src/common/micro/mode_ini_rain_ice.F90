@@ -188,6 +188,7 @@ IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
 !
 !
 !
+!
 !*       0.     FUNCTION STATEMENTS
 !               -------------------
 !
@@ -341,7 +342,7 @@ XCXS = 1.0
 IF(LUPDATE_SNOW)THEN
   XCCS = XFRMIN(16)
   XCXS = XFRMIN(17)
-END IF
+ENDIF
 !
 XF0S = 0.86
 XF1S = 0.28

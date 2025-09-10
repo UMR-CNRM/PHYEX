@@ -303,7 +303,7 @@ USE MODD_BLOWSNOW
 USE MODD_BLOWSNOW_n
 use modd_budget,          only: cbutype, lbu_ru, lbu_rv, lbu_rw, lbudget_u, lbudget_v, lbudget_w, lbudget_sv, lbu_enable, &
                                 NBUDGET_U, NBUDGET_V, NBUDGET_W, NBUDGET_SV1, nbumod, nbutime,                            &
-                                tbudgets, tbuconf, tburhodj,                                                                       &
+                                tbudgets, tbudgets_ptr, tbuconf, tburhodj,                                                                       &
                                 xtime_bu, xtime_bu_process
 USE MODD_CH_AERO_n,      ONLY: XSOLORG, XMI
 USE MODD_CH_MNHC_n,      ONLY: LUSECHEM,LCH_CONV_LINOX,LUSECHAQ,LUSECHIC, &
@@ -2164,7 +2164,7 @@ IF (CCLOUD /= 'NONE') THEN
 !
     IF (LSCAV .AND. (CCLOUD == 'LIMA')) THEN
        CALL FILL_DIMPHYEX( YLDIMPHYEX, SIZE(XTHT,1), SIZE(XTHT,2), SIZE(XTHT,3) )
-       CALL LIMA_PRECIP_SCAVENGING( TNSV, YLDIMPHYEX,CST,TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
+       CALL LIMA_PRECIP_SCAVENGING( TNSV, YLDIMPHYEX,CST,TBUCONF,TBUDGETS_PTR,SIZE(TBUDGETS_PTR), &
                                     CCLOUD, CCONF, ILUOUT, KTCOUNT,XTSTEP,XRT(:,:,:,3),    &
                                     XRHODREF, XRHODJ, XZZ, XPABST, XTHT,            &
                                     XSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),          &

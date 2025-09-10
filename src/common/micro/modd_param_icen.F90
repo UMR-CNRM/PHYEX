@@ -51,7 +51,7 @@ LOGICAL :: LDEPOSC     !< TRUE to enable cloud droplet deposition
 REAL    :: XVDEPOSC    !< Droplet deposition velocity
 !
 CHARACTER(LEN=4) :: CPRISTINE_ICE !< Pristine ice type PLAT, COLU or BURO
-CHARACTER(LEN=4) :: CSEDIM        !< Sedimentation calculation mode      
+CHARACTER(LEN=4) :: CSEDIM        !< Sedimentation calculation mode
 !
 LOGICAL :: LRED       !< To use modified ICE3/ICE4 to reduce time step dependency
 LOGICAL :: LFEEDBACKT !< When .TRUE. feed back on temperature is taken into account
@@ -99,6 +99,10 @@ REAL :: XRDEPSRED_NAM   !< Tuning factor of sublimation of snow
 REAL :: XRDEPGRED_NAM   !< Tuning factor of sublimation of graupel
 !
 LOGICAL :: LOCND2       !< Logical switch to separate liquid and ice
+LOGICAL :: LKOGAN       !< Use Kogan autocoversion of liquid
+LOGICAL :: LMODICEDEP   !< Logical switch for alternative dep/evap of ice
+LOGICAL :: LEXCLDROP    !< Logical switch for use of external Cloud droplet (as from NRT aerosols) in microphysics
+
 REAL, DIMENSION(40) :: XFRMIN_NAM
 !
 END TYPE PARAM_ICE_t
@@ -125,7 +129,10 @@ LOGICAL, POINTER :: LWARM => NULL(), &
                     LPACK_INTERP => NULL(), &
                     LPACK_MICRO => NULL(), &
                     LCRIAUTI => NULL(), &
-                    LOCND2 => NULL()
+                    LOCND2 => NULL(), &
+                    LKOGAN => NULL(), &
+                    LMODICEDEP => NULL(), &
+                    LEXCLDROP => NULL()
 
 REAL, POINTER :: XVDEPOSC => NULL(), &
                  XFRACM90 => NULL(), &
@@ -164,7 +171,8 @@ NAMELIST/NAM_PARAM_ICEn/LWARM,LSEDIC,LCONVHG,CPRISTINE_ICE,CSEDIM,LDEPOSC,XVDEPO
                        CSUBG_RR_EVAP, CSUBG_PR_PDF, CSUBG_AUCV_RC, CSUBG_AUCV_RI, &
                        LCRIAUTI, XCRIAUTI_NAM, XT0CRIAUTI_NAM, XBCRIAUTI_NAM, &
                        XACRIAUTI_NAM, XCRIAUTC_NAM, XRDEPSRED_NAM, XRDEPGRED_NAM, &
-                       LOCND2, XFRMIN_NAM, CSUBG_MF_PDF
+                       LOCND2, LKOGAN, LMODICEDEP, LEXCLDROP, &
+                       XFRMIN_NAM, CSUBG_MF_PDF
 !
 !-------------------------------------------------------------------------------
 !
@@ -200,6 +208,9 @@ IF(.NOT. ASSOCIATED(PARAM_ICEN, PARAM_ICE_MODEL(KTO))) THEN
   LPACK_MICRO => PARAM_ICEN%LPACK_MICRO
   LCRIAUTI => PARAM_ICEN%LCRIAUTI
   LOCND2 => PARAM_ICEN%LOCND2
+  LKOGAN => PARAM_ICEN%LKOGAN
+  LMODICEDEP => PARAM_ICEN%LMODICEDEP
+  LEXCLDROP => PARAM_ICEN%LEXCLDROP
   !
   XVDEPOSC => PARAM_ICEN%XVDEPOSC
   XFRACM90 => PARAM_ICEN%XFRACM90
@@ -301,7 +312,7 @@ IF(PRESENT(KPRINT      )) IPRINT      =KPRINT
 IF(LLDEFAULTVAL) THEN
   !NOTES ON GENERAL DEFAULTS AND MODEL-SPECIFIC DEFAULTS :
   !- General default values *MUST* remain unchanged.
-  !- To change the default value for a given application,                                                 
+  !- To change the default value for a given application,
   !  an "IF(HPROGRAM=='...')" condition must be used.
 
   LWARM=.TRUE.
@@ -348,23 +359,40 @@ IF(LLDEFAULTVAL) THEN
   XRDEPSRED_NAM=1.
   XRDEPGRED_NAM=1.
   LOCND2=.FALSE.
+  LKOGAN=.FALSE.
+  LMODICEDEP=.FALSE.
+  LEXCLDROP=.FALSE.  ! Only can be TRUE if external Cloud droplets are used.
   ! Tuning and modication of graupeln etc:
-  XFRMIN_NAM(1:6)=0.
-  XFRMIN_NAM(7:9)=1.
-  XFRMIN_NAM(10) =10.
-  XFRMIN_NAM(11) =1.
-  XFRMIN_NAM(12) =0.
-  XFRMIN_NAM(13) =1.0E-15
-  XFRMIN_NAM(14) =120.
-  XFRMIN_NAM(15) =1.0E-4
-  XFRMIN_NAM(16:20)=0.
-  XFRMIN_NAM(21:22)=1.
-  XFRMIN_NAM(23)=0.5
-  XFRMIN_NAM(24)=1.5
-  XFRMIN_NAM(25)=30.
-  XFRMIN_NAM(26:38)=0.
-  XFRMIN_NAM(39)=0.25
-  XFRMIN_NAM(40)=0.15
+  XFRMIN_NAM(1:4)=0.        ! Different thresholds for snow, ice, graupel and graupel again, respectively, leading to conversion of super-cooled rain into graupel
+  XFRMIN_NAM(5)=0.          ! Higher value means less graupel and more snow (Experimental)
+  XFRMIN_NAM(6)=0.          ! Higher value means more graupel and less snow (Experimental)
+  XFRMIN_NAM(7)=1.          ! Tuning factor for the collisions between rain and snow. Higher values give less super-cooled rain and more snow. Zero means that those collisions are disregarded (probably OK)
+  XFRMIN_NAM(8)=1.          ! > 1. Increase melt of graupel, < 1 decrease it (Experimental)
+  XFRMIN_NAM(9)=1.          ! > 1 means increase IN-concentration and <1 decrease
+  XFRMIN_NAM(10)=10.        ! >10 means faster Kogan autoconversion <10 slower, only active for LKOGAN=T.
+  XFRMIN_NAM(11)=1.         ! Setting e.g. 0.01 means that subgrid-scale fraction of cloud water is used. Minimum cloud fraction=0.01, only active for LKOGAN=T.
+  XFRMIN_NAM(12)=0.         ! Threshold supersaturation with respect to ice in the supersaturated part of the grid-box for treatment in the microphysics computation, only used with OCND2
+  XFRMIN_NAM(13)=1.0E-15    ! Threshold mixing ratio for different non-vapor water species treated in the microphysics computation, only used with OCND2
+  XFRMIN_NAM(14)=120.       ! Time scale for conversion of large ice crystals to snow, only used with LMODICEDEP (Experimental)
+  XFRMIN_NAM(15)=1.0E-4     ! Ice crystal diameter(m) for conversion from cloud ice to snow. Larger values lead to more ice and less snow
+  XFRMIN_NAM(16)=0.         ! "C" parameter for size distribution of snow. (constant for number concentration, N=C lamda^x) Only active if non-zero (Experimental)
+  XFRMIN_NAM(17)=0.         ! "x" parameter for size distribution of snow. (slope for number concentration, N=C lamda^x) Only active if XFRMIN(16) is non-zero (Experimental)
+  XFRMIN_NAM(18)=0.         ! With XFRMIN(18)=1, snow and graupel melt are based on wet bulb temperature, instead of temperature and leads to slower melting (Experimental)
+  XFRMIN_NAM(19)=0.         ! Threshold cloud thickness for StCu/Cu transition [m] Only active for EDMF scheme and if non-zero, but very small effect
+  XFRMIN_NAM(20)=0.         ! Threshold cloud thickness used in shallow/deep decision [m]. Only active for EDMF scheme and if non-zero, higher value gives more shallow convection and less deep model resolved convection
+  XFRMIN_NAM(21)=1.         ! Tuning factor for ice clouds, such as cirrus. A larger value means a larger effect of the presence of solid water and thus more ice clouds
+  XFRMIN_NAM(22)=1.         ! Tuning parameter for CDNC at lowest model level. Lower value give lower CDNC. XFRMIN(22)=0.5 means CDNC= old CDNC x 0.5
+  XFRMIN_NAM(23)=0.5        ! The lower limit for reduction of VSIGQSAT, only active with LHGT_QS
+  XFRMIN_NAM(24)=1.5        ! The upper limit for increase of VSIGQSAT, only active with LHGT_QS
+  XFRMIN_NAM(25)=30.        ! The level thickness for which VSIGQSAT is unchanged with LHGT_QS, only active with LHGT_QS
+  XFRMIN_NAM(26)=0.         ! If > 0.01, it replaces default CDNC everywhere. So XFRMIN(26)=50E6 (Beware of that it is in m-3!) gives CDNC = 50 cm-3 at reference level (1000 hPa) and XFRMIN(26) x pressure/ ref-pressure elsewhere.
+  XFRMIN_NAM(27)=0.         ! Minimum temperature (K) used for Meyers ice number concentration. Larger values give less ice for temperatures below XFRMIN(27) (Experimental)
+  XFRMIN_NAM(28)=0.         ! Currently not used
+  XFRMIN_NAM(29)=0.         ! If >0. and XFRMIN(22)>0 it gives the upper limit in metres for which the reduction of CDNC has an effect. A linear decrease from the lowest level to XFRMIN(29) meters is assumed
+  XFRMIN_NAM(30)=1.         ! If not unity, CDNC is reduced/increased over sea with a factor XFRMIN(30) for the lowest model level and linearly reaching "no change" at XFRMIN(29) m height. If XFRMIN(29) is unset, XFRMIN(30) only affects the lowest model level
+  XFRMIN_NAM(31:38)=0.      ! Currently not used
+  XFRMIN_NAM(39)=0.25       ! Speed factor for deposition/evaporation rate of graupel. Larger values give faster deposition/evaporation, only used when OCND2=T and LMODICEDEP=F
+  XFRMIN_NAM(40)=0.15       ! Speed factor for deposition/evaporation rate of snow. Larger values give faster deposition/evaporation, only used when OCND2=T and LMODICEDEP=F
 
   IF(HPROGRAM=='AROME') THEN
     LCONVHG=.TRUE.

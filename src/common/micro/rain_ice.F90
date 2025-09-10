@@ -8,6 +8,7 @@
                             OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
                             PTSTEP, KRR, PEXN,                                    &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
+                            PICLDFR, PSSIO, PSSIU, PIFR,                 &
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
                             PTHT, PRVT, PRCT, PRRT, PRIT, PRST,                   &
                             PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,       &
@@ -17,7 +18,7 @@
                             PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,           &
                             PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &                            
                             PEFIELDW, PLATHAM_IAGGS,                              &
-                            PSEA, PTOWN,                                          &
+                            PSEA, PTOWN, PCONC3D,                                 &
                             PRHT, PRHS, PINPRH, PFPR, PQHT, PQHS                  )
 !     #############################################################################
 !
@@ -160,7 +161,7 @@
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_BUDGET,         ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, &
+USE MODD_BUDGET,         ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, &
                                NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
@@ -170,7 +171,6 @@ USE MODD_ELEC_PARAM,     ONLY: ELEC_PARAM_t
 USE MODD_ELEC_DESCR,     ONLY: ELEC_DESCR_t
 USE MODD_FIELDS_ADDRESS
 
-USE MODE_BUDGET_PHY,         ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 USE MODE_MSG,                ONLY: PRINT_MSG, NVERB_FATAL
 
 USE MODE_ICE4_RAINFR_VERT,   ONLY: ICE4_RAINFR_VERT
@@ -209,6 +209,12 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST  ! absolute pressure at
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCLDFR  ! Cloud fraction
+! OCND2
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PICLDFR ! Ice cloud fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the supersaturated fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the  subsaturated fraction 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part 
+
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLC_HRC
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLC_HCF
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLI_HRI
@@ -240,7 +246,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) :: PRAINFR !Precipitation fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
 REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity
 !
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
 ! scalar variables for cloud electricity
@@ -267,6 +273,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(IN
 ! optional variables
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(IN)    :: PSEA    ! Sea Mask
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(IN)    :: PTOWN   ! Fraction that is town
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,  INTENT(IN)    :: PCONC3D    ! Cloud droplet number concentration
 REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
 REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
@@ -279,6 +286,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(IN
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
+LOGICAL :: LLSEA_AND_TOWN, LLCONC
 INTEGER :: JIJ, JK, JRR
 INTEGER :: IKTB, IKTE, IKB, IIJB, IIJE, IIJT
 !
@@ -298,9 +306,12 @@ REAL :: ZINV_TSTEP ! Inverse ov PTSTEP
 REAL, DIMENSION(D%NIJT,D%NKT,0:7) :: ZWR
 REAL, DIMENSION(KRR) :: ZICEDRTMIN
 !
-REAL :: ZDEVIDE, ZRICE
+REAL :: ZDEVIDE, ZRICE, ZZSUM
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZW3D
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZZZZ, ZCONC3D
+REAL, DIMENSION(D%NIJT) :: ZCONC_TMP
+
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLW3D
 REAL, DIMENSION(KRR) :: ZRSMIN
 INTEGER :: ISIZE, IPROMA, IGPBLKS, ISIZE2
@@ -327,11 +338,11 @@ IIJT=D%NIJT
 ZICEDRTMIN(1:KRR)=ICED%XRTMIN(1:KRR)
 !-------------------------------------------------------------------------------
 !
-IF(PARAMI%LOCND2) THEN
-  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'LOCND2 OPTION NOT CODED IN THIS RAIN_ICE VERSION')
-END IF
 !$acc kernels
 ZINV_TSTEP=1./PTSTEP
+!
+LLSEA_AND_TOWN=PRESENT(PSEA).AND.PRESENT(PTOWN)
+LLCONC=PRESENT(PCONC3D)
 !
 ! LSFACT and LVFACT without exner, and LLMICRO
 ! LLMICRO is a mask with a True value on points where microphysics is active
@@ -356,23 +367,86 @@ DO JK = IKTB,IKTE
     ZZ_LVFACT(JIJ,JK)=(CST%XLVTT+(CST%XCPV-CST%XCL)*(ZT(JIJ,JK)-CST%XTT)) / ZDEVIDE
 
     !LLMICRO
-    IF (KRR==7) THEN
-      LLMICRO(JIJ,JK)=PRCT(JIJ,JK)>ICED%XRTMIN(2) .OR. &
-                      PRRT(JIJ,JK)>ICED%XRTMIN(3) .OR. &
-                      PRIT(JIJ,JK)>ICED%XRTMIN(4) .OR. &
-                      PRST(JIJ,JK)>ICED%XRTMIN(5) .OR. &
-                      PRGT(JIJ,JK)>ICED%XRTMIN(6) .OR. &
-                      PRHT(JIJ,JK)>ICED%XRTMIN(7)
+    IF ( PARAMI%LOCND2 ) THEN
+      IF (KRR==7) THEN
+        LLMICRO(JIJ,JK)=PSSIO(JIJ,JK)>ICEP%XFRMIN(12) .OR. &
+                        PRCT(JIJ,JK)>ICEP%XFRMIN(13) .OR. &
+                        PRRT(JIJ,JK)>ICEP%XFRMIN(13) .OR. &
+                        PRIT(JIJ,JK)>ICEP%XFRMIN(13) .OR. &
+                        PRST(JIJ,JK)>ICEP%XFRMIN(13) .OR. &
+                        PRGT(JIJ,JK)>ICEP%XFRMIN(13) .OR. &
+                        PRHT(JIJ,JK)>ICEP%XFRMIN(13)
+      ELSE
+        LLMICRO(JIJ,JK)=PSSIO(JIJ,JK)>ICEP%XFRMIN(12) .OR. &
+                        PRCT(JIJ,JK)>ICEP%XFRMIN(13) .OR. &
+                        PRRT(JIJ,JK)>ICEP%XFRMIN(13) .OR. &
+                        PRIT(JIJ,JK)>ICEP%XFRMIN(13) .OR. &
+                        PRST(JIJ,JK)>ICEP%XFRMIN(13) .OR. &
+                        PRGT(JIJ,JK)>ICEP%XFRMIN(13)
+      ENDIF
     ELSE
-      LLMICRO(JIJ,JK)=PRCT(JIJ,JK)>ICED%XRTMIN(2) .OR. &
-                      PRRT(JIJ,JK)>ICED%XRTMIN(3) .OR. &
-                      PRIT(JIJ,JK)>ICED%XRTMIN(4) .OR. &
-                      PRST(JIJ,JK)>ICED%XRTMIN(5) .OR. &
-                      PRGT(JIJ,JK)>ICED%XRTMIN(6)
+      IF (KRR==7) THEN
+        LLMICRO(JIJ,JK)=PRCT(JIJ,JK)>ICED%XRTMIN(2) .OR. &
+                        PRRT(JIJ,JK)>ICED%XRTMIN(3) .OR. &
+                        PRIT(JIJ,JK)>ICED%XRTMIN(4) .OR. &
+                        PRST(JIJ,JK)>ICED%XRTMIN(5) .OR. &
+                        PRGT(JIJ,JK)>ICED%XRTMIN(6) .OR. &
+                        PRHT(JIJ,JK)>ICED%XRTMIN(7)
+      ELSE
+        LLMICRO(JIJ,JK)=PRCT(JIJ,JK)>ICED%XRTMIN(2) .OR. &
+                        PRRT(JIJ,JK)>ICED%XRTMIN(3) .OR. &
+                        PRIT(JIJ,JK)>ICED%XRTMIN(4) .OR. &
+                        PRST(JIJ,JK)>ICED%XRTMIN(5) .OR. &
+                        PRGT(JIJ,JK)>ICED%XRTMIN(6)
+      ENDIF
     ENDIF
   ENDDO
 ENDDO
 !$acc end kernels
+!        1.1    Compute cloud liquid number concentration
+!               -----------------------------------------
+! Model level height
+DO JIJ=IIJB,IIJE
+  ZZSUM = 0.
+  DO JK=IKTE,IKTB, -1
+    ZZSUM = ZZSUM + PDZZ(JIJ,JK)
+    ZZZZ(JIJ,JK) = ZZSUM - PDZZ(JIJ,JK)*0.5
+  ENDDO
+ENDDO
+
+ZCONC3D(:,:) = ICED%XCONC_LAND
+IF( LLCONC .AND. PARAMI%LEXCLDROP) THEN
+  DO JK=IKTB,IKTE
+    DO JIJ=IIJB,IIJE
+      ZCONC3D(JIJ,JK)=PCONC3D(JIJ,JK)
+    ENDDO
+  ENDDO
+ELSE
+  IF (PARAMI%LEXCLDROP) THEN
+   CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'WITH LEXCLDROP=TRUE CLOUD DROPLET FIELDS MUST BE PRESENT IN RAIN_ICE')
+  END IF
+  IF(LLSEA_AND_TOWN .AND. ICEP%XFRMIN(26)<0.001) THEN
+    DO JK=IKTB,IKTE
+      DO JIJ=IIJB,IIJE
+        ZCONC_TMP(JIJ) = PSEA(JIJ)*ICED%XCONC_SEA+(1.-PSEA(JIJ))*ICED%XCONC_LAND
+        ZCONC3D(JIJ,JK)= (1.-PTOWN(JIJ))*ZCONC_TMP(JIJ) +PTOWN(JIJ)*ICED%XCONC_URBAN
+      ENDDO
+    ENDDO
+  ENDIF
+  IF(ICEP%XFRMIN(26)>0.001)THEN
+    DO JK=IKTB,IKTE
+      DO JIJ=IIJB,IIJE
+        ZCONC3D(JIJ,JK) = ICEP%XFRMIN(26)*PPABST(JIJ,JK)/CST%XP00
+        IF(ICEP%XFRMIN(22)>0.001 .AND. LLSEA_AND_TOWN)THEN
+          ZCONC_TMP(JIJ)  = MAX(0., MIN(1.,(ZZZZ(JIJ,JK)- ZZZZ(JIJ,IKTE))/&
+              &(MAX(0.01,ICEP%XFRMIN(29)-ZZZZ(JIJ,IKTE)))))
+          ZCONC3D(JIJ,JK) =  ZCONC3D(JIJ,JK)*(ICEP%XFRMIN(22)*(PSEA(JIJ)*ICEP%XFRMIN(30)+&
+              &(1.-PSEA(JIJ)))*(1.-ZCONC_TMP(JIJ)) + ZCONC_TMP(JIJ))
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDIF
+ENDIF
 !
 !
 !-------------------------------------------------------------------------------
@@ -385,6 +459,7 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
                          &OELEC, OSEDIM_BEARD, PTSTEP, KRR, PDZZ, PTHVREFZIKB, &
                          &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                          &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
+                         &ZCONC3D, &
                          &PINPRC, PINPRR, PINPRS, PINPRG, &
                          &PQCT, PQRT, PQIT, PQST, PQGT, PQCS, PQRS, PQIS, PQSS, PQGS, PEFIELDW, &
                          &TBUDGETS, KBUDGETS, &
@@ -449,12 +524,12 @@ ENDDO
 
 !$acc kernels
 !$acc loop independent collapse(2)
-DO JK=IKTB,IKTE                                                                                                                     
+DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
     CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(JIJ, JK), &
-                         PTHT(JIJ, JK), PPABST(JIJ, JK), PRHODREF(JIJ, JK), &                                       
-                         PEXN(JIJ, JK), ZW3D(JIJ, JK), ZT(JIJ, JK), &                                                           
-                         PRVT(JIJ, JK), &                                                                                 
+                         PTHT(JIJ, JK), PPABST(JIJ, JK), PRHODREF(JIJ, JK), &
+                         PEXN(JIJ, JK), ZW3D(JIJ, JK), ZT(JIJ, JK), &
+                         PRVT(JIJ, JK), PICLDFR(JIJ, JK), ZZZZ(JIJ, JK), &
                          PCIT(JIJ, JK), ZZ_RVHENI(JIJ, JK))
   ENDDO
 ENDDO
@@ -577,6 +652,8 @@ CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                PEVAP3D,                                              &
                PRAINFR, PSIGS,                                       &
                ZZ_RVHENI, ZZ_LVFACT, ZZ_LSFACT,                      &
+               PICLDFR, ZZZZ, ZCONC3D,                               &
+               PSSIO, PSSIU, PIFR,                                   &
                ZWR,                                                  &
                TBUDGETS, KBUDGETS,                                   &
                ZMICRO_TEND, PLATHAM_IAGGS, PRHS                      )
@@ -736,14 +813,14 @@ ENDDO
 !  call must only be due to the correction of negativities.
 !
 IF(BUCONF%LBU_ENABLE) THEN
-  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'CORR', PTHS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'CORR', PRVS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', PRCS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', PRRS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', PRIS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'CORR', PRSS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'CORR', PRGS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'CORR', PRHS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%INIT_PHY(D, 'CORR', PTHS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RV) CALL TBUDGETS(NBUDGET_RV)%PTR%INIT_PHY(D, 'CORR', PRVS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RC) CALL TBUDGETS(NBUDGET_RC)%PTR%INIT_PHY(D, 'CORR', PRCS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%INIT_PHY(D, 'CORR', PRRS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%INIT_PHY(D, 'CORR', PRIS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%INIT_PHY(D, 'CORR', PRSS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%INIT_PHY(D, 'CORR', PRGS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL TBUDGETS(NBUDGET_RH)%PTR%INIT_PHY(D, 'CORR', PRHS(:, :)*PRHODJ(:, :))
 END IF
 !++cb-- ajouter les bilans pour l'elec !!!
 
@@ -757,14 +834,14 @@ CALL ICE4_CORRECT_NEGATIVITIES(D, ICED, KRR, PRVS, PRCS, PRRS, &
 !                              &PTHS, ZZ_LVFACT, ZZ_LSFACT, PRHS, PQHS)
 
 IF (BUCONF%LBU_ENABLE) THEN
-  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'CORR', PTHS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'CORR', PRVS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', PRCS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', PRRS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', PRIS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'CORR', PRSS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RG), 'CORR', PRGS(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'CORR', PRHS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%END_PHY(D, 'CORR', PTHS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RV) CALL TBUDGETS(NBUDGET_RV)%PTR%END_PHY(D, 'CORR', PRVS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RC) CALL TBUDGETS(NBUDGET_RC)%PTR%END_PHY(D, 'CORR', PRCS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%END_PHY(D, 'CORR', PRRS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%END_PHY(D, 'CORR', PRIS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%END_PHY(D, 'CORR', PRSS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%END_PHY(D, 'CORR', PRGS(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL TBUDGETS(NBUDGET_RH)%PTR%END_PHY(D, 'CORR', PRHS(:, :)*PRHODJ(:, :))
 END IF
 !
 !-------------------------------------------------------------------------------
@@ -777,6 +854,7 @@ IF(PARAMI%LSEDIM_AFTER) THEN
                          &OELEC, OSEDIM_BEARD, PTSTEP, KRR, PDZZ, PTHVREFZIKB, &
                          &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                          &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
+                         &ZCONC3D, &
                          &PINPRC, PINPRR, PINPRS, PINPRG, &
                          &PQCT, PQRT, PQIT, PQST, PQGT, PQCS, PQRS, PQIS, PQSS, PQGS, PEFIELDW, &
                          &TBUDGETS, KBUDGETS, &
@@ -814,7 +892,7 @@ ENDIF
 !
 IF (PARAMI%LDEPOSC) THEN !cloud water deposition on vegetation
   IF (BUCONF%LBU_ENABLE .AND. BUCONF%LBUDGET_RC) &
-     & CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'DEPO', PRCS(:, :)*PRHODJ(:, :))
+     & CALL TBUDGETS(NBUDGET_RC)%PTR%INIT_PHY(D, 'DEPO', PRCS(:, :)*PRHODJ(:, :))
 !$acc kernels
   PINDEP(:)=0.
 !DEC$ IVDEP
@@ -827,7 +905,7 @@ IF (PARAMI%LDEPOSC) THEN !cloud water deposition on vegetation
 !$acc end kernels
 
   IF (BUCONF%LBU_ENABLE .AND. BUCONF%LBUDGET_RC) &
-     & CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'DEPO', PRCS(:, :)*PRHODJ(:, :))
+     & CALL TBUDGETS(NBUDGET_RC)%PTR%END_PHY(D, 'DEPO', PRCS(:, :)*PRHODJ(:, :))
 ENDIF
 
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 1, ZHOOK_HANDLE)

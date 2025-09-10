@@ -144,6 +144,14 @@ LOGICAL, DIMENSION(D%NIT) :: GTRIG2          ! local arrays for OTRIG
 LOGICAL, DIMENSION(D%NIT) :: GWORK1                 ! work array
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+
+REAL, DIMENSION(D%NIT,D%NKT) :: ZZZX1, ZZPPRES,ZZPTH,ZZPRV,ZZPTHESINV,ZZPZ
+REAL, DIMENSION(D%NIT)       :: ZWLCLSQRENT
+INTEGER  :: JLSTEP,JLSIZE,JLSTART
+INTEGER  :: JLCLMIN   !!MIN value of LCL on all grid points, used to remove
+                      !!unnecessary computation for smaller vertical levels.
+INTEGER  :: IJIMIN,IJIMAX,IJIMIN2,IJIMAX2
+LOGICAL  :: LLCOMPUTE
 !
 !-------------------------------------------------------------------------------
 !
@@ -180,6 +188,19 @@ GTRIG2(:)  = .TRUE.
 !
 !
 !
+!       0.     Auxiliary arrays 
+!              ----------------
+!
+!!!Auxiliary arrays, computed once here and used for each JKK in 3.
+DO JK=IKB+1,IKE-1
+  DO JI=D%NIB,D%NIE
+    ZZZX1(JI,JK)=PPRES(JI,JK)-PPRES(JI,JK+1)
+    ZZPPRES(JI,JK)=PPRES(JI,JK)*ZZZX1(JI,JK)
+    ZZPTH(JI,JK)=PTH(JI,JK)*ZZZX1(JI,JK)
+    ZZPRV(JI,JK)=MAX(0.,PRV(JI,JK))*ZZZX1(JI,JK)
+  ENDDO
+ENDDO
+!
 !       1.     Determine highest necessary loop test layer
 !              -------------------------------------------
 !
@@ -215,11 +236,10 @@ DO JKK = IKB + 1, IKE - 2
        DO JI = D%NIB, D%NIE
          IF ( GWORK1(JI) .AND. ZDPTHMIX(JI) < CVP_SHAL%XZPBL ) THEN
             IPBL(JI)     = JK
-            ZX1   = PPRES(JI,JK) - PPRES(JI,JKM)
-            ZDPTHMIX(JI) = ZDPTHMIX(JI) + ZX1
-            ZPRESMIX(JI) = ZPRESMIX(JI) + PPRES(JI,JK) * ZX1
-            ZTHLCL(JI)   = ZTHLCL(JI)   + PTH(JI,JK)   * ZX1
-            ZRVLCL(JI)   = ZRVLCL(JI)   + MAX(0., PRV(JI,JK))   * ZX1
+            ZDPTHMIX(JI) = ZDPTHMIX(JI) + ZZZX1(JI,JK)        !!!uses the auxiliary arrays of 0. 
+            ZPRESMIX(JI) = ZPRESMIX(JI) + ZZPPRES(JI,JK) 
+            ZTHLCL(JI)   = ZTHLCL(JI)   + ZZPTH(JI,JK)   
+            ZRVLCL(JI)   = ZRVLCL(JI)   + ZZPRV(JI,JK) 
          END IF
        END DO
      END DO
@@ -258,8 +278,13 @@ DO JKK = IKB + 1, IKE - 2
      ENDDO
 !
      DO JI=D%NIB, D%NIE
+     !arrays ZEWA, ZLVA, ZLSA, ZCPHA, 
+     !       ZEWB, ZLVB, ZLSB, ZCPHB are only used if GWORK1(JI)=.TRUE.
+     !in the rest of the code.
+     IF ( GWORK1(JI) ) THEN
        CALL CONVECT_SATMIXRATIO( ZPLCL(JI), ZTLCL(JI), ZEPS, ZEWA(JI), ZLVA(JI), ZLSA(JI), ZCPHA(JI) )
        CALL CONVECT_SATMIXRATIO( ZPRESMIX(JI), ZTMIX(JI), ZEPS, ZEWB(JI), ZLVB(JI), ZLSB(JI), ZCPHB(JI) )
+     ENDIF
      ENDDO
 !
 !*       4.2    Correct ZTLCL in order to be completely consistent
@@ -299,31 +324,58 @@ DO JKK = IKB + 1, IKE - 2
 !*        5.1   Determine  vertical loop index at the LCL and DPL
 !               --------------------------------------------------
 !
-    DO JK = JKK, IKE - 1
-       DO JI = D%NIB, D%NIE
-         IF ( ZPLCL(JI) <= PPRES(JI,JK) .AND. GWORK1(JI) ) ILCL(JI) = JK + 1
-       END DO
-    END DO
+    !!!Every 4 vertical level, the first loop checks if computations need 
+    !!!to be done in the second loop for a given JI.
+    !!!PPRES comes from array PREHYDF, which is decreasing with
+    !!!increasing vertical level.
+    JLSTEP=4
+    DO JLSTART=JKK,IKE-1,JLSTEP
+      JLSIZE=MIN(JLSTEP,JT-JLSTART+1) 
+      IF (JLSTART .EQ. JKK) THEN
+        IJIMIN=D%NIB
+        IJIMAX=D%NIE
+        LLCOMPUTE=.TRUE.
+      ELSE
+        IF (LLCOMPUTE) THEN
+          LLCOMPUTE=.FALSE.
+          IJIMIN2=IJIMIN
+          IJIMAX2=IJIMAX
+          DO JI=D%NIB,D%NIE
+            IF ((JI .GE. IJIMIN2) .AND. (JI .LE. IJIMAX2) .AND. GWORK1(JI) .AND. (ZPLCL(JI) <= PPRES(JI,JLSTART))) THEN
+              IF (.NOT. LLCOMPUTE) IJIMIN=JI      
+              IJIMAX=JI 
+              LLCOMPUTE=.TRUE.           
+            ENDIF
+          ENDDO
+        ENDIF
+      ENDIF
+
+      IF (LLCOMPUTE) THEN
+        DO JK = JLSTART, JLSTART+JLSIZE-1
+           DO JI = D%NIB,D%NIE
+             IF ( (JI .GE. IJIMIN) .AND. (JI .LE. IJIMAX) .AND. ZPLCL(JI) <= PPRES(JI,JK) .AND. GWORK1(JI) ) ILCL(JI) = JK + 1
+           END DO
+        END DO
+      ENDIF
+    ENDDO
+
 !
 !
 !*        5.2   Estimate height and environm. theta_v at LCL
 !               --------------------------------------------------
 !
+    JLCLMIN=ILCL(D%NIB)
     DO JI = D%NIB, D%NIE
+      IF ( GWORK1(JI) ) THEN
         JK   = ILCL(JI)
         JKM  = JK - 1
         ZDP(JI)    = LOG( ZPLCL(JI) / PPRES(JI,JKM) ) /                     &
                      LOG( PPRES(JI,JK) / PPRES(JI,JKM) )
-        ZWORK1(JI) = PTHV(JI,JKM) + ( PTHV(JI,JK) - PTHV(JI,JKM) ) * ZDP(JI)
+        ZTHVELCL(JI) = PTHV(JI,JKM) + ( PTHV(JI,JK) - PTHV(JI,JKM) ) * ZDP(JI)
            ! we compute the precise value of the LCL
            ! The precise height is between the levels ILCL and ILCL-1.
-        ZWORK2(JI) = PZ(JI,JKM) + ( PZ(JI,JK) - PZ(JI,JKM) ) * ZDP(JI)
-    END DO
-    DO JI = D%NIB, D%NIE
-    IF( GWORK1(JI) ) THEN
-        ZTHVELCL(JI) = ZWORK1(JI)
-        ZZLCL(JI)    = ZWORK2(JI)
-    END IF
+        ZZLCL(JI) = PZ(JI,JKM) + ( PZ(JI,JK) - PZ(JI,JKM) ) * ZDP(JI)
+      END IF
     END DO
 !
 !
@@ -360,7 +412,10 @@ DO JKK = IKB + 1, IKE - 2
 !                  ZWLCL(:) > 0.
 !    END WHERE
     DO JI = D%NIB, D%NIE
+      JLCLMIN=MIN(JLCLMIN,ILCL(JI))  
       ZWLCL(JI) = CVP_SHAL%XAW * MAX(0.,PW(JI,IKB)) + CVP_SHAL%XBW
+                 ! the factor 1.05 takes entrainment into account
+      ZWLCLSQRENT(JI) = 1.05*ZWLCL(JI)*ZWLCL(JI)
 !
 !
 !*       6.3    Look for parcel that produces sufficient cloud depth.
@@ -374,33 +429,63 @@ DO JKK = IKB + 1, IKE - 2
                                ZRVLCL(JI) * ( 1. + 0.81 * ZRVLCL(JI) ) )
     END DO
 
-     ZCAPE(D%NIB:D%NIE) = 0.
-     ZCAP(D%NIB:D%NIE)  = 0.
+     ZCAPE(D%NIB:D%NIE)  = MAX(JLCLMIN-1-IKB,0)*CST%XG 
+     ZCAP(D%NIB:D%NIE) = 0.
      ZTOP(D%NIB:D%NIE)  = 0.
-     ZTOPP(D%NIB:D%NIE)  = 0.
      ZWORK3(D%NIB:D%NIE)= 0.
-     JKM = IKB
-     DO JL = JKM, JT
-        JK = JL + 1
+     JKM=MAX(IKB,JLCLMIN-1) 
+
 !REK : should try if's instead of sign & max
-        DO JI = D%NIB, D%NIE
-           ZX1 = ( 2. * ZTHEUL(JI) /                                &
-            ( PTHES(JI,JK) + PTHES(JI,JL) ) - 1. ) * ( PZ(JI,JK) - PZ(JI,JL) )
-           IF ( JL < ILCL(JI) ) ZX1 = 0.
-           ZCAPE(JI)  = ZCAPE(JI) + CST%XG * MAX( 1., ZX1 )
-           ZCAP(JI)   = ZCAP(JI) + ZX1
-               ! the factor 1.05 takes entrainment into account
-           ZX2 = SIGN( 1., ( CVP_SHAL%XNHGAM * CST%XG * ZCAP(JI) + 1.05 * ZWLCL(JI) * ZWLCL(JI)) )
-           ZWORK3(JI) = MAX( -1., (ZWORK3(JI) + MIN(0.,ZX2)) )
-               ! Nota, the factors ZX2 and ZWORK3 are only used to avoid
-               ! if and goto statements, the difficulty is to extract only
-               ! the level where the criterium is first fullfilled
-           ZTOPP(JI)=ZTOP(JI)
-           ZTOP(JI)   = PZ(JI,JL) * .5 * ( 1. + ZX2 ) * ( 1. + ZWORK3(JI) ) + &
-                        ZTOP(JI) * .5 * ( 1. - ZX2 )
-           ZTOP(JI)=MAX(ZTOP(JI),ZTOPP(JI))
-           ZTOPP(JI)=ZTOP(JI)
-         END DO
+
+     !!!Every 4 vertical level, the first loop checks if computations need to be done in the second loop.
+     !!!If ZWORK3(JI)==-1 and ZCAPE(JI) >10., no more computation are necessary for JI :
+     !!!if ZWORK3(JI)==-1, it remains equal to -1, and ZTOP(JI) does not change.
+     !!!if ZCAPE(JI)>10., it remains >10., because MAX(1.,ZX1) is a positive
+     !!!number ; the last loop of CONVECT_TRIGGER_SHAL uses ZCAPE(JI) as a
+     !!!criterion. 
+     JLSTEP=4
+     DO JLSTART=JKM,JT,JLSTEP
+       JLSIZE=MIN(JLSTEP,JT-JLSTART+1)
+
+       IF (JLSTART .EQ. JKM) THEN
+         LLCOMPUTE=.TRUE.
+       ELSE
+         IF (LLCOMPUTE) THEN
+           LLCOMPUTE=.FALSE.
+           DO JI=D%NIB,D%NIE
+             IF (GTRIG2(JI) .AND. ((ZWORK3(JI) .GT. -0.5) .OR. (ZCAPE(JI) .LE. 10.))) LLCOMPUTE=.TRUE.
+           ENDDO
+         ENDIF
+      ENDIF
+      IF (LLCOMPUTE) THEN       
+
+         DO JL = JLSTART,JLSTART+JLSIZE-1
+           JK = JL + 1
+  
+           DO JI = D%NIB, D%NIE
+             !!!it was not possible to use a mask IF (JI>=IJIMIN .AND. JI
+             !!!<=IJIMAX) here, as the loop did not vectorize.
+             ZX1 = ( 2. * ZTHEUL(JI) / ( PTHES(JI,JK) + PTHES(JI,JL) ) - 1. ) *&
+                    & (PZ(JI,JK) - PZ(JI,JL))
+             IF  ((JL < ILCL(JI))) ZX1 = 0.
+             ZCAPE(JI)  = ZCAPE(JI) + CST%XG * MAX( 1., ZX1 )
+             ZCAP(JI)   = ZCAP(JI) + ZX1
+                 ! the factor 1.05 in ZWLCLSQRENT takes entrainment into account
+             ZX2 = SIGN( 1., ( CVP_SHAL%XNHGAM * CST%XG * ZCAP(JI) + ZWLCLSQRENT(JI) ) )
+             ZWORK3(JI) = MAX( -1., (ZWORK3(JI) + MIN(0.,ZX2)) )
+                 ! Nota, the factors ZX2 and ZWORK3 are only used to avoid
+                 ! if and goto statements, the difficulty is to extract only
+                 ! the level where the criterium is first fullfilled
+             ZTOPP(JI)=ZTOP(JI)
+             ZTOP(JI)   = PZ(JI,JL) * .5 * ( 1. + ZX2 ) * ( 1. + ZWORK3(JI) ) + &
+                        & ZTOP(JI) * .5 * ( 1. - ZX2 )
+             ZTOP(JI)=MAX(ZTOP(JI),ZTOPP(JI))
+           ENDDO
+
+         ENDDO
+
+      ENDIF !!LLCOMPUTE
+
      END DO
 !
 !

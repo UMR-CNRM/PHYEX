@@ -12,7 +12,8 @@ SUBROUTINE ICE4_TENDENCIES(CST, PARAMI, ICEP, ICED, BUCONF, KPROMA, KSIZE, &
                           &PEXN, PRHODREF, PLVFACT, PLSFACT, K1, K2, &
                           &PPRES, PCF, PSIGMA_RC, &
                           &PCIT, &
-                          &PT, PVART, &
+                          &PT, PICLDFR, PZZZ, PCONC, &
+                          &PSSIO, PSSIU, PIFR, PVART, &
                           &PLATHAM_IAGGS, &
                           &PBU_INST, &
                           &PRS_TEND, PRG_TEND, PRH_TEND, PSSI, &
@@ -57,6 +58,8 @@ USE MODE_ICE4_FAST_RS, ONLY: ICE4_FAST_RS
 USE MODE_ICE4_FAST_RG, ONLY: ICE4_FAST_RG
 USE MODE_ICE4_FAST_RH, ONLY: ICE4_FAST_RH
 USE MODE_ICE4_FAST_RI, ONLY: ICE4_FAST_RI
+USE MODE_ICE4_FAST_RI_RS, ONLY: ICE4_FAST_RI_RS
+USE MODE_TIWMX,      ONLY: ESATI, AA2, BB3 
 !
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
@@ -86,6 +89,12 @@ REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PCF
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PSIGMA_RC
 REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PCIT
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PT
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PICLDFR
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PZZZ
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PCONC
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PSSIO
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PSSIU
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PIFR
 REAL, DIMENSION(KPROMA,0:KRR), INTENT(IN)    :: PVART
 REAL, DIMENSION(MERGE(KPROMA,0,OELEC)), INTENT(IN) :: PLATHAM_IAGGS
 REAL, DIMENSION(KPROMA, IBUNUM),INTENT(INOUT):: PBU_INST
@@ -111,17 +120,23 @@ REAL, DIMENSION(KPROMA,0:KRR) :: ZVART
 REAL, DIMENSION(KPROMA) :: ZT, &
                         & ZKA, ZDV, ZAI, ZCJ, &
                         & ZLBDAR, ZLBDAS, ZLBDAG, ZLBDAH, ZLBDAR_RF, &
-                        & ZRGSI, ZRGSI_MR, ZRAINFR
+                        & ZRGSI, ZRGSI_MR, &
+                        & ZRAINFR, &
+                        & ZCOLF, ZACRF, ZESI, ZRCW, ZVT, ZST, ZR20, ZCONC
 INTEGER :: JL, JV
 LOGICAL, DIMENSION(KPROMA) :: LLWETG ! .TRUE. if graupel growths in wet mode
+REAL, DIMENSION(KPROMA) :: ZZW, ZDEPG_S, ZNODEPG_S
 LOGICAL :: LLMASK
-REAL :: ZZW
 LOGICAL :: LLRFR
+LOGICAL :: LLTAB   ! Use saturation vapour pressure tables for optimization 
+LOGICAL :: LLCOL   ! Collision factors OCND2-style
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
 IF (LHOOK) CALL DR_HOOK('ICE4_TENDENCIES', 0, ZHOOK_HANDLE)
 
+LLTAB = .TRUE.
+LLCOL = .TRUE.
 
 !
 !$acc kernels
@@ -147,7 +162,7 @@ ELSE
   DO JL=1, KSIZE
     CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LDCOMPUTE(JL), &
                      ZVART(JL,ITH), PPRES(JL), PRHODREF(JL), PEXN(JL), PLSFACT(JL), ZT(JL), &
-                     ZVART(JL,IRV), &
+                     ZVART(JL,IRV), PICLDFR(JL), PZZZ(JL), &
                      PCIT(JL), PBU_INST(JL, IRVHENI_MR))
   ENDDO
   DO JL=1, KSIZE
@@ -254,20 +269,55 @@ ELSE
     PB(JL, IRG)=PB(JL, IRG) + PBU_INST(JL, IRSRIMCG_MR)
   ENDDO
 !$acc end kernels
- !
+  !
   !* Derived fields
   !
 !$acc kernels
 !$acc loop independent
   DO JL=1, KSIZE
-    ZZW = EXP(CST%XALPI-CST%XBETAI/ZT(JL)-CST%XGAMI*ALOG(ZT(JL)))
-    PSSI(JL) = ZVART(JL,IRV)*( PPRES(JL)-ZZW ) / ( CST%XEPSILO * ZZW ) - 1.0
-                                                      ! Supersaturation over ice
-    ZKA(JL) = 2.38E-2 + 0.0071E-2*(ZT(JL)-CST%XTT) ! k_a
-    ZDV(JL) = 0.211E-4*(ZT(JL)/CST%XTT)**1.94 * (CST%XP00/PPRES(JL)) ! D_v
-    ZAI(JL) = (CST%XLSTT+(CST%XCPV-CST%XCI)*(ZT(JL)-CST%XTT))**2 / (ZKA(JL)*CST%XRV*ZT(JL)**2) &
-                                 + ( CST%XRV*ZT(JL) ) / (ZDV(JL)*ZZW)
+    IF(LLTAB.AND.PARAMI%LOCND2) THEN ! Use tabulated values, May go faster for some machines. (Is now separared from OCND2)
+      ZESI(JL) = ESATI(ICEP%TIWMX, ZT(JL))
+      PSSI(JL) = ZVART(JL,IRV)*( PPRES(JL)-ZESI(JL) ) / ( CST%XEPSILO * ZESI(JL) ) - 1.0
+                                                    ! Supersaturation over ice0
+      ZKA(JL) = 2.38E-2 + 0.0071E-2*(ZT(JL)-CST%XTT) ! k_a
+      ZDV(JL) = 0.211E-4*(ZT(JL)/CST%XTT)**1.94 * (CST%XP00/PPRES(JL)) ! D_v
+      ZAI(JL) =  AA2(ICEP%TIWMX, ZT(JL)) + BB3(ICEP%TIWMX, ZT(JL))*PPRES(JL)
+    ELSE
+      ZZW(JL) = EXP(CST%XALPI-CST%XBETAI/ZT(JL)-CST%XGAMI*ALOG(ZT(JL)))
+      PSSI(JL) = ZVART(JL,IRV)*( PPRES(JL)-ZZW(JL) ) / ( CST%XEPSILO * ZZW(JL) ) - 1.0
+      ZKA(JL) = 2.38E-2 + 0.0071E-2*(ZT(JL)-CST%XTT) ! k_a
+      ZDV(JL) = 0.211E-4*(ZT(JL)/CST%XTT)**1.94 * (CST%XP00/PPRES(JL)) ! D_v
+      ZAI(JL) = (CST%XLSTT+(CST%XCPV-CST%XCI)*(ZT(JL)-CST%XTT))**2 / (ZKA(JL)*CST%XRV*ZT(JL)**2) &
+                                   + ( CST%XRV*ZT(JL) ) / (ZDV(JL)*ZZW(JL))
+    ENDIF
+
     ZCJ(JL) = ICEP%XSCFAC*PRHODREF(JL)**0.3 / SQRT(1.718E-5+0.0049E-5*(ZT(JL)-CST%XTT))
+
+    ! Compute collison factors for cloud water - rain (ZACRF) and cloud water snow/graupel (ZCOLF)
+    ZCOLF(JL)=1.0
+    ZACRF(JL)=1.0
+    ZCONC(JL) = PCONC(JL)*0.000001
+    IF(LLCOL .AND. PARAMI%LOCND2)THEN
+      ZCOLF(JL)=0.00001
+      ZACRF(JL)=0.00001
+      IF(ZVART(JL,IRC)>1.0E-10)THEN
+        ! mean cloud droplet radius in cm
+        ZRCW(JL) =  0.1*(0.75*ZVART(JL,IRC)*PRHODREF(JL)/(CST%XPI*ZCONC(JL)))**0.333 
+        ! fall speed for mean cloud droplet with cloud droplet radius in cm/s
+        IF(ZRCW(JL) < 0.0065 )THEN
+          ZVT(JL)   =  1.19E6*ZRCW(JL)**2
+        ELSE
+          ZVT(JL)   =  8000.*ZRCW(JL)
+        ENDIF
+        ZVT(JL) = MIN(10.,ZVT(JL))
+        ZST(JL) = MAX(0.01,2.*(100.-ZVT(JL))*ZVT(JL)/(CST%XG*10.))
+        IF(ZST(JL) > 0.1) ZCOLF(JL) =  MAX(0.01,MIN(1.,0.939*ZST(JL)**2.657))
+        IF( ZVART(JL,IRR) > 1.0E-10 .AND. ZRCW(JL) >1.0E-5)THEN
+          ZR20(JL) = EXP(ZRCW(JL)*2000.)  ! This ZRCW is in cm . To convert to micro meter : x 10000
+          ZACRF(JL)  = (ZR20(JL) -1.)/(ZR20(JL) +1.)             ! ZRCW is then multiplied with 0.2
+        ENDIF
+      ENDIF
+    ENDIF
   ENDDO
 !$acc end kernels
 ENDIF ! ODSOFT
@@ -358,13 +408,27 @@ ENDDO
 !$acc end kernels
 !
 !
-CALL ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, OELEC, LDCOMPUTE, PRHODREF, ZT, &
+CALL ICE4_SLOW(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, OELEC, LDCOMPUTE, PRHODREF, ZT, &
               &PSSI, PLVFACT, PLSFACT, &
               &ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRI), ZVART(:,IRS), ZVART(:,IRG), &
               &ZLBDAS, ZLBDAG, &
               &ZAI, ZCJ, PHLI_HCF, PHLI_HRI, &
               &PLATHAM_IAGGS, &
               &PBU_INST(:, IRCHONI), PBU_INST(:, IRVDEPS), PBU_INST(:, IRIAGGS), PBU_INST(:, IRIAUTS), PBU_INST(:, IRVDEPG))
+!
+ZDEPG_S(:)=0.0
+ZNODEPG_S(:)=1.0
+IF (PARAMI%LOCND2) THEN
+! Possibility to turn some growing graupels to snow in case of high ice supersaturation
+! and low graupel content (both conditions should be present simultaneously)
+  DO JL=1, KSIZE
+    IF(ICEP%XFRMIN(5)>1.0E-12 .AND. ICEP%XFRMIN(6)>0.01) THEN
+      ZDEPG_S(JL)=MAX(0., MIN(1., (ICEP%XFRMIN(5)-ZVART(JL,IRG)/ICEP%XFRMIN(5))))*&
+                  MAX(0., MIN(1., (PSSI(JL)/ICEP%XFRMIN(6))))
+      ZNODEPG_S(JL)=1.-ZDEPG_S(JL)
+    ENDIF
+  ENDDO
+ENDIF
 !
 !-------------------------------------------------------------------------------
 !
@@ -375,13 +439,14 @@ CALL ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, OELEC, LDCOMPUTE, PRHODRE
 !
 IF(PARAMI%LWARM) THEN    !  Check if the formation of the raindrops by the slow
                   !  warm processes is allowed
-  CALL ICE4_WARM(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT,LDCOMPUTE, &
+  CALL ICE4_WARM(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT,LDCOMPUTE, &
                 &PARAMI%CSUBG_RC_RR_ACCR, PARAMI%CSUBG_RR_EVAP, &
                 &PRHODREF, PLVFACT, ZT, PPRES, ZVART(:,ITH),&
                 &ZLBDAR, ZLBDAR_RF, ZKA, ZDV, ZCJ, &
                 &PHLC_LCF, PHLC_HCF, PHLC_LRC, PHLC_HRC, &
                 &PCF, PRAINFR, &
                 &ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRR), &
+                &ZCONC, ZACRF, &
                 &PBU_INST(:, IRCAUTR), PBU_INST(:, IRCACCR), PBU_INST(:, IRREVAV))
 ELSE
 !$acc kernels
@@ -399,7 +464,7 @@ END IF
 !
 CALL ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, &
                  &PRHODREF, PLVFACT, PLSFACT, PPRES, &
-                 &ZDV, ZKA, ZCJ, &
+                 &ZDV, ZKA, ZCJ, ZCOLF, &
                  &ZLBDAR, ZLBDAS, &
                  &ZT, ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRR), ZVART(:,IRS), &
                  &PBU_INST(:, IRIAGGS), &
@@ -474,12 +539,35 @@ END IF
 !*       7.     COMPUTES SPECIFIC SOURCES OF THE WARM AND COLD CLOUDY SPECIES
 !               -------------------------------------------------------------
 !
-CALL ICE4_FAST_RI(ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, &
+IF (.NOT.PARAMI%LOCND2) THEN
+   CALL ICE4_FAST_RI(ICEP, ICED, KPROMA, KSIZE, &
+                 &ODSOFT, LDCOMPUTE, &
                  &PRHODREF, PLVFACT, PLSFACT, &
                  &ZAI, ZCJ, PCIT, &
                  &PSSI, &
                  &ZVART(:,IRC), ZVART(:,IRI), &
                  &PBU_INST(:, IRCBERI))
+ELSE
+   PBU_INST(:, IRCBERI)=0.0
+ENDIF
+
+!
+!*       8.     COMPUTES DEPOSITION OF ICE AND CONVERSION OF LARGE ICE CRYSTALS TO SNOW
+!               -------------------------------------------------------------
+!
+
+IF (PARAMI%LOCND2) THEN
+  CALL ICE4_FAST_RI_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE,&
+                 &ODSOFT, LDCOMPUTE, &
+                 &PRHODREF, PLSFACT, &
+                 &ZAI, PCIT, ZESI, PPRES, &
+                 &PSSI, PSSIO, PSSIU, PICLDFR, PIFR, &
+                 &ZVART(:,IRV),ZVART(:,IRI),ZVART(:,IRS), ZT, &
+                 &PBU_INST(:, IRILARS),PBU_INST(:, IRVDEPI))
+ELSE
+  PBU_INST(:, IRILARS)=0.
+  PBU_INST(:, IRVDEPI)=0.
+ENDIF
 !
 !-------------------------------------------------------------------------------
 !
@@ -508,10 +596,12 @@ DO JL=1, KSIZE
     PA(JL, ITH) = PA(JL, ITH) - PBU_INST(JL, IRHMLTR)*(PLSFACT(JL)-PLVFACT(JL))
   ENDIF
   PA(JL, ITH) = PA(JL, ITH) + PBU_INST(JL, IRCBERI)*(PLSFACT(JL)-PLVFACT(JL))
+  IF (PARAMI%LOCND2) PA(JL, ITH) = PA(JL, ITH) + PBU_INST(JL, IRVDEPI)*PLSFACT(JL)
 
   PA(JL, IRV) = PA(JL, IRV) - PBU_INST(JL, IRVDEPG)
   PA(JL, IRV) = PA(JL, IRV) - PBU_INST(JL, IRVDEPS)
   PA(JL, IRV) = PA(JL, IRV) + PBU_INST(JL, IRREVAV)
+  IF (PARAMI%LOCND2) PA(JL, IRV) = PA(JL, IRV) - PBU_INST(JL, IRVDEPI)
 
   PA(JL, IRC) = PA(JL, IRC) - PBU_INST(JL, IRCHONI)
   PA(JL, IRC) = PA(JL, IRC) - PBU_INST(JL, IRCAUTR)
@@ -554,8 +644,11 @@ DO JL=1, KSIZE
     PA(JL, IRI) = PA(JL, IRI) - PBU_INST(JL, IRIDRYH)
   ENDIF
   PA(JL, IRI) = PA(JL, IRI) + PBU_INST(JL, IRCBERI)
+  IF (PARAMI%LOCND2) PA(JL, IRI) = PA(JL, IRI) + PBU_INST(JL, IRVDEPI)
+  IF (PARAMI%LOCND2) PA(JL, IRI) = PA(JL, IRI) - PBU_INST(JL, IRILARS)
 
   PA(JL, IRS) = PA(JL, IRS) + PBU_INST(JL, IRVDEPS)
+  IF (PARAMI%LOCND2) PA(JL, IRS) = PA(JL, IRS) + PBU_INST(JL, IRVDEPG) * ZDEPG_S(JL)
   PA(JL, IRS) = PA(JL, IRS) + PBU_INST(JL, IRIAGGS)
   PA(JL, IRS) = PA(JL, IRS) + PBU_INST(JL, IRIAUTS)
   PA(JL, IRS) = PA(JL, IRS) + PBU_INST(JL, IRCRIMSS)
@@ -569,8 +662,9 @@ DO JL=1, KSIZE
     PA(JL, IRS) = PA(JL, IRS) - PBU_INST(JL, IRSWETH)
     PA(JL, IRS) = PA(JL, IRS) - PBU_INST(JL, IRSDRYH)
   ENDIF
+  IF (PARAMI%LOCND2) PA(JL, IRS) = PA(JL, IRS) + PBU_INST(JL, IRILARS)
 
-  PA(JL, IRG) = PA(JL, IRG) + PBU_INST(JL, IRVDEPG)
+  PA(JL, IRG) = PA(JL, IRG) + PBU_INST(JL, IRVDEPG) * ZNODEPG_S(JL)
   PA(JL, IRG) = PA(JL, IRG) + PBU_INST(JL, IRCRIMSG)+PBU_INST(JL, IRSRIMCG)
   PA(JL, IRG) = PA(JL, IRG) + PBU_INST(JL, IRRACCSG)+PBU_INST(JL, IRSACCRG)
   PA(JL, IRG) = PA(JL, IRG) + PBU_INST(JL, IRSMLTG)

@@ -8,7 +8,7 @@
                                 KCLTOP, KCLBAS, PPRLFLX, PPRSFLX,              &
                                 PUMF, PDMF, PCAPE,                             &
                                 OCH1CONV, KCH1, PCH1, PCH1TEN,                 &
-                                OUSECHEM, OCH_CONV_SCAV, OCH_CONV_LINOX,       &
+                                OCH_CONV_SCAV, OCH_CONV_LINOX,       &
                                 ODUST, OSALT, PRHODREF, PIC_RATE, PCG_RATE     )
     USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !   ############################################################################
@@ -174,7 +174,6 @@ LOGICAL,                    INTENT(IN) :: OCH1CONV ! include tracer transport
 INTEGER,                    INTENT(IN) :: KCH1     ! number of species
 REAL, DIMENSION(KLON,KLEV,KCH1), INTENT(IN) :: PCH1! grid scale chemical species
 REAL, DIMENSION(KLON,KLEV,KCH1), INTENT(INOUT):: PCH1TEN! species conv. tendency (1/s)
-LOGICAL,                    INTENT(IN) :: OUSECHEM      ! flag for chemistry
 LOGICAL,                    INTENT(IN) :: OCH_CONV_SCAV !  & scavenging
 LOGICAL,                    INTENT(IN) :: OCH_CONV_LINOX ! & LiNOx
 LOGICAL,                    INTENT(IN) :: ODUST         ! flag for dust
@@ -1017,13 +1016,7 @@ IF ( ICONV1 > 0 )  THEN
         ZCG_RATE(JI)=PCG_RATE(JL)
       END DO
       END DO
-      IF (OUSECHEM) THEN
-        DO JN = NSV_CHEMBEG,NSV_CHEMEND
-          IF (CNAMES(JN-NSV_CHEMBEG+1)=='NO') JN_NO = JN
-        END DO
-      ELSE
-        JN_NO = NSV_LNOXBEG
-      ENDIF
+      JN_NO = NSV_LNOXBEG
       ZWORK4(:,:) = ZCH1(:,:,JN_NO)
 ! ***  for AROME *****
 !      CALL CH_CONVECT_LINOX( ICONV, KLEV, ZWORK4, ZWORK4C,        &
@@ -1039,7 +1032,7 @@ IF ( ICONV1 > 0 )  THEN
       ENDDO
     ENDIF
 !
-    IF ((OUSECHEM .AND. OCH_CONV_SCAV).OR.(ODUST .AND.  OCH_CONV_SCAV).OR.&
+    IF ((ODUST .AND.  OCH_CONV_SCAV).OR.&
         (OSALT .AND.  OCH_CONV_SCAV)  ) THEN
 !
       CALL CH_CONVECT_SCAVENGING( ICONV, KLEV, KCH1, ZCH1, ZCH1C,      &

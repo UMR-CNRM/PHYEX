@@ -298,7 +298,7 @@ END MODULE MODI_RESOLVED_CLOUD
 !
 !*       0.    DECLARATIONS
 !              ------------
-USE MODD_BUDGET,           ONLY: TBUDGETS, TBUCONF
+USE MODD_BUDGET,           ONLY: TBUDGETS, TBUDGETS_PTR, TBUCONF
 USE MODD_CH_AEROSOL,       ONLY: LORILAM, NSP, NCARB, NSOA
 USE MODD_CST,              ONLY: CST
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
@@ -926,7 +926,7 @@ SELECT CASE ( HCLOUD )
                       PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),              &
                       PRS=PRS(:,:,:,5)*PTSTEP,                                 &
                       PRG=PRS(:,:,:,6)*PTSTEP,                                 &
-                      TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),               &
+                      TBUDGETS=TBUDGETS_PTR,KBUDGETS=SIZE(TBUDGETS_PTR), &
                       PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                    &
                       PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,                    &
                       PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF,       &
@@ -1013,6 +1013,7 @@ SELECT CASE ( HCLOUD )
                     XTHVREFZ(IKB),                                              &
                     PTSTEP, KRR, ZEXN,                                          &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
+                    ZDUM, ZDUM, ZDUM, ZDUM, &
                     PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                     &
                     PTHT, PRT(:,:,:,1), PRT(:,:,:,2), PRT(:,:,:,3),             &
                     PRT(:,:,:,4), PRT(:,:,:,5), PRT(:,:,:,6),                   &
@@ -1020,7 +1021,7 @@ SELECT CASE ( HCLOUD )
                     PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),                   &
                     PINPRC,PINPRR, PEVAP3D,                                     &
                     PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,                     &
-                    TBUDGETS,SIZE(TBUDGETS),                                    &
+                    TBUDGETS_PTR, SIZE(TBUDGETS_PTR), &
                     ZQPIT, ZQCT, ZQRT, ZQIT, ZQST, ZQGT, ZQNIT,                 &
                     ZQPIS, ZQCS, ZQRS, ZQIS, ZQSS, ZQGS, ZQNIS,                 &
                     ZEFIELDW, ZLATHAM_IAGGS,                                    &
@@ -1143,7 +1144,7 @@ SELECT CASE ( HCLOUD )
                          PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),                     &
                          PRS=PRS(:,:,:,5)*PTSTEP,                                        &
                          PRG=PRS(:,:,:,6)*PTSTEP,                                        &
-                         TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),                      &
+                         TBUDGETS=TBUDGETS_PTR, KBUDGETS=SIZE(TBUDGETS_PTR), &
                          PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                           &
                          PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,                           &
                          PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF,               &
@@ -1213,7 +1214,7 @@ SELECT CASE ( HCLOUD )
                        PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),             &
                        PRS=PRS(:,:,:,5)*PTSTEP,                                &
                        PRG=PRS(:,:,:,6)*PTSTEP,                                &
-                       TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),              &
+                       TBUDGETS=TBUDGETS_PTR, KBUDGETS=SIZE(TBUDGETS_PTR), &
                        PRH=PRS(:,:,:,7)*PTSTEP,                                &
                        PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                   &
                        PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,                   &
@@ -1305,6 +1306,7 @@ SELECT CASE ( HCLOUD )
                      XTHVREFZ(IKB),                                              &
                      PTSTEP, KRR, ZEXN,                                          &
                      ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
+                     ZDUM, ZDUM, ZDUM, ZDUM, &
                      PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                     &
                      PTHT, PRT(:,:,:,1), PRT(:,:,:,2), PRT(:,:,:,3),             &
                      PRT(:,:,:,4), PRT(:,:,:,5), PRT(:,:,:,6),                   &
@@ -1312,7 +1314,7 @@ SELECT CASE ( HCLOUD )
                      PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),                   &
                      PINPRC, PINPRR, PEVAP3D,                                    &
                      PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,                     &
-                     TBUDGETS,SIZE(TBUDGETS),                                    &
+                     TBUDGETS_PTR, SIZE(TBUDGETS_PTR), &
                      ZQPIT, ZQCT, ZQRT, ZQIT, ZQST, ZQGT, ZQNIT,                 &
                      ZQPIS, ZQCS, ZQRS, ZQIS, ZQSS, ZQGS, ZQNIS,                 &
                      ZEFIELDW, ZLATHAM_IAGGS,                                    &
@@ -1396,7 +1398,7 @@ SELECT CASE ( HCLOUD )
                       PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),                     &
                       PRS=PRS(:,:,:,5)*PTSTEP,                                        &
                       PRG=PRS(:,:,:,6)*PTSTEP,                                        &
-                      TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),                      &
+                      TBUDGETS=TBUDGETS_PTR, KBUDGETS=SIZE(TBUDGETS_PTR), &
                       PRH=PRS(:,:,:,7)*PTSTEP,                                        &
                       PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                           &
                       PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,                           &
@@ -1453,7 +1455,7 @@ SELECT CASE ( HCLOUD )
          CALL LIMA (PARAM_LIMA, PARAM_LIMA_WARM, PARAM_LIMA_COLD, PARAM_LIMA_MIXED,&
                    TNSV, YLDIMPHYEX,CST, NEBN, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
                    ELEC_DESCR, ELEC_PARAM,                                 &
-                   TBUCONF,TBUDGETS, HACTCCN,SIZE(TBUDGETS), KRR,          &
+                   TBUCONF, TBUDGETS_PTR, HACTCCN, SIZE(TBUDGETS_PTR), KRR, &
                    PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
@@ -1471,7 +1473,7 @@ SELECT CASE ( HCLOUD )
         CALL LIMA (PARAM_LIMA, PARAM_LIMA_WARM, PARAM_LIMA_COLD, PARAM_LIMA_MIXED,&
                    TNSV, YLDIMPHYEX,CST, NEBN, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
                    ELEC_DESCR, ELEC_PARAM,                                 &
-                   TBUCONF, TBUDGETS, HACTCCN, SIZE(TBUDGETS), KRR,        &
+                   TBUCONF, TBUDGETS_PTR, HACTCCN, SIZE(TBUDGETS_PTR), KRR, &
                    PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
@@ -1524,7 +1526,7 @@ SELECT CASE ( HCLOUD )
                            PCLDFR, PICEFR, PRAINFR, PSRCS                           )
     ELSE IF (LPTSPLIT) THEN
        CALL LIMA_ADJUST_SPLIT(PARAM_LIMA, PARAM_LIMA_WARM, &
-                             TNSV, YLDIMPHYEX, CST, NEBN, TURBN, TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
+                             TNSV, YLDIMPHYEX, CST, NEBN, TURBN, TBUCONF, TBUDGETS_PTR, SIZE(TBUDGETS_PTR), &
                              KRR, CCONDENS, CLAMBDA3,                                        &
                              NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                        &
                              OSUBG_COND, OSIGMAS, PTSTEP, ZSIGQSAT2D,                        &

@@ -1,24 +1,8 @@
 {
-"IALcommit":"9ebb0c6",
-"IALbundle_tag":"BDL49T2_R1.06-1",
-"cycle":"49t2",
-"scripttag":"_nam1",
+"IALcommit":"CY50T1",
+"IALbundle_tag":"BDL50T1-default",
+"cycle":"50t1",
+"scripttag":"",
 "testing": {
-            "small_3D":"f4ef9f6",
-            "small_3D_alt1":"f4ef9f6",
-            "small_3D_alt2":"f4ef9f6",
-            "small_3D_alt3":"f4ef9f6",
-            "small_3D_alt4":"f4ef9f6",
-            "small_3D_alt5":"f4ef9f6",
-            "small_3D_alt6":"f4ef9f6",
-            "small_3D_alt7":"f4ef9f6",
-            "small_3D_alt8":"f4ef9f6",
-            "small_3D_alt9":"f4ef9f6",
-            "small_3D_alt10":"f4ef9f6",
-            "small_3D_alt11":"f4ef9f6",
-            "small_3D_alt12":"f4ef9f6",
-            "small_3D_lima":"ccd5bff",
-            "small_3D_np2":"f4ef9f6",
-            "big_3D":"f4ef9f6"
            }
 }

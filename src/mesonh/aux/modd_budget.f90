@@ -180,9 +180,53 @@ TYPE TBUDGETCONF_t
  LOGICAL :: LBUDGET_SV=.FALSE. ! flag to compute budget of RhoJsv and/or LES budgets with sv
 END TYPE TBUDGETCONF_t
 !
+TYPE, ABSTRACT :: TBUDGETDATA_ABS
+  INTEGER :: NBUDGET
+  CONTAINS
+  PROCEDURE (TBUDGETDATA_STORE_INIT_PHY), DEFERRED :: INIT_PHY
+  PROCEDURE (TBUDGETDATA_STORE_END_PHY),  DEFERRED :: END_PHY
+  PROCEDURE (TBUDGETDATA_STORE_ADD_PHY),  DEFERRED :: ADD_PHY
+ENDTYPE TBUDGETDATA_ABS
+!
+ABSTRACT INTERFACE
+!
+SUBROUTINE TBUDGETDATA_STORE_INIT_PHY(SELF, D, HSOURCE, PVARS)
+  USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+  IMPORT TBUDGETDATA_ABS
+  CLASS(TBUDGETDATA_ABS), INTENT(INOUT) :: SELF ! Budget datastructure
+  TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
+  CHARACTER(LEN=*),       INTENT(IN)    :: HSOURCE  ! Name of the source term
+  REAL, DIMENSION(D%NIT, D%NJT,D%NKT), INTENT(IN)    :: PVARS    ! Current value to be stored
+END SUBROUTINE TBUDGETDATA_STORE_INIT_PHY
+!
+SUBROUTINE TBUDGETDATA_STORE_END_PHY(SELF, D, HSOURCE, PVARS)
+  USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+  IMPORT TBUDGETDATA_ABS
+  CLASS(TBUDGETDATA_ABS), INTENT(INOUT) :: SELF ! Budget datastructure
+  TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
+  CHARACTER(LEN=*),       INTENT(IN)    :: HSOURCE  ! Name of the source term
+  REAL, DIMENSION(D%NIT, D%NJT,D%NKT), INTENT(IN)    :: PVARS    ! Current value to be stored
+END SUBROUTINE TBUDGETDATA_STORE_END_PHY
+!
+SUBROUTINE TBUDGETDATA_STORE_ADD_PHY(SELF, D, HSOURCE, PVARS)
+  USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+  IMPORT TBUDGETDATA_ABS
+  CLASS(TBUDGETDATA_ABS), INTENT(INOUT) :: SELF ! Budget datastructure
+  TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
+  CHARACTER(LEN=*),       INTENT(IN)    :: HSOURCE  ! Name of the source term
+  REAL, DIMENSION(D%NIT, D%NJT,D%NKT), INTENT(IN)    :: PVARS    ! Current value to be stored
+END SUBROUTINE TBUDGETDATA_STORE_ADD_PHY
+!
+END INTERFACE
+!
+TYPE TBUDGETDATA_PTR
+  CLASS (TBUDGETDATA_ABS), POINTER :: PTR => NULL()
+END TYPE TBUDGETDATA_PTR
+!
 TYPE(TBUDGETCONF_t), TARGET :: TBUCONF
 !
-type(tbudgetdata), dimension(:), allocatable, save :: tbudgets
+type(tbudgetdata), dimension(:), allocatable, target, save :: tbudgets
+type(tbudgetdata_ptr), dimension(:), allocatable, save :: tbudgets_ptr
 type(tburhodata),                pointer,     save :: tburhodj => null() ! Budget array for rhodj used inside some tbudgets
 
 

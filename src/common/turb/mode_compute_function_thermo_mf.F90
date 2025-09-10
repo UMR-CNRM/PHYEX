@@ -122,14 +122,14 @@ DO JRR = 2,1+KRRL  ! loop on the liquid components
    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
    ZCP(IIJB:IIJE,IKTB:IKTE)  = ZCP(IIJB:IIJE,IKTB:IKTE) + CST%XCL * PR(IIJB:IIJE,IKTB:IKTE,JRR)
    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
-END DO
+ENDDO
 
 DO JRR = 2+KRRL,1+KRRL+KRRI ! loop on the solid components
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
   ZCP(IIJB:IIJE,IKTB:IKTE)  = ZCP(IIJB:IIJE,IKTB:IKTE)  + CST%XCI * PR(IIJB:IIJE,IKTB:IKTE,JRR)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
 
-END DO
+ENDDO
 
 !*      Temperature
 !
