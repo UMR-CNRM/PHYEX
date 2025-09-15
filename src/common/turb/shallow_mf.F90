@@ -345,8 +345,10 @@ IF( PARAMMF%CMF_UPDRAFT == 'DUAL') THEN
   ! Now thetav_up from vdfhghtnn is used!
   PFLXZTHVMF(:,:)=0.
   ! Yes/No UV mixing!
-!  PDUDT_MF=0.
-!  PDVDT_MF=0.
+  ! Now 50% momentum mixing if UVMIX TRUE (we know 100% too much 0% too little)
+  ! If LMIXUV=FALSE have no impact (0.5*0.=0.)
+  PDUDT_MF=0.5*PDUDT_MF
+  PDVDT_MF=0.5*PDVDT_MF
 ENDIF
 !
 IF(PRESENT(BUCONF)) THEN
