@@ -147,7 +147,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">type(<a class="el" href="structmodd__budget_1_1tbudgetdata.html">tbudgetdata</a>), dimension(kbudgets), intent(inout)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__budget_1_1tbudgetdata__ptr.html">tbudgetdata_ptr</a>), dimension(kbudgets), intent(inout)&#160;</td>
           <td class="paramname"><em>tbudgets</em>, </td>
         </tr>
         <tr>
@@ -231,31 +231,31 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>psigqsat</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pexnref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(merge(d%nit,0,nebn%lsubg_cond),                 merge(d%njt,0,nebn%lsubg_cond),                 merge(d%nkt,0,nebn%lsubg_cond)), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,nebn%lsubg_cond),                 merge(d%nkt,0,nebn%lsubg_cond)), intent(in)&#160;</td>
           <td class="paramname"><em>psigs</em>, </td>
         </tr>
         <tr>
@@ -267,19 +267,19 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(merge(d%nit,0,omfconv),                 merge(d%njt,0,omfconv),                 merge(d%nkt,0,omfconv)), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,omfconv),                 merge(d%nkt,0,omfconv)), intent(in)&#160;</td>
           <td class="paramname"><em>pmfconv</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>ppabst</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pzz</em>, </td>
         </tr>
         <tr>
@@ -291,37 +291,37 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(merge(d%nit,0,odthrad),                 merge(d%njt,0,odthrad),                 merge(d%nkt,0,odthrad)), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,odthrad),                 merge(d%nkt,0,odthrad)), intent(in)&#160;</td>
           <td class="paramname"><em>pdthrad</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pw_nu</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, krr), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, krr), intent(in)&#160;</td>
           <td class="paramname"><em>prt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, krr), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, krr), intent(inout)&#160;</td>
           <td class="paramname"><em>prs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, tnsv%nsv), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv), intent(in)&#160;</td>
           <td class="paramname"><em>psvt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, tnsv%nsv), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv), intent(inout)&#160;</td>
           <td class="paramname"><em>psvs</em>, </td>
         </tr>
         <tr>
@@ -333,25 +333,25 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt ,tnsv%nsv), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt ,tnsv%nsv), intent(inout)&#160;</td>
           <td class="paramname"><em>paero</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, 10), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, 10), intent(in)&#160;</td>
           <td class="paramname"><em>psolorg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt, ksp+kcarb+ksoa), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, ksp+kcarb+ksoa), intent(in)&#160;</td>
           <td class="paramname"><em>pmi</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(inout)&#160;</td>
           <td class="paramname"><em>pths</em>, </td>
         </tr>
         <tr>
@@ -363,37 +363,37 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(merge(d%nit,0,ocompute_src),                 merge(d%njt,0,ocompute_src),                 merge(d%nkt,0,ocompute_src)), intent(out)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,ocompute_src),                 merge(d%nkt,0,ocompute_src)), intent(out)&#160;</td>
           <td class="paramname"><em>psrcs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>pcldfr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(out)&#160;</td>
           <td class="paramname"><em>picefr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>prc_mf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pri_mf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nit, d%njt, d%nkt), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>pcf_mf</em>&#160;</td>
         </tr>
         <tr>

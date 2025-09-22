@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['ylbudget_0',['ylbudget',['../structmodd__misc_1_1misc__t.html#a004ce0042ff8e9f75f439a96a7505bae',1,'modd_misc::misc_t']]],
+  ['ylbudget_0',['ylbudget',['../structmodd__misc_1_1misc__t.html#a4605bf9d4b99e3e2c894089621c88aee',1,'modd_misc::misc_t']]],
   ['ymnh_5fstack_1',['ymnh_stack',['../namespacemode__mnh__zwork.html#afeea983961d4672701fb6e9776baab69',1,'mode_mnh_zwork']]],
   ['ypdedst_5fini_2',['ypdedst_ini',['../namespacemodd__dust.html#a5cd418e0dbe98bd4312345897d086b28',1,'modd_dust']]],
   ['ypdeslt_5fini_3',['ypdeslt_ini',['../namespacemodd__salt.html#a3c2892197768ddb450b09295eac5d365',1,'modd_salt']]],

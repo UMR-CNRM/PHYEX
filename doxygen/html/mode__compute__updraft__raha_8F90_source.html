@@ -329,7 +329,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span><span class="comment">! IF (ONOMIXLG .AND. JSV &gt;= KSV_LGBEG .AND. JSV&lt;= KSV_LGEND) CYCLE</span></div>
 <div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span><span class="comment">!   ZSVM_F(IIJB:IIJE,KKB:IKU,JSV) = 0.5*(PSVM(IIJB:IIJE,KKB:IKU,JSV)+PSVM(IIJB:IIJE,1:IKU-1,JSV))</span></div>
 <div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span><span class="comment">!   ZSVM_F(IIJB:IIJE,1,JSV)       = ZSVM_F(IIJB:IIJE,KKB,JSV) </span></div>
-<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span><span class="comment">!END DO  </span></div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span><span class="comment">!ENDDO  </span></div>
 <div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span> </div>
 <div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span><span class="comment">!          Initialisation of updraft characteristics </span></div>
 <div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span><span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
@@ -683,7 +683,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>    pemf(jij,jk+ikl) = zrho_f(jij,jk+ikl)*pfrac_up(jij,jk+ikl)*&amp;</div>
 <div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>                                 &amp; sqrt(zw_up2(jij,jk+ikl))</div>
 <div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span><span class="keywordflow">  END IF</span></div>
-<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span><span class="keywordflow"> END DO</span></div>
+<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span><span class="keywordflow"> ENDDO</span></div>
 <div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span><span class="keywordflow">ENDDO</span></div>
 <div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span> </div>
 <div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span><span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
@@ -701,7 +701,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span><span class="comment">!</span></div>
 <div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span><span class="keywordflow">DO</span> jij=iijb,iije </div>
 <div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span>  pdepth(jij) = max(0., pzz(jij,kkctl(jij)) -  pzz(jij,kklcl(jij)) )</div>
-<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span><span class="keywordflow">END DO</span></div>
+<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span><span class="keywordflow">ENDDO</span></div>
 <div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span> </div>
 <div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span><span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
 <div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span>gwork1(iijb:iije)= (gtestlcl(iijb:iije) .AND. (pdepth(iijb:iije) &gt; zdepth_max1) )</div>

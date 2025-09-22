@@ -17,7 +17,7 @@ var searchData=
   ['getdata_5fice_5fadjust_14',['getdata_ice_adjust',['../namespacegetdata__ice__adjust__mod.html#aed91f9693679f1a450ca6354e18e1d4f',1,'getdata_ice_adjust_mod']]],
   ['getdata_5flima_15',['getdata_lima',['../namespacegetdata__lima__mod.html#a16eb8a6b3f0bd9a7ec75ecace73094eb',1,'getdata_lima_mod']]],
   ['getdata_5flima_5fadjust_16',['getdata_lima_adjust',['../namespacegetdata__lima__adjust__mod.html#ac67b753c91f9ee01c18d8eeadb8ce9c4',1,'getdata_lima_adjust_mod']]],
-  ['getdata_5frain_5fice_17',['getdata_rain_ice',['../namespacegetdata__rain__ice__mod.html#a33576dcc83a2b019bfc56411f13f2a92',1,'getdata_rain_ice_mod']]],
+  ['getdata_5frain_5fice_17',['getdata_rain_ice',['../namespacegetdata__rain__ice__mod.html#a2a55f7a458e2b70de592573becefc490',1,'getdata_rain_ice_mod']]],
   ['getdata_5frain_5fice_5fold_18',['getdata_rain_ice_old',['../namespacegetdata__rain__ice__old__mod.html#a1eb08fc12d2dad1b794666f2e8a6646b',1,'getdata_rain_ice_old_mod']]],
   ['getdata_5fshallow_19',['getdata_shallow',['../namespacegetdata__shallow__mod.html#a0c6b214568a9eac8e09185240029e5e7',1,'getdata_shallow_mod']]],
   ['getdata_5fturb_20',['getdata_turb',['../namespacegetdata__turb__mod.html#a333286cb260d67181050a840012ea934',1,'getdata_turb_mod']]],
