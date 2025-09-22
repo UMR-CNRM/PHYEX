@@ -171,46 +171,46 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 ! PRiS = Source of the previous time step
 !
     IF (OSEDIC) THEN
-      ZPRCS(:,:) = 0.0
-      ZPRCS(:,:) = PRCS(:,:)-PRCT(:,:)* ZINVTSTEP
-      PRCS(:,:)  = PRCT(:,:)* ZINVTSTEP
+      ZPRCS(D%NIB:D%NIE,:) = 0.0
+      ZPRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:)-PRCT(D%NIB:D%NIE,:)* ZINVTSTEP
+      PRCS(D%NIB:D%NIE,:)  = PRCT(D%NIB:D%NIE,:)* ZINVTSTEP
     END IF
 
-    ZPRRS(:,:) = 0.0
-    ZPRSS(:,:) = 0.0
-    ZPRGS(:,:) = 0.0
-    IF ( KRR == 7 ) ZPRHS(:,:) = 0.0
+    ZPRRS(D%NIB:D%NIE,:) = 0.0
+    ZPRSS(D%NIB:D%NIE,:) = 0.0
+    ZPRGS(D%NIB:D%NIE,:) = 0.0
+    IF ( KRR == 7 ) ZPRHS(D%NIB:D%NIE,:) = 0.0
 !
-    ZPRRS(:,:) = PRRS(:,:)-PRRT(:,:)* ZINVTSTEP
-    ZPRSS(:,:) = PRSS(:,:)-PRST(:,:)* ZINVTSTEP
-    ZPRGS(:,:) = PRGS(:,:)-PRGT(:,:)* ZINVTSTEP
-    IF ( KRR == 7 ) ZPRHS(:,:) = PRHS(:,:)-PRHT(:,:)* ZINVTSTEP
-    PRRS(:,:)  = PRRT(:,:)* ZINVTSTEP
-    PRSS(:,:)  = PRST(:,:)* ZINVTSTEP
-    PRGS(:,:)  = PRGT(:,:)* ZINVTSTEP
-    IF ( KRR == 7 ) PRHS(:,:)  = PRHT(:,:)* ZINVTSTEP
+    ZPRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:)-PRRT(D%NIB:D%NIE,:)* ZINVTSTEP
+    ZPRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:)-PRST(D%NIB:D%NIE,:)* ZINVTSTEP
+    ZPRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:)-PRGT(D%NIB:D%NIE,:)* ZINVTSTEP
+    IF ( KRR == 7 ) ZPRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:)-PRHT(D%NIB:D%NIE,:)* ZINVTSTEP
+    PRRS(D%NIB:D%NIE,:)  = PRRT(D%NIB:D%NIE,:)* ZINVTSTEP
+    PRSS(D%NIB:D%NIE,:)  = PRST(D%NIB:D%NIE,:)* ZINVTSTEP
+    PRGS(D%NIB:D%NIE,:)  = PRGT(D%NIB:D%NIE,:)* ZINVTSTEP
+    IF ( KRR == 7 ) PRHS(D%NIB:D%NIE,:)  = PRHT(D%NIB:D%NIE,:)* ZINVTSTEP
 !
 ! PRiS = Source of the previous time step + source created during the subtime
 ! step
 !
     DO JN = 1, KSPLITR
       IF( JN==1 ) THEN
-        IF (OSEDIC) PRCS(:,:) = PRCS(:,:) + ZPRCS(:,:)/KSPLITR
-          PRRS(:,:) = PRRS(:,:) + ZPRRS(:,:)/KSPLITR
-          PRSS(:,:) = PRSS(:,:) + ZPRSS(:,:)/KSPLITR
-          PRGS(:,:) = PRGS(:,:) + ZPRGS(:,:)/KSPLITR
-        IF ( KRR == 7 ) PRHS(:,:) = PRHS(:,:) + ZPRHS(:,:)/KSPLITR
+        IF (OSEDIC) PRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:) + ZPRCS(D%NIB:D%NIE,:)/KSPLITR
+          PRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:) + ZPRRS(D%NIB:D%NIE,:)/KSPLITR
+          PRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:) + ZPRSS(D%NIB:D%NIE,:)/KSPLITR
+          PRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:) + ZPRGS(D%NIB:D%NIE,:)/KSPLITR
+        IF ( KRR == 7 ) PRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:) + ZPRHS(D%NIB:D%NIE,:)/KSPLITR
         DO JK = D%NKTB , D%NKTE
           DO JI = D%NIB , D%NIE
             ZW(JI,JK) =ZTSPLITR/(PRHODREF(JI,JK)* PDZZ(JI,JK))
           END DO
         END DO
       ELSE
-        IF (OSEDIC) PRCS(:,:) = PRCS(:,:) + ZPRCS(:,:)*ZTSPLITR
-        PRRS(:,:) = PRRS(:,:) + ZPRRS(:,:)*ZTSPLITR
-        PRSS(:,:) = PRSS(:,:) + ZPRSS(:,:)*ZTSPLITR
-        PRGS(:,:) = PRGS(:,:) + ZPRGS(:,:)*ZTSPLITR
-        IF ( KRR == 7 ) PRHS(:,:) = PRHS(:,:) + ZPRHS(:,:)*ZTSPLITR
+        IF (OSEDIC) PRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:) + ZPRCS(D%NIB:D%NIE,:)*ZTSPLITR
+        PRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:) + ZPRRS(D%NIB:D%NIE,:)*ZTSPLITR
+        PRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:) + ZPRSS(D%NIB:D%NIE,:)*ZTSPLITR
+        PRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:) + ZPRGS(D%NIB:D%NIE,:)*ZTSPLITR
+        IF ( KRR == 7 ) PRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:) + ZPRHS(D%NIB:D%NIE,:)*ZTSPLITR
       END IF
  !
       IF (OSEDIC) GSEDIMC(D%NIB:D%NIE,D%NKTB:D%NKTE) =                &
@@ -237,8 +237,8 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 !
       IF (OSEDIC) THEN
 
-        ZWSED(:,:) = 0.
-        IF( JN==1 ) PRCS(:,:) = PRCS(:,:) * PTSTEP
+        ZWSED(D%NIB:D%NIE,:) = 0.
+        IF( JN==1 ) PRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:) * PTSTEP
 
         IF( ISEDIMC >= 1 ) THEN
 
@@ -279,27 +279,27 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
         END IF
 
         DO JK = D%NKTB , D%NKTE
-          PRCS(:,JK) = PRCS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
+          PRCS(D%NIB:D%NIE,JK) = PRCS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
         END DO
 
         IF (PRESENT(PFPR)) THEN
           DO JK = D%NKTB , D%NKTE
-            PFPR(:,JK,2)=ZWSED(:,JK)
+            PFPR(D%NIB:D%NIE,JK,2)=ZWSED(D%NIB:D%NIE,JK)
           ENDDO
         ENDIF
 
-        PINPRC(:) = PINPRC(:) + ZWSED(:,IKB) / CST%XRHOLW / KSPLITR
+        PINPRC(D%NIB:D%NIE) = PINPRC(D%NIB:D%NIE) + ZWSED(D%NIB:D%NIE,IKB) / CST%XRHOLW / KSPLITR
 
         IF( JN==KSPLITR ) THEN
-          PRCS(:,:) = PRCS(:,:) * ZINVTSTEP
+          PRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:) * ZINVTSTEP
         END IF
 
       END IF !OSEDIC
 !
 !*       2.2   for rain
 !
-      IF( JN==1 ) PRRS(:,:) = PRRS(:,:) * PTSTEP
-      ZWSED(:,:) = 0.
+      IF( JN==1 ) PRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:) * PTSTEP
+      ZWSED(D%NIB:D%NIE,:) = 0.
 
       IF( ISEDIMR >= 1 ) THEN
 !
@@ -324,26 +324,26 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
       END IF ! ISEDIMR
 
       DO JK = D%NKTB , D%NKTE
-        PRRS(:,JK) = PRRS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
+        PRRS(D%NIB:D%NIE,JK) = PRRS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
       END DO
 
       IF (PRESENT(PFPR)) THEN
         DO JK = D%NKTB , D%NKTE
-          PFPR(:,JK,3)=ZWSED(:,JK)
+          PFPR(D%NIB:D%NIE,JK,3)=ZWSED(D%NIB:D%NIE,JK)
         ENDDO
       ENDIF
 
-      PINPRR(:) = PINPRR(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
+      PINPRR(D%NIB:D%NIE) = PINPRR(D%NIB:D%NIE) + ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
-        PRRS(:,:) = PRRS(:,:) * ZINVTSTEP
+        PRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:) * ZINVTSTEP
       END IF
 !
 !*       2.3   for pristine ice
 !
 
-      IF( JN==1 ) PRIS(:,:) = PRIS(:,:) * PTSTEP
+      IF( JN==1 ) PRIS(D%NIB:D%NIE,:) = PRIS(D%NIB:D%NIE,:) * PTSTEP
 
-      ZWSED(:,:) = 0.
+      ZWSED(D%NIB:D%NIE,:) = 0.
       IF( ISEDIMI >= 1 ) THEN
 
         DO JL=1,ISEDIMI
@@ -369,24 +369,24 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
       END IF !ISEDIMI
 
       DO JK = D%NKTB , D%NKTE
-        PRIS(:,JK) = PRIS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
+        PRIS(D%NIB:D%NIE,JK) = PRIS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
       END DO
 
       IF (PRESENT(PFPR)) THEN
         DO JK = D%NKTB , D%NKTE
-          PFPR(:,JK,4)=ZWSED(:,JK)
+          PFPR(D%NIB:D%NIE,JK,4)=ZWSED(D%NIB:D%NIE,JK)
         ENDDO
       ENDIF
 
       IF( JN==KSPLITR ) THEN
-        PRIS(:,:) = PRIS(:,:) * ZINVTSTEP
+        PRIS(D%NIB:D%NIE,:) = PRIS(D%NIB:D%NIE,:) * ZINVTSTEP
       END IF
 !
 !*       2.4   for aggregates/snow
 !
-      IF( JN==1 ) PRSS(:,:) = PRSS(:,:) * PTSTEP
+      IF( JN==1 ) PRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:) * PTSTEP
 
-      ZWSED(:,:) = 0.
+      ZWSED(D%NIB:D%NIE,:) = 0.
       IF( ISEDIMS >= 1 ) THEN
 !
         DO JL=1,ISEDIMS
@@ -410,24 +410,24 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
       END IF !ISEDIMS
 
       DO JK = D%NKTB , D%NKTE
-        PRSS(:,JK) = PRSS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
+        PRSS(D%NIB:D%NIE,JK) = PRSS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
       END DO
 
       IF (PRESENT(PFPR)) THEN
         DO JK = D%NKTB , D%NKTE
-          PFPR(:,JK,5)=ZWSED(:,JK)
+          PFPR(D%NIB:D%NIE,JK,5)=ZWSED(D%NIB:D%NIE,JK)
         ENDDO
       ENDIF
 
-      PINPRS(:) = PINPRS(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
+      PINPRS(D%NIB:D%NIE) = PINPRS(D%NIB:D%NIE) + ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
-        PRSS(:,:) = PRSS(:,:) * ZINVTSTEP
+        PRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:) * ZINVTSTEP
       END IF
 !
 !*       2.5   for graupeln
 !
-      ZWSED(:,:) = 0.
-      IF( JN==1 ) PRGS(:,:) = PRGS(:,:) * PTSTEP
+      ZWSED(D%NIB:D%NIE,:) = 0.
+      IF( JN==1 ) PRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:) * PTSTEP
 
       IF( ISEDIMG >= 1 ) THEN
 !
@@ -452,25 +452,25 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
       END IF !ISEDIMG
 
       DO JK = D%NKTB , D%NKTE
-        PRGS(:,JK) = PRGS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
+        PRGS(D%NIB:D%NIE,JK) = PRGS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
       END DO
 
       IF (PRESENT(PFPR)) THEN
         DO JK = D%NKTB , D%NKTE
-          PFPR(:,JK,6)=ZWSED(:,JK)
+          PFPR(D%NIB:D%NIE,JK,6)=ZWSED(D%NIB:D%NIE,JK)
         ENDDO
       ENDIF
 
-      PINPRG(:) = PINPRG(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
+      PINPRG(D%NIB:D%NIE) = PINPRG(D%NIB:D%NIE) + ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
-        PRGS(:,:) = PRGS(:,:) * ZINVTSTEP
+        PRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:) * ZINVTSTEP
       END IF
 !
 !*       2.6   for hail
 !
       IF ( KRR == 7 ) THEN
-        IF( JN==1 ) PRHS(:,:) = PRHS(:,:) * PTSTEP
-        ZWSED(:,:) = 0.
+        IF( JN==1 ) PRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:) * PTSTEP
+        ZWSED(D%NIB:D%NIE,:) = 0.
 
         IF( ISEDIMH >= 1 ) THEN
 
@@ -496,18 +496,18 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
         END IF !ISEDIMH
 
         DO JK = D%NKTB , D%NKTE
-          PRHS(:,JK) = PRHS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
+          PRHS(D%NIB:D%NIE,JK) = PRHS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
         END DO
 
         IF (PRESENT(PFPR)) THEN
           DO JK = D%NKTB , D%NKTE
-            PFPR(:,JK,7)=ZWSED(:,JK)
+            PFPR(D%NIB:D%NIE,JK,7)=ZWSED(D%NIB:D%NIE,JK)
           ENDDO
         ENDIF
 
-        PINPRH(:) = PINPRH(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
+        PINPRH(D%NIB:D%NIE) = PINPRH(D%NIB:D%NIE) + ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW/KSPLITR
         IF( JN==KSPLITR ) THEN
-          PRHS(:,:) = PRHS(:,:) * ZINVTSTEP
+          PRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:) * ZINVTSTEP
         END IF
       END IF !KRR == 7
 
