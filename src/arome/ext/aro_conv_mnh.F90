@@ -152,7 +152,7 @@ INTEGER, DIMENSION(KLON),INTENT(INOUT) :: KCLTOP,KCLBAS
 
 LOGICAL :: OCHTRANS ! flag to compute convective transport
                         ! for chemical tracers
-LOGICAL :: OUSECHEM, OCH_CONV_SCAV ! ?
+LOGICAL :: OCH_CONV_SCAV ! ?
 
 INTEGER :: JLON,JLEV,JN ! loop index
 INTEGER :: IIDIA, IFDIA ! horizontal loop bounds
@@ -256,7 +256,6 @@ IENS=MIN(KSETENS,3)
 
 OCHTRANS=.FALSE.
 ICH1=1
-OUSECHEM=.FALSE.
 OCH_CONV_SCAV=.FALSE.
 
 !1-5 others
@@ -353,7 +352,7 @@ IF(LDEEP) THEN
   !                      &ZCAPE,&
   !                      &OCHTRANS, ICH1, ZCH1,&
   !                      & ZCH1TEN,&
-  !                      &OUSECHEM, OCH_CONV_SCAV, PRHOREF)
+  !                      &OCH_CONV_SCAV, PRHOREF)
 !  3.2. Additional Ensemble members
  
     IF ( IENS > 0 ) THEN
@@ -373,7 +372,7 @@ IF(LDEEP) THEN
      !                     &IEDUMMY, IEDUMMY, ZPRLFLXE(:,:,1), ZPRSFLXE(:,:,1),&
      !                     &ZUMFE(:,:,1), ZDMFE(:,:,1), ZEDUMMY,&
      !                     &OCHTRANS, ICH1, ZCH1, ZCH1TENE(:,:,:,1),&
-     !                     &OUSECHEM, OCH_CONV_SCAV, PRHOREF)                  
+     !                     &OCH_CONV_SCAV, PRHOREF)                  
     ENDIF
  
     IF (  IENS > 1 ) THEN
@@ -392,7 +391,7 @@ IF(LDEEP) THEN
     !                      &IEDUMMY, IEDUMMY, ZPRLFLXE(:,:,2), ZPRSFLXE(:,:,2),&
     !                      &ZUMFE(:,:,2), ZDMFE(:,:,2), ZEDUMMY,&
     !                      &OCHTRANS, ICH1, ZCH1, ZCH1TENE(:,:,:,2),&
-    !                      &OUSECHEM, OCH_CONV_SCAV, PRHOREF)                  
+    !                      &OCH_CONV_SCAV, PRHOREF)                  
     ENDIF
 !
     IF ( IENS > 2 ) THEN
@@ -409,7 +408,7 @@ IF(LDEEP) THEN
      !                     &IEDUMMY, IEDUMMY, ZPRLFLXE(:,:,3), ZPRSFLXE(:,:,3),&
      !                     &ZUMFE(:,:,3), ZDMFE(:,:,3), ZEDUMMY,&
      !                     &OCHTRANS, ICH1, ZCH1, ZCH1TENE(:,:,:,3),&
-     !                     &OUSECHEM, OCH_CONV_SCAV, PRHOREF)                  
+     !                     &OCH_CONV_SCAV, PRHOREF)                  
     ENDIF
  
 ENDIF

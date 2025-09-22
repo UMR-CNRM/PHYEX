@@ -138,7 +138,7 @@ IF (KRRL > 0)  THEN
       ZFLXZ(IIJB:IIJE,1:IKT) = -2 * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
                            & (PTHL_UP(IIJB:IIJE,1:IKT)-ZFLXZ(IIJB:IIJE,1:IKT)) * ZWK(IIJB:IIJE,1:IKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    END IF
+    ENDIF
     !
     !   Avoid negative values
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -170,7 +170,7 @@ IF (KRRL > 0)  THEN
       ZFLXZ2(IIJB:IIJE,1:IKT) = -2 * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
                            & (PRT_UP(IIJB:IIJE,1:IKT)-ZFLXZ2(IIJB:IIJE,1:IKT)) * ZWK2(IIJB:IIJE,1:IKT) 
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    END IF
+    ENDIF
     !
     !   Avoid negative values
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -207,7 +207,7 @@ IF (KRRL > 0)  THEN
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ELSE
   PSIGMF(:,:) = 0.
-END IF
+ENDIF
 !
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_STAT',1,ZHOOK_HANDLE)
 !

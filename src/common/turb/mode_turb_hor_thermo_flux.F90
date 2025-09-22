@@ -147,6 +147,7 @@ REAL, DIMENSION(D%NIT,D%NJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF
 !
 REAL :: ZTIME1, ZTIME2
 TYPE(TFIELDMETADATA) :: TZFIELD
+INTEGER :: JI, JJ, JK
 ! ---------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS

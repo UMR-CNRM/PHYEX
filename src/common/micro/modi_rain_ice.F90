@@ -8,6 +8,7 @@ INTERFACE
                             OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
                             PTSTEP, KRR, PEXN,                                    &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
+                            PICLDFR, PSSIO, PSSIU, PIFR,                 &
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
                             PTHT, PRT, PTHS, PRS, &
                             PINPRC, PINPRR, PEVAP3D,                              &
@@ -16,10 +17,10 @@ INTERFACE
                             PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,           &
                             PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &
                             PEFIELDW, PLATHAM_IAGGS,                              &
-                            PSEA, PTOWN,                                          &
+                            PSEA, PTOWN, PCONC3D,                                 &
                             PINPRH, PFPR, PQHT, PQHS                  )
 !
-USE MODD_BUDGET,         ONLY: TBUDGETDATA, TBUDGETCONF_t
+USE MODD_BUDGET,         ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
@@ -53,6 +54,12 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST  ! absolute pressure at
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCLDFR  ! Cloud fraction
+!OCND2
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PICLDFR ! Ice cloud fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the supersaturated fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the  subsaturated fraction 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part 
+
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLC_HRC
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLC_HCF
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLI_HRI
@@ -73,7 +80,7 @@ REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PINDEP  ! Cloud instant deposition
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) :: PRAINFR !Precipitation fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
 !
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
 ! scalar variables for cloud electricity
@@ -100,6 +107,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(IN
 ! optional variables
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(IN)    :: PSEA    ! Sea Mask
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(IN)    :: PTOWN   ! Fraction that is town
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,  INTENT(IN)    :: PCONC3D    ! Cloud droplet number concentration
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-air precipitation fluxes
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHT ! Hail electric charge at t

@@ -140,7 +140,11 @@ fi
 
 if [ -z "${checkout_point-}" ]; then
   [ $verbose -gt 0 ] && echo "No checkout point provided, we use the content of $directory directory"
-  if [ ! -d $directory/src ]; then
+  if [ -d $directory/src ]; then
+    :
+  elif [ -d $directory/turb -a -d $directory/micro -a -d $directory/aux ]; then
+    :
+  else
     echo "$directory must be filled with files and directories as if it was obtained through a checkout"
     exit 2
   fi
@@ -304,6 +308,9 @@ if [ "$pyfortool_opts_env" != "" -o -n "${pyfortool_options-}" ]; then
       reps="$reps src/*/$sub"
     done
   fi
+  for rep in $reps; do
+    [ -f $rep/.gitkeep ] && rm -f $rep/.gitkeep
+  done
 
   extra_opts=""
   if [ "$pyfortool_opts_env" != "" ]; then

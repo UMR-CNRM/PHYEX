@@ -149,7 +149,7 @@ IIJB=D%NIJB
 IKT=D%NKT
 !
 PFLXZSVMF(:,:,:) = 0.
-PSVDT(:,:,:) = 0.
+PSVDT(:,:,:)     = 0.
 !
 IF(PARAMMF%LRELAX_ALPHA_MF) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)

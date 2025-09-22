@@ -63,7 +63,7 @@ CONTAINS
 !*      0.    DECLARATIONS
 !             ------------
 !
-USE MODD_BUDGET,     ONLY:  NBUDGET_SV1, TBUDGETDATA, TBUDGETCONF_t
+USE MODD_BUDGET,     ONLY:  NBUDGET_SV1, TBUDGETDATA_PTR, TBUDGETCONF_T
 !
 USE MODD_CST,              ONLY: CST_t
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
@@ -98,7 +98,6 @@ USE MODD_PARAM_LIMA_MIXED, ONLY: XDG_L=>XDG, XCXG_L=>XCXG,                      
 !USE MODE_PACK_PGI
 !#endif
 use mode_tools,           only: Countjv
-USE MODE_BUDGET_PHY,      ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 !
 USE MODE_COMPUTE_LAMBDA, ONLY: COMPUTE_LAMBDA
 USE MODE_ELEC_COMPUTE_EX,ONLY: ELEC_COMPUTE_EX
@@ -116,7 +115,7 @@ TYPE(RAIN_ICE_DESCR_t),                INTENT(IN)     :: ICED
 TYPE(RAIN_ICE_PARAM_t),                INTENT(IN)     :: ICEP
 TYPE(ELEC_PARAM_t),                    INTENT(IN)     :: ELECP   ! electrical parameters
 TYPE(ELEC_DESCR_t),                    INTENT(IN)     :: ELECD   ! electrical descriptive csts
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS),INTENT(INOUT)  :: TBUDGETS
+TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS),INTENT(INOUT)  :: TBUDGETS
 INTEGER,                               INTENT(IN)     :: KBUDGETS
 !
 INTEGER,                              INTENT(IN)    :: KMICRO
@@ -804,9 +803,9 @@ IF (KMICRO >= 0) THEN
 !*      2.2   spontaneous freezing (rhong)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'SFR', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%INIT_PHY(D, 'SFR', &
                             Unpack( zqrs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'SFR', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%INIT_PHY(D, 'SFR', &
                             Unpack( zqgs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !  
@@ -820,9 +819,9 @@ IF (KMICRO >= 0) THEN
   END WHERE
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'SFR', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%END_PHY(D, 'SFR', &
                            Unpack( zqrs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'SFR', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%END_PHY(D, 'SFR', &
                            Unpack( zqgs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -830,9 +829,9 @@ IF (KMICRO >= 0) THEN
 !*      2.3   cloud ice melting (rimltc)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'IMLT', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%INIT_PHY(D, 'IMLT', &
                             Unpack( zqcs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'IMLT', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%INIT_PHY(D, 'IMLT', &
                             Unpack( zqis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -842,9 +841,9 @@ IF (KMICRO >= 0) THEN
   END WHERE
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'IMLT', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%END_PHY(D, 'IMLT', &
                            Unpack( zqcs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'IMLT', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%END_PHY(D, 'IMLT', &
                            Unpack( zqis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -869,9 +868,9 @@ IF (KMICRO >= 0) THEN
   END WHERE
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'HON', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%ADD_PHY(D, 'HON', &
                            Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'HON', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'HON', &
                            Unpack(  zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -879,9 +878,9 @@ IF (KMICRO >= 0) THEN
 !*      2.6   deposition on snow/aggregates (rvdeps)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG ), 'DEPS', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG )%PTR%INIT_PHY(D, 'DEPS', &
                             Unpack( zqpis(:) * zrhodj(:), mask = odmicro(:, :, :), field =  0. ) )
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND ), 'DEPS', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND )%PTR%INIT_PHY(D, 'DEPS', &
                             Unpack( zqnis(:) * zrhodj(:), mask = odmicro(:, :, :), field =  0. ) )
   end if
 !
@@ -899,11 +898,11 @@ IF (KMICRO >= 0) THEN
   END WHERE
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG ), 'DEPS', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG )%PTR%END_PHY(D, 'DEPS', &
                            Unpack( zqpis(:) * zrhodj(:), mask = odmicro(:, :, :), field =  0. ) )
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND ), 'DEPS', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND )%PTR%END_PHY(D, 'DEPS', &
                            Unpack( zqnis(:) * zrhodj(:), mask = odmicro(:, :, :), field =  0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'DEPS', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%ADD_PHY(D, 'DEPS', &
                            Unpack( -zwq(:) * zrhodj(:),  mask = odmicro(:, :, :), field =  0. ) )
   end if
 !
@@ -915,9 +914,9 @@ IF (KMICRO >= 0) THEN
                                 ZWQ, ZQIS, ZQSS)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'AGGS', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'AGGS', &
                            Unpack( -zwq(:), mask = odmicro(:, :, :), field =  0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'AGGS', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%ADD_PHY(D, 'AGGS', &
                            Unpack(  zwq(:), mask = odmicro(:, :, :), field =  0. ) )
   end if
 !
@@ -927,9 +926,9 @@ IF (KMICRO >= 0) THEN
   CALL ELEC_IAGGS_B()
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'NIIS', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'NIIS', &
                            Unpack( -zwq_ni(:), mask = odmicro(:, :, :), field =  0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'NIIS', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%ADD_PHY(D, 'NIIS', &
                            Unpack(  zwq_ni(:), mask = odmicro(:, :, :), field =  0. ) )
   end if
 !
@@ -946,9 +945,9 @@ IF (KMICRO >= 0) THEN
                                 ZWQ, ZQIS, ZQSS)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'AUTS', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'AUTS', &
                            Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'AUTS', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%ADD_PHY(D, 'AUTS', &
                            Unpack(  zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -961,18 +960,18 @@ IF (KMICRO >= 0) THEN
                                   ZWQ, ZQSS, ZQIS)          
 !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'CNVI', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'CNVI', &
                              Unpack(  zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'CNVI', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%ADD_PHY(D, 'CNVI', &
                              Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if
 !
 !*      2.11  water vapor deposition on ice crystals (rvdepi)
 !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG ), 'SUBI', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG )%PTR%INIT_PHY(D, 'SUBI', &
                               Unpack( zqpis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND ), 'SUBI', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND )%PTR%INIT_PHY(D, 'SUBI', &
                               Unpack( zqnis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if
     !
@@ -990,11 +989,11 @@ IF (KMICRO >= 0) THEN
     END WHERE
 !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG ), 'SUBI', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG )%PTR%END_PHY(D, 'SUBI', &
                              Unpack( zqpis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND ), 'SUBI', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND )%PTR%END_PHY(D, 'SUBI', &
                              Unpack( zqnis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )           
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'SUBI', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'SUBI', &
                              Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if    
   END IF
@@ -1003,9 +1002,9 @@ IF (KMICRO >= 0) THEN
 !*      2.12  water vapor deposition on graupel (rvdepg)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG ), 'DEPG', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG )%PTR%INIT_PHY(D, 'DEPG', &
                             Unpack( zqpis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND ), 'DEPG', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND )%PTR%INIT_PHY(D, 'DEPG', &
                             Unpack( zqnis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -1023,11 +1022,11 @@ IF (KMICRO >= 0) THEN
   END WHERE
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG ), 'DEPG', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG )%PTR%END_PHY(D, 'DEPG', &
                            Unpack( zqpis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND ), 'DEPG', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND )%PTR%END_PHY(D, 'DEPG', &
                            Unpack( zqnis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'DEPG', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%ADD_PHY(D, 'DEPG', &
                            Unpack( -zwq(:) * zrhodj(:),  mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -1044,9 +1043,9 @@ IF (KMICRO >= 0) THEN
                                 ZWQ, ZQCS, ZQRS)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'AUTO', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%ADD_PHY(D, 'AUTO', &
                            Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'AUTO', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%ADD_PHY(D, 'AUTO', &
                            Unpack(  zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -1058,9 +1057,9 @@ IF (KMICRO >= 0) THEN
                                 ZWQ, ZQCS, ZQRS)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'ACCR', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%ADD_PHY(D, 'ACCR', &
                            Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'ACCR', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%ADD_PHY(D, 'ACCR', &
                            Unpack(  zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -1068,9 +1067,9 @@ IF (KMICRO >= 0) THEN
 !*      3.3   evaporation of raindrops (rrevav)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG ), 'REVA', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG )%PTR%INIT_PHY(D, 'REVA', &
                             Unpack( zqpis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND ), 'REVA', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND )%PTR%INIT_PHY(D, 'REVA', &
                             Unpack( zqnis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -1086,11 +1085,11 @@ IF (KMICRO >= 0) THEN
   END WHERE
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG ), 'REVA', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG )%PTR%END_PHY(D, 'REVA', &
                            Unpack( zqpis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND ), 'REVA', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND )%PTR%END_PHY(D, 'REVA', &
                            Unpack( zqnis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'REVA', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%ADD_PHY(D, 'REVA', &
                            Unpack( -zwq(:) * zrhodj(:),  mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -1099,9 +1098,9 @@ IF (KMICRO >= 0) THEN
 !
   IF (HCLOUD == 'LIMA') THEN
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'R2C1', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%INIT_PHY(D, 'R2C1', &
                               Unpack( zqcs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'R2C1', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%INIT_PHY(D, 'R2C1', &
                               Unpack( zqrs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if
 !
@@ -1110,9 +1109,9 @@ IF (KMICRO >= 0) THEN
                                   ZWQ, ZQRS, ZQCS)
 !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'R2C1', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%END_PHY(D, 'R2C1', &
                              Unpack( zqcs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'R2C1', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%END_PHY(D, 'R2C1', &
                              Unpack( zqrs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if
   END IF
@@ -1125,11 +1124,11 @@ IF (KMICRO >= 0) THEN
 !*      4.1   cloud droplet riming of the aggregates
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'RIM', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%INIT_PHY(D, 'RIM', &
                            Unpack( zqcs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'RIM', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%INIT_PHY(D, 'RIM', &
                            Unpack( zqss(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'RIM', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%INIT_PHY(D, 'RIM', &
                            Unpack( zqgs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -1213,11 +1212,11 @@ IF (KMICRO >= 0) THEN
   END WHERE
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'RIM', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%END_PHY(D, 'RIM', &
                            Unpack( zqcs(:) * zrhodj(:),  mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'RIM', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%END_PHY(D, 'RIM', &
                            Unpack( zqss(:) * zrhodj(:),  mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'RIM', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%END_PHY(D, 'RIM', &
                            Unpack( zqgs(:) * zrhodj(:),  mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -1230,9 +1229,9 @@ IF (KMICRO >= 0) THEN
                                   ZWQ, ZQSS, ZQIS)       
 !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'HMS', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%ADD_PHY(D, 'HMS', &
                              Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'HMS', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'HMS', &
                              Unpack(  zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if
   END IF
@@ -1355,11 +1354,11 @@ IF (KMICRO >= 0) THEN
     END WHERE
     !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'ACC', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%ADD_PHY(D, 'ACC', &
                              Unpack( (-zwq5(:,1) - zwq5(:,3)) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'ACC', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%ADD_PHY(D, 'ACC', &
                              Unpack( ( zwq5(:,1) - zwq5(:,4)) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'ACC', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%ADD_PHY(D, 'ACC', &
                              Unpack( ( zwq5(:,3) + zwq5(:,4)) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if    
     !
@@ -1373,9 +1372,9 @@ IF (KMICRO >= 0) THEN
                                 ZWQ, ZQSS, ZQGS)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'CMEL', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%ADD_PHY(D, 'CMEL', &
                            Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'CMEL', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%ADD_PHY(D, 'CMEL', &
                            Unpack(  zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -1388,9 +1387,9 @@ IF (KMICRO >= 0) THEN
                                   ZWQ, ZQCS, ZQRS)
 !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'CMEL', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%ADD_PHY(D, 'CMEL', &
                              Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'CMEL', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%ADD_PHY(D, 'CMEL', &
                              Unpack(  zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if
   END IF
@@ -1404,11 +1403,11 @@ IF (KMICRO >= 0) THEN
 !*      5.1   rain contact freezing (ricfrrg, rrcfrig, ricfrr)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'CFRZ', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%INIT_PHY(D, 'CFRZ', &
                            Unpack( zqrs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'CFRZ', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%INIT_PHY(D, 'CFRZ', &
                            Unpack( zqis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'CFRZ', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%INIT_PHY(D, 'CFRZ', &
                            Unpack( zqgs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
   !
@@ -1439,11 +1438,11 @@ IF (KMICRO >= 0) THEN
 !++CB-- 16/06/2022 il manque le traitement de qricfrr
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'CFRZ', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%END_PHY(D, 'CFRZ', &
                            Unpack( zqrs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'CFRZ', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%END_PHY(D, 'CFRZ', &
                            Unpack( zqis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'CFRZ', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%END_PHY(D, 'CFRZ', &
                            Unpack( zqgs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -1484,9 +1483,9 @@ IF (KMICRO >= 0) THEN
   CALL ELEC_IDRYG_B()  ! QIDRYG_boun
   !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'NIIG', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'NIIG', &
                             Unpack( -zwq_ni(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'NIIG', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%ADD_PHY(D, 'NIIG', &
                             Unpack(  zwq_ni(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
   !
@@ -1616,9 +1615,9 @@ IF (KMICRO >= 0) THEN
     CALL ELEC_SDRYG_B()
     !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'NISG', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%ADD_PHY(D, 'NISG', &
                               Unpack( -zwq_ni(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'NISG', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%ADD_PHY(D, 'NISG', &
                               Unpack(  zwq_ni(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if
     !
@@ -1705,15 +1704,15 @@ IF (KMICRO >= 0) THEN
 !    ZRDRYG(:) = ZWQ5(:,1) + ZWQ5(:,2) + ZWQ5(:,3) + ZWQ5(:,4)
 !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'DRYG', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%ADD_PHY(D, 'DRYG', &
                               Unpack( -zwq5(:,1) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'DRYG', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%ADD_PHY(D, 'DRYG', &
                               Unpack( -zwq5(:,4) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'DRYG', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'DRYG', &
                               Unpack( -zwq5(:,2) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'DRYG', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%ADD_PHY(D, 'DRYG', &
                               Unpack( -zwq5(:,3) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'DRYG', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%ADD_PHY(D, 'DRYG', &
                               Unpack( (zwq5(:,1) + zwq5(:,2) + zwq5(:,3) + zwq5(:,4)) * zrhodj(:), &
                               mask = odmicro(:, :, :), field = 0. ) )
     end if
@@ -1729,9 +1728,9 @@ IF (KMICRO >= 0) THEN
                                   ZWQ, ZQGS, ZQIS)          
 !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'HMG', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%ADD_PHY(D, 'HMG', &
                              Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'HMG', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'HMG', &
                              Unpack(  zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if
   END IF
@@ -1782,7 +1781,7 @@ IF (KMICRO >= 0) THEN
 !*      5.4.4 conversion of graupel into hail (rwetgh)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'WETG', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%INIT_PHY(D, 'WETG', &
                             Unpack( zqgs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -1814,18 +1813,18 @@ IF (KMICRO >= 0) THEN
   END IF
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'WETG', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%ADD_PHY(D, 'WETG', &
                            Unpack( -zwq5(:,5) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'WETG', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%ADD_PHY(D, 'WETG', &
                            Unpack( -zwq5(:,8) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'WETG', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'WETG', &
                            Unpack( -zwq5(:,6) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'WETG', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%ADD_PHY(D, 'WETG', &
                            Unpack( -zwq5(:,7) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'WETG', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%END_PHY(D, 'WETG', &
                            Unpack(  zqgs(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     if ( krr == 7 ) &
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 6 ), 'WETG', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 6 )%PTR%ADD_PHY(D, 'WETG', &
                            Unpack( zwq5(:,9) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -1860,9 +1859,9 @@ IF (KMICRO >= 0) THEN
       END WHERE
     !
       if ( BUCONF%LBUDGET_SV ) then
-        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'INCG', &
+        CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%ADD_PHY(D, 'INCG', &
                                Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'INCG', &
+        CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%ADD_PHY(D, 'INCG', &
                                Unpack(  zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
       end if    
       !
@@ -1886,9 +1885,9 @@ IF (KMICRO >= 0) THEN
                                 ZWQ, ZQGS, ZQRS)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'GMLT', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%ADD_PHY(D, 'GMLT', &
                            Unpack(  zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'GMLT', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%ADD_PHY(D, 'GMLT', &
                            Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -1968,17 +1967,17 @@ IF (KMICRO >= 0) THEN
     END WHERE
 !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'WETH', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%ADD_PHY(D, 'WETH', &
                              Unpack( -zwq5(:, 1) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'WETH', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%ADD_PHY(D, 'WETH', &
                              Unpack( -zwq5(:, 4) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'WETH', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'WETH', &
                              Unpack( -zwq5(:, 2) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'WETH', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%ADD_PHY(D, 'WETH', &
                              Unpack( -zwq5(:, 3) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'WETH', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%ADD_PHY(D, 'WETH', &
                              Unpack( -zwq5(:, 5) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 6 ), 'WETH',                      &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 6 )%PTR%ADD_PHY(D, 'WETH',                      &
                              Unpack( ( zwq5(:, 1) + zwq5(:, 2) + zwq5(:, 3) + zwq5(:, 4) + zwq5(:, 5) ) &
                                        * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if
@@ -2036,17 +2035,17 @@ IF (KMICRO >= 0) THEN
                                   ZWQ, ZQHS, ZQGS)
 !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'DRYH', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%ADD_PHY(D, 'DRYH', &
                              Unpack( -zwq5(:, 1) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'DRYH', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%ADD_PHY(D, 'DRYH', &
                              Unpack( -zwq5(:, 4) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'DRYH', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'DRYH', &
                              Unpack( -zwq5(:, 2) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 ), 'DRYH', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 4 )%PTR%ADD_PHY(D, 'DRYH', &
                              Unpack( -zwq5(:, 3) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 ), 'DRYH', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 5 )%PTR%ADD_PHY(D, 'DRYH', &
                              Unpack( (-zwq5(:, 5) - zwq(:)) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 6 ), 'DRYH',                      &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 6 )%PTR%ADD_PHY(D, 'DRYH',                      &
                              Unpack( ( zwq5(:, 1) + zwq5(:, 2) + zwq5(:, 3) + zwq5(:, 4) + zwq5(:, 5) + zwq(:) ) &
                                        * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if
@@ -2059,9 +2058,9 @@ IF (KMICRO >= 0) THEN
                                   ZWQ, ZQHS, ZQRS)
 !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'HMLT', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%ADD_PHY(D, 'HMLT', &
                              Unpack(  zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 6 ), 'HMLT', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 6 )%PTR%ADD_PHY(D, 'HMLT', &
                              Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if
 !
@@ -2080,9 +2079,9 @@ IF (KMICRO >= 0) THEN
                                 ZWQ, ZQCS, ZQIS)
 !
   if ( BUCONF%LBUDGET_SV ) then
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'BERFI', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%ADD_PHY(D, 'BERFI', &
                            Unpack( -zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'BERFI', &
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'BERFI', &
                            Unpack(  zwq(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
   end if
 !
@@ -2095,9 +2094,9 @@ IF (KMICRO >= 0) THEN
   IF (HCLOUD == 'LIMA') THEN
 !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG ), 'CORR2', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG )%PTR%INIT_PHY(D, 'CORR2', &
                               Unpack( zqpis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND ), 'CORR2', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND )%PTR%INIT_PHY(D, 'CORR2', &
                               Unpack( zqnis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if
 !
@@ -2133,15 +2132,15 @@ IF (KMICRO >= 0) THEN
     END WHERE
 !
     if ( BUCONF%LBUDGET_SV ) then
-      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG ), 'CORR2', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG )%PTR%END_PHY(D, 'CORR2', &
                              Unpack( zqpis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND ), 'CORR2', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECEND )%PTR%END_PHY(D, 'CORR2', &
                              Unpack( zqnis(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 ), 'CORR2', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 1 )%PTR%ADD_PHY(D, 'CORR2', &
                              Unpack( zwq1(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 ), 'CORR2', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 2 )%PTR%ADD_PHY(D, 'CORR2', &
                              Unpack( zwq2(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )                     
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 ), 'CORR2', &
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + NSV_ELECBEG + 3 )%PTR%ADD_PHY(D, 'CORR2', &
                              Unpack( zwq3(:) * zrhodj(:), mask = odmicro(:, :, :), field = 0. ) )
     end if    
   END IF

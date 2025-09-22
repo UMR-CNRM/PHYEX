@@ -41,40 +41,40 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
 
     REAL, INTENT(IN) :: PTSTEP  ! Double Time step
 
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PTHT     ! Theta at time t
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PPABST   ! absolute pressure at t
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PEXNREF  ! Reference Exner function
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PICLDFR  ! ice cloud fraction
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PRHODJ   ! Dry density * Jacobian
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PRHODREF ! Reference density
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PRVT     ! Water vapor m.r. at t
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PRCT     ! Cloud water m.r. at t
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PRRT     ! Rain water m.r. at t
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PRIT     ! Pristine ice m.r. at t
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PRST     ! Snow/aggregate m.r. at t
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PRGT     ! Graupel/hail m.r. at t
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PTHT     ! Theta at time t
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PPABST   ! absolute pressure at t
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PEXNREF  ! Reference Exner function
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PICLDFR  ! ice cloud fraction
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PRHODJ   ! Dry density * Jacobian
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PRHODREF ! Reference density
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PRVT     ! Water vapor m.r. at t
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PRCT     ! Cloud water m.r. at t
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PRRT     ! Rain water m.r. at t
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PRIT     ! Pristine ice m.r. at t
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PRST     ! Snow/aggregate m.r. at t
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PRGT     ! Graupel/hail m.r. at t
     LOGICAL, INTENT(IN)                       :: OAERONRT ! Switch for nrt aerosols
     LOGICAL, INTENT(IN)                       :: OAEIFN   ! Switch to activate ice nuclei
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PIFNNC   ! Ice freezing nuclei concentration
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PIFNNC   ! Ice freezing nuclei concentration
 !
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(INOUT) :: PTHS ! Theta source
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(INOUT) :: PRVS ! Water vapor m.r. source
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(INOUT) :: PRIS ! Pristine ice m.r. source
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(INOUT) :: PCIT ! Pristine ice n.c. at t
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(INOUT) :: PTHS ! Theta source
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(INOUT) :: PRVS ! Water vapor m.r. source
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(INOUT) :: PRIS ! Pristine ice m.r. source
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(INOUT) :: PCIT ! Pristine ice n.c. at t
 !
-    REAL, DIMENSION(D%NIT), INTENT(IN) :: PICENU
+    REAL, DIMENSION(D%NIJT), INTENT(IN) :: PICENU
 !
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PT   ! Temperature
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PZZZ ! Temperature
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PT   ! Temperature
+    REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN) :: PZZZ ! Temperature
 
-    REAL, DIMENSION(D%NIT, D%NKT), OPTIONAL, INTENT(IN) :: PRHT ! Hail m.r. at t
+    REAL, DIMENSION(D%NIJT, D%NKT), OPTIONAL, INTENT(IN) :: PRHT ! Hail m.r. at t
 !
 !*       0.2  declaration of local variables
 !
     REAL, DIMENSION(KSIZE) :: ZRVT    ! Water vapor m.r. at t
 
     INTEGER , DIMENSION(KSIZE) :: I1,I2 ! Used to replace the COUNT
-    INTEGER                    :: JI, JK, JL ! and PACK intrinsics
+    INTEGER                    :: JIJ, JK, JL ! and PACK intrinsics
 !
 !-------------------------------------------------------------------------------
 !
@@ -92,7 +92,7 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
     REAL, DIMENSION(KSIZE) :: ZSIFRC  ! subgridscale fraction with supersaturation with
                                                ! respect to ice.
     REAL, DIMENSION(KSIZE) :: ZZW     ! Work array
-    REAL, DIMENSION(D%NIT,D%NKT) :: ZW      ! work array
+    REAL, DIMENSION(D%NIJT,D%NKT) :: ZW      ! work array
 !
 !   compute the temperature and the pressure
 !
@@ -106,11 +106,11 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
 !     the temperature is negative only !!!
 !
       JL = 0
-      DO JK = 1, D%NKT
-        DO JI = 1, D%NIT
-          IF (PT(JI, JK) < CST%XTT) THEN
+      DO JK = D%NKTB, D%NKTE
+        DO JIJ = D%NIJB, D%NIJE
+          IF (PT(JIJ, JK) < CST%XTT) THEN
             JL = JL + 1
-            I1(JL) = JI
+            I1(JL) = JIJ
             I2(JL) = JK
           ENDIF
         ENDDO
@@ -217,29 +217,59 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
         ZZW(:) = MIN( ZZW(:),50.E3 ) ! limitation provisoire a 50 l^-1
 
         IF(.NOT.OCND2)THEN
-          ZW(:,:) = 0.
-          DO JL=1, KSIZE
-            ZW(I1(JL), I2(JL)) = ZZW(JL)
+
+          JL = 0
+          DO JK = D%NKTB, D%NKTE
+            DO JIJ = D%NIJB, D%NIJE
+              IF (PT(JIJ,JK) < CST%XTT) THEN
+                JL = JL + 1
+                ZW(JIJ,JK) = MAX(ZZW(JL), 0.0)*ICEP%XMNU0/(PRHODREF(JIJ,JK)*PTSTEP)
+              ELSE
+                ZW(JIJ,JK) = 0.0
+              ENDIF
+            ENDDO
           ENDDO
-          ZW(:,:) = MAX( ZW(:,:) ,0.0 ) *ICEP%XMNU0/(PRHODREF(:,:)*PTSTEP)
-          PRIS(:,:) = PRIS(:,:) + ZW(:,:)
-          PRVS(:,:) = PRVS(:,:) - ZW(:,:)
+          DO JK = D%NKTB, D%NKTE
+            DO JIJ = D%NIJB, D%NIJE
+              PRIS(JIJ,JK) = PRIS(JIJ,JK) + ZW(JIJ,JK)
+              PRVS(JIJ,JK) = PRVS(JIJ,JK) - ZW(JIJ,JK)
+            ENDDO
+          ENDDO
 
           IF ( KRR == 7 ) THEN
-            PTHS(:,:) = PTHS(:,:) + ZW(:,:)*(CST%XLSTT+(CST%XCPV-CST%XCI)*(PT(:,:)-CST%XTT))   &
-                 /( (CST%XCPD + CST%XCPV*PRVT(:,:) + CST%XCL*(PRCT(:,:)+PRRT(:,:))   &
-                 + CST%XCI*(PRIT(:,:)+PRST(:,:)+PRGT(:,:)+PRHT(:,:)))*PEXNREF(:,:) )
+            DO JK = D%NKTB, D%NKTE
+              DO JIJ = D%NIJB, D%NIJE
+                PTHS(JIJ,JK) = PTHS(JIJ,JK) + ZW(JIJ,JK)*(CST%XLSTT+(CST%XCPV-CST%XCI)*(PT(JIJ,JK)-CST%XTT))   &
+                     /( (CST%XCPD + CST%XCPV*PRVT(JIJ,JK) + CST%XCL*(PRCT(JIJ,JK)+PRRT(JIJ,JK))   &
+                     + CST%XCI*(PRIT(JIJ,JK)+PRST(JIJ,JK)+PRGT(JIJ,JK)+PRHT(JIJ,JK)))*PEXNREF(JIJ,JK) )
+              ENDDO
+            ENDDO
           ELSE IF( KRR == 6 ) THEN
-            PTHS(:,:) = PTHS(:,:) + ZW(:,:)*(CST%XLSTT+(CST%XCPV-CST%XCI)*(PT(:,:)-CST%XTT))   &
-                 /( (CST%XCPD + CST%XCPV*PRVT(:,:) + CST%XCL*(PRCT(:,:)+PRRT(:,:))   &
-                 + CST%XCI*(PRIT(:,:)+PRST(:,:)+PRGT(:,:)))*PEXNREF(:,:) )
+            DO JK = D%NKTB, D%NKTE
+              DO JIJ = D%NIJB, D%NIJE
+                PTHS(JIJ,JK) = PTHS(JIJ,JK) + ZW(JIJ,JK)*(CST%XLSTT+(CST%XCPV-CST%XCI)*(PT(JIJ,JK)-CST%XTT))   &
+                     /( (CST%XCPD + CST%XCPV*PRVT(JIJ,JK) + CST%XCL*(PRCT(JIJ,JK)+PRRT(JIJ,JK))   &
+                     + CST%XCI*(PRIT(JIJ,JK)+PRST(JIJ,JK)+PRGT(JIJ,JK)))*PEXNREF(JIJ,JK) )
+              ENDDO
+            ENDDO
           END IF
         ENDIF
-                                 ! f(L_s*(RVHENI))
-        ZZW(:) = MAX(ZZW(:)+ZCIT(:),ZCIT(:))
 
-        DO JL=1, KSIZE
-          PCIT(I1(JL), I2(JL)) = ZZW(JL)
+        ! f(L_s*(RVHENI))
+        DO JL = 1, KSIZE
+          ZZW(JL) = MAX(ZZW(JL)+ZCIT(JL),ZCIT(JL))
+        ENDDO
+
+        JL = 0
+        DO JK = D%NKTB, D%NKTE
+          DO JIJ = D%NIJB, D%NIJE
+            IF (PT(JIJ,JK) < CST%XTT) THEN
+              JL = JL + 1
+              PCIT(JIJ,JK) = MAX(ZZW(JL), PCIT(JIJ,JK))
+            ELSE
+              PCIT(JIJ,JK) = 0.0
+            ENDIF
+          ENDDO
         ENDDO
       END IF
 

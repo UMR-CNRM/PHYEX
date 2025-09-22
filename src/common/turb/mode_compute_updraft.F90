@@ -307,10 +307,10 @@ IF (OENTR_DETR) THEN
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
   !cloud/dry air mixture cloud content
-  ZRC_MIX = 0.
-  ZRI_MIX = 0.
+  ZRC_MIX(:,:) = 0.
+  ZRI_MIX(:,:) = 0.
 
-END IF
+ENDIF
 
 ! Initialisation of environment variables at t-dt
 ! variables at flux level
@@ -323,7 +323,7 @@ CALL MZM_MF(D, PTKEM(:,:), ZTKEM_F(:,:))
 DO JSV=1,KSV
   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
   CALL MZM_MF(D, PSVM(:,:,JSV), ZSVM_F(:,:,JSV))
-END DO
+ENDDO
 !                     
 !          Initialisation of updraft characteristics 
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -420,7 +420,7 @@ IF (OENTR_DETR) THEN
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ELSE
     ZSHEAR = 0. !no shear in bl89 mixing length
-  END IF
+  ENDIF
   !
   CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ,ZTKEM_F(:,IKB),&
                       &ZG_O_THVREF(:,IKB),ZTHVM,IKB,GLMIX,.TRUE.,ZSHEAR,ZLUPSURF)
@@ -442,7 +442,7 @@ IF (OENTR_DETR) THEN
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   ELSE
     ZSURF(IIJB:IIJE)=1.
-  END IF
+  ENDIF
   !$mnh_expand_where(JIJ=IIJB:IIJE)
   WHERE (ZWTHVSURF(IIJB:IIJE)>0.)
     PEMF(IIJB:IIJE,IKB) = PARAMMF%XCMF * ZSURF(IIJB:IIJE) * ZRHO_F(IIJB:IIJE,IKB) *  &
@@ -460,7 +460,7 @@ ELSE
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   GTEST(IIJB:IIJE)=PEMF(IIJB:IIJE,IKB+IKL)>0.
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-END IF
+ENDIF
 
 !--------------------------------------------------------------------------
 
@@ -550,7 +550,7 @@ DO JK=IKB,IKE-IKL,IKL
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     GTEST(IIJB:IIJE) = (PEMF(IIJB:IIJE,JK+IKL)>0.)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  END IF !OENTR_DETR
+  ENDIF !OENTR_DETR
   
   ! stop the updraft if MF becomes negative
   !$mnh_expand_where(JIJ=IIJB:IIJE)
@@ -977,8 +977,8 @@ DO JIJ=IIJB,IIJE
     ZDZ_STOP(JIJ) = (PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))*PPART_DRY(JIJ)
   ELSE
     PPART_DRY(JIJ)=0. ! value does not matter, here
-  END IF
-END DO
+  ENDIF
+ENDDO
 
 !               1.5 Gradient and flux values of thetav
 !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -1092,8 +1092,8 @@ DO JIJ=IIJB,IIJE
   ELSE
     !No cloudy part
     PBUO_INTEG_CLD(JIJ)=0.
-  END IF
-END DO
+  ENDIF
+ENDDO
 
 IF(PARAMMF%CKIC_COMPUTE=='KFB') THEN
   !               3.2.a Critical mixed fraction for KK+KKL flux level (ZKIC_F2) and
@@ -1239,21 +1239,6 @@ DO JIJ=IIJB,IIJE
     ZDELTA(JIJ) = (1.-ZKIC(JIJ))**2. !idem
   ENDIF
 ENDDO
-
-!Triangular PDF
-!Calculus must be verified before activating this part, but in this state,
-!results on ARM case are almost identical
-!For this PDF, eq. (5) is also delta Me=0.5*delta Mt
-!WHERE(OTEST(IIJB:IIJE))
-!  !Integration multiplied by 2
-!  WHERE(ZKIC<0.5)
-!    ZEPSI(IIJB:IIJE)=8.*ZKIC(IIJB:IIJE)**3/3.
-!    ZDELTA(IIJB:IIJE)=1.-4.*ZKIC(IIJB:IIJE)**2+8.*ZKIC(IIJB:IIJE)**3/3.
-!  ELSEWHERE
-!    ZEPSI(IIJB:IIJE)=5./3.-4*ZKIC(IIJB:IIJE)**2+8.*ZKIC(IIJB:IIJE)**3/3.
-!    ZDELTA(IIJB:IIJE)=8.*(1.-ZKIC(IIJB:IIJE))**3/3.
-!  ENDWHERE
-!ENDWHERE
 
 !               3.4 Computation of PENTR and PDETR
 IF (PARAMMF%CWET_MIXING == 'PKFB') THEN
