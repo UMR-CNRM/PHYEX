@@ -344,30 +344,6 @@ IF(.NOT. LDSOFT) THEN
     !        5.2.6  raindrop accretion-conversion of the large sized aggregates
     !               into graupeln
     !
-!! Version to use, after having verified that current merge reproduce the 50t1 bug
-!!!$acc kernels
-!!    !$mnh_expand_where(JL=1:KSIZE)
-!!    IF(.NOT. ICEP%LNEWCOEFF) THEN
-!!      WHERE(GACC(1:KSIZE) .AND. (.NOT. PARAMI%LOCND2 .OR. PRST(:)>ICEP%XFRMIN(1) )))
-!!        PRS_TEND(1:KSIZE, IRSACCRG) = ICEP%XFSACCRG*ZZW3(1:KSIZE)*                    & ! RSACCRG
-!!            ( PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS) )*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) ) &
-!!           *( ICEP%XLBSACCR1/((PLBDAR(1:KSIZE)**2)               ) +           &
-!!              ICEP%XLBSACCR2/( PLBDAR(1:KSIZE)    * PLBDAS(1:KSIZE)    ) +           &
-!!              ICEP%XLBSACCR3/(               (PLBDAS(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)
-!!      END WHERE
-!!    ELSE
-!!      WHERE(GACC(1:KSIZE) .AND. (.NOT. PARAMI%LOCND2 .OR. PRST(:)>ICEP%XFRMIN(1) )))
-!!        PRS_TEND(1:KSIZE, IRSACCRG) = ICEP%XFSACCRG*ZZW3(1:KSIZE)*                    & ! RSACCRG
-!!            ( PRST(1:KSIZE))*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT) ) &
-!!           *( ICEP%XLBSACCR1/((PLBDAR(1:KSIZE)**2)               ) +           &
-!!              ICEP%XLBSACCR2/( PLBDAR(1:KSIZE)    * PLBDAS(1:KSIZE)    ) +           &
-!!              ICEP%XLBSACCR3/(               (PLBDAS(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)
-!!      END WHERE
-!!    ENDIF
-!!    !$mnh_end_expand_where(JL=1:KSIZE)
-!!!$acc end kernels
-
-!! Bugged 50t1 version
     DO JL=1, KSIZE
       IF(.NOT. ICEP%LNEWCOEFF) THEN
         IF (GACC(JL)) THEN
@@ -378,8 +354,10 @@ IF(.NOT. LDSOFT) THEN
             ICEP%XLBSACCR2/( PLBDAR(JL)    * PLBDAS(JL)    ) +           &
             ICEP%XLBSACCR3/(               (PLBDAS(JL)**2)) )/PLBDAR(JL)
           ENDIF
-        ELSE
-          IF (GACC(JL)) THEN
+        ENDIF
+      ELSE
+        IF (GACC(JL)) THEN
+          IF (.NOT. PARAMI%LOCND2 .OR. PRST(JL)>ICEP%XFRMIN(1) ) THEN
             PRS_TEND(JL, IRSACCRG) = ICEP%XFSACCRG*ZZW3(JL)*                    & ! RSACCRG
               ( PRST(JL))*( PRHODREF(JL)**(-ICED%XCEXVT) ) &
                *( ICEP%XLBSACCR1/((PLBDAR(JL)**2)               ) +           &
@@ -389,7 +367,6 @@ IF(.NOT. LDSOFT) THEN
         ENDIF
       ENDIF
     END DO
-
   ENDIF
 ENDIF
 !
