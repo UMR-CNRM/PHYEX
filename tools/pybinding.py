@@ -129,11 +129,13 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             moduleList.append('USE MODD_BUDGET, ONLY: TBUCONF_ASSOCIATE, TBUCONF')
             argList2.append('TBUCONF')
             copyList.append('CALL TBUCONF_ASSOCIATE')
-        elif vartype == 'TYPE(TBUDGETDATA)':
-            moduleList.append('USE MODD_BUDGET, ONLY: NBUDGET_RH, TBUDGETDATA')
-            declList.append('TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET')
+        elif vartype == 'TYPE(TBUDGETDATA_PTR)':
+            moduleList.append('USE MODD_BUDGET, ONLY: NBUDGET_RH, TBUDGETDATA_PTR')
+            moduleList.append('USE MODE_BUDGET_OFFLINE, ONLY: TBUDGETDATA_OFFLINE')
+            declList.append('TYPE(TBUDGETDATA_PTR), DIMENSION(NBUDGET_RH) :: YLBUDGET')
+            declList.append('TYPE(TBUDGETDATA_OFFLINE), DIMENSION(NBUDGET_RH), TARGET :: YLOFFBUD')
             declList.append('INTEGER :: JRR')
-            copyList.append('DO JRR=1, NBUDGET_RH\n  YLBUDGET(JRR)%NBUDGET=JRR\nENDDO')
+            copyList.append('DO JRR=1, NBUDGET_RH\n  YLBUDGET(JRR)%PTR => YLOFFBUD(JRR)\n  YLBUDGET(JRR)%PTR%NBUDGET=JRR\nENDDO')
             argList2.append('YLBUDGET')
         elif vartype == 'TYPE(TFILEDATA)':
             moduleList.append('USE MODD_IO, ONLY: TFILEDATA')

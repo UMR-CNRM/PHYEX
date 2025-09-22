@@ -93,8 +93,8 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZDELTVPT
             ! Increment of Virtual Potential Temp between two following levels
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZHLVPT
             ! Virtual Potential Temp at half levels
-REAL, DIMENSION(D%NIJT,D%NKT) ::  ZLWORK
-REAL, DIMENSION(D%NIJT) ::  ZINTE
+REAL, DIMENSION(D%NIJT,D%NKT) ::  ZLWORK, ZLWORKUP
+REAL, DIMENSION(D%NIJT) ::  ZINTE, ZTMP
 !           ! downwards then upwards vertical displacement,
 !           ! residual internal energy,
 !           ! residual potential energy
@@ -226,6 +226,8 @@ DO JK=1,IKT
     END IF
   END DO
 END DO
+ZLWORKUP(:,:) = 0.
+ZTMP(:)=0.
 !$acc end kernels
 !
 !-------------------------------------------------------------------------------
@@ -291,7 +293,7 @@ DO JK=IKTB,IKTE
 !            -----------------------------------------
 !
   ZINTE(IIJB:IIJE)=PTKEM(IIJB:IIJE,JK)
-  ZLWORK(IIJB:IIJE,JK)=0.
+  ZLWORKUP(IIJB:IIJE,JK)=0.
   ZTESTM=1.
 !
 !$acc loop seq
@@ -319,41 +321,47 @@ DO JK=IKTB,IKTE
             + 2. * ZINTE(JIJ) * &
             (ZG_O_THVREF(JIJ,JK)* ZDELTVPT(JIJ,JKK)/PDZZ(JIJ,JKK))))) / &
             (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK) / PDZZ(JIJ,JKK))
-        ZLWORK(JIJ,JK)=ZLWORK(JIJ,JK)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
+        ZLWORKUP(JIJ,JK)=ZLWORKUP(JIJ,JK)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
         ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE
       END DO
     ENDIF
   END DO
+END DO
 !
 !* Maximal length between JK and the levels below (as in ARPEGE)
 !
-  IF (TURBN%LBL89TOP) THEN
-    DO JIJ=IIJB,IIJE
-      ZLWORK(JIJ,JK) = MAX(ZLWORK(JIJ,JK),ZLWORK(JIJ,JK-IKL)-PDZZ(JIJ,JK))
-    ENDDO
-  END IF
-
+IF (TURBN%LBL89TOP) THEN
+ DO JK=IKTE,IKTB,IKL
+   DO JIJ=IIJB,IIJE
+     ZTMP(JIJ) = ZLWORKUP(JIJ,JK-IKL)-PDZZ(JIJ,JK)
+   ENDDO
+   DO JIJ=IIJB,IIJE
+     ZLWORKUP(JIJ,JK) = MAX(ZLWORKUP(JIJ,JK),ZTMP(JIJ))
+   ENDDO
+  ENDDO
+END IF
+!
 !
 !-------------------------------------------------------------------------------
 !
 !*       7.  final mixing length
 !
-!$acc loop independent
+!$acc loop independent collapse(2)
+DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
     ZLWORK1=MAX(PLMDN(JIJ,JK),1.E-10_MNHREAL)
-    ZLWORK2=MAX(ZLWORK(JIJ,JK),1.E-10_MNHREAL)
+    ZLWORK2=MAX(ZLWORKUP(JIJ,JK),1.E-10_MNHREAL)
     ZPOTE = ZLWORK1 / ZLWORK2
     ZLWORK2=1.d0 + ZPOTE**TURBN%XBL89EXP
     PLM(JIJ,JK) = ZLWORK1*(2./ZLWORK2)**TURBN%XUSRBL89
     PLM(JIJ,JK)=MAX(PLM(JIJ,JK),TURBN%XLINI)
   END DO
+END DO
+!$acc end kernels
 
 !-------------------------------------------------------------------------------
 !*       8.  end of the loop on the vertical levels
 !            --------------------------------------
-!
-!$acc end kernels
-END DO
 !
 !-------------------------------------------------------------------------------
 !

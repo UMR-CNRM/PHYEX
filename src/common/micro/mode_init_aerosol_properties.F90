@@ -152,7 +152,7 @@ IF ( NMOD_CCN .GE. 1 ) THEN
       LOGSIGCCN(:) = (/ 0.645 , 0.253 , 0.425 /)
       RHOCCN(:) = (/ 1000. , 1000. , 1000. /)
    CASE DEFAULT
-      call Print_msg(NVERB_FATAL,'GEN','INIT_AEROSOL_PROPERTIES','CCN_MODES must be JUNGFRAU, COPT, CAMS, CAMS_JPP,'// &
+      CALL PRINT_MSG(NVERB_FATAL,'GEN','INIT_AEROSOL_PROPERTIES','CCN_MODES must be JUNGFRAU, COPT, CAMS, CAMS_JPP,'// &
                                                                  'CAMS_ACC, CAMS_AIT, SIRTA, CPS00, MOCAGE or FREETROP')
    ENDSELECT
 !
@@ -202,13 +202,15 @@ END IF
     XLOGSIG_CCN(4) = 0.708
     XRHO_CCN(4)    = 2200.   
     IF ((LSALT).AND.(NMODE_SLT > 5)) THEN
-      IF (CRGUNITS=="MASS") THEN
-       XR_MEAN_CCN(4) = XINIRADIUS_SLT(6) * EXP(-3.*(LOG(XINISIG_SLT(6)))**2) * 1E-6
-      ELSE
-       XR_MEAN_CCN(4) = XINIRADIUS_SLT(6) * 1E-6
-      END IF
-     XLOGSIG_CCN(4) = LOG(XINISIG_SLT(6))
-     XRHO_CCN(4)    = XDENSITY_SALT
+      CALL PRINT_MSG(NVERB_FATAL,'GEN','INIT_AEROSOL_PROPERTIES',&
+                    &'bound checking error detected here (XINIRADIUS_SLT)')
+!      IF (CRGUNITS=="MASS") THEN
+!       XR_MEAN_CCN(4) = XINIRADIUS_SLT(6) * EXP(-3.*(LOG(XINISIG_SLT(6)))**2) * 1E-6
+!      ELSE
+!       XR_MEAN_CCN(4) = XINIRADIUS_SLT(6) * 1E-6
+!      END IF
+!     XLOGSIG_CCN(4) = LOG(XINISIG_SLT(6))
+!     XRHO_CCN(4)    = XDENSITY_SALT
     END IF
   END IF
 !

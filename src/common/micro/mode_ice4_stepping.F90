@@ -10,6 +10,8 @@ SUBROUTINE ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, KMICRO, PTSTEP, &
                         &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
                         &PEXN, PRHODREF, PPABST, PCIT, PCLDFR, &
+                        &PICLDFR, PZZZ, PCONC3D, &
+                        &PSSIO, PSSIU, PIFR, &
                         &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
                         &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
                         &PBUDGETS, PLATHAM_IAGGS)
@@ -79,8 +81,16 @@ LOGICAL,                  INTENT(IN)    :: OELEC         ! if true, cloud electr
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PEXN    ! Exner function
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PRHODREF! Reference density
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PPABST
+
 REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PCIT
+
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PCLDFR ! Cloud fraction
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PICLDFR ! Ice cloud fraction
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PZZZ    ! Model level height
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PCONC3D ! Cloud croplet number concentration
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the supersaturated fraction
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the  subsaturated fraction
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part
 REAL,    DIMENSION(MERGE(KPROMA,0,PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')), INTENT(INOUT) :: PHLC_HRC, &
                                                                                                                   & PHLC_HCF, &
                                                                                                                   & PHLI_HRI, &
@@ -288,7 +298,8 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
                         &PEXN, PRHODREF, ZLVFACT, ZLSFACT, &
                         &PPABST, PCLDFR, ZSIGMA_RC, &
                         &PCIT, &
-                        &ZZT, PTHT, PRT, &
+                        &ZZT, PICLDFR, PZZZ, PCONC3D, &
+                        &PSSIO, PSSIU, PIFR, PTHT, PRT, &
                         &PLATHAM_IAGGS, &
                         &ZBU_INST, &
                         &ZRS_TEND, ZRG_TEND, ZRH_TEND, ZSSI, &

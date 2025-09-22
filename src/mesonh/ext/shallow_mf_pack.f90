@@ -136,7 +136,7 @@ USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 !
-USE MODD_BUDGET,          ONLY: TBUDGETS,TBUCONF,lbudget_th,nbudget_th
+USE MODD_BUDGET,          ONLY: TBUDGETS,TBUDGETS_PTR,TBUCONF,lbudget_th,nbudget_th
 USE MODD_CONF
 USE MODD_IO,              ONLY: TFILEDATA
 use modd_field,           ONLY: tfieldmetadata, TYPEREAL
@@ -285,7 +285,7 @@ CALL SHALLOW_MF(YLDIMPHYEXPACK, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB, RAIN_I
                 ZU_UP, ZV_UP, ZTKE_UP, ZTHV_UP, ZW_UP,                &
                 ZFRAC_UP,ZEMF,ZDETR,ZENTR,                            &
                 IKLCL,IKETL,IKCTL,PDX,PDY,PRSVS,XSVMIN,               &
-                TBUCONF, TBUDGETS,SIZE(TBUDGETS)                      )
+                TBUCONF, TBUDGETS_PTR, SIZE(TBUDGETS_PTR))
 !
 ! Fill non-declared-explicit-dimensions output variables
 PSIGMF(:,:,:) = ZSIGMF(:,:,:)

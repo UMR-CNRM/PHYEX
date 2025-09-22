@@ -10,7 +10,7 @@ SUBROUTINE ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
                                    &OELEC, OSEDIM_BEARD, PTHVREFZIKB, &
                                    &PTSTEP, KRR, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
-                                   &PRS, PRT, &
+                                   &PRS, PRT, PCONC3D, &
                                    &PINPRC, PINPRR, PINPRI, PINPRS, PINPRG, &
                                    &PQCT, PQRT, PQIT, PQST, PQGT, PQCS, PQRS, PQIS, PQSS, PQGS,&
                                    &PEFIELDW, &
@@ -82,6 +82,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PT      ! Temperature 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRHODJ  ! Dry density * Jacobian
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT)       :: PRS     ! m.r. source
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)          :: PRT     ! m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PCONC3D ! cloud liquid drop number concentration /m3
 REAL, DIMENSION(D%NIJT),       INTENT(OUT)             :: PINPRC  ! Cloud instant precip
 REAL, DIMENSION(D%NIJT),       INTENT(OUT)             :: PINPRR  ! Rain instant precip
 REAL, DIMENSION(D%NIJT),       INTENT(OUT)             :: PINPRI  ! Pristine ice instant precip
@@ -117,8 +118,7 @@ LOGICAL :: GPRESENT_PFPR, GPRESENT_PSEA
 REAL    :: ZINVTSTEP
 REAL, DIMENSION(D%NIJT)               :: ZCONC_TMP    ! Weighted concentration
 REAL, DIMENSION(D%NIJT,D%NKTB:D%NKTE) :: ZW ! work array
-REAL, DIMENSION(D%NIJT, D%NKT)        :: ZCONC3D, & !  droplet condensation
-                                       & ZRAY,   & ! Cloud Mean radius
+REAL, DIMENSION(D%NIJT, D%NKT)        :: ZRAY,   & ! Cloud Mean radius
                                        & ZLBC,   & ! XLBC weighted by sea fraction
                                        & ZFSEDC
 REAL, DIMENSION(D%NIJT, D%NKT, KRR) :: ZRS, &   ! Mixing ratios created during the time step
@@ -180,16 +180,8 @@ IF (GSEDIC) THEN
   ZRAY(:,:)   = 0.
   ZLBC(:,:)   = ICED%XLBC(1)
   ZFSEDC(:,:) = ICEP%XFSEDC(1)
-  ZCONC3D(:,:)= ICED%XCONC_LAND
-  ZCONC_TMP(:)= ICED%XCONC_LAND
 !$acc end kernels
   IF (GPRESENT_PSEA) THEN
-!$acc kernels
-!$acc loop independent
-    DO JIJ = IIJB, IIJE
-      ZCONC_TMP(JIJ)=PSEA(JIJ)*ICED%XCONC_SEA+(1.-PSEA(JIJ))*ICED%XCONC_LAND
-    ENDDO
-!$acc end kernels
 
 !$acc kernels
 !$acc loop independent collapse(2)
@@ -198,7 +190,6 @@ IF (GSEDIC) THEN
           ZLBC(JIJ,JK)   = PSEA(JIJ)*ICED%XLBC(2)+(1.-PSEA(JIJ))*ICED%XLBC(1)
           ZFSEDC(JIJ,JK) = (PSEA(JIJ)*ICEP%XFSEDC(2)+(1.-PSEA(JIJ))*ICEP%XFSEDC(1))
           ZFSEDC(JIJ,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
-          ZCONC3D(JIJ,JK)= (1.-PTOWN(JIJ))*ZCONC_TMP(JIJ)+PTOWN(JIJ)*ICED%XCONC_URBAN
           ZRAY(JIJ,JK)   = 0.5*((1.-PSEA(JIJ))*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
                          & PSEA(JIJ)*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
       ENDDO
@@ -206,7 +197,6 @@ IF (GSEDIC) THEN
 !$acc end kernels
   ELSE
 !$acc kernels
-    ZCONC3D(:,:) = ICED%XCONC_LAND
     ZRAY(:,:)  = 0.5*(GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)))
 !$acc end kernels
   END IF
@@ -276,7 +266,7 @@ IF (GSEDIC) THEN
                           &IRC, &
                           &ZRT(:,:,IRC), PRS(:,:,IRC), PINPRC, ZRS(:,:,IRC), &
                           &ZQCT, PQCS, ZPQCS, PEFIELDW, &
-                          &PRAY=ZRAY, PLBC=ZLBC, PFSEDC=ZFSEDC, PCONC3D=ZCONC3D, &
+                          &PRAY=ZRAY, PLBC=ZLBC, PFSEDC=ZFSEDC, PCONC3D=PCONC3D, &
                           &PFPR=PFPR)
 ENDIF
 !

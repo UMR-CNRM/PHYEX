@@ -179,6 +179,15 @@ LOGICAL, DIMENSION(D%NIT,D%NKT) :: GWORK4    ! work array
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
+INTEGER           :: JLCLMIN,JDPLMIN !MIN value of LCL and DPL on all grid points,
+                                     !used to remove unnecessary computations
+                                     !for smaller vertical levels
+INTEGER           :: JCTLMAX,JLCLMAX !MAX value of CTL and LCL on all grid points,
+                                     !used to remove unnecessary computations 
+                                     !for greater vertical levels
+INTEGER           :: JKPP
+REAL, DIMENSION(D%NIT,D%NKT) :: ZPIAUX 
+!
 !-------------------------------------------------------------------------------
 !
 !*       0.2    Initialize  local variables
@@ -204,9 +213,6 @@ ZRDOCP    = CST%XRD / CST%XCPD
 !
 ZADJ(:)   = 1.
 ZWORK5(:) = 1.
-DO JI=D%NIB,D%NIE
-  IF (.NOT. OTRIG1(JI)) ZWORK5(JI) = 0
-ENDDO
 !
 !
 !*       0.3   Compute loop bounds
@@ -224,7 +230,6 @@ JKMAX=IKE
 ZUMF(:,:)  = PUMF(:,:)
 ZUER(:,:)  = PUER(:,:)
 ZUDR(:,:)  = PUDR(:,:)
-ZOMG(:,:)  = 0.
 PWSUB(:,:) = 0.
 !
 !
@@ -234,12 +239,21 @@ PWSUB(:,:) = 0.
 !               ---------------------------------------------------------------
 !
 ZADJMAX(:) = 1000.
-IWORK1(:) = ILCL(:)
+JCTLMAX=KCTL(D%NIB)   
+JDPLMIN=KDPL(D%NIB)
+JLCLMAX=ILCL(D%NIB)
+DO JI=D%NIB,D%NIE
+  IF (.NOT. OTRIG1(JI)) ZWORK5(JI) = 0
+  JCTLMAX=MAX(JCTLMAX,KCTL(JI)) 
+  JDPLMIN=MIN(JDPLMIN,KDPL(JI))
+  JLCLMAX=MAX(JLCLMAX,ILCL(JI))
+ENDDO
+JCTLMAX=MIN(JCTLMAX,IKE)
 JKP=IKB
-DO JK = JKP, IKE
+DO JK = MAX(JKP,JDPLMIN+1) , MIN(IKE,JLCLMAX)
   DO JI = D%NIB, D%NIE
     IF( JK > KDPL(JI))THEN
-            IF(JK <= IWORK1(JI) ) THEN
+           IF(JK <= ILCL(JI) ) THEN  
         ZWORK1(JI)  = PLMASS(JI,JK) / ( ( PUER(JI,JK) + 1.E-5 ) * PTIMEC(JI) )
         ZADJMAX(JI) = MIN( ZADJMAX(JI), ZWORK1(JI) )
     END IF
@@ -263,6 +277,12 @@ END DO
 !
 !
 !
+DO JK = IKB , JCTLMAX 
+  DO JI = D%NIB, D%NIE
+    ZPIAUX(JI,JK)    = ( CST%XP00 / PPRES(JI,JK) ) ** ZRDOCP
+  ENDDO
+ENDDO
+
 DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
                  ! removed within the advective time interval TIMEC
 !
@@ -277,7 +297,7 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
      END DO
      ZOMG(:,1:D%NKT)=0.
 !
-     DO JK = IKB + 1, JKMAX
+     DO JK = IKB + 1, JCTLMAX 
            JKP = MAX( IKB + 1, JK - 1 )
            DO JI=D%NIB,D%NIE
              IF(GWORK1(JI) .AND. JK <= KCTL(JI)) THEN
@@ -343,15 +363,13 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
     DO JK = IKB, IKE
         PWSUB(:,JK) = PWSUB(:,JK) * ZWORK5(:)
     END DO
-    GWORK4(:,1:IKB) = .FALSE.
-    GWORK4(:,IKE:IKS)   = .FALSE.
 !
     DO JI=D%NIB,D%NIE
       ITSTEP(JI) = INT( PTIMEC(JI) / ZTIMEC(JI) ) + 1
       ZTIMEC(JI) = PTIMEC(JI) / REAL( ITSTEP(JI) ) ! adjust  fractional time step
     ENDDO
                                            ! to be an integer multiple of PTIMEC
-    DO JK=1, IKS
+    DO JK=1, JCTLMAX !ZTIMC is only used for JK <= JCTLMAX in the rest of the code 
       ZTIMC(1:D%NIE,JK) = ZTIMEC(1:D%NIE)
     ENDDO
     ICOUNT(:) = 0
@@ -374,7 +392,7 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
 !               layer based on the sign of w
 !               ------------------------------------------------------------
 !
-      DO JK = 1, D%NKT
+      DO JK = 1, JCTLMAX+1
         ZTHMFIN(:,JK)   = 0.
         ZRWMFIN(:,JK)   = 0.
         ZRCMFIN(:,JK)   = 0.
@@ -384,40 +402,147 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
         ZRCMFOUT(:,JK)  = 0.
         ZRIMFOUT(:,JK)  = 0.
       ENDDO
-!
-      DO JK = IKB + 1, JKMAX
-        DO JI = D%NIB, D%NIE
-           GWORK4(JI,JK) = GWORK3(JI) .AND. JK <= KCTL(JI)
+
+      IF (JKMAX-IKB <= 4) THEN
+        !!!original code for the two loops
+        DO JK = IKB + 1, JKMAX
+          DO JI = D%NIB, D%NIE
+             GWORK4(JI,JK) = GWORK3(JI) .AND. JK <= KCTL(JI)
+          ENDDO
+          JKP = MAX( IKB + 1, JK - 1 )
+          DO JI = D%NIB, D%NIE !original loop 1
+            IF ( GWORK3(JI) ) THEN  
+              ZWORK1(JI)       = SIGN( 1., ZOMG(JI,JK) )
+              ZWORK2(JI)       = 0.5 * ( 1. + ZWORK1(JI) )
+              ZWORK1(JI)       = 0.5 * ( 1. - ZWORK1(JI) )
+              ZTHMFIN(JI,JK)   = - ZOMG(JI,JK) * ZTHLC(JI,JKP) * ZWORK1(JI)
+              ZTHMFOUT(JI,JK)  =   ZOMG(JI,JK) * ZTHLC(JI,JK)  * ZWORK2(JI)
+              ZRWMFIN(JI,JK)   = - ZOMG(JI,JK) * PRWC(JI,JKP) * ZWORK1(JI)
+              ZRWMFOUT(JI,JK)  =   ZOMG(JI,JK) * PRWC(JI,JK)  * ZWORK2(JI)
+              ZRCMFIN(JI,JK)   = - ZOMG(JI,JK) * PRCC(JI,JKP) * ZWORK1(JI)
+              ZRCMFOUT(JI,JK)  =   ZOMG(JI,JK) * PRCC(JI,JK)  * ZWORK2(JI)
+              ZRIMFIN(JI,JK)   = - ZOMG(JI,JK) * PRIC(JI,JKP) * ZWORK1(JI)
+              ZRIMFOUT(JI,JK)  =   ZOMG(JI,JK) * PRIC(JI,JK)  * ZWORK2(JI)
+            ENDIF
+          ENDDO
+          DO JI = D%NIB, D%NIE  !original loop 2
+            IF ( GWORK3(JI) ) THEN
+              ZTHMFIN(JI,JKP)  = ZTHMFIN(JI,JKP)  + ZTHMFOUT(JI,JK) * ZWORK2(JI)
+              ZTHMFOUT(JI,JKP) = ZTHMFOUT(JI,JKP) + ZTHMFIN(JI,JK)  * ZWORK1(JI)
+              ZRWMFIN(JI,JKP)  = ZRWMFIN(JI,JKP)  + ZRWMFOUT(JI,JK) * ZWORK2(JI)
+              ZRWMFOUT(JI,JKP) = ZRWMFOUT(JI,JKP) + ZRWMFIN(JI,JK)  * ZWORK1(JI)
+              ZRCMFIN(JI,JKP)  = ZRCMFIN(JI,JKP)  + ZRCMFOUT(JI,JK) * ZWORK2(JI)
+              ZRCMFOUT(JI,JKP) = ZRCMFOUT(JI,JKP) + ZRCMFIN(JI,JK)  * ZWORK1(JI)
+              ZRIMFIN(JI,JKP)  = ZRIMFIN(JI,JKP)  + ZRIMFOUT(JI,JK) * ZWORK2(JI)
+              ZRIMFOUT(JI,JKP) = ZRIMFOUT(JI,JKP) + ZRIMFIN(JI,JK)  * ZWORK1(JI)
+            ENDIF
+          ENDDO
         ENDDO
-        JKP = MAX( IKB + 1, JK - 1 )
-        DO JI = D%NIB, D%NIE
+
+      ELSE
+        !!!the original two loops are rewritten to allow vectorization
+        !!!if there are enough levels (JKMAX-IBK>4). The values are reported from
+        !!!the original two loops to have direct expressions for 
+        !!!arrays ZTHMFIN etc from arrays ZTHLC etc.,
+        !!! with special cases for the first vertical
+        !!!levels and for the last vertical level. The arrays ZWORK1 and ZWORK2
+        !!!times ZOMG are replaced with equivalent expressions based on MAX and MIN.
+        DO JK = IKB + 1, JKMAX
+          DO JI = D%NIB, D%NIE
+             GWORK4(JI,JK) = GWORK3(JI) .AND. JK <= KCTL(JI)
+          ENDDO
+        ENDDO
+        IF (JKMAX .LE. JCTLMAX) THEN
+          JK= JKMAX
+          JKP = MAX( IKB + 1, JK - 1 )
+          DO JI = D%NIB, D%NIE !if JK=JKMAX, the column JK of the arrays is only modified by 
+                               !index JKMAX of original loop 1, and is not used
+                               !in the remaining code if JKMAX is greater than JCTLMAX
+            IF ( GWORK3(JI) ) THEN
+              ZTHMFIN(JI,JK)   = - MIN(ZOMG(JI,JK),0.) * ZTHLC(JI,JKP)
+              ZTHMFOUT(JI,JK)  =   MAX(ZOMG(JI,JK),0.) * ZTHLC(JI,JK)  
+              ZRWMFIN(JI,JK)   = - MIN(ZOMG(JI,JK),0.) * PRWC(JI,JKP) 
+              ZRWMFOUT(JI,JK)  =   MAX(ZOMG(JI,JK),0.) * PRWC(JI,JK)  
+              ZRCMFIN(JI,JK)   = - MIN(ZOMG(JI,JK),0.) * PRCC(JI,JKP) 
+              ZRCMFOUT(JI,JK)  =   MAX(ZOMG(JI,JK),0.) * PRCC(JI,JK)  
+              ZRIMFIN(JI,JK)   = - MIN(ZOMG(JI,JK),0.) * PRIC(JI,JKP) 
+              ZRIMFOUT(JI,JK)  =   MAX(ZOMG(JI,JK),0.) * PRIC(JI,JK)  
+            ENDIF
+          ENDDO
+        ENDIF
+        JK = IKB+1
+        DO JI = D%NIB, D%NIE !if JK=IKB+1, the column JK of the arrays is modified by 
+                             !index IKB+1 of both original loops
           IF ( GWORK3(JI) ) THEN
-            ZWORK1(JI)       = SIGN( 1., ZOMG(JI,JK) )
-            ZWORK2(JI)       = 0.5 * ( 1. + ZWORK1(JI) )
-            ZWORK1(JI)       = 0.5 * ( 1. - ZWORK1(JI) )
-            ZTHMFIN(JI,JK)   = - ZOMG(JI,JK) * ZTHLC(JI,JKP) * ZWORK1(JI)
-            ZTHMFOUT(JI,JK)  =   ZOMG(JI,JK) * ZTHLC(JI,JK)  * ZWORK2(JI)
-            ZRWMFIN(JI,JK)   = - ZOMG(JI,JK) * PRWC(JI,JKP) * ZWORK1(JI)
-            ZRWMFOUT(JI,JK)  =   ZOMG(JI,JK) * PRWC(JI,JK)  * ZWORK2(JI)
-            ZRCMFIN(JI,JK)   = - ZOMG(JI,JK) * PRCC(JI,JKP) * ZWORK1(JI)
-            ZRCMFOUT(JI,JK)  =   ZOMG(JI,JK) * PRCC(JI,JK)  * ZWORK2(JI)
-            ZRIMFIN(JI,JK)   = - ZOMG(JI,JK) * PRIC(JI,JKP) * ZWORK1(JI)
-            ZRIMFOUT(JI,JK)  =   ZOMG(JI,JK) * PRIC(JI,JK)  * ZWORK2(JI)
+            ZTHMFIN(JI,JK)  =  - MIN(ZOMG(JI,JK),0.) * ZTHLC(JI,JK)   + &
+               &  MAX(ZOMG(JI,JK),0.) * ZTHLC(JI,JK)               
+            ZTHMFOUT(JI,JK) =  MAX(ZOMG(JI,JK),0.) * ZTHLC(JI,JK) -  &
+               &  MIN(ZOMG(JI,JK),0.) * ZTHLC(JI,JK) 
+            ZRWMFIN(JI,JK)  =  - MIN(ZOMG(JI,JK),0.) * PRWC(JI,JK)  + &
+               &  MAX(ZOMG(JI,JK),0.) * PRWC(JI,JK)  
+            ZRWMFOUT(JI,JK) =  MAX(ZOMG(JI,JK),0.) * PRWC(JI,JK)  - &
+               &    MIN(ZOMG(JI,JK),0.) * PRWC(JI,JK) 
+            ZRCMFIN(JI,JKP)  =  - MIN(ZOMG(JI,JK),0.) * PRCC(JI,JK)  + &
+               &  MAX(ZOMG(JI,JK),0.) * PRCC(JI,JK)    
+            ZRCMFOUT(JI,JK) =  MAX(ZOMG(JI,JK),0.) * PRCC(JI,JK)   - &
+               &  MIN(ZOMG(JI,JK),0.) * PRCC(JI,JK)  
+            ZRIMFIN(JI,JKP)  =  - MIN(ZOMG(JI,JK),0.) * PRIC(JI,JK) + &
+               &  MAX(ZOMG(JI,JK),0.) * PRIC(JI,JK)  
+            ZRIMFOUT(JI,JK) =  MAX(ZOMG(JI,JK),0.) * PRIC(JI,JK)  - &
+               &  MIN(ZOMG(JI,JK),0.) * PRIC(JI,JK) 
           ENDIF
         ENDDO
-        DO JI = D%NIB, D%NIE
+        JK = IKB + 2
+        JKP= JK - 1  !JKP = MAX (IKB + 1 , JK - 1)
+        DO JI = D%NIB, D%NIE !if JK=IBK+2, the column JKB+1 of the arrays is modified 
+                             !again by index IKB+2 of original loop 2
           IF ( GWORK3(JI) ) THEN
-            ZTHMFIN(JI,JKP)  = ZTHMFIN(JI,JKP)  + ZTHMFOUT(JI,JK) * ZWORK2(JI)
-            ZTHMFOUT(JI,JKP) = ZTHMFOUT(JI,JKP) + ZTHMFIN(JI,JK)  * ZWORK1(JI)
-            ZRWMFIN(JI,JKP)  = ZRWMFIN(JI,JKP)  + ZRWMFOUT(JI,JK) * ZWORK2(JI)
-            ZRWMFOUT(JI,JKP) = ZRWMFOUT(JI,JKP) + ZRWMFIN(JI,JK)  * ZWORK1(JI)
-            ZRCMFIN(JI,JKP)  = ZRCMFIN(JI,JKP)  + ZRCMFOUT(JI,JK) * ZWORK2(JI)
-            ZRCMFOUT(JI,JKP) = ZRCMFOUT(JI,JKP) + ZRCMFIN(JI,JK)  * ZWORK1(JI)
-            ZRIMFIN(JI,JKP)  = ZRIMFIN(JI,JKP)  + ZRIMFOUT(JI,JK) * ZWORK2(JI)
-            ZRIMFOUT(JI,JKP) = ZRIMFOUT(JI,JKP) + ZRIMFIN(JI,JK)  * ZWORK1(JI)
+            ZTHMFIN(JI,JKP)  = ZTHMFIN(JI,JKP)  + &
+              & MAX(ZOMG(JI,JK),0.) * ZTHLC(JI,JK)   
+            ZTHMFOUT(JI,JKP) = ZTHMFOUT(JI,JKP) - &
+              & MIN(ZOMG(JI,JK),0.) * ZTHLC(JI,JKP)  
+            ZRWMFIN(JI,JKP)  = ZRWMFIN(JI,JKP)  + &
+              & MAX(ZOMG(JI,JK),0.) * PRWC(JI,JK)  
+            ZRWMFOUT(JI,JKP) = ZRWMFOUT(JI,JKP) - &
+              & MIN(ZOMG(JI,JK),0.) * PRWC(JI,JKP) 
+            ZRCMFIN(JI,JKP)  = ZRCMFIN(JI,JKP)  + &
+              & MAX(ZOMG(JI,JK),0.) * PRCC(JI,JK)  
+            ZRCMFOUT(JI,JKP) = ZRCMFOUT(JI,JKP) - &
+              & MIN(ZOMG(JI,JK),0.) * PRCC(JI,JKP) 
+            ZRIMFIN(JI,JKP)  = ZRIMFIN(JI,JKP)  + &
+              & MAX(ZOMG(JI,JK),0.) * PRIC(JI,JK)  
+            ZRIMFOUT(JI,JKP) = ZRIMFOUT(JI,JKP) - &
+              & MIN(ZOMG(JI,JK),0.) * PRIC(JI,JKP) 
           ENDIF
         ENDDO
-      ENDDO
+        DO JK = IKB + 3, MIN(JKMAX-1,JCTLMAX+1) 
+          JKP= JK - 1 !JKP = MAX( IKB + 1, JK - 1 )
+          JKPP=JK - 2 !JKPP= MAX( IKB + 1, JK - 2 )
+          DO JI = D%NIB, D%NIE !if JK is greater than IKB+3, the column JK of the arrays is modified 
+                               !by index JK of original loop 1 and index JK+1 of original loop 2
+            IF ( GWORK3(JI) ) THEN
+              ZTHMFIN(JI,JKP)  =  - MIN(ZOMG(JI,JKP),0.) * ZTHLC(JI,JKPP) + &
+                 &  MAX(ZOMG(JI,JK),0.) * ZTHLC(JI,JK)   
+              ZTHMFOUT(JI,JKP) =  MAX(ZOMG(JI,JKP),0.) * ZTHLC(JI,JKP)   - &
+                 &   MIN(ZOMG(JI,JK),0.) * ZTHLC(JI,JKP)  
+              ZRWMFIN(JI,JKP)  =  - MIN(ZOMG(JI,JKP),0.) * PRWC(JI,JKPP) + &
+                 &  MAX(ZOMG(JI,JK),0.) * PRWC(JI,JK)   
+              ZRWMFOUT(JI,JKP) =  MAX(ZOMG(JI,JKP),0.) * PRWC(JI,JKP)  - &
+                 &  MIN(ZOMG(JI,JK),0.) * PRWC(JI,JKP) 
+              ZRCMFIN(JI,JKP)  =  - MIN(ZOMG(JI,JKP),0.) * PRCC(JI,JKPP) + &
+                 &  MAX(ZOMG(JI,JK),0.) * PRCC(JI,JK)   
+              ZRCMFOUT(JI,JKP) =  MAX(ZOMG(JI,JKP),0.) * PRCC(JI,JKP)    - &
+                 &  MIN(ZOMG(JI,JK),0.) * PRCC(JI,JKP) 
+              ZRIMFIN(JI,JKP)  =  - MIN(ZOMG(JI,JKP),0.) * PRIC(JI,JKPP) + &
+                 &  MAX(ZOMG(JI,JK),0.) * PRIC(JI,JK)   
+              ZRIMFOUT(JI,JKP) =  MAX(ZOMG(JI,JKP),0.) * PRIC(JI,JKP) - &
+                 &  MIN(ZOMG(JI,JK),0.) * PRIC(JI,JKP)  
+            ENDIF
+          ENDDO
+        ENDDO
+
+      ENDIF
+
 !
 !******************************************************************************
 !
@@ -426,7 +551,7 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
 !               -----------------------------------------------------------------
 !
 !
-      DO JK = IKB, IKE
+      DO JK = IKB, JCTLMAX !GWORK4 is .FALSE. if JK is greater than JCTLMAX 
         DO JI=D%NIB, D%NIE
           IF(GWORK4(JI,JK)) THEN
 !
@@ -456,19 +581,19 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
 !*          10.    Compute final linearized value of theta envir.
 !                  ----------------------------------------------
 !
-    DO JK = IKB + 1, JKMAX
+    DO JK = IKB + 1,JCTLMAX 
       DO JI = D%NIB, D%NIE
         IF( GWORK1(JI) .AND. JK <= KCTL(JI) ) THEN
-          ZPI(JI)    = ( CST%XP00 / PPRES(JI,JK) ) ** ZRDOCP
+
           ZCPH(JI)   = CST%XCPD + PRWC(JI,JK) * CST%XCPV
-          ZWORK2(JI) = PTH(JI,JK) / ZPI(JI)  ! first temperature estimate
+          ZWORK2(JI) = PTH(JI,JK) / ZPIAUX(JI,JK)  ! first temperature estimate
           ZLV(JI)    = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZWORK2(JI) - CST%XTT )
           ZLS(JI)    = CST%XLVTT + ( CST%XCPV - CST%XCI ) * ( ZWORK2(JI) - CST%XTT )
           ! final linearized temperature
           ZWORK2(JI) = ( ZTHLC(JI,JK) + ZLV(JI) * PRCC(JI,JK) + ZLS(JI) * PRIC(JI,JK) &
                       - (1. + PRWC(JI,JK) ) * CST%XG * PZ(JI,JK) ) / ZCPH(JI)
           ZWORK2(JI) = MAX( 180., MIN( 340., ZWORK2(JI) ) )
-          PTHC(JI,JK)= ZWORK2(JI) * ZPI(JI) ! final adjusted envir. theta
+          PTHC(JI,JK)= ZWORK2(JI) * ZPIAUX(JI,JK) ! final adjusted envir. theta
         ENDIF
       ENDDO
     ENDDO
@@ -485,8 +610,11 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
                                      ILCL, KDPL, KPBL )
 !
 !
+JLCLMIN=ILCL(D%NIB)  
+
 !DIR$ IVDEP
     DO JI = D%NIB, D%NIE
+      JLCLMIN=MIN(JLCLMIN,ILCL(JI)) 
       ZTLCL (JI)  = MAX( 230., MIN( 335., ZTLCL(JI) ) )  ! set some overflow bounds
       ZTELCL(JI) = MAX( 230., MIN( 335., ZTELCL(JI) ) )
       ZTHLCL(JI) = MAX( 230., MIN( 345., ZTHLCL(JI) ) )
@@ -509,21 +637,20 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
        & * EXP( ( 3374.6525 / ZTELCL(JI) - 2.5403 ) * ZWORK3(JI) * ( 1. + 0.81 * ZWORK3(JI) ) )
     ENDDO
 !
-    DO JK = IKB, JKMAX
-
+    JLCLMIN=MAX(JLCLMIN,IKB)        
+    DO JK = JLCLMIN, JCTLMAX  
       JKP = JK - 1
 !DIR$ IVDEP
       DO JI = D%NIB, D%NIE
         ! compute theta_e saturated environment and adjusted values of theta
         GWORK3(JI)  = JK >= ILCL(JI) .AND. JK <= KCTL(JI) .AND. GWORK1(JI)
-        ZPI(JI)     = ( CST%XP00 / PPRES(JI,JK) ) ** ZRDOCP
-        ZWORK2(JI)  = PTHC(JI,JK) / ZPI(JI)
+        ZWORK2(JI)  = PTHC(JI,JK) / ZPIAUX(JI,JK)
         CALL CONVECT_SATMIXRATIO( PPRES(JI,JK), ZWORK2(JI), ZEPS, ZWORK3(JI), ZLV(JI), ZLS(JI), ZCPH(JI) )
       END DO
 !
-      DO JI = D%NIB, D%NIE
+      DO JI = D%NIB, D%NIE 
         IF ( GWORK3(JI) ) THEN
-          ZTHES2(JI)  = ZWORK2(JI) * ZPI(JI) ** ( 1. - 0.28 * ZWORK3(JI) )   &
+           ZTHES2(JI)  = ZWORK2(JI) * ZPIAUX(JI,JK) ** ( 1. - 0.28 * ZWORK3(JI) )   &
            & * EXP( ( 3374.6525 / ZWORK2(JI) - 2.5403 ) * ZWORK3(JI) * ( 1. + 0.81 * ZWORK3(JI) ) )
           IF ( JK == ILCL(JI) ) THEN
             ZWORK3(JI)  = PZ(JI,JK) - ZZLCL(JI)  ! level thickness

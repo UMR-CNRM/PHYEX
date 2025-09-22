@@ -13,50 +13,57 @@
 MODULE MODE_BUDGET_PHY
 !#################
 
-USE MODD_BUDGET, ONLY: TBUDGETDATA
+USE MODD_BUDGET, ONLY: TBUDGETDATA, TBUDGETDATA_ABS
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 
 IMPLICIT NONE
-
+!
+TYPE, EXTENDS(TBUDGETDATA_ABS) :: TBUDGETDATA_MNH
+  TYPE(TBUDGETDATA), POINTER :: TBUDGET
+  CONTAINS
+  PROCEDURE :: INIT_PHY => BUDGET_INIT
+  PROCEDURE :: END_PHY => BUDGET_END
+  PROCEDURE :: ADD_PHY => BUDGET_ADD
+ENDTYPE TBUDGETDATA_MNH
+!
+TYPE(TBUDGETDATA_MNH), DIMENSION(:), ALLOCATABLE, SAVE, TARGET :: TBUDGETS_MNH
+!
 PRIVATE
-
-PUBLIC :: Budget_store_init_phy
-PUBLIC :: Budget_store_end_phy
-PUBLIC :: Budget_store_add_phy
+PUBLIC :: TBUDGETS_MNH
 
 CONTAINS
 
-SUBROUTINE Budget_store_init_phy(D, tpbudget, hsource, pvars)
+SUBROUTINE BUDGET_INIT(SELF, D, HSOURCE, PVARS)
   USE MODE_BUDGET, ONLY: BUDGET_STORE_INIT
-  TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
-  type(tbudgetdata),      intent(inout) :: tpbudget ! Budget datastructure
-  character(len=*),       intent(in)    :: hsource  ! Name of the source term
-  real, dimension(D%NIT,D%NJT,D%NKT), intent(in)    :: pvars    ! Current value to be stored
+  CLASS(TBUDGETDATA_MNH), INTENT(INOUT) :: SELF
+  TYPE(DIMPHYEX_T),       INTENT(IN)    :: D
+  CHARACTER(LEN=*),       INTENT(IN)    :: HSOURCE  ! NAME OF THE SOURCE TERM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PVARS    ! CURRENT VALUE TO BE STORED
+  !
+  CALL BUDGET_STORE_INIT(SELF%TBUDGET, HSOURCE, PVARS)
+  !
+END SUBROUTINE BUDGET_INIT
 !
-  CALL Budget_store_init(tpbudget, hsource, pvars)
-!
-END SUBROUTINE Budget_store_init_phy
-!
-SUBROUTINE Budget_store_end_phy(D, tpbudget, hsource, pvars)
+SUBROUTINE BUDGET_END(SELF, D, HSOURCE, PVARS)
   USE MODE_BUDGET, ONLY: BUDGET_STORE_END
-  TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
-  type(tbudgetdata),      intent(inout) :: tpbudget ! Budget datastructure
-  character(len=*),       intent(in)    :: hsource  ! Name of the source term
-  real, dimension(D%NIT,D%NJT,D%NKT), intent(in)    :: pvars    ! Current value to be stored
+  CLASS(TBUDGETDATA_MNH), INTENT(INOUT) :: SELF
+  TYPE(DIMPHYEX_T),       INTENT(IN)    :: D
+  CHARACTER(LEN=*),       INTENT(IN)    :: HSOURCE  ! NAME OF THE SOURCE TERM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PVARS    ! CURRENT VALUE TO BE STORED
+  !
+  CALL BUDGET_STORE_END(SELF%TBUDGET, HSOURCE, PVARS)
+  !
+END SUBROUTINE BUDGET_END
 !
-  CALL Budget_store_end(tpbudget, hsource, pvars)
-!
-END SUBROUTINE Budget_store_end_phy
-!
-SUBROUTINE Budget_store_add_phy(D, tpbudget, hsource, pvars)
+SUBROUTINE BUDGET_ADD(SELF, D, HSOURCE, PVARS)
   USE MODE_BUDGET,   ONLY: BUDGET_STORE_ADD
-  TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
-  type(tbudgetdata),      intent(inout) :: tpbudget ! Budget datastructure
-  character(len=*),       intent(in)    :: hsource  ! Name of the source term
-  real, dimension(D%NIT,D%NJT,D%NKT), intent(in)    :: pvars    ! Current value to be stored
-!
-  CALL Budget_store_add(tpbudget, hsource, pvars)
-!
-END SUBROUTINE Budget_store_add_phy
+  CLASS(TBUDGETDATA_MNH), INTENT(INOUT) :: SELF
+  TYPE(DIMPHYEX_T),       INTENT(IN)    :: D
+  CHARACTER(LEN=*),       INTENT(IN)    :: HSOURCE  ! NAME OF THE SOURCE TERM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PVARS    ! CURRENT VALUE TO BE STORED
+  !
+  CALL BUDGET_STORE_ADD(SELF%TBUDGET, HSOURCE, PVARS)
+  !
+END SUBROUTINE BUDGET_ADD
 !
 END MODULE MODE_BUDGET_PHY

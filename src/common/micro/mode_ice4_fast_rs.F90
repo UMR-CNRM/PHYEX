@@ -8,7 +8,7 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, &
                        &PRHODREF, PLVFACT, PLSFACT, PPRES, &
-                       &PDV, PKA, PCJ, &
+                       &PDV, PKA, PCJ, PCOLF, &
                        &PLBDAR, PLBDAS, &
                        &PT,  PRVT, PRCT, PRRT, PRST, &
                        &PRIAGGS, &
@@ -32,6 +32,8 @@ SUBROUTINE ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUT
 !  P. Wautelet 29/05/2019: remove PACK/UNPACK intrinsics (to get more performance and better OpenACC support)
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
+!  K.I Ivarsson   02/2023: Possibility to use alternative collision factor
+!!                            and tunings for e.g. better forecasting supercooled rain
 !
 !
 !*      0. DECLARATIONS
@@ -61,6 +63,7 @@ REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PPRES    ! absolute pressure at t
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PDV      ! Diffusivity of water vapor in the air
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PKA      ! Thermal conductivity of the air
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
+REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCOLF    ! Collision factor cloud water - snow/graupel
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLBDAR   ! Slope parameter of the raindrop  distribution
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PT       ! Temperature
@@ -174,13 +177,13 @@ IF(.NOT. LDSOFT) THEN
     !$mnh_expand_where(JL=1:KSIZE)
     IF(.NOT. ICEP%LNEWCOEFF) THEN
       WHERE (GRIM(1:KSIZE))
-        PRS_TEND(1:KSIZE, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(1:KSIZE) * PRCT(1:KSIZE) & ! RCRIMSS
+        PRS_TEND(1:KSIZE, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(1:KSIZE) * PRCT(1:KSIZE) * PCOLF(1:KSIZE) & ! RCRIMSS
                                         * PLBDAS(1:KSIZE)**ICEP%XEXCRIMSS &
                                         * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
       END WHERE
     ELSE
       WHERE (GRIM(1:KSIZE))
-        PRS_TEND(1:KSIZE, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(1:KSIZE) * PRCT(1:KSIZE) & ! RCRIMSS
+        PRS_TEND(1:KSIZE, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(1:KSIZE) * PRCT(1:KSIZE) * PCOLF(1:KSIZE) & ! RCRIMSS
                                         * PRST(1:KSIZE)*(1+(ICED%XFVELOS/PLBDAS(1:KSIZE))**ICED%XALPHAS) &
                                           **(-ICED%XNUS+ICEP%XEXCRIMSS/ICED%XALPHAS) &
                                         * PRHODREF(1:KSIZE)**(-ICED%XCEXVT+1.) &
@@ -197,13 +200,13 @@ IF(.NOT. LDSOFT) THEN
     !$mnh_expand_where(JL=1:KSIZE)
     IF(.NOT. ICEP%LNEWCOEFF) THEN
       WHERE(GRIM(1:KSIZE))
-        PRS_TEND(1:KSIZE, IRCRIMS)=ICEP%XCRIMSG * PRCT(1:KSIZE)               & ! RCRIMS
+        PRS_TEND(1:KSIZE, IRCRIMS)=ICEP%XCRIMSG * PRCT(1:KSIZE) * PCOLF(1:KSIZE)               & ! RCRIMS
                                      * PLBDAS(1:KSIZE)**ICEP%XEXCRIMSG  &
                                      * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
       END WHERE
     ELSE
       WHERE(GRIM(1:KSIZE))
-        PRS_TEND(1:KSIZE, IRCRIMS)=ICEP%XCRIMSG * PRCT(1:KSIZE)               & ! RCRIMS
+        PRS_TEND(1:KSIZE, IRCRIMS)=ICEP%XCRIMSG * PRCT(1:KSIZE) * PCOLF(1:KSIZE)               & ! RCRIMS
                                      * PRST(1:KSIZE)*(1+(ICED%XFVELOS/PLBDAS(1:KSIZE))**(ICED%XALPHAS)) &
                                        **(-ICED%XNUS+ICEP%XEXCRIMSG/ICED%XALPHAS) &
                                      * PRHODREF(1:KSIZE)**(-ICED%XCEXVT+1.) &
@@ -322,6 +325,11 @@ IF(.NOT. LDSOFT) THEN
     WHERE(GACC(1:KSIZE))
       PRS_TEND(1:KSIZE, IRRACCSS) =ZZW1(1:KSIZE)*ZZW(1:KSIZE)
     END WHERE
+    IF(PARAMI%LOCND2) THEN
+      WHERE(GACC(1:KSIZE))
+        PRS_TEND(1:KSIZE, IRRACCSS) = PRS_TEND(1:KSIZE, IRRACCSS) * ICEP%XFRMIN(7)
+      END WHERE
+    ENDIF
     !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
     !
@@ -336,27 +344,52 @@ IF(.NOT. LDSOFT) THEN
     !        5.2.6  raindrop accretion-conversion of the large sized aggregates
     !               into graupeln
     !
-!$acc kernels
-    !$mnh_expand_where(JL=1:KSIZE)
-    IF(.NOT. ICEP%LNEWCOEFF) THEN
-      WHERE(GACC(1:KSIZE))
-        PRS_TEND(1:KSIZE, IRSACCRG) = ICEP%XFSACCRG*ZZW3(1:KSIZE)*                    & ! RSACCRG
-            ( PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS) )*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) ) &
-           *( ICEP%XLBSACCR1/((PLBDAR(1:KSIZE)**2)               ) +           &
-              ICEP%XLBSACCR2/( PLBDAR(1:KSIZE)    * PLBDAS(1:KSIZE)    ) +           &
-              ICEP%XLBSACCR3/(               (PLBDAS(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)
-      END WHERE
-    ELSE
-      WHERE(GACC(1:KSIZE))
-        PRS_TEND(1:KSIZE, IRSACCRG) = ICEP%XFSACCRG*ZZW3(1:KSIZE)*                    & ! RSACCRG
-            ( PRST(1:KSIZE))*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT) ) &
-           *( ICEP%XLBSACCR1/((PLBDAR(1:KSIZE)**2)               ) +           &
-              ICEP%XLBSACCR2/( PLBDAR(1:KSIZE)    * PLBDAS(1:KSIZE)    ) +           &
-              ICEP%XLBSACCR3/(               (PLBDAS(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)
-      END WHERE
-    ENDIF
-    !$mnh_end_expand_where(JL=1:KSIZE)
-!$acc end kernels
+!! Version to use, after having verified that current merge reproduce the 50t1 bug
+!!!$acc kernels
+!!    !$mnh_expand_where(JL=1:KSIZE)
+!!    IF(.NOT. ICEP%LNEWCOEFF) THEN
+!!      WHERE(GACC(1:KSIZE) .AND. (.NOT. PARAMI%LOCND2 .OR. PRST(:)>ICEP%XFRMIN(1) )))
+!!        PRS_TEND(1:KSIZE, IRSACCRG) = ICEP%XFSACCRG*ZZW3(1:KSIZE)*                    & ! RSACCRG
+!!            ( PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS) )*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) ) &
+!!           *( ICEP%XLBSACCR1/((PLBDAR(1:KSIZE)**2)               ) +           &
+!!              ICEP%XLBSACCR2/( PLBDAR(1:KSIZE)    * PLBDAS(1:KSIZE)    ) +           &
+!!              ICEP%XLBSACCR3/(               (PLBDAS(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)
+!!      END WHERE
+!!    ELSE
+!!      WHERE(GACC(1:KSIZE) .AND. (.NOT. PARAMI%LOCND2 .OR. PRST(:)>ICEP%XFRMIN(1) )))
+!!        PRS_TEND(1:KSIZE, IRSACCRG) = ICEP%XFSACCRG*ZZW3(1:KSIZE)*                    & ! RSACCRG
+!!            ( PRST(1:KSIZE))*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT) ) &
+!!           *( ICEP%XLBSACCR1/((PLBDAR(1:KSIZE)**2)               ) +           &
+!!              ICEP%XLBSACCR2/( PLBDAR(1:KSIZE)    * PLBDAS(1:KSIZE)    ) +           &
+!!              ICEP%XLBSACCR3/(               (PLBDAS(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)
+!!      END WHERE
+!!    ENDIF
+!!    !$mnh_end_expand_where(JL=1:KSIZE)
+!!!$acc end kernels
+
+!! Bugged 50t1 version
+    DO JL=1, KSIZE
+      IF(.NOT. ICEP%LNEWCOEFF) THEN
+        IF (GACC(JL)) THEN
+          IF (.NOT. PARAMI%LOCND2 .OR. PRST(JL)>ICEP%XFRMIN(1) ) THEN
+            PRS_TEND(JL, IRSACCRG) = ICEP%XFSACCRG*ZZW3(JL)*                    & ! RSACCRG
+            ( PLBDAS(JL)**(ICED%XCXS-ICED%XBS) )*( PRHODREF(JL)**(-ICED%XCEXVT-1.) ) &
+            *( ICEP%XLBSACCR1/((PLBDAR(JL)**2)               ) +           &
+            ICEP%XLBSACCR2/( PLBDAR(JL)    * PLBDAS(JL)    ) +           &
+            ICEP%XLBSACCR3/(               (PLBDAS(JL)**2)) )/PLBDAR(JL)
+          ENDIF
+        ELSE
+          IF (GACC(JL)) THEN
+            PRS_TEND(JL, IRSACCRG) = ICEP%XFSACCRG*ZZW3(JL)*                    & ! RSACCRG
+              ( PRST(JL))*( PRHODREF(JL)**(-ICED%XCEXVT) ) &
+               *( ICEP%XLBSACCR1/((PLBDAR(JL)**2)               ) +           &
+                  ICEP%XLBSACCR2/( PLBDAR(JL)    * PLBDAS(JL)    ) +           &
+                  ICEP%XLBSACCR3/(               (PLBDAS(JL)**2)) )/PLBDAR(JL)
+          ENDIF
+        ENDIF
+      ENDIF
+    END DO
+
   ENDIF
 ENDIF
 !

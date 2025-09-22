@@ -11,7 +11,9 @@ SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                     &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
                     &PEXN, PRHODREF, PPABST, PCIT, PCLDFR, &
                     &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
-                    &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
+                    &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, &
+                    &PICLDFR, PZZZ, PCONC3D, PSSIO, PSSIU, PIFR, &
+                    &PTHT, PRT, &
                     &PBUDGETS, PLATHAM_IAGGS)
 !     ######################################################################
 !
@@ -110,6 +112,12 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR),   INTENT(INOUT) :: PRS    ! m.r. source
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRREVAV! Rain evap profile
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRAINFR !Precipitation fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PICLDFR
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PZZZ
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCONC3D
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the supersaturated fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the  subsaturated fraction 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHT
 REAL, DIMENSION(D%NIJT,D%NKT,7), INTENT(INOUT) :: PRT
 REAL, DIMENSION(MERGE(D%NIJT,0,OSAVE_MICRO .OR. BUCONF%LBU_ENABLE), &
@@ -134,6 +142,12 @@ INTEGER :: IMICRO ! Case r_x>0 locations
 INTEGER :: JL, JV
 REAL, DIMENSION(KPROMA) :: &
                         & ZCIT,     & ! Pristine ice conc. at t
+                        & ZICLDFR,  & ! Ice cloud fraction
+                        & ZZZZ,     & ! model level height
+                        & ZCONC3D,  & ! Cloud droplet number concentration at t
+                        & ZSSIO,    & ! Super-saturation with respect to ice in the supersaturated fraction
+                        & ZSSIU,    & ! Sub-saturation with respect to ice in the  subsaturated fraction
+                        & ZIFR,     & ! Ratio cloud ice moist part to dry part
                         & ZRHODREF, & ! RHO Dry REFerence
                         & ZPABST,   & ! Pressure
                         & ZEXN,     & ! EXNer Pressure
@@ -252,6 +266,12 @@ IF(PARAMI%LPACK_MICRO) THEN
               ZRHODREF   (IDX)=PRHODREF(JIJ, JK)
               ZPABST     (IDX)=PPABST  (JIJ, JK)
               ZEXN       (IDX)=PEXN    (JIJ, JK)
+              ZICLDFR    (IC)=PICLDFR (JIJ, JK)
+              ZZZZ       (IC)=PZZZ    (JIJ, JK)
+              ZCONC3D    (IC)=PCONC3D (JIJ, JK)
+              ZSSIO      (IC)=PSSIO   (JIJ, JK)
+              ZSSIU      (IC)=PSSIU   (JIJ, JK)
+              ZIFR       (IC)=PIFR    (JIJ, JK)
               IF(LLSIGMA_RC) THEN
                 ZSIGS(IDX)    =PSIGS   (JIJ, JK)
               ENDIF
@@ -307,6 +327,8 @@ IF(PARAMI%LPACK_MICRO) THEN
                         &KRR, OSAVE_MICRO, LLMICRO, OELEC, &
                         &ZEXN, ZRHODREF, &
                         &ZPABST, ZCIT, ZCLDFR, &
+                        &ZICLDFR, ZZZZ, ZCONC3D, &
+                        &ZSSIO, ZSSIU, ZIFR, &
                         &ZHLC_HCF, ZHLC_HRC, &
                         &ZHLI_HCF, ZHLI_HRI, &
                         &ZTHS, ZRS, ZRREVAV, &
@@ -394,6 +416,8 @@ ELSE ! PARAMI%LPACK_MICRO
                     &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
                     &PEXN, PRHODREF, &
                     &PPABST, PCIT, PCLDFR, &
+                    &PICLDFR, PZZZ, PCONC3D, &
+                    &PSSIO, PSSIU, PIFR, &
                     &PHLC_HCF, PHLC_HRC, &
                     &PHLI_HCF, PHLI_HRI,  &
                     &PTHS, PRS, PRREVAV, &

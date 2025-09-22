@@ -78,7 +78,8 @@ TYPE TURB_t
   LOGICAL            :: LSIG_CONV   !< Switch for computing Sigma_s due to convection
 !
   LOGICAL            :: LHARAT      !< if true RACMO turbulence is used
-  LOGICAL            :: LBL89TOP    !< if true modification in BL89 at PBL top   
+  LOGICAL            :: LBL89TOP    !< if true modification in BL89 at PBL top
+  LOGICAL            :: LBL89EXP    !< if true true exposant of BL89 paper
   LOGICAL            :: LRMC01      !< Switch for computing separate mixing and dissipative length in the SBL
                                     !! according to Redelsperger, Mahe & Carlotti 2001
   CHARACTER(LEN=4)   :: CTOM        !< type of Third Order Moments:
@@ -156,6 +157,7 @@ LOGICAL, POINTER :: LSIG_CONV=>NULL()
 LOGICAL, POINTER :: LRMC01=>NULL()
 LOGICAL, POINTER :: LHARAT=>NULL()
 LOGICAL, POINTER :: LBL89TOP=>NULL()
+LOGICAL, POINTER :: LBL89EXP=>NULL()
 CHARACTER(LEN=4),POINTER :: CTOM=>NULL()
 REAL, DIMENSION(:,:), POINTER :: XBL_DEPTH=>NULL()
 REAL, DIMENSION(:,:), POINTER :: XSBL_DEPTH=>NULL()
@@ -200,11 +202,11 @@ NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
                    LSIG_CONV,LRMC01,CTOM,&
                    XTKEMIN,XCED,XCTP,XCADAP,&
                    LLEONARD,XCOEFHGRADTHL, XCOEFHGRADRM, &
-                   XALTHGRAD, LGOGER, XSMAG, XCLDTHOLD, XLINI, LHARAT, & 
+                   XALTHGRAD, LGOGER, XSMAG, XCLDTHOLD, XLINI, LHARAT, &
                    LPROJQITURB, LSMOOTH_PRANDTL, XMINSIGS, NTURBSPLIT, &
                    LCLOUDMODIFLM, CTURBLEN_CLOUD, &
                    XCOEF_AMPL_SAT, XCEI_MIN, XCEI_MAX, LTURB_PRECIP, &
-                   LDYNMF, LTHERMMF,LBL89TOP
+                   LDYNMF, LTHERMMF, LBL89TOP, LBL89EXP
 !
 !-------------------------------------------------------------------------------
 !
@@ -257,6 +259,7 @@ CTURBDIM=>TURB_MODEL(KTO)%CTURBDIM
 LTURB_FLX=>TURB_MODEL(KTO)%LTURB_FLX
 LHARAT=>TURB_MODEL(KTO)%LHARAT
 LBL89TOP=>TURB_MODEL(KTO)%LBL89TOP
+LBL89EXP=>TURB_MODEL(KTO)%LBL89EXP
 LTURB_DIAG=>TURB_MODEL(KTO)%LTURB_DIAG
 LSIG_CONV=>TURB_MODEL(KTO)%LSIG_CONV
 LRMC01=>TURB_MODEL(KTO)%LRMC01
@@ -400,6 +403,7 @@ IF(LLDEFAULTVAL) THEN
   XLINI=0.1 !old value: 10.
   LHARAT=.FALSE.
   LBL89TOP=.FALSE.
+  LBL89EXP=.TRUE.
   LROTATE_WIND=.FALSE.
   LTKEMINTURB=.TRUE.
   LPROJQITURB=.TRUE.
@@ -420,6 +424,7 @@ IF(LLDEFAULTVAL) THEN
     XLINI=0.
     LPROJQITURB=.FALSE.
     LSMOOTH_PRANDTL=.FALSE.
+    LBL89EXP=.FALSE.
   ELSEIF(HPROGRAM=='MESONH') THEN
     LROTATE_WIND=.TRUE.
     LTKEMINTURB=.FALSE.

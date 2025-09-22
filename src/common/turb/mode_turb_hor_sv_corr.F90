@@ -124,6 +124,7 @@ REAL :: ZCQSVD = 2.4  ! constant for humidity - scalar covariance dissipation
 !
 REAL :: ZCSV          !constant for the scalar flux 
 ! ---------------------------------------------------------------------------
+INTEGER :: JI, JJ, JK
 !
 IKU=SIZE(PTKEM,3)
 IIT=D%NIT

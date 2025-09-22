@@ -53,7 +53,7 @@ CONTAINS
 !
 USE MODD_CST
 USE MODD_TURB_n, ONLY : XCTP, XCED, XCSHF, XCHF, XCTV, XCHV, XCHT1, XCHT2, XCPR1, CTURBLEN, &
-                      & XBL89EXP,  XUSRBL89
+                      & XBL89EXP,  XUSRBL89, LBL89EXP
 USE MODD_NEB_n, ONLY: LSTATNW
 USE MODD_CTURB ! For true constants (not tunable)
 USE MODD_PARAMETERS, ONLY : XUNDEF
@@ -82,7 +82,7 @@ IF(XCED == XUNDEF) THEN
   !       Schmidt-Schumann      (1989) = 0.845
   !       Cheng-Canuto-Howard   (2002) = 0.845
   !       Rodier, Masson, Couvreux, Paci (2017) = 0.34
-  IF(CTURBLEN=='RM17' .OR. CTURBLEN=='HM21') THEN
+  IF(CTURBLEN=='RM17' .OR. CTURBLEN=='ADAP') THEN
     XCED=0.34
   ELSE
     IF(HPROGRAM=='AROME') THEN
@@ -258,7 +258,13 @@ XFTOP_O_FSURF = 0.05 ! Fraction of surface (heat or momentum) flux used to defin
 !
 !         7. Constants for BL89 computation
 !
-XBL89EXP=LOG(16.)/(4.*LOG(XKARMAN)+LOG(XCED)-3.*LOG(XCMFS))
+!
+IF (LBL89EXP) THEN
+    XBL89EXP=LOG(16.)/(4.*LOG(XKARMAN)+LOG(XCED)-3.*LOG(XCMFS))
+ELSE
+    XBL89EXP=(2./3.)
+END IF
+!
 XUSRBL89=1./XBL89EXP
 !
 !

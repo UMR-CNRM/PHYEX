@@ -20,7 +20,7 @@ INTERFACE
                             &POUT_RV, POUT_RC, POUT_RI, POUT_TH,               &
                             &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,           &
                             &PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF)
-USE MODD_BUDGET,         ONLY: TBUDGETDATA, TBUDGETCONF_t
+USE MODD_BUDGET,         ONLY: TBUDGETDATA_PTR, TBUDGETCONF_T
 USE MODD_CST,            ONLY: CST_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_NEB_n,          ONLY: NEB_t
@@ -89,7 +89,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRR  ! Rain water m.r. to adjust
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRI  ! Cloud ice  m.r. to adjust
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRS  ! Aggregate  m.r. to adjust
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRG  ! Graupel    m.r. to adjust
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS),       INTENT(INOUT)::  TBUDGETS
+TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS),       INTENT(INOUT)::  TBUDGETS
 INTEGER,                                      INTENT(IN)   ::  KBUDGETS
 REAL, DIMENSION(D%NIJT),       OPTIONAL, INTENT(IN)   ::  PICE_CLD_WGT
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PRH  ! Hail       m.r. to adjust
