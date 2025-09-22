@@ -340,7 +340,6 @@ IF(.NOT. LDSOFT) THEN
     !        5.2.6  raindrop accretion-conversion of the large sized aggregates
     !               into graupeln
     !
-
     DO JL=1, KSIZE
       IF(.NOT. ICEP%LNEWCOEFF) THEN
         IF (GACC(JL)) THEN
@@ -351,8 +350,10 @@ IF(.NOT. LDSOFT) THEN
             ICEP%XLBSACCR2/( PLBDAR(JL)    * PLBDAS(JL)    ) +           &
             ICEP%XLBSACCR3/(               (PLBDAS(JL)**2)) )/PLBDAR(JL)
           ENDIF
-        ELSE
-          IF (GACC(JL)) THEN
+        ENDIF
+      ELSE
+        IF (GACC(JL)) THEN
+          IF (.NOT. PARAMI%LOCND2 .OR. PRST(JL)>ICEP%XFRMIN(1) ) THEN
             PRS_TEND(JL, IRSACCRG) = ICEP%XFSACCRG*ZZW3(JL)*                    & ! RSACCRG
               ( PRST(JL))*( PRHODREF(JL)**(-ICED%XCEXVT) ) &
                *( ICEP%XLBSACCR1/((PLBDAR(JL)**2)               ) +           &
@@ -362,7 +363,6 @@ IF(.NOT. LDSOFT) THEN
         ENDIF
       ENDIF
     END DO
-
   ENDIF
 ENDIF
 !
