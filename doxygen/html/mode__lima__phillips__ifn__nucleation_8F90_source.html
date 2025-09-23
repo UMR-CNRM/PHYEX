@@ -277,12 +277,12 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span><span class="comment">!</span></div>
 <div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span><span class="comment">! Temperature</span></div>
 <div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span><span class="comment">!</span></div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>zt(:,:)  = ptht(:,:) * ( ppabst(:,:)/cst%XP00 ) ** (cst%XRD/cst%XCPD)</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>zt(d%NIJB:d%NIJE,:)  = ptht(d%NIJB:d%NIJE,:) * ( ppabst(d%NIJB:d%NIJE,:)/cst%XP00 ) ** (cst%XRD/cst%XCPD)</div>
 <div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span><span class="comment">!</span></div>
 <div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span><span class="comment">! Saturation over ice</span></div>
 <div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span><span class="comment">!</span></div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>zw(:,:) = exp( cst%XALPI - cst%XBETAI/zt(:,:) - cst%XGAMI*log(zt(:,:) ) )</div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>zw(:,:) = prvt(:,:)*( ppabst(:,:)-zw(:,:) ) / ( (cst%XMV/cst%XMD) * zw(:,:) )</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>zw(d%NIJB:d%NIJE,:) = exp( cst%XALPI - cst%XBETAI/zt(d%NIJB:d%NIJE,:) - cst%XGAMI*log(zt(d%NIJB:d%NIJE,:) ) )</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>zw(d%NIJB:d%NIJE,:) = prvt(d%NIJB:d%NIJE,:)*( ppabst(d%NIJB:d%NIJE,:)-zw(d%NIJB:d%NIJE,:) ) / ( (cst%XMV/cst%XMD) * zw(d%NIJB:d%NIJE,:) )</div>
 <div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span><span class="comment">!</span></div>
 <div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span><span class="comment">!</span></div>
 <div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
@@ -404,7 +404,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span>   <span class="keywordflow">IF</span> (limap%LCRYSTAL_SHAPE) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span>     <span class="keyword">ALLOCATE</span>(ztc3d(<span class="keyword">SIZE</span>(prhodref,1),<span class="keyword">SIZE</span>(prhodref,2)))</div>
 <div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span>     <span class="keyword">ALLOCATE</span>(zsi3d(<span class="keyword">SIZE</span>(prhodref,1),<span class="keyword">SIZE</span>(prhodref,2)))</div>
-<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span>     ztc3d(:,:) = zt(:,:) - cst%XTT</div>
+<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span>     ztc3d(d%NIJB:d%NIJE,:) = zt(d%NIJB:d%NIJE,:) - cst%XTT</div>
 <div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span>     zsi3d(:,:) = unpack( zsi(:), mask=gnegt(:,:), field=0. )</div>
 <div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span><span class="keywordflow">   END IF</span></div>
 <div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span><span class="comment">!</span></div>
@@ -449,43 +449,43 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span><span class="comment">! Update the concentrations and MMR</span></div>
 <div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span><span class="comment">!</span></div>
 <div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span>      zw(:,:) = unpack( zzx(:), mask=gnegt(:,:), field=0. )</div>
-<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span>      pift(:,:,imod_ifn) = pift(:,:,imod_ifn) - zw(:,:)</div>
-<div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span>      pint(:,:,imod_ifn) = pint(:,:,imod_ifn) + zw(:,:)</div>
+<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span>      pift(d%NIJB:d%NIJE,:,imod_ifn) = pift(d%NIJB:d%NIJE,:,imod_ifn) - zw(:,:)</div>
+<div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span>      pint(d%NIJB:d%NIJE,:,imod_ifn) = pint(d%NIJB:d%NIJE,:,imod_ifn) + zw(:,:)</div>
 <div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span><span class="comment">!</span></div>
-<div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span>      p_ci_hind(:,:) = p_ci_hind(:,:) + zw(:,:)</div>
+<div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span>      p_ci_hind(d%NIJB:d%NIJE,:) = p_ci_hind(d%NIJB:d%NIJE,:) + zw(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span>      <span class="keywordflow">IF</span> (.NOT. limap%LCRYSTAL_SHAPE) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span>        pcit(:,:) = pcit(:,:) + zw(:,:)</div>
+<div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span>        pcit(d%NIJB:d%NIJE,:) = pcit(d%NIJB:d%NIJE,:) + zw(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00373" name="l00373"></a><span class="lineno">  373</span>      <span class="keywordflow">ELSE</span></div>
 <div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span><span class="comment">!NOTE : p_shci_hinX est utile uniquement pour les bilans --&gt; peut-etre mettre une condition pour leur calcul ?</span></div>
 <div class="line"><a id="l00375" name="l00375"></a><span class="lineno">  375</span>        <span class="comment">! different crystal habits are generated depending on the temperature</span></div>
 <div class="line"><a id="l00376" name="l00376"></a><span class="lineno">  376</span><span class="comment">!++cb++ 18/04/24 la formation des cristaux produit uniquement des formes primaires</span></div>
 <div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span><span class="comment">! on se base sur la figure 5 de Bailey et Hallett (2009)</span></div>
 <div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span><span class="comment">! Plates: -1&lt;T&lt;-3, -9&lt;T&lt;-20, -20&lt;T&lt;-40, -40&lt;T si SSI &lt; 0.05</span></div>
-<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span>        <span class="keywordflow">WHERE</span> (((ztc3d(:,:) .GT. -3.0)  .AND.  (ztc3d(:,:) .LT. 0.0))   .OR. &amp;</div>
-<div class="line"><a id="l00380" name="l00380"></a><span class="lineno">  380</span>               ((ztc3d(:,:) .LE. -9.0)  .AND.  (ztc3d(:,:) .GT. -40.0)) .OR. &amp;</div>
-<div class="line"><a id="l00381" name="l00381"></a><span class="lineno">  381</span>               ((ztc3d(:,:) .LE. -40.0) .AND. ((zsi3d(:,:)-1.) .LT. 0.05)) )</div>
-<div class="line"><a id="l00382" name="l00382"></a><span class="lineno">  382</span>          p_shci_hind(:,:,1) = p_shci_hind(:,:,1) + zw(:,:)</div>
-<div class="line"><a id="l00383" name="l00383"></a><span class="lineno">  383</span>          pcit_shape(:,:,1)  = pcit_shape(:,:,1)  + zw(:,:)</div>
+<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span>        <span class="keywordflow">WHERE</span> (((ztc3d(d%NIJB:d%NIJE,:) .GT. -3.0)  .AND.  (ztc3d(d%NIJB:d%NIJE,:) .LT. 0.0))   .OR. &amp;</div>
+<div class="line"><a id="l00380" name="l00380"></a><span class="lineno">  380</span>               ((ztc3d(d%NIJB:d%NIJE,:) .LE. -9.0)  .AND.  (ztc3d(d%NIJB:d%NIJE,:) .GT. -40.0)) .OR. &amp;</div>
+<div class="line"><a id="l00381" name="l00381"></a><span class="lineno">  381</span>               ((ztc3d(d%NIJB:d%NIJE,:) .LE. -40.0) .AND. ((zsi3d(d%NIJB:d%NIJE,:)-1.) .LT. 0.05)) )</div>
+<div class="line"><a id="l00382" name="l00382"></a><span class="lineno">  382</span>          p_shci_hind(d%NIJB:d%NIJE,:,1) = p_shci_hind(d%NIJB:d%NIJE,:,1) + zw(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00383" name="l00383"></a><span class="lineno">  383</span>          pcit_shape(d%NIJB:d%NIJE,:,1)  = pcit_shape(d%NIJB:d%NIJE,:,1)  + zw(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00384" name="l00384"></a><span class="lineno">  384</span><span class="keywordflow">        END WHERE</span></div>
 <div class="line"><a id="l00385" name="l00385"></a><span class="lineno">  385</span><span class="comment">!</span></div>
 <div class="line"><a id="l00386" name="l00386"></a><span class="lineno">  386</span><span class="comment">! Columns: -3&lt;T&lt;-9, -40&lt;T&lt;-70 si SSI &gt; 0.05</span></div>
-<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span>        <span class="keywordflow">WHERE</span> (((ztc3d(:,:) .LE. -3.0)   .AND.  (ztc3d(:,:) .GT. -9.0)) .OR. &amp;</div>
-<div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span>               ((ztc3d(:,:) .LE. -40.0)  .AND. ((zsi3d(:,:)-1.) .GE. 0.05)))</div>
-<div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span>          p_shci_hind(:,:,2) = p_shci_hind(:,:,2) + zw(:,:)</div>
-<div class="line"><a id="l00390" name="l00390"></a><span class="lineno">  390</span>          pcit_shape(:,:,2)  = pcit_shape(:,:,2)  + zw(:,:)</div>
+<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span>        <span class="keywordflow">WHERE</span> (((ztc3d(d%NIJB:d%NIJE,:) .LE. -3.0)   .AND.  (ztc3d(d%NIJB:d%NIJE,:) .GT. -9.0)) .OR. &amp;</div>
+<div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span>               ((ztc3d(d%NIJB:d%NIJE,:) .LE. -40.0)  .AND. ((zsi3d(d%NIJB:d%NIJE,:)-1.) .GE. 0.05)))</div>
+<div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span>          p_shci_hind(d%NIJB:d%NIJE,:,2) = p_shci_hind(d%NIJB:d%NIJE,:,2) + zw(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00390" name="l00390"></a><span class="lineno">  390</span>          pcit_shape(d%NIJB:d%NIJE,:,2)  = pcit_shape(d%NIJB:d%NIJE,:,2)  + zw(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00391" name="l00391"></a><span class="lineno">  391</span><span class="keywordflow">        END WHERE</span></div>
 <div class="line"><a id="l00392" name="l00392"></a><span class="lineno">  392</span>        <span class="comment">!</span></div>
-<div class="line"><a id="l00393" name="l00393"></a><span class="lineno">  393</span>        pcit(:,:) = sum(pcit_shape, dim=3)</div>
+<div class="line"><a id="l00393" name="l00393"></a><span class="lineno">  393</span>        pcit(d%NIJB:d%NIJE,:) = sum(pcit_shape(d%NIJB:d%NIJE,:,:), dim=3)</div>
 <div class="line"><a id="l00394" name="l00394"></a><span class="lineno">  394</span><span class="keywordflow">      END IF</span></div>
 <div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span><span class="comment">!</span></div>
 <div class="line"><a id="l00396" name="l00396"></a><span class="lineno">  396</span>      zw(:,:) = unpack( zzw(:), mask=gnegt(:,:), field=0. )</div>
-<div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span>      p_ri_hind(:,:) = p_ri_hind(:,:) + zw(:,:)</div>
-<div class="line"><a id="l00398" name="l00398"></a><span class="lineno">  398</span>      prvt(:,:) = prvt(:,:) - zw(:,:)</div>
-<div class="line"><a id="l00399" name="l00399"></a><span class="lineno">  399</span>      prit(:,:) = prit(:,:) + zw(:,:)</div>
+<div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span>      p_ri_hind(d%NIJB:d%NIJE,:) = p_ri_hind(d%NIJB:d%NIJE,:) + zw(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00398" name="l00398"></a><span class="lineno">  398</span>      prvt(d%NIJB:d%NIJE,:) = prvt(d%NIJB:d%NIJE,:) - zw(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00399" name="l00399"></a><span class="lineno">  399</span>      prit(d%NIJB:d%NIJE,:) = prit(d%NIJB:d%NIJE,:) + zw(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00400" name="l00400"></a><span class="lineno">  400</span><span class="comment">!</span></div>
 <div class="line"><a id="l00401" name="l00401"></a><span class="lineno">  401</span>      zw(:,:) = unpack( zzw(:)*zlsfact(:), mask=gnegt(:,:), field=0. )</div>
-<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span>      p_th_hind(:,:) = p_th_hind(:,:) + zw(:,:)</div>
-<div class="line"><a id="l00403" name="l00403"></a><span class="lineno">  403</span>      ptht(:,:) = ptht(:,:) + zw(:,:)</div>
+<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span>      p_th_hind(d%NIJB:d%NIJE,:) = p_th_hind(d%NIJB:d%NIJE,:) + zw(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00403" name="l00403"></a><span class="lineno">  403</span>      ptht(d%NIJB:d%NIJE,:) = ptht(d%NIJB:d%NIJE,:) + zw(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00404" name="l00404"></a><span class="lineno">  404</span><span class="keywordflow">   END DO</span></div>
 <div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span><span class="comment">!</span></div>
 <div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span><span class="comment">!</span></div>
@@ -518,13 +518,13 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00433" name="l00433"></a><span class="lineno">  433</span><span class="comment">! Update the concentrations and MMR</span></div>
 <div class="line"><a id="l00434" name="l00434"></a><span class="lineno">  434</span><span class="comment">!</span></div>
 <div class="line"><a id="l00435" name="l00435"></a><span class="lineno">  435</span>         zw(:,:) = unpack( zzx(:), mask=gnegt(:,:), field=0. )</div>
-<div class="line"><a id="l00436" name="l00436"></a><span class="lineno">  436</span>         pnit(:,:,imod_imm) = pnit(:,:,imod_imm) + zw(:,:)</div>
-<div class="line"><a id="l00437" name="l00437"></a><span class="lineno">  437</span>         pnat(:,:,imod_ccn) = pnat(:,:,imod_ccn) - zw(:,:)</div>
+<div class="line"><a id="l00436" name="l00436"></a><span class="lineno">  436</span>         pnit(d%NIJB:d%NIJE,:,imod_imm) = pnit(d%NIJB:d%NIJE,:,imod_imm) + zw(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00437" name="l00437"></a><span class="lineno">  437</span>         pnat(d%NIJB:d%NIJE,:,imod_ccn) = pnat(d%NIJB:d%NIJE,:,imod_ccn) - zw(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00438" name="l00438"></a><span class="lineno">  438</span><span class="comment">!</span></div>
-<div class="line"><a id="l00439" name="l00439"></a><span class="lineno">  439</span>         p_cc_hinc(:,:) = p_cc_hinc(:,:) - zw(:,:) </div>
-<div class="line"><a id="l00440" name="l00440"></a><span class="lineno">  440</span>         pcct(:,:) = pcct(:,:) - zw(:,:)</div>
+<div class="line"><a id="l00439" name="l00439"></a><span class="lineno">  439</span>         p_cc_hinc(d%NIJB:d%NIJE,:) = p_cc_hinc(d%NIJB:d%NIJE,:) - zw(d%NIJB:d%NIJE,:) </div>
+<div class="line"><a id="l00440" name="l00440"></a><span class="lineno">  440</span>         pcct(d%NIJB:d%NIJE,:) = pcct(d%NIJB:d%NIJE,:) - zw(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00441" name="l00441"></a><span class="lineno">  441</span>         <span class="keywordflow">IF</span> (.NOT. limap%LCRYSTAL_SHAPE) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00442" name="l00442"></a><span class="lineno">  442</span>           pcit(:,:) = pcit(:,:) + zw(:,:)</div>
+<div class="line"><a id="l00442" name="l00442"></a><span class="lineno">  442</span>           pcit(d%NIJB:d%NIJE,:) = pcit(d%NIJB:d%NIJE,:) + zw(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00443" name="l00443"></a><span class="lineno">  443</span>         <span class="keywordflow">ELSE</span></div>
 <div class="line"><a id="l00444" name="l00444"></a><span class="lineno">  444</span>           <span class="comment">! different crystal habits are generated depending on the temperature</span></div>
 <div class="line"><a id="l00445" name="l00445"></a><span class="lineno">  445</span> </div>
@@ -543,20 +543,20 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00458" name="l00458"></a><span class="lineno">  458</span><span class="comment">!             PCIT_SHAPE(:,:,2)  = PCIT_SHAPE(:,:,2)  + ZW(:,:)</span></div>
 <div class="line"><a id="l00459" name="l00459"></a><span class="lineno">  459</span><span class="comment">!           END WHERE</span></div>
 <div class="line"><a id="l00460" name="l00460"></a><span class="lineno">  460</span><span class="comment">! Droxtals</span></div>
-<div class="line"><a id="l00461" name="l00461"></a><span class="lineno">  461</span>           p_shci_hinc(:,:,4) = p_shci_hinc(:,:,4) + zw(:,:)</div>
-<div class="line"><a id="l00462" name="l00462"></a><span class="lineno">  462</span>           pcit_shape(:,:,4)  = pcit_shape(:,:,4)  + zw(:,:)</div>
+<div class="line"><a id="l00461" name="l00461"></a><span class="lineno">  461</span>           p_shci_hinc(d%NIJB:d%NIJE,:,4) = p_shci_hinc(d%NIJB:d%NIJE,:,4) + zw(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00462" name="l00462"></a><span class="lineno">  462</span>           pcit_shape(d%NIJB:d%NIJE,:,4)  = pcit_shape(d%NIJB:d%NIJE,:,4)  + zw(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00463" name="l00463"></a><span class="lineno">  463</span>           <span class="comment">!</span></div>
-<div class="line"><a id="l00464" name="l00464"></a><span class="lineno">  464</span>           pcit(:,:) = sum(pcit_shape, dim=3)</div>
+<div class="line"><a id="l00464" name="l00464"></a><span class="lineno">  464</span>           pcit(d%NIJB:d%NIJE,:) = sum(pcit_shape(d%NIJB:d%NIJE,:,:), dim=3)</div>
 <div class="line"><a id="l00465" name="l00465"></a><span class="lineno">  465</span><span class="keywordflow">         END IF</span></div>
 <div class="line"><a id="l00466" name="l00466"></a><span class="lineno">  466</span><span class="comment">!</span></div>
 <div class="line"><a id="l00467" name="l00467"></a><span class="lineno">  467</span>         zw(:,:) = unpack( zzy(:), mask=gnegt(:,:), field=0. )</div>
-<div class="line"><a id="l00468" name="l00468"></a><span class="lineno">  468</span>         p_rc_hinc(:,:) = p_rc_hinc(:,:) - zw(:,:)</div>
-<div class="line"><a id="l00469" name="l00469"></a><span class="lineno">  469</span>         prct(:,:) = prct(:,:) - zw(:,:)</div>
-<div class="line"><a id="l00470" name="l00470"></a><span class="lineno">  470</span>         prit(:,:) = prit(:,:) + zw(:,:)</div>
+<div class="line"><a id="l00468" name="l00468"></a><span class="lineno">  468</span>         p_rc_hinc(d%NIJB:d%NIJE,:) = p_rc_hinc(d%NIJB:d%NIJE,:) - zw(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00469" name="l00469"></a><span class="lineno">  469</span>         prct(d%NIJB:d%NIJE,:) = prct(d%NIJB:d%NIJE,:) - zw(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00470" name="l00470"></a><span class="lineno">  470</span>         prit(d%NIJB:d%NIJE,:) = prit(d%NIJB:d%NIJE,:) + zw(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00471" name="l00471"></a><span class="lineno">  471</span><span class="comment">!</span></div>
 <div class="line"><a id="l00472" name="l00472"></a><span class="lineno">  472</span>         zw(:,:) = unpack( zzy(:)*zlsfact(:), mask=gnegt(:,:), field=0. )</div>
-<div class="line"><a id="l00473" name="l00473"></a><span class="lineno">  473</span>         p_th_hinc(:,:) = p_th_hinc(:,:) + zw(:,:)</div>
-<div class="line"><a id="l00474" name="l00474"></a><span class="lineno">  474</span>         ptht(:,:) = ptht(:,:) + zw(:,:)</div>
+<div class="line"><a id="l00473" name="l00473"></a><span class="lineno">  473</span>         p_th_hinc(d%NIJB:d%NIJE,:) = p_th_hinc(d%NIJB:d%NIJE,:) + zw(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00474" name="l00474"></a><span class="lineno">  474</span>         ptht(d%NIJB:d%NIJE,:) = ptht(d%NIJB:d%NIJE,:) + zw(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00475" name="l00475"></a><span class="lineno">  475</span><span class="keywordflow">      END IF</span></div>
 <div class="line"><a id="l00476" name="l00476"></a><span class="lineno">  476</span><span class="keywordflow">   END DO</span></div>
 <div class="line"><a id="l00477" name="l00477"></a><span class="lineno">  477</span><span class="comment">!</span></div>
