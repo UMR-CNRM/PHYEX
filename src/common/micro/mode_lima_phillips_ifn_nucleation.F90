@@ -193,12 +193,12 @@ P_CC_HINC(:,:) = 0.
 !
 ! Temperature
 !
-ZT(:,:)  = PTHT(:,:) * ( PPABST(:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
+ZT(D%NIJB:D%NIJE,:)  = PTHT(D%NIJB:D%NIJE,:) * ( PPABST(D%NIJB:D%NIJE,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
 !
 ! Saturation over ice
 !
-ZW(:,:) = EXP( CST%XALPI - CST%XBETAI/ZT(:,:) - CST%XGAMI*ALOG(ZT(:,:) ) )
-ZW(:,:) = PRVT(:,:)*( PPABST(:,:)-ZW(:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:,:) )
+ZW(D%NIJB:D%NIJE,:) = EXP( CST%XALPI - CST%XBETAI/ZT(D%NIJB:D%NIJE,:) - CST%XGAMI*ALOG(ZT(D%NIJB:D%NIJE,:) ) )
+ZW(D%NIJB:D%NIJE,:) = PRVT(D%NIJB:D%NIJE,:)*( PPABST(D%NIJB:D%NIJE,:)-ZW(D%NIJB:D%NIJE,:) ) / ( (CST%XMV/CST%XMD) * ZW(D%NIJB:D%NIJE,:) )
 !
 !
 !-------------------------------------------------------------------------------
@@ -320,7 +320,7 @@ IF (INEGT > 0) THEN
    IF (LIMAP%LCRYSTAL_SHAPE) THEN
      ALLOCATE(ZTC3D(SIZE(PRHODREF,1),SIZE(PRHODREF,2)))
      ALLOCATE(ZSI3D(SIZE(PRHODREF,1),SIZE(PRHODREF,2)))
-     ZTC3D(:,:) = ZT(:,:) - CST%XTT
+     ZTC3D(D%NIJB:D%NIJE,:) = ZT(D%NIJB:D%NIJE,:) - CST%XTT
      ZSI3D(:,:) = UNPACK( ZSI(:), MASK=GNEGT(:,:), FIELD=0. )
    END IF
 !
@@ -365,43 +365,43 @@ IF (INEGT > 0) THEN
 ! Update the concentrations and MMR
 !
       ZW(:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:), FIELD=0. )
-      PIFT(:,:,IMOD_IFN) = PIFT(:,:,IMOD_IFN) - ZW(:,:)
-      PINT(:,:,IMOD_IFN) = PINT(:,:,IMOD_IFN) + ZW(:,:)
+      PIFT(D%NIJB:D%NIJE,:,IMOD_IFN) = PIFT(D%NIJB:D%NIJE,:,IMOD_IFN) - ZW(:,:)
+      PINT(D%NIJB:D%NIJE,:,IMOD_IFN) = PINT(D%NIJB:D%NIJE,:,IMOD_IFN) + ZW(:,:)
 !
-      P_CI_HIND(:,:) = P_CI_HIND(:,:) + ZW(:,:)
+      P_CI_HIND(D%NIJB:D%NIJE,:) = P_CI_HIND(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:)
       IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
-        PCIT(:,:) = PCIT(:,:) + ZW(:,:)
+        PCIT(D%NIJB:D%NIJE,:) = PCIT(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:)
       ELSE
 !NOTE : p_shci_hinX est utile uniquement pour les bilans --> peut-etre mettre une condition pour leur calcul ?
         ! different crystal habits are generated depending on the temperature
 !++cb++ 18/04/24 la formation des cristaux produit uniquement des formes primaires
 ! on se base sur la figure 5 de Bailey et Hallett (2009)
 ! Plates: -1<T<-3, -9<T<-20, -20<T<-40, -40<T si SSI < 0.05
-        WHERE (((ZTC3D(:,:) .GT. -3.0)  .AND.  (ZTC3D(:,:) .LT. 0.0))   .OR. &
-               ((ZTC3D(:,:) .LE. -9.0)  .AND.  (ZTC3D(:,:) .GT. -40.0)) .OR. &
-               ((ZTC3D(:,:) .LE. -40.0) .AND. ((ZSI3D(:,:)-1.) .LT. 0.05)) )
-          P_SHCI_HIND(:,:,1) = P_SHCI_HIND(:,:,1) + ZW(:,:)
-          PCIT_SHAPE(:,:,1)  = PCIT_SHAPE(:,:,1)  + ZW(:,:)
+        WHERE (((ZTC3D(D%NIJB:D%NIJE,:) .GT. -3.0)  .AND.  (ZTC3D(D%NIJB:D%NIJE,:) .LT. 0.0))   .OR. &
+               ((ZTC3D(D%NIJB:D%NIJE,:) .LE. -9.0)  .AND.  (ZTC3D(D%NIJB:D%NIJE,:) .GT. -40.0)) .OR. &
+               ((ZTC3D(D%NIJB:D%NIJE,:) .LE. -40.0) .AND. ((ZSI3D(D%NIJB:D%NIJE,:)-1.) .LT. 0.05)) )
+          P_SHCI_HIND(D%NIJB:D%NIJE,:,1) = P_SHCI_HIND(D%NIJB:D%NIJE,:,1) + ZW(D%NIJB:D%NIJE,:)
+          PCIT_SHAPE(D%NIJB:D%NIJE,:,1)  = PCIT_SHAPE(D%NIJB:D%NIJE,:,1)  + ZW(D%NIJB:D%NIJE,:)
         END WHERE
 !
 ! Columns: -3<T<-9, -40<T<-70 si SSI > 0.05
-        WHERE (((ZTC3D(:,:) .LE. -3.0)   .AND.  (ZTC3D(:,:) .GT. -9.0)) .OR. &
-               ((ZTC3D(:,:) .LE. -40.0)  .AND. ((ZSI3D(:,:)-1.) .GE. 0.05)))
-          P_SHCI_HIND(:,:,2) = P_SHCI_HIND(:,:,2) + ZW(:,:)
-          PCIT_SHAPE(:,:,2)  = PCIT_SHAPE(:,:,2)  + ZW(:,:)
+        WHERE (((ZTC3D(D%NIJB:D%NIJE,:) .LE. -3.0)   .AND.  (ZTC3D(D%NIJB:D%NIJE,:) .GT. -9.0)) .OR. &
+               ((ZTC3D(D%NIJB:D%NIJE,:) .LE. -40.0)  .AND. ((ZSI3D(D%NIJB:D%NIJE,:)-1.) .GE. 0.05)))
+          P_SHCI_HIND(D%NIJB:D%NIJE,:,2) = P_SHCI_HIND(D%NIJB:D%NIJE,:,2) + ZW(D%NIJB:D%NIJE,:)
+          PCIT_SHAPE(D%NIJB:D%NIJE,:,2)  = PCIT_SHAPE(D%NIJB:D%NIJE,:,2)  + ZW(D%NIJB:D%NIJE,:)
         END WHERE
         !
-        PCIT(:,:) = SUM(PCIT_SHAPE, DIM=3)
+        PCIT(D%NIJB:D%NIJE,:) = SUM(PCIT_SHAPE(D%NIJB:D%NIJE,:,:), DIM=3)
       END IF
 !
       ZW(:,:) = UNPACK( ZZW(:), MASK=GNEGT(:,:), FIELD=0. )
-      P_RI_HIND(:,:) = P_RI_HIND(:,:) + ZW(:,:)
-      PRVT(:,:) = PRVT(:,:) - ZW(:,:)
-      PRIT(:,:) = PRIT(:,:) + ZW(:,:)
+      P_RI_HIND(D%NIJB:D%NIJE,:) = P_RI_HIND(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:)
+      PRVT(D%NIJB:D%NIJE,:) = PRVT(D%NIJB:D%NIJE,:) - ZW(D%NIJB:D%NIJE,:)
+      PRIT(D%NIJB:D%NIJE,:) = PRIT(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:)
 !
       ZW(:,:) = UNPACK( ZZW(:)*ZLSFACT(:), MASK=GNEGT(:,:), FIELD=0. )
-      P_TH_HIND(:,:) = P_TH_HIND(:,:) + ZW(:,:)
-      PTHT(:,:) = PTHT(:,:) + ZW(:,:)
+      P_TH_HIND(D%NIJB:D%NIJE,:) = P_TH_HIND(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:)
+      PTHT(D%NIJB:D%NIJE,:) = PTHT(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:)
    END DO
 !
 !
@@ -434,13 +434,13 @@ IF (INEGT > 0) THEN
 ! Update the concentrations and MMR
 !
          ZW(:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:), FIELD=0. )
-         PNIT(:,:,IMOD_IMM) = PNIT(:,:,IMOD_IMM) + ZW(:,:)
-         PNAT(:,:,IMOD_CCN) = PNAT(:,:,IMOD_CCN) - ZW(:,:)
+         PNIT(D%NIJB:D%NIJE,:,IMOD_IMM) = PNIT(D%NIJB:D%NIJE,:,IMOD_IMM) + ZW(D%NIJB:D%NIJE,:)
+         PNAT(D%NIJB:D%NIJE,:,IMOD_CCN) = PNAT(D%NIJB:D%NIJE,:,IMOD_CCN) - ZW(D%NIJB:D%NIJE,:)
 !
-         P_CC_HINC(:,:) = P_CC_HINC(:,:) - ZW(:,:) 
-         PCCT(:,:) = PCCT(:,:) - ZW(:,:)
+         P_CC_HINC(D%NIJB:D%NIJE,:) = P_CC_HINC(D%NIJB:D%NIJE,:) - ZW(D%NIJB:D%NIJE,:) 
+         PCCT(D%NIJB:D%NIJE,:) = PCCT(D%NIJB:D%NIJE,:) - ZW(D%NIJB:D%NIJE,:)
          IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
-           PCIT(:,:) = PCIT(:,:) + ZW(:,:)
+           PCIT(D%NIJB:D%NIJE,:) = PCIT(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:)
          ELSE
            ! different crystal habits are generated depending on the temperature
 
@@ -459,20 +459,20 @@ IF (INEGT > 0) THEN
 !             PCIT_SHAPE(:,:,2)  = PCIT_SHAPE(:,:,2)  + ZW(:,:)
 !           END WHERE
 ! Droxtals
-           P_SHCI_HINC(:,:,4) = P_SHCI_HINC(:,:,4) + ZW(:,:)
-           PCIT_SHAPE(:,:,4)  = PCIT_SHAPE(:,:,4)  + ZW(:,:)
+           P_SHCI_HINC(D%NIJB:D%NIJE,:,4) = P_SHCI_HINC(D%NIJB:D%NIJE,:,4) + ZW(D%NIJB:D%NIJE,:)
+           PCIT_SHAPE(D%NIJB:D%NIJE,:,4)  = PCIT_SHAPE(D%NIJB:D%NIJE,:,4)  + ZW(D%NIJB:D%NIJE,:)
            !
-           PCIT(:,:) = SUM(PCIT_SHAPE, DIM=3)
+           PCIT(D%NIJB:D%NIJE,:) = SUM(PCIT_SHAPE(D%NIJB:D%NIJE,:,:), DIM=3)
          END IF
 !
          ZW(:,:) = UNPACK( ZZY(:), MASK=GNEGT(:,:), FIELD=0. )
-         P_RC_HINC(:,:) = P_RC_HINC(:,:) - ZW(:,:)
-         PRCT(:,:) = PRCT(:,:) - ZW(:,:)
-         PRIT(:,:) = PRIT(:,:) + ZW(:,:)
+         P_RC_HINC(D%NIJB:D%NIJE,:) = P_RC_HINC(D%NIJB:D%NIJE,:) - ZW(D%NIJB:D%NIJE,:)
+         PRCT(D%NIJB:D%NIJE,:) = PRCT(D%NIJB:D%NIJE,:) - ZW(D%NIJB:D%NIJE,:)
+         PRIT(D%NIJB:D%NIJE,:) = PRIT(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:)
 !
          ZW(:,:) = UNPACK( ZZY(:)*ZLSFACT(:), MASK=GNEGT(:,:), FIELD=0. )
-         P_TH_HINC(:,:) = P_TH_HINC(:,:) + ZW(:,:)
-         PTHT(:,:) = PTHT(:,:) + ZW(:,:)
+         P_TH_HINC(D%NIJB:D%NIJE,:) = P_TH_HINC(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:)
+         PTHT(D%NIJB:D%NIJE,:) = PTHT(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:)
       END IF
    END DO
 !
