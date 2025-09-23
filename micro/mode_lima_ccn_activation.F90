@@ -129,6 +129,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(INOUT) :: PTOT_RV_HENU  ! Mixing
 !
 ! Packing variables
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) :: GNUCT 
+REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) :: ZW2D ! array for unpacking
 INTEGER :: INUCT
 INTEGER , DIMENSION(SIZE(GNUCT))   :: I1,I3 ! Used to replace the COUNT
 INTEGER                            :: IL       ! and PACK intrinsics 
@@ -182,15 +183,16 @@ IF (LHOOK) CALL DR_HOOK('LIMA_CCN_ACTIVATION', 0, ZHOOK_HANDLE)
 !  Saturation vapor mixing ratio and radiative tendency                    
 !
 ZEPS= CST%XMV / CST%XMD
-ZRVSAT(:,:) = ZEPS / (PPABST(:,:)*EXP(-CST%XALPW+CST%XBETAW/PT(:,:)+CST%XGAMW*ALOG(PT(:,:))) - 1.0)
-ZTDT(:,:)   = 0.
-IF (LIMAP%LACTIT .AND. SIZE(PDTHRAD).GT.0) ZTDT(:,:)   = PDTHRAD(:,:) * PEXNREF(:,:)
+ZRVSAT(D%NIJB:D%NIJE,:) = ZEPS / (PPABST(D%NIJB:D%NIJE,:)*EXP(-CST%XALPW+CST%XBETAW/PT(D%NIJB:D%NIJE,:)&
+                                                          +CST%XGAMW*ALOG(PT(D%NIJB:D%NIJE,:))) - 1.0)
+ZTDT(D%NIJB:D%NIJE,:)   = 0.
+IF (LIMAP%LACTIT .AND. SIZE(PDTHRAD).GT.0) ZTDT(D%NIJB:D%NIJE,:)   = PDTHRAD(D%NIJB:D%NIJE,:) * PEXNREF(D%NIJB:D%NIJE,:)
 !
 !  find locations where CCN are available
 !
-ZCONC_TOT(:,:) = 0.0
+ZCONC_TOT(D%NIJB:D%NIJE,:) = 0.0
 DO IMOD = 1, LIMAP%NMOD_CCN 
-   ZCONC_TOT(:,:) = ZCONC_TOT(:,:) + PNFT(:,:,IMOD) ! sum over the free CCN
+   ZCONC_TOT(D%NIJB:D%NIJE,:) = ZCONC_TOT(D%NIJB:D%NIJE,:) + PNFT(D%NIJB:D%NIJE,:,IMOD) ! sum over the free CCN
 ENDDO
 !
 !  optimization by looking for locations where
@@ -219,9 +221,9 @@ ELSE
 END IF
 !
 IF (.NOT. NEBN%LSUBG_COND) THEN
-   ZCLDFR(:,:) = 1.
+   ZCLDFR(D%NIJB:D%NIJE,:) = 1.
 ELSE
-   ZCLDFR(:,:) = PCLDFR(:,:)
+   ZCLDFR(D%NIJB:D%NIJE,:) = PCLDFR(D%NIJB:D%NIJE,:)
 END IF
 !
 INUCT = COUNTJV( GNUCT(:,:),I1(:),I3(:))
@@ -307,7 +309,7 @@ IF ((HACTCCN == 'ABRK').AND.((OORILAM).OR.(ODUST).OR.(OSALT))) THEN  ! CCN activ
      ZZW1(:) = MAX(ZNATOLD(:)- ZNAT(:,1) , 0.0 )
 !
      ZW(:,:) = UNPACK( ZZW1(:),MASK=GNUCT(:,:),FIELD=0.0 )
-     PNAT(:,:,1) = PNAT(:,:,1) + ZW(:,:)
+     PNAT(D%NIJB:D%NIJE,:,1) = PNAT(D%NIJB:D%NIJE,:,1) + ZW(D%NIJB:D%NIJE,:)
      ! Je sais pas ce que c'est:
      ZZW4(:) = 1.
      ZZW5(:) = 1.
@@ -471,11 +473,13 @@ ELSE ! CCN activation from Cohard-Pinty
    !
    !* update the concentration of activated CCN = Na
    !
-      PNAT(:,:,IMOD) = PNAT(:,:,IMOD) + ZCLDFR(:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:), FIELD=0.0 )
+      ZW2D(:,:) = UNPACK( ZZW1(:), MASK=GNUCT(:,:), FIELD=0.0 )
+      PNAT(D%NIJB:D%NIJE,:,IMOD) = PNAT(D%NIJB:D%NIJE,:,IMOD) + ZCLDFR(D%NIJB:D%NIJE,:) * ZW2D(D%NIJB:D%NIJE,:)
    !
    !* update the concentration of free CCN = Nf
    !
-      PNFT(:,:,IMOD) = PNFT(:,:,IMOD) - ZCLDFR(:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:), FIELD=0.0 )
+      ZW2D(:,:) = UNPACK( ZZW1(:), MASK=GNUCT(:,:), FIELD=0.0 )
+      PNFT(D%NIJB:D%NIJE,:,IMOD) = PNFT(D%NIJB:D%NIJE,:,IMOD) - ZCLDFR(D%NIJB:D%NIJE,:) * ZW2D(D%NIJB:D%NIJE,:)
    !
    !* prepare to update the cloud water concentration 
    !
@@ -493,21 +497,25 @@ END IF ! AER_ACTIVATION
    IF(PRESENT(PTOT_RV_HENU)) PTOT_RV_HENU(:,:) = 0.
    IF (.NOT.NEBN%LSUBG_COND) THEN
       ZW(:,:) = MIN( UNPACK( ZZW1(:),MASK=GNUCT(:,:),FIELD=0.0 ),PRVT(:,:) )
-      IF(PRESENT(PTOT_RV_HENU)) PTOT_RV_HENU(:,:) = ZW(:,:)
-      PTHT(:,:) = PTHT(:,:) + ZW(:,:) * (CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(:,:)-CST%XTT))/                &
-            (PEXNREF(:,:)*(CST%XCPD+CST%XCPV*PRVT(:,:)+CST%XCL*(PRCT(:,:)+PRRT(:,:))))
-      PRVT(:,:) = PRVT(:,:) - ZW(:,:) 
-      PRCT(:,:) = PRCT(:,:) + ZW(:,:) 
-      PCCT(:,:) = PCCT(:,:) + UNPACK( ZZW6(:),MASK=GNUCT(:,:),FIELD=0. ) 
+      IF(PRESENT(PTOT_RV_HENU)) PTOT_RV_HENU(D%NIJB:D%NIJE,:) = ZW(D%NIJB:D%NIJE,:)
+      PTHT(D%NIJB:D%NIJE,:) = PTHT(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:) * (CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(D%NIJB:D%NIJE,:)-CST%XTT))/ &
+            (PEXNREF(D%NIJB:D%NIJE,:)*(CST%XCPD+CST%XCPV*PRVT(D%NIJB:D%NIJE,:)+CST%XCL*(PRCT(D%NIJB:D%NIJE,:)+PRRT(D%NIJB:D%NIJE,:))))
+      PRVT(D%NIJB:D%NIJE,:) = PRVT(D%NIJB:D%NIJE,:) - ZW(D%NIJB:D%NIJE,:) 
+      PRCT(D%NIJB:D%NIJE,:) = PRCT(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:) 
+      ZW2D(:,:) = UNPACK( ZZW6(:),MASK=GNUCT(:,:),FIELD=0. )
+      PCCT(D%NIJB:D%NIJE,:) = PCCT(D%NIJB:D%NIJE,:) + ZW2D(D%NIJB:D%NIJE,:)
    ELSE
-      ZW(:,:) = MIN( ZCLDFR(:,:) * UNPACK( ZZW1(:),MASK=GNUCT(:,:),FIELD=0.0 ),PRVT(:,:) )
-      PCCT(:,:) = PCCT(:,:) + ZCLDFR(:,:) * UNPACK( ZZW6(:),MASK=GNUCT(:,:),FIELD=0. ) 
+      ZW2D(:,:) = UNPACK( ZZW1(:),MASK=GNUCT(:,:),FIELD=0.0 )
+      ZW(D%NIJB:D%NIJE,:) = MIN( ZCLDFR(D%NIJB:D%NIJE,:) * ZW2D(D%NIJB:D%NIJE,:),PRVT(D%NIJB:D%NIJE,:) )
+      ZW2D(:,:) = UNPACK( ZZW6(:),MASK=GNUCT(:,:),FIELD=0. )
+      PCCT(D%NIJB:D%NIJE,:) = PCCT(D%NIJB:D%NIJE,:) + ZCLDFR(D%NIJB:D%NIJE,:) * ZW2D(D%NIJB:D%NIJE,:)
    END IF
 !
 !++cb-- A quoi servent ces 2 dernieres lignes ? variables locales, non sauvees, et ne servent pas 
 ! a calculer quoi que ce soit (fin de la routine)
    ZW(:,:)   = UNPACK( 100.0*ZSMAX(:),MASK=GNUCT(:,:),FIELD=0.0 )
-   ZW2(:,:)  = ZCLDFR(:,:) * UNPACK( ZZW6(:),MASK=GNUCT(:,:),FIELD=0.0 )
+   ZW2D(:,:) = UNPACK( ZZW6(:),MASK=GNUCT(:,:),FIELD=0.0 )
+   ZW2(D%NIJB:D%NIJE,:)  = ZCLDFR(D%NIJB:D%NIJE,:) * ZW2D(D%NIJB:D%NIJE,:)
 !
 !
 !-------------------------------------------------------------------------------
