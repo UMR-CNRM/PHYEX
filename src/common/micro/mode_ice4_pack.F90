@@ -477,7 +477,7 @@ ELSE ! PARAMI%LPACK_MICRO
   !
   CALL ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                     &LLSIGMA_RC, LL_AUCV_ADJU, GEXT_TEND, &
-                    &KSIZE, KSIZE, ODMICRO, PTSTEP, &
+                    &KSIZE, D%NIJB, ODMICRO, PTSTEP, &
                     &KRR, OSAVE_MICRO, OELEC, &
                     &PEXN, PRHODREF, I1TOT, I2TOT, &
                     &PPABST, PCLDFR, PICLDFR, PZZZ, PCONC3D, &
