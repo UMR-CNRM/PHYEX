@@ -154,11 +154,11 @@ PFPR(:,:) = 0.
 ZWSEDR(:,:) = 0.
 ZWSEDC(:,:) = 0.
 !
-PRS(:,:) = PRS(:,:) * PTSTEP
-IF (KMOMENTS==2) PCS(:,:) = PCS(:,:) * PTSTEP
-IF (OELEC)       PQS(:,:) = PQS(:,:) * PTSTEP
+PRS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:) * PTSTEP
+IF (KMOMENTS==2) PCS(D%NIJB:D%NIJE,:) = PCS(D%NIJB:D%NIJE,:) * PTSTEP
+IF (OELEC)       PQS(D%NIJB:D%NIJE,:) = PQS(D%NIJB:D%NIJE,:) * PTSTEP
 DO IK = D%NKTB , D%NKTE
-   ZW(:,IK)=ZTSPLITG/PDZZ(:,IK)
+   ZW(D%NIJB:D%NIJE,IK)=ZTSPLITG/PDZZ(D%NIJB:D%NIJE,IK)
 END DO
 !
 IF (HPHASE=='L') ZC=CST%XCL
@@ -168,8 +168,8 @@ IF (HPHASE=='I') ZC=CST%XCI
 ! McFarquhar and Heymsfield (1997) for columns as in ICE3
 IF (KID==4 .AND. IMOMENTS==1) THEN
    IMOMENTS=2
-   WHERE(PRS(:,:)>0) PCS(:,:)=1/(4*CST%XPI*900.) * PRS(:,:) * &
-        MAX(0.05E6,-0.15319E6-0.021454E6*LOG(PRHODREF(:,:)*PRS(:,:)))**3
+   WHERE(PRS(D%NIJB:D%NIJE,:)>0) PCS(D%NIJB:D%NIJE,:)=1/(4*CST%XPI*900.) * PRS(D%NIJB:D%NIJE,:) * &
+        MAX(0.05E6,-0.15319E6-0.021454E6*LOG(PRHODREF(D%NIJB:D%NIJE,:)*PRS(D%NIJB:D%NIJE,:)))**3
 END IF
 !
 ! ################################
@@ -180,7 +180,7 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
   ! Computation only where enough ice, snow, graupel or hail
    GSEDIM(:,:) = .FALSE.
    GSEDIM(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = PRS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>LIMAP%XRTMIN(KID)
-   IF (IMOMENTS==2)  GSEDIM(:,:) = GSEDIM(:,:) .AND. PCS(:,:)>LIMAP%XCTMIN(KID)
+   IF (IMOMENTS==2)  GSEDIM(D%NIJB:D%NIJE,:) = GSEDIM(D%NIJB:D%NIJE,:) .AND. PCS(D%NIJB:D%NIJE,:)>LIMAP%XCTMIN(KID)
    ISEDIM = COUNTJV( GSEDIM(:,:),I1(:),I3(:))
 !
    IF( ISEDIM >= 1 ) THEN
@@ -262,14 +262,14 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
       END IF
 !
       ZWSEDR(:,1:D%NKT) = UNPACK( ZZW(:),MASK=GSEDIM(:,:),FIELD=0.0 )
-      ZWSEDR(:,D%NKTB:D%NKTE) = MIN( ZWSEDR(:,D%NKTB:D%NKTE) * ZBEARDCOEFF(:,D%NKTB:D%NKTE), &
-                                       PRS(:,D%NKTB:D%NKTE) * PRHODREF(:,D%NKTB:D%NKTE) /      &
-                                                                ZW(:,D%NKTB:D%NKTE) )
+      ZWSEDR(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = MIN( ZWSEDR(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ZBEARDCOEFF(D%NIJB:D%NIJE,D%NKTB:D%NKTE), &
+                                       PRS(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * PRHODREF(D%NIJB:D%NIJE,D%NKTB:D%NKTE) /      &
+                                                                ZW(D%NIJB:D%NIJE,D%NKTB:D%NKTE) )
       IF (KMOMENTS==2) THEN
          ZWSEDC(:,1:D%NKT) = UNPACK( ZZX(:),MASK=GSEDIM(:,:),FIELD=0.0 )
-         ZWSEDC(:,D%NKTB:D%NKTE) = MIN( ZWSEDC(:,D%NKTB:D%NKTE) * ZBEARDCOEFF(:,D%NKTB:D%NKTE), &
-                                          PCS(:,D%NKTB:D%NKTE) * PRHODREF(:,D%NKTB:D%NKTE) /      &
-                                                                   ZW(:,D%NKTB:D%NKTE) )
+         ZWSEDC(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = MIN( ZWSEDC(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ZBEARDCOEFF(D%NIJB:D%NIJE,D%NKTB:D%NKTE), &
+                                          PCS(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * PRHODREF(D%NIJB:D%NIJE,D%NKTB:D%NKTE) /      &
+                                                                   ZW(D%NIJB:D%NIJE,D%NKTB:D%NKTE) )
       END IF
 !
 ! Sedimentation of electric charges
@@ -305,18 +305,18 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
         IF (KID == 2)  ZZQ(:) = ZZQ(:) * ZCC(:)
         !
         ZWSEDQ(:,1:D%NKT) = UNPACK( ZZQ(:),MASK=GSEDIM(:,:),FIELD=0.0 )
-        ZWSEDQ(:,1:D%NKT) = ZWSEDQ(:,1:D%NKT) * ZBEARDCOEFF(:,1:D%NKT)
-        ZWSEDQ(:,D%NKTB:D%NKTE) = SIGN(MIN(ABS(ZWSEDQ(:,D%NKTB:D%NKTE)),                                                 &
-                                             ABS(PQS(:,D%NKTB:D%NKTE)*PRHODREF(:,D%NKTB:D%NKTE)/ZW(:,D%NKTB:D%NKTE))), &
-                                         ZWSEDQ(:,D%NKTB:D%NKTE))
+        ZWSEDQ(D%NIJB:D%NIJE,1:D%NKT) = ZWSEDQ(D%NIJB:D%NIJE,1:D%NKT) * ZBEARDCOEFF(D%NIJB:D%NIJE,1:D%NKT)
+        ZWSEDQ(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = SIGN(MIN(ABS(ZWSEDQ(D%NIJB:D%NIJE,D%NKTB:D%NKTE)),                                                 &
+                                             ABS(PQS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)*PRHODREF(D%NIJB:D%NIJE,D%NKTB:D%NKTE)/ZW(D%NIJB:D%NIJE,D%NKTB:D%NKTE))), &
+                                         ZWSEDQ(D%NIJB:D%NIJE,D%NKTB:D%NKTE))
       END IF      
       
       DO IK = D%NKTB , D%NKTE
-         PRS(:,IK) = PRS(:,IK) + ZW(:,IK)*    &
-              (ZWSEDR(:,IK+D%NKL)-ZWSEDR(:,IK))/PRHODREF(:,IK)
-         PFPR(:,IK) = ZWSEDR(:,IK)
-         IF (KMOMENTS==2) PCS(:,IK) = PCS(:,IK) + ZW(:,IK)*    &
-              (ZWSEDC(:,IK+D%NKL)-ZWSEDC(:,IK))/PRHODREF(:,IK)
+         PRS(D%NIJB:D%NIJE,IK) = PRS(D%NIJB:D%NIJE,IK) + ZW(D%NIJB:D%NIJE,IK)*    &
+              (ZWSEDR(D%NIJB:D%NIJE,IK+D%NKL)-ZWSEDR(D%NIJB:D%NIJE,IK))/PRHODREF(D%NIJB:D%NIJE,IK)
+         PFPR(D%NIJB:D%NIJE,IK) = ZWSEDR(D%NIJB:D%NIJE,IK)
+         IF (KMOMENTS==2) PCS(D%NIJB:D%NIJE,IK) = PCS(D%NIJB:D%NIJE,IK) + ZW(D%NIJB:D%NIJE,IK)*    &
+              (ZWSEDC(D%NIJB:D%NIJE,IK+D%NKL)-ZWSEDC(D%NIJB:D%NIJE,IK))/PRHODREF(D%NIJB:D%NIJE,IK)
          ! Heat transport
          !PRT_SUM(:,IK-D%NKL) = PRT_SUM(:,IK-D%NKL) + ZW(:,IK-D%NKL)*ZWSEDR(:,IK)/PRHODREF(:,IK-D%NKL)
          !PRT_SUM(:,IK) = PRT_SUM(:,IK) - ZW(:,IK)*ZWSEDR(:,IK)/PRHODREF(:,IK)
@@ -326,8 +326,8 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
          !     ZW(:,IK)*ZWSEDR(:,IK+1)*ZC*PT(:,IK+D%NKL)) / &
          !     (PRHODREF(:,IK+D%NKL)*(1.+PRT_SUM(:,IK))*PCPT(:,IK) + ZW(:,IK)*ZWSEDR(:,IK+D%NKL)*ZC)
          !ZWDT(:,IK) = ZWDT(:,IK) - PT(:,IK)
-         IF (OELEC) PQS(:,IK) = PQS(:,IK) + ZW(:,IK) *    &
-                                 (ZWSEDQ(:,IK+D%NKL) - ZWSEDQ(:,IK)) / PRHODREF(:,IK)
+         IF (OELEC) PQS(D%NIJB:D%NIJE,IK) = PQS(D%NIJB:D%NIJE,IK) + ZW(D%NIJB:D%NIJE,IK) *    &
+                                 (ZWSEDQ(D%NIJB:D%NIJE,IK+D%NKL) - ZWSEDQ(D%NIJB:D%NIJE,IK)) / PRHODREF(D%NIJB:D%NIJE,IK)
          
       END DO
       !
@@ -345,15 +345,15 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
       IF (ALLOCATED(ZZQ))    DEALLOCATE(ZZQ)
       IF (ALLOCATED(ZES))    DEALLOCATE(ZES)      
       !      
-      PINPR(:) = PINPR(:) + ZWSEDR(:,D%NKB)/CST%XRHOLW/LIMAP%NSPLITSED(KID)                          ! in m/s
+      PINPR(D%NIJB:D%NIJE) = PINPR(D%NIJB:D%NIJE) + ZWSEDR(D%NIJB:D%NIJE,D%NKB)/CST%XRHOLW/LIMAP%NSPLITSED(KID)                          ! in m/s
       !PT(:,:) = PT(:,:) + ZWDT(:,:)
       
    END IF
 END DO
 !
-PRS(:,:) = PRS(:,:) / PTSTEP
-IF (KMOMENTS==2) PCS(:,:) = PCS(:,:) / PTSTEP
-IF (OELEC) PQS(:,:) = PQS(:,:) / PTSTEP
+PRS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:) / PTSTEP
+IF (KMOMENTS==2) PCS(D%NIJB:D%NIJE,:) = PCS(D%NIJB:D%NIJE,:) / PTSTEP
+IF (OELEC) PQS(D%NIJB:D%NIJE,:) = PQS(D%NIJB:D%NIJE,:) / PTSTEP
 !
 IF (LHOOK) CALL DR_HOOK('LIMA_SEDIMENTATION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_SEDIMENTATION

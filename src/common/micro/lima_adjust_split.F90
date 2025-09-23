@@ -265,11 +265,11 @@ ZCTMIN(:) = LIMAP%XCTMIN(:) / PTSTEP
 !
 ! Prepare 3D water mixing ratios
 !
-ZTHT = PTHS*PTSTEP
+ZTHT(:,:)=0.
+ZTHT(D%NIJB:D%NIJE,:) = PTHS(D%NIJB:D%NIJE,:)*PTSTEP
 !
-ZRVT(:,:) = PRS(:,:,1)*PTSTEP
-ZRVS(:,:) = PRS(:,:,1)
-!
+ZRVT(:,:) = 0.
+ZRVS(:,:) = 0.
 ZRCT(:,:) = 0.
 ZRCS(:,:) = 0.
 ZRRT(:,:) = 0.
@@ -280,34 +280,37 @@ ZRSS(:,:) = 0.
 ZRGS(:,:) = 0.
 ZRHS(:,:) = 0.
 !
-IF ( KRR .GE. 2 ) ZRCT(:,:) = PRS(:,:,2)*PTSTEP
-IF ( KRR .GE. 2 ) ZRCS(:,:) = PRS(:,:,2)
-IF ( KRR .GE. 3 ) ZRRT(:,:) = PRT(:,:,3) 
-IF ( KRR .GE. 3 ) ZRRS(:,:) = PRS(:,:,3)
-IF ( KRR .GE. 4 ) ZRIT(:,:) = PRT(:,:,4)
-IF ( KRR .GE. 4 ) ZRIS(:,:) = PRS(:,:,4) 
-IF ( KRR .GE. 5 ) ZRSS(:,:) = PRS(:,:,5) 
-IF ( KRR .GE. 6 ) ZRGS(:,:) = PRS(:,:,6)
-IF ( KRR .GE. 7 ) ZRHS(:,:) = PRS(:,:,7)
+ZRVT(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,1)*PTSTEP
+ZRVS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,1)
+!
+IF ( KRR .GE. 2 ) ZRCT(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,2)*PTSTEP
+IF ( KRR .GE. 2 ) ZRCS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,2)
+IF ( KRR .GE. 3 ) ZRRT(D%NIJB:D%NIJE,:) = PRT(D%NIJB:D%NIJE,:,3) 
+IF ( KRR .GE. 3 ) ZRRS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,3)
+IF ( KRR .GE. 4 ) ZRIT(D%NIJB:D%NIJE,:) = PRT(D%NIJB:D%NIJE,:,4)
+IF ( KRR .GE. 4 ) ZRIS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,4) 
+IF ( KRR .GE. 5 ) ZRSS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,5) 
+IF ( KRR .GE. 6 ) ZRGS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,6)
+IF ( KRR .GE. 7 ) ZRHS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,7)
 !
 ! Prepare 3D number concentrations
 ZCCT(:,:) = 0.
 ZCCS(:,:) = 0.
 !
-IF ( LIMAP%NMOM_C.GE.2 ) ZCCT(:,:) = PSVS(:,:,ISV_LIMA_NC)*PTSTEP
-IF ( LIMAP%NMOM_C.GE.2 ) ZCCS(:,:) = PSVS(:,:,ISV_LIMA_NC)
+IF ( LIMAP%NMOM_C.GE.2 ) ZCCT(D%NIJB:D%NIJE,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NC)*PTSTEP
+IF ( LIMAP%NMOM_C.GE.2 ) ZCCS(D%NIJB:D%NIJE,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NC)
 !
-IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) ZMAS(:,:) = PSVS(:,:,ISV_LIMA_SCAVMASS)
+IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) ZMAS(D%NIJB:D%NIJE,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_SCAVMASS)
 ! 
 IF ( LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOD_CCN.GE.1 ) THEN
    ALLOCATE( ZNFS(D%NIJT,D%NKT,LIMAP%NMOD_CCN) )
    ALLOCATE( ZNAS(D%NIJT,D%NKT,LIMAP%NMOD_CCN) )
    ALLOCATE( ZNFT(D%NIJT,D%NKT,LIMAP%NMOD_CCN) )
    ALLOCATE( ZNAT(D%NIJT,D%NKT,LIMAP%NMOD_CCN) )
-   ZNFS(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1)
-   ZNAS(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1)
-   ZNFT(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1)*PTSTEP
-   ZNAT(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1)*PTSTEP
+   ZNFS(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1)
+   ZNAS(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1)
+   ZNFT(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1)*PTSTEP
+   ZNAT(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1)*PTSTEP
 END IF
 !
 ! Initialize budgets
@@ -341,19 +344,19 @@ END IF
 !               ------------
 !
 !
-WHERE ( ZRVS(:,:)+ZRCS(:,:)+ZRIS(:,:) < 0.)
-  ZRVS(:,:) = -  ZRCS(:,:) - ZRIS(:,:)
+WHERE ( ZRVS(D%NIJB:D%NIJE,:)+ZRCS(D%NIJB:D%NIJE,:)+ZRIS(D%NIJB:D%NIJE,:) < 0.)
+  ZRVS(D%NIJB:D%NIJE,:) = -  ZRCS(D%NIJB:D%NIJE,:) - ZRIS(D%NIJB:D%NIJE,:)
 END WHERE
 !
-ZEXNS(:,:) = ( PPABST(:,:) / CST%XP00 ) ** (CST%XRD/CST%XCPD)  
+ZEXNS(D%NIJB:D%NIJE,:) = ( PPABST(D%NIJB:D%NIJE,:) / CST%XP00 ) ** (CST%XRD/CST%XCPD)  
 !
-ZT(:,:) = ( PTHS(:,:) * PTSTEP ) * ZEXNS(:,:)
-ZT2(:,:) = ZT(:,:)
-ZCPH(:,:) = CST%XCPD + CST%XCPV  *PTSTEP*   ZRVS(:,:)                     &
-     + CST%XCL *PTSTEP* ( ZRCS(:,:) + ZRRS(:,:) )                         &
-     + CST%XCI *PTSTEP* ( ZRIS(:,:) + ZRSS(:,:) + ZRGS(:,:) + ZRHS(:,:) )
-ZLV(:,:) = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZT(:,:) -CST%XTT )
-ZLS(:,:) = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( ZT(:,:) -CST%XTT )
+ZT(D%NIJB:D%NIJE,:) = ( PTHS(D%NIJB:D%NIJE,:) * PTSTEP ) * ZEXNS(D%NIJB:D%NIJE,:)
+ZT2(D%NIJB:D%NIJE,:) = ZT(D%NIJB:D%NIJE,:)
+ZCPH(D%NIJB:D%NIJE,:) = CST%XCPD + CST%XCPV  *PTSTEP*   ZRVS(D%NIJB:D%NIJE,:)                     &
+     + CST%XCL *PTSTEP* ( ZRCS(D%NIJB:D%NIJE,:) + ZRRS(D%NIJB:D%NIJE,:) )                         &
+     + CST%XCI *PTSTEP* ( ZRIS(D%NIJB:D%NIJE,:) + ZRSS(D%NIJB:D%NIJE,:) + ZRGS(D%NIJB:D%NIJE,:) + ZRHS(D%NIJB:D%NIJE,:) )
+ZLV(D%NIJB:D%NIJE,:) = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZT(D%NIJB:D%NIJE,:) -CST%XTT )
+ZLS(D%NIJB:D%NIJE,:) = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( ZT(D%NIJB:D%NIJE,:) -CST%XTT )
 !
 IF (LIMAP%LADJ) THEN
    ZRV_IN=ZRVS*PTSTEP
@@ -382,35 +385,35 @@ IF (LIMAP%LADJ) THEN
         PSIGQSAT, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
    !
    IF (LIMAP%NMOM_C.GE.1) THEN
-      ZW1(:,:) = (ZRC(:,:) - ZRCS(:,:)*PTSTEP) / PTSTEP
-      WHERE( ZW1(:,:) < 0.0 )
-         ZW1(:,:) = MAX ( ZW1(:,:), -ZRCS(:,:) )
+      ZW1(D%NIJB:D%NIJE,:) = (ZRC(D%NIJB:D%NIJE,:) - ZRCS(D%NIJB:D%NIJE,:)*PTSTEP) / PTSTEP
+      WHERE( ZW1(D%NIJB:D%NIJE,:) < 0.0 )
+         ZW1(D%NIJB:D%NIJE,:) = MAX ( ZW1(D%NIJB:D%NIJE,:), -ZRCS(D%NIJB:D%NIJE,:) )
       ELSEWHERE
-         ZW1(:,:) = MIN ( ZW1(:,:),  ZRVS(:,:) )
+         ZW1(D%NIJB:D%NIJE,:) = MIN ( ZW1(D%NIJB:D%NIJE,:),  ZRVS(D%NIJB:D%NIJE,:) )
       END WHERE
-      ZRVS(:,:) = ZRVS(:,:) - ZW1(:,:)
-      ZRCS(:,:) = ZRCS(:,:) + ZW1(:,:)
-      PTHS(:,:) = PTHS(:,:) +        &
-           ZW1(:,:) * ZLV(:,:) / (ZCPH(:,:) * PEXNREF(:,:))
+      ZRVS(D%NIJB:D%NIJE,:) = ZRVS(D%NIJB:D%NIJE,:) - ZW1(D%NIJB:D%NIJE,:)
+      ZRCS(D%NIJB:D%NIJE,:) = ZRCS(D%NIJB:D%NIJE,:) + ZW1(D%NIJB:D%NIJE,:)
+      PTHS(D%NIJB:D%NIJE,:) = PTHS(D%NIJB:D%NIJE,:) +        &
+           ZW1(D%NIJB:D%NIJE,:) * ZLV(D%NIJB:D%NIJE,:) / (ZCPH(D%NIJB:D%NIJE,:) * PEXNREF(D%NIJB:D%NIJE,:))
    END IF
    !
    IF (LIMAP%NMOM_I.EQ.1) THEN
-      PICEFR(:,:)=PCLDFR(:,:)
-      ZW2(:,:) = (ZRI(:,:) - ZRIS(:,:)*PTSTEP) / PTSTEP ! idem ZW1 but for Ri
+      PICEFR(D%NIJB:D%NIJE,:)=PCLDFR(D%NIJB:D%NIJE,:)
+      ZW2(D%NIJB:D%NIJE,:) = (ZRI(D%NIJB:D%NIJE,:) - ZRIS(D%NIJB:D%NIJE,:)*PTSTEP) / PTSTEP ! idem ZW1 but for Ri
       !
-      WHERE( ZW2(:,:) < 0.0 )
-         ZW2(:,:) = MAX ( ZW2(:,:), -ZRIS(:,:) )
+      WHERE( ZW2(D%NIJB:D%NIJE,:) < 0.0 )
+         ZW2(D%NIJB:D%NIJE,:) = MAX ( ZW2(D%NIJB:D%NIJE,:), -ZRIS(D%NIJB:D%NIJE,:) )
       ELSEWHERE
-         ZW2(:,:) = MIN ( ZW2(:,:),  ZRVS(:,:) )
+         ZW2(D%NIJB:D%NIJE,:) = MIN ( ZW2(D%NIJB:D%NIJE,:),  ZRVS(D%NIJB:D%NIJE,:) )
       END WHERE
-      ZRVS(:,:) = ZRVS(:,:) - ZW2(:,:)
-      ZRIS(:,:) = ZRIS(:,:) + ZW2(:,:)
-      PTHS(:,:) = PTHS(:,:) +        &
-           ZW2(:,:) * ZLS(:,:) / (ZCPH(:,:) * PEXNREF(:,:))
+      ZRVS(D%NIJB:D%NIJE,:) = ZRVS(D%NIJB:D%NIJE,:) - ZW2(D%NIJB:D%NIJE,:)
+      ZRIS(D%NIJB:D%NIJE,:) = ZRIS(D%NIJB:D%NIJE,:) + ZW2(D%NIJB:D%NIJE,:)
+      PTHS(D%NIJB:D%NIJE,:) = PTHS(D%NIJB:D%NIJE,:) +        &
+           ZW2(D%NIJB:D%NIJE,:) * ZLS(D%NIJB:D%NIJE,:) / (ZCPH(D%NIJB:D%NIJE,:) * PEXNREF(D%NIJB:D%NIJE,:))
    END IF
    !
 ELSE
-   DO II=1,SIZE(ZRCS,1)
+   DO II=D%NIJB, D%NIJE
       DO IK=1,SIZE(ZRCS,2)
          IF (ZRCS(II,IK).GE.LIMAP%XRTMIN(2) .AND. ZCCS(II,IK).GE.LIMAP%XCTMIN(2)) THEN
             ZVEC1(II,IK) = MAX( 1.0001, MIN( FLOAT(LIMAW%NAHEN)-0.0001, LIMAW%XAHENINTP1 * ZT(II,IK) + LIMAW%XAHENINTP2 ) )
@@ -456,38 +459,38 @@ END IF
 !               ---------------------------
 !
 IF ( .NOT. OSUBG_COND ) THEN
-   WHERE (ZRCS(:,:) + ZRIS(:,:) > 1.E-12 / PTSTEP)
-      PCLDFR(:,:)  = 1.
+   WHERE (ZRCS(D%NIJB:D%NIJE,:) + ZRIS(D%NIJB:D%NIJE,:) > 1.E-12 / PTSTEP)
+      PCLDFR(D%NIJB:D%NIJE,:)  = 1.
    ELSEWHERE
-      PCLDFR(:,:)  = 0. 
+      PCLDFR(D%NIJB:D%NIJE,:)  = 0. 
    ENDWHERE
    IF ( SIZE(PSRCS,2) /= 0 ) THEN
-      WHERE (ZRCS(:,:) + ZRIS(:,:) > 1.E-12 / PTSTEP)
-         PSRCS(:,:)  = 1.
+      WHERE (ZRCS(D%NIJB:D%NIJE,:) + ZRIS(D%NIJB:D%NIJE,:) > 1.E-12 / PTSTEP)
+         PSRCS(D%NIJB:D%NIJE,:)  = 1.
       ELSEWHERE
-         PSRCS(:,:)  = 0.
+         PSRCS(D%NIJB:D%NIJE,:)  = 0.
       ENDWHERE
    END IF
 ELSE
    ! We limit PRC_MF+PRI_MF to ZRVS*PTSTEP to avoid negative humidity
-   ZW1(:,:)=PRC_MF(:,:)/PTSTEP
-   ZW2(:,:)=0.
-   IF (LIMAP%NMOM_I.EQ.1) ZW2(:,:)=PRI_MF(:,:)/PTSTEP
-   WHERE(ZW1(:,:)+ZW2(:,:)>ZRVS(:,:))
-      ZW1(:,:)=ZW1(:,:)*ZRVS(:,:)/(ZW1(:,:)+ZW2(:,:))
-      ZW2(:,:)=ZRVS(:,:)-ZW1(:,:)
+   ZW1(D%NIJB:D%NIJE,:)=PRC_MF(D%NIJB:D%NIJE,:)/PTSTEP
+   ZW2(D%NIJB:D%NIJE,:)=0.
+   IF (LIMAP%NMOM_I.EQ.1) ZW2(D%NIJB:D%NIJE,:)=PRI_MF(D%NIJB:D%NIJE,:)/PTSTEP
+   WHERE(ZW1(D%NIJB:D%NIJE,:)+ZW2(D%NIJB:D%NIJE,:)>ZRVS(D%NIJB:D%NIJE,:))
+      ZW1(D%NIJB:D%NIJE,:)=ZW1(D%NIJB:D%NIJE,:)*ZRVS(D%NIJB:D%NIJE,:)/(ZW1(D%NIJB:D%NIJE,:)+ZW2(D%NIJB:D%NIJE,:))
+      ZW2(D%NIJB:D%NIJE,:)=ZRVS(D%NIJB:D%NIJE,:)-ZW1(D%NIJB:D%NIJE,:)
    ENDWHERE
    ! Compute CF and update rc, ri from MF scheme
-   PCLDFR(:,:) = MIN(1.,PCLDFR(:,:)+PCF_MF(:,:))
-   ZRVS(:,:)   = ZRVS(:,:) - ZW1(:,:) -ZW2(:,:)
-   ZRCS(:,:)   = ZRCS(:,:) + ZW1(:,:)
-   IF (LIMAP%NMOM_I.EQ.1) ZRIS(:,:)   = ZRIS(:,:) + ZW2(:,:)
-   IF (LIMAP%NMOM_C.GE.1) ZCCS(:,:)   = ZCCT(:,:) / PTSTEP
-   IF (LIMAP%NMOD_CCN.GE.1) ZNFS(:,:,:) = ZNFT(:,:,:) / PTSTEP
-   IF (LIMAP%NMOD_CCN.GE.1) ZNAS(:,:,:) = ZNAT(:,:,:) / PTSTEP
-   PTHS(:,:)   = PTHS(:,:) + &
-        (ZW1(:,:) * ZLV(:,:) + ZW2(:,:) * ZLS(:,:)) / ZCPH(:,:)     &
-        /  PEXNREF(:,:)
+   PCLDFR(D%NIJB:D%NIJE,:) = MIN(1.,PCLDFR(D%NIJB:D%NIJE,:)+PCF_MF(D%NIJB:D%NIJE,:))
+   ZRVS(D%NIJB:D%NIJE,:)   = ZRVS(D%NIJB:D%NIJE,:) - ZW1(D%NIJB:D%NIJE,:) -ZW2(D%NIJB:D%NIJE,:)
+   ZRCS(D%NIJB:D%NIJE,:)   = ZRCS(D%NIJB:D%NIJE,:) + ZW1(D%NIJB:D%NIJE,:)
+   IF (LIMAP%NMOM_I.EQ.1) ZRIS(D%NIJB:D%NIJE,:)   = ZRIS(D%NIJB:D%NIJE,:) + ZW2(D%NIJB:D%NIJE,:)
+   IF (LIMAP%NMOM_C.GE.1) ZCCS(D%NIJB:D%NIJE,:)   = ZCCT(D%NIJB:D%NIJE,:) / PTSTEP
+   IF (LIMAP%NMOD_CCN.GE.1) ZNFS(D%NIJB:D%NIJE,:,:) = ZNFT(D%NIJB:D%NIJE,:,:) / PTSTEP
+   IF (LIMAP%NMOD_CCN.GE.1) ZNAS(D%NIJB:D%NIJE,:,:) = ZNAT(D%NIJB:D%NIJE,:,:) / PTSTEP
+   PTHS(D%NIJB:D%NIJE,:)   = PTHS(D%NIJB:D%NIJE,:) + &
+        (ZW1(D%NIJB:D%NIJE,:) * ZLV(D%NIJB:D%NIJE,:) + ZW2(D%NIJB:D%NIJE,:) * ZLS(D%NIJB:D%NIJE,:)) / ZCPH(D%NIJB:D%NIJE,:)     &
+        /  PEXNREF(D%NIJB:D%NIJE,:)
 END IF
 !
 !-------------------------------------------------------------------------------
@@ -496,36 +499,36 @@ END IF
 !               --------------------------------
 !
 IF (LIMAP%NMOM_C .GE. 2) THEN
-   ZMASK(:,:) = 0.0
-   ZW(:,:) = 0.
-   WHERE (ZRCS(:,:) <= ZRTMIN(2) .OR. ZCCS(:,:) <=0.) 
-      ZRVS(:,:) = ZRVS(:,:) + ZRCS(:,:) 
-      PTHS(:,:) = PTHS(:,:) - ZRCS(:,:)*ZLV(:,:)/(ZCPH(:,:)*ZEXNS(:,:))
-      ZRCS(:,:) = 0.0
-      ZW(:,:)   = MAX(ZCCS(:,:),0.)
-      ZCCS(:,:) = 0.0
-      PCLDFR(:,:) = 0.
+   ZMASK(D%NIJB:D%NIJE,:) = 0.0
+   ZW(D%NIJB:D%NIJE,:) = 0.
+   WHERE (ZRCS(D%NIJB:D%NIJE,:) <= ZRTMIN(2) .OR. ZCCS(D%NIJB:D%NIJE,:) <=0.) 
+      ZRVS(D%NIJB:D%NIJE,:) = ZRVS(D%NIJB:D%NIJE,:) + ZRCS(D%NIJB:D%NIJE,:) 
+      PTHS(D%NIJB:D%NIJE,:) = PTHS(D%NIJB:D%NIJE,:) - ZRCS(D%NIJB:D%NIJE,:)*ZLV(D%NIJB:D%NIJE,:)/(ZCPH(D%NIJB:D%NIJE,:)*ZEXNS(D%NIJB:D%NIJE,:))
+      ZRCS(D%NIJB:D%NIJE,:) = 0.0
+      ZW(D%NIJB:D%NIJE,:)   = MAX(ZCCS(D%NIJB:D%NIJE,:),0.)
+      ZCCS(D%NIJB:D%NIJE,:) = 0.0
+      PCLDFR(D%NIJB:D%NIJE,:) = 0.
    END WHERE
    !
-   ZW1(:,:) = 0.
-   IF (LIMAP%NMOD_CCN.GE.1) ZW1(:,:) = SUM(ZNAS,DIM=3)
-   ZW (:,:) = MIN( ZW(:,:), ZW1(:,:) )
-   ZW2(:,:) = 0.
-   WHERE ( ZW(:,:) > 0. )
-      ZMASK(:,:) = 1.0
-      ZW2(:,:) = ZW(:,:) / ZW1(:,:)
+   ZW1(D%NIJB:D%NIJE,:) = 0.
+   IF (LIMAP%NMOD_CCN.GE.1) ZW1(D%NIJB:D%NIJE,:) = SUM(ZNAS(D%NIJB:D%NIJE,:,:),DIM=3)
+   ZW (D%NIJB:D%NIJE,:) = MIN( ZW(D%NIJB:D%NIJE,:), ZW1(D%NIJB:D%NIJE,:) )
+   ZW2(D%NIJB:D%NIJE,:) = 0.
+   WHERE ( ZW(D%NIJB:D%NIJE,:) > 0. )
+      ZMASK(D%NIJB:D%NIJE,:) = 1.0
+      ZW2(D%NIJB:D%NIJE,:) = ZW(D%NIJB:D%NIJE,:) / ZW1(D%NIJB:D%NIJE,:)
    ENDWHERE
    !
    IF (LIMAP%NMOD_CCN.GE.1) THEN
       DO IMOD = 1, LIMAP%NMOD_CCN
-         ZNFS(:,:,IMOD) = ZNFS(:,:,IMOD) +                           &
-              ZMASK(:,:) * ZNAS(:,:,IMOD) * ZW2(:,:)
-         ZNAS(:,:,IMOD) = ZNAS(:,:,IMOD) -                           &
-              ZMASK(:,:) * ZNAS(:,:,IMOD) * ZW2(:,:)
-         ZNAS(:,:,IMOD) = MAX( 0.0 , ZNAS(:,:,IMOD) )
+         ZNFS(D%NIJB:D%NIJE,:,IMOD) = ZNFS(D%NIJB:D%NIJE,:,IMOD) +                           &
+              ZMASK(D%NIJB:D%NIJE,:) * ZNAS(D%NIJB:D%NIJE,:,IMOD) * ZW2(D%NIJB:D%NIJE,:)
+         ZNAS(D%NIJB:D%NIJE,:,IMOD) = ZNAS(D%NIJB:D%NIJE,:,IMOD) -                           &
+              ZMASK(D%NIJB:D%NIJE,:) * ZNAS(D%NIJB:D%NIJE,:,IMOD) * ZW2(D%NIJB:D%NIJE,:)
+         ZNAS(D%NIJB:D%NIJE,:,IMOD) = MAX( 0.0 , ZNAS(D%NIJB:D%NIJE,:,IMOD) )
       ENDDO
    END IF
-   IF (LIMAP%LSCAV .AND. LIMAP%LAERO_MASS) ZMAS(:,:) = ZMAS(:,:) * (1-ZMASK(:,:))
+   IF (LIMAP%LSCAV .AND. LIMAP%LAERO_MASS) ZMAS(D%NIJB:D%NIJE,:) = ZMAS(D%NIJB:D%NIJE,:) * (1-ZMASK(D%NIJB:D%NIJE,:))
 END IF
 !
 !-------------------------------------------------------------------------------
@@ -534,21 +537,21 @@ END IF
 !               -----------------------
 !
 ! 3D water mixing ratios
-PRS(:,:,1) = ZRVS(:,:)
-IF ( KRR .GE. 2 ) PRS(:,:,2) = ZRCS(:,:)
-IF ( KRR .GE. 3 ) PRS(:,:,3) = ZRRS(:,:)
-IF ( KRR .GE. 4 ) PRS(:,:,4) = ZRIS(:,:)
-IF ( KRR .GE. 5 ) PRS(:,:,5) = ZRSS(:,:)
-IF ( KRR .GE. 6 ) PRS(:,:,6) = ZRGS(:,:)
-IF ( KRR .GE. 7 ) PRS(:,:,7) = ZRHS(:,:)
+PRS(D%NIJB:D%NIJE,:,1) = ZRVS(D%NIJB:D%NIJE,:)
+IF ( KRR .GE. 2 ) PRS(D%NIJB:D%NIJE,:,2) = ZRCS(D%NIJB:D%NIJE,:)
+IF ( KRR .GE. 3 ) PRS(D%NIJB:D%NIJE,:,3) = ZRRS(D%NIJB:D%NIJE,:)
+IF ( KRR .GE. 4 ) PRS(D%NIJB:D%NIJE,:,4) = ZRIS(D%NIJB:D%NIJE,:)
+IF ( KRR .GE. 5 ) PRS(D%NIJB:D%NIJE,:,5) = ZRSS(D%NIJB:D%NIJE,:)
+IF ( KRR .GE. 6 ) PRS(D%NIJB:D%NIJE,:,6) = ZRGS(D%NIJB:D%NIJE,:)
+IF ( KRR .GE. 7 ) PRS(D%NIJB:D%NIJE,:,7) = ZRHS(D%NIJB:D%NIJE,:)
 !
 ! Prepare 3D number concentrations
 !
-IF ( LIMAP%NMOM_C.GE.2 ) PSVS(:,:,ISV_LIMA_NC) = ZCCS(:,:)
-IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) PSVS(:,:,ISV_LIMA_SCAVMASS) = ZMAS(:,:)
+IF ( LIMAP%NMOM_C.GE.2 ) PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NC) = ZCCS(D%NIJB:D%NIJE,:)
+IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_SCAVMASS) = ZMAS(D%NIJB:D%NIJE,:)
 IF ( LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOD_CCN.GE.1 ) THEN
-   PSVS(:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1) = ZNFS(:,:,:)
-   PSVS(:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1) = ZNAS(:,:,:)
+   PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1) = ZNFS(D%NIJB:D%NIJE,:,:)
+   PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1) = ZNAS(D%NIJB:D%NIJE,:,:)
 END IF
 !
 ! Initialize budgets
