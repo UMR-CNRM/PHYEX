@@ -3,59 +3,16 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
 !     ##################
-      MODULE MODI_SHUMAN_MF
+MODULE MODE_SHUMAN_MF
+
+!$ACDC singlecolumn 
+
 !     ##################
 !
 IMPLICIT NONE
-INTERFACE
-!
-SUBROUTINE DZF_MF(D, PA, PDZF)
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-IMPLICIT NONE
-TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass
-                                                 ! localization
-END SUBROUTINE DZF_MF
-!
-SUBROUTINE DZM_MF(D, PA, PDZM)
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-IMPLICIT NONE
-TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
-                                                 ! side
-END SUBROUTINE DZM_MF
-!
-SUBROUTINE MZF_MF(D, PA, PMZF)
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-IMPLICIT NONE
-TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZF   ! result at mass
-                                                 ! localization
-END SUBROUTINE MZF_MF
-!
-SUBROUTINE MZM_MF(D, PA, PMZM)
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-IMPLICIT NONE
-TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZM   ! result at flux localization
-END SUBROUTINE MZM_MF
-!
-SUBROUTINE GZ_M_W_MF(D, PY, PDZZ, PGZ_M_W)
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-IMPLICIT NONE
-TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PDZZ ! Metric coefficient d*zz
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PY   ! variable at mass localization
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux side
-END SUBROUTINE GZ_M_W_MF
-!
-END INTERFACE
-!
-END MODULE MODI_SHUMAN_MF
+
+CONTAINS
+
 !
 !     ###############################
       SUBROUTINE MZF_MF(D, PA, PMZF)
@@ -509,3 +466,5 @@ PGZ_M_W(IIJB:IIJE,IKU) = (PY(IIJB:IIJE,IKU) - PY(IIJB:IIJE,IKU-IKL)) / PDZZ(IIJB
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE GZ_M_W_MF
+
+END MODULE MODE_SHUMAN_MF
