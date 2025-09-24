@@ -75,7 +75,6 @@ REAL, DIMENSION(KPROMA) :: ZZW, &
                            ZWCITRED23
 REAL :: ZDICRIT, ZTIMESC, ZKVO, ZTC, ZHU, ZQIMAX
 
-REAL, DIMENSION(KSIZE) :: ZMASK
 INTEGER :: JL
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -195,7 +194,8 @@ CONTAINS
     REAL, PARAMETER :: ICE_DENSITY = 890.0
     REAL, PARAMETER :: PI = 3.1415926536
     INTEGER :: IDX_REI
-    REAL :: CORR, REICE, DEICE, Q_ICE, T3D, RET
+    REAL, INTENT(IN) :: Q_ICE, T3D
+    REAL :: CORR, REICE, DEICE, RET
     DOUBLE PRECISION :: LAMBDA
 
     !+---+-----------------------------------------------------------------+

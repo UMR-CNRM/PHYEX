@@ -116,7 +116,6 @@ INTEGER :: IKRR !Workaround of PGI bug with OpenACC (at least up to 18.10 versio
 LOGICAL :: GSEDIC !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL :: GPRESENT_PFPR, GPRESENT_PSEA
 REAL    :: ZINVTSTEP
-REAL, DIMENSION(D%NIJT)               :: ZCONC_TMP    ! Weighted concentration
 REAL, DIMENSION(D%NIJT,D%NKTB:D%NKTE) :: ZW ! work array
 REAL, DIMENSION(D%NIJT, D%NKT)        :: ZRAY,   & ! Cloud Mean radius
                                        & ZLBC,   & ! XLBC weighted by sea fraction
