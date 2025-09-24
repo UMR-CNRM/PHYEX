@@ -291,65 +291,64 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    <span class="comment">!.. and coauthors.</span></div>
 <div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>    <span class="comment">!+---+-----------------------------------------------------------------+</span></div>
 <div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span> </div>
-<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span><span class="keywordtype">    REAL</span> retab(95)</div>
-<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>    <span class="keyword">DATA</span> retab /                                                     &amp;</div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>      5.92779, 6.26422, 6.61973, 6.99539, 7.39234,                   &amp;</div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>      7.81177, 8.25496, 8.72323, 9.21800, 9.74075, 10.2930,          &amp;</div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>      10.8765, 11.4929, 12.1440, 12.8317, 13.5581, 14.2319,          &amp;</div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>      15.0351, 15.8799, 16.7674, 17.6986, 18.6744, 19.6955,          &amp;</div>
-<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>      20.7623, 21.8757, 23.0364, 24.2452, 25.5034, 26.8125,          &amp;</div>
-<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>      27.7895, 28.6450, 29.4167, 30.1088, 30.7306, 31.2943,          &amp;</div>
-<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>      31.8151, 32.3077, 32.7870, 33.2657, 33.7540, 34.2601,          &amp;</div>
-<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>      34.7892, 35.3442, 35.9255, 36.5316, 37.1602, 37.8078,          &amp;</div>
-<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>      38.4720, 39.1508, 39.8442, 40.5552, 41.2912, 42.0635,          &amp;</div>
-<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>      42.8876, 43.7863, 44.7853, 45.9170, 47.2165, 48.7221,          &amp;</div>
-<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>      50.4710, 52.4980, 54.8315, 57.4898, 60.4785, 63.7898,          &amp;</div>
-<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>      65.5604, 71.2885, 75.4113, 79.7368, 84.2351, 88.8833,          &amp;</div>
-<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>      93.6658, 98.5739, 103.603, 108.752, 114.025, 119.424,          &amp;</div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>      124.954, 130.630, 136.457, 142.446, 148.608, 154.956,          &amp;</div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>      161.503, 168.262, 175.248, 182.473, 189.952, 197.699,          &amp;</div>
-<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>      205.728, 214.055, 222.694, 231.661, 240.971, 250.639/</div>
-<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span> </div>
-<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>    <span class="comment">!+---+-----------------------------------------------------------------+</span></div>
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>    <span class="comment">!..From the model 3D temperature field, subtract 179K for which</span></div>
-<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>    <span class="comment">!.. index value of retab as a start.  Value of corr is for</span></div>
-<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>    <span class="comment">!.. interpolating between neighboring values in the table.</span></div>
-<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>    <span class="comment">!+---+-----------------------------------------------------------------+</span></div>
-<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span> </div>
-<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>    idx_rei = int(t3d-179.)</div>
-<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>    idx_rei = min(max(idx_rei,1),95)</div>
-<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>    corr = t3d - int(t3d)</div>
-<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>    reice = retab(idx_rei)*(1.-corr) + retab(min(95,idx_rei+1))*corr</div>
-<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>    deice = 2.*reice * 1.e-6</div>
-<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span> </div>
-<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>    <span class="comment">!+---+-----------------------------------------------------------------+</span></div>
-<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>    <span class="comment">!..Now we have the final radiative effective size of ice (as function</span></div>
-<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>    <span class="comment">!.. of temperature only).  This size represents 3rd moment divided by</span></div>
-<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>    <span class="comment">!.. second moment of the ice size distribution, so we can compute a</span></div>
-<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>    <span class="comment">!.. number concentration from the mean size and mass mixing ratio.</span></div>
-<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>    <span class="comment">!.. The mean (radiative effective) diameter is 3./Slope for an inverse</span></div>
-<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>    <span class="comment">!.. exponential size distribution.  So, starting with slope, work</span></div>
-<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>    <span class="comment">!.. backwords to get number concentration.</span></div>
-<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>    <span class="comment">!+---+-----------------------------------------------------------------+</span></div>
-<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span> </div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>    lambda = 3.0 / deice</div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>    ret = q_ice * lambda*lambda*lambda / (pi*ice_density)</div>
-<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span> </div>
-<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>    <span class="comment">!+---+-----------------------------------------------------------------+</span></div>
-<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>    <span class="comment">!..Example1:Common ice size coming from Thompson scheme is about 30 microns.</span></div>
-<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>    <span class="comment">!.. An example ice mixing ratio could be 0.001 g/kg for a temp. of -50C.</span></div>
-<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>    <span class="comment">!.. Remember to convert both into MKS units. This gives N_ice=357652 per kg.</span></div>
-<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>    <span class="comment">!..Example2: Lower in atmosphere at T=-10C matching ~162 microns in retab,</span></div>
-<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>    <span class="comment">!.. and assuming we have 0.1 g/kg mixing ratio, then N_ice=28122 per kg,</span></div>
-<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>    <span class="comment">!.. which is 28 crystals per liter of air if the air density is 1.0.</span></div>
-<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>    <span class="comment">!+---+-----------------------------------------------------------------+</span></div>
-<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span> </div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">DIMENSION(95)</span>, <span class="keywordtype">PARAMETER</span> :: retab = (/                     &amp;</div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>      5.92779, 6.26422, 6.61973, 6.99539, 7.39234,                   &amp;</div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>      7.81177, 8.25496, 8.72323, 9.21800, 9.74075, 10.2930,          &amp;</div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>      10.8765, 11.4929, 12.1440, 12.8317, 13.5581, 14.2319,          &amp;</div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>      15.0351, 15.8799, 16.7674, 17.6986, 18.6744, 19.6955,          &amp;</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>      20.7623, 21.8757, 23.0364, 24.2452, 25.5034, 26.8125,          &amp;</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>      27.7895, 28.6450, 29.4167, 30.1088, 30.7306, 31.2943,          &amp;</div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>      31.8151, 32.3077, 32.7870, 33.2657, 33.7540, 34.2601,          &amp;</div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>      34.7892, 35.3442, 35.9255, 36.5316, 37.1602, 37.8078,          &amp;</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>      38.4720, 39.1508, 39.8442, 40.5552, 41.2912, 42.0635,          &amp;</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>      42.8876, 43.7863, 44.7853, 45.9170, 47.2165, 48.7221,          &amp;</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>      50.4710, 52.4980, 54.8315, 57.4898, 60.4785, 63.7898,          &amp;</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>      65.5604, 71.2885, 75.4113, 79.7368, 84.2351, 88.8833,          &amp;</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>      93.6658, 98.5739, 103.603, 108.752, 114.025, 119.424,          &amp;</div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>      124.954, 130.630, 136.457, 142.446, 148.608, 154.956,          &amp;</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>      161.503, 168.262, 175.248, 182.473, 189.952, 197.699,          &amp;</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>      205.728, 214.055, 222.694, 231.661, 240.971, 250.639/)</div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span> </div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>    <span class="comment">!+---+-----------------------------------------------------------------+</span></div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>    <span class="comment">!..From the model 3D temperature field, subtract 179K for which</span></div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>    <span class="comment">!.. index value of retab as a start.  Value of corr is for</span></div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>    <span class="comment">!.. interpolating between neighboring values in the table.</span></div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>    <span class="comment">!+---+-----------------------------------------------------------------+</span></div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span> </div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>    idx_rei = int(t3d-179.)</div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>    idx_rei = min(max(idx_rei,1),95)</div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>    corr = t3d - int(t3d)</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>    reice = retab(idx_rei)*(1.-corr) + retab(min(95,idx_rei+1))*corr</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>    deice = 2.*reice * 1.e-6</div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span> </div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>    <span class="comment">!+---+-----------------------------------------------------------------+</span></div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>    <span class="comment">!..Now we have the final radiative effective size of ice (as function</span></div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>    <span class="comment">!.. of temperature only).  This size represents 3rd moment divided by</span></div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>    <span class="comment">!.. second moment of the ice size distribution, so we can compute a</span></div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>    <span class="comment">!.. number concentration from the mean size and mass mixing ratio.</span></div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>    <span class="comment">!.. The mean (radiative effective) diameter is 3./Slope for an inverse</span></div>
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>    <span class="comment">!.. exponential size distribution.  So, starting with slope, work</span></div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>    <span class="comment">!.. backwords to get number concentration.</span></div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>    <span class="comment">!+---+-----------------------------------------------------------------+</span></div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span> </div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>    lambda = 3.0 / deice</div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>    ret = q_ice * lambda*lambda*lambda / (pi*ice_density)</div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span> </div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>    <span class="comment">!+---+-----------------------------------------------------------------+</span></div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>    <span class="comment">!..Example1:Common ice size coming from Thompson scheme is about 30 microns.</span></div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>    <span class="comment">!.. An example ice mixing ratio could be 0.001 g/kg for a temp. of -50C.</span></div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>    <span class="comment">!.. Remember to convert both into MKS units. This gives N_ice=357652 per kg.</span></div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>    <span class="comment">!..Example2: Lower in atmosphere at T=-10C matching ~162 microns in retab,</span></div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>    <span class="comment">!.. and assuming we have 0.1 g/kg mixing ratio, then N_ice=28122 per kg,</span></div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>    <span class="comment">!.. which is 28 crystals per liter of air if the air density is 1.0.</span></div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>    <span class="comment">!+---+-----------------------------------------------------------------+</span></div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span> </div>
 </div>
-<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>  <span class="keyword">END FUNCTION </span><a class="code hl_function" href="mode__ice4__fast__ri__rs_8F90.html#aa8dbd047f455c1488da72c77edda2dda">icenumber3</a></div>
-<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span><span class="comment">!</span></div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>  <span class="keyword">END FUNCTION </span><a class="code hl_function" href="mode__ice4__fast__ri__rs_8F90.html#aa8dbd047f455c1488da72c77edda2dda">icenumber3</a></div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span><span class="comment">!</span></div>
 </div>
-<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__ice4__fast__ri__rs.html#aa1a11739afb42b97ba56f6990f8b87ea">ice4_fast_ri_rs</a></div>
-<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__ice4__fast__ri__rs.html">mode_ice4_fast_ri_rs</a></div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__ice4__fast__ri__rs.html#aa1a11739afb42b97ba56f6990f8b87ea">ice4_fast_ri_rs</a></div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__ice4__fast__ri__rs.html">mode_ice4_fast_ri_rs</a></div>
 <div class="ttc" id="amode__ice4__fast__ri__rs_8F90_html_aa8dbd047f455c1488da72c77edda2dda"><div class="ttname"><a href="mode__ice4__fast__ri__rs_8F90.html#aa8dbd047f455c1488da72c77edda2dda">icenumber3</a></div><div class="ttdeci">real function icenumber3(q_ice, t3d)</div><div class="ttdef"><b>Definition</b> <a href="mode__ice4__fast__ri__rs_8F90_source.html#l00192">mode_ice4_fast_ri_rs.F90:193</a></div></div>
 <div class="ttc" id="anamespacemodd__cst_html"><div class="ttname"><a href="namespacemodd__cst.html">modd_cst</a></div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00007">modd_cst.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__param__ice__n_html"><div class="ttname"><a href="namespacemodd__param__ice__n.html">modd_param_ice_n</a></div><div class="ttdef"><b>Definition</b> <a href="modd__param__icen_8F90_source.html#l00007">modd_param_icen.F90:7</a></div></div>
