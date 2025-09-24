@@ -1,5 +1,5 @@
 matplotlib
-pyfortool>=0.2.6
+pyfortool>=0.2.7
 numpy
 pandas
 xarray
