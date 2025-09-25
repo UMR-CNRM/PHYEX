@@ -18,8 +18,7 @@ var searchData=
   ['gy_5fw_5fvw_15',['gy_w_vw',['../interfacemodi__gradient__w_1_1gy__w__vw.html',1,'modi_gradient_w']]],
   ['gz_5fm_5fm_16',['gz_m_m',['../interfacemodi__gradient__m_1_1gz__m__m.html',1,'modi_gradient_m']]],
   ['gz_5fm_5fw_17',['gz_m_w',['../interfacemodi__gradient__m_1_1gz__m__w.html',1,'modi_gradient_m']]],
-  ['gz_5fm_5fw_5fmf_18',['gz_m_w_mf',['../interfacemodi__shuman__mf_1_1gz__m__w__mf.html',1,'modi_shuman_mf']]],
-  ['gz_5fu_5fuw_19',['gz_u_uw',['../interfacemodi__gradient__u_1_1gz__u__uw.html',1,'modi_gradient_u']]],
-  ['gz_5fv_5fvw_20',['gz_v_vw',['../interfacemodi__gradient__v_1_1gz__v__vw.html',1,'modi_gradient_v']]],
-  ['gz_5fw_5fm_21',['gz_w_m',['../interfacemodi__gradient__w_1_1gz__w__m.html',1,'modi_gradient_w']]]
+  ['gz_5fu_5fuw_18',['gz_u_uw',['../interfacemodi__gradient__u_1_1gz__u__uw.html',1,'modi_gradient_u']]],
+  ['gz_5fv_5fvw_19',['gz_v_vw',['../interfacemodi__gradient__v_1_1gz__v__vw.html',1,'modi_gradient_v']]],
+  ['gz_5fw_5fm_20',['gz_w_m',['../interfacemodi__gradient__w_1_1gz__w__m.html',1,'modi_gradient_w']]]
 ];

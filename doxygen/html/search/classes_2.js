@@ -10,7 +10,5 @@ var searchData=
   ['dyf_7',['dyf',['../interfacemodi__shuman_1_1dyf.html',1,'modi_shuman']]],
   ['dym_8',['dym',['../interfacemodi__shuman_1_1dym.html',1,'modi_shuman']]],
   ['dzf_9',['dzf',['../interfacemodi__shuman_1_1dzf.html',1,'modi_shuman']]],
-  ['dzf_5fmf_10',['dzf_mf',['../interfacemodi__shuman__mf_1_1dzf__mf.html',1,'modi_shuman_mf']]],
-  ['dzm_11',['dzm',['../interfacemodi__shuman_1_1dzm.html',1,'modi_shuman']]],
-  ['dzm_5fmf_12',['dzm_mf',['../interfacemodi__shuman__mf_1_1dzm__mf.html',1,'modi_shuman_mf']]]
+  ['dzm_10',['dzm',['../interfacemodi__shuman_1_1dzm.html',1,'modi_shuman']]]
 ];

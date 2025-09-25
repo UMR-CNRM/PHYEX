@@ -143,7 +143,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="keywordtype">LOGICAL</span>, <span class="keywordtype">ALLOCATABLE</span>, <span class="keywordtype">DIMENSION(:,:,:)</span> :: llmicro</div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="keywordtype">INTEGER</span> :: nproma, ngpblks, nflevg</div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="keywordtype">INTEGER</span> :: jlon, jlev</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="keywordtype">INTEGER</span> :: jlon</div>
 <div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="keywordtype">INTEGER</span>, <span class="keywordtype">TARGET</span> :: ibl</div>
 <div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
 <div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>)         :: d, d0</div>
@@ -618,52 +618,51 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00532" name="l00532"></a><span class="lineno">  532</span>  <span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
 <div class="line"><a id="l00533" name="l00533"></a><span class="lineno">  533</span>  <span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__rain__ice__descr__n.html">modd_rain_ice_descr_n</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_variable" href="namespacemodd__rain__ice__descr__n.html#ae13fd91b662c43e318847abfbfd7acd3">xrtmin</a></div>
 <div class="line"><a id="l00534" name="l00534"></a><span class="lineno">  534</span>  <span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__rain__ice__param__n.html">modd_rain_ice_param_n</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_variable" href="namespacemodd__rain__ice__param__n.html#a4ed1a8523cf8338bb92316cd5dc8cb1b">xfrmin</a></div>
-<div class="line"><a id="l00535" name="l00535"></a><span class="lineno">  535</span>  <span class="keywordtype">USE </span>iso_fortran_env, <span class="keywordtype">ONLY</span>: output_unit</div>
-<div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span> </div>
-<div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span>  <span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span> </div>
-<div class="line"><a id="l00539" name="l00539"></a><span class="lineno">  539</span>  <span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>) :: D</div>
-<div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span> </div>
-<div class="line"><a id="l00541" name="l00541"></a><span class="lineno">  541</span>  <span class="keywordtype">INTEGER</span>, <span class="keywordtype">INTENT(IN)</span> :: KRR, NGPBLKS</div>
-<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span>  <span class="keywordtype">LOGICAL</span>, <span class="keywordtype">DIMENSION(D%NIT, D%NKT, NGPBLKS)</span>, <span class="keywordtype">INTENT(INOUT)</span> :: ODMICRO</div>
-<div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span> </div>
-<div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(D%NIT, D%NKT, KRR, NGPBLKS)</span>, <span class="keywordtype">INTENT(IN)</span> :: PRT</div>
-<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(D%NIT, D%NKT, NGPBLKS)</span>, <span class="keywordtype">INTENT(IN)</span> :: PSSIO</div>
-<div class="line"><a id="l00546" name="l00546"></a><span class="lineno">  546</span> </div>
-<div class="line"><a id="l00547" name="l00547"></a><span class="lineno">  547</span>  <span class="keywordtype">LOGICAL</span>, <span class="keywordtype">INTENT(IN)</span> :: OCND2</div>
-<div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span> </div>
-<div class="line"><a id="l00549" name="l00549"></a><span class="lineno">  549</span>  <span class="keywordtype">INTEGER</span> :: I, K, IKRR, IBLOCK</div>
-<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span><span class="keywordtype">  REAL</span>    :: ZTHR</div>
-<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span> </div>
-<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span>  <span class="keywordflow">DO</span> iblock = 1, ngpblks</div>
-<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span> </div>
-<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span>    <span class="keywordflow">IF</span> (ocnd2) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span>      <span class="keywordflow">DO</span> k = 1, d%NKT</div>
-<div class="line"><a id="l00556" name="l00556"></a><span class="lineno">  556</span>        <span class="keywordflow">DO</span> i = 1, d%NIT</div>
-<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span>          odmicro(i, k, iblock) = odmicro(i, k, iblock) .OR. pssio(i, k, iblock) &gt; <a class="code hl_variable" href="namespacemodd__rain__ice__param__n.html#a4ed1a8523cf8338bb92316cd5dc8cb1b">xfrmin</a>(12)</div>
-<div class="line"><a id="l00558" name="l00558"></a><span class="lineno">  558</span><span class="keywordflow">        ENDDO</span></div>
-<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span><span class="keywordflow">      ENDDO</span></div>
-<div class="line"><a id="l00560" name="l00560"></a><span class="lineno">  560</span><span class="keywordflow">    ENDIF</span></div>
-<div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span> </div>
-<div class="line"><a id="l00562" name="l00562"></a><span class="lineno">  562</span>    <span class="keywordflow">DO</span> ikrr = 2, krr</div>
-<div class="line"><a id="l00563" name="l00563"></a><span class="lineno">  563</span>      <span class="keywordflow">IF</span> (ocnd2) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span>        zthr = <a class="code hl_variable" href="namespacemodd__rain__ice__param__n.html#a4ed1a8523cf8338bb92316cd5dc8cb1b">xfrmin</a>(13)</div>
-<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span>      <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00566" name="l00566"></a><span class="lineno">  566</span>        zthr = <a class="code hl_variable" href="namespacemodd__rain__ice__descr__n.html#ae13fd91b662c43e318847abfbfd7acd3">xrtmin</a>(ikrr)</div>
-<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span><span class="keywordflow">      ENDIF</span></div>
-<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span>      <span class="keywordflow">DO</span> k = 1, d%NKT</div>
-<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span>        <span class="keywordflow">DO</span> i = 1, d%NIT</div>
-<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span>          odmicro(i, k, iblock) = odmicro(i, k, iblock) .OR. prt(i, k, ikrr, iblock) &gt; <a class="code hl_variable" href="namespacemodd__rain__ice__param__n.html#a4ed1a8523cf8338bb92316cd5dc8cb1b">xfrmin</a>(13)</div>
-<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span><span class="keywordflow">        ENDDO</span></div>
-<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span><span class="keywordflow">      ENDDO</span></div>
-<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span><span class="keywordflow">    ENDDO</span></div>
-<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span> </div>
-<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span><span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span> </div>
-<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span><span class="keyword">END SUBROUTINE </span>init_gmicro</div>
-<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span> </div>
-<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span><span class="keyword">END PROGRAM</span></div>
-<div class="ttc" id="ainterfacecompute__diff_1_1diff_html"><div class="ttname"><a href="interfacecompute__diff_1_1diff.html">compute_diff::diff</a></div><div class="ttdef"><b>Definition</b> <a href="compute__diff_8F90_source.html#l00003">compute_diff.F90:3</a></div></div>
+<div class="line"><a id="l00535" name="l00535"></a><span class="lineno">  535</span> </div>
+<div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span>  <span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span> </div>
+<div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span>  <span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), <span class="keywordtype">INTENT(IN)</span> :: D</div>
+<div class="line"><a id="l00539" name="l00539"></a><span class="lineno">  539</span> </div>
+<div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span>  <span class="keywordtype">INTEGER</span>, <span class="keywordtype">INTENT(IN)</span> :: KRR, NGPBLKS</div>
+<div class="line"><a id="l00541" name="l00541"></a><span class="lineno">  541</span>  <span class="keywordtype">LOGICAL</span>, <span class="keywordtype">DIMENSION(D%NIT, D%NKT, NGPBLKS)</span>, <span class="keywordtype">INTENT(INOUT)</span> :: ODMICRO</div>
+<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span> </div>
+<div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(D%NIT, D%NKT, KRR, NGPBLKS)</span>, <span class="keywordtype">INTENT(IN)</span> :: PRT</div>
+<div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(D%NIT, D%NKT, NGPBLKS)</span>, <span class="keywordtype">INTENT(IN)</span> :: PSSIO</div>
+<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span> </div>
+<div class="line"><a id="l00546" name="l00546"></a><span class="lineno">  546</span>  <span class="keywordtype">LOGICAL</span>, <span class="keywordtype">INTENT(IN)</span> :: OCND2</div>
+<div class="line"><a id="l00547" name="l00547"></a><span class="lineno">  547</span> </div>
+<div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span>  <span class="keywordtype">INTEGER</span> :: I, K, IKRR, IBLOCK</div>
+<div class="line"><a id="l00549" name="l00549"></a><span class="lineno">  549</span><span class="keywordtype">  REAL</span>    :: ZTHR</div>
+<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span> </div>
+<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span>  <span class="keywordflow">DO</span> iblock = 1, ngpblks</div>
+<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span> </div>
+<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span>    <span class="keywordflow">IF</span> (ocnd2) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span>      <span class="keywordflow">DO</span> k = 1, d%NKT</div>
+<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span>        <span class="keywordflow">DO</span> i = 1, d%NIT</div>
+<div class="line"><a id="l00556" name="l00556"></a><span class="lineno">  556</span>          odmicro(i, k, iblock) = odmicro(i, k, iblock) .OR. pssio(i, k, iblock) &gt; <a class="code hl_variable" href="namespacemodd__rain__ice__param__n.html#a4ed1a8523cf8338bb92316cd5dc8cb1b">xfrmin</a>(12)</div>
+<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span><span class="keywordflow">        ENDDO</span></div>
+<div class="line"><a id="l00558" name="l00558"></a><span class="lineno">  558</span><span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span><span class="keywordflow">    ENDIF</span></div>
+<div class="line"><a id="l00560" name="l00560"></a><span class="lineno">  560</span> </div>
+<div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span>    <span class="keywordflow">DO</span> ikrr = 2, krr</div>
+<div class="line"><a id="l00562" name="l00562"></a><span class="lineno">  562</span>      <span class="keywordflow">IF</span> (ocnd2) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00563" name="l00563"></a><span class="lineno">  563</span>        zthr = <a class="code hl_variable" href="namespacemodd__rain__ice__param__n.html#a4ed1a8523cf8338bb92316cd5dc8cb1b">xfrmin</a>(13)</div>
+<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span>      <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span>        zthr = <a class="code hl_variable" href="namespacemodd__rain__ice__descr__n.html#ae13fd91b662c43e318847abfbfd7acd3">xrtmin</a>(ikrr)</div>
+<div class="line"><a id="l00566" name="l00566"></a><span class="lineno">  566</span><span class="keywordflow">      ENDIF</span></div>
+<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span>      <span class="keywordflow">DO</span> k = 1, d%NKT</div>
+<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span>        <span class="keywordflow">DO</span> i = 1, d%NIT</div>
+<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span>          odmicro(i, k, iblock) = odmicro(i, k, iblock) .OR. prt(i, k, ikrr, iblock) &gt; <a class="code hl_variable" href="namespacemodd__rain__ice__param__n.html#a4ed1a8523cf8338bb92316cd5dc8cb1b">xfrmin</a>(13)</div>
+<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span><span class="keywordflow">        ENDDO</span></div>
+<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span><span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span><span class="keywordflow">    ENDDO</span></div>
+<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span> </div>
+<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span><span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span> </div>
+<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span><span class="keyword">END SUBROUTINE </span>init_gmicro</div>
+<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span> </div>
+<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span><span class="keyword">END PROGRAM</span></div>
+<div class="ttc" id="ainterfacecompute__diff_1_1diff_html"><div class="ttname"><a href="interfacecompute__diff_1_1diff.html">compute_diff::diff</a></div><div class="ttdef"><b>Definition</b> <a href="compute__diff_8F90_source.html#l00005">compute_diff.F90:5</a></div></div>
 <div class="ttc" id="ainterfacemodi__ini__phyex_1_1ini__phyex_html"><div class="ttname"><a href="interfacemodi__ini__phyex_1_1ini__phyex.html">modi_ini_phyex::ini_phyex</a></div><div class="ttdef"><b>Definition</b> <a href="modi__ini__phyex_8F90_source.html#l00004">modi_ini_phyex.F90:4</a></div></div>
 <div class="ttc" id="ainterfacemodi__rain__ice__old_1_1rain__ice__old_html"><div class="ttname"><a href="interfacemodi__rain__ice__old_1_1rain__ice__old.html">modi_rain_ice_old::rain_ice_old</a></div><div class="ttdef"><b>Definition</b> <a href="modi__rain__ice__old_8F90_source.html#l00007">modi_rain_ice_old.F90:7</a></div></div>
 <div class="ttc" id="ainterfacexrd__getoptions_1_1getoption_html"><div class="ttname"><a href="interfacexrd__getoptions_1_1getoption.html">xrd_getoptions::getoption</a></div><div class="ttdef"><b>Definition</b> <a href="xrd__getoptions_8F90_source.html#l00018">xrd_getoptions.F90:18</a></div></div>
@@ -671,7 +670,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="amain__rain__ice__old_8F90_html_a759951adb9c6d30eb75ddab53ebf8f39"><div class="ttname"><a href="main__rain__ice__old_8F90.html#a759951adb9c6d30eb75ddab53ebf8f39">main_rain_ice_old</a></div><div class="ttdeci">program main_rain_ice_old</div><div class="ttdef"><b>Definition</b> <a href="main__rain__ice__old_8F90_source.html#l00001">main_rain_ice_old.F90:1</a></div></div>
 <div class="ttc" id="anamespacecompute__diff_html"><div class="ttname"><a href="namespacecompute__diff.html">compute_diff</a></div><div class="ttdef"><b>Definition</b> <a href="compute__diff_8F90_source.html#l00001">compute_diff.F90:1</a></div></div>
 <div class="ttc" id="anamespacegetdata__rain__ice__old__mod_html"><div class="ttname"><a href="namespacegetdata__rain__ice__old__mod.html">getdata_rain_ice_old_mod</a></div><div class="ttdef"><b>Definition</b> <a href="getdata__rain__ice__old__mod_8F90_source.html#l00001">getdata_rain_ice_old_mod.F90:1</a></div></div>
-<div class="ttc" id="anamespacegetdata__rain__ice__old__mod_html_a1eb08fc12d2dad1b794666f2e8a6646b"><div class="ttname"><a href="namespacegetdata__rain__ice__old__mod.html#a1eb08fc12d2dad1b794666f2e8a6646b">getdata_rain_ice_old_mod::getdata_rain_ice_old</a></div><div class="ttdeci">subroutine getdata_rain_ice_old(nproma, ngpblks, nflevg, krr, osedic, ocnd2, lkogan, lmodicedep, owarm, kka, kku, kkl, ksplitr, ptstep, csedim, csubg_aucv_rc, pdzz_b, prhodj_b, prhodref_b, pexnref_b, ppabsm_b, pcit_b, pcit_out_b, pcldfr_b, picldfr_b, pssio_b, pssiu_b, pifr_b, ptht_b, prt_b, pths_b, pths_out_b, prs_b, prs_out_b, psigs_b, psea_b, ptown_b, pcldrop_b, pifnnc_b, zinprc_b, zinprc_out_b, pinprr_b, pinprr_out_b, pevap_b, pevap_out_b, pinprs_b, pinprs_out_b, pinprg_b, pinprg_out_b, pinprh_b, pinprh_out_b, picenu_b, pkgn_acon_b, pkgn_sbgr_b, pfpr_b, pfpr_out_b, odmicro, ldverbose)</div><div class="ttdef"><b>Definition</b> <a href="getdata__rain__ice__old__mod_8F90_source.html#l00010">getdata_rain_ice_old_mod.F90:31</a></div></div>
+<div class="ttc" id="anamespacegetdata__rain__ice__old__mod_html_a1eb08fc12d2dad1b794666f2e8a6646b"><div class="ttname"><a href="namespacegetdata__rain__ice__old__mod.html#a1eb08fc12d2dad1b794666f2e8a6646b">getdata_rain_ice_old_mod::getdata_rain_ice_old</a></div><div class="ttdeci">subroutine getdata_rain_ice_old(nproma, ngpblks, nflevg, krr, osedic, ocnd2, lkogan, lmodicedep, owarm, kka, kku, kkl, ksplitr, ptstep, csedim, csubg_aucv_rc, pdzz_b, prhodj_b, prhodref_b, pexnref_b, ppabsm_b, pcit_b, pcit_out_b, pcldfr_b, picldfr_b, pssio_b, pssiu_b, pifr_b, ptht_b, prt_b, pths_b, pths_out_b, prs_b, prs_out_b, psigs_b, psea_b, ptown_b, pcldrop_b, pifnnc_b, zinprc_b, zinprc_out_b, pinprr_b, pinprr_out_b, pevap_b, pevap_out_b, pinprs_b, pinprs_out_b, pinprg_b, pinprg_out_b, pinprh_b, pinprh_out_b, picenu_b, pkgn_acon_b, pkgn_sbgr_b, pfpr_b, pfpr_out_b, odmicro, ldverbose)</div><div class="ttdef"><b>Definition</b> <a href="getdata__rain__ice__old__mod_8F90_source.html#l00012">getdata_rain_ice_old_mod.F90:33</a></div></div>
 <div class="ttc" id="anamespacemodd__budget_html"><div class="ttname"><a href="namespacemodd__budget.html">modd_budget</a></div><div class="ttdef"><b>Definition</b> <a href="modd__budget_8F90_source.html#l00002">modd_budget.F90:2</a></div></div>
 <div class="ttc" id="anamespacemodd__budget_html_a07dc15edaf8cd68c1036451fc7b536b9"><div class="ttname"><a href="namespacemodd__budget.html#a07dc15edaf8cd68c1036451fc7b536b9">modd_budget::nbudget_rh</a></div><div class="ttdeci">integer, parameter nbudget_rh</div><div class="ttdef"><b>Definition</b> <a href="modd__budget_8F90_source.html#l00057">modd_budget.F90:57</a></div></div>
 <div class="ttc" id="anamespacemodd__budget_html_a1991401753344457bc4ef3bf63aa6c2a"><div class="ttname"><a href="namespacemodd__budget.html#a1991401753344457bc4ef3bf63aa6c2a">modd_budget::lbudget_rh</a></div><div class="ttdeci">logical, pointer lbudget_rh</div><div class="ttdef"><b>Definition</b> <a href="modd__budget_8F90_source.html#l00141">modd_budget.F90:141</a></div></div>
