@@ -172,7 +172,6 @@ REAL, DIMENSION(D%NIT)     :: ZCPH         ! specific heat C_ph
 INTEGER, DIMENSION(D%NIT)  :: ITSTEP       ! fractional convective time step
 INTEGER, DIMENSION(D%NIT)  :: ICOUNT       ! timestep counter
 INTEGER, DIMENSION(D%NIT)  :: ILCL         ! index lifting condens. level
-INTEGER, DIMENSION(D%NIT)  :: IWORK1       ! work array
 REAL, DIMENSION(D%NIT)     :: ZWORK1, ZWORK2, ZWORK3, ZWORK5
 LOGICAL, DIMENSION(D%NIT)  :: GWORK1, GWORK3! work arrays
 LOGICAL, DIMENSION(D%NIT,D%NKT) :: GWORK4    ! work array

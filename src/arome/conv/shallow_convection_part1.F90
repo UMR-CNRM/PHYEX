@@ -8,7 +8,6 @@
                                   PCH1, PCH1TEN, PTHT, PSTHV, PSTHES,  &
                                   KSDPL, KSPBL, KSLCL, PSTHLCL, PSTLCL,&
                                   PSRVLCL, PSWLCL, PSZLCL, PSTHVELCL, OTRIG1)
-    USE PARKIND1, ONLY : JPRB
     USE YOMHOOK , ONLY : LHOOK, JPHOOK, DR_HOOK
 !   ###############################################################################
 !
@@ -171,7 +170,6 @@ LOGICAL            ,INTENT(OUT)    :: OTRIG1(D%NIT)  ! logical mask for convecti
 INTEGER  :: IKB, IKE                ! vertical loop bounds
 INTEGER  :: JI                      ! horizontal loop index
 INTEGER  :: JK                      ! vertical loop index
-INTEGER  :: ICONV
 REAL     :: ZEPS, ZEPSA             ! R_d / R_v, R_v / R_d
 REAL     :: ZRDOCP                  ! R_d/C_p
 !

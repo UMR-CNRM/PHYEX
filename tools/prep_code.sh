@@ -342,6 +342,15 @@ if [ "$pyfortool_opts_env" != "" -o -n "${pyfortool_options-}" ]; then
   fi
 fi
 
+###### Check coding conventions after transformation
+for rep in $PWD/*; do
+  if [ $(basename "${rep}") != 'ext' ]; then
+    set +e
+    $PHYEXTOOLSDIR/check_coding_conventions.sh -v --source ${rep}
+    set -e
+  fi
+done
+
 ###### PUSH
 if [ -n "${branch-}" ]; then
   [ $verbose -gt 0 ] && echo "commit and push"

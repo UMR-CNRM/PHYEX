@@ -142,13 +142,13 @@ REAL, DIMENSION(D%NIT) :: ZEWA, ZEWB ! vapor saturation mixing ratios
 REAL, DIMENSION(D%NIT) :: ZLSA, ZLSB  ! latent heat L_s
 REAL, DIMENSION(D%NIT) :: ZDP      ! pressure between LCL and model layer
 REAL, DIMENSION(D%NIT) :: ZTOP,ZTOPP     ! estimated cloud top (m)
-REAL, DIMENSION(D%NIT) :: ZWORK1, ZWORK2, ZWORK3    ! work arrays
+REAL, DIMENSION(D%NIT) :: ZWORK3    ! work arrays
 LOGICAL, DIMENSION(D%NIT) :: GTRIG2          ! local arrays for OTRIG
 LOGICAL, DIMENSION(D%NIT) :: GWORK1                 ! work array
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
-REAL, DIMENSION(D%NIT,D%NKT) :: ZZZX1, ZZPPRES,ZZPTH,ZZPRV,ZZPTHESINV,ZZPZ
+REAL, DIMENSION(D%NIT,D%NKT) :: ZZZX1, ZZPPRES,ZZPTH,ZZPRV
 REAL, DIMENSION(D%NIT)       :: ZWLCLSQRENT
 INTEGER  :: JLSTEP,JLSIZE,JLSTART
 INTEGER  :: JLCLMIN   !!MIN value of LCL on all grid points, used to remove

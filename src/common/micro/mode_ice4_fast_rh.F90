@@ -148,11 +148,11 @@ DO JL = 1, KSIZE
 ENDDO
 !$acc end kernels
 IF(.NOT. LDSOFT) THEN
-   CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH(:), PLBDAS(:), ICEP%NWETLBDAH, ICEP%NWETLBDAS, &
+   CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH, PLBDAS, ICEP%NWETLBDAH, ICEP%NWETLBDAS, &
                        &ICEP%XWETINTP1H, ICEP%XWETINTP2H, ICEP%XWETINTP1S, ICEP%XWETINTP2S, &
-                       &PARAMI%LPACK_INTERP, GWET(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                       &PARAMI%LPACK_INTERP, GWET, IBUF1, IBUF2, IBUF3, ZBUF1, ZBUF2, ZBUF3, &
                        &IGWET, &
-                       &ICEP%XKER_SWETH(:,:), ZZW(:))
+                       &ICEP%XKER_SWETH, ZZW)
   IF(IGWET>0)THEN
 !$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
@@ -198,11 +198,11 @@ DO JL = 1, KSIZE
 ENDDO
 !$acc end kernels
 IF(.NOT. LDSOFT) THEN
-  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH(:), PLBDAG(:), ICEP%NWETLBDAH, ICEP%NWETLBDAG, &
+  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH, PLBDAG, ICEP%NWETLBDAH, ICEP%NWETLBDAG, &
                        &ICEP%XWETINTP1H, ICEP%XWETINTP2H, ICEP%XWETINTP1G, ICEP%XWETINTP2G, &
-                       &PARAMI%LPACK_INTERP, GWET(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                       &PARAMI%LPACK_INTERP, GWET, IBUF1, IBUF2, IBUF3, ZBUF1, ZBUF2, ZBUF3, &
                        &IGWET, &
-                       &ICEP%XKER_GWETH(:,:), ZZW(:))
+                       &ICEP%XKER_GWETH, ZZW)
   IF(IGWET>0)THEN
 !$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
@@ -238,11 +238,11 @@ DO JL = 1, KSIZE
 ENDDO
 !$acc end kernels
 IF(.NOT. LDSOFT) THEN
-  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH(:), PLBDAR(:), ICEP%NWETLBDAH, ICEP%NWETLBDAR, &
+  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH, PLBDAR, ICEP%NWETLBDAH, ICEP%NWETLBDAR, &
                        &ICEP%XWETINTP1H, ICEP%XWETINTP2H, ICEP%XWETINTP1R, ICEP%XWETINTP2R, &
-                       &PARAMI%LPACK_INTERP, GWET(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                       &PARAMI%LPACK_INTERP, GWET, IBUF1, IBUF2, IBUF3, ZBUF1, ZBUF2, ZBUF3, &
                        &IGWET, &
-                       &ICEP%XKER_RWETH(:,:), ZZW(:))
+                       &ICEP%XKER_RWETH, ZZW)
   IF(IGWET>0)THEN
 !$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)

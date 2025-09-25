@@ -195,11 +195,11 @@ ENDDO
 !$acc end kernels
 
 IF(.NOT. LDSOFT) THEN
-  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAG(:), PLBDAS(:), ICEP%NDRYLBDAG, ICEP%NDRYLBDAS, &
+  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAG, PLBDAS, ICEP%NDRYLBDAG, ICEP%NDRYLBDAS, &
                        &ICEP%XDRYINTP1G, ICEP%XDRYINTP2G, ICEP%XDRYINTP1S, ICEP%XDRYINTP2S, &
-                       &PARAMI%LPACK_INTERP, GDRY(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                       &PARAMI%LPACK_INTERP, GDRY, IBUF1, IBUF2, IBUF3, ZBUF1, ZBUF2, ZBUF3, &
                        &IGDRY, &
-                       &ICEP%XKER_SDRYG(:,:), ZZW(:))
+                       &ICEP%XKER_SDRYG, ZZW)
   IF(IGDRY>0)THEN
 !$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
@@ -251,11 +251,11 @@ ENDDO
 !$acc end kernels
 IF(.NOT. LDSOFT) THEN
   !
-  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAG(:), PLBDAR(:), ICEP%NDRYLBDAG, ICEP%NDRYLBDAR, &
+  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAG, PLBDAR, ICEP%NDRYLBDAG, ICEP%NDRYLBDAR, &
                        &ICEP%XDRYINTP1G, ICEP%XDRYINTP2G, ICEP%XDRYINTP1R, ICEP%XDRYINTP2R, &
-                       &PARAMI%LPACK_INTERP, GDRY(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                       &PARAMI%LPACK_INTERP, GDRY, IBUF1, IBUF2, IBUF3, ZBUF1, ZBUF2, ZBUF3, &
                        &IGDRY, &
-                       &ICEP%XKER_RDRYG(:,:), ZZW(:))
+                       &ICEP%XKER_RDRYG, ZZW)
   IF(IGDRY>0) THEN
 !$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)

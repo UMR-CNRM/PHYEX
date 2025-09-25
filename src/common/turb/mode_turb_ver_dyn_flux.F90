@@ -941,7 +941,7 @@ IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. TURBN%CTURBDIM == '1DIM') THEN
     NDIMS      = 3,              &
     LTIMEDEP   = .TRUE.          )
 !$acc update self(ZFLXZ)
-  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ(:,:))
+  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
 END IF
 !
 !----------------------------------------------------------------------------

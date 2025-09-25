@@ -166,9 +166,9 @@ ENDDO
 ! Collection of cloud droplets by snow: this rate is used for riming (T<0) and for conversion/melting (T>0)
 IF(.NOT. LDSOFT) THEN
   CALL INTERP_MICRO_1D(KPROMA, KSIZE, ZZW, ICEP%NGAMINC, ICEP%XRIMINTP1, ICEP%XRIMINTP2, &
-                           PARAMI%LPACK_INTERP, GRIM(:), IBUF1, IBUF2, ZBUF1, ZBUF2, &
+                           PARAMI%LPACK_INTERP, GRIM, IBUF1, IBUF2, ZBUF1, ZBUF2, &
                            IGRIM, &
-                           ICEP%XGAMINC_RIM1(:), ZZW1(:), ICEP%XGAMINC_RIM2(:), ZZW2(:), ICEP%XGAMINC_RIM4(:), ZZW3(:))
+                           ICEP%XGAMINC_RIM1, ZZW1, ICEP%XGAMINC_RIM2, ZZW2, ICEP%XGAMINC_RIM4, ZZW3)
   IF(IGRIM>0) THEN
     !
     !        5.1.4  riming of the small sized aggregates
@@ -297,9 +297,9 @@ IF(.NOT. LDSOFT) THEN
 !$acc end kernels
   CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAS, PLBDAR, ICEP%NACCLBDAS, ICEP%NACCLBDAR, &
                       &ICEP%XACCINTP1S, ICEP%XACCINTP2S, ICEP%XACCINTP1R, ICEP%XACCINTP2R,&
-                      &PARAMI%LPACK_INTERP, GACC(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                      &PARAMI%LPACK_INTERP, GACC, IBUF1, IBUF2, IBUF3, ZBUF1, ZBUF2, ZBUF3, &
                       &IGACC, &
-                      &ICEP%XKER_RACCSS(:,:), ZZW1(:), ICEP%XKER_RACCS(:,:), ZZW2(:), ICEP%XKER_SACCRG(:,:), ZZW3(:))
+                      &ICEP%XKER_RACCSS, ZZW1, ICEP%XKER_RACCS, ZZW2, ICEP%XKER_SACCRG, ZZW3)
   IF(IGACC>0)THEN
     !        5.2.4  raindrop accretion on the small sized aggregates
     !
