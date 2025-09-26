@@ -17,6 +17,7 @@ SUBROUTINE GETDATA_SHALLOW (NPROMA, NGPBLKS, NFLEVG, KRR, KRRL, KRRI, KSV, KLEV,
                         &PRI_UP_B, &
                         &PU_UP_B, &
                         &PV_UP_B, PTHV_UP_B, PW_UP_B, PFRAC_UP_B, PEMF_B, &
+                        &PTAUFUNC_B, &
                         !OUT (allocation)
                         &PDUDT_MF_B, &
                         &PDVDT_MF_B,PDTHLDT_MF_B,PDRTDT_MF_B,PDSVDT_MF_B,PSIGMF_B,PRC_MF_B,PRI_MF_B,PCF_MF_B, &
@@ -71,6 +72,7 @@ REAL, INTENT(OUT), ALLOCATABLE   :: PTHV_UP_B     (:,:,:)
 REAL, INTENT(OUT), ALLOCATABLE   :: PW_UP_B       (:,:,:)
 REAL, INTENT(OUT), ALLOCATABLE   :: PFRAC_UP_B    (:,:,:)
 REAL, INTENT(OUT), ALLOCATABLE   :: PEMF_B        (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PTAUFUNC_B    (:,:,:)
 
 !OUT
 REAL, INTENT(OUT), ALLOCATABLE   :: PDUDT_MF_B    (:,:,:)
@@ -239,6 +241,7 @@ ALLOCATE (PTHV_UP_B         (NPROMA,NFLEVG,NGPBLKS))
 ALLOCATE (PW_UP_B           (NPROMA,NFLEVG,NGPBLKS))
 ALLOCATE (PFRAC_UP_B        (NPROMA,NFLEVG,NGPBLKS))
 ALLOCATE (PEMF_B            (NPROMA,NFLEVG,NGPBLKS))
+ALLOCATE (PTAUFUNC_B        (NPROMA,NFLEVG,NGPBLKS))
 
 ALLOCATE (PDUDT_MF_B        (NPROMA,NFLEVG,NGPBLKS))
 ALLOCATE (PDVDT_MF_B        (NPROMA,NFLEVG,NGPBLKS))

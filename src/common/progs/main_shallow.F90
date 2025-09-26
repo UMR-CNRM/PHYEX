@@ -48,6 +48,7 @@ REAL, ALLOCATABLE   :: PTHV_UP        (:,:,:)
 REAL, ALLOCATABLE   :: PW_UP          (:,:,:)
 REAL, ALLOCATABLE   :: PFRAC_UP       (:,:,:)
 REAL, ALLOCATABLE   :: PEMF           (:,:,:)
+REAL, ALLOCATABLE   :: PTAUFUNC       (:,:,:)
 
 !OUT
 REAL, ALLOCATABLE   :: PDUDT_MF       (:,:,:)
@@ -173,7 +174,7 @@ CALL GETDATA_SHALLOW (NPROMA, NGPBLKS, NFLEVG, KRR, KRRL, KRRI, KSV, KLEV, &
                   &PRT_UP, PRV_UP, PRC_UP, &
                   &PRI_UP, &
                   &PU_UP, &
-                  &PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF, &
+                  &PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF, PTAUFUNC,&
                   !OUT only (needed to allocate the array to be passed to the subroutine)
                   &PDUDT_MF, &
                   &PDVDT_MF,PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,PSIGMF,PRC_MF,PRI_MF,PCF_MF, &
@@ -251,7 +252,7 @@ DO ITIME = 1, NTIME
 !$acc data &
 !$acc      & copyin  (D0, &
 !$acc      &          PDZZF, PZZ, PRHODJ, PRHODREF, PPABSM, PEXNM, PSFTH, PSFRV, PTHM, PRM, PUM, PVM, &
-!$acc      &          PTKEM, PSVM) & 
+!$acc      &          PTKEM, PSVM, PTAUFUNC) & 
 !$acc      & copy    (PTHL_UP, PRT_UP, PRV_UP, PRC_UP, PRI_UP, PU_UP, PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF) &
 !$acc      & copyout (PDUDT_MF, PDVDT_MF, PDTHLDT_MF, PDRTDT_MF, PDSVDT_MF, PSIGMF, PRC_MF, PRI_MF, PCF_MF, &
 !$acc      &          PFLXZTHVMF, ZFLXZTHMF, ZFLXZRMF, ZFLXZUMF, ZFLXZVMF, ZDETR, ZENTR, IKLCL, IKETL, IKCTL, &
@@ -323,7 +324,7 @@ DO ITIME = 1, NTIME
        &PFLXZTKEMF=PFLXZTKEMF(:,:,IBL),PTHL_UP=PTHL_UP(:,:,IBL),PRT_UP=PRT_UP(:,:,IBL),PRV_UP=PRV_UP(:,:,IBL),&
        &PRC_UP=PRC_UP(:,:,IBL),PRI_UP=PRI_UP(:,:,IBL),            &
        &PU_UP=PU_UP(:,:,IBL), PV_UP=PV_UP(:,:,IBL), PTKE_UP=PTKE_UP(:,:,IBL),PTHV_UP=PTHV_UP(:,:,IBL), PW_UP=PW_UP(:,:,IBL),                        &
-       &PFRAC_UP=PFRAC_UP(:,:,IBL),PEMF=PEMF(:,:,IBL),PDETR=ZDETR(:,:,IBL),PENTR=ZENTR(:,:,IBL),                           &
+       &PFRAC_UP=PFRAC_UP(:,:,IBL),PEMF=PEMF(:,:,IBL),PTAUFUNC=PTAUFUNC(:,:,IBL),PDETR=ZDETR(:,:,IBL),PENTR=ZENTR(:,:,IBL),                           &
        &KKLCL=IKLCL(:,IBL),KKETL=IKETL(:,IBL),KKCTL=IKCTL(:,IBL),PDX=MISC%PDX,PDY=MISC%PDY,KBUDGETS=MISC%NBUDGET &
 #ifdef USE_STACK
        & , YDSTACK=YLSTACK &

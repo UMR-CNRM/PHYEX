@@ -11,11 +11,11 @@ CONTAINS
 !     ######spl
       SUBROUTINE COMPUTE_MF_CLOUD_STAT(D, CST, TURBN, PARAMMF, &
                             &KRR, KRRL, KRRI, OSTATNW,     &
-                            &PFRAC_ICE,&
+                            &OTAUCONV, PFRAC_ICE,&
                             &PTHLM, PRTM, PPABSM, PRM,&
                             &PDZZ, PTHM, PEXNM, &
                             &PEMF, PTHL_UP, PRT_UP,&
-                            &PSIGMF)
+                            &PSIGMF, PTAUFUNC)
 !$ACDC singlecolumn --dummy
 
 !     #################################################################
@@ -76,7 +76,8 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
-LOGICAL,                INTENT(IN)   :: OSTATNW      ! cloud scheme inclues convect. covar. contrib
+LOGICAL,                INTENT(IN)   :: OSTATNW      ! updated cloud scheme also including convect. covar. contrib
+LOGICAL,                INTENT(IN)   :: OTAUCONV     ! new convection time scale
 INTEGER,                INTENT(IN)   :: KRR                     ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL                    ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI                    ! number of ice water var.
@@ -88,6 +89,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PDZZ
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHM                    ! environement
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PEXNM
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PEMF                    ! updraft characteritics
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTAUFUNC                ! profile convection time scale
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHL_UP, PRT_UP         ! rc,w,Mass Flux,Thetal,rt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PSIGMF                  ! SQRT(variance) for statistical cloud scheme
 !
@@ -115,6 +117,9 @@ IKT=D%NKT
 !
 !*      1. COMPUTE SIGMA_MF (saturation deviation variance)
 !          Soares et al (2004) formulation
+!          Several updates see https://doi.org/10.5194/gmd-15-1513-2022 plus
+!          a new convection time scale consistent with the convection
+!          scheme and based on https://journals.ametsoc.org/view/journals/atsc/57/10/1520-0469_2000_057_1585_abmfar_2.0.co_2.pdf
 !          ------------------------------------------------
 !
 ! Thermodynamics functions
@@ -131,10 +136,17 @@ IF (KRRL > 0)  THEN
     CALL MZM_MF(D, PTHLM, ZFLXZ)
     CALL GZ_M_W_MF(D, PTHLM, PDZZ, ZWK)
     IF (OSTATNW) THEN
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZFLXZ(IIJB:IIJE,1:IKT) = -2 * TURBN%XCTV* PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
-                           & (PTHL_UP(IIJB:IIJE,1:IKT)-ZFLXZ(IIJB:IIJE,1:IKT)) * ZWK(IIJB:IIJE,1:IKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      IF (OTAUCONV) THEN
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZFLXZ(IIJB:IIJE, 1:IKT) = -2 * PTAUFUNC(IIJB:IIJE, 1:IKT) * PEMF(IIJB:IIJE, 1:IKT)* &
+                             & (PTHL_UP(IIJB:IIJE, 1:IKT)-ZFLXZ(IIJB:IIJE, 1:IKT)) * ZWK(IIJB:IIJE, 1:IKT)
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ELSE
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZFLXZ(IIJB:IIJE,1:IKT) = -2 * TURBN%XCTV* PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
+                             & (PTHL_UP(IIJB:IIJE,1:IKT)-ZFLXZ(IIJB:IIJE,1:IKT)) * ZWK(IIJB:IIJE,1:IKT)
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ENDIF
     ELSE
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZFLXZ(IIJB:IIJE,1:IKT) = -2 * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
@@ -163,10 +175,17 @@ IF (KRRL > 0)  THEN
     CALL MZM_MF(D, PRTM, ZFLXZ2)
     CALL GZ_M_W_MF(D, PRTM, PDZZ, ZWK2)
     IF (OSTATNW) THEN
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZFLXZ2(IIJB:IIJE,1:IKT) = -2 * TURBN%XCTV * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
-                           & (PRT_UP(IIJB:IIJE,1:IKT)-ZFLXZ2(IIJB:IIJE,1:IKT)) * ZWK2(IIJB:IIJE,1:IKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      IF (OTAUCONV) THEN
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZFLXZ2(IIJB:IIJE, 1:IKT) = -2 * PTAUFUNC(IIJB:IIJE, 1:IKT) * PEMF(IIJB:IIJE, 1:IKT)* &
+                             & (PRT_UP(IIJB:IIJE, 1:IKT)-ZFLXZ2(IIJB:IIJE, 1:IKT)) * ZWK2(IIJB:IIJE, 1:IKT)
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ELSE
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZFLXZ2(IIJB:IIJE,1:IKT) = -2 * TURBN%XCTV * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
+                             & (PRT_UP(IIJB:IIJE,1:IKT)-ZFLXZ2(IIJB:IIJE,1:IKT)) * ZWK2(IIJB:IIJE,1:IKT)
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ENDIF
     ELSE
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZFLXZ2(IIJB:IIJE,1:IKT) = -2 * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
@@ -187,13 +206,23 @@ IF (KRRL > 0)  THEN
       !wc Now including convection covariance contribution in case of OSTATNW=TRUE
       !
       !       1.2.2 contribution from <Rnp Thl>
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZFLXZ3(IIJB:IIJE,1:IKT) = - TURBN%XCTV * PARAMMF%XTAUSIGMF * &
-                    (PEMF(IIJB:IIJE,1:IKT)*(PRT_UP(IIJB:IIJE,1:IKT)-ZFLXZ2(IIJB:IIJE,1:IKT)) * &
-                                   ZWK(IIJB:IIJE,1:IKT) + &
-                                   PEMF(IIJB:IIJE,1:IKT)*(PTHL_UP(IIJB:IIJE,1:IKT)-ZFLXZ(IIJB:IIJE,1:IKT)) * &
-                                   ZWK2(IIJB:IIJE,1:IKT))
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      IF (OTAUCONV) THEN
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZFLXZ3(IIJB:IIJE, 1:IKT) = - PTAUFUNC(IIJB:IIJE, 1:IKT) * &
+                       (PEMF(IIJB:IIJE, 1:IKT)*(PRT_UP(IIJB:IIJE, 1:IKT)-ZFLXZ2(IIJB:IIJE, 1:IKT)) * &
+                                      ZWK(IIJB:IIJE, 1:IKT) + &
+                                      PEMF(IIJB:IIJE, 1:IKT)*(PTHL_UP(IIJB:IIJE, 1:IKT)-ZFLXZ(IIJB:IIJE, 1:IKT)) * &
+                                      ZWK2(IIJB:IIJE, 1:IKT))
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ELSE
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZFLXZ3(IIJB:IIJE,1:IKT) = - TURBN%XCTV * PARAMMF%XTAUSIGMF * &
+                      (PEMF(IIJB:IIJE,1:IKT)*(PRT_UP(IIJB:IIJE,1:IKT)-ZFLXZ2(IIJB:IIJE,1:IKT)) * &
+                                     ZWK(IIJB:IIJE,1:IKT) + &
+                                     PEMF(IIJB:IIJE,1:IKT)*(PTHL_UP(IIJB:IIJE,1:IKT)-ZFLXZ(IIJB:IIJE,1:IKT)) * &
+                                     ZWK2(IIJB:IIJE,1:IKT))
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ENDIF
       CALL MZF_MF(D, ZFLXZ3, ZFLXZ)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       PSIGMF(IIJB:IIJE,1:IKT) = PSIGMF(IIJB:IIJE,1:IKT) - &
