@@ -656,7 +656,11 @@ IF ( LIMAP%NMOM_C.GE.2) THEN
    ZCCT(:,:)   = PSVS(:,:,ISV_LIMA_NC) * PTSTEP
    ZCCS(:,:)   = PSVS(:,:,ISV_LIMA_NC)
 ELSE
-   ZCCT(:,:)   = 100.E6 / PRHODREF(:,:)
+   IF (LIMAP%LICE3) THEN
+      ZCCT(:,:)   = 300.E6 / PRHODREF(:,:)   
+   ELSE
+      ZCCT(:,:)   = 100.E6 / PRHODREF(:,:)
+   END IF
    ZCCS(:,:)   = ZCCT(:,:) / PTSTEP
 END IF
 IF ( LIMAP%NMOM_I.GE.2) THEN
