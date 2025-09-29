@@ -96,23 +96,17 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN), OPTIONAL :: PLBDAI_SHAPE ! lambda for
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: IK, IL, IN                     ! Loop index
+INTEGER :: IK, IL, IN, JK, JIJ            ! Loop index
 INTEGER :: ISEDIM                         ! Case number of sedimentation
 !
-LOGICAL, DIMENSION(D%NIJT, D%NKT) :: GSEDIM      ! Test where to compute the SED processes
+LOGICAL :: GSEDIM      ! Test where to compute the SED processes
 REAL,    DIMENSION(D%NIJT, D%NKT) :: ZW,       & ! Work array
                                      ZWDT        ! Temperature change
 REAL,    DIMENSION(D%NIJT,0:D%NKT+1) &
                            :: ZWSEDR,   & ! Sedimentation of MMR
                               ZWSEDC      ! Sedimentation of number conc.
 !
-REAL, DIMENSION(:), ALLOCATABLE         &
-                           :: ZRS,      & ! m.r. source
-                              ZCS,      & ! conc. source
-                              ZRHODREF, & ! RHO Dry REFerence
-                              ZPABST,   & ! Pressure
-                              ZT,       & ! Temperature
-                              ZZW,      & ! Work array
+REAL                       :: ZZW,      & ! Work array
                               ZZX,      & ! Work array
                               ZZY,      & ! Work array
                               ZLBDA,    & ! Slope parameter
@@ -120,15 +114,12 @@ REAL, DIMENSION(:), ALLOCATABLE         &
 !
 INTEGER , DIMENSION(D%NIJT*D%NKT) :: I1,I3 ! Indexes for PACK replacement
 !
-REAL    :: ZTSPLITG                       ! Small time step for rain sedimentation
 REAL    :: ZC                             ! Cpl or Cpi
 INTEGER :: IMOMENTS
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 ! Variables for cloud electricity
-REAL :: ZCX, ZXX  ! C and x parameters for N-lambda relationship
-REAL, DIMENSION(:),     ALLOCATABLE :: ZQS, &    ! Electric charge density source
-                                       ZZQ, &    ! Work array
+REAL                                :: ZZQ, &    ! Work array
                                        ZES       ! e in q-D relationship
 REAL, DIMENSION(MERGE(D%NIJT, 0, OELEC), &
                &MERGE(D%NKT, 0, OELEC)) :: ZWSEDQ, &   ! Sedimentation of electric charge density
@@ -139,216 +130,207 @@ TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
 TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 REAL, DIMENSION(D%NIJT, D%NKT):: ZBEARDCOEFF ! effect of electrical forces on terminal fall speed
 !
+REAL, DIMENSION(D%NIJT)       :: ZMAX_TSTEP1D ! Maximum CFL in column
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZMAX_TSTEP2D ! Maximum CFL in column
+REAL, DIMENSION(D%NIJT)       :: ZREMAINT   ! Remaining time until the timestep end
+LOGICAL :: ZANYREMAINT
+REAL                            :: ZINVTSTEP
+REAL                            :: ZMRCHANGE
+REAL                            :: ZCCHANGE
+REAL                            :: ZQCHANGE
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('LIMA_SEDIMENTATION', 0, ZHOOK_HANDLE)
+!
+ZINVTSTEP=1./PTSTEP
 IMOMENTS=KMOMENTS
-!
-! Time splitting
-!
-ZTSPLITG= PTSTEP / REAL(LIMAP%NSPLITSED(KID))
-!
-ZWDT(:,:)=0.
 PINPR(:) = 0.
-PFPR(:,:) = 0.
-ZWSEDR(:,:) = 0.
-ZWSEDC(:,:) = 0.
-!
 PRS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:) * PTSTEP
 IF (KMOMENTS==2) PCS(D%NIJB:D%NIJE,:) = PCS(D%NIJB:D%NIJE,:) * PTSTEP
 IF (OELEC)       PQS(D%NIJB:D%NIJE,:) = PQS(D%NIJB:D%NIJE,:) * PTSTEP
 DO IK = D%NKTB , D%NKTE
-   ZW(D%NIJB:D%NIJE,IK)=ZTSPLITG/PDZZ(D%NIJB:D%NIJE,IK)
+   ZW(D%NIJB:D%NIJE,IK)=1./(PDZZ(D%NIJB:D%NIJE,IK)*PRHODREF(D%NIJB:D%NIJE,IK))
 END DO
-!
 IF (HPHASE=='L') ZC=CST%XCL
 IF (HPHASE=='I') ZC=CST%XCI
 !
+! Time splitting
+!
+ZREMAINT(:) = 0.
+ZREMAINT(:) = PTSTEP
+ZANYREMAINT = .TRUE.
+DO WHILE (ZANYREMAINT)
+!
+   ZWDT(:,:)=0.
+   PFPR(:,:) = 0.
+   ZWSEDR(:,:) = 0.
+   ZWSEDC(:,:) = 0.
+   ZWSEDQ(:,:) = 0.
+   ZLBDA3(:,:) = 0.
+   !
+      
+   DO JK = D%NKTB,D%NKTE
+      DO JIJ = D%NIJB,D%NIJE
+!
 ! When pristine ice is 1-moment, nb concentration is parameterized following 
 ! McFarquhar and Heymsfield (1997) for columns as in ICE3
-IF (KID==4 .AND. IMOMENTS==1) THEN
-   IMOMENTS=2
-   WHERE(PRS(D%NIJB:D%NIJE,:)>0) PCS(D%NIJB:D%NIJE,:)=1/(4*CST%XPI*900.) * PRS(D%NIJB:D%NIJE,:) * &
-        MAX(0.05E6,-0.15319E6-0.021454E6*LOG(PRHODREF(D%NIJB:D%NIJE,:)*PRS(D%NIJB:D%NIJE,:)))**3
-END IF
+         IF (KID==4 .AND. IMOMENTS==1) THEN
+            IMOMENTS=2
+            IF (PRS(JIJ,JK)>LIMAP%XRTMIN(KID) .AND. ZREMAINT(JIJ)>0.) PCS(JIJ,JK)=1/(4*CST%XPI*900.) * PRS(JIJ,JK) * &
+                 MAX(0.05E6,-0.15319E6-0.021454E6*LOG(PRHODREF(JIJ,JK)*PRS(JIJ,JK)))**3
+         END IF
 !
 ! ################################
 ! Compute the sedimentation fluxes
 ! ################################
 !
-DO IN = 1 ,  LIMAP%NSPLITSED(KID)
-  ! Computation only where enough ice, snow, graupel or hail
-   GSEDIM(:,:) = .FALSE.
-   GSEDIM(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = PRS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>LIMAP%XRTMIN(KID)
-   IF (IMOMENTS==2)  GSEDIM(D%NIJB:D%NIJE,:) = GSEDIM(D%NIJB:D%NIJE,:) .AND. PCS(D%NIJB:D%NIJE,:)>LIMAP%XCTMIN(KID)
-   ISEDIM = COUNTJV( GSEDIM(:,:),I1(:),I3(:))
+         GSEDIM = PRS(JIJ,JK)>LIMAP%XRTMIN(KID) .AND. ZREMAINT(JIJ)>0.
+         IF (IMOMENTS==2)  GSEDIM = GSEDIM .AND. PCS(JIJ,JK)>LIMAP%XCTMIN(KID)
 !
-   IF( ISEDIM >= 1 ) THEN
+         IF( GSEDIM ) THEN
 !
-      ALLOCATE(ZRHODREF(ISEDIM))
-      ALLOCATE(ZPABST(ISEDIM))
-      ALLOCATE(ZT(ISEDIM))
-      ALLOCATE(ZRS(ISEDIM))
-      ALLOCATE(ZCS(ISEDIM))
-      ALLOCATE(ZLBDA(ISEDIM)) ; ZLBDA(:) = 1.E10
-      ALLOCATE(ZCC(ISEDIM))   ; ZCC(:) = 1.0
-      ALLOCATE(ZZW(ISEDIM))   ; ZZW(:) = 0.0
-      ALLOCATE(ZZX(ISEDIM))   ; ZZX(:) = 0.0
-      ALLOCATE(ZZY(ISEDIM))   ; ZZY(:) = 0.0
-      !
-      IF (OELEC) THEN
-        ZWSEDQ(:,:) = 0.
-        ALLOCATE(ZES(ISEDIM)) ; ZES(:) = 0.0
-        ALLOCATE(ZQS(ISEDIM)) ; ZQS(:) = 0.0
-        ALLOCATE(ZZQ(ISEDIM)) ; ZZQ(:) = 0.0
-      END IF      
-!
-      DO IL = 1,ISEDIM
-         ZRHODREF(IL) = PRHODREF(I1(IL),I3(IL))
-         ZPABST(IL) = PPABST(I1(IL),I3(IL))
-         ZT(IL) = PT(I1(IL),I3(IL))
-         ZRS(IL) = PRS(I1(IL),I3(IL))
-         IF (IMOMENTS==2) ZCS(IL) = PCS(I1(IL),I3(IL))
-         IF (OELEC)       ZQS(IL) = PQS(I1(IL),I3(IL))
-         IF (LIMAP%LCRYSTAL_SHAPE .AND. IMOMENTS == 2 .AND. KID == 4) &
-           ZLBDA(IL) = PLBDAI_SHAPE(I1(IL),I3(IL))
-      END DO
-!
+            ZLBDA = 1.E10
+            ZCC = 1.0
+            ZZW = 0.0
+            ZZX = 0.0
+            ZZY = 0.0
+            IF (OELEC) THEN
+               ZES = 0.0
+               ZZQ = 0.0
+            END IF
 ! Compute lambda
-      IF (KID == 5 .AND. LIMAP%NMOM_S.EQ.1 .AND. LIMAP%LSNOW_T) THEN
-         ZLBDA(:) = 1.E10
-         WHERE(ZT(:)>263.15 .AND. ZRS(:)>LIMAP%XRTMIN(5))
-            ZLBDA(:) = MAX(MIN(LIMAC%XLBDAS_MAX, 10**(14.554-0.0423*ZT(:))),LIMAC%XLBDAS_MIN)
-         END WHERE
-         WHERE(ZT(:)<=263.15 .AND. ZRS(:)>LIMAP%XRTMIN(5))
-            ZLBDA(:) = MAX(MIN(LIMAC%XLBDAS_MAX, 10**(6.226-0.0106*ZT(:))),LIMAC%XLBDAS_MIN)
-         END WHERE
-         ZLBDA(:) = ZLBDA(:)*LIMAC%XTRANS_MP_GAMMAS
-         ZZW(:) = LIMAP%XFSEDR(KID) * ZRHODREF(:)**(1.-LIMAP%XCEXVT)*ZRS(:)* &
-              (1 + (LIMAC%XFVELOS/ZLBDA(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS-(LIMAP%XD(KID)+LIMAC%XBS)/LIMAP%XALPHAS) &
-              * ZLBDA(:)**(-LIMAP%XD(KID))
-      ELSE IF (KID == 4 .AND. IMOMENTS==2 .AND. LIMAP%LCRYSTAL_SHAPE) THEN
-         ZZY(:) = ZRHODREF(:)**(-LIMAP%XCEXVT) * ZLBDA(:)**(-LIMAC%XDI_SHAPE(KISHAPE))
-         ZZW(:) = LIMAC%XFSEDRI_SHAPE(KISHAPE) * ZRS(:) * ZZY(:) * ZRHODREF(:)
-         ZZX(:) = LIMAC%XFSEDCI_SHAPE(KISHAPE) * ZCS(:) * ZZY(:) * ZRHODREF(:)
-      ELSE
-         IF (IMOMENTS==1) ZLBDA(:) = LIMAP%XLB(KID) * ( ZRHODREF(:) * ZRS(:) )**LIMAP%XLBEX(KID)
-         IF (IMOMENTS==2) ZLBDA(:) = ( LIMAP%XLB(KID)*ZCS(:) / ZRS(:) )**LIMAP%XLBEX(KID)
-         ZZY(:) = ZRHODREF(:)**(-LIMAP%XCEXVT) * ZLBDA(:)**(-LIMAP%XD(KID))
-         IF (LIMAP%LSNOW_T .AND. KID==5) &
-              ZZY(:) = ZZY(:) * (1 + (LIMAC%XFVELOS/ZLBDA(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS-(LIMAP%XD(KID)+LIMAC%XBS)/LIMAP%XALPHAS)
-         ZZW(:) = LIMAP%XFSEDR(KID) * ZRS(:) * ZZY(:) * ZRHODREF(:)
-      END IF ! Wurtz
-!
-      IF (KMOMENTS==2 .AND. .NOT.(LIMAP%LCRYSTAL_SHAPE .AND. KID==4)) &
-         ZZX(:) = LIMAP%XFSEDC(KID) * ZCS(:) * ZZY(:) * ZRHODREF(:)
-
-      IF (KID==2) THEN
-         ! mean cloud droplet diameter
-         ZCC(:) = LIMAW%XGCC/ZLBDA(:)
-         ! correction factor for cloud droplet terminal fall speed
-         ZCC(:) = 1.+1.26*6.6E-8*(101325./ZPABST(:))*(ZT(:)/293.15)/ZCC(:)
-         ZZW(:) = ZCC(:) * ZZW(:)
-         ZZX(:) = ZCC(:) * ZZX(:)
-      END IF
+            IF (KID == 5 .AND. LIMAP%NMOM_S.EQ.1 .AND. LIMAP%LSNOW_T) THEN
+               ZLBDA= 1.E10
+               IF (PT(JIJ,JK)>263.15 .AND. PRS(JIJ,JK)>LIMAP%XRTMIN(5)) THEN
+                  ZLBDA = MAX(MIN(LIMAC%XLBDAS_MAX, 10**(14.554-0.0423*PT(JIJ,JK))),LIMAC%XLBDAS_MIN)
+               ELSE IF(PT(JIJ,JK)<=263.15 .AND. PRS(JIJ,JK)>LIMAP%XRTMIN(5)) THEN
+                  ZLBDA = MAX(MIN(LIMAC%XLBDAS_MAX, 10**(6.226-0.0106*PT(JIJ,JK))),LIMAC%XLBDAS_MIN)
+               END IF
+               ZLBDA = ZLBDA*LIMAC%XTRANS_MP_GAMMAS
+               ZWSEDR(JIJ,JK) = LIMAP%XFSEDR(KID) * PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT)*PRS(JIJ,JK)* &
+                    (1 + (LIMAC%XFVELOS/ZLBDA)**LIMAP%XALPHAS)**(-LIMAP%XNUS-(LIMAP%XD(KID)+LIMAC%XBS)/LIMAP%XALPHAS) &
+                    * ZLBDA**(-LIMAP%XD(KID))
+            ELSE IF (KID == 4 .AND. IMOMENTS==2 .AND. LIMAP%LCRYSTAL_SHAPE) THEN
+               ZZY = PRHODREF(JIJ,JK)**(-LIMAP%XCEXVT) * ZLBDA**(-LIMAC%XDI_SHAPE(KISHAPE))
+               ZWSEDR(JIJ,JK) = LIMAC%XFSEDRI_SHAPE(KISHAPE) * PRS(JIJ,JK) * ZZY * PRHODREF(JIJ,JK)
+               ZWSEDC(JIJ,JK) = LIMAC%XFSEDCI_SHAPE(KISHAPE) * PCS(JIJ,JK) * ZZY * PRHODREF(JIJ,JK)
+               ZLBDA = PLBDAI_SHAPE(JIJ,JK)
+            ELSE
+               IF (IMOMENTS==1) ZLBDA = LIMAP%XLB(KID) * ( PRHODREF(JIJ,JK) * PRS(JIJ,JK) )**LIMAP%XLBEX(KID)
+               IF (IMOMENTS==2) ZLBDA = ( LIMAP%XLB(KID)*PCS(JIJ,JK) / PRS(JIJ,JK) )**LIMAP%XLBEX(KID)
+               ZZY = PRHODREF(JIJ,JK)**(-LIMAP%XCEXVT) * ZLBDA**(-LIMAP%XD(KID))
+               IF (LIMAP%LSNOW_T .AND. KID==5) &
+                    ZZY = ZZY * (1 + (LIMAC%XFVELOS/ZLBDA)**LIMAP%XALPHAS)**(-LIMAP%XNUS-(LIMAP%XD(KID)+LIMAC%XBS)/LIMAP%XALPHAS)
+               ZWSEDR(JIJ,JK) = LIMAP%XFSEDR(KID) * PRS(JIJ,JK) * ZZY * PRHODREF(JIJ,JK)
+            END IF ! Wurtz
+            !
+            IF (KMOMENTS==2 .AND. .NOT.(LIMAP%LCRYSTAL_SHAPE .AND. KID==4)) &
+                 ZWSEDC(JIJ,JK) = LIMAP%XFSEDC(KID) * PCS(JIJ,JK) * ZZY * PRHODREF(JIJ,JK)
+            
+            IF (KID==2) THEN
+               ! mean cloud droplet diameter
+               ZCC = LIMAW%XGCC/ZLBDA
+               ! correction factor for cloud droplet terminal fall speed
+               ZCC = 1.+1.26*6.6E-8*(101325./PPABST(JIJ,JK))*(PT(JIJ,JK)/293.15)/ZCC
+               ZWSEDR(JIJ,JK) = ZCC * ZWSEDR(JIJ,JK)
+               ZWSEDC(JIJ,JK) = ZCC * ZWSEDC(JIJ,JK)
+            END IF
+            !
+            !
+!            IF (OELEC) THEN
+!               ! compute e of the q-D relationship
+!               IF (IMOMENTS == 2) THEN  ! 2-moment species
+!                  CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, 'LIMA', PTSTEP, ZRHODREF, LIMAP%XRTMIN(KID), &
+!                       PRS(JIJ,JK), PQS(JIJ,JK), ZES, PLBDX=ZLBDA, PCX=PCS(JIJ,JK))
+!               ELSE                     ! 1-moment species
+!                  CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, 'LIMA', PTSTEP, ZRHODREF, LIMAP%XRTMIN(KID), &
+!                       PRS(JIJ,JK), PQS(JIJ,JK), ZES, PLBDX=ZLBDA)
+!               END IF
+!               !
+!               IF (ELECD%LSEDIM_BEARD) ZLBDA3(JIJ,JK) = ZLBDA
+!               !
+!               IF (IMOMENTS == 1) THEN
+!                  IF (KID == 5) THEN
+!                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAC%XCCS*ZLBDA**LIMAC%XCXS * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
+!                  ELSE IF (KID == 6) THEN
+!                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAC%XCCG*ZLBDA**LIMAC%XCXG * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
+!                  ELSE IF (KID == 7) THEN
+!                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAC%XCCH*ZLBDA**LIMAC%XCXH * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
+!                  ELSE
+!                     ZWSEDQ(JIJ,JK) = 0.
+!                  END IF
+!               ELSE
+!                  ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * PCS(JIJ,JK) * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
+!               END IF
+!               IF (KID == 2) ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZCC
+!            END IF
+            !
+         END IF
+      END DO
+   END DO
 !
 ! If the electrical scheme is activated, the electric field can impact the sedimentation
-      ZBEARDCOEFF(:,:) = 1.0
-      IF (OELEC .AND. ELECD%LSEDIM_BEARD) THEN
-        ZLBDA3(:,:) = UNPACK( ZLBDA(:),MASK=GSEDIM(:,:),FIELD=0.0 )
-        CALL ELEC_BEARD_EFFECT(D, CST, 'LIMA', KID, GSEDIM, PT, PRHODREF, PTHVREFZIKB, &
-                               PRS, PQS, PEFIELDW, ZLBDA3, ZBEARDCOEFF, &
-                               LIMAP=LIMAP, LIMAPC=LIMAC, LIMAPW=LIMAW, LIMAPM=LIMAM)
-      END IF
-!
-      ZWSEDR(:,1:D%NKT) = UNPACK( ZZW(:),MASK=GSEDIM(:,:),FIELD=0.0 )
-      ZWSEDR(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = MIN( ZWSEDR(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ZBEARDCOEFF(D%NIJB:D%NIJE,D%NKTB:D%NKTE), &
-                                       PRS(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * PRHODREF(D%NIJB:D%NIJE,D%NKTB:D%NKTE) /      &
-                                                                ZW(D%NIJB:D%NIJE,D%NKTB:D%NKTE) )
-      IF (KMOMENTS==2) THEN
-         ZWSEDC(:,1:D%NKT) = UNPACK( ZZX(:),MASK=GSEDIM(:,:),FIELD=0.0 )
-         ZWSEDC(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = MIN( ZWSEDC(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ZBEARDCOEFF(D%NIJB:D%NIJE,D%NKTB:D%NKTE), &
-                                          PCS(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * PRHODREF(D%NIJB:D%NIJE,D%NKTB:D%NKTE) /      &
-                                                                   ZW(D%NIJB:D%NIJE,D%NKTB:D%NKTE) )
-      END IF
-!
-! Sedimentation of electric charges
-      IF (OELEC) THEN
-        ! compute e of the q-D relationship
-        IF (IMOMENTS == 2) THEN  ! 2-moment species
-          CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, 'LIMA', PTSTEP, ZRHODREF, LIMAP%XRTMIN(KID), &
-                                ZRS, ZQS, ZES, PLBDX=ZLBDA, PCX=ZCS)
-        ELSE                     ! 1-moment species
-          CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, 'LIMA', PTSTEP, ZRHODREF, LIMAP%XRTMIN(KID), &
-                                ZRS, ZQS, ZES, PLBDX=ZLBDA)
-        END IF
-        !
-        ! number concentration for 1-moment species
-        ! for precipitating hydrometeors, N=C\lambda^x, except for snow if lsnow_t=t
-        IF (IMOMENTS == 1) THEN
-          IF (KID == 5) THEN
-            ZCX = LIMAC%XCCS
-            ZXX = LIMAC%XCXS
-          ELSE IF (KID == 6) THEN
-            ZCX = LIMAM%XCCG
-            ZXX = LIMAM%XCXG
-          ELSE IF (KID == 7) THEN
-            ZCX = LIMAM%XCCH
-            ZXX = LIMAM%XCXH
-          END IF
-          ZCS(:) = ZCX * ZLBDA(:)**ZXX
-        END IF
-        !
-        ZZQ(:) = ZRHODREF(:)**(1.-LIMAP%XCEXVT) * ZES(:) * ZCS(:) * ELECP%XFQSED(KID) * ZLBDA(:)**(-ELECP%XDQ(KID))
-        !
-        ! correction for cloud droplet terminal fall speed
-        IF (KID == 2)  ZZQ(:) = ZZQ(:) * ZCC(:)
-        !
-        ZWSEDQ(:,1:D%NKT) = UNPACK( ZZQ(:),MASK=GSEDIM(:,:),FIELD=0.0 )
-        ZWSEDQ(D%NIJB:D%NIJE,1:D%NKT) = ZWSEDQ(D%NIJB:D%NIJE,1:D%NKT) * ZBEARDCOEFF(D%NIJB:D%NIJE,1:D%NKT)
-        ZWSEDQ(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = SIGN(MIN(ABS(ZWSEDQ(D%NIJB:D%NIJE,D%NKTB:D%NKTE)),                                                 &
-                                             ABS(PQS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)*PRHODREF(D%NIJB:D%NIJE,D%NKTB:D%NKTE)/ZW(D%NIJB:D%NIJE,D%NKTB:D%NKTE))), &
-                                         ZWSEDQ(D%NIJB:D%NIJE,D%NKTB:D%NKTE))
-      END IF      
-      
-      DO IK = D%NKTB , D%NKTE
-         PRS(D%NIJB:D%NIJE,IK) = PRS(D%NIJB:D%NIJE,IK) + ZW(D%NIJB:D%NIJE,IK)*    &
-              (ZWSEDR(D%NIJB:D%NIJE,IK+D%NKL)-ZWSEDR(D%NIJB:D%NIJE,IK))/PRHODREF(D%NIJB:D%NIJE,IK)
-         PFPR(D%NIJB:D%NIJE,IK) = ZWSEDR(D%NIJB:D%NIJE,IK)
-         IF (KMOMENTS==2) PCS(D%NIJB:D%NIJE,IK) = PCS(D%NIJB:D%NIJE,IK) + ZW(D%NIJB:D%NIJE,IK)*    &
-              (ZWSEDC(D%NIJB:D%NIJE,IK+D%NKL)-ZWSEDC(D%NIJB:D%NIJE,IK))/PRHODREF(D%NIJB:D%NIJE,IK)
-         ! Heat transport
-         !PRT_SUM(:,IK-D%NKL) = PRT_SUM(:,IK-D%NKL) + ZW(:,IK-D%NKL)*ZWSEDR(:,IK)/PRHODREF(:,IK-D%NKL)
-         !PRT_SUM(:,IK) = PRT_SUM(:,IK) - ZW(:,IK)*ZWSEDR(:,IK)/PRHODREF(:,IK)
-         !PCPT(:,IK-D%NKL) = PCPT(:,IK-D%NKL) + ZC * (ZW(:,IK-D%NKL)*ZWSEDR(:,IK)/PRHODREF(:,IK-D%NKL))
-         !PCPT(:,IK) = PCPT(:,IK) - ZC * (ZW(:,IK)*ZWSEDR(:,IK)/PRHODREF(:,IK))
-         !ZWDT(:,IK) =(PRHODREF(:,IK+D%NKL)*(1.+PRT_SUM(:,IK))*PCPT(:,IK)*PT(:,IK) + &
-         !     ZW(:,IK)*ZWSEDR(:,IK+1)*ZC*PT(:,IK+D%NKL)) / &
-         !     (PRHODREF(:,IK+D%NKL)*(1.+PRT_SUM(:,IK))*PCPT(:,IK) + ZW(:,IK)*ZWSEDR(:,IK+D%NKL)*ZC)
-         !ZWDT(:,IK) = ZWDT(:,IK) - PT(:,IK)
-         IF (OELEC) PQS(D%NIJB:D%NIJE,IK) = PQS(D%NIJB:D%NIJE,IK) + ZW(D%NIJB:D%NIJE,IK) *    &
-                                 (ZWSEDQ(D%NIJB:D%NIJE,IK+D%NKL) - ZWSEDQ(D%NIJB:D%NIJE,IK)) / PRHODREF(D%NIJB:D%NIJE,IK)
-         
+!   ZBEARDCOEFF = 1.0
+!   IF (OELEC .AND. ELECD%LSEDIM_BEARD) THEN
+!      CALL ELEC_BEARD_EFFECT(D, CST, 'LIMA', KID, GSEDIM, PT, PRHODREF, PTHVREFZIKB, &
+!           PRS, PQS, PEFIELDW, ZLBDA3, ZBEARDCOEFF, &
+!           LIMAP=LIMAP, LIMAPC=LIMAC, LIMAPW=LIMAW, LIMAPM=LIMAM)
+!      ZWSEDR(:,:)=ZWSEDR(:,:)*ZBEARDCOEFF(:,:)
+!      ZWSEDC(:,:)=ZWSEDC(:,:)*ZBEARDCOEFF(:,:)
+!      ZWSEDQ(:,:)=ZWSEDQ(:,:)*ZBEARDCOEFF(:,:)
+!   END IF
+   !
+   ZMAX_TSTEP1D(:) = ZREMAINT(:)
+   DO JK = D%NKTB,D%NKTE
+      DO JIJ = D%NIJB,D%NIJE
+         ZMAX_TSTEP2D(JIJ,JK) = ZREMAINT(JIJ)
       END DO
-      !
-      DEALLOCATE(ZRHODREF)
-      DEALLOCATE(ZPABST)
-      DEALLOCATE(ZT)
-      DEALLOCATE(ZRS)
-      DEALLOCATE(ZCS)
-      DEALLOCATE(ZCC)
-      DEALLOCATE(ZLBDA)
-      DEALLOCATE(ZZW)
-      DEALLOCATE(ZZX)
-      DEALLOCATE(ZZY)
-      IF (ALLOCATED(ZQS))    DEALLOCATE(ZQS)
-      IF (ALLOCATED(ZZQ))    DEALLOCATE(ZZQ)
-      IF (ALLOCATED(ZES))    DEALLOCATE(ZES)      
-      !      
-      PINPR(D%NIJB:D%NIJE) = PINPR(D%NIJB:D%NIJE) + ZWSEDR(D%NIJB:D%NIJE,D%NKB)/CST%XRHOLW/LIMAP%NSPLITSED(KID)                          ! in m/s
-      !PT(:,:) = PT(:,:) + ZWDT(:,:)
-      
-   END IF
+   END DO
+   !
+   DO JK = D%NKTB,D%NKTE
+      DO JIJ = D%NIJB,D%NIJE
+         IF(PRS(JIJ,JK)>LIMAP%XRTMIN(KID) .AND. ZWSEDR(JIJ, JK)>1.E-20 .AND. ZREMAINT(JIJ)>0.) THEN
+            ZMAX_TSTEP2D(JIJ,JK) = 0.8 * PRHODREF(JIJ, JK) * PRS(JIJ, JK) * PDZZ(JIJ, JK) / ZWSEDR(JIJ, JK)
+         ENDIF
+      ENDDO
+   ENDDO
+   !
+   DO JK = D%NKTB,D%NKTE
+      DO JIJ = D%NIJB,D%NIJE
+         IF(PRS(JIJ,JK)>LIMAP%XRTMIN(KID) .AND. ZWSEDR(JIJ, JK)>1.E-20 .AND. ZREMAINT(JIJ)>0.) THEN
+            ZMAX_TSTEP1D(JIJ) = MIN(ZMAX_TSTEP1D(JIJ), ZMAX_TSTEP2D(JIJ,JK))
+         ENDIF
+      ENDDO
+   ENDDO
+   !
+   DO JIJ = D%NIJB, D%NIJE
+      ZREMAINT(JIJ) = ZREMAINT(JIJ) - ZMAX_TSTEP1D(JIJ)
+      PINPR(JIJ) = PINPR(JIJ) + ZWSEDR(JIJ,D%NKB) / CST%XRHOLW * (ZMAX_TSTEP1D(JIJ) * ZINVTSTEP)
+   ENDDO
+   !
+   DO JK = D%NKTB, D%NKTE
+      DO JIJ = D%NIJB, D%NIJE
+         ZMRCHANGE = ZMAX_TSTEP1D(JIJ) * ZW(JIJ,JK)*(ZWSEDR(JIJ,JK+D%NKL)-ZWSEDR(JIJ,JK))
+         PRS(JIJ,JK) = PRS(JIJ,JK) + ZMRCHANGE
+         PFPR(JIJ,JK) = PFPR(JIJ,JK) + ZWSEDR(JIJ,JK) * (ZMAX_TSTEP1D(JIJ) * ZINVTSTEP)
+         IF (KMOMENTS==2) THEN
+            ZCCHANGE = ZMAX_TSTEP1D(JIJ) * ZW(JIJ,JK)*(ZWSEDC(JIJ,JK+D%NKL)-ZWSEDC(JIJ,JK))
+            PCS(JIJ,JK) = PCS(JIJ,JK) + ZCCHANGE
+         END IF
+         IF (OELEC) THEN
+            ZQCHANGE = ZMAX_TSTEP1D(JIJ) * ZW(JIJ,JK) * (ZWSEDQ(JIJ,JK+D%NKL) - ZWSEDQ(JIJ,JK))
+            PQS(JIJ,JK) = PQS(JIJ,JK) + ZQCHANGE
+         ENDIF
+      ENDDO
+   ENDDO
+   !   
+   ZANYREMAINT = .FALSE.
+   DO JIJ=D%NIJB,D%NIJE
+      IF(ZREMAINT(JIJ)>0.) THEN
+         ZANYREMAINT = .TRUE.
+      END IF
+   END DO
+   !
 END DO
 !
 PRS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:) / PTSTEP

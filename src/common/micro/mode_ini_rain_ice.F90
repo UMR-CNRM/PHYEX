@@ -420,8 +420,10 @@ XNUI    = 3.0  ! Gamma law with little dispersion
 !
 IF (LSNOW_T) THEN
 !Cas GAMMAGEN
-   XALPHAS = .214   ! Generalized gamma law
-   XNUS    = 43.7   ! Generalized gamma law
+!   XALPHAS = .214   ! Generalized gamma law
+!   XNUS    = 43.7   ! Generalized gamma law
+   XALPHAS = 1.   ! Generalized gamma law
+   XNUS    = 1.3   ! Generalized gamma law
    XTRANS_MP_GAMMAS = SQRT( ( GAMMA(DBLE(XNUS + 2._MNHREAL64/XALPHAS))*GAMMA(DBLE(XNUS + 4._MNHREAL64/XALPHAS)) ) / &
                             ( 8._MNHREAL64* GAMMA(DBLE(XNUS + 1._MNHREAL64/XALPHAS))*GAMMA(DBLE(XNUS + 3._MNHREAL64/XALPHAS)) ) )
 ELSE
@@ -768,6 +770,10 @@ END IF
 RAIN_ICE_PARAMN%NGAMINC = 80
 RAIN_ICE_PARAMN%XGAMINC_BOUND_MIN = 1.0E-1 ! Minimal value of (Lbda * D_cs^lim)**alpha
 RAIN_ICE_PARAMN%XGAMINC_BOUND_MAX = 1.0E7  ! Maximal value of (Lbda * D_cs^lim)**alpha
+IF (LSNOW_T) THEN
+  RAIN_ICE_PARAMN%XGAMINC_BOUND_MIN = (1000.*XTRANS_MP_GAMMAS*XDCSLIM)**XALPHAS
+  RAIN_ICE_PARAMN%XGAMINC_BOUND_MAX = (50000.*XTRANS_MP_GAMMAS*XDCSLIM)**XALPHAS
+END IF
 ZRATE = EXP(LOG(RAIN_ICE_PARAMN%XGAMINC_BOUND_MAX/RAIN_ICE_PARAMN%XGAMINC_BOUND_MIN)/REAL(RAIN_ICE_PARAMN%NGAMINC-1))
 !
 IF( .NOT.ASSOCIATED(XGAMINC_RIM1) ) THEN
@@ -857,14 +863,7 @@ CALL READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                  
                       PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PFVELOS,PCR,PDR, &
                       PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN,        &
                       PFDINFTY                                                        )
-IF( (KACCLBDAS/=RAIN_ICE_PARAMN%NACCLBDAS) .OR. (KACCLBDAR/=RAIN_ICE_PARAMN%NACCLBDAR) .OR. (KND/=IND) .OR. &
-    (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
-    (PALPHAR/=XALPHAR) .OR. (PNUR/=XNUR)                               .OR. &
-    (PESR/=ZESR) .OR. (PBS/=XBS) .OR. (PBR/=XBR)                       .OR. &
-    (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. (PCR/=XCR) .OR. (PDR/=XDR) .OR. &
-    (PACCLBDAS_MAX/=RAIN_ICE_PARAMN%XACCLBDAS_MAX) .OR. (PACCLBDAR_MAX/=RAIN_ICE_PARAMN%XACCLBDAR_MAX) .OR. &
-    (PACCLBDAS_MIN/=RAIN_ICE_PARAMN%XACCLBDAS_MIN) .OR. (PACCLBDAR_MIN/=RAIN_ICE_PARAMN%XACCLBDAR_MIN) .OR. &
-    (PFDINFTY/=ZFDINFTY)                                               ) THEN
+IF( .TRUE.                                              ) THEN
   CALL RRCOLSS ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
                  ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  RAIN_ICE_PARAMN%XACCLBDAS_MAX, RAIN_ICE_PARAMN%XACCLBDAR_MAX, &

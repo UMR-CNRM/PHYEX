@@ -1455,11 +1455,13 @@ SELECT CASE ( HCLOUD )
                    PRHODJ, PPABST,                                         &
                    NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                &
                    LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
-                   PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
+                   PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PCIT, PW_ACT,    &
                    PSVT, PSOLORG, PMI,                                     &
                    PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),       &
                    PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, &
                    PEVAP3D, PCLDFR, PICEFR, PRAINFR, ZFPR,                 &
+                   PHLC_HCF, PHLC_HRC,                                     &
+                   PHLI_HCF, PHLI_HRI,                                     &
                    ZLATHAM_IAGGS, XEFIELDW,                                &
                    PSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),                    &
                    PSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND)                     )
@@ -1473,11 +1475,13 @@ SELECT CASE ( HCLOUD )
                    PRHODJ, PPABST,                                         &
                    NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                &
                    LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
-                   PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
+                   PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PCIT, PW_ACT,    &
                    PSVT, PSOLORG, PMI,                                     &
                    PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),       &
                    PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, &
                    PEVAP3D, PCLDFR, PICEFR, PRAINFR, ZFPR,                 &
+                   PHLC_HCF, PHLC_HRC,                                     &
+                   PHLI_HCF, PHLI_HRI,                                     &
                    ZLATHAM_IAGGS                                           )
       END IF
     ELSE
@@ -1518,7 +1522,8 @@ SELECT CASE ( HCLOUD )
                            PTHT,PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),         &
                            PTHS,PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),         &
                            PCLDFR, PICEFR, PRAINFR, PSRCS                           )
-    ELSE IF (LPTSPLIT) THEN
+   ELSE IF (LPTSPLIT) THEN
+      ! currently using ZSIGQSAT2D as a dummy argument for PICE_CLD_WGT, only used in condensation with OCND2
        CALL LIMA_ADJUST_SPLIT(PARAM_LIMA, PARAM_LIMA_WARM, &
                              TNSV, YLDIMPHYEX, CST, NEBN, TURBN, TBUCONF, TBUDGETS_PTR, SIZE(TBUDGETS_PTR), &
                              KRR, CCONDENS, CLAMBDA3,                                        &
@@ -1531,7 +1536,10 @@ SELECT CASE ( HCLOUD )
                              PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                          &
                              HACTCCN, PSVT, PSOLORG, PMI,                                    &
                              PTHS, SIZE(PSRCS, 3)/=0, PSRCS, PCLDFR, PICEFR,                 &
-                             PRC_MF, PRI_MF, PCF_MF             )
+                             PRC_MF, PRI_MF, PCF_MF,                                         &
+                             ZSIGQSAT2D, PWEIGHT_MF_CLOUD,                        &
+                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                         &
+                             PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF              )
     ELSE
       CALL LIMA_ADJUST(KRR, KMI, TPFILE,                                &
                        OSUBG_COND, PTSTEP,                              &
