@@ -10,7 +10,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
   CONTAINS
 
   SUBROUTINE RAIN_ICE_OLD_SEDIMENTATION_STAT(D, CST, ICEP, ICED,             &
-                                             KRR, OICE_T, OSEDIC, PTSTEP,    &
+                                             KRR, OSEDIC, OICE_T, PTSTEP,    &
                                              KKL, IKB, IKE,                  &
                                              PDZZ, PRHODJ, PRHODREF, PPABST, &
                                              PTHT, PRCT, PRRT, PRST, PRGT,   &
