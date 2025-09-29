@@ -4,8 +4,6 @@
 set -e
 set -o pipefail #abort if left command on a pipe fails
 
-pyfortool_version=tags/0.2.2
-
 #This script installs PHYEX
 #Call the script with the -h option to get more information.
 
@@ -14,14 +12,14 @@ pyfortool_version=tags/0.2.2
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [--ALL] [--dataset] [--pyfortool] [--clean]"
+  echo "Usage: $0 [-h] [--ALL] [--dataset] [--clean]"
   echo "  --ALL              Install or clean everything"
   echo "  --dataset          Install or clean a reduced dataset for the test programs"
-  echo "  --pyfortool        Install or clean the pyfortool tool"
   echo "  --fiatfcm          Install or clean the fiat and fcm tools"
+  echo "  --fiatecbuild      Install or clean the fiat and ecbuild tools"
   echo "  --clean            Clean instead of installing"
   echo "  --test             Perform a test"
-  echo "  --ssh              Use the ssh protocol to clone the pyfortool, fxtran, fiat and fcm"
+  echo "  --ssh              Use the ssh protocol to clone the fiat and fcm"
   echo "                     repositories instead of https"
   echo ""
   echo "If the installation has already been done, calling again this script will update"
@@ -30,18 +28,18 @@ function usage {
 
 ALL=0
 dataset=0
-pyfortool=0
 clean=0
 dotest=0
 ssh=0
 fiatfcm=0
+fiatecbuild=0
 
 while [ -n "$1" ]; do
   case "$1" in
     '--ALL') ALL=1;;
     '--dataset') dataset=1;;
-    '--pyfortool') pyfortool=1;;
     '--fiatfcm') fiatfcm=1;;
+    '--fiatecbuild') fiatecbuild=1;;
     '--clean') clean=1;;
     '--test') dotest=1;;
     '--ssh') ssh=1;;
@@ -53,8 +51,8 @@ done
 
 if [ $ALL == 1 ]; then
   dataset=1
-  pyfortool=1
   fiatfcm=1
+  fiatecbuild=1
 fi
 
 #################################
@@ -83,41 +81,6 @@ if [ $dataset -eq 1 ]; then
   done
 fi
 
-if [ $pyfortool -eq 1 ]; then
-  cd $PHYEXTOOLSDIR/site
-  if [ $clean -eq 1 ]; then
-    rm -rf pyfortool
-  else
-    if [ ! -d pyfortool ]; then
-      #Install
-      if [ $ssh -eq 1 ]; then
-        git clone git@github.com:UMR-CNRM/pyfortool.git
-      else
-        git clone https://github.com/UMR-CNRM/pyfortool.git
-      fi
-      cd pyfortool
-    else
-      #Update
-      cd pyfortool
-      if [ $ssh -eq 1 ]; then
-        git fetch --tags git@github.com:UMR-CNRM/pyfortool.git
-      else
-        git fetch --tags https://github.com/UMR-CNRM/pyfortool.git
-      fi
-    fi
-    git checkout ${pyfortool_version}
-    cd ..
-    #Install/update
-    if [ $ssh -eq 1 ]; then
-      ./pyfortool/bin/INSTALL.sh --ssh
-    else
-      ./pyfortool/bin/INSTALL.sh
-    fi
-    echo ""
-    echo "To use PHYEX, you only need to source the file $PHYEXTOOLSDIR/env.sh"
-  fi
-fi
-
 if [ $fiatfcm -eq 1 ]; then
   if [ $clean -eq 1 ]; then
     $PHYEXTOOLSDIR/../build/with_fcm/make_fcm.sh --inplace-clean
@@ -127,6 +90,19 @@ if [ $fiatfcm -eq 1 ]; then
       $PHYEXTOOLSDIR/../build/with_fcm/make_fcm.sh --inplace-install --ssh
     else
       $PHYEXTOOLSDIR/../build/with_fcm/make_fcm.sh --inplace-install
+    fi
+  fi
+fi
+
+if [ $fiatecbuild -eq 1 ]; then
+  if [ $clean -eq 1 ]; then
+    $PHYEXTOOLSDIR/../build/with_ecbuild/make_ecbuild.sh --inplace-clean
+  else
+    #Install/update
+    if [ $ssh -eq 1 ]; then
+      $PHYEXTOOLSDIR/../build/with_ecbuild/make_ecbuild.sh --inplace-install --ssh
+    else
+      $PHYEXTOOLSDIR/../build/with_ecbuild/make_ecbuild.sh --inplace-install
     fi
   fi
 fi

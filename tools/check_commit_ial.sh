@@ -23,6 +23,7 @@ set -o pipefail #abort if left command on a pipe fails
 #small_3D_alt11: same as small_3D but with a different value for NPROMICRO (must give exactly the same results)
 #small_3D_alt12: same as small_3D but with LPACK_MICRO=.F. (must give exactly the same results)
 #small_3D_xfrmin: same as small_3D_alt2 but with specified values for XFRMIN(16:17)
+#arp_t31: Ph. Marguinaud's ARPEGE toy
 
 #When running in 49t0 after the f065e64 commit (23 June 2023) all configurations must be compared to this same commit.
 #79fe47e (previous commit) is identical to the different references for all the test cases.
@@ -77,7 +78,7 @@ specialPack="ori split split_48t1 split_48t3 recompil split_49t0"
 # - defaultTest is the list of tests to perform when no '-t' option is provided on the command line.
 ALLTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7"
 defaultTest="small_3D"
-allowedTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7,small_3D_alt8,small_3D_alt9,small_3D_alt10,small_3D_alt11,small_3D_alt12,small_3D_lima,small_3D_xfrmin"
+allowedTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7,small_3D_alt8,small_3D_alt9,small_3D_alt10,small_3D_alt11,small_3D_alt12,small_3D_lima,small_3D_xfrmin,arp_t31"
 
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
@@ -95,9 +96,11 @@ if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taran
   gmkpack_l[default]=MIMPIIFC1805
   gmkpack_l[49t0]=IMPIIFC2018
   gmkpack_l[49t2]=IMPIIFCI2302DP
+  gmkpack_l[50t1]=IMPIIFCI2302REPRODP
   gmkpack_o[default]=2y
   gmkpack_o[49t0]=x
   gmkpack_o[49t2]=y
+  gmkpack_o[50t1]=y
   defaultMainPackVersion=01
   defaultRef='split_${cycle}'
   ALLTests="${ALLTests},big_3D"
@@ -107,9 +110,11 @@ else
   gmkpack_l[default]=MPIGFORTRAN920DBL
   gmkpack_l[49t0]=OMPIGFORT920DBL
   gmkpack_l[49t2]=OMPIGFORT920DBL
+  gmkpack_l[50t1]=OMPI5GFORT141DP50
   gmkpack_o[default]=xfftw
   gmkpack_o[49t0]=x
   gmkpack_o[49t2]=x
+  gmkpack_o[50t1]=x
   defaultMainPackVersion=01
   defaultRef='split_${cycle}'
 fi
@@ -327,8 +332,13 @@ if [ $is_directory -eq 1 -o $is_commit -eq 1 ]; then
   if [ $is_directory -eq 1 ]; then
     #The git repository is a directory
     fromdir=$commit
-    content_ial_version=$(scp $commit/src/arome/ial_version.json /dev/stdout 2>/dev/null || echo "")
-    cmd_apl_arome="scp $commit/src/arome/ext/apl_arome.F90 /dev/stdout"
+    if [ -d $commit/src ]; then
+      content_ial_version=$(scp $commit/src/arome/ial_version.json /dev/stdout 2>/dev/null || echo "")
+      cmd_apl_arome="scp $commit/src/arome/ext/apl_arome.F90 /dev/stdout"
+    else
+      content_ial_version=$(scp $commit/ial_version.json /dev/stdout 2>/dev/null || echo "")
+      cmd_apl_arome="scp $commit/ext/apl_arome.F90 /dev/stdout"
+    fi
     packBranch=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
   else
     #The git repository is on github
@@ -396,7 +406,7 @@ fi
 if [ ! -z "${reference-}" ]; then
   declare -A refnameByTest
   #Reference to use for each test
-  for t in $(echo $ALLTests | sed 's/,/ /g'); do
+  for t in $(echo $allowedTests | sed 's/,/ /g'); do
     #Name of the reference
     if [ "$reference" == 'REF' ]; then
       if [[ ! -z "${refByTest[$t]+unset}" ]]; then #the -v approach is valid only with bash > 4.3:  if [[ -v gmkpack_o[$cycle] ]]; then
@@ -450,7 +460,7 @@ if [ $packcreation -eq 1 ]; then
 
     export GMKTMP=/dev/shm
 
-    if [ $cycle == '49t2' ]; then
+    if [ $cycle == '49t2' -o $cycle == '50t1' ]; then
       if ! which ial-git2pack > /dev/null 2>&1; then
         echo "ial-git2pack not found, please install it"
         exit 7
@@ -486,20 +496,27 @@ if [ $packcreation -eq 1 ]; then
       done
       rm -rf $tmpbuilddir
 
-      #Workarounds for 49t2 compilation
       cd $HOMEPACK/$name
-      rm -rf src/local/obstat src/local/oopsifs
-      rm -rf hub/local/src/Atlas hub/local/src/OOPS hub/local/src/ecSDK/?ckit
-      if [ $fullcompilation != 0 ]; then
-        gmkfile=$HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
-        for key in REPRO48 WITH_ODB WITHOUT_ECFLOW; do
-          if ! grep "^MACROS_FRT" $gmkfile | grep -e -D$key; then
-            sed -i "/^MACROS_FRT/s/$/ -D$key/" $gmkfile
+      if [ $cycle == '49t2' ]; then
+        #Workarounds for 49t2 compilation
+        rm -rf src/local/obstat src/local/oopsifs
+        rm -rf hub/local/src/Atlas hub/local/src/OOPS hub/local/src/ecSDK/?ckit
+        if [ $fullcompilation != 0 ]; then
+          gmkfile=$HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
+          for key in REPRO48 WITH_ODB WITHOUT_ECFLOW; do
+            if ! grep "^MACROS_FRT" $gmkfile | grep -e -D$key; then
+              sed -i "/^MACROS_FRT/s/$/ -D$key/" $gmkfile
+            fi
+          done
+          if ! grep "^GMK_CMAKE_ectrans" $gmkfile | grep -e -DENABLE_ETRANS=ON; then
+            sed -i "/^GMK_CMAKE_ectrans/s/$/ -DENABLE_ETRANS=ON/" $gmkfile
           fi
-        done
-        if ! grep "^GMK_CMAKE_ectrans" $gmkfile | grep -e -DENABLE_ETRANS=ON; then
-          sed -i "/^GMK_CMAKE_ectrans/s/$/ -DENABLE_ETRANS=ON/" $gmkfile
         fi
+      fi
+      if [ $cycle == '50t1' ]; then
+        #Workarounds for 50t1 compilation
+        rm -rf src/local/oopsifs
+        rm -rf hub/local/src/Atlas hub/local/src/OOPS
       fi
 
       #Prepare PHYEX inclusion
@@ -602,7 +619,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     cd $HOMEPACK/$name/src/local/phyex
 
     if [ $useexpand == 1 ]; then
-      expand_options="--mnhExpand --removeACC"
+      expand_options="--mnhExpand"
     else
       expand_options=""
     fi
@@ -613,13 +630,18 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       if [[ $commit == arome${separator}* ]]; then
         $prep_code $prepCodeOpts -c $commit PHYEX #This commit is ready for inclusion
       else
-        $prep_code $prepCodeOpts -c $commit $expand_options $subs -m arome PHYEX -- --shumanFUNCtoCALL --removeACC
+        $prep_code $prepCodeOpts -c $commit $subs -m arome PHYEX -- --shumanFUNCtoCALL --removeACC $expand_options
       fi
     else
       echo "Copy $fromdir"
       mkdir PHYEX
-      scp -q -r $fromdir/src PHYEX/
-      $prep_code $prepCodeOpts $expand_options $subs -m arome PHYEX -- --shumanFUNCtoCALL --removeACC
+      if [ -d $fromdir/src ]; then
+        scp -q -r $fromdir/src PHYEX/
+        $prep_code $prepCodeOpts $subs -m arome PHYEX -- --shumanFUNCtoCALL --removeACC $expand_options
+      else
+        scp -q -r $fromdir/* PHYEX/
+        $prep_code $prepCodeOpts PHYEX #Ready for inclusion
+      fi
     fi
     find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs
     if [ $packupdate -eq 1 ]; then
@@ -720,16 +742,19 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
         else
           reftree='local'
         fi
-        for file in $EXT/*; do
-          extname=`basename $file`
-          loc=`find ../../$reftree/mpa/ -name $extname | sed "s/\/$reftree\//\/local\//g"`
-          nb=`echo $loc | wc -w`
-          if [ $nb -ne 1 ]; then
-            echo "Don't know where $file must be moved, none or several places found!"
-            exit 9
-          fi
-          mvdiff $file $loc
-        done
+        if [ ! -z "$(\ls $EXT)" ]; then
+          #$EXT is not empty
+          for file in $EXT/*; do
+            extname=`basename $file`
+            loc=`find ../../$reftree/mpa/ -name $extname | sed "s/\/$reftree\//\/local\//g"`
+            nb=`echo $loc | wc -w`
+            if [ $nb -ne 1 ]; then
+              echo "Don't know where $file must be moved, none or several places found!"
+              exit 9
+            fi
+            mvdiff $file $loc
+          done
+        fi
       fi
     fi
     rm -rf PHYEX
@@ -806,7 +831,7 @@ if [ $run -ge 1 ]; then
         mkdir -p conf_tests/$t
         cd conf_tests/$t
         t1=$(($(date +%s%N)/1000)) #current time in milliseconds
-        MYLIB=$name TESTDIR=$dirconf/$t exescript Output_run $dirconf/$t/aro${cycle}${scripttag}.sh
+        MYLIB=$name TESTDIR=$dirconf/$t exescript Output_run $dirconf/$t/ar?${cycle}${scripttag}.sh
         t2=$(($(date +%s%N)/1000))
         if [ "$perffile" != "" ]; then
           #The elapsed time is not relevant when the model runs with a queuing system (HPC)
@@ -851,7 +876,6 @@ fi
 ####################
 #### COMPARISON ####
 ####################
-
 if [ $check -eq 1 ]; then
   echo "### Check commit $commit against commit $reference"
 
@@ -867,7 +891,7 @@ if [ $check -eq 1 ]; then
 
       #Files to compare
       if echo $t | grep 'small' > /dev/null; then
-        if [ $cycle == '49t2' ]; then
+        if [ $cycle == '49t2' -o $cycle == '50t1' ]; then
           filestocheck="$filestocheck ${t},conf_tests/$t/ICMSHFPOS+0002:00"
         else
           filestocheck="$filestocheck ${t},conf_tests/$t/ICMSHFPOS+0002:00 ${t},conf_tests/$t/DHFDLFPOS+0002"

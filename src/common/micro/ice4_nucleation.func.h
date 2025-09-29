@@ -5,7 +5,7 @@
 !-----------------------------------------------------------------
 ELEMENTAL SUBROUTINE ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, ODCOMPUTE, &
                            PTHT, PPABST, PRHODREF, PEXN, PLSFACT, PT, &
-                           PRVT, &
+                           PRVT, PICLDFR, PZZZ, &
                            PCIT, PRVHENI_MR)
 !!
 !!**  PURPOSE
@@ -29,6 +29,7 @@ USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+USE MODE_TIWMX,            ONLY: AM3, REDIN
 !
 IMPLICIT NONE
 !
@@ -46,6 +47,10 @@ REAL,    INTENT(IN)    :: PEXN    ! Exner function
 REAL,    INTENT(IN)    :: PLSFACT
 REAL,    INTENT(IN)    :: PT      ! Temperature at time t
 REAL,    INTENT(IN)    :: PRVT    ! Water vapor m.r. at t
+REAL,    INTENT(IN)    :: PICLDFR ! Subgrid fraction of
+                                  ! supersaturation with
+                                  ! respect to ice at t
+REAL,    INTENT(IN)    :: PZZZ    ! Model level height at t
 REAL,    INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
 REAL,    INTENT(OUT)   :: PRVHENI_MR ! Mixing ratio change due to the heterogeneous nucleation
 !
@@ -56,6 +61,7 @@ LOGICAL  :: GNEGT  ! Test where to compute the HEN process
 REAL   :: ZZW,      & ! Work array
                            ZUSW,     & ! Undersaturation over water
                            ZSSI        ! Supersaturation over ice
+REAL    :: ZAM3, ZREDIN
 !-------------------------------------------------------------------------------
 !
 !
@@ -73,50 +79,65 @@ IF (GNEGT) THEN
  ZUSW=EXP(CST%XALPW - CST%XBETAW/PT - CST%XGAMW*ZZW)          ! es_w
  ZZW=EXP(CST%XALPI - CST%XBETAI/PT - CST%XGAMI*ZZW)           ! es_i
 END IF
-  
+
 ZSSI=0.
-IF (GNEGT) THEN
-  ZZW=MIN(PPABST/2., ZZW)             ! safety limitation
-  ZSSI=PRVT*(PPABST-ZZW) / (CST%XEPSILO*ZZW) - 1.0
-                                               ! Supersaturation over ice
-  ZUSW=MIN(PPABST/2., ZUSW)            ! safety limitation
-  ZUSW=(ZUSW/ZZW)*((PPABST-ZZW)/(PPABST-ZUSW)) - 1.0
-                             ! Supersaturation of saturated water vapor over ice
-  ZSSI=MIN(ZSSI, ZUSW) ! limitation of SSi according to SSw=0
-END IF
-  
-ZZW=0.
-
-IF(GNEGT) THEN
-  IF(PT<CST%XTT-5.0 .AND. ZSSI>0.0) THEN
-    ZZW=ICEP%XNU20*EXP(ICEP%XALPHA2*ZSSI-ICEP%XBETA2)
-  ELSEIF(PT<=CST%XTT-2.0 .AND. PT>=CST%XTT-5.0 .AND. ZSSI>0.0) THEN
-    ZZW=MAX(ICEP%XNU20*EXP(-ICEP%XBETA2 ), &                                                                                       
-                ICEP%XNU10*EXP(-ICEP%XBETA1*(PT-CST%XTT))*(ZSSI/ZUSW)**ICEP%XALPHA1)
-  ENDIF
-ENDIF
-IF (GNEGT) THEN
-  ZZW=ZZW-PCIT
-  ZZW=MIN(ZZW, 50.E3) ! limitation provisoire a 50 l^-1
-END IF
-
-PRVHENI_MR=0.
-
-IF (GNEGT) THEN
-  PRVHENI_MR=MAX(ZZW, 0.0)*ICEP%XMNU0/PRHODREF
-  PRVHENI_MR=MIN(PRVT, PRVHENI_MR)
-END IF
-!Limitation due to 0 crossing of temperature
-IF(PARAMI%LFEEDBACKT) THEN
-  ZW=0.
+IF (.NOT. PARAMI%LOCND2 ) THEN
   IF (GNEGT) THEN
-    ZW=MIN(PRVHENI_MR, &
-              MAX(0., (CST%XTT/PEXN-PTHT)/PLSFACT)) / &
-              MAX(PRVHENI_MR, 1.E-20)
+    ZZW=MIN(PPABST/2., ZZW)             ! safety limitation
+    ZSSI=PRVT*(PPABST-ZZW) / (CST%XEPSILO*ZZW) - 1.0
+                                                 ! Supersaturation over ice
+    ZUSW=MIN(PPABST/2., ZUSW)            ! safety limitation
+    ZUSW=(ZUSW/ZZW)*((PPABST-ZZW)/(PPABST-ZUSW)) - 1.0
+                               ! Supersaturation of saturated water vapor over ice
+    ZSSI=MIN(ZSSI, ZUSW) ! limitation of SSi according to SSw=0
   END IF
-  PRVHENI_MR=PRVHENI_MR*ZW
-  ZZW=ZZW*ZW
+
+  ZZW=0.
+
+  IF(GNEGT) THEN
+    IF(PT<CST%XTT-5.0 .AND. ZSSI>0.0) THEN
+      ZZW=ICEP%XNU20*EXP(ICEP%XALPHA2*ZSSI-ICEP%XBETA2)
+    ELSEIF(PT<=CST%XTT-2.0 .AND. PT>=CST%XTT-5.0 .AND. ZSSI>0.0) THEN
+      ZZW=MAX(ICEP%XNU20*EXP(-ICEP%XBETA2 ), &
+                  ICEP%XNU10*EXP(-ICEP%XBETA1*(PT-CST%XTT))*(ZSSI/ZUSW)**ICEP%XALPHA1)
+    ENDIF
+  ENDIF
+  IF (GNEGT) THEN
+    ZZW=ZZW-PCIT
+    ZZW=MIN(ZZW, 50.E3) ! limitation provisoire a 50 l^-1
+  END IF
+
+  PRVHENI_MR=0.
+
+  IF (GNEGT) THEN
+    PRVHENI_MR=MAX(ZZW, 0.0)*ICEP%XMNU0/PRHODREF
+    PRVHENI_MR=MIN(PRVT, PRVHENI_MR)
+  END IF
+  !Limitation due to 0 crossing of temperature
+  IF(PARAMI%LFEEDBACKT) THEN
+    ZW=0.
+    IF (GNEGT) THEN
+      ZW=MIN(PRVHENI_MR, &
+                MAX(0., (CST%XTT/PEXN-PTHT)/PLSFACT)) / &
+                MAX(PRVHENI_MR, 1.E-20)
+    END IF
+    PRVHENI_MR=PRVHENI_MR*ZW
+    ZZW=ZZW*ZW
+  ENDIF
+ELSE
+  ! ONCD2 option
+  IF(GNEGT)THEN
+    ZZW=MIN(PPABST/2., ZZW)             ! safety limitation
+    ! Supersaturation over ice
+    ZREDIN=REDIN(ICEP%TIWMX, PT)
+    ZAM3=AM3(ICEP%TIWMX, MAX(ICEP%XFRMIN(27),PT))
+    ZZW=ZREDIN* MAX(0.1,((20000.- MIN(20000.,PZZZ))/20000.)**4) &
+        &   *ZAM3*(0.0001 + 0.9999*PICLDFR)
+    ZZW=MIN(ZZW, 50.E3) ! limitation provisoire a 50 l^-1
+  ENDIF
+  PRVHENI_MR=0.
 ENDIF
+
 IF (GNEGT) THEN
   PCIT=MAX(ZZW+PCIT, PCIT)
 END IF

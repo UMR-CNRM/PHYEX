@@ -210,7 +210,7 @@ SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,TLES,ONOMIXLG,       &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODE_SHUMAN_PHY, ONLY: DZM_PHY, MZM_PHY, MZF_PHY
+USE MODE_SHUMAN_PHY, ONLY: MZM_PHY
 USE YOMHOOK,    ONLY: LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_CST,              ONLY: CST_t
@@ -222,8 +222,6 @@ USE MODD_LES,              ONLY: TLES_t
 USE MODD_PARAMETERS,       ONLY: NMNHNAMELGTMAX
 USE MODD_TURB_n,           ONLY: TURB_t
 !
-USE MODE_GRADIENT_W_PHY, ONLY: GZ_W_M_PHY
-USE MODE_GRADIENT_M_PHY, ONLY: GZ_M_W_PHY
 USE MODE_IO_FIELD_WRITE_PHY, ONLY: IO_FIELD_WRITE_PHY
 USE MODE_TRIDIAG,        ONLY: TRIDIAG
 !
@@ -292,8 +290,7 @@ REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
        ZFLXZ,  &   ! vertical flux of the treated variable
        ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
-       ZWORK1,ZWORK2,&
-       ZWORK3,ZWORK4,&! working var. for shuman operators (array syntax)
+       ZWORK1, &   ! working var. for shuman operators (array syntax)
        ZMZMRHODJ
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IIJB,IIJE,IKB,IKE,IKA ! index value for the mass points of the domain 

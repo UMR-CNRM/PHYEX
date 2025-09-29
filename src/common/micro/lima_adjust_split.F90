@@ -91,8 +91,8 @@ SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, TNSV, D, CST, NEBN, TURBN, BUCONF, TB
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_T, NBUDGET_TH, NBUDGET_RV, &
-                         NBUDGET_RC, NBUDGET_RI, NBUDGET_RV, NBUDGET_SV1       
+USE MODD_BUDGET,   ONLY: TBUDGETCONF_T, NBUDGET_TH, NBUDGET_RV,& 
+                         NBUDGET_RC, NBUDGET_RI, NBUDGET_RV, NBUDGET_SV1, TBUDGETDATA_PTR
 USE MODD_CST,            ONLY: CST_T
 !USE MODD_CONF
 !use modd_field,            only: TFIELDDATA, TYPEREAL
@@ -106,7 +106,6 @@ USE MODD_NEB_N,            ONLY: NEB_T
 USE MODD_TURB_N,           ONLY: TURB_T
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_T
 !
-USE MODE_BUDGET_PHY,       ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 !USE MODE_IO_FIELD_WRITE,   only: IO_Field_write
 USE MODE_MSG
 !
@@ -122,12 +121,12 @@ IMPLICIT NONE
 TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
 TYPE(NSV_T),              INTENT(IN)    :: TNSV
-TYPE(DIMPHYEX_T),         INTENT(IN)   :: D
+TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
 TYPE(CST_T),              INTENT(IN)    :: CST
-TYPE(NEB_T),INTENT(IN)::NEBN
-TYPE(TURB_T),INTENT(IN)::TURBN
+TYPE(NEB_T),              INTENT(IN)    :: NEBN
+TYPE(TURB_T),             INTENT(IN)    :: TURBN
 TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
 INTEGER,                  INTENT(IN)   :: KRR        ! Number of moist variables
@@ -142,7 +141,7 @@ REAL,                     INTENT(IN)   :: PTSTEP     ! Time step
 REAL, DIMENSION(D%NIJT),  INTENT(IN)   :: PSIGQSAT   ! coeff applied to qsat variance contribution
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)   ::  PRHODREF  ! Dry density of the 
-                                                                   ! reference state
+                                                             ! reference state
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)   ::  PRHODJ    ! Dry density * Jacobian
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)   ::  PEXNREF   ! Reference Exner function
 REAL, DIMENSION(MERGE(D%NIJT,0,NEBN%LSUBG_COND), &
@@ -214,7 +213,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) &
                             ZRHS,        & ! Hail       m.r. source
 !
                             ZCCT,        & ! Cloud water conc. at t
-                            ZCIT,        & ! Cloud ice   conc. at t
 !
                             ZCCS,        & ! Cloud water C. source
                             ZMAS           ! Mass of scavenged AP
@@ -257,10 +255,6 @@ INTEGER :: ISV_LIMA_NC
 INTEGER :: ISV_LIMA_CCN_FREE
 INTEGER :: ISV_LIMA_CCN_ACTI
 INTEGER :: ISV_LIMA_SCAVMASS
-INTEGER :: ISV_LIMA_NI
-INTEGER :: ISV_LIMA_IFN_FREE
-INTEGER :: ISV_LIMA_IFN_NUCL
-INTEGER :: ISV_LIMA_IMM_NUCL
 !
 LOGICAL :: LLHLC_H, LLHLI_H
 !
@@ -287,11 +281,11 @@ ZCTMIN(:) = LIMAP%XCTMIN(:) / PTSTEP
 !
 ! Prepare 3D water mixing ratios
 !
-ZTHT = PTHS*PTSTEP
+ZTHT(:,:)=0.
+ZTHT(D%NIJB:D%NIJE,:) = PTHS(D%NIJB:D%NIJE,:)*PTSTEP
 !
-ZRVT(:,:) = PRS(:,:,1)*PTSTEP
-ZRVS(:,:) = PRS(:,:,1)
-!
+ZRVT(:,:) = 0.
+ZRVS(:,:) = 0.
 ZRCT(:,:) = 0.
 ZRCS(:,:) = 0.
 ZRRT(:,:) = 0.
@@ -302,55 +296,58 @@ ZRSS(:,:) = 0.
 ZRGS(:,:) = 0.
 ZRHS(:,:) = 0.
 !
-IF ( KRR .GE. 2 ) ZRCT(:,:) = PRS(:,:,2)*PTSTEP
-IF ( KRR .GE. 2 ) ZRCS(:,:) = PRS(:,:,2)
-IF ( KRR .GE. 3 ) ZRRT(:,:) = PRT(:,:,3) 
-IF ( KRR .GE. 3 ) ZRRS(:,:) = PRS(:,:,3)
-IF ( KRR .GE. 4 ) ZRIT(:,:) = PRT(:,:,4)
-IF ( KRR .GE. 4 ) ZRIS(:,:) = PRS(:,:,4) 
-IF ( KRR .GE. 5 ) ZRSS(:,:) = PRS(:,:,5) 
-IF ( KRR .GE. 6 ) ZRGS(:,:) = PRS(:,:,6)
-IF ( KRR .GE. 7 ) ZRHS(:,:) = PRS(:,:,7)
+ZRVT(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,1)*PTSTEP
+ZRVS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,1)
+!
+IF ( KRR .GE. 2 ) ZRCT(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,2)*PTSTEP
+IF ( KRR .GE. 2 ) ZRCS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,2)
+IF ( KRR .GE. 3 ) ZRRT(D%NIJB:D%NIJE,:) = PRT(D%NIJB:D%NIJE,:,3) 
+IF ( KRR .GE. 3 ) ZRRS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,3)
+IF ( KRR .GE. 4 ) ZRIT(D%NIJB:D%NIJE,:) = PRT(D%NIJB:D%NIJE,:,4)
+IF ( KRR .GE. 4 ) ZRIS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,4) 
+IF ( KRR .GE. 5 ) ZRSS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,5) 
+IF ( KRR .GE. 6 ) ZRGS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,6)
+IF ( KRR .GE. 7 ) ZRHS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,7)
 !
 ! Prepare 3D number concentrations
 ZCCT(:,:) = 0.
 ZCCS(:,:) = 0.
 !
-IF ( LIMAP%NMOM_C.GE.2 ) ZCCT(:,:) = PSVS(:,:,ISV_LIMA_NC)*PTSTEP
-IF ( LIMAP%NMOM_C.GE.2 ) ZCCS(:,:) = PSVS(:,:,ISV_LIMA_NC)
+IF ( LIMAP%NMOM_C.GE.2 ) ZCCT(D%NIJB:D%NIJE,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NC)*PTSTEP
+IF ( LIMAP%NMOM_C.GE.2 ) ZCCS(D%NIJB:D%NIJE,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NC)
 !
-IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) ZMAS(:,:) = PSVS(:,:,ISV_LIMA_SCAVMASS)
+IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) ZMAS(D%NIJB:D%NIJE,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_SCAVMASS)
 ! 
 IF ( LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOD_CCN.GE.1 ) THEN
    ALLOCATE( ZNFS(D%NIJT,D%NKT,LIMAP%NMOD_CCN) )
    ALLOCATE( ZNAS(D%NIJT,D%NKT,LIMAP%NMOD_CCN) )
    ALLOCATE( ZNFT(D%NIJT,D%NKT,LIMAP%NMOD_CCN) )
    ALLOCATE( ZNAT(D%NIJT,D%NKT,LIMAP%NMOD_CCN) )
-   ZNFS(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1)
-   ZNAS(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1)
-   ZNFT(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1)*PTSTEP
-   ZNAT(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1)*PTSTEP
+   ZNFS(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1)
+   ZNAS(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1)
+   ZNFT(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1)*PTSTEP
+   ZNAT(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1)*PTSTEP
 END IF
 !
 ! Initialize budgets
 !
 IF ( BUCONF%LBU_ENABLE ) then
-  IF ( BUCONF%LBUDGET_TH ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'CEDS', PTHS(:,:) * PRHODJ(:,:) )
-  IF ( BUCONF%LBUDGET_RV ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'CEDS', ZRVS(:,:) * PRHODJ(:,:) )
-  IF ( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'CEDS', ZRCS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_TH ) CALL TBUDGETS(NBUDGET_TH)%PTR%INIT_PHY(D, 'CEDS', PTHS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_RV ) CALL TBUDGETS(NBUDGET_RV)%PTR%INIT_PHY(D, 'CEDS', ZRVS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_RC ) CALL TBUDGETS(NBUDGET_RC)%PTR%INIT_PHY(D, 'CEDS', ZRCS(:,:) * PRHODJ(:,:) )
   !Remark: ZRIS is not modified but source term kept for better coherence with lima_adjust and lima_notadjust
-  IF ( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'CEDS', ZRIS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_RI ) CALL TBUDGETS(NBUDGET_RI)%PTR%INIT_PHY(D, 'CEDS', ZRIS(:,:) * PRHODJ(:,:) )
   IF ( BUCONF%LBUDGET_SV ) then
     IF ( LIMAP%NMOM_C.GE.2) &
-      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NC), 'CEDS', ZCCS(:,:) * PRHODJ(:,:) )
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NC)%PTR%INIT_PHY(D, 'CEDS', ZCCS(:,:) * PRHODJ(:,:) )
     IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) &
-      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_SCAVMASS), 'CEDS', ZMAS(:,:) * PRHODJ(:,:) )
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_SCAVMASS)%PTR%INIT_PHY(D, 'CEDS', ZMAS(:,:) * PRHODJ(:,:) )
     IF ( LIMAP%NMOM_C.GE.1 ) then
       DO IL = 1, LIMAP%NMOD_CCN
         IDX = NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_CCN_FREE - 1 + IL
-        CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(IDX), 'CEDS', ZNFS(:,:, IL) * PRHODJ(:,:) )
+        CALL TBUDGETS(IDX)%PTR%INIT_PHY(D, 'CEDS', ZNFS(:,:, IL) * PRHODJ(:,:) )
         IDX = NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_CCN_ACTI - 1 + IL
-        CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(IDX), 'CEDS', ZNAS(:,:, IL) * PRHODJ(:,:) )
+        CALL TBUDGETS(IDX)%PTR%INIT_PHY(D, 'CEDS', ZNAS(:,:, IL) * PRHODJ(:,:) )
       END DO
     END IF
   END IF
@@ -363,19 +360,19 @@ END IF
 !               ------------
 !
 !
-WHERE ( ZRVS(:,:)+ZRCS(:,:)+ZRIS(:,:) < 0.)
-  ZRVS(:,:) = -  ZRCS(:,:) - ZRIS(:,:)
+WHERE ( ZRVS(D%NIJB:D%NIJE,:)+ZRCS(D%NIJB:D%NIJE,:)+ZRIS(D%NIJB:D%NIJE,:) < 0.)
+  ZRVS(D%NIJB:D%NIJE,:) = -  ZRCS(D%NIJB:D%NIJE,:) - ZRIS(D%NIJB:D%NIJE,:)
 END WHERE
 !
-ZEXNS(:,:) = ( PPABST(:,:) / CST%XP00 ) ** (CST%XRD/CST%XCPD)  
+ZEXNS(D%NIJB:D%NIJE,:) = ( PPABST(D%NIJB:D%NIJE,:) / CST%XP00 ) ** (CST%XRD/CST%XCPD)  
 !
-ZT(:,:) = ( PTHS(:,:) * PTSTEP ) * ZEXNS(:,:)
-ZT2(:,:) = ZT(:,:)
-ZCPH(:,:) = CST%XCPD + CST%XCPV  *PTSTEP*   ZRVS(:,:)                     &
-     + CST%XCL *PTSTEP* ( ZRCS(:,:) + ZRRS(:,:) )                         &
-     + CST%XCI *PTSTEP* ( ZRIS(:,:) + ZRSS(:,:) + ZRGS(:,:) + ZRHS(:,:) )
-ZLV(:,:) = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZT(:,:) -CST%XTT )
-ZLS(:,:) = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( ZT(:,:) -CST%XTT )
+ZT(D%NIJB:D%NIJE,:) = ( PTHS(D%NIJB:D%NIJE,:) * PTSTEP ) * ZEXNS(D%NIJB:D%NIJE,:)
+ZT2(D%NIJB:D%NIJE,:) = ZT(D%NIJB:D%NIJE,:)
+ZCPH(D%NIJB:D%NIJE,:) = CST%XCPD + CST%XCPV  *PTSTEP*   ZRVS(D%NIJB:D%NIJE,:)                     &
+     + CST%XCL *PTSTEP* ( ZRCS(D%NIJB:D%NIJE,:) + ZRRS(D%NIJB:D%NIJE,:) )                         &
+     + CST%XCI *PTSTEP* ( ZRIS(D%NIJB:D%NIJE,:) + ZRSS(D%NIJB:D%NIJE,:) + ZRGS(D%NIJB:D%NIJE,:) + ZRHS(D%NIJB:D%NIJE,:) )
+ZLV(D%NIJB:D%NIJE,:) = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZT(D%NIJB:D%NIJE,:) -CST%XTT )
+ZLS(D%NIJB:D%NIJE,:) = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( ZT(D%NIJB:D%NIJE,:) -CST%XTT )
 !
 IF (LIMAP%LADJ) THEN
    ZRV_IN=ZRVS*PTSTEP
@@ -457,16 +454,16 @@ IF (LIMAP%LADJ) THEN
    !
    ! Compute the cloud fraction
    IF ( .NOT. NEBN%LSUBG_COND ) THEN
-      WHERE (ZRCS(:,:) + ZRIS(:,:) > 1.E-12 / PTSTEP)
-         PCLDFR(:,:)  = 1.
+      WHERE (ZRCS(D%NIJB:D%NIJE,:) + ZRIS(D%NIJB:D%NIJE,:) > 1.E-12 / PTSTEP)
+         PCLDFR(D%NIJB:D%NIJE,:)  = 1.
       ELSEWHERE
-         PCLDFR(:,:)  = 0. 
+         PCLDFR(D%NIJB:D%NIJE,:)  = 0. 
       ENDWHERE
       IF ( SIZE(PSRCS,2) /= 0 ) THEN
-         WHERE (ZRCS(:,:) + ZRIS(:,:) > 1.E-12 / PTSTEP)
-            PSRCS(:,:)  = 1.
+         WHERE (ZRCS(D%NIJB:D%NIJE,:) + ZRIS(D%NIJB:D%NIJE,:) > 1.E-12 / PTSTEP)
+            PSRCS(D%NIJB:D%NIJE,:)  = 1.
          ELSEWHERE
-            PSRCS(:,:)  = 0.
+            PSRCS(D%NIJB:D%NIJE,:)  = 0.
          ENDWHERE
       END IF
    ELSE
@@ -523,7 +520,7 @@ IF (LIMAP%LADJ) THEN
    END IF
    !
 ELSE
-   DO II=1,SIZE(ZRCS,1)
+   DO II=D%NIJB, D%NIJE
       DO IK=1,SIZE(ZRCS,2)
          IF (ZRCS(II,IK).GE.LIMAP%XRTMIN(2) .AND. ZCCS(II,IK).GE.LIMAP%XCTMIN(2)) THEN
             ZVEC1(II,IK) = MAX( 1.0001, MIN( FLOAT(LIMAW%NAHEN)-0.0001, LIMAW%XAHENINTP1 * ZT(II,IK) + LIMAW%XAHENINTP2 ) )
@@ -555,36 +552,36 @@ END IF
 !               --------------------------------
 !
 IF (LIMAP%NMOM_C .GE. 2) THEN
-   ZMASK(:,:) = 0.0
-   ZW(:,:) = 0.
-   WHERE (ZRCS(:,:) <= ZRTMIN(2) .OR. ZCCS(:,:) <=0.) 
-      ZRVS(:,:) = ZRVS(:,:) + ZRCS(:,:) 
-      PTHS(:,:) = PTHS(:,:) - ZRCS(:,:)*ZLV(:,:)/(ZCPH(:,:)*ZEXNS(:,:))
-      ZRCS(:,:) = 0.0
-      ZW(:,:)   = MAX(ZCCS(:,:),0.)
-      ZCCS(:,:) = 0.0
-      PCLDFR(:,:) = 0.
+   ZMASK(D%NIJB:D%NIJE,:) = 0.0
+   ZW(D%NIJB:D%NIJE,:) = 0.
+   WHERE (ZRCS(D%NIJB:D%NIJE,:) <= ZRTMIN(2) .OR. ZCCS(D%NIJB:D%NIJE,:) <=0.) 
+      ZRVS(D%NIJB:D%NIJE,:) = ZRVS(D%NIJB:D%NIJE,:) + ZRCS(D%NIJB:D%NIJE,:) 
+      PTHS(D%NIJB:D%NIJE,:) = PTHS(D%NIJB:D%NIJE,:) - ZRCS(D%NIJB:D%NIJE,:)*ZLV(D%NIJB:D%NIJE,:)/(ZCPH(D%NIJB:D%NIJE,:)*ZEXNS(D%NIJB:D%NIJE,:))
+      ZRCS(D%NIJB:D%NIJE,:) = 0.0
+      ZW(D%NIJB:D%NIJE,:)   = MAX(ZCCS(D%NIJB:D%NIJE,:),0.)
+      ZCCS(D%NIJB:D%NIJE,:) = 0.0
+      PCLDFR(D%NIJB:D%NIJE,:) = 0.
    END WHERE
    !
-   ZZW1(:,:) = 0.
-   IF (LIMAP%NMOD_CCN.GE.1) ZZW1(:,:) = SUM(ZNAS,DIM=3)
-   ZW (:,:) = MIN( ZW(:,:), ZZW1(:,:) )
-   ZZW2(:,:) = 0.
-   WHERE ( ZW(:,:) > 0. )
-      ZMASK(:,:) = 1.0
-      ZZW2(:,:) = ZW(:,:) / ZZW1(:,:)
+   ZW1(D%NIJB:D%NIJE,:) = 0.
+   IF (LIMAP%NMOD_CCN.GE.1) ZW1(D%NIJB:D%NIJE,:) = SUM(ZNAS(D%NIJB:D%NIJE,:,:),DIM=3)
+   ZW (D%NIJB:D%NIJE,:) = MIN( ZW(D%NIJB:D%NIJE,:), ZW1(D%NIJB:D%NIJE,:) )
+   ZW2(D%NIJB:D%NIJE,:) = 0.
+   WHERE ( ZW(D%NIJB:D%NIJE,:) > 0. )
+      ZMASK(D%NIJB:D%NIJE,:) = 1.0
+      ZW2(D%NIJB:D%NIJE,:) = ZW(D%NIJB:D%NIJE,:) / ZW1(D%NIJB:D%NIJE,:)
    ENDWHERE
    !
    IF (LIMAP%NMOD_CCN.GE.1) THEN
       DO IMOD = 1, LIMAP%NMOD_CCN
-         ZNFS(:,:,IMOD) = ZNFS(:,:,IMOD) +                           &
-              ZMASK(:,:) * ZNAS(:,:,IMOD) * ZZW2(:,:)
-         ZNAS(:,:,IMOD) = ZNAS(:,:,IMOD) -                           &
-              ZMASK(:,:) * ZNAS(:,:,IMOD) * ZZW2(:,:)
-         ZNAS(:,:,IMOD) = MAX( 0.0 , ZNAS(:,:,IMOD) )
+         ZNFS(D%NIJB:D%NIJE,:,IMOD) = ZNFS(D%NIJB:D%NIJE,:,IMOD) +                           &
+              ZMASK(D%NIJB:D%NIJE,:) * ZNAS(D%NIJB:D%NIJE,:,IMOD) * ZW2(D%NIJB:D%NIJE,:)
+         ZNAS(D%NIJB:D%NIJE,:,IMOD) = ZNAS(D%NIJB:D%NIJE,:,IMOD) -                           &
+              ZMASK(D%NIJB:D%NIJE,:) * ZNAS(D%NIJB:D%NIJE,:,IMOD) * ZW2(D%NIJB:D%NIJE,:)
+         ZNAS(D%NIJB:D%NIJE,:,IMOD) = MAX( 0.0 , ZNAS(D%NIJB:D%NIJE,:,IMOD) )
       ENDDO
    END IF
-   IF (LIMAP%LSCAV .AND. LIMAP%LAERO_MASS) ZMAS(:,:) = ZMAS(:,:) * (1-ZMASK(:,:))
+   IF (LIMAP%LSCAV .AND. LIMAP%LAERO_MASS) ZMAS(D%NIJB:D%NIJE,:) = ZMAS(D%NIJB:D%NIJE,:) * (1-ZMASK(D%NIJB:D%NIJE,:))
 END IF
 !
 !-------------------------------------------------------------------------------
@@ -593,41 +590,41 @@ END IF
 !               -----------------------
 !
 ! 3D water mixing ratios
-PRS(:,:,1) = ZRVS(:,:)
-IF ( KRR .GE. 2 ) PRS(:,:,2) = ZRCS(:,:)
-IF ( KRR .GE. 3 ) PRS(:,:,3) = ZRRS(:,:)
-IF ( KRR .GE. 4 ) PRS(:,:,4) = ZRIS(:,:)
-IF ( KRR .GE. 5 ) PRS(:,:,5) = ZRSS(:,:)
-IF ( KRR .GE. 6 ) PRS(:,:,6) = ZRGS(:,:)
-IF ( KRR .GE. 7 ) PRS(:,:,7) = ZRHS(:,:)
+PRS(D%NIJB:D%NIJE,:,1) = ZRVS(D%NIJB:D%NIJE,:)
+IF ( KRR .GE. 2 ) PRS(D%NIJB:D%NIJE,:,2) = ZRCS(D%NIJB:D%NIJE,:)
+IF ( KRR .GE. 3 ) PRS(D%NIJB:D%NIJE,:,3) = ZRRS(D%NIJB:D%NIJE,:)
+IF ( KRR .GE. 4 ) PRS(D%NIJB:D%NIJE,:,4) = ZRIS(D%NIJB:D%NIJE,:)
+IF ( KRR .GE. 5 ) PRS(D%NIJB:D%NIJE,:,5) = ZRSS(D%NIJB:D%NIJE,:)
+IF ( KRR .GE. 6 ) PRS(D%NIJB:D%NIJE,:,6) = ZRGS(D%NIJB:D%NIJE,:)
+IF ( KRR .GE. 7 ) PRS(D%NIJB:D%NIJE,:,7) = ZRHS(D%NIJB:D%NIJE,:)
 !
 ! Prepare 3D number concentrations
 !
-IF ( LIMAP%NMOM_C.GE.2 ) PSVS(:,:,ISV_LIMA_NC) = ZCCS(:,:)
-IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) PSVS(:,:,ISV_LIMA_SCAVMASS) = ZMAS(:,:)
+IF ( LIMAP%NMOM_C.GE.2 ) PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NC) = ZCCS(D%NIJB:D%NIJE,:)
+IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_SCAVMASS) = ZMAS(D%NIJB:D%NIJE,:)
 IF ( LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOD_CCN.GE.1 ) THEN
-   PSVS(:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1) = ZNFS(:,:,:)
-   PSVS(:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1) = ZNAS(:,:,:)
+   PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1) = ZNFS(D%NIJB:D%NIJE,:,:)
+   PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1) = ZNAS(D%NIJB:D%NIJE,:,:)
 END IF
 !
 ! Initialize budgets
 !
 IF ( BUCONF%LBU_ENABLE ) THEN
-  IF ( BUCONF%LBUDGET_TH ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'CEDS', PTHS(:,:) * PRHODJ(:,:) )
-  IF ( BUCONF%LBUDGET_RV ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'CEDS', ZRVS(:,:) * PRHODJ(:,:) )
-  IF ( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'CEDS', ZRCS(:,:) * PRHODJ(:,:) )
-  IF ( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'CEDS', ZRIS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_TH ) CALL TBUDGETS(NBUDGET_TH)%PTR%END_PHY(D, 'CEDS', PTHS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_RV ) CALL TBUDGETS(NBUDGET_RV)%PTR%END_PHY(D, 'CEDS', ZRVS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_RC ) CALL TBUDGETS(NBUDGET_RC)%PTR%END_PHY(D, 'CEDS', ZRCS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_RI ) CALL TBUDGETS(NBUDGET_RI)%PTR%END_PHY(D, 'CEDS', ZRIS(:,:) * PRHODJ(:,:) )
   IF ( BUCONF%LBUDGET_SV ) THEN
     IF ( LIMAP%NMOM_C.GE.2) &
-      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NC), 'CEDS', ZCCS(:,:) * PRHODJ(:,:) )
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NC)%PTR%END_PHY(D, 'CEDS', ZCCS(:,:) * PRHODJ(:,:) )
     IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) &
-      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_SCAVMASS), 'CEDS', ZMAS(:,:) * PRHODJ(:,:) )
+      CALL TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_SCAVMASS)%PTR%END_PHY(D, 'CEDS', ZMAS(:,:) * PRHODJ(:,:) )
     IF ( LIMAP%NMOM_C.GE.1 ) THEN
       DO IL = 1, LIMAP%NMOD_CCN
         IDX = NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_CCN_FREE - 1 + IL
-        CALL BUDGET_STORE_END_PHY(D, TBUDGETS(IDX), 'CEDS', ZNFS(:,:, IL) * PRHODJ(:,:) )
+        CALL TBUDGETS(IDX)%PTR%END_PHY(D, 'CEDS', ZNFS(:,:, IL) * PRHODJ(:,:) )
         IDX = NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_CCN_ACTI - 1 + IL
-        CALL BUDGET_STORE_END_PHY(D, TBUDGETS(IDX), 'CEDS', ZNAS(:,:, IL) * PRHODJ(:,:) )
+        CALL TBUDGETS(IDX)%PTR%END_PHY(D, 'CEDS', ZNAS(:,:, IL) * PRHODJ(:,:) )
       END DO
     END IF
   END IF

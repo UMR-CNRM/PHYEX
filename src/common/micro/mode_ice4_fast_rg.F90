@@ -31,6 +31,8 @@ SUBROUTINE ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUT
 !  P. Wautelet 29/05/2019: remove PACK/UNPACK intrinsics (to get more performance and better OpenACC support)
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
+!  K.I Ivarsson   02/2023: Some modifications that can be activated from namelist,
+!!                           e.g. for better forecasts of supercooled rain.
 !
 !
 !*      0. DECLARATIONS
@@ -180,6 +182,10 @@ ENDDO
 DO JL = 1, KSIZE
   IF (PRST(JL)>ICED%XRTMIN(5) .AND. PRGT(JL)>ICED%XRTMIN(6) .AND. LDCOMPUTE(JL)) THEN
     GDRY(JL) = .TRUE.
+    IF(PARAMI%LOCND2)THEN
+      PRG_TEND(JL, IRSDRYG)=0.
+      PRG_TEND(JL, IRSWETG)=0.
+    ENDIF
   ELSE
     GDRY(JL) = .FALSE.
     PRG_TEND(JL, IRSDRYG)=0.
@@ -189,24 +195,28 @@ ENDDO
 !$acc end kernels
 
 IF(.NOT. LDSOFT) THEN
-  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAG(:), PLBDAS(:), ICEP%NDRYLBDAG, ICEP%NDRYLBDAS, &
+  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAG, PLBDAS, ICEP%NDRYLBDAG, ICEP%NDRYLBDAS, &
                        &ICEP%XDRYINTP1G, ICEP%XDRYINTP2G, ICEP%XDRYINTP1S, ICEP%XDRYINTP2S, &
-                       &PARAMI%LPACK_INTERP, GDRY(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                       &PARAMI%LPACK_INTERP, GDRY, IBUF1, IBUF2, IBUF3, ZBUF1, ZBUF2, ZBUF3, &
                        &IGDRY, &
-                       &ICEP%XKER_SDRYG(:,:), ZZW(:))
+                       &ICEP%XKER_SDRYG, ZZW)
   IF(IGDRY>0)THEN
 !$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
     IF(.NOT. ICEP%LNEWCOEFF) THEN
-      WHERE(GDRY(1:KSIZE))
-        PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
-                                      / ICEP%XCOLSG &
-                    *(PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
-                    *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.))                    &
-                         *( ICEP%XLBSDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
-                            ICEP%XLBSDRYG2/( PLBDAG(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
-                            ICEP%XLBSDRYG3/(               PLBDAS(1:KSIZE)**2))
-      END WHERE
+      IF(.NOT. PARAMI%LOCND2) THEN
+        ! Here, OCND2 option is only used for disregarding collision snow-graupel
+        ! which according to Greg Thompson can be neglected.
+        WHERE(GDRY(1:KSIZE))
+          PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
+                                        / ICEP%XCOLSG &
+                      *(PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
+                      *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.))                    &
+                           *( ICEP%XLBSDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
+                              ICEP%XLBSDRYG2/( PLBDAG(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
+                              ICEP%XLBSDRYG3/(               PLBDAS(1:KSIZE)**2))
+        END WHERE
+      ENDIF
     ELSE
       WHERE(GDRY(1:KSIZE))
         PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
@@ -241,11 +251,11 @@ ENDDO
 !$acc end kernels
 IF(.NOT. LDSOFT) THEN
   !
-  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAG(:), PLBDAR(:), ICEP%NDRYLBDAG, ICEP%NDRYLBDAR, &
+  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAG, PLBDAR, ICEP%NDRYLBDAG, ICEP%NDRYLBDAR, &
                        &ICEP%XDRYINTP1G, ICEP%XDRYINTP2G, ICEP%XDRYINTP1R, ICEP%XDRYINTP2R, &
-                       &PARAMI%LPACK_INTERP, GDRY(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                       &PARAMI%LPACK_INTERP, GDRY, IBUF1, IBUF2, IBUF3, ZBUF1, ZBUF2, ZBUF3, &
                        &IGDRY, &
-                       &ICEP%XKER_RDRYG(:,:), ZZW(:))
+                       &ICEP%XKER_RDRYG, ZZW)
   IF(IGDRY>0) THEN
 !$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)

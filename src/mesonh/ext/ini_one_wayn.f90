@@ -217,6 +217,8 @@ IJE=IJU
 
 D%NIJT=SIZE(XRT,1)*SIZE(XRT,2)
 D%NKT=SIZE(XRT,3)
+D%NIJB=1
+D%NIJE=D%NIJT
 
 ALLOCATE(ZWORK(IIB:IIE,IJB:IJE,SIZE(PLBXTHM,3)))  ! can be smaller than child extended subdomain
 ! LS_FORCING routine can not correctly manage extra halo zone

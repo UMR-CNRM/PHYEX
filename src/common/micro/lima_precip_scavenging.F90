@@ -78,7 +78,7 @@
 !                   --------------
 !
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
-USE MODD_BUDGET,          only: TBUDGETDATA, TBUDGETCONF_T, NBUDGET_SV1
+USE MODD_BUDGET,          ONLY: TBUDGETDATA_PTR, TBUDGETCONF_T, NBUDGET_SV1
 USE MODD_CST,             ONLY: CST_T
 USE MODD_NSV,             ONLY: NSV_T
 USE MODD_PARAM_LIMA,      ONLY: NMOD_IFN, NSPECIE, XFRAC,                         &
@@ -90,7 +90,6 @@ USE MODD_PARAM_LIMA,      ONLY: NMOD_IFN, NSPECIE, XFRAC,                       
                                 XRTMIN, XCTMIN
 USE MODD_PARAM_LIMA_WARM, ONLY: XCR, XDR
 
-USE MODE_BUDGET_PHY,      ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 USE MODE_TOOLS,           only: COUNTJV
 
 USE MODI_GAMMA
@@ -105,7 +104,7 @@ TYPE(NSV_T),              INTENT(IN)    :: TNSV
 TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
 TYPE(CST_T),              INTENT(IN)    :: CST
 TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER,                  INTENT(IN)    :: KBUDGETS
 !
 CHARACTER(LEN=4),       INTENT(IN)    :: HCLOUD   ! cloud paramerization
@@ -129,20 +128,13 @@ REAL, DIMENSION(D%NIJT),   INTENT(INOUT) :: PINPAP
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: IIB           !  Define the domain where is 
-INTEGER :: IIE           !  the microphysical sources have to be computed
-INTEGER :: IJB           ! 
-INTEGER :: IJE           !
-INTEGER :: IKB           ! 
-INTEGER :: IKE           !
-!
 INTEGER :: ISV               ! CCN or IFN mode 
 INTEGER :: J1, J2, IMOD
 !
 LOGICAL, DIMENSION(D%NIJT,D%NKT) &
                                  :: GRAIN,  &! Test where rain is present
                                     GSCAV    ! Test where rain is present
-INTEGER , DIMENSION(SIZE(GSCAV)) :: I1,I2,I3 ! Used to replace the COUNT
+INTEGER , DIMENSION(SIZE(GSCAV)) :: I1,I3    ! Used to replace the COUNT
 INTEGER                          :: IL       ! and PACK intrinsics
 INTEGER                          :: ISCAV
 !
@@ -238,14 +230,14 @@ ISV_LIMA_SCAVMASS = TNSV%NSV_LIMA_SCAVMASS - TNSV%NSV_LIMA_BEG + 1
 IF ( BUCONF%LBUDGET_SV ) then
   DO IL = 1, NMOD_CCN
     IDX = TNSV%NSV_LIMA_CCN_FREE - 1 + IL
-    CALL BUDGET_STORE_INIT_PHY(D,  TBUDGETS(NBUDGET_SV1 - 1 + IDX), 'SCAV', PRSVS( :, :, IDX) )
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + IDX)%PTR%INIT_PHY(D, 'SCAV', PRSVS( :, :, IDX) )
   END DO
   DO IL = 1, NMOD_IFN
     IDX = TNSV%NSV_LIMA_IFN_FREE - 1 + IL
-    CALL BUDGET_STORE_INIT_PHY(D,  TBUDGETS(NBUDGET_SV1 - 1 + IDX), 'SCAV', PRSVS( :, :, IDX) )
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + IDX)%PTR%INIT_PHY(D, 'SCAV', PRSVS( :, :, IDX) )
   END DO
   IF ( LAERO_MASS ) then
-     CALL BUDGET_STORE_INIT_PHY(D,  TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_SCAVMASS), 'SCAV', &
+     CALL TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_SCAVMASS)%PTR%INIT_PHY(D, 'SCAV', &
           PRSVS( :, :, TNSV%NSV_LIMA_SCAVMASS) )
   END IF
 END IF
@@ -552,14 +544,14 @@ ENDDO
 IF ( BUCONF%LBUDGET_SV ) then
   DO IL = 1, NMOD_CCN
     IDX = TNSV%NSV_LIMA_CCN_FREE - 1 + IL
-    CALL BUDGET_STORE_END_PHY(D,  TBUDGETS(NBUDGET_SV1 - 1 + IDX), 'SCAV', PRSVS(:, :, IDX) )
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + IDX)%PTR%END_PHY(D, 'SCAV', PRSVS(:, :, IDX) )
   END DO
   DO IL = 1, NMOD_IFN
     IDX = TNSV%NSV_LIMA_IFN_FREE - 1 + IL
-    CALL BUDGET_STORE_END_PHY(D,  TBUDGETS(NBUDGET_SV1 - 1 + IDX), 'SCAV', PRSVS(:, :, IDX) )
+    CALL TBUDGETS(NBUDGET_SV1 - 1 + IDX)%PTR%END_PHY(D, 'SCAV', PRSVS(:, :, IDX) )
   END DO
   IF ( LAERO_MASS ) then
-     CALL BUDGET_STORE_END_PHY(D,  TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_SCAVMASS), &
+     CALL TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_SCAVMASS)%PTR%END_PHY(D, &
           'SCAV', PRSVS(:, :, TNSV%NSV_LIMA_SCAVMASS) )
   END IF
 END IF
@@ -646,7 +638,7 @@ REAL, DIMENSION(D%NIJT),     INTENT(INOUT) :: PINPAP
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: IK, IN                         ! Loop indexes 
-INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE   ! Physical domain
+INTEGER :: IKB, IKE   ! Physical domain
 !
 REAL    :: ZTSPLITR      ! Small time step for rain sedimentation
 REAL    :: ZTSTEP        ! Large time step for rain sedimentation
@@ -655,7 +647,7 @@ REAL    :: ZTSTEP        ! Large time step for rain sedimentation
 LOGICAL, DIMENSION(D%NIJT,D%NKT) &
                                 :: GSEDIM   ! where to compute the SED processes
 INTEGER :: ISEDIM 
-INTEGER , DIMENSION(SIZE(GSEDIM)) :: I1,I2,I3 ! Used to replace the COUNT
+INTEGER , DIMENSION(SIZE(GSEDIM)) :: I1,I3    ! Used to replace the COUNT
 INTEGER                           :: IL       ! and PACK intrinsics
 !
 !

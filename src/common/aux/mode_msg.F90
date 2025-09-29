@@ -121,6 +121,9 @@ ELSE
 #endif
   ENDDO
 ENDIF
+#ifndef _OPENACC
+FLUSH(UNIT=NULOUT)
+#endif
 !
 IF (KVERB<=N_ABORT_LEVEL) THEN
 #ifdef _OPENACC

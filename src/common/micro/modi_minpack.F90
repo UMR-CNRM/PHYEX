@@ -5,338 +5,338 @@ INTERFACE
 subroutine chkder ( m, n, x, fvec, fjac, ldfjac, xp, fvecp, mode, err )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDFJAC
-integer ( kind = 4 ) :: M
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(m) :: ERR
-real ( kind = 8 ), DIMENSION(ldfjac, n) :: FJAC
-real ( kind = 8 ), DIMENSION(m) :: FVEC
-real ( kind = 8 ), DIMENSION(m) :: FVECP
-integer ( kind = 4 ) :: MODE
-real ( kind = 8 ), DIMENSION(n) :: X
-real ( kind = 8 ), DIMENSION(n) :: XP
+integer ( kind = 4 ), INTENT(in) :: LDFJAC
+integer ( kind = 4 ), INTENT(in) :: M
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(m), INTENT(out) :: ERR
+real ( kind = 8 ), DIMENSION(ldfjac, n), INTENT(in) :: FJAC
+real ( kind = 8 ), DIMENSION(m), INTENT(in) :: FVEC
+real ( kind = 8 ), DIMENSION(m), INTENT(in) :: FVECP
+integer ( kind = 4 ), INTENT(in) :: MODE
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: X
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: XP
 end
 subroutine dogleg ( n, r, lr, diag, qtb, delta, x )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LR
-integer ( kind = 4 ) :: N
-real ( kind = 8 ) :: DELTA
-real ( kind = 8 ), DIMENSION(n) :: DIAG
-real ( kind = 8 ), DIMENSION(n) :: QTB
-real ( kind = 8 ), DIMENSION(lr) :: R
-real ( kind = 8 ), DIMENSION(n) :: X
+integer ( kind = 4 ), INTENT(in) :: LR
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), INTENT(in) :: DELTA
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: DIAG
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: QTB
+real ( kind = 8 ), DIMENSION(lr), INTENT(in) :: R
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: X
 end
 function enorm ( n, x )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(n) :: X
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: X
 real ( kind = 8 ) :: ENORM
 end
 function enorm2 ( n, x )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: N
+integer ( kind = 4 ), INTENT(in) :: N
 real ( kind = 8 ) :: ENORM2
-real ( kind = 8 ), DIMENSION(n) :: X
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: X
 end
 subroutine fdjac1 ( fcn, n, x, fvec, fjac, ldfjac, iflag, ml, mu, epsfcn )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDFJAC
-integer ( kind = 4 ) :: N
-real ( kind = 8 ) :: EPSFCN
-real ( kind = 8 ), DIMENSION(ldfjac, n) :: FJAC
-real ( kind = 8 ), DIMENSION(n) :: FVEC
-integer ( kind = 4 ) :: IFLAG
-integer ( kind = 4 ) :: ML
-integer ( kind = 4 ) :: MU
-real ( kind = 8 ), DIMENSION(n) :: X
+integer ( kind = 4 ), INTENT(in) :: LDFJAC
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), INTENT(in) :: EPSFCN
+real ( kind = 8 ), DIMENSION(ldfjac, n), INTENT(out) :: FJAC
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: FVEC
+integer ( kind = 4 ), INTENT(out) :: IFLAG
+integer ( kind = 4 ), INTENT(in) :: ML
+integer ( kind = 4 ), INTENT(in) :: MU
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: X
 external fcn
   end
 subroutine fdjac2 ( fcn, m, n, x, fvec, fjac, ldfjac, iflag, epsfcn )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDFJAC
-integer ( kind = 4 ) :: M
-integer ( kind = 4 ) :: N
-real ( kind = 8 ) :: EPSFCN
-real ( kind = 8 ), DIMENSION(ldfjac, n) :: FJAC
-real ( kind = 8 ), DIMENSION(m) :: FVEC
-integer ( kind = 4 ) :: IFLAG
-real ( kind = 8 ), DIMENSION(n) :: X
+integer ( kind = 4 ), INTENT(in) :: LDFJAC
+integer ( kind = 4 ), INTENT(in) :: M
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), INTENT(in) :: EPSFCN
+real ( kind = 8 ), DIMENSION(ldfjac, n), INTENT(out) :: FJAC
+real ( kind = 8 ), DIMENSION(m), INTENT(in) :: FVEC
+integer ( kind = 4 ), INTENT(out) :: IFLAG
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: X
 external fcn
   end
 subroutine hybrd ( fcn, n, x, fvec, xtol, maxfev, ml, mu, epsfcn, diag, mode, &
   factor, nprint, info, nfev, fjac, ldfjac, r, lr, qtf )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDFJAC
-integer ( kind = 4 ) :: LR
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(n) :: DIAG
-real ( kind = 8 ) :: EPSFCN
-real ( kind = 8 ) :: FACTOR
-real ( kind = 8 ), DIMENSION(ldfjac, n) :: FJAC
-real ( kind = 8 ), DIMENSION(n) :: FVEC
-integer ( kind = 4 ) :: INFO
-integer ( kind = 4 ) :: MAXFEV
-integer ( kind = 4 ) :: ML
-integer ( kind = 4 ) :: MODE
-integer ( kind = 4 ) :: MU
-integer ( kind = 4 ) :: NFEV
-integer ( kind = 4 ) :: NPRINT
-real ( kind = 8 ), DIMENSION(n) :: QTF
-real ( kind = 8 ), DIMENSION(lr) :: R
-real ( kind = 8 ), DIMENSION(n) :: X
-real ( kind = 8 ) :: XTOL
+integer ( kind = 4 ), INTENT(in) :: LDFJAC
+integer ( kind = 4 ), INTENT(in) :: LR
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: DIAG
+real ( kind = 8 ), INTENT(in) :: EPSFCN
+real ( kind = 8 ), INTENT(in) :: FACTOR
+real ( kind = 8 ), DIMENSION(ldfjac, n), INTENT(out) :: FJAC
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: FVEC
+integer ( kind = 4 ), INTENT(out) :: INFO
+integer ( kind = 4 ), INTENT(in) :: MAXFEV
+integer ( kind = 4 ), INTENT(in) :: ML
+integer ( kind = 4 ), INTENT(in) :: MODE
+integer ( kind = 4 ), INTENT(in) :: MU
+integer ( kind = 4 ), INTENT(out) :: NFEV
+integer ( kind = 4 ), INTENT(in) :: NPRINT
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: QTF
+real ( kind = 8 ), DIMENSION(lr), INTENT(out) :: R
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: X
+real ( kind = 8 ), INTENT(in) :: XTOL
 external fcn
   end
 subroutine hybrd1 ( fcn, n, x, fvec, tol, info )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(n) :: FVEC
-integer ( kind = 4 ) :: INFO
-real ( kind = 8 ) :: TOL
-real ( kind = 8 ), DIMENSION(n) :: X
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: FVEC
+integer ( kind = 4 ), INTENT(out) :: INFO
+real ( kind = 8 ), INTENT(in) :: TOL
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: X
 external fcn
   end
 subroutine hybrj ( fcn, n, x, fvec, fjac, ldfjac, xtol, maxfev, diag, mode, &
   factor, nprint, info, nfev, njev, r, lr, qtf )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDFJAC
-integer ( kind = 4 ) :: LR
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(n) :: DIAG
-real ( kind = 8 ) :: FACTOR
-real ( kind = 8 ), DIMENSION(ldfjac, n) :: FJAC
-real ( kind = 8 ), DIMENSION(n) :: FVEC
-integer ( kind = 4 ) :: INFO
-integer ( kind = 4 ) :: MAXFEV
-integer ( kind = 4 ) :: MODE
-integer ( kind = 4 ) :: NFEV
-integer ( kind = 4 ) :: NJEV
-integer ( kind = 4 ) :: NPRINT
-real ( kind = 8 ), DIMENSION(n) :: QTF
-real ( kind = 8 ), DIMENSION(lr) :: R
-real ( kind = 8 ), DIMENSION(n) :: X
-real ( kind = 8 ) :: XTOL
+integer ( kind = 4 ), INTENT(in) :: LDFJAC
+integer ( kind = 4 ), INTENT(in) :: LR
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: DIAG
+real ( kind = 8 ), INTENT(in) :: FACTOR
+real ( kind = 8 ), DIMENSION(ldfjac, n), INTENT(out) :: FJAC
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: FVEC
+integer ( kind = 4 ), INTENT(out) :: INFO
+integer ( kind = 4 ), INTENT(in) :: MAXFEV
+integer ( kind = 4 ), INTENT(in) :: MODE
+integer ( kind = 4 ), INTENT(out) :: NFEV
+integer ( kind = 4 ), INTENT(out) :: NJEV
+integer ( kind = 4 ), INTENT(in) :: NPRINT
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: QTF
+real ( kind = 8 ), DIMENSION(lr), INTENT(out) :: R
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: X
+real ( kind = 8 ), INTENT(in) :: XTOL
 external fcn
   end
 subroutine hybrj1 ( fcn, n, x, fvec, fjac, ldfjac, tol, info )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDFJAC
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(ldfjac, n) :: FJAC
-real ( kind = 8 ), DIMENSION(n) :: FVEC
-integer ( kind = 4 ) :: INFO
-real ( kind = 8 ) :: TOL
-real ( kind = 8 ), DIMENSION(n) :: X
+integer ( kind = 4 ), INTENT(in) :: LDFJAC
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(ldfjac, n), INTENT(out) :: FJAC
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: FVEC
+integer ( kind = 4 ), INTENT(out) :: INFO
+real ( kind = 8 ), INTENT(in) :: TOL
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: X
 external fcn
   end
 subroutine lmder ( fcn, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, &
   diag, mode, factor, nprint, info, nfev, njev, ipvt, qtf )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDFJAC
-integer ( kind = 4 ) :: M
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(n) :: DIAG
-real ( kind = 8 ) :: FACTOR
-real ( kind = 8 ), DIMENSION(ldfjac, n) :: FJAC
-real ( kind = 8 ) :: FTOL
-real ( kind = 8 ), DIMENSION(m) :: FVEC
-real ( kind = 8 ) :: GTOL
-integer ( kind = 4 ) :: INFO
-integer ( kind = 4 ), DIMENSION(n) :: IPVT
-integer ( kind = 4 ) :: MAXFEV
-integer ( kind = 4 ) :: MODE
-integer ( kind = 4 ) :: NFEV
-integer ( kind = 4 ) :: NJEV
-integer ( kind = 4 ) :: NPRINT
-real ( kind = 8 ), DIMENSION(n) :: QTF
-real ( kind = 8 ), DIMENSION(n) :: X
-real ( kind = 8 ) :: XTOL
+integer ( kind = 4 ), INTENT(in) :: LDFJAC
+integer ( kind = 4 ), INTENT(in) :: M
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: DIAG
+real ( kind = 8 ), INTENT(in) :: FACTOR
+real ( kind = 8 ), DIMENSION(ldfjac, n), INTENT(out) :: FJAC
+real ( kind = 8 ), INTENT(in) :: FTOL
+real ( kind = 8 ), DIMENSION(m), INTENT(out) :: FVEC
+real ( kind = 8 ), INTENT(in) :: GTOL
+integer ( kind = 4 ), INTENT(out) :: INFO
+integer ( kind = 4 ), DIMENSION(n), INTENT(out) :: IPVT
+integer ( kind = 4 ), INTENT(in) :: MAXFEV
+integer ( kind = 4 ), INTENT(in) :: MODE
+integer ( kind = 4 ), INTENT(out) :: NFEV
+integer ( kind = 4 ), INTENT(out) :: NJEV
+integer ( kind = 4 ), INTENT(in) :: NPRINT
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: QTF
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: X
+real ( kind = 8 ), INTENT(in) :: XTOL
 external fcn
   end
 subroutine lmder1 ( fcn, m, n, x, fvec, fjac, ldfjac, tol, info )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDFJAC
-integer ( kind = 4 ) :: M
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(ldfjac, n) :: FJAC
-real ( kind = 8 ), DIMENSION(m) :: FVEC
-integer ( kind = 4 ) :: INFO
-real ( kind = 8 ) :: TOL
-real ( kind = 8 ), DIMENSION(n) :: X
+integer ( kind = 4 ), INTENT(in) :: LDFJAC
+integer ( kind = 4 ), INTENT(in) :: M
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(ldfjac, n), INTENT(out) :: FJAC
+real ( kind = 8 ), DIMENSION(m), INTENT(out) :: FVEC
+integer ( kind = 4 ), INTENT(out) :: INFO
+real ( kind = 8 ), INTENT(in) :: TOL
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: X
 external fcn
   end
 subroutine lmdif ( fcn, m, n, x, fvec, ftol, xtol, gtol, maxfev, epsfcn, &
   diag, mode, factor, nprint, info, nfev, fjac, ldfjac, ipvt, qtf )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDFJAC
-integer ( kind = 4 ) :: M
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(n) :: DIAG
-real ( kind = 8 ) :: EPSFCN
-real ( kind = 8 ) :: FACTOR
-real ( kind = 8 ), DIMENSION(ldfjac, n) :: FJAC
-real ( kind = 8 ) :: FTOL
-real ( kind = 8 ), DIMENSION(m) :: FVEC
-real ( kind = 8 ) :: GTOL
-integer ( kind = 4 ) :: INFO
-integer ( kind = 4 ), DIMENSION(n) :: IPVT
-integer ( kind = 4 ) :: MAXFEV
-integer ( kind = 4 ) :: MODE
-integer ( kind = 4 ) :: NFEV
-integer ( kind = 4 ) :: NPRINT
-real ( kind = 8 ), DIMENSION(n) :: QTF
-real ( kind = 8 ), DIMENSION(n) :: X
-real ( kind = 8 ) :: XTOL
+integer ( kind = 4 ), INTENT(in) :: LDFJAC
+integer ( kind = 4 ), INTENT(in) :: M
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: DIAG
+real ( kind = 8 ), INTENT(in) :: EPSFCN
+real ( kind = 8 ), INTENT(in) :: FACTOR
+real ( kind = 8 ), DIMENSION(ldfjac, n), INTENT(out) :: FJAC
+real ( kind = 8 ), INTENT(in) :: FTOL
+real ( kind = 8 ), DIMENSION(m), INTENT(out) :: FVEC
+real ( kind = 8 ), INTENT(in) :: GTOL
+integer ( kind = 4 ), INTENT(out) :: INFO
+integer ( kind = 4 ), DIMENSION(n), INTENT(out) :: IPVT
+integer ( kind = 4 ), INTENT(in) :: MAXFEV
+integer ( kind = 4 ), INTENT(in) :: MODE
+integer ( kind = 4 ), INTENT(out) :: NFEV
+integer ( kind = 4 ), INTENT(in) :: NPRINT
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: QTF
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: X
+real ( kind = 8 ), INTENT(in) :: XTOL
 external fcn
   end
 subroutine lmdif1 ( fcn, m, n, x, fvec, tol, info )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: M
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(m) :: FVEC
-integer ( kind = 4 ) :: INFO
-real ( kind = 8 ) :: TOL
-real ( kind = 8 ), DIMENSION(n) :: X
+integer ( kind = 4 ), INTENT(in) :: M
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(m), INTENT(out) :: FVEC
+integer ( kind = 4 ), INTENT(out) :: INFO
+real ( kind = 8 ), INTENT(in) :: TOL
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: X
 external fcn
   end
 subroutine lmpar ( n, r, ldr, ipvt, diag, qtb, delta, par, x, sdiag )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDR
-integer ( kind = 4 ) :: N
-real ( kind = 8 ) :: DELTA
-real ( kind = 8 ), DIMENSION(n) :: DIAG
-integer ( kind = 4 ), DIMENSION(n) :: IPVT
-real ( kind = 8 ) :: PAR
-real ( kind = 8 ), DIMENSION(n) :: QTB
-real ( kind = 8 ), DIMENSION(ldr, n) :: R
-real ( kind = 8 ), DIMENSION(n) :: SDIAG
-real ( kind = 8 ), DIMENSION(n) :: X
+integer ( kind = 4 ), INTENT(in) :: LDR
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), INTENT(in) :: DELTA
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: DIAG
+integer ( kind = 4 ), DIMENSION(n), INTENT(in) :: IPVT
+real ( kind = 8 ), INTENT(inout) :: PAR
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: QTB
+real ( kind = 8 ), DIMENSION(ldr, n), INTENT(inout) :: R
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: SDIAG
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: X
 end
 subroutine lmstr ( fcn, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, &
   diag, mode, factor, nprint, info, nfev, njev, ipvt, qtf )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDFJAC
-integer ( kind = 4 ) :: M
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(n) :: DIAG
-real ( kind = 8 ) :: FACTOR
-real ( kind = 8 ), DIMENSION(ldfjac, n) :: FJAC
-real ( kind = 8 ) :: FTOL
-real ( kind = 8 ), DIMENSION(m) :: FVEC
-real ( kind = 8 ) :: GTOL
-integer ( kind = 4 ) :: INFO
-integer ( kind = 4 ), DIMENSION(n) :: IPVT
-integer ( kind = 4 ) :: MAXFEV
-integer ( kind = 4 ) :: MODE
-integer ( kind = 4 ) :: NFEV
-integer ( kind = 4 ) :: NJEV
-integer ( kind = 4 ) :: NPRINT
-real ( kind = 8 ), DIMENSION(n) :: QTF
-real ( kind = 8 ), DIMENSION(n) :: X
-real ( kind = 8 ) :: XTOL
+integer ( kind = 4 ), INTENT(in) :: LDFJAC
+integer ( kind = 4 ), INTENT(in) :: M
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: DIAG
+real ( kind = 8 ), INTENT(in) :: FACTOR
+real ( kind = 8 ), DIMENSION(ldfjac, n), INTENT(out) :: FJAC
+real ( kind = 8 ), INTENT(in) :: FTOL
+real ( kind = 8 ), DIMENSION(m), INTENT(out) :: FVEC
+real ( kind = 8 ), INTENT(in) :: GTOL
+integer ( kind = 4 ), INTENT(out) :: INFO
+integer ( kind = 4 ), DIMENSION(n), INTENT(out) :: IPVT
+integer ( kind = 4 ), INTENT(in) :: MAXFEV
+integer ( kind = 4 ), INTENT(in) :: MODE
+integer ( kind = 4 ), INTENT(out) :: NFEV
+integer ( kind = 4 ), INTENT(out) :: NJEV
+integer ( kind = 4 ), INTENT(in) :: NPRINT
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: QTF
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: X
+real ( kind = 8 ), INTENT(in) :: XTOL
 external fcn
   end
 subroutine lmstr1 ( fcn, m, n, x, fvec, fjac, ldfjac, tol, info )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDFJAC
-integer ( kind = 4 ) :: M
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(ldfjac, n) :: FJAC
-real ( kind = 8 ), DIMENSION(m) :: FVEC
-integer ( kind = 4 ) :: INFO
-real ( kind = 8 ) :: TOL
-real ( kind = 8 ), DIMENSION(n) :: X
+integer ( kind = 4 ), INTENT(in) :: LDFJAC
+integer ( kind = 4 ), INTENT(in) :: M
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(ldfjac, n), INTENT(out) :: FJAC
+real ( kind = 8 ), DIMENSION(m), INTENT(out) :: FVEC
+integer ( kind = 4 ), INTENT(out) :: INFO
+real ( kind = 8 ), INTENT(in) :: TOL
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: X
 external fcn
   end
 subroutine qform ( m, n, q, ldq )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDQ
-integer ( kind = 4 ) :: M
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(ldq, m) :: Q
+integer ( kind = 4 ), INTENT(in) :: LDQ
+integer ( kind = 4 ), INTENT(in) :: M
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(ldq, m), INTENT(inout) :: Q
 end
 subroutine qrfac ( m, n, a, lda, pivot, ipvt, lipvt, rdiag, acnorm )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDA
-integer ( kind = 4 ) :: LIPVT
-integer ( kind = 4 ) :: M
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(lda, n) :: A
-real ( kind = 8 ), DIMENSION(n) :: ACNORM
-integer ( kind = 4 ), DIMENSION(lipvt) :: IPVT
-logical :: PIVOT
-real ( kind = 8 ), DIMENSION(n) :: RDIAG
+integer ( kind = 4 ), INTENT(in) :: LDA
+integer ( kind = 4 ), INTENT(in) :: LIPVT
+integer ( kind = 4 ), INTENT(in) :: M
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(lda, n), INTENT(inout) :: A
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: ACNORM
+integer ( kind = 4 ), DIMENSION(lipvt), INTENT(out) :: IPVT
+logical, INTENT(in) :: PIVOT
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: RDIAG
 end
 subroutine qrsolv ( n, r, ldr, ipvt, diag, qtb, x, sdiag )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDR
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(n) :: DIAG
-integer ( kind = 4 ), DIMENSION(n) :: IPVT
-real ( kind = 8 ), DIMENSION(n) :: QTB
-real ( kind = 8 ), DIMENSION(ldr, n) :: R
-real ( kind = 8 ), DIMENSION(n) :: SDIAG
-real ( kind = 8 ), DIMENSION(n) :: X
+integer ( kind = 4 ), INTENT(in) :: LDR
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: DIAG
+integer ( kind = 4 ), DIMENSION(n), INTENT(in) :: IPVT
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: QTB
+real ( kind = 8 ), DIMENSION(ldr, n), INTENT(inout) :: R
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: SDIAG
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: X
 end
 subroutine r1mpyq ( m, n, a, lda, v, w )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDA
-integer ( kind = 4 ) :: M
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(lda, n) :: A
-real ( kind = 8 ), DIMENSION(n) :: V
-real ( kind = 8 ), DIMENSION(n) :: W
+integer ( kind = 4 ), INTENT(in) :: LDA
+integer ( kind = 4 ), INTENT(in) :: M
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(lda, n), INTENT(inout) :: A
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: V
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: W
 end
 subroutine r1updt ( m, n, s, ls, u, v, w, sing )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LS
-integer ( kind = 4 ) :: M
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(ls) :: S
-logical :: SING
-real ( kind = 8 ), DIMENSION(m) :: U
-real ( kind = 8 ), DIMENSION(n) :: V
-real ( kind = 8 ), DIMENSION(m) :: W
+integer ( kind = 4 ), INTENT(in) :: LS
+integer ( kind = 4 ), INTENT(in) :: M
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(ls), INTENT(inout) :: S
+logical, INTENT(out) :: SING
+real ( kind = 8 ), DIMENSION(m), INTENT(in) :: U
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: V
+real ( kind = 8 ), DIMENSION(m), INTENT(out) :: W
 end
 subroutine r8vec_print ( n, a, title )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: N
-real ( kind = 8 ), DIMENSION(n) :: A
-character ( len = * ) :: TITLE
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: A
+character ( len = * ), INTENT(in) :: TITLE
 end
 subroutine rwupdt ( n, r, ldr, w, b, alpha, c, s )
 
 IMPLICIT NONE
-integer ( kind = 4 ) :: LDR
-integer ( kind = 4 ) :: N
-real ( kind = 8 ) :: ALPHA
-real ( kind = 8 ), DIMENSION(n) :: B
-real ( kind = 8 ), DIMENSION(n) :: C
-real ( kind = 8 ), DIMENSION(ldr, n) :: R
-real ( kind = 8 ), DIMENSION(n) :: S
-real ( kind = 8 ), DIMENSION(n) :: W
+integer ( kind = 4 ), INTENT(in) :: LDR
+integer ( kind = 4 ), INTENT(in) :: N
+real ( kind = 8 ), INTENT(inout) :: ALPHA
+real ( kind = 8 ), DIMENSION(n), INTENT(inout) :: B
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: C
+real ( kind = 8 ), DIMENSION(ldr, n), INTENT(inout) :: R
+real ( kind = 8 ), DIMENSION(n), INTENT(out) :: S
+real ( kind = 8 ), DIMENSION(n), INTENT(in) :: W
 end
 subroutine timestamp ( )
 

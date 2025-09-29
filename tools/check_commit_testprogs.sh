@@ -86,6 +86,8 @@ i=$((i+1)); conf_extra_tag[$i]="_Z120_NPRO32_BLK64_TIMES16"
 i=$((i+1)); conf_extra_tag[$i]='_Z120_NPRO${NPROMA}_BLK${NBLOCKS}_TIMES${NTIMES}'
             conf_extra_opts[$i]='--nflevg 120 --nproma ${NPROMA} --blocks ${NBLOCKS} --times ${NTIMES}'
 
+#Build system
+defaultBuildSystem='fcm'
 
 ################################
 #### COMMAND LINE ARGUMENTS ####
@@ -120,6 +122,8 @@ function usage {
   echo "                to access performance statistics."
   echo "-a arch ARCH    architecture name to use to build and run the commit (=$defaultarchfile)"
   echo "-A arch ARCH    architecture name to use for the reference simulation (=$defaultarchfile)"
+  echo "--buildSys      build system to use (=$defaultBuildSystem)"
+  echo "                fcm and ecbuild are available"
   echo "--perf FILE     add performance statistics in file FILE"
   echo "-e EXTRAPOLATION"
   echo "                extrapolate data. EXTRAPOLATION corresponds to a configuration:"
@@ -159,6 +163,7 @@ perf=1
 extrapolation=0
 checkOpt="--check"
 perffile=""
+buildSys="$defaultBuildSystem"
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -176,6 +181,7 @@ while [ -n "$1" ]; do
     '--remove') remove=1;;
     '-a') archfile="$2"; shift;;
     '-A') refarchfile="$2"; shift;;
+    '--buildSys') buildSys="$2"; shift;;
     '--onlyIfNeeded') onlyIfNeeded=1;;
     '--computeRefIfNeeded') computeRefIfNeeded=1;;
     '--no-perf') perf=0;;
@@ -381,12 +387,12 @@ fi
 #### PACK CREATION ####
 #######################
 
-if [ $packcreation -eq 1 -a -d $TESTDIR/$name/build/with_fcm/arch_${archfile} -a $onlyIfNeeded -eq 1 ]; then
+if [ $packcreation -eq 1 -a -d $TESTDIR/$name/build/with_${buildSys}/arch_${archfile} -a $onlyIfNeeded -eq 1 ]; then
   packcreation=0
 fi
 if [ $packcreation -eq 1 ]; then
-  if [ -d $TESTDIR/$name/build/with_fcm/arch_${archfile} ]; then
-    echo "Directory already exists ($TESTDIR/$name/build/with_fcm/arch_${archfile}),"
+  if [ -d $TESTDIR/$name/build/with_${buildSys}/arch_${archfile} ]; then
+    echo "Directory already exists ($TESTDIR/$name/build/with_${buildSys}/arch_${archfile}),"
     echo "suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
     exit 5
   else
@@ -401,22 +407,22 @@ if [ $packcreation -eq 1 ]; then
     cd $TESTDIR/$name/
     if [ ! -d build ]; then
       cp -r $PHYEXTOOLSDIR/../build . #We use the compilation system from the same commit as the current script
-      rm -rf build/with_fcm/arch_*
+      rm -rf build/with_${buildSys}/arch_*
     else
       echo "WARNING: the compilation system is already there, we use it but it could be outdated"
     fi
   fi
 fi
 if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
-  if [ ! -d $TESTDIR/$name/build/with_fcm/ ]; then
-    echo "Compilation directory must exist ($TESTDIR/$name/build/with_fcm)"
+  if [ ! -d $TESTDIR/$name/build/with_${buildSys}/ ]; then
+    echo "Compilation directory must exist ($TESTDIR/$name/build/with_${buildSys})"
     exit 9
   else
-    cd $TESTDIR/$name/build/with_fcm/
+    cd $TESTDIR/$name/build/with_${buildSys}/
     packbuild=""
     [ $packupdate -eq 1 ] && packbuild='-u'
     [ $packcreation -eq 1 ] && packbuild="$packbuild -p"
-    ./make_fcm.sh $packbuild $useexpand --commit $commit --arch $archfile 2>&1 | tee Output_compilation_step1
+    ./make_${buildSys}.sh $packbuild $useexpand --commit $commit --arch $archfile 2>&1 | tee Output_compilation_step1
   fi
 fi
 
@@ -425,11 +431,11 @@ fi
 #####################
 
 if [ $compilation -eq 1 ]; then
-  if [ $onlyIfNeeded -eq 0 -o ! -f $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/libphyex.so ]; then
+  if [ $onlyIfNeeded -eq 0 -o ! -f $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/build/lib/libphyex.so ]; then
     echo "### Compilation of commit $commit"
 
-    cd $TESTDIR/$name/build/with_fcm/
-    ./make_fcm.sh -c --jobs=10 $useexpand --commit $commit --arch $archfile 2>&1 | tee Output_compilation_step2
+    cd $TESTDIR/$name/build/with_${buildSys}/
+    ./make_${buildSys}.sh -c --jobs=10 $useexpand --commit $commit --arch $archfile 2>&1 | tee Output_compilation_step2
   fi
 fi
 
@@ -442,8 +448,8 @@ if [ $run -ge 1 ]; then
   #Cleaning to suppress old results that may be confusing in case of a crash during the run
   if [ $onlyIfNeeded -eq 0 ]; then
     for t in $(echo $tests | sed 's/,/ /g'); do
-      if [ -d tests/with_fcm/arch_${archfile}/${t}${extrapolation_tag} ]; then
-        rm -rf tests/with_fcm/arch_${archfile}/${t}${extrapolation_tag}
+      if [ -d tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag} ]; then
+        rm -rf tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag}
       fi
     done
   fi
@@ -452,13 +458,13 @@ if [ $run -ge 1 ]; then
   firstrun=1
   for t in $(echo $tests | sed 's/,/ /g'); do
     if echo $allowedTests | grep -w $t > /dev/null; then #test is allowed on this plateform
-      if  [ ! -d tests/with_fcm/arch_${archfile}/${t}${extrapolation_tag} ]; then #We do not enter systematically this part if onlyIfNeeded=1
+      if  [ ! -d tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag} ]; then #We do not enter systematically this part if onlyIfNeeded=1
         if [ $firstrun -eq 1 ]; then
           echo "### Running of commit $commit"
           firstrun=0
         fi
 
-        if [ ! -f $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe ]; then
+        if [ ! -f $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/build/bin/main_${t}.exe ]; then
           echo "Directory does not exist ($TESTDIR/$name) or compilation has failed, please check"
           echo "Run '$0 -p -c $commit' to compile."
           exit 6
@@ -466,17 +472,17 @@ if [ $run -ge 1 ]; then
 
         #execution
         cd $TESTDIR/$name
-        mkdir -p tests/with_fcm/arch_${archfile}/${t}${extrapolation_tag}
-        cd tests/with_fcm/arch_${archfile}/${t}${extrapolation_tag}
+        mkdir -p tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag}
+        cd tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag}
         ln -s $dirdata/$t data
         if [ $perf -eq 1 ]; then
             export DR_HOOK_OPT=prof
             export DR_HOOK=1
             export DR_HOOK_IGNORE_SIGNALS=-1
         fi
-        . $TESTDIR/$name/build/with_fcm/arch_${archfile}/arch.env
+        . $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/arch.env
         set +e
-        submit Output_run Stderr_run $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe $checkOpt $extrapolation_opts
+        submit Output_run Stderr_run $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/build/bin/main_${t}.exe $checkOpt $extrapolation_opts
         stat=$?
         set -e
         if [ $stat -ne 0 ]; then
@@ -517,7 +523,7 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
   firstrun=1
   for t in $(echo $tests | sed 's/,/ /g'); do
     if echo $allowedTests | grep -w $t > /dev/null; then
-      if [ ! -f $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe ]; then
+      if [ ! -f $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/build/bin/main_${t}.exe ]; then
         echo "Directory does not exist ($TESTDIR/$name) or compilation has failed, please check"
         echo "Run '$0 -p -c $commit' to compile."
         exit 7
@@ -527,7 +533,7 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
         firstrun=0
         #Read prefered NPROMA, maximum number of points and number of openMP threads
         #for performance evaluation
-        . $TESTDIR/$name/build/with_fcm/arch_${archfile}/arch.env
+        . $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/arch.env
 
         #Experiement size 
         NPOINTS=100000
@@ -545,15 +551,15 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
         #Cleaning to suppress old results that may be confusing in case of a crash during the run
         if [ $onlyIfNeeded -eq 0 ]; then
           for t2 in $(echo $tests | sed 's/,/ /g'); do
-            if [ -d tests/with_fcm/arch_${archfile}/${t2}${perf_extrapolation_tag} ]; then
-              rm -rf tests/with_fcm/arch_${archfile}/${t2}${perf_extrapolation_tag}
+            if [ -d tests/with_${buildSys}/arch_${archfile}/${t2}${perf_extrapolation_tag} ]; then
+              rm -rf tests/with_${buildSys}/arch_${archfile}/${t2}${perf_extrapolation_tag}
             fi
           done
         fi
       fi
 
       NPROMA=$NPROMA NBLOCKS=$NBLOCKS NTIMES=$NTIMES OMP_NUM_THREADS=${OMP_NUM_THREADS} $0 -r -t $t -a ${archfile} --no-check --no-perf -e 4 ${commit}
-      file=$TESTDIR/$name/tests/with_fcm/arch_${archfile}/${t}${perf_extrapolation_tag}/Output_run
+      file=$TESTDIR/$name/tests/with_${buildSys}/arch_${archfile}/${t}${perf_extrapolation_tag}/Output_run
       if [ -f $file ]; then
         ZTD=$(grep -m 1 "ZTD =" $file | awk '{print $4}')
         if [ "$ZTD" != "" ]; then
@@ -594,12 +600,18 @@ if [ $check -eq 1 ]; then
     if echo $allowedTests | grep -w $t > /dev/null; then
       #Run the reference if needed
       if [ $computeRefIfNeeded -eq 1 ]; then
-        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${refByTest[$t]}
+        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${refByTest[$t]} --buildSys ${buildSys}
       fi
 
       #File comparison
-      file1=$TESTDIR/$name/tests/with_fcm/arch_${archfile}/${t}${extrapolation_tag}/Output_run
-      file2=$TESTDIR/${refnameByTest[$t]}/tests/with_fcm/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run
+      file1=$TESTDIR/$name/tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag}/Output_run
+      file2=$TESTDIR/${refnameByTest[$t]}/tests/with_${buildSys}/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run
+      if [ ! -f $file2 ]; then
+        # If the reference has not been run with this buildSystem, pick a result from another one
+        if ls $TESTDIR/${refnameByTest[$t]}/tests/with_*/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run > /dev/null 2>&1; then
+          file2=$(ls $TESTDIR/${refnameByTest[$t]}/tests/with_*/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run | head -1)
+        fi
+      fi
       mess=""
       te=0
       if [ ! -f "$file1" ]; then

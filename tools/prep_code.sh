@@ -140,7 +140,11 @@ fi
 
 if [ -z "${checkout_point-}" ]; then
   [ $verbose -gt 0 ] && echo "No checkout point provided, we use the content of $directory directory"
-  if [ ! -d $directory/src ]; then
+  if [ -d $directory/src ]; then
+    :
+  elif [ -d $directory/turb -a -d $directory/micro -a -d $directory/aux ]; then
+    :
+  else
     echo "$directory must be filled with files and directories as if it was obtained through a checkout"
     exit 2
   fi
@@ -296,13 +300,6 @@ fi
 if [ "$pyfortool_opts_env" != "" -o -n "${pyfortool_options-}" ]; then
   [ $verbose -gt 0 ] && echo "Applying pyfortool"
 
-  #Update PATH and PYTHONPATH if needed
-  if [ $useParallelPyForTool -eq 1 ]; then
-    which pyfortool_parallel > /dev/null || . $PHYEXTOOLSDIR/site/pyfortool/bin/env.sh
-  else
-    which pyfortool > /dev/null || . $PHYEXTOOLSDIR/site/pyfortool/bin/env.sh
-  fi
-
   if [ -n "${model-}" ]; then
     reps=$subs
   else
@@ -311,6 +308,9 @@ if [ "$pyfortool_opts_env" != "" -o -n "${pyfortool_options-}" ]; then
       reps="$reps src/*/$sub"
     done
   fi
+  for rep in $reps; do
+    [ -f $rep/.gitkeep ] && rm -f $rep/.gitkeep
+  done
 
   extra_opts=""
   if [ "$pyfortool_opts_env" != "" ]; then
@@ -341,6 +341,15 @@ if [ "$pyfortool_opts_env" != "" -o -n "${pyfortool_options-}" ]; then
     fi
   fi
 fi
+
+###### Check coding conventions after transformation
+for rep in $PWD/*; do
+  if [ $(basename "${rep}") != 'ext' ]; then
+    set +e
+    $PHYEXTOOLSDIR/check_coding_conventions.sh -v --source ${rep}
+    set -e
+  fi
+done
 
 ###### PUSH
 if [ -n "${branch-}" ]; then

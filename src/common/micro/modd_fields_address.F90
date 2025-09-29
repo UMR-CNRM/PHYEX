@@ -31,11 +31,8 @@
 IMPLICIT NONE
 !
 ! Pointer of fields in microphysic species arrays. Microphysics species are
-! usually counted as KRR=6 or KRR=7. The extra "zero" adress for potential
-! temperature is a trick to improve vectorization when all these fields needs
-! the same treatement.
+! usually counted as KRR=6 or KRR=7.
 INTEGER, PARAMETER :: & ! pointer of fields in microphysic species arrays :
-      & ITH=0,     & ! Potential temperature
       & IRV=1,     & ! Water vapor
       & IRC=2,     & ! Cloud water
       & IRR=3,     & ! Rain water
@@ -52,7 +49,7 @@ INTEGER, PARAMETER :: & ! pointer of fields in microphysic species arrays :
 ! - first are the normal tendencies directly computed as tendencies
 ! - second are the tendencies computed only from a mixing ratio change
 ! - third are the indexes used to designate the mising ratio change part of double-contribution tendencies
-INTEGER, PARAMETER :: IBUNUM=47,    & ! Total number
+INTEGER, PARAMETER :: IBUNUM=49,    & ! Total number
                       IBUNUM_MR=3,  & ! Number of tendencies computed only from a mixing ratio change
                       IBUNUM_EXTRA=2  ! Extra terms
 INTEGER, PARAMETER :: &
@@ -79,15 +76,17 @@ INTEGER, PARAMETER :: &
                     & IRCWETH=32,  IRIWETH=33,  IRSWETH=34,  IRGWETH=35,  IRRWETH=36, & ! Dry growth of hailstone
                     & IRCDRYH=37,  IRIDRYH=38,  IRSDRYH=39,  IRRDRYH=40,  IRGDRYH=41, & ! Wet growth of hailstone
                     & IRDRYHG=42,    &
+                    & IRILARS=43,    & ! OCND2: Conversion large ice crystals to snow
+                    & IRVDEPI=44,    & ! OCND2: Conversion vapor to ice, non spherical effect
 
                     !tendencies computed only with a mixing ratio change
-                    & IRVHENI_MR=43, & ! heterogeneous nucleation mixing ratio change
-                    & IRRHONG_MR=44, & ! Spontaneous freezing mixing ratio change
-                    & IRIMLTC_MR=45, & ! Cloud ice melting mixing ratio change
+                    & IRVHENI_MR=45, & ! heterogeneous nucleation mixing ratio change
+                    & IRRHONG_MR=46, & ! Spontaneous freezing mixing ratio change
+                    & IRIMLTC_MR=47, & ! Cloud ice melting mixing ratio change
 
                     !Extra term computed as a mixing ratio change, to be added to other term
-                    & IRSRIMCG_MR=46,& ! Cloud droplet riming of the aggregates
-                    & IRWETGH_MR=47    ! Conversion of graupel into hail
+                    & IRSRIMCG_MR=48,& ! Cloud droplet riming of the aggregates
+                    & IRWETGH_MR=49    ! Conversion of graupel into hail
 INTEGER, PARAMETER, DIMENSION(IBUNUM-IBUNUM_EXTRA+1:IBUNUM) :: IBUEXTRAIND=(/18, 30/)
 !
 END MODULE MODD_FIELDS_ADDRESS

@@ -51,7 +51,6 @@ CONTAINS
 !
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_T
 USE MODD_CST,              ONLY: CST_T
-USE MODD_RAIN_ICE_DESCR_N, ONLY: RAIN_ICE_DESCR_T
 USE MODD_ELEC_DESCR,       ONLY: ELEC_DESCR_t
 USE MODD_ELEC_PARAM,       ONLY: ELEC_PARAM_t
 
@@ -113,7 +112,7 @@ REAL                       :: ZZW,      & ! Work array
                               ZLBDA,    & ! Slope parameter
                               ZCC         ! Cunningham corrective term for droplets fall speed
 !
-INTEGER , DIMENSION(D%NIJT*D%NKT) :: I1,I2,I3 ! Indexes for PACK replacement
+INTEGER , DIMENSION(D%NIJT*D%NKT) :: I1,I3 ! Indexes for PACK replacement
 !
 REAL    :: ZC                             ! Cpl or Cpi
 INTEGER :: IMOMENTS
@@ -146,11 +145,11 @@ IF (LHOOK) CALL DR_HOOK('LIMA_SEDIMENTATION', 0, ZHOOK_HANDLE)
 ZINVTSTEP=1./PTSTEP
 IMOMENTS=KMOMENTS
 PINPR(:) = 0.
-PRS(:,:) = PRS(:,:) * PTSTEP
-IF (KMOMENTS==2) PCS(:,:) = PCS(:,:) * PTSTEP
-IF (OELEC)       PQS(:,:) = PQS(:,:) * PTSTEP
+PRS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:) * PTSTEP
+IF (KMOMENTS==2) PCS(D%NIJB:D%NIJE,:) = PCS(D%NIJB:D%NIJE,:) * PTSTEP
+IF (OELEC)       PQS(D%NIJB:D%NIJE,:) = PQS(D%NIJB:D%NIJE,:) * PTSTEP
 DO IK = D%NKTB , D%NKTE
-   ZW(:,IK)=1./(PDZZ(:,IK)*PRHODREF(:,IK))
+   ZW(D%NIJB:D%NIJE,IK)=1./(PDZZ(D%NIJB:D%NIJE,IK)*PRHODREF(D%NIJB:D%NIJE,IK))
 END DO
 IF (HPHASE=='L') ZC=CST%XCL
 IF (HPHASE=='I') ZC=CST%XCI
@@ -334,9 +333,9 @@ DO WHILE (ZANYREMAINT)
    !
 END DO
 !
-PRS(:,:) = PRS(:,:) / PTSTEP
-IF (KMOMENTS==2) PCS(:,:) = PCS(:,:) / PTSTEP
-IF (OELEC) PQS(:,:) = PQS(:,:) / PTSTEP
+PRS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:) / PTSTEP
+IF (KMOMENTS==2) PCS(D%NIJB:D%NIJE,:) = PCS(D%NIJB:D%NIJE,:) / PTSTEP
+IF (OELEC) PQS(D%NIJB:D%NIJE,:) = PQS(D%NIJB:D%NIJE,:) / PTSTEP
 !
 IF (LHOOK) CALL DR_HOOK('LIMA_SEDIMENTATION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_SEDIMENTATION

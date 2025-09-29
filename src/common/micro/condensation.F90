@@ -159,7 +159,7 @@ REAL, DIMENSION(D%NIJT),       OPTIONAL, INTENT(IN)    :: PICE_CLD_WGT
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: JIJ, JK, JKP, JKM                    ! loop index
+INTEGER :: JIJ, JK, JKP                         ! loop index
 INTEGER :: IKTB, IKTE, IKB, IKE, IKL, IIJB, IIJE
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZTLK, ZRT     ! work arrays for T_l and total water mixing ratio
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZL            ! length scale
@@ -191,7 +191,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZDZFACT,ZDZREF
 ! LHGT_QS END
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER :: IERR
 INTEGER, DIMENSION(D%NKT) :: JKPK, JKMK
 !
 !
@@ -378,10 +377,10 @@ IF (OCND2) THEN
     END DO
   END DO
 !$acc end kernels
-  CALL ICECLOUD(D, CST, ICEP, PPABS(:,:),PZZ(:,:),ZDZ(:,:), &
-       & PT(:,:),PRV_IN(:,:),1.,-1., &
-       & ZCLDINI(:,:),PIFR(IIJB,1),PICLDFR(:,:), &
-       & PSSIO(:,:),PSSIU(:,:),ZARDUM2(:,:),ZARDUM(:,:))
+  CALL ICECLOUD(D, CST, ICEP, PPABS,PZZ,ZDZ, &
+       & PT,PRV_IN,1.,-1., &
+       & ZCLDINI,PIFR(IIJB,1),PICLDFR, &
+       & PSSIO,PSSIU,ZARDUM2,ZARDUM)
   ! latent heats
   ! saturated water vapor mixing ratio over liquid water and ice
 !$acc kernels
@@ -412,7 +411,7 @@ DO JK=IKTB,IKTE
       IF (PRC_IN(JIJ,JK)+PRI_IN(JIJ,JK) > 1.E-20) THEN
         ZFRAC(JIJ,JK) = PRI_IN(JIJ,JK) / (PRC_IN(JIJ,JK)+PRI_IN(JIJ,JK))
       ENDIF
-    CALL COMPUTE_FRAC_ICE(CST, HFRAC_ICE, NEBN, ZFRAC(JIJ,JK), PT(JIJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
+    CALL COMPUTE_FRAC_ICE(CST, HFRAC_ICE, NEBN, ZFRAC(JIJ,JK), PT(JIJ,JK))
   ENDIF
     ZQSL(JIJ,JK)   = CST%XRD / CST%XRV * ZPV(JIJ,JK) / ( PPABS(JIJ,JK) - ZPV(JIJ,JK) )
     ZQSI(JIJ,JK)   = CST%XRD / CST%XRV * ZPIV(JIJ,JK) / ( PPABS(JIJ,JK) - ZPIV(JIJ,JK) )

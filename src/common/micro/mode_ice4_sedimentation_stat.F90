@@ -9,11 +9,10 @@ CONTAINS
 SUBROUTINE ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, PARAMI, &
                                   &PTSTEP, KRR, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
-                                  &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, &
-                                  &PRSS, PRST, PRGS, PRGT,&
+                                  &PRS, PRT, PCONC3D, &
                                   &PINPRC, PINPRR, PINPRI, PINPRS, PINPRG, &
                                   &PSEA, PTOWN, &
-                                  &PINPRH, PRHT, PRHS, PFPR)
+                                  &PINPRH, PFPR)
 
 !!
 !!**  PURPOSE
@@ -44,6 +43,7 @@ USE MODD_CST, ONLY: CST_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
+USE MODD_FIELDS_ADDRESS
 USE MODI_GAMMA, ONLY: GAMMA
 !
 IMPLICIT NONE
@@ -63,16 +63,9 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PPABST  ! absolute pre
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PTHT    ! Theta at time t
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PT      ! Temperature
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRHODJ  ! Dry density * Jacobian
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)           :: PRCS    ! Cloud water m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRCT    ! Cloud water m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)           :: PRRS    ! Rain water m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRRT    ! Rain water m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)           :: PRIS    ! Pristine ice m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRIT    ! Pristine ice m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)           :: PRSS    ! Snow/aggregate m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRST    ! Snow/aggregate m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)           :: PRGS    ! Graupel m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRGT    ! Graupel/hail m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT)       :: PRS     ! m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)          :: PRT     ! m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PCONC3D ! cloud liquid drop number concentration /m3
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)             :: PINPRC  ! Cloud instant precip
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)             :: PINPRR  ! Rain instant precip
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)             :: PINPRI  ! Pristine ice instant precip
@@ -81,8 +74,6 @@ REAL, DIMENSION(D%NIJT),     INTENT(OUT)             :: PINPRG  ! Graupel instan
 REAL, DIMENSION(D%NIJT),     OPTIONAL, INTENT(IN)    :: PSEA    ! Sea Mask
 REAL, DIMENSION(D%NIJT),     OPTIONAL, INTENT(IN)    :: PTOWN   ! Fraction that is town
 REAL, DIMENSION(D%NIJT),         OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
-REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-air precipitation fluxes
 !
 !*       0.2  declaration of local variables
@@ -133,7 +124,7 @@ ISHIFT=0
 CALL SHIFT
 
 ! Initialize vertical loop
-DO JRR=2,KRR
+DO JRR=IRC,KRR
   ZSED(:,IKPLUS,JRR) = 0.
 ENDDO
 
@@ -144,46 +135,44 @@ DO JK = IKE , IKB, -1*IKL
     ZTSORHODZ(JIJ) =PTSTEP/(PRHODREF(JIJ,JK)*PDZZ(JIJ,JK))
   ENDDO
 !
-  DO JRR=2,KRR
+  DO JRR=IRC,KRR
 
-    IF (JRR==2) THEN
+    IF (JRR==IRC) THEN
 
       !******* for cloud
       IF (PARAMI%LSEDIC) THEN
-        CALL CLOUD(PRCT(:,JK))
+        CALL CLOUD(PRT(:,JK,IRC))
       ELSE
         ZSED(:,IK,JRR)=0.
       ENDIF
 
-    ELSEIF (JRR==3) THEN
+    ELSEIF (JRR==IRR) THEN
 
       !*       2.2   for rain
-      CALL OTHER_SPECIES(ICEP%XFSEDR,ICEP%XEXSEDR,PRRT(:,JK))
+      CALL OTHER_SPECIES(ICEP%XFSEDR,ICEP%XEXSEDR,PRT(:,JK,IRR))
 
-    ELSEIF (JRR==4) THEN
+    ELSEIF (JRR==IRI) THEN
 
-      CALL PRISTINE_ICE(PRIT(:,JK))
+      CALL PRISTINE_ICE(PRT(:,JK,IRI))
 
-    ELSEIF (JRR==5) THEN
+    ELSEIF (JRR==IRS) THEN
 
       !*       2.4   for aggregates/snow
       IF(.NOT. ICEP%LNEWCOEFF) THEN
-        CALL OTHER_SPECIES(ICEP%XFSEDS,ICEP%XEXSEDS,PRST(:,JK))
+        CALL OTHER_SPECIES(ICEP%XFSEDS,ICEP%XEXSEDS,PRT(:,JK,IRS))
       ELSE
-        CALL SNOW(PRST(:,JK))
+        CALL SNOW(PRT(:,JK,IRS))
       ENDIF
 
-    ELSEIF (JRR==6) THEN
+    ELSEIF (JRR==IRG) THEN
 
       !*       2.5   for graupeln
-      CALL OTHER_SPECIES(ICEP%XFSEDG,ICEP%XEXSEDG,PRGT(:,JK))
+      CALL OTHER_SPECIES(ICEP%XFSEDG,ICEP%XEXSEDG,PRT(:,JK,IRG))
 
-    ELSEIF (JRR==7) THEN
+    ELSEIF (JRR==IRH) THEN
 
       !*       2.6   for hail
-      IF (PRESENT(PRHT))  THEN
-        CALL OTHER_SPECIES(ICEP%XFSEDH,ICEP%XEXSEDH,PRHT(:,JK))
-      ENDIF
+       CALL OTHER_SPECIES(ICEP%XFSEDH,ICEP%XEXSEDH,PRT(:,JK,IRH))
 
     ENDIF
 
@@ -192,21 +181,16 @@ DO JK = IKE , IKB, -1*IKL
   ! Wrap-up
 
   IF(PRESENT(PFPR)) THEN
-    DO JRR=2,KRR
+    DO JRR=IRC,KRR
       PFPR(:,JK,JRR)=ZSED(:,IK,JRR)
     ENDDO
   ENDIF
 
+  DO JRR=IRC, KRR
     DO JIJ = IIJB, IIJE
-      PRCS(JIJ,JK) = PRCS(JIJ,JK)+ZTSORHODZ(JIJ)*(ZSED(JIJ,IKPLUS,2)-ZSED(JIJ,IK,2))*ZINVTSTEP
-      PRRS(JIJ,JK) = PRRS(JIJ,JK)+ZTSORHODZ(JIJ)*(ZSED(JIJ,IKPLUS,3)-ZSED(JIJ,IK,3))*ZINVTSTEP
-      PRIS(JIJ,JK) = PRIS(JIJ,JK)+ZTSORHODZ(JIJ)*(ZSED(JIJ,IKPLUS,4)-ZSED(JIJ,IK,4))*ZINVTSTEP
-      PRSS(JIJ,JK) = PRSS(JIJ,JK)+ZTSORHODZ(JIJ)*(ZSED(JIJ,IKPLUS,5)-ZSED(JIJ,IK,5))*ZINVTSTEP
-      PRGS(JIJ,JK) = PRGS(JIJ,JK)+ZTSORHODZ(JIJ)*(ZSED(JIJ,IKPLUS,6)-ZSED(JIJ,IK,6))*ZINVTSTEP
-      IF (PRESENT(PRHS) .AND. KRR==7)  THEN
-        PRHS(JIJ,JK) = PRHS(JIJ,JK)+ZTSORHODZ(JIJ)*(ZSED(JIJ,IKPLUS,7)-ZSED(JIJ,IK,7))*ZINVTSTEP
-      ENDIF
+      PRS(JIJ,JK,JRR) = PRS(JIJ,JK,JRR)+ZTSORHODZ(JIJ)*(ZSED(JIJ,IKPLUS,JRR)-ZSED(JIJ,IK,JRR))*ZINVTSTEP
     ENDDO
+  ENDDO
 
   IF (JK==IKB) THEN
     DO JIJ = IIJB, IIJE
@@ -243,10 +227,6 @@ CONTAINS
     REAL :: ZQP
     REAL :: ZWSEDW1, ZWSEDW2
 
-    !!REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:CLOUD',0,ZHOOK_HANDLE)
-
     DO JIJ = IIJB, IIJE
       !estimation of q' taking into account incoming ZWSED from previous vertical level
       ZQP=ZSED(JIJ,IKPLUS,JRR)*ZTSORHODZ(JIJ)
@@ -255,14 +235,12 @@ CONTAINS
           ZRAY   = MAX(1.,0.5*((1.-PSEA(JIJ))*ZGAC/ZGC+PSEA(JIJ)*ZGAC2/ZGC2))
           ZLBC   = MAX(MIN(ICED%XLBC(1),ICED%XLBC(2)),(PSEA(JIJ)*ICED%XLBC(2)+(1.-PSEA(JIJ))*ICED%XLBC(1)) )
           ZFSEDC = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)), (PSEA(JIJ)*ICEP%XFSEDC(2)+(1.-PSEA(JIJ))*ICEP%XFSEDC(1)) )
-          ZCONC3D= (1.-PTOWN(JIJ))*(PSEA(JIJ)*ICED%XCONC_SEA+(1.-PSEA(JIJ))*ICED%XCONC_LAND) + &
-                    PTOWN(JIJ)  *ICED%XCONC_URBAN
         ELSE
           ZRAY   = ZRAYDEFO
           ZLBC   = ICED%XLBC(1)
           ZFSEDC = ICEP%XFSEDC(1)
-          ZCONC3D= ICED%XCONC_LAND
         ENDIF
+        ZCONC3D= PCONC3D(JIJ,JK)
         !calculation of w
         IF(PRXT(JIJ) > ICED%XRTMIN(JRR)) THEN
           ZZWLBDA=6.6E-8*(101325./PPABST(JIJ,JK))*(PTHT(JIJ,JK)/293.15)
@@ -294,8 +272,6 @@ CONTAINS
 !-------------------------------------------------------------------------------------------
     ENDDO
 
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:CLOUD',1,ZHOOK_HANDLE)
-
   END SUBROUTINE CLOUD
 
   SUBROUTINE PRISTINE_ICE(PRXT)
@@ -304,10 +280,6 @@ CONTAINS
     INTEGER :: JIJ
     REAL :: ZQP
     REAL :: ZWSEDW1, ZWSEDW2
-
-    !!REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:PRISTINE_ICE',0,ZHOOK_HANDLE)
 
     ! ******* for pristine ice
     DO JIJ = IIJB, IIJE
@@ -344,8 +316,6 @@ CONTAINS
 !-------------------------------------------------------------------------------------------
     ENDDO
 
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:PRISTINE_ICE',1,ZHOOK_HANDLE)
-
   END SUBROUTINE PRISTINE_ICE
 
   SUBROUTINE SNOW(PRXT)
@@ -354,10 +324,6 @@ CONTAINS
     INTEGER :: JIJ
     REAL :: ZQP, ZLBDAS
     REAL :: ZWSEDW1, ZWSEDW2
-
-    !!REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:SNOW',0,ZHOOK_HANDLE)
 
     ! ******* for snow
     DO JIJ = IIJB, IIJE
@@ -404,8 +370,6 @@ CONTAINS
 !-------------------------------------------------------------------------------------------
     ENDDO
 
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:SNOW',1,ZHOOK_HANDLE)
-
   END SUBROUTINE SNOW
 
   SUBROUTINE OTHER_SPECIES(PFSED,PEXSED,PRXT)
@@ -416,10 +380,6 @@ CONTAINS
     INTEGER :: JIJ
     REAL :: ZQP
     REAL :: ZWSEDW1, ZWSEDW2
-
-    !!REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:OTHER_SPECIES',0,ZHOOK_HANDLE)
 
     ! for all but cloud and pristine ice :
     DO JIJ = IIJB, IIJE
@@ -449,8 +409,6 @@ CONTAINS
       ENDIF
 !-------------------------------------------------------------------------------------------
     ENDDO
-
-    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:OTHER_SPECIES',1,ZHOOK_HANDLE)
 
   END SUBROUTINE OTHER_SPECIES
 

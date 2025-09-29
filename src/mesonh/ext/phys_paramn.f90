@@ -257,7 +257,7 @@ USE MODD_AIRCRAFT_BALLOON, ONLY: LFLYER
 USE MODD_ARGSLIST_ll, ONLY : LIST_ll
 USE MODD_BLOWSNOW,    ONLY : LBLOWSNOW,XRSNOW
 USE MODD_BUDGET,      ONLY: NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RI, NBUDGET_SV1, &
-                            TBUDGETS, xtime_bu_process, TBUCONF
+                            TBUDGETS, TBUDGETS_PTR, xtime_bu_process, TBUCONF
 USE MODD_CH_AEROSOL
 USE MODD_CH_MNHC_n, ONLY : LUSECHEM,         &! indicates if chemistry is used
                            LCH_CONV_SCAV,    &
@@ -1689,7 +1689,7 @@ END IF
               XRUS, XRVS, XRWS, XRTHS, XRRS, XRSVS, XRTKES, XSIGS,                   &
               XWTHVMF, XWUMF, XWVMF,                                                 &
               XTHW_FLUX, XRCW_FLUX, XSVW_FLUX,XDYP, XTHP, ZTDIFF, ZTDISS,            &
-              TBUDGETS, KBUDGETS=SIZE(TBUDGETS),PLEM=XLEM,PRTKEMS=XRTKEMS,           &
+              TBUDGETS_PTR, KBUDGETS=SIZE(TBUDGETS_PTR),PLEM=XLEM,PRTKEMS=XRTKEMS,           &
               PTR=XTR, PDISS=XDISS, PCURRENT_TKE_DISS=XCURRENT_TKE_DISS,             &
               PIBM_LS=XIBM_LS(:,:,:,1), PIBM_XMUT=XIBM_XMUT,                         & 
               PSSTFL=XSSTFL, PSSTFL_C=XSSTFL_C, PSSRFL_C=XSSRFL_C,                   &

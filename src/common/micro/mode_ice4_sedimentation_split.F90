@@ -10,12 +10,12 @@ SUBROUTINE ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
                                    &OELEC, OSEDIM_BEARD, PTHVREFZIKB, &
                                    &PTSTEP, KRR, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
-                                   &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
+                                   &PRS, PRT, PCONC3D, &
                                    &PINPRC, PINPRR, PINPRI, PINPRS, PINPRG, &
                                    &PQCT, PQRT, PQIT, PQST, PQGT, PQCS, PQRS, PQIS, PQSS, PQGS,&
                                    &PEFIELDW, &
                                    &PSEA, PTOWN,  &
-                                   &PINPRH, PRHT, PRHS, PFPR, &
+                                   &PINPRH, PFPR, &
                                    &PQHT, PQHS)
 !!
 !!**  PURPOSE
@@ -46,6 +46,7 @@ USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_ELEC_DESCR,     ONLY: ELEC_DESCR_t
 USE MODD_ELEC_PARAM,     ONLY: ELEC_PARAM_t
+USE MODD_FIELDS_ADDRESS
 !
 !USE MODI_GAMMA, ONLY: GAMMA
 #ifndef MNH_COMPILER_CCE
@@ -79,16 +80,9 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PPABST  ! absolute pre
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PTHT    ! Theta at time t
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PT      ! Temperature at time t
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRHODJ  ! Dry density * Jacobian
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)           :: PRCS    ! Cloud water m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRCT    ! Cloud water m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)           :: PRRS    ! Rain water m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRRT    ! Rain water m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)           :: PRIS    ! Pristine ice m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRIT    ! Pristine ice m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)           :: PRSS    ! Snow/aggregate m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRST    ! Snow/aggregate m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)           :: PRGS    ! Graupel m.r. source
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRGT    ! Graupel/hail m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT)       :: PRS     ! m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)          :: PRT     ! m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PCONC3D ! cloud liquid drop number concentration /m3
 REAL, DIMENSION(D%NIJT),       INTENT(OUT)             :: PINPRC  ! Cloud instant precip
 REAL, DIMENSION(D%NIJT),       INTENT(OUT)             :: PINPRR  ! Rain instant precip
 REAL, DIMENSION(D%NIJT),       INTENT(OUT)             :: PINPRI  ! Pristine ice instant precip
@@ -97,8 +91,6 @@ REAL, DIMENSION(D%NIJT),       INTENT(OUT)             :: PINPRG  ! Graupel inst
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(IN)    :: PSEA    ! Sea Mask
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(IN)    :: PTOWN   ! Fraction that is town
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
-REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-air precipitation fluxes
 ! variables for cloud electricity
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(IN)    :: PQCT   ! Cloud water electric charge at t
@@ -119,29 +111,23 @@ REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electr
 !
 !
 INTEGER :: JIJ, JK
-INTEGER :: IKTB, IKTE, IKB, IKL, IIJE, IIJB
-INTEGER :: IRR !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
+INTEGER :: IKTB, IKTE, IIJE, IIJB
+INTEGER :: IKRR !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL :: GSEDIC !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL :: GPRESENT_PFPR, GPRESENT_PSEA
 REAL    :: ZINVTSTEP
-REAL, DIMENSION(D%NIJT)               :: ZCONC_TMP    ! Weighted concentration
 REAL, DIMENSION(D%NIJT,D%NKTB:D%NKTE) :: ZW ! work array
-REAL, DIMENSION(D%NIJT, D%NKT)        :: ZCONC3D, & !  droplet condensation
-                                       & ZRAY,   & ! Cloud Mean radius
+REAL, DIMENSION(D%NIJT, D%NKT)        :: ZRAY,   & ! Cloud Mean radius
                                        & ZLBC,   & ! XLBC weighted by sea fraction
-                                       & ZFSEDC, &
-                                       & ZPRCS,ZPRRS,ZPRIS,ZPRSS,ZPRGS,ZPRHS, &   ! Mixing ratios created during the time step
-                                       & ZRCT, &
-                                       & ZRRT, &
-                                       & ZRIT, &
-                                       & ZRST, &
-                                       & ZRGT, &
-                                       & ZRHT
+                                       & ZFSEDC
+REAL, DIMENSION(D%NIJT, D%NKT, KRR) :: ZRS, &   ! Mixing ratios created during the time step
+                                     & ZRT
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)) :: &
                    ZQCT, ZQRT, ZQIT, ZQST, ZQGT, ZQHT, &      ! electric charge a t
                    ZPQCS, ZPQRS, ZPQIS, ZPQSS, ZPQGS, ZPQHS   ! electric charge created during the time step
 CHARACTER (LEN=4) :: HCLOUD  ! Kind of microphysical scheme
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+INTEGER :: JRR
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT', 0, ZHOOK_HANDLE)
@@ -150,7 +136,7 @@ IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT', 0, ZHOOK_HANDLE)
 !
 !
 GSEDIC = PARAMI%LSEDIC
-IRR    = KRR
+IKRR    = KRR
 !
 IKTB=D%NKTB
 IKTE=D%NKTE
@@ -169,7 +155,7 @@ ELSE
   GPRESENT_PSEA = .FALSE.
 END IF
 !
-IF(KRR==7) THEN
+IF(IKRR==7) THEN
   HCLOUD='ICE4'
 ELSE
   HCLOUD='ICE3'
@@ -193,16 +179,8 @@ IF (GSEDIC) THEN
   ZRAY(:,:)   = 0.
   ZLBC(:,:)   = ICED%XLBC(1)
   ZFSEDC(:,:) = ICEP%XFSEDC(1)
-  ZCONC3D(:,:)= ICED%XCONC_LAND
-  ZCONC_TMP(:)= ICED%XCONC_LAND
 !$acc end kernels
   IF (GPRESENT_PSEA) THEN
-!$acc kernels
-!$acc loop independent
-    DO JIJ = IIJB, IIJE
-      ZCONC_TMP(JIJ)=PSEA(JIJ)*ICED%XCONC_SEA+(1.-PSEA(JIJ))*ICED%XCONC_LAND
-    ENDDO
-!$acc end kernels
 
 !$acc kernels
 !$acc loop independent collapse(2)
@@ -211,7 +189,6 @@ IF (GSEDIC) THEN
           ZLBC(JIJ,JK)   = PSEA(JIJ)*ICED%XLBC(2)+(1.-PSEA(JIJ))*ICED%XLBC(1)
           ZFSEDC(JIJ,JK) = (PSEA(JIJ)*ICEP%XFSEDC(2)+(1.-PSEA(JIJ))*ICEP%XFSEDC(1))
           ZFSEDC(JIJ,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
-          ZCONC3D(JIJ,JK)= (1.-PTOWN(JIJ))*ZCONC_TMP(JIJ)+PTOWN(JIJ)*ICED%XCONC_URBAN
           ZRAY(JIJ,JK)   = 0.5*((1.-PSEA(JIJ))*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
                          & PSEA(JIJ)*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
       ENDDO
@@ -219,7 +196,6 @@ IF (GSEDIC) THEN
 !$acc end kernels
   ELSE
 !$acc kernels
-    ZCONC3D(:,:) = ICED%XCONC_LAND
     ZRAY(:,:)  = 0.5*(GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)))
 !$acc end kernels
   END IF
@@ -246,25 +222,16 @@ DO JK=IKTB, IKTE
   DO JIJ = IIJB, IIJE
     ! External tendecies
     IF (GSEDIC) THEN
-      ZPRCS(JIJ,JK) = PRCS(JIJ,JK)-PRCT(JIJ,JK)*ZINVTSTEP
+      ZRS(JIJ,JK,IRC) = PRS(JIJ,JK,IRC)-PRT(JIJ,JK,IRC)*ZINVTSTEP
     ENDIF
-    ZPRRS(JIJ,JK) = PRRS(JIJ,JK)-PRRT(JIJ,JK)*ZINVTSTEP
-    ZPRIS(JIJ,JK) = PRIS(JIJ,JK)-PRIT(JIJ,JK)*ZINVTSTEP
-    ZPRSS(JIJ,JK) = PRSS(JIJ,JK)-PRST(JIJ,JK)*ZINVTSTEP
-    ZPRGS(JIJ,JK) = PRGS(JIJ,JK)-PRGT(JIJ,JK)*ZINVTSTEP
-    IF ( IRR == 7 ) THEN
-      ZPRHS(JIJ,JK) = PRHS(JIJ,JK)-PRHT(JIJ,JK)*ZINVTSTEP
-    END IF
+    DO JRR=IRR, IKRR
+      ZRS(JIJ,JK,JRR) = PRS(JIJ,JK,JRR)-PRT(JIJ,JK,JRR)*ZINVTSTEP
+    ENDDO
     !
     ! mr values inside the time-splitting loop
-    ZRCT(JIJ,JK) = PRCT(JIJ,JK)
-    ZRRT(JIJ,JK) = PRRT(JIJ,JK)
-    ZRIT(JIJ,JK) = PRIT(JIJ,JK)
-    ZRST(JIJ,JK) = PRST(JIJ,JK)
-    ZRGT(JIJ,JK) = PRGT(JIJ,JK)
-    IF (IRR==7) THEN
-      ZRHT(JIJ,JK) = PRHT(JIJ,JK)
-    END IF
+    DO JRR=IRC, IKRR
+      ZRT(JIJ,JK,JRR) = PRT(JIJ,JK,JRR)
+    ENDDO
     !
     ZW(JIJ,JK) =1./(PRHODREF(JIJ,JK)* PDZZ(JIJ,JK))
     !
@@ -275,14 +242,14 @@ DO JK=IKTB, IKTE
       ZPQIS(JIJ,JK) = PQIS(JIJ,JK) - PQIT(JIJ,JK) * ZINVTSTEP
       ZPQSS(JIJ,JK) = PQSS(JIJ,JK) - PQST(JIJ,JK) * ZINVTSTEP
       ZPQGS(JIJ,JK) = PQGS(JIJ,JK) - PQGT(JIJ,JK) * ZINVTSTEP
-      IF (IRR==7) ZPQHS(JIJ,JK) = PQHS(JIJ,JK) - PQHT(JIJ,JK) * ZINVTSTEP
+      IF (IKRR==7) ZPQHS(JIJ,JK) = PQHS(JIJ,JK) - PQHT(JIJ,JK) * ZINVTSTEP
       !
       ZQCT(JIJ,JK) = PQCT(JIJ,JK)
       ZQRT(JIJ,JK) = PQST(JIJ,JK)
       ZQIT(JIJ,JK) = PQIT(JIJ,JK)
       ZQST(JIJ,JK) = PQST(JIJ,JK)
       ZQGT(JIJ,JK) = PQGT(JIJ,JK)
-      IF (IRR==7) ZQHT(JIJ,JK) = PQHT(JIJ,JK)
+      IF (IKRR==7) ZQHT(JIJ,JK) = PQHT(JIJ,JK)
     ENDIF
   ENDDO
 ENDDO
@@ -293,63 +260,63 @@ ENDDO
 !
 IF (GSEDIC) THEN
     CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
-                          &KRR, OELEC, OSEDIM_BEARD, &
+                          &IKRR, OELEC, OSEDIM_BEARD, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
-                          &2, &
-                          &ZRCT, PRCS, PINPRC, ZPRCS, &
+                          &IRC, &
+                          &ZRT(:,:,IRC), PRS(:,:,IRC), PINPRC, ZRS(:,:,IRC), &
                           &ZQCT, PQCS, ZPQCS, PEFIELDW, &
-                          &PRAY=ZRAY, PLBC=ZLBC, PFSEDC=ZFSEDC, PCONC3D=ZCONC3D, &
+                          &PRAY=ZRAY, PLBC=ZLBC, PFSEDC=ZFSEDC, PCONC3D=PCONC3D, &
                           &PFPR=PFPR)
 ENDIF
 !
 !*       2.2   for rain
 !
   CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
-                          &KRR, OELEC, OSEDIM_BEARD, &
+                          &IKRR, OELEC, OSEDIM_BEARD, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
-                          &3, &
-                          &ZRRT, PRRS, PINPRR, ZPRRS, &
+                          &IRR, &
+                          &ZRT(:,:,IRR), PRS(:,:,IRR), PINPRR, ZRS(:,:,IRR), &
                           &ZQRT, PQRS, ZPQRS, PEFIELDW, &
                           &PFPR=PFPR)
 !
 !*       2.3   for pristine ice
 !
   CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI,  ELECP, ELECD, &
-                          &KRR, OELEC, OSEDIM_BEARD, &
+                          &IKRR, OELEC, OSEDIM_BEARD, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
-                          &4, &
-                          &ZRIT, PRIS, PINPRI, ZPRIS, &
+                          &IRI, &
+                          &ZRT(:,:,IRI), PRS(:,:,IRI), PINPRI, ZRS(:,:,IRI), &
                           &ZQIT, PQIS, ZPQIS, PEFIELDW, &
                           &PFPR=PFPR)
 !
 !*       2.4   for aggregates/snow
 !
   CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI,  ELECP, ELECD, &
-                          &KRR, OELEC, OSEDIM_BEARD, &
+                          &IKRR, OELEC, OSEDIM_BEARD, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
-                          &5, &
-                          &ZRST, PRSS, PINPRS, ZPRSS, &
+                          &IRS, &
+                          &ZRT(:,:,IRS), PRS(:,:,IRS), PINPRS, ZRS(:,:,IRS), &
                           &ZQST, PQSS, ZPQSS, PEFIELDW, &
                           &PFPR=PFPR)
 !
 !*       2.5   for graupeln
 !
   CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI,  ELECP, ELECD, &
-                          &KRR, OELEC, OSEDIM_BEARD, &
+                          &IKRR, OELEC, OSEDIM_BEARD, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
-                          &6, &
-                          &ZRGT, PRGS, PINPRG, ZPRGS, &
+                          &IRG, &
+                          &ZRT(:,:,IRG), PRS(:,:,IRG), PINPRG, ZRS(:,:,IRG), &
                           &ZQGT, PQGS, ZPQGS, PEFIELDW, &
                           &PFPR=PFPR)
 !
 !*       2.6   for hail
 !
-IF (IRR==7) THEN
+IF (IKRR==7) THEN
     CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
-                            &KRR, OELEC, OSEDIM_BEARD, &
+                            &IKRR, OELEC, OSEDIM_BEARD, &
                             &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
-                            &7, &
-                            &ZRHT, PRHS, PINPRH, ZPRHS, &
+                            &IRH, &
+                            &ZRT(:,:,IRH), PRS(:,:,IRH), PINPRH, ZRS(:,:,IRH), &
                             &ZQHT, PQHS, ZPQHS, PEFIELDW, &
                             &PFPR=PFPR)
 ENDIF
@@ -512,7 +479,7 @@ DO WHILE (ZANYREMAINT)
   !*       2.    compute the fluxes
   !
   !
-  IF(KSPE==2) THEN
+  IF(KSPE==IRC) THEN
     !******* for cloud
 !$acc kernels
     ZWSED(:,:) = 0.
@@ -564,7 +531,7 @@ DO WHILE (ZANYREMAINT)
       END DO
 !$acc end kernels
     END IF
-  ELSEIF(KSPE==4) THEN
+  ELSEIF(KSPE==IRI) THEN
     ! ******* for pristine ice
 !$acc kernels
     ZWSED(:,:) = 0.
@@ -616,7 +583,7 @@ DO WHILE (ZANYREMAINT)
       END DO
 !$acc end kernels
     END IF
-  ELSEIF(KSPE==5) THEN
+  ELSEIF(KSPE==IRS) THEN
     ! ******* for snow
 !$acc kernels
     ZWSED(:,:) = 0.
@@ -689,13 +656,13 @@ DO WHILE (ZANYREMAINT)
   ELSE
     ! ******* for other species
     SELECT CASE(KSPE)
-      CASE(3)
+      CASE(IRR)
         ZFSED=ICEP%XFSEDR
         ZEXSED=ICEP%XEXSEDR
-      CASE(6)
+      CASE(IRG)
         ZFSED=ICEP%XFSEDG
         ZEXSED=ICEP%XEXSEDG
-      CASE(7)
+      CASE(IRH)
         ZFSED=ICEP%XFSEDH
         ZEXSED=ICEP%XEXSEDH
       CASE DEFAULT
@@ -704,7 +671,7 @@ DO WHILE (ZANYREMAINT)
     !
     IF (OELEC) THEN
       SELECT CASE(KSPE)
-        CASE(3)
+        CASE(IRR)
           ZFQSED = ELECP%XFQSEDR
           ZEXQSED = ELECP%XEXQSEDR
           ZEXMIN = ELECP%XERMIN
@@ -714,7 +681,7 @@ DO WHILE (ZANYREMAINT)
           ZFQUPDX = ELECP%XFQUPDR
           ZCXX = ELECD%XCXR
           ZFX = ELECD%XFR
-        CASE(6)
+        CASE(IRG)
           ZFQSED = ELECP%XFQSEDG
           ZEXQSED = ELECP%XEXQSEDG
           ZEXMIN = ELECP%XEGMIN
@@ -724,7 +691,7 @@ DO WHILE (ZANYREMAINT)
           ZFQUPDX = ELECP%XFQUPDG
           ZCXX = ICED%XCXG
           ZFX = ELECD%XFG
-        CASE(7)
+        CASE(IRH)
           ZFQSED = ELECP%XFQSEDH
           ZEXQSED = ELECP%XEXQSEDH
           ZEXMIN = ELECP%XEHMIN

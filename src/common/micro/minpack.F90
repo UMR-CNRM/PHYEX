@@ -143,24 +143,24 @@ subroutine chkder ( m, n, x, fvec, fjac, ldfjac, xp, fvecp, mode, err )
 !
   implicit none
 
-  integer ( kind = 4 ) ldfjac
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldfjac
+  integer ( kind = 4 ), intent(in) :: m
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) eps
   real ( kind = 8 ) epsf
   real ( kind = 8 ) epslog
   real ( kind = 8 ) epsmch
-  real ( kind = 8 ) err(m)
-  real ( kind = 8 ) fjac(ldfjac,n)
-  real ( kind = 8 ) fvec(m)
-  real ( kind = 8 ) fvecp(m)
+  real ( kind = 8 ), intent(out) :: err(m)
+  real ( kind = 8 ), intent(in) :: fjac(ldfjac,n)
+  real ( kind = 8 ), intent(in) :: fvec(m)
+  real ( kind = 8 ), intent(in) :: fvecp(m)
   integer ( kind = 4 ) i
   integer ( kind = 4 ) j
-  integer ( kind = 4 ) mode
+  integer ( kind = 4 ), intent(in) :: mode
   real ( kind = 8 ) temp
-  real ( kind = 8 ) x(n)
-  real ( kind = 8 ) xp(n)
+  real ( kind = 8 ), intent(in) :: x(n)
+  real ( kind = 8 ), intent(out) :: xp(n)
 
   epsmch = epsilon ( epsmch )
   eps = sqrt ( epsmch )
@@ -284,13 +284,13 @@ subroutine dogleg ( n, r, lr, diag, qtb, delta, x )
 !
   implicit none
 
-  integer ( kind = 4 ) lr
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: lr
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) alpha
   real ( kind = 8 ) bnorm
-  real ( kind = 8 ) delta
-  real ( kind = 8 ) diag(n)
+  real ( kind = 8 ), intent(in) :: delta
+  real ( kind = 8 ), intent(in) :: diag(n)
   real ( kind = 8 ) enorm
   real ( kind = 8 ) epsmch
   real ( kind = 8 ) gnorm
@@ -300,14 +300,14 @@ subroutine dogleg ( n, r, lr, diag, qtb, delta, x )
   integer ( kind = 4 ) k
   integer ( kind = 4 ) l
   real ( kind = 8 ) qnorm
-  real ( kind = 8 ) qtb(n)
-  real ( kind = 8 ) r(lr)
+  real ( kind = 8 ), intent(in) :: qtb(n)
+  real ( kind = 8 ), intent(in) :: r(lr)
   real ( kind = 8 ) sgnorm
   real ( kind = 8 ) sum2
   real ( kind = 8 ) temp
   real ( kind = 8 ) wa1(n)
   real ( kind = 8 ) wa2(n)
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(out) :: x(n)
 
   epsmch = epsilon ( epsmch )
 !
@@ -471,8 +471,8 @@ function enorm ( n, x )
 !
   implicit none
 
-  integer ( kind = 4 ) n
-  real ( kind = 8 ) x(n)
+  integer ( kind = 4 ), intent(in) :: n
+  real ( kind = 8 ), intent(in) :: x(n)
   real ( kind = 8 ) enorm
 
   enorm = sqrt ( sum ( x(1:n) ** 2 ))
@@ -532,7 +532,7 @@ function enorm2 ( n, x )
 !
   implicit none
 
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) agiant
   real ( kind = 8 ) enorm2
@@ -542,7 +542,7 @@ function enorm2 ( n, x )
   real ( kind = 8 ) s1
   real ( kind = 8 ) s2
   real ( kind = 8 ) s3
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(in) :: x(n)
   real ( kind = 8 ) xabs
   real ( kind = 8 ) x1max
   real ( kind = 8 ) x3max
@@ -687,27 +687,27 @@ subroutine fdjac1 ( fcn, n, x, fvec, fjac, ldfjac, iflag, ml, mu, epsfcn )
 !
   implicit none
 
-  integer ( kind = 4 ) ldfjac
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldfjac
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) eps
-  real ( kind = 8 ) epsfcn
+  real ( kind = 8 ), intent(in) :: epsfcn
   real ( kind = 8 ) epsmch
   external fcn
-  real ( kind = 8 ) fjac(ldfjac,n)
-  real ( kind = 8 ) fvec(n)
+  real ( kind = 8 ), intent(out) :: fjac(ldfjac,n)
+  real ( kind = 8 ), intent(in) :: fvec(n)
   real ( kind = 8 ) h
   integer ( kind = 4 ) i
-  integer ( kind = 4 ) iflag
+  integer ( kind = 4 ), intent(out) :: iflag
   integer ( kind = 4 ) j
   integer ( kind = 4 ) k
-  integer ( kind = 4 ) ml
+  integer ( kind = 4 ), intent(in) :: ml
   integer ( kind = 4 ) msum
-  integer ( kind = 4 ) mu
+  integer ( kind = 4 ), intent(in) :: mu
   real ( kind = 8 ) temp
   real ( kind = 8 ) wa1(n)
   real ( kind = 8 ) wa2(n)
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(inout) :: x(n)
 
   epsmch = epsilon ( epsmch )
 
@@ -862,23 +862,22 @@ subroutine fdjac2 ( fcn, m, n, x, fvec, fjac, ldfjac, iflag, epsfcn )
 !
   implicit none
 
-  integer ( kind = 4 ) ldfjac
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldfjac
+  integer ( kind = 4 ), intent(in) :: m
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) eps
-  real ( kind = 8 ) epsfcn
+  real ( kind = 8 ), intent(in) :: epsfcn
   real ( kind = 8 ) epsmch
   external fcn
-  real ( kind = 8 ) fjac(ldfjac,n)
-  real ( kind = 8 ) fvec(m)
+  real ( kind = 8 ), intent(out) :: fjac(ldfjac,n)
+  real ( kind = 8 ), intent(in) :: fvec(m)
   real ( kind = 8 ) h
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) iflag
+  integer ( kind = 4 ), intent(out) :: iflag
   integer ( kind = 4 ) j
   real ( kind = 8 ) temp
   real ( kind = 8 ) wa(m)
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(inout) :: x(n)
 
   epsmch = epsilon ( epsmch )
 
@@ -1036,46 +1035,46 @@ subroutine hybrd ( fcn, n, x, fvec, xtol, maxfev, ml, mu, epsfcn, diag, mode, &
 !
   implicit none
 
-  integer ( kind = 4 ) ldfjac
-  integer ( kind = 4 ) lr
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldfjac
+  integer ( kind = 4 ), intent(in) :: lr
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) actred
   real ( kind = 8 ) delta
-  real ( kind = 8 ) diag(n)
+  real ( kind = 8 ), intent(inout) :: diag(n)
   real ( kind = 8 ) enorm
-  real ( kind = 8 ) epsfcn
+  real ( kind = 8 ), intent(in) :: epsfcn
   real ( kind = 8 ) epsmch
-  real ( kind = 8 ) factor
+  real ( kind = 8 ), intent(in) :: factor
   external fcn
-  real ( kind = 8 ) fjac(ldfjac,n)
+  real ( kind = 8 ), intent(out) :: fjac(ldfjac,n)
   real ( kind = 8 ) fnorm
   real ( kind = 8 ) fnorm1
-  real ( kind = 8 ) fvec(n)
+  real ( kind = 8 ), intent(out) :: fvec(n)
   integer ( kind = 4 ) i
   integer ( kind = 4 ) iflag
-  integer ( kind = 4 ) info
+  integer ( kind = 4 ), intent(out) :: info
   integer ( kind = 4 ) iter
   integer ( kind = 4 ) iwa(1)
   integer ( kind = 4 ) j
   logical jeval
   integer ( kind = 4 ) l
-  integer ( kind = 4 ) maxfev
-  integer ( kind = 4 ) ml
-  integer ( kind = 4 ) mode
+  integer ( kind = 4 ), intent(in) :: maxfev
+  integer ( kind = 4 ), intent(in) :: ml
+  integer ( kind = 4 ), intent(in) :: mode
   integer ( kind = 4 ) msum
-  integer ( kind = 4 ) mu
+  integer ( kind = 4 ), intent(in) :: mu
   integer ( kind = 4 ) ncfail
   integer ( kind = 4 ) nslow1
   integer ( kind = 4 ) nslow2
   integer ( kind = 4 ) ncsuc
-  integer ( kind = 4 ) nfev
-  integer ( kind = 4 ) nprint
+  integer ( kind = 4 ), intent(out) :: nfev
+  integer ( kind = 4 ), intent(in) :: nprint
   logical pivot
   real ( kind = 8 ) pnorm
   real ( kind = 8 ) prered
-  real ( kind = 8 ) qtf(n)
-  real ( kind = 8 ) r(lr)
+  real ( kind = 8 ), intent(out) :: qtf(n)
+  real ( kind = 8 ), intent(out) :: r(lr)
   real ( kind = 8 ) ratio
   logical sing
   real ( kind = 8 ) sum2
@@ -1084,9 +1083,9 @@ subroutine hybrd ( fcn, n, x, fvec, xtol, maxfev, ml, mu, epsfcn, diag, mode, &
   real ( kind = 8 ) wa2(n)
   real ( kind = 8 ) wa3(n)
   real ( kind = 8 ) wa4(n)
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(inout) :: x(n)
   real ( kind = 8 ) xnorm
-  real ( kind = 8 ) xtol
+  real ( kind = 8 ), intent(in) :: xtol
 
   epsmch = epsilon ( epsmch )
 
@@ -1530,17 +1529,15 @@ subroutine hybrd1 ( fcn, n, x, fvec, tol, info )
 !
   implicit none
 
-  integer ( kind = 4 ) lwa
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) diag(n)
   real ( kind = 8 ) epsfcn
   real ( kind = 8 ) factor
   external fcn
   real ( kind = 8 ) fjac(n,n)
-  real ( kind = 8 ) fvec(n)
-  integer ( kind = 4 ) info
-  integer ( kind = 4 ) j
+  real ( kind = 8 ), intent(out) :: fvec(n)
+  integer ( kind = 4 ), intent(out) :: info
   integer ( kind = 4 ) ldfjac
   integer ( kind = 4 ) lr
   integer ( kind = 4 ) maxfev
@@ -1551,8 +1548,8 @@ subroutine hybrd1 ( fcn, n, x, fvec, tol, info )
   integer ( kind = 4 ) nprint
   real ( kind = 8 ) qtf(n)
   real ( kind = 8 ) r((n*(n+1))/2)
-  real ( kind = 8 ) tol
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(in) :: tol
+  real ( kind = 8 ), intent(inout) :: x(n)
   real ( kind = 8 ) xtol
 
   if ( n <= 0 ) then
@@ -1716,43 +1713,43 @@ subroutine hybrj ( fcn, n, x, fvec, fjac, ldfjac, xtol, maxfev, diag, mode, &
 !
   implicit none
 
-  integer ( kind = 4 ) ldfjac
-  integer ( kind = 4 ) lr
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldfjac
+  integer ( kind = 4 ), intent(in) :: lr
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) actred
   real ( kind = 8 ) delta
-  real ( kind = 8 ) diag(n)
+  real ( kind = 8 ), intent(inout) :: diag(n)
   real ( kind = 8 ) enorm
   real ( kind = 8 ) epsmch
-  real ( kind = 8 ) factor
+  real ( kind = 8 ), intent(in) :: factor
   external fcn
-  real ( kind = 8 ) fjac(ldfjac,n)
+  real ( kind = 8 ), intent(out) :: fjac(ldfjac,n)
   real ( kind = 8 ) fnorm
   real ( kind = 8 ) fnorm1
-  real ( kind = 8 ) fvec(n)
+  real ( kind = 8 ), intent(out) :: fvec(n)
   integer ( kind = 4 ) i
   integer ( kind = 4 ) iflag
-  integer ( kind = 4 ) info
+  integer ( kind = 4 ), intent(out) :: info
   integer ( kind = 4 ) iter
   integer ( kind = 4 ) iwa(1)
   integer ( kind = 4 ) j
   logical jeval
   integer ( kind = 4 ) l
-  integer ( kind = 4 ) maxfev
-  integer ( kind = 4 ) mode
+  integer ( kind = 4 ), intent(in) :: maxfev
+  integer ( kind = 4 ), intent(in) :: mode
   integer ( kind = 4 ) ncfail
   integer ( kind = 4 ) nslow1
   integer ( kind = 4 ) nslow2
   integer ( kind = 4 ) ncsuc
-  integer ( kind = 4 ) nfev
-  integer ( kind = 4 ) njev
-  integer ( kind = 4 ) nprint
+  integer ( kind = 4 ), intent(out) :: nfev
+  integer ( kind = 4 ), intent(out) :: njev
+  integer ( kind = 4 ), intent(in) :: nprint
   logical pivot
   real ( kind = 8 ) pnorm
   real ( kind = 8 ) prered
-  real ( kind = 8 ) qtf(n)
-  real ( kind = 8 ) r(lr)
+  real ( kind = 8 ), intent(out) :: qtf(n)
+  real ( kind = 8 ), intent(out) :: r(lr)
   real ( kind = 8 ) ratio
   logical sing
   real ( kind = 8 ) sum2
@@ -1761,9 +1758,9 @@ subroutine hybrj ( fcn, n, x, fvec, fjac, ldfjac, xtol, maxfev, diag, mode, &
   real ( kind = 8 ) wa2(n)
   real ( kind = 8 ) wa3(n)
   real ( kind = 8 ) wa4(n)
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(inout) :: x(n)
   real ( kind = 8 ) xnorm
-  real ( kind = 8 ) xtol
+  real ( kind = 8 ), intent(in) :: xtol
 
   epsmch = epsilon ( epsmch )
 
@@ -2246,16 +2243,15 @@ subroutine hybrj1 ( fcn, n, x, fvec, fjac, ldfjac, tol, info )
 !
   implicit none
 
-  integer ( kind = 4 ) ldfjac
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldfjac
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) diag(n)
   real ( kind = 8 ) factor
   external fcn
-  real ( kind = 8 ) fjac(ldfjac,n)
-  real ( kind = 8 ) fvec(n)
-  integer ( kind = 4 ) info
-  integer ( kind = 4 ) j
+  real ( kind = 8 ), intent(out) :: fjac(ldfjac,n)
+  real ( kind = 8 ), intent(out) :: fvec(n)
+  integer ( kind = 4 ), intent(out) :: info
   integer ( kind = 4 ) lr
   integer ( kind = 4 ) maxfev
   integer ( kind = 4 ) mode
@@ -2264,8 +2260,8 @@ subroutine hybrj1 ( fcn, n, x, fvec, fjac, ldfjac, tol, info )
   integer ( kind = 4 ) nprint
   real ( kind = 8 ) qtf(n)
   real ( kind = 8 ) r((n*(n+1))/2)
-  real ( kind = 8 ) tol
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(in) :: tol
+  real ( kind = 8 ), intent(inout) :: x(n)
   real ( kind = 8 ) xtol
 
   info = 0
@@ -2444,42 +2440,41 @@ subroutine lmder ( fcn, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, &
 !
   implicit none
 
-  integer ( kind = 4 ) ldfjac
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldfjac
+  integer ( kind = 4 ), intent(in) :: m
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) actred
   real ( kind = 8 ) delta
-  real ( kind = 8 ) diag(n)
+  real ( kind = 8 ), intent(inout) :: diag(n)
   real ( kind = 8 ) dirder
   real ( kind = 8 ) enorm
   real ( kind = 8 ) epsmch
-  real ( kind = 8 ) factor
+  real ( kind = 8 ), intent(in) :: factor
   external fcn
-  real ( kind = 8 ) fjac(ldfjac,n)
+  real ( kind = 8 ), intent(out) :: fjac(ldfjac,n)
   real ( kind = 8 ) fnorm
   real ( kind = 8 ) fnorm1
-  real ( kind = 8 ) ftol
-  real ( kind = 8 ) fvec(m)
+  real ( kind = 8 ), intent(in) :: ftol
+  real ( kind = 8 ), intent(out) :: fvec(m)
   real ( kind = 8 ) gnorm
-  real ( kind = 8 ) gtol
-  integer ( kind = 4 ) i
+  real ( kind = 8 ), intent(in) :: gtol
   integer ( kind = 4 ) iflag
-  integer ( kind = 4 ) info
-  integer ( kind = 4 ) ipvt(n)
+  integer ( kind = 4 ), intent(out) :: info
+  integer ( kind = 4 ), intent(out) :: ipvt(n)
   integer ( kind = 4 ) iter
   integer ( kind = 4 ) j
   integer ( kind = 4 ) l
-  integer ( kind = 4 ) maxfev
-  integer ( kind = 4 ) mode
-  integer ( kind = 4 ) nfev
-  integer ( kind = 4 ) njev
-  integer ( kind = 4 ) nprint
+  integer ( kind = 4 ), intent(in) :: maxfev
+  integer ( kind = 4 ), intent(in) :: mode
+  integer ( kind = 4 ), intent(out) :: nfev
+  integer ( kind = 4 ), intent(out) :: njev
+  integer ( kind = 4 ), intent(in) :: nprint
   real ( kind = 8 ) par
   logical pivot
   real ( kind = 8 ) pnorm
   real ( kind = 8 ) prered
-  real ( kind = 8 ) qtf(n)
+  real ( kind = 8 ), intent(out) :: qtf(n)
   real ( kind = 8 ) ratio
   real ( kind = 8 ) sum2
   real ( kind = 8 ) temp
@@ -2490,8 +2485,8 @@ subroutine lmder ( fcn, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, &
   real ( kind = 8 ) wa3(n)
   real ( kind = 8 ) wa4(m)
   real ( kind = 8 ) xnorm
-  real ( kind = 8 ) x(n)
-  real ( kind = 8 ) xtol
+  real ( kind = 8 ), intent(inout) :: x(n)
+  real ( kind = 8 ), intent(in) :: xtol
 
   epsmch = epsilon ( epsmch )
 
@@ -2923,18 +2918,18 @@ subroutine lmder1 ( fcn, m, n, x, fvec, fjac, ldfjac, tol, info )
 !
   implicit none
 
-  integer ( kind = 4 ) ldfjac
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldfjac
+  integer ( kind = 4 ), intent(in) :: m
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) diag(n)
   real ( kind = 8 ) factor
   external fcn
-  real ( kind = 8 ) fjac(ldfjac,n)
+  real ( kind = 8 ), intent(out) :: fjac(ldfjac,n)
   real ( kind = 8 ) ftol
-  real ( kind = 8 ) fvec(m)
+  real ( kind = 8 ), intent(out) :: fvec(m)
   real ( kind = 8 ) gtol
-  integer ( kind = 4 ) info
+  integer ( kind = 4 ), intent(out) :: info
   integer ( kind = 4 ) ipvt(n)
   integer ( kind = 4 ) maxfev
   integer ( kind = 4 ) mode
@@ -2942,8 +2937,8 @@ subroutine lmder1 ( fcn, m, n, x, fvec, fjac, ldfjac, tol, info )
   integer ( kind = 4 ) njev
   integer ( kind = 4 ) nprint
   real ( kind = 8 ) qtf(n)
-  real ( kind = 8 ) tol
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(in) :: tol
+  real ( kind = 8 ), intent(inout) :: x(n)
   real ( kind = 8 ) xtol
 
   info = 0
@@ -3126,42 +3121,42 @@ subroutine lmdif ( fcn, m, n, x, fvec, ftol, xtol, gtol, maxfev, epsfcn, &
 !
   implicit none
 
-  integer ( kind = 4 ) ldfjac
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldfjac
+  integer ( kind = 4 ), intent(in) :: m
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) actred
   real ( kind = 8 ) delta
-  real ( kind = 8 ) diag(n)
+  real ( kind = 8 ), intent(inout) :: diag(n)
   real ( kind = 8 ) dirder
   real ( kind = 8 ) enorm
-  real ( kind = 8 ) epsfcn
+  real ( kind = 8 ), intent(in) :: epsfcn
   real ( kind = 8 ) epsmch
-  real ( kind = 8 ) factor
+  real ( kind = 8 ), intent(in) :: factor
   external fcn
-  real ( kind = 8 ) fjac(ldfjac,n)
+  real ( kind = 8 ), intent(out) :: fjac(ldfjac,n)
   real ( kind = 8 ) fnorm
   real ( kind = 8 ) fnorm1
-  real ( kind = 8 ) ftol
-  real ( kind = 8 ) fvec(m)
+  real ( kind = 8 ), intent(in) :: ftol
+  real ( kind = 8 ), intent(out) :: fvec(m)
   real ( kind = 8 ) gnorm
-  real ( kind = 8 ) gtol
+  real ( kind = 8 ), intent(in) :: gtol
   integer ( kind = 4 ) i
   integer ( kind = 4 ) iflag
   integer ( kind = 4 ) iter
-  integer ( kind = 4 ) info
-  integer ( kind = 4 ) ipvt(n)
+  integer ( kind = 4 ), intent(out) :: info
+  integer ( kind = 4 ), intent(out) :: ipvt(n)
   integer ( kind = 4 ) j
   integer ( kind = 4 ) l
-  integer ( kind = 4 ) maxfev
-  integer ( kind = 4 ) mode
-  integer ( kind = 4 ) nfev
-  integer ( kind = 4 ) nprint
+  integer ( kind = 4 ), intent(in) :: maxfev
+  integer ( kind = 4 ), intent(in) :: mode
+  integer ( kind = 4 ), intent(out) :: nfev
+  integer ( kind = 4 ), intent(in) :: nprint
   real ( kind = 8 ) par
   logical pivot
   real ( kind = 8 ) pnorm
   real ( kind = 8 ) prered
-  real ( kind = 8 ) qtf(n)
+  real ( kind = 8 ), intent(out) :: qtf(n)
   real ( kind = 8 ) ratio
   real ( kind = 8 ) sum2
   real ( kind = 8 ) temp
@@ -3171,9 +3166,9 @@ subroutine lmdif ( fcn, m, n, x, fvec, ftol, xtol, gtol, maxfev, epsfcn, &
   real ( kind = 8 ) wa2(n)
   real ( kind = 8 ) wa3(n)
   real ( kind = 8 ) wa4(m)
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(inout) :: x(n)
   real ( kind = 8 ) xnorm
-  real ( kind = 8 ) xtol
+  real ( kind = 8 ), intent(in) :: xtol
 
   epsmch = epsilon ( epsmch )
 
@@ -3590,8 +3585,8 @@ subroutine lmdif1 ( fcn, m, n, x, fvec, tol, info )
 !
   implicit none
 
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: m
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) diag(n)
   real ( kind = 8 ) epsfcn
@@ -3599,9 +3594,9 @@ subroutine lmdif1 ( fcn, m, n, x, fvec, tol, info )
   external fcn
   real ( kind = 8 ) fjac(m,n)
   real ( kind = 8 ) ftol
-  real ( kind = 8 ) fvec(m)
+  real ( kind = 8 ), intent(out) :: fvec(m)
   real ( kind = 8 ) gtol
-  integer ( kind = 4 ) info
+  integer ( kind = 4 ), intent(out) :: info
   integer ( kind = 4 ) ipvt(n)
   integer ( kind = 4 ) ldfjac
   integer ( kind = 4 ) maxfev
@@ -3609,8 +3604,8 @@ subroutine lmdif1 ( fcn, m, n, x, fvec, tol, info )
   integer ( kind = 4 ) nfev
   integer ( kind = 4 ) nprint
   real ( kind = 8 ) qtf(n)
-  real ( kind = 8 ) tol
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(in) :: tol
+  real ( kind = 8 ), intent(inout) :: x(n)
   real ( kind = 8 ) xtol
 
   info = 0
@@ -3745,36 +3740,34 @@ subroutine lmpar ( n, r, ldr, ipvt, diag, qtb, delta, par, x, sdiag )
 !
   implicit none
 
-  integer ( kind = 4 ) ldr
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldr
+  integer ( kind = 4 ), intent(in) :: n
 
-  real ( kind = 8 ) delta
-  real ( kind = 8 ) diag(n)
+  real ( kind = 8 ), intent(in) :: delta
+  real ( kind = 8 ), intent(in) :: diag(n)
   real ( kind = 8 ) dwarf
   real ( kind = 8 ) dxnorm
   real ( kind = 8 ) enorm
   real ( kind = 8 ) gnorm
   real ( kind = 8 ) fp
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) ipvt(n)
+  integer ( kind = 4 ), intent(in) :: ipvt(n)
   integer ( kind = 4 ) iter
   integer ( kind = 4 ) j
   integer ( kind = 4 ) k
   integer ( kind = 4 ) l
   integer ( kind = 4 ) nsing
-  real ( kind = 8 ) par
+  real ( kind = 8 ), intent(inout) :: par
   real ( kind = 8 ) parc
   real ( kind = 8 ) parl
   real ( kind = 8 ) paru
-  real ( kind = 8 ) qnorm
-  real ( kind = 8 ) qtb(n)
-  real ( kind = 8 ) r(ldr,n)
-  real ( kind = 8 ) sdiag(n)
+  real ( kind = 8 ), intent(in) :: qtb(n)
+  real ( kind = 8 ), intent(inout) :: r(ldr,n)
+  real ( kind = 8 ), intent(out) :: sdiag(n)
   real ( kind = 8 ) sum2
   real ( kind = 8 ) temp
   real ( kind = 8 ) wa1(n)
   real ( kind = 8 ) wa2(n)
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(out) :: x(n)
 !
 !  DWARF is the smallest positive magnitude.
 !
@@ -4101,42 +4094,42 @@ subroutine lmstr ( fcn, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, &
 !
   implicit none
 
-  integer ( kind = 4 ) ldfjac
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldfjac
+  integer ( kind = 4 ), intent(in) :: m
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) actred
   real ( kind = 8 ) delta
-  real ( kind = 8 ) diag(n)
+  real ( kind = 8 ), intent(inout) :: diag(n)
   real ( kind = 8 ) dirder
   real ( kind = 8 ) enorm
   real ( kind = 8 ) epsmch
-  real ( kind = 8 ) factor
+  real ( kind = 8 ), intent(in) :: factor
   external fcn
-  real ( kind = 8 ) fjac(ldfjac,n)
+  real ( kind = 8 ), intent(out) :: fjac(ldfjac,n)
   real ( kind = 8 ) fnorm
   real ( kind = 8 ) fnorm1
-  real ( kind = 8 ) ftol
-  real ( kind = 8 ) fvec(m)
+  real ( kind = 8 ), intent(in) :: ftol
+  real ( kind = 8 ), intent(out) :: fvec(m)
   real ( kind = 8 ) gnorm
-  real ( kind = 8 ) gtol
+  real ( kind = 8 ), intent(in) :: gtol
   integer ( kind = 4 ) i
   integer ( kind = 4 ) iflag
-  integer ( kind = 4 ) info
-  integer ( kind = 4 ) ipvt(n)
+  integer ( kind = 4 ), intent(out) :: info
+  integer ( kind = 4 ), intent(out) :: ipvt(n)
   integer ( kind = 4 ) iter
   integer ( kind = 4 ) j
   integer ( kind = 4 ) l
-  integer ( kind = 4 ) maxfev
-  integer ( kind = 4 ) mode
-  integer ( kind = 4 ) nfev
-  integer ( kind = 4 ) njev
-  integer ( kind = 4 ) nprint
+  integer ( kind = 4 ), intent(in) :: maxfev
+  integer ( kind = 4 ), intent(in) :: mode
+  integer ( kind = 4 ), intent(out) :: nfev
+  integer ( kind = 4 ), intent(out) :: njev
+  integer ( kind = 4 ), intent(in) :: nprint
   real ( kind = 8 ) par
   logical pivot
   real ( kind = 8 ) pnorm
   real ( kind = 8 ) prered
-  real ( kind = 8 ) qtf(n)
+  real ( kind = 8 ), intent(out) :: qtf(n)
   real ( kind = 8 ) ratio
   logical sing
   real ( kind = 8 ) sum2
@@ -4147,9 +4140,9 @@ subroutine lmstr ( fcn, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, &
   real ( kind = 8 ) wa2(n)
   real ( kind = 8 ) wa3(n)
   real ( kind = 8 ) wa4(m)
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(inout) :: x(n)
   real ( kind = 8 ) xnorm
-  real ( kind = 8 ) xtol
+  real ( kind = 8 ), intent(in) :: xtol
 
   epsmch = epsilon ( epsmch )
 
@@ -4601,18 +4594,18 @@ subroutine lmstr1 ( fcn, m, n, x, fvec, fjac, ldfjac, tol, info )
 !
   implicit none
 
-  integer ( kind = 4 ) ldfjac
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldfjac
+  integer ( kind = 4 ), intent(in) :: m
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) diag(n)
   real ( kind = 8 ) factor
   external fcn
-  real ( kind = 8 ) fjac(ldfjac,n)
+  real ( kind = 8 ), intent(out) :: fjac(ldfjac,n)
   real ( kind = 8 ) ftol
-  real ( kind = 8 ) fvec(m)
+  real ( kind = 8 ), intent(out) :: fvec(m)
   real ( kind = 8 ) gtol
-  integer ( kind = 4 ) info
+  integer ( kind = 4 ), intent(out) :: info
   integer ( kind = 4 ) ipvt(n)
   integer ( kind = 4 ) maxfev
   integer ( kind = 4 ) mode
@@ -4620,8 +4613,8 @@ subroutine lmstr1 ( fcn, m, n, x, fvec, fjac, ldfjac, tol, info )
   integer ( kind = 4 ) njev
   integer ( kind = 4 ) nprint
   real ( kind = 8 ) qtf(n)
-  real ( kind = 8 ) tol
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(in) :: tol
+  real ( kind = 8 ), intent(inout) :: x(n)
   real ( kind = 8 ) xtol
 
   if ( n <= 0 ) then
@@ -4720,15 +4713,15 @@ subroutine qform ( m, n, q, ldq )
 !
   implicit none
 
-  integer ( kind = 4 ) ldq
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldq
+  integer ( kind = 4 ), intent(in) :: m
+  integer ( kind = 4 ), intent(in) :: n
 
   integer ( kind = 4 ) j
   integer ( kind = 4 ) k
   integer ( kind = 4 ) l
   integer ( kind = 4 ) minmn
-  real ( kind = 8 ) q(ldq,m)
+  real ( kind = 8 ), intent(inout) :: q(ldq,m)
   real ( kind = 8 ) temp
   real ( kind = 8 ) wa(m)
 
@@ -4845,26 +4838,25 @@ subroutine qrfac ( m, n, a, lda, pivot, ipvt, lipvt, rdiag, acnorm )
 !
   implicit none
 
-  integer ( kind = 4 ) lda
-  integer ( kind = 4 ) lipvt
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: lda
+  integer ( kind = 4 ), intent(in) :: lipvt
+  integer ( kind = 4 ), intent(in) :: m
+  integer ( kind = 4 ), intent(in) :: n
 
-  real ( kind = 8 ) a(lda,n)
-  real ( kind = 8 ) acnorm(n)
+  real ( kind = 8 ), intent(inout) :: a(lda,n)
+  real ( kind = 8 ), intent(out) :: acnorm(n)
   real ( kind = 8 ) ajnorm
   real ( kind = 8 ) enorm
   real ( kind = 8 ) epsmch
-  integer ( kind = 4 ) i
   integer ( kind = 4 ) i4_temp
-  integer ( kind = 4 ) ipvt(lipvt)
+  integer ( kind = 4 ), intent(out) :: ipvt(lipvt)
   integer ( kind = 4 ) j
   integer ( kind = 4 ) k
   integer ( kind = 4 ) kmax
   integer ( kind = 4 ) minmn
-  logical pivot
+  logical, intent(in) :: pivot
   real ( kind = 8 ) r8_temp(m)
-  real ( kind = 8 ) rdiag(n)
+  real ( kind = 8 ), intent(out) :: rdiag(n)
   real ( kind = 8 ) temp
   real ( kind = 8 ) wa(n)
 
@@ -5050,28 +5042,28 @@ subroutine qrsolv ( n, r, ldr, ipvt, diag, qtb, x, sdiag )
 !
   implicit none
 
-  integer ( kind = 4 ) ldr
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldr
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) c
   real ( kind = 8 ) cotan
-  real ( kind = 8 ) diag(n)
+  real ( kind = 8 ), intent(in) :: diag(n)
   integer ( kind = 4 ) i
-  integer ( kind = 4 ) ipvt(n)
+  integer ( kind = 4 ), intent(in) :: ipvt(n)
   integer ( kind = 4 ) j
   integer ( kind = 4 ) k
   integer ( kind = 4 ) l
   integer ( kind = 4 ) nsing
-  real ( kind = 8 ) qtb(n)
+  real ( kind = 8 ), intent(in) :: qtb(n)
   real ( kind = 8 ) qtbpj
-  real ( kind = 8 ) r(ldr,n)
+  real ( kind = 8 ), intent(inout) :: r(ldr,n)
   real ( kind = 8 ) s
-  real ( kind = 8 ) sdiag(n)
+  real ( kind = 8 ), intent(out) :: sdiag(n)
   real ( kind = 8 ) sum2
   real ( kind = 8 ) t
   real ( kind = 8 ) temp
   real ( kind = 8 ) wa(n)
-  real ( kind = 8 ) x(n)
+  real ( kind = 8 ), intent(out) :: x(n)
 !
 !  Copy R and Q'*B to preserve input and initialize S.
 !
@@ -5238,18 +5230,18 @@ subroutine r1mpyq ( m, n, a, lda, v, w )
 !
   implicit none
 
-  integer ( kind = 4 ) lda
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: lda
+  integer ( kind = 4 ), intent(in) :: m
+  integer ( kind = 4 ), intent(in) :: n
 
-  real ( kind = 8 ) a(lda,n)
+  real ( kind = 8 ), intent(inout) :: a(lda,n)
   real ( kind = 8 ) c
   integer ( kind = 4 ) i
   integer ( kind = 4 ) j
   real ( kind = 8 ) s
   real ( kind = 8 ) temp
-  real ( kind = 8 ) v(n)
-  real ( kind = 8 ) w(n)
+  real ( kind = 8 ), intent(in) :: v(n)
+  real ( kind = 8 ), intent(in) :: w(n)
 !
 !  Apply the first set of Givens rotations to A.
 !
@@ -5366,9 +5358,9 @@ subroutine r1updt ( m, n, s, ls, u, v, w, sing )
 !
   implicit none
 
-  integer ( kind = 4 ) ls
-  integer ( kind = 4 ) m
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ls
+  integer ( kind = 4 ), intent(in) :: m
+  integer ( kind = 4 ), intent(in) :: n
 
   real ( kind = 8 ) cos
   real ( kind = 8 ) cotan
@@ -5377,15 +5369,15 @@ subroutine r1updt ( m, n, s, ls, u, v, w, sing )
   integer ( kind = 4 ) j
   integer ( kind = 4 ) jj
   integer ( kind = 4 ) l
-  real ( kind = 8 ) s(ls)
+  real ( kind = 8 ), intent(inout) :: s(ls)
   real ( kind = 8 ) sin
-  logical sing
+  logical, intent(out) :: sing
   real ( kind = 8 ) tan
   real ( kind = 8 ) tau
   real ( kind = 8 ) temp
-  real ( kind = 8 ) u(m)
-  real ( kind = 8 ) v(n)
-  real ( kind = 8 ) w(m)
+  real ( kind = 8 ), intent(in) :: u(m)
+  real ( kind = 8 ), intent(inout) :: v(n)
+  real ( kind = 8 ), intent(out) :: w(m)
 !
 !  GIANT is the largest magnitude.
 !
@@ -5559,11 +5551,11 @@ subroutine r8vec_print ( n, a, title )
 !
   implicit none
 
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: n
 
-  real ( kind = 8 ) a(n)
+  real ( kind = 8 ), intent(in) :: a(n)
   integer ( kind = 4 ) i
-  character ( len = * ) title
+  character ( len = * ), intent(in) :: title
 
   write ( *, '(a)' ) ' '
   write ( *, '(a)' ) trim ( title )
@@ -5642,21 +5634,21 @@ subroutine rwupdt ( n, r, ldr, w, b, alpha, c, s )
 !
   implicit none
 
-  integer ( kind = 4 ) ldr
-  integer ( kind = 4 ) n
+  integer ( kind = 4 ), intent(in) :: ldr
+  integer ( kind = 4 ), intent(in) :: n
 
-  real ( kind = 8 ) alpha
-  real ( kind = 8 ) b(n)
-  real ( kind = 8 ) c(n)
+  real ( kind = 8 ), intent(inout) :: alpha
+  real ( kind = 8 ), intent(inout) :: b(n)
+  real ( kind = 8 ), intent(out) :: c(n)
   real ( kind = 8 ) cotan
   integer ( kind = 4 ) i
   integer ( kind = 4 ) j
-  real ( kind = 8 ) r(ldr,n)
+  real ( kind = 8 ), intent(inout) :: r(ldr,n)
   real ( kind = 8 ) rowj
-  real ( kind = 8 ) s(n)
+  real ( kind = 8 ), intent(out) :: s(n)
   real ( kind = 8 ) tan
   real ( kind = 8 ) temp
-  real ( kind = 8 ) w(n)
+  real ( kind = 8 ), intent(in) :: w(n)
 
   do j = 1, n
 

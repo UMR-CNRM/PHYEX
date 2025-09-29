@@ -176,9 +176,8 @@
 !              ------------
 !
 USE MODD_PARAMETERS, ONLY: JPVEXT
-USE MODD_BUDGET,     ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, &
+USE MODD_BUDGET,     ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, &
                            NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
-USE MODE_BUDGET_PHY, ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 USE MODI_GAMMA,      ONLY: GAMMA
 USE MODE_TIWMX,      ONLY: ESATI, ESATW, AA2, BB3, AA2W, BB3W
 USE MODE_TIWMX_TAB,  ONLY: TIWMX_TAB
@@ -199,112 +198,111 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 TYPE(DIMPHYEX_T),       INTENT(IN) :: D
-TYPE(CST_T),            INTENT(IN) :: CST 
+TYPE(CST_T),            INTENT(IN) :: CST
 TYPE(PARAM_ICE_t),      INTENT(IN) :: PARAMI
 TYPE(RAIN_ICE_PARAM_t), INTENT(IN) :: ICEP
 TYPE(RAIN_ICE_DESCR_t), INTENT(IN) :: ICED
-TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(TBUDGETCONF_t),    INTENT(IN) :: BUCONF
 TYPE(TLES_t),           INTENT(INOUT)   :: TLES          ! modd_les structure
 
-LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.
-LOGICAL,                  INTENT(IN)    :: OCND2  ! Logical switch to separate liquid and ice
-LOGICAL,                  INTENT(IN)    :: LKOGAN ! Logical switch for using Kogan autoconversion of liquid.
-LOGICAL,                  INTENT(IN)    :: LMODICEDEP ! Logical switch for alternative dep/evap of ice
-CHARACTER(LEN=4),         INTENT(IN)    :: HSEDIM ! Sedimentation scheme
-CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Switch for rc->rr Subgrid autoconversion
-                                        ! Kind of Subgrid autoconversion method
-LOGICAL,                  INTENT(IN)    :: OWARM   ! .TRUE. allows raindrops to
-                                                   !   form by warm processes
-                                                   !      (Kessler scheme)
-INTEGER,                  INTENT(IN)    :: KKA   !near ground array index
-INTEGER,                  INTENT(IN)    :: KKU   !uppest atmosphere array index
-INTEGER,                  INTENT(IN)    :: KKL   !vert. levels type 1=MNH -1=ARO
-INTEGER,                  INTENT(IN)    :: KSPLITR ! Number of small time step
-                                      ! integration for  rain sedimendation
-REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step
-                                                   ! (single if cold start)
-INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
+LOGICAL,                INTENT(IN) :: OSEDIC ! Switch for droplet sedim.
+LOGICAL,                INTENT(IN) :: OCND2  ! Logical switch to separate liquid and ice
+LOGICAL,                INTENT(IN) :: LKOGAN ! Logical switch for using Kogan autoconversion of liquid.
+LOGICAL,                INTENT(IN) :: LMODICEDEP ! Logical switch for alternative dep/evap of ice
+CHARACTER(LEN=4),       INTENT(IN) :: HSEDIM ! Sedimentation scheme
+CHARACTER(LEN=4),       INTENT(IN) :: HSUBG_AUCV_RC ! Switch for rc->rr Subgrid autoconversion
+                                   ! Kind of Subgrid autoconversion method
+LOGICAL,                INTENT(IN) :: OWARM   ! .TRUE. allows raindrops to
+                                              !   form by warm processes
+                                              !      (Kessler scheme)
+INTEGER,                INTENT(IN) :: KKA   !near ground array index
+INTEGER,                INTENT(IN) :: KKU   !uppest atmosphere array index
+INTEGER,                INTENT(IN) :: KKL   !vert. levels type 1=MNH -1=ARO
+INTEGER,                INTENT(IN) :: KSPLITR ! Number of small time step
+                                   ! integration for  rain sedimendation
+REAL,                   INTENT(IN) :: PTSTEP  ! Double Time step
+                                              ! (single if cold start)
+INTEGER,                INTENT(IN) :: KRR     ! Number of moist variable
 !
-LOGICAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: GMICRO    ! Layer thickness (m)
+LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: GMICRO    ! Layer thickness (m)
 
 INTEGER, INTENT(IN) :: KSIZE
 !
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PDZZ    ! Layer thickness (m)
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PEXNREF ! Reference Exner function
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PPABST  ! absolute pressure at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PDZZ    ! Layer thickness (m)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODREF! Reference density
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PEXNREF ! Reference Exner function
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PPABST  ! absolute pressure at t
 !
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PCLDFR  ! Cloud fraction
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PCLDFR  ! Cloud fraction
 !
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PTHT    ! Theta at time t
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRVT    ! Water vapor m.r. at t
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRCT    ! Cloud water m.r. at t
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRRT    ! Rain water m.r. at t
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRIT    ! Pristine ice m.r. at t
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRGT    ! Graupel/hail m.r. at t
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PSIGS   ! Sigma_s at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PTHT    ! Theta at time t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRVT    ! Water vapor m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRCT    ! Cloud water m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRRT    ! Rain water m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRIT    ! Pristine ice m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRGT    ! Graupel/hail m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PSIGS   ! Sigma_s at t
 ! input from aro_adjust / condensation with OCND2, dummy if OCND2 = F
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PICLDFR ! ice cloud fraction
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PICLDFR ! ice cloud fraction
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the
                                                  ! supersaturated fraction
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the
                                                  ! subsaturated fraction
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PIFR    ! Ratio cloud ice moist part to dry part
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part
 ! input from aro_adjust / condensation with OCND2 END.
 !
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PTHS    ! Theta source
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRRS    ! Rain water m.r. source
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRIS    ! Pristine ice m.r. source
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRSS    ! Snow/aggregate m.r. source
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRGS    ! Graupel m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PTHS    ! Theta source
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRRS    ! Rain water m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRIS    ! Pristine ice m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRSS    ! Snow/aggregate m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRGS    ! Graupel m.r. source
 !
-REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRC! Cloud instant precip
-REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRR! Rain instant precip
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PEVAP3D! Rain evap profile
-REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRS! Snow instant precip
-REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRG! Graupel instant precip
-REAL, DIMENSION(D%NIT),       INTENT(IN)  :: PSEA ! Sea Mask
-REAL, DIMENSION(D%NIT),       INTENT(IN)  :: PTOWN! Fraction that is town
+REAL, DIMENSION(D%NIJT),       INTENT(OUT) :: PINPRC! Cloud instant precip
+REAL, DIMENSION(D%NIJT),       INTENT(OUT) :: PINPRR! Rain instant precip
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PEVAP3D! Rain evap profile
+REAL, DIMENSION(D%NIJT),       INTENT(OUT) :: PINPRS! Snow instant precip
+REAL, DIMENSION(D%NIJT),       INTENT(OUT) :: PINPRG! Graupel instant precip
+REAL, DIMENSION(D%NIJT),       INTENT(IN)  :: PSEA ! Sea Mask
+REAL, DIMENSION(D%NIJT),       INTENT(IN)  :: PTOWN! Fraction that is town
 ! nrt aerosol
-LOGICAL,                          INTENT(IN)  :: OAERONRT ! Switch for nrt aerosols
-LOGICAL,                          INTENT(IN)  :: OAEIFN   ! Switch to activate ice nuclei
-REAL, DIMENSION(D%NIT,D%NKT),     INTENT(IN)  :: PCLDROP  ! Activated Condensation nuclei (CCN) 
-REAL, DIMENSION(D%NIT,D%NKT),     INTENT(IN)  :: PIFNNC   ! Ice freezing nuclei concentration
+LOGICAL,                       INTENT(IN)  :: OAERONRT ! Switch for nrt aerosols
+LOGICAL,                       INTENT(IN)  :: OAEIFN   ! Switch to activate ice nuclei
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PCLDROP  ! Activated Condensation nuclei (CCN)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PIFNNC   ! Ice freezing nuclei concentration
 !
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
-REAL, DIMENSION(D%NIT), INTENT(IN)            :: PICENU, PKGN_ACON, PKGN_SBGR
-REAL, DIMENSION(D%NIT,D%NKT),   OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
-REAL, DIMENSION(D%NIT,D%NKT),   OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
-REAL, DIMENSION(D%NIT),         OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
-REAL, DIMENSION(D%NIT,D%NKT,KRR), OPTIONAL, INTENT(OUT) :: PFPR    ! upper-air precipitation fluxes
+REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PICENU, PKGN_ACON, PKGN_SBGR
+REAL, DIMENSION(D%NIJT,D%NKT),   OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT),   OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
+REAL, DIMENSION(D%NIJT),         OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT) :: PFPR    ! upper-air precipitation fluxes
 
 !
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: JK            ! Vertical loop index for the rain sedimentation
-INTEGER :: JI            ! Loop index for the interpolation
+INTEGER :: JIJ            ! Loop index for the interpolation
 INTEGER :: IKB           !
 INTEGER :: IKE           !
 !
 INTEGER :: IMICRO ! Case number of sedimentation, T>0 (for HEN) and r_x>0 locations
-REAL, DIMENSION(D%NIT,D%NKT) :: ZW        ! work array
-REAL, DIMENSION(D%NIT)       :: ZCONC_TMP ! Weighted concentration
-REAL, DIMENSION(D%NIT,D%NKT) :: ZT        ! Temperature
-REAL, DIMENSION(D%NIT,D%NKT) :: ZRAY      ! Cloud Mean radius
-REAL, DIMENSION(D%NIT,D%NKT) :: ZLBC      ! XLBC weighted by sea fraction
-REAL, DIMENSION(D%NIT,D%NKT) :: ZFSEDC
-REAL, DIMENSION(D%NIT,D%NKT) :: ZCONC3D   ! droplet concentration m-3
-REAL, DIMENSION(D%NIT,D%NKT) :: ZZZZ      ! geometric height
-REAL, DIMENSION(D%NIT,D%NKT) :: ZZZT      ! tempoary value for geometric height
+REAL, DIMENSION(D%NIJT)       :: ZCONC_TMP ! Weighted concentration
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZT        ! Temperature
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZRAY      ! Cloud Mean radius
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZLBC      ! XLBC weighted by sea fraction
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZFSEDC
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZCONC3D   ! droplet concentration m-3
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZZZZ      ! geometric height
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZZZT      ! tempoary value for geometric height
 
 !Diagnostics
-REAL, DIMENSION(D%NIT,D%NKT) :: ZRAINFR
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZRAINFR
 
 REAL, DIMENSION(KSIZE) :: ZRVT    ! Water vapor m.r. at t
 REAL, DIMENSION(KSIZE) :: ZRCT    ! Cloud water m.r. at t
@@ -404,13 +402,13 @@ REAL, DIMENSION(KSIZE) :: ZZKGN_ACON,ZZKGN_SBGR
 
      !internal fractions etc, finally saturation ratio over ice 'source' value
 
-INTEGER, DIMENSION(D%NIT*D%NKT) :: I1, I2 ! Used to replace the COUNT
+INTEGER, DIMENSION(D%NIJT*D%NKT) :: I1, I2 ! Used to replace the COUNT
 INTEGER                         :: JL       ! and PACK intrinsics
 REAL :: ZCOEFFRCM
 LOGICAL :: LCHECKNOISE ! Noise check on/off
 LOGICAL :: LTIW   ! Use TIW for graupel melting ( set by XFRMIN(18) ~ 1)
 !
-REAL, DIMENSION(D%NIT,D%NKT) :: ZBU0
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZBU0
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
@@ -436,11 +434,10 @@ ZCITRED23 = ZCITRED**0.667
 IF (LMODICEDEP) THEN
   ZCITRED = 1.
   !from spherical diameter to max diameter
-  ZDICRIT = (700.*CST%XPI/ICED%XAI/6.)**(1./ICED%XBI)*ZDICRIT**(3./ICED%XBI) 
+  ZDICRIT = (700.*CST%XPI/ICED%XAI/6.)**(1./ICED%XBI)*ZDICRIT**(3./ICED%XBI)
   ZCITRED23 = ZCITRED**(1.+ ICED%XLBEXI)
   ZKVO      = ((ICED%XALPHAI*ICED%XNUI + ICED%XBI -1.)/ICED%XALPHAI)**(1./ICED%XALPHAI)
   ZKVO =  ZKVO/ZDICRIT/ICEP%XFRMIN(14)
-  PIFR = 1.
 ENDIF
 
 ZREDGR  = 1.      ! Tuning of the deposition of graupel, 1. is ref. value
@@ -448,10 +445,10 @@ ZREDGR  = 1.      ! Tuning of the deposition of graupel, 1. is ref. value
 ZREDSN  = 1.      ! Tuning of the deposition of snow, 1. is ref. value
 
 IF(OCND2) THEN
-   IF (.NOT. LMODICEDEP) THEN
-      ZREDGR  = ICEP%XFRMIN(39)  ! Tuning factor, may be /= 1.
-      ZREDSN  = ICEP%XFRMIN(40)  ! Tuning factor, may be /= 1.
-   ENDIF
+  IF (.NOT. LMODICEDEP) THEN
+    ZREDGR  = ICEP%XFRMIN(39)  ! Tuning factor, may be /= 1.
+    ZREDSN  = ICEP%XFRMIN(40)  ! Tuning factor, may be /= 1.
+  ENDIF
 ENDIF
 
 LTIW=.FALSE.
@@ -463,62 +460,122 @@ IF (NINT(ICEP%XFRMIN(18)) == 1) LTIW=.TRUE.
 !         (Do it already here, since also used with OCND2=T )
 
 IF (OSEDIC.OR.OCND2) THEN
-   ZRAY(:,:)   = 0.
-   ZZZZ(:,D%NKTE)   = PDZZ(:,D%NKTE)*0.5
-   ZZZT(:,D%NKTE)   = PDZZ(:,D%NKTE)
-   IF (ICEP%XFRMIN(26)>0.001) THEN ! Use alternative concentration given by (XFRMIN(26)
-      ZCONC_TMP(:) = ICEP%XFRMIN(26)
-      DO JK=D%NKTB,D%NKTE
-         ZLBC(:,JK)   = 0.5* (ICED%XLBC(2)+ICED%XLBC(1)) ! Assume "average" distr. func for simplicity
-         ZFSEDC(:,JK) = 0.5* (ICEP%XFSEDC(2)+ICEP%XFSEDC(1))
-         ZFSEDC(:,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(:,JK))
-         ZCONC3D(:,JK)= ZCONC_TMP(:)*PPABST(:,JK)/CST%XP00 ! Let it be diluted with decreasing pressure
-         ZRAY(:,JK)   = 0.5*( 0.5*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
-           0.5*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
+  ZRAY(:,:)   = 0.
+  ZZZZ(:,D%NKTE)   = PDZZ(:,D%NKTE)*0.5
+  ZZZT(:,D%NKTE)   = PDZZ(:,D%NKTE)
+  IF (ICEP%XFRMIN(26)>0.001) THEN ! Use alternative concentration given by (XFRMIN(26)
+    ZCONC_TMP(:) = ICEP%XFRMIN(26)
+    DO JK = D%NKTB,D%NKTE
+      DO JIJ = D%NIJB,D%NIJE
+        ZLBC(JIJ,JK)   = 0.5* (ICED%XLBC(2)+ICED%XLBC(1)) ! Assume "average" distr. func for simplicity
+        ZFSEDC(JIJ,JK) = 0.5* (ICEP%XFSEDC(2)+ICEP%XFSEDC(1))
+        ZFSEDC(JIJ,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
+        ZCONC3D(JIJ,JK)= ZCONC_TMP(JIJ)*PPABST(JIJ,JK)/CST%XP00 ! Let it be diluted with decreasing pressure
+        ZRAY(JIJ,JK)   = 0.5*( 0.5*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
+          0.5*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
       ENDDO
-   ELSE
-     ZCONC_TMP(:)=PSEA(:)*ICED%XCONC_SEA+(1.-PSEA(:))*ICED%XCONC_LAND
+    ENDDO
+  ELSE
 
-     DO JK=D%NKTB,D%NKTE
-        ZLBC(:,JK)   = PSEA(:)*ICED%XLBC(2)+(1.-PSEA(:))*ICED%XLBC(1)
-        ZFSEDC(:,JK) = (PSEA(:)*ICEP%XFSEDC(2)+(1.-PSEA(:))*ICEP%XFSEDC(1))
-        ZFSEDC(:,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(:,JK))
-        ZCONC3D(:,JK)= (1.-PTOWN(:))*ZCONC_TMP(:)+PTOWN(:)*ICED%XCONC_URBAN
-        ZRAY(:,JK)   = 0.5*((1.-PSEA(:))*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
-           PSEA(:)*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
-     ENDDO
-   ENDIF
+    DO JIJ = D%NIJB,D%NIJE
+      ZCONC_TMP(JIJ) = PSEA(JIJ)*ICED%XCONC_SEA+(1.-PSEA(JIJ))*ICED%XCONC_LAND
+    ENDDO
 
-   ZCONC3D(:,D%NKTE) = ZCONC3D(:,D%NKTE)*MAX(0.001,ICEP%XFRMIN(22))
+    DO JK=D%NKTB,D%NKTE
+      DO JIJ = D%NIJB,D%NIJE
+        ZLBC(JIJ,JK)   = PSEA(JIJ)*ICED%XLBC(2) + (1.-PSEA(JIJ))*ICED%XLBC(1)
+        ZFSEDC(JIJ,JK) = (PSEA(JIJ)*ICEP%XFSEDC(2) + (1.-PSEA(JIJ))*ICEP%XFSEDC(1))
+        ZFSEDC(JIJ,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
+        ZCONC3D(JIJ,JK)= (1.-PTOWN(JIJ))*ZCONC_TMP(JIJ) + PTOWN(JIJ)*ICED%XCONC_URBAN
+        ZRAY(JIJ,JK)   = 0.5*((1.-PSEA(JIJ))*GAMMA(ICED%XNUC + 1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) &
+                     & + PSEA(JIJ)*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
+      ENDDO
+    ENDDO
+  ENDIF
 
-   !Consider CCN obtained from near real time aerosol mixing ratio fields
-   IF (OAERONRT) THEN
-     DO JK=D%NKTB,D%NKTE
-       ZCONC3D(:,JK) = PCLDROP(:,JK)
-       ZLBC(:,JK)    = 0.5* (ICED%XLBC(2)+ICED%XLBC(1)) ! Assume "average" distr. func
-       ZFSEDC(:,JK)  = 0.5* (ICEP%XFSEDC(2)+ICEP%XFSEDC(1))
-       ZFSEDC(:,JK)  = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(:,JK))
-       ZRAY(:,JK)    = 0.5*(0.5*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
-                            0.5*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
-     ENDDO
-   ENDIF
-   ZRAY(:,:)      = MAX(1.,ZRAY(:,:))
-   ZLBC(:,:)      = MAX(MIN(ICED%XLBC(1),ICED%XLBC(2)),ZLBC(:,:))
+  DO JIJ = D%NIJB,D%NIJE
+    ZCONC3D(JIJ,D%NKTE) = ZCONC3D(JIJ,D%NKTE)*MAX(0.001,ICEP%XFRMIN(22))
+  ENDDO
 
-   DO JK=D%NKTE-1,D%NKTB,-1
-     ZZZT(:,JK) = ZZZT(:,JK+1) + PDZZ(:,JK)
-     ZZZZ(:,JK) = ZZZT(:,JK) - 0.5*PDZZ(:,JK)
-   ENDDO
+  !Consider CCN obtained from near real time aerosol mixing ratio fields
+  IF (OAERONRT) THEN
+    DO JK = D%NKTB, D%NKTE
+      DO JIJ = D%NIJB, D%NIJE
+        ZCONC3D(JIJ,JK) = PCLDROP(JIJ,JK)
+        ZLBC(JIJ,JK)    = 0.5* (ICED%XLBC(2)+ICED%XLBC(1)) ! Assume "average" distr. func
+        ZFSEDC(JIJ,JK)  = 0.5* (ICEP%XFSEDC(2)+ICEP%XFSEDC(1))
+        ZFSEDC(JIJ,JK)  = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
+        ZRAY(JIJ,JK)    = 0.5*(0.5*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) &
+                      & + 0.5*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
+      ENDDO
+    ENDDO
+  ELSE
+    DO JIJ = D%NIJB, D%NIJE
+      ZCONC_TMP(JIJ)=PSEA(JIJ)*ICED%XCONC_SEA+(1.-PSEA(JIJ))*ICED%XCONC_LAND
+    ENDDO
+    DO JK=D%NKTB,D%NKTE
+      DO JIJ = D%NIJB, D%NIJE
+        ZLBC(JIJ,JK)   = PSEA(JIJ)*ICED%XLBC(2)+(1.-PSEA(JIJ))*ICED%XLBC(1)
+        ZFSEDC(JIJ,JK) = (PSEA(JIJ)*ICEP%XFSEDC(2)+(1.-PSEA(JIJ))*ICEP%XFSEDC(1))
+        ZFSEDC(JIJ,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
+        ZCONC3D(JIJ,JK)= (1.-PTOWN(JIJ))*ZCONC_TMP(JIJ)+PTOWN(JIJ)*ICED%XCONC_URBAN
+        ZRAY(JIJ,JK)   = 0.5*((1.-PSEA(JIJ))*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
+           PSEA(JIJ)*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
+      ENDDO
+    ENDDO
+  ENDIF
+   
+  DO JK=D%NKTE-1,D%NKTB,-1
+    DO JIJ = D%NIJB, D%NIJE
+      ZZZT(JIJ,JK) = ZZZT(JIJ,JK+1) + PDZZ(JIJ,JK)
+      ZZZZ(JIJ,JK) = ZZZT(JIJ,JK) - 0.5*PDZZ(JIJ,JK)
+    ENDDO
+  ENDDO
+
+  IF(ICEP%XFRMIN(22)>0.001)THEN
+    DO JK=D%NKTB,D%NKTE
+      DO JIJ = D%NIJB, D%NIJE
+        ZCONC_TMP(JIJ)  = MAX(0., MIN(1.,(ZZZZ(JIJ,JK)- ZZZZ(JIJ,D%NKTE))/&
+             &(MAX(0.01,ICEP%XFRMIN(29)-ZZZZ(JIJ,D%NKTE)))))
+        ZCONC3D(JIJ,JK) =  ZCONC3D(JIJ,JK)*(ICEP%XFRMIN(22)*(PSEA(JIJ)*ICEP%XFRMIN(30)+&
+             &(1.-PSEA(JIJ)))*(1.-ZCONC_TMP(JIJ)) + ZCONC_TMP(JIJ))
+      END DO
+    END DO
+  ENDIF
+
+  !Consider CCN obtained from near real time aerosol mixing ratio fields
+  IF (OAERONRT) THEN
+    DO JK=D%NKTB,D%NKTE
+      DO JIJ = D%NIJB, D%NIJE
+        ZCONC3D(JIJ,JK) = PCLDROP(JIJ,JK)
+        ZLBC(JIJ,JK)    = 0.5* (ICED%XLBC(2)+ICED%XLBC(1)) ! Assume "average" distr. func
+        ZFSEDC(JIJ,JK)  = 0.5* (ICEP%XFSEDC(2)+ICEP%XFSEDC(1))
+        ZFSEDC(JIJ,JK)  = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
+        ZRAY(JIJ,JK)    = 0.5*(0.5*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
+                             0.5*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
+      ENDDO
+    ENDDO
+  ENDIF
+  DO JK=D%NKTB,D%NKTE
+    DO JIJ = D%NIJB, D%NIJE
+      ZRAY(JIJ,JK)      = MAX(1.,ZRAY(JIJ,JK))
+      ZLBC(JIJ,JK)      = MAX(MIN(ICED%XLBC(1),ICED%XLBC(2)),ZLBC(JIJ,JK))
+    ENDDO
+  ENDDO
 ENDIF
 
-ZT(:,:) = PTHT(:,:) * ( PPABST(:,:) / CST%XP00 ) ** (CST%XRD/CST%XCPD)
+DO JK = D%NKTB, D%NKTE
+  DO JIJ = D%NIJB, D%NIJE
+    ZT(JIJ,JK) = PTHT(JIJ,JK) * ( PPABST(JIJ,JK) / CST%XP00 ) ** (CST%XRD/CST%XCPD)
+  ENDDO
+ENDDO
 
 IF(BUCONF%LBU_ENABLE) THEN
-  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'HENU', PTHS(:,:)*PRHODJ(:,:))
-  IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'HENU', PRVS(:,:)*PRHODJ(:,:))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'HENU', PRIS(:,:)*PRHODJ(:,:))
+  IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%INIT_PHY(D, 'HENU', PTHS(:,:)*PRHODJ(:,:))
+  IF (BUCONF%LBUDGET_RV) CALL TBUDGETS(NBUDGET_RV)%PTR%INIT_PHY(D, 'HENU', PRVS(:,:)*PRHODJ(:,:))
+  IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%INIT_PHY(D, 'HENU', PRIS(:,:)*PRHODJ(:,:))
 ENDIF
-CALL RAIN_ICE_OLD_NUCLEATION(D, CST, ICEP, COUNT(ZT(D%NIB:D%NIE,D%NKTB:D%NKTE)<CST%XTT), &
+CALL RAIN_ICE_OLD_NUCLEATION(D, CST, ICEP, COUNT(ZT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<CST%XTT), &
                              OCND2, LMODICEDEP, KRR, PTSTEP, &
                              PTHT, PPABST, PEXNREF, PICLDFR, PRHODJ, PRHODREF, &
                              PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
@@ -527,29 +584,29 @@ CALL RAIN_ICE_OLD_NUCLEATION(D, CST, ICEP, COUNT(ZT(D%NIB:D%NIE,D%NKTB:D%NKTE)<C
                              PICENU, ZT, ZZZZ, &
                              PRHT)
 IF(BUCONF%LBU_ENABLE) THEN
-  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'HENU', PTHS(:,:)*PRHODJ(:,:))
-  IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'HENU', PRVS(:,:)*PRHODJ(:,:))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'HENU', PRIS(:,:)*PRHODJ(:,:))
+  IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%END_PHY(D, 'HENU', PTHS(:,:)*PRHODJ(:,:))
+  IF (BUCONF%LBUDGET_RV) CALL TBUDGETS(NBUDGET_RV)%PTR%END_PHY(D, 'HENU', PRVS(:,:)*PRHODJ(:,:))
+  IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%END_PHY(D, 'HENU', PRIS(:,:)*PRHODJ(:,:))
 ENDIF
 
 IMICRO = 0
 DO JK = 1, D%NKT
-  DO JI = 1, D%NIT
-    IF(GMICRO(JI,JK)) THEN
+  DO JIJ = D%NIJB, D%NIJE
+    IF (GMICRO(JIJ,JK)) THEN
       IMICRO = IMICRO + 1
-      I1(IMICRO) = JI
+      I1(IMICRO) = JIJ
       I2(IMICRO) = JK
     END IF
   END DO
 END DO
 
 PEVAP3D(:,:)= 0.
-IF ( KSIZE >= 0 ) THEN
+IF (KSIZE >= 0) THEN
 
   IF (OCND2) THEN
      IF (LMODICEDEP) THEN
         DO JL=1,KSIZE
-           ZXW2D(JL) = PIFR(I1(JL),I2(JL))
+           ZXW2D(JL) = 1.
            ZXW2D13(JL)=ZXW2D(JL)**(-ICED%XLBEXI)
         ENDDO
      ELSE
@@ -583,7 +640,6 @@ IF ( KSIZE >= 0 ) THEN
     ZRGS(JL) = PRGS(I1(JL),I2(JL))
     IF ( KRR == 7 ) ZRHS(JL) = PRHS(I1(JL),I2(JL))
     ZTHS(JL) = PTHS(I1(JL),I2(JL))
-!
 
     ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL))
     ZZT(JL) = ZT(I1(JL),I2(JL))
@@ -638,74 +694,85 @@ IF ( KSIZE >= 0 ) THEN
 
   ENDDO
 
-  ZZW(:)  = ZEXNREF(:)*(CST%XCPD+CST%XCPV*ZRVT(:) + CST%XCL*(ZRCT(:)+ZRRT(:)) &
-                                  + CST%XCI*(ZRIT(:)+ZRST(:) + ZRGT(:)) )
-  ZLSFACT(:) = (CST%XLSTT + (CST%XCPV - CST%XCI)*(ZZT(:) - CST%XTT))/ZZW(:) ! L_s/(Pi_ref*C_ph)
-  ZLVFACT(:) = (CST%XLVTT + (CST%XCPV - CST%XCL)*(ZZT(:) - CST%XTT))/ZZW(:) ! L_v/(Pi_ref*C_ph)
+  DO JL = 1, KSIZE
+    ZZW(JL)  = ZEXNREF(JL)*(CST%XCPD+CST%XCPV*ZRVT(JL) + CST%XCL*(ZRCT(JL)+ZRRT(JL)) &
+           & + CST%XCI*(ZRIT(JL)+ZRST(JL) + ZRGT(JL)) )
+    ZLSFACT(JL) = (CST%XLSTT + (CST%XCPV - CST%XCI)*(ZZT(JL) - CST%XTT))/ZZW(JL) ! L_s/(Pi_ref*C_ph)
+    ZLVFACT(JL) = (CST%XLVTT + (CST%XCPV - CST%XCL)*(ZZT(JL) - CST%XTT))/ZZW(JL) ! L_v/(Pi_ref*C_ph)
+  ENDDO
 
   IF(OCND2)THEN
-    ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZESI(:) ) / ( CST%XEPSILO * ZESI(:) ) - 1.0
+    DO JL = 1, KSIZE
+      ZSSI(JL) = ZRVT(JL)*( ZPRES(JL)-ZESI(JL) ) / ( CST%XEPSILO * ZESI(JL) ) - 1.0
+    ENDDO
   ELSE                                                  ! Supersaturation over ice
-    ZZW(:) = EXP( CST%XALPI - CST%XBETAI/ZZT(:) - CST%XGAMI*LOG(ZZT(:) ) )
-    ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( CST%XEPSILO * ZZW(:) ) - 1.0
-                                                    ! Supersaturation over ice
+    DO JL = 1, KSIZE
+      ZZW(JL) = EXP(CST%XALPI - CST%XBETAI/ZZT(JL) - CST%XGAMI*LOG(ZZT(JL)))
+      ZSSI(JL) = ZRVT(JL)*(ZPRES(JL)-ZZW(JL))/(CST%XEPSILO * ZZW(JL)) - 1.0 ! Supersaturation over ice
+    ENDDO
   ENDIF
 
-!
   !Cloud water split between high and low content part is done here
   !according to autoconversion option
-  ZRCRAUTC(:)   = ICEP%XCRIAUTC/ZRHODREF(:) ! Autoconversion rc threshold
+  DO JL = 1, KSIZE
+    ZRCRAUTC(JL) = ICEP%XCRIAUTC/ZRHODREF(JL) ! Autoconversion rc threshold
+  ENDDO
+
   IF (HSUBG_AUCV_RC == 'NONE') THEN
     !Cloud water is entirely in low or high part
-    WHERE (ZRCT(:) > ZRCRAUTC(:))
-      ZHLC_HCF(:) = 1.
-      ZHLC_LCF(:) = 0.0
-      ZHLC_HRC(:) = ZRCT(:)
-      ZHLC_LRC(:) = 0.0
-      ZRF(:)      = 1.
-    ELSEWHERE (ZRCT(:) > ICED%XRTMIN(2))
-      ZHLC_HCF(:) = 0.0
-      ZHLC_LCF(:) = 1.
-      ZHLC_HRC(:) = 0.0
-      ZHLC_LRC(:) = ZRCT(:)
-      ZRF(:)      = 0.
-    ELSEWHERE
-      ZHLC_HCF(:) = 0.0
-      ZHLC_LCF(:) = 0.0
-      ZHLC_HRC(:) = 0.0
-      ZHLC_LRC(:) = 0.0
-      ZRF(:)      = 0.
-    END WHERE
+    DO JL = 1, KSIZE
+      IF (ZRCT(JL) > ZRCRAUTC(JL)) THEN
+        ZHLC_HCF(JL) = 1.
+        ZHLC_LCF(JL) = 0.0
+        ZHLC_HRC(JL) = ZRCT(JL)
+        ZHLC_LRC(JL) = 0.0
+        ZRF(JL)      = 1.
+      ELSEIF (ZRCT(JL) > ICED%XRTMIN(2)) THEN
+        ZHLC_HCF(JL) = 0.0
+        ZHLC_LCF(JL) = 1.
+        ZHLC_HRC(JL) = 0.0
+        ZHLC_LRC(JL) = ZRCT(JL)
+        ZRF(JL)      = 0.
+      ELSE
+        ZHLC_HCF(JL) = 0.0
+        ZHLC_LCF(JL) = 0.0
+        ZHLC_HRC(JL) = 0.0
+        ZHLC_LRC(JL) = 0.0
+        ZRF(JL)      = 0.
+      ENDIF
+    ENDDO
 
   ELSEIF (HSUBG_AUCV_RC == 'CLFR') THEN
     !Cloud water is only in the cloudy part and entirely in low or high part
-    WHERE (ZCF(:) > 0. )
-      WHERE (ZRCT(:)/ZCF(:) > ZRCRAUTC(:))
-        ZHLC_HCF(:) = ZCF(:)
-        ZHLC_LCF(:) = 0.0
-        ZHLC_HRC(:) = ZRCT(:)
-        ZHLC_LRC(:) = 0.0
-        ZRF(:)      = ZCF(:)
-      ELSEWHERE (ZRCT(:) > ICED%XRTMIN(2))
-        ZHLC_HCF(:) = 0.0
-        ZHLC_LCF(:) = ZCF(:)
-        ZHLC_HRC(:) = 0.0
-        ZHLC_LRC(:) = ZRCT(:)
-        ZRF(:)      = 0.
-      ELSEWHERE
-        ZHLC_HCF(:) = 0.0
-        ZHLC_LCF(:) = 0.0
-        ZHLC_HRC(:) = 0.0
-        ZHLC_LRC(:) = 0.0
-        ZRF(:)      = 0.
-      END WHERE
-    ELSEWHERE
-      ZHLC_HCF(:) = 0.0
-      ZHLC_LCF(:) = 0.0
-      ZHLC_HRC(:) = 0.0
-      ZHLC_LRC(:) = 0.0
-      ZRF(:)      = 0.
-    END WHERE
+    DO JL = 1, KSIZE
+      IF (ZCF(JL) > 0. ) THEN
+        IF (ZRCT(JL)/ZCF(JL) > ZRCRAUTC(JL)) THEN
+          ZHLC_HCF(JL) = ZCF(JL)
+          ZHLC_LCF(JL) = 0.0
+          ZHLC_HRC(JL) = ZRCT(JL)
+          ZHLC_LRC(JL) = 0.0
+          ZRF(JL)      = ZCF(JL)
+        ELSEIF (ZRCT(JL) > ICED%XRTMIN(2)) THEN
+          ZHLC_HCF(JL) = 0.0
+          ZHLC_LCF(JL) = ZCF(JL)
+          ZHLC_HRC(JL) = 0.0
+          ZHLC_LRC(JL) = ZRCT(JL)
+          ZRF(JL)      = 0.
+        ELSE
+          ZHLC_HCF(JL) = 0.0
+          ZHLC_LCF(JL) = 0.0
+          ZHLC_HRC(JL) = 0.0
+          ZHLC_LRC(JL) = 0.0
+          ZRF(JL)      = 0.
+        ENDIF
+      ELSE
+        ZHLC_HCF(JL) = 0.0
+        ZHLC_LCF(JL) = 0.0
+        ZHLC_HRC(JL) = 0.0
+        ZHLC_LRC(JL) = 0.0
+        ZRF(JL)      = 0.
+      ENDIF
+    ENDDO
 
   ELSEIF (HSUBG_AUCV_RC == 'PDF ') THEN
     !Cloud water is split between high and low part according to a PDF
@@ -717,35 +784,37 @@ IF ( KSIZE >= 0 ) THEN
 
     IF ( PARAMI%CSUBG_PR_PDF == 'SIGM' ) THEN
       ! Redelsperger and Sommeria (1986) but organised according to Turner (2011, 2012)
-      WHERE ( ZRCT(:) > ZRCRAUTC(:) + ZSIGMA_RC(:))
-        ZHLC_HCF(:) = 1.
-        ZHLC_LCF(:) = 0.0
-        ZHLC_HRC(:) = ZRCT(:)
-        ZHLC_LRC(:) = 0.0
-        ZRF(:)      = 1.
-      ELSEWHERE ( ZRCT(:) >  ( ZRCRAUTC(:) - ZSIGMA_RC(:) ) .AND. &
-                & ZRCT(:) <= ( ZRCRAUTC(:) + ZSIGMA_RC(:) )       )
-        ZHLC_HCF(:) = (ZRCT(:)+ZSIGMA_RC(:)-ZRCRAUTC(:))/ &
-                     &(2.*ZSIGMA_RC(:))
-        ZHLC_LCF(:) = MAX(0., ZCF(:)-ZHLC_HCF(:))
-        ZHLC_HRC(:) = (ZRCT(:)+ZSIGMA_RC(:)-ZRCRAUTC(:))* &
-                     &(ZRCT(:)+ZSIGMA_RC(:)+ZRCRAUTC(:))/ &
-                     &(4.*ZSIGMA_RC(:))
-        ZHLC_LRC(:) = MAX(0., ZRCT(:)-ZHLC_HRC(:))
-        ZRF(:)      = ZHLC_HCF(:)
-      ELSEWHERE ( ZRCT(:)>ICED%XRTMIN(2) .AND. ZCF(:)>0. )
-        ZHLC_HCF(:) = 0.0
-        ZHLC_LCF(:) = ZCF(:)
-        ZHLC_HRC(:) = 0.0
-        ZHLC_LRC(:) = ZRCT(:)
-        ZRF(:)      = 0.
-      ELSEWHERE
-        ZHLC_HCF(:) = 0.0
-        ZHLC_LCF(:) = 0.0
-        ZHLC_HRC(:) = 0.0
-        ZHLC_LRC(:) = 0.0
-        ZRF(:)      = 0.
-      END WHERE
+      DO JL = 1, KSIZE
+        IF ( ZRCT(JL) > ZRCRAUTC(JL) + ZSIGMA_RC(JL)) THEN
+          ZHLC_HCF(JL) = 1.
+          ZHLC_LCF(JL) = 0.0
+          ZHLC_HRC(JL) = ZRCT(JL)
+          ZHLC_LRC(JL) = 0.0
+          ZRF(JL)      = 1.
+        ELSEIF (ZRCT(JL) >  (ZRCRAUTC(JL) - ZSIGMA_RC(JL)) .AND. &
+              & ZRCT(JL) <= (ZRCRAUTC(JL) + ZSIGMA_RC(JL))) THEN
+          ZHLC_HCF(JL) = (ZRCT(JL)+ZSIGMA_RC(JL)-ZRCRAUTC(JL))/ &
+                       &(2.*ZSIGMA_RC(JL))
+          ZHLC_LCF(JL) = MAX(0., ZCF(JL)-ZHLC_HCF(JL))
+          ZHLC_HRC(JL) = (ZRCT(JL)+ZSIGMA_RC(JL)-ZRCRAUTC(JL))* &
+                       & (ZRCT(JL)+ZSIGMA_RC(JL)+ZRCRAUTC(JL))/ &
+                       & (4.*ZSIGMA_RC(JL))
+          ZHLC_LRC(JL) = MAX(0., ZRCT(JL)-ZHLC_HRC(JL))
+          ZRF(JL)      = ZHLC_HCF(JL)
+        ELSEIF (ZRCT(JL)>ICED%XRTMIN(2) .AND. ZCF(JL)>0.) THEN
+          ZHLC_HCF(JL) = 0.0
+          ZHLC_LCF(JL) = ZCF(JL)
+          ZHLC_HRC(JL) = 0.0
+          ZHLC_LRC(JL) = ZRCT(JL)
+          ZRF(JL)      = 0.
+        ELSE
+          ZHLC_HCF(JL) = 0.0
+          ZHLC_LCF(JL) = 0.0
+          ZHLC_HRC(JL) = 0.0
+          ZHLC_LRC(JL) = 0.0
+          ZRF(JL)      = 0.
+        ENDIF
+      ENDDO
 
     ! Turner (2011, 2012)
     ELSEIF ( PARAMI%CSUBG_PR_PDF== 'HLCRECTPDF' .OR. PARAMI%CSUBG_PR_PDF == 'HLCISOTRIPDF' .OR. &
@@ -758,104 +827,121 @@ IF ( KSIZE >= 0 ) THEN
       ELSE IF ( PARAMI%CSUBG_PR_PDF == 'HLCQUADRAPDF' ) THEN
         ZCOEFFRCM = 4.0
       END IF
-      WHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0.)
-        ZHLC_RCMAX(:) = ZCOEFFRCM * ZRCT(:) / ZCF(:)
-      END WHERE
+
+      DO JL = 1, KSIZE
+        IF (ZRCT(JL).GT.0. .AND. ZCF(JL).GT.0.) THEN
+          ZHLC_RCMAX(JL) = ZCOEFFRCM * ZRCT(JL) / ZCF(JL)
+        ENDIF
+      ENDDO
 
       ! Split available water and cloud fraction in two parts
       ! Calculate local mean values int he low and high parts for the 3 PDF forms:
       IF ( PARAMI%CSUBG_PR_PDF == 'HLCRECTPDF' ) THEN
-        WHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:))
-          ZHLC_LRCLOCAL(:) = 0.5*ZRCRAUTC(:)
-          ZHLC_HRCLOCAL(:) = ( ZHLC_RCMAX(:) + ZRCRAUTC(:)) / 2.0
-        END WHERE
+        DO JL = 1, KSIZE
+          IF (ZRCT(JL) .GT. 0. .AND. ZCF(JL) .GT. 0. .AND. ZHLC_RCMAX(JL) .GT. ZRCRAUTC(JL)) THEN
+            ZHLC_LRCLOCAL(JL) = 0.5*ZRCRAUTC(JL)
+            ZHLC_HRCLOCAL(JL) = ( ZHLC_RCMAX(JL) + ZRCRAUTC(JL)) / 2.0
+          ENDIF
+        ENDDO
       ELSE IF ( PARAMI%CSUBG_PR_PDF == 'HLCTRIANGPDF' ) THEN
-        WHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:))
-          ZHLC_LRCLOCAL(:) = ( ZRCRAUTC(:) *(3.0 * ZHLC_RCMAX(:) - 2.0 * ZRCRAUTC(:) ) ) &
-                          / (3.0 * (2.0 * ZHLC_RCMAX(:) - ZRCRAUTC(:)  ) )
-          ZHLC_HRCLOCAL(:) = (ZHLC_RCMAX(:) + 2.0*ZRCRAUTC(:)) / 3.0
-        END WHERE
+        DO JL = 1, KSIZE
+          IF (ZRCT(JL) .GT. 0. .AND. ZCF(JL) .GT. 0. .AND. ZHLC_RCMAX(JL) .GT. ZRCRAUTC(JL)) THEN
+            ZHLC_LRCLOCAL(JL) = (ZRCRAUTC(JL) *(3.0 * ZHLC_RCMAX(JL) - 2.0 * ZRCRAUTC(JL))) &
+                              / (3.0 * (2.0 * ZHLC_RCMAX(JL) - ZRCRAUTC(JL)))
+            ZHLC_HRCLOCAL(JL) = (ZHLC_RCMAX(JL) + 2.0*ZRCRAUTC(JL)) / 3.0
+          ENDIF
+        ENDDO
       ELSE IF ( PARAMI%CSUBG_PR_PDF == 'HLCQUADRAPDF' ) THEN
-        WHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:))
-          ZHLC_LRCLOCAL(:) = (3.0 *ZRCRAUTC(:)**3 - 8.0 *ZRCRAUTC(:)**2 * ZHLC_RCMAX(:) &
-                          + 6.0*ZRCRAUTC(:) *ZHLC_RCMAX(:)**2 ) &
-                          / &
-                          (4.0* ZRCRAUTC(:)**2 -12.0*ZRCRAUTC(:) *ZHLC_RCMAX(:) &
-                          + 12.0 * ZHLC_RCMAX(:)**2 )
-          ZHLC_HRCLOCAL(:) =  (ZHLC_RCMAX(:) + 3.0*ZRCRAUTC(:)) / 4.0
-        END WHERE
+        DO JL = 1, KSIZE
+          IF (ZRCT(JL) .GT. 0. .AND. ZCF(JL) .GT. 0. .AND. ZHLC_RCMAX(JL) .GT. ZRCRAUTC(JL)) THEN
+            ZHLC_LRCLOCAL(JL) = (3.0 *ZRCRAUTC(JL)**3 - 8.0*ZRCRAUTC(JL)**2*ZHLC_RCMAX(JL) &
+                            & + 6.0*ZRCRAUTC(JL)*ZHLC_RCMAX(JL)**2) &
+                            & / (4.0*ZRCRAUTC(JL)**2 - 12.0*ZRCRAUTC(JL)*ZHLC_RCMAX(JL) &
+                            & + 12.0*ZHLC_RCMAX(JL)**2 )
+            ZHLC_HRCLOCAL(JL) =  (ZHLC_RCMAX(JL) + 3.0*ZRCRAUTC(JL)) / 4.0
+          ENDIF
+        ENDDO
       ELSE IF ( PARAMI%CSUBG_PR_PDF == 'HLCISOTRIPDF' ) THEN
-        WHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:))
-          WHERE ( (ZRCT(:) / ZCF(:)).LE.ZRCRAUTC(:) )
-            ZHLC_LRCLOCAL(:) = ( (ZHLC_RCMAX(:))**3 &
-                             - (12.0 * (ZHLC_RCMAX(:))*(ZRCRAUTC(:))**2) &
-                             + (8.0 * ZRCRAUTC(:)**3) ) &
-                             / ( (6.0 * (ZHLC_RCMAX(:))**2) &
-                             - (24.0 * (ZHLC_RCMAX(:)) * ZRCRAUTC(:)) &
-                             + (12.0 * ZRCRAUTC(:)**2) )
-            ZHLC_HRCLOCAL(:) = ( ZHLC_RCMAX(:) + 2.0 * ZRCRAUTC(:) ) / 3.0
-          ELSEWHERE
-            ZHLC_LRCLOCAL(:) = (2.0/3.0) * ZRCRAUTC(:)
-            ZHLC_HRCLOCAL(:) = (3.0*ZHLC_RCMAX(:)**3 - 8.0*ZRCRAUTC(:)**3) &
-                             / (6.0 * ZHLC_RCMAX(:)**2 - 12.0*ZRCRAUTC(:)**2)
-          END WHERE
-        END WHERE
+        DO JL = 1, KSIZE
+          IF (ZRCT(JL).GT.0. .AND. ZCF(JL) .GT. 0. .AND. ZHLC_RCMAX(JL) .GT. ZRCRAUTC(JL)) THEN
+            IF ((ZRCT(JL) / ZCF(JL)) .LE. ZRCRAUTC(JL)) THEN
+              ZHLC_LRCLOCAL(JL) = ( (ZHLC_RCMAX(JL))**3 &
+                              & - (12.0 * (ZHLC_RCMAX(JL))*(ZRCRAUTC(JL))**2) &
+                              & + (8.0 * ZRCRAUTC(JL)**3) ) &
+                              & / ((6.0 * (ZHLC_RCMAX(JL))**2) &
+                              & - (24.0 * (ZHLC_RCMAX(JL)) * ZRCRAUTC(JL)) &
+                              & + (12.0 * ZRCRAUTC(JL)**2))
+              ZHLC_HRCLOCAL(JL) = (ZHLC_RCMAX(JL) + 2.0 * ZRCRAUTC(JL) ) / 3.0
+            ELSE
+              ZHLC_LRCLOCAL(JL) = (2.0/3.0) * ZRCRAUTC(JL)
+              ZHLC_HRCLOCAL(JL) = (3.0*ZHLC_RCMAX(JL)**3 - 8.0*ZRCRAUTC(JL)**3) &
+                                / (6.0 * ZHLC_RCMAX(JL)**2 - 12.0*ZRCRAUTC(JL)**2)
+            ENDIF
+          ENDIF
+        ENDDO
       END IF
 
       ! Compare r_cM  to r_cR to know if cloud water content is high enough to split in two parts or not
-      WHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:))
-        ! Calculate final values for LCF and HCF:
-        ZHLC_LCF(:) = ZCF(:) &
-                       * ( ZHLC_HRCLOCAL - &
-                       ( ZRCT(:) / ZCF(:) ) ) &
-                       / (ZHLC_HRCLOCAL - ZHLC_LRCLOCAL)
-        ZHLC_HCF(:) = MAX(0., ZCF(:) - ZHLC_LCF(:))
-        !
-        ! Calculate final values for LRC and HRC:
-        ZHLC_LRC(:) = ZHLC_LRCLOCAL * ZHLC_LCF(:)
-        ZHLC_HRC(:) = MAX(0., ZRCT(:) - ZHLC_LRC(:))
-      ELSEWHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0. .AND. ZHLC_RCMAX(:).LE.ZRCRAUTC(:))
-        ! Put all available cloud water and his fraction in the low part
-        ZHLC_LCF(:) = ZCF(:)
-        ZHLC_HCF(:) = 0.0
-        ZHLC_LRC(:) = ZRCT(:)
-        ZHLC_HRC(:) = 0.0
-      ELSEWHERE
-        ZHLC_LCF(:) = 0.
-        ZHLC_HCF(:) = 0.0
-        ZHLC_LRC(:) = 0.
-        ZHLC_HRC(:) = 0.0
-      END WHERE
+      DO JL = 1, KSIZE
+        IF (ZRCT(JL) .GT. 0. .AND. ZCF(JL) .GT. 0. .AND. ZHLC_RCMAX(JL) .GT. ZRCRAUTC(JL)) THEN
+          ! Calculate final values for LCF and HCFJL
+          ZHLC_LCF(JL) = ZCF(JL) * (ZHLC_HRCLOCAL(JL) - (ZRCT(JL) / ZCF(JL))) / (ZHLC_HRCLOCAL(JL) - ZHLC_LRCLOCAL(JL))
+          ZHLC_HCF(JL) = MAX(0., ZCF(JL) - ZHLC_LCF(JL))
+
+          ! Calculate final values for LRC and HRCJL
+          ZHLC_LRC(JL) = ZHLC_LRCLOCAL(JL) * ZHLC_LCF(JL)
+          ZHLC_HRC(JL) = MAX(0., ZRCT(JL) - ZHLC_LRC(JL))
+        ELSEIF (ZRCT(JL) .GT. 0. .AND. ZCF(JL) .GT. 0. .AND. ZHLC_RCMAX(JL) .LE. ZRCRAUTC(JL)) THEN
+          ! Put all available cloud water and his fraction in the low part
+          ZHLC_LCF(JL) = ZCF(JL)
+          ZHLC_HCF(JL) = 0.0
+          ZHLC_LRC(JL) = ZRCT(JL)
+          ZHLC_HRC(JL) = 0.0
+        ELSE
+          ZHLC_LCF(JL) = 0.
+          ZHLC_HCF(JL) = 0.0
+          ZHLC_LRC(JL) = 0.
+          ZHLC_HRC(JL) = 0.0
+        ENDIF
+      ENDDO
 
       ZRF(:)=ZHLC_HCF(:) !Precipitation fraction
 
     ELSE
-      !wrong CSUBG_PR_PDF case
       CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE_OLD', 'wrong CSUBG_PR_PDF case')
     ENDIF
   ELSE
-    !wrong HSUBG_AUCV_RC case
     CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE_OLD', 'wrong HSUBG_AUCV_RC case')
   ENDIF
 
   !Diagnostic of precipitation fraction
-  ZRAINFR(:,:) = 0.
-  DO JL=1,KSIZE
-    ZRAINFR(I1(JL),I2(JL))=ZRF(JL)
+  IMICRO = 0
+  DO JK = D%NKTB,D%NKTE
+    DO JIJ = D%NIJB, D%NIJE
+      IF (GMICRO(JIJ, JK)) THEN
+        IMICRO = IMICRO + 1
+        ZRAINFR(JIJ,JK) = ZRF(IMICRO)
+      ELSE
+        ZRAINFR(JIJ,JK) = 0.
+      ENDIF
+    ENDDO
   ENDDO
 
-  DO JI = D%NIB,D%NIE
-    ZRAINFR(JI,IKE)=0.
-    DO JK=IKE-KKL, IKB, -KKL
-      IF (PRRT(JI,JK) .GT. ICED%XRTMIN(3)) THEN
+  DO JIJ = D%NIJB, D%NIJE
+    ZRAINFR(JIJ,IKE)=0.
+  END DO
 
-        ZRAINFR(JI,JK)=MAX(ZRAINFR(JI,JK), ZRAINFR(JI,JK+KKL))
+  DO JK=IKE-KKL, IKB, -KKL
+    DO JIJ = D%NIJB, D%NIJE
+      IF (PRRT(JIJ,JK) .GT. ICED%XRTMIN(3)) THEN
 
-        IF (ZRAINFR(JI,JK)==0) THEN
-          ZRAINFR(JI,JK)=1.
+        ZRAINFR(JIJ,JK)=MAX(ZRAINFR(JIJ,JK), ZRAINFR(JIJ,JK+KKL))
+
+        IF (ZRAINFR(JIJ,JK)==0) THEN
+          ZRAINFR(JIJ,JK)=1.
         END IF
       ELSE
-        ZRAINFR(JI,JK)=0.
+        ZRAINFR(JIJ,JK)=0.
       END IF
     END DO
   END DO
@@ -887,16 +973,20 @@ IF ( KSIZE >= 0 ) THEN
 !*       3.1    compute the slope parameter Lbda_r
 !
   !ZLBDAR will be used when we consider rain diluted over the grid box
-  WHERE( ZRRT(:)>0.0 )
-    ZLBDAR(:)  = ICED%XLBR*( ZRHODREF(:)*MAX( ZRRT(:),ICED%XRTMIN(3) ) )**ICED%XLBEXR
-  END WHERE
+  DO JL=1,KSIZE
+    IF (ZRRT(JL) > 0.0) THEN
+      ZLBDAR(JL) = ICED%XLBR*(ZRHODREF(JL)*MAX(ZRRT(JL),ICED%XRTMIN(3)))**ICED%XLBEXR
+    ENDIF
+  ENDDO
   !ZLBDAR_RF will be used when we consider rain concentrated in its fraction
-  WHERE( ZRRT(:)>0.0 .AND. ZRF(:)>0.0 )
-    ZLBDAR_RF(:)  = ICED%XLBR*( ZRHODREF(:) *MAX( ZRRT(:)/ZRF(:), ICED%XRTMIN(3) ) )**ICED%XLBEXR
-  ELSEWHERE
-    ZLBDAR_RF(:)  = 0.
-  END WHERE
-!
+  DO JL=1,KSIZE
+    IF (ZRRT(JL) > 0.0 .AND. ZRF(JL) > 0.0) THEN
+      ZLBDAR_RF(JL) = ICED%XLBR*(ZRHODREF(JL)*MAX(ZRRT(JL)/ZRF(JL), ICED%XRTMIN(3)))**ICED%XLBEXR
+    ELSE
+      ZLBDAR_RF(JL) = 0.
+    ENDIF
+  ENDDO
+
   IF( OWARM ) THEN    !  Check if the formation of the raindrops by the slow
                       !  warm processes is allowed
     CALL RAIN_ICE_OLD_WARM(D, CST, PARAMI, ICEP, ICED, BUCONF, &
@@ -955,19 +1045,19 @@ IF ( KSIZE >= 0 ) THEN
 !*       6.     COMPUTES THE FAST COLD PROCESS SOURCES FOR r_h
 !               ----------------------------------------------
 !
- IF ( KRR == 7 ) THEN
-  CALL RAIN_ICE_OLD_FAST_RH(D, CST, ICEP, ICED, BUCONF, &
-                            KSIZE, KRR, &
-                            GMICRO, &
-                            PTHS, PRHODJ, &
-                            ZRVT, ZRCT, ZRIT, ZRST, ZRGT, ZRHT, &
-                            ZRIS, ZRRS, ZRCS, ZRSS, ZRGS, ZRHS, ZTHS, &
-                            ZRHODREF, ZRHODJ, ZLSFACT, ZLVFACT, &
-                            ZLBDAS, ZLBDAG, ZLBDAH, &
-                            ZCJ, ZKA, ZDV, &
-                            ZZT, ZPRES, &
-                            TBUDGETS, KBUDGETS)
- END IF
+  IF ( KRR == 7 ) THEN
+    CALL RAIN_ICE_OLD_FAST_RH(D, CST, ICEP, ICED, BUCONF, &
+                              KSIZE, KRR, &
+                              GMICRO, &
+                              PTHS, PRHODJ, &
+                              ZRVT, ZRCT, ZRIT, ZRST, ZRGT, ZRHT, &
+                              ZRIS, ZRRS, ZRCS, ZRSS, ZRGS, ZRHS, ZTHS, &
+                              ZRHODREF, ZRHODJ, ZLSFACT, ZLVFACT, &
+                              ZLBDAS, ZLBDAG, ZLBDAH, &
+                              ZCJ, ZKA, ZDV, &
+                              ZZT, ZPRES, &
+                              TBUDGETS, KBUDGETS)
+  END IF
 !
 !-------------------------------------------------------------------------------
 !
@@ -992,10 +1082,10 @@ IF ( KSIZE >= 0 ) THEN
                             TBUDGETS, KBUDGETS)
 
   IF (OCND2.AND.LCHECKNOISE) THEN
-!*       8     This check is mainly for noise reduction:
-!              ----------------------------------------
-! Do not override saturation point over ice for temperatures below freezing.
-! If so, adjust total ice and then moisture  and temperature.
+    !*       8     This check is mainly for noise reduction:
+    !              ----------------------------------------
+    ! Do not override saturation point over ice for temperatures below freezing.
+    ! If so, adjust total ice and then moisture  and temperature.
 
     DO JL=1,KSIZE
       ZRSA=ZRIS(JL)+ZRSS(JL) +ZRGS(JL) ! total solid
@@ -1026,9 +1116,6 @@ IF ( KSIZE >= 0 ) THEN
 
           ! ZRFRAC should not exceed ZRSP, if so adjust
           ZRSDIF = MIN(0.,ZRSP-ZRFRAC)
-        ELSE  ! super - saturation over ice:
-          ! ZRFRAC should not go below ZRSP, if so adjust
-!          ZRSDIF = MAX(0.,ZRSP-ZRFRAC)
         ENDIF
         ZRSB = ZRSA*PTSTEP  - ZRSDIF
         ZRVS(JL) = ZRVS(JL) -  (ZRSB/PTSTEP-ZRSA) ! total H2O should not change
@@ -1045,20 +1132,109 @@ IF ( KSIZE >= 0 ) THEN
   ENDIF
 
 !-------------------------------------------------------------------------------
-  DO JL=1,KSIZE
-    PRVS(I1(JL),I2(JL))=ZRVS(JL)
-    PRCS(I1(JL),I2(JL))=ZRCS(JL)
-    PRRS(I1(JL),I2(JL))=ZRRS(JL)
-    PRIS(I1(JL),I2(JL))=ZRIS(JL)
-    PRSS(I1(JL),I2(JL))=ZRSS(JL)
-    PRGS(I1(JL),I2(JL))=ZRGS(JL)
-    IF (KRR == 7) PRHS(I1(JL),I2(JL))=ZRHS(JL)
-    PTHS(I1(JL),I2(JL))=ZTHS(JL)
-    PCIT(I1(JL),I2(JL))=ZCIT(JL)
-    ZRAINFR(I1(JL),I2(JL))=ZRF(JL)
-  END DO
-!
-  ELSE
+
+  IMICRO = 0
+  DO JK = D%NKTB,D%NKTE
+    DO JIJ = D%NIJB, D%NIJE
+      IF (GMICRO(JIJ,JK)) THEN
+        IMICRO = IMICRO + 1
+        PRVS(JIJ,JK) = ZRVS(IMICRO)
+      ENDIF
+    ENDDO
+  ENDDO
+
+  IMICRO = 0
+  DO JK = D%NKTB,D%NKTE
+    DO JIJ = D%NIJB, D%NIJE
+      IF (GMICRO(JIJ,JK)) THEN
+        IMICRO = IMICRO + 1
+        PRCS(JIJ,JK) = ZRCS(IMICRO)
+      ENDIF
+    ENDDO
+  ENDDO
+
+  IMICRO = 0
+  DO JK = D%NKTB,D%NKTE
+    DO JIJ = D%NIJB, D%NIJE
+      IF (GMICRO(JIJ,JK)) THEN
+        IMICRO = IMICRO + 1
+        PRRS(JIJ,JK) = ZRRS(IMICRO)
+      ENDIF
+    ENDDO
+  ENDDO
+
+  IMICRO = 0
+  DO JK = D%NKTB,D%NKTE
+    DO JIJ = D%NIJB, D%NIJE
+      IF (GMICRO(JIJ,JK)) THEN
+        IMICRO = IMICRO + 1
+        PRIS(JIJ,JK) = ZRIS(IMICRO)
+      ENDIF
+    ENDDO
+  ENDDO
+
+  IMICRO = 0
+  DO JK = D%NKTB,D%NKTE
+    DO JIJ = D%NIJB, D%NIJE
+      IF (GMICRO(JIJ,JK)) THEN
+        IMICRO = IMICRO + 1
+        PRSS(JIJ,JK) = ZRSS(IMICRO)
+      ENDIF
+    ENDDO
+  ENDDO
+
+  IMICRO = 0
+  DO JK = D%NKTB,D%NKTE
+    DO JIJ = D%NIJB, D%NIJE
+      IF (GMICRO(JIJ,JK)) THEN
+        IMICRO = IMICRO + 1
+        PRGS(JIJ,JK) = ZRGS(IMICRO)
+      ENDIF
+    ENDDO
+  ENDDO
+
+  IF ( KRR == 7 ) THEN
+    IMICRO = 0
+    DO JK = D%NKTB,D%NKTE
+      DO JIJ = D%NIJB, D%NIJE
+        IF (GMICRO(JIJ,JK)) THEN
+          IMICRO = IMICRO + 1
+          PRHS(JIJ,JK) = ZRHS(IMICRO)
+        ENDIF
+      ENDDO
+    ENDDO
+  END IF
+  IMICRO = 0
+  DO JK = D%NKTB,D%NKTE
+    DO JIJ = D%NIJB, D%NIJE
+      IF (GMICRO(JIJ,JK)) THEN
+        IMICRO = IMICRO + 1
+        PTHS(JIJ,JK) = ZTHS(IMICRO)
+      ENDIF
+    ENDDO
+  ENDDO
+
+  IMICRO = 0
+  DO JK = D%NKTB,D%NKTE
+    DO JIJ = D%NIJB, D%NIJE
+      IF (GMICRO(JIJ,JK)) THEN
+        IMICRO = IMICRO + 1
+        PCIT(JIJ,JK) = ZCIT(IMICRO)
+      ENDIF
+    ENDDO
+  ENDDO
+
+  IMICRO = 0
+  DO JK = D%NKTB,D%NKTE
+    DO JIJ = D%NIJB, D%NIJE
+      IF (GMICRO(JIJ,JK)) THEN
+        IMICRO = IMICRO + 1
+        ZRAINFR(JIJ,JK) = ZRF(IMICRO)
+      ENDIF
+    ENDDO
+  ENDDO
+
+ELSE
 !
 ! Advance the budget calls
 !
@@ -1066,89 +1242,90 @@ IF ( KSIZE >= 0 ) THEN
 ! Reordered for compability with flexible structures like in AROME
  ZBU0(:,:)=0.
  ! rain_ice_slow
- IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HON', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'HON', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HON', ZBU0(:,:))
- IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'SFR', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'SFR', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'SFR', ZBU0(:,:))
- IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'DEPS', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'DEPS', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'DEPS', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'AGGS', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'AGGS', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'AUTS', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'AUTS', ZBU0(:,:))
- IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'DEPG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'DEPG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'DEPG', ZBU0(:,:))
+ IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'HON', ZBU0)
+ IF (BUCONF%LBUDGET_RC) CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'HON', ZBU0)
+ IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%ADD_PHY(D, 'HON', ZBU0)
+ IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'SFR', ZBU0)
+ IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'SFR', ZBU0)
+ IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%ADD_PHY(D, 'SFR', ZBU0)
+ IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'DEPS', ZBU0)
+ IF (BUCONF%LBUDGET_RV) CALL TBUDGETS(NBUDGET_RV)%PTR%ADD_PHY(D, 'DEPS', ZBU0)
+ IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%ADD_PHY(D, 'DEPS', ZBU0)
+ IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%ADD_PHY(D, 'AGGS', ZBU0)
+ IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%ADD_PHY(D, 'AGGS', ZBU0)
+ IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%ADD_PHY(D, 'AUTS', ZBU0)
+ IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%ADD_PHY(D, 'AUTS', ZBU0)
+ IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'DEPG', ZBU0)
+ IF (BUCONF%LBUDGET_RV) CALL TBUDGETS(NBUDGET_RV)%PTR%ADD_PHY(D, 'DEPG', ZBU0)
+ IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%ADD_PHY(D, 'DEPG', ZBU0)
 
  IF (OWARM) THEN ! rain_ice_warm
-   IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'AUTO', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'AUTO', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'ACCR', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACCR', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'REVA', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'REVA', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'REVA', ZBU0(:,:))
+   IF (BUCONF%LBUDGET_RC) CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'AUTO', ZBU0)
+   IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'AUTO', ZBU0)
+   IF (BUCONF%LBUDGET_RC) CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'ACCR', ZBU0)
+   IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'ACCR', ZBU0)
+   IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'REVA', ZBU0)
+   IF (BUCONF%LBUDGET_RV) CALL TBUDGETS(NBUDGET_RV)%PTR%ADD_PHY(D, 'REVA', ZBU0)
+   IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'REVA', ZBU0)
  ENDIF
 
  !rain_ice_fast_rs
- IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'RIM', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'RIM', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'RIM', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'RIM', ZBU0(:,:))
- IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'ACC', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACC', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'ACC', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'ACC', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'CMEL', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'CMEL', ZBU0(:,:))
+ IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'RIM', ZBU0)
+ IF (BUCONF%LBUDGET_RC) CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'RIM', ZBU0)
+ IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%ADD_PHY(D, 'RIM', ZBU0)
+ IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%ADD_PHY(D, 'RIM', ZBU0)
+ IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'ACC', ZBU0)
+ IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'ACC', ZBU0)
+ IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%ADD_PHY(D, 'ACC', ZBU0)
+ IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%ADD_PHY(D, 'ACC', ZBU0)
+ IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%ADD_PHY(D, 'CMEL', ZBU0)
+ IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%ADD_PHY(D, 'CMEL', ZBU0)
 
  !rain_ice_fast_rg
- IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'CFRZ', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'CFRZ', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'CFRZ', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'CFRZ', ZBU0(:,:))
- IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'WETG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'WETG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'WETG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'WETG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'WETG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'WETG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RH), 'WETG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'DRYG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'DRYG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'DRYG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'DRYG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'DRYG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'DRYG', ZBU0(:,:))
- IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'GMLT', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'GMLT', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'GMLT', ZBU0(:,:))
+ IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'CFRZ', ZBU0)
+ IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'CFRZ', ZBU0)
+ IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%ADD_PHY(D, 'CFRZ', ZBU0)
+ IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%ADD_PHY(D, 'CFRZ', ZBU0)
+ IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'WETG', ZBU0)
+ IF (BUCONF%LBUDGET_RC) CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'WETG', ZBU0)
+ IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'WETG', ZBU0)
+ IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%ADD_PHY(D, 'WETG', ZBU0)
+ IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%ADD_PHY(D, 'WETG', ZBU0)
+ IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%ADD_PHY(D, 'WETG', ZBU0)
+ IF (BUCONF%LBUDGET_RH) CALL TBUDGETS(NBUDGET_RH)%PTR%ADD_PHY(D, 'WETG', ZBU0)
+ IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'DRYG', ZBU0)
+ IF (BUCONF%LBUDGET_RC) CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'DRYG', ZBU0)
+ IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'DRYG', ZBU0)
+ IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%ADD_PHY(D, 'DRYG', ZBU0)
+ IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%ADD_PHY(D, 'DRYG', ZBU0)
+ IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%ADD_PHY(D, 'DRYG', ZBU0)
+ IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'GMLT', ZBU0)
+ IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'GMLT', ZBU0)
+ IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%ADD_PHY(D, 'GMLT', ZBU0)
 
  IF(KRR==7) THEN ! rain_ice_fast_rh
-   IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'WETH', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'WETH', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'WETH', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'WETH', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'WETH', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'WETH', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RH), 'WETH', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HMLT', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'HMLT', ZBU0(:,:))
-   IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RH), 'HMLT', ZBU0(:,:))
+   IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'WETH', ZBU0)
+   IF (BUCONF%LBUDGET_RC) CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'WETH', ZBU0)
+   IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'WETH', ZBU0)
+   IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%ADD_PHY(D, 'WETH', ZBU0)
+   IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%ADD_PHY(D, 'WETH', ZBU0)
+   IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%ADD_PHY(D, 'WETH', ZBU0)
+   IF (BUCONF%LBUDGET_RH) CALL TBUDGETS(NBUDGET_RH)%PTR%ADD_PHY(D, 'WETH', ZBU0)
+   IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'HMLT', ZBU0)
+   IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'HMLT', ZBU0)
+   IF (BUCONF%LBUDGET_RH) CALL TBUDGETS(NBUDGET_RH)%PTR%ADD_PHY(D, 'HMLT', ZBU0)
  ENDIF
 
  !rain_ice_fast_ri
- IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'IMLT', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'IMLT', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'IMLT', ZBU0(:,:))
- IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'BERFI', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'BERFI', ZBU0(:,:))
- IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'BERFI', ZBU0(:,:))
+ IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'IMLT', ZBU0)
+ IF (BUCONF%LBUDGET_RC) CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'IMLT', ZBU0)
+ IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%ADD_PHY(D, 'IMLT', ZBU0)
+ IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%ADD_PHY(D, 'BERFI', ZBU0)
+ IF (BUCONF%LBUDGET_RC) CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'BERFI', ZBU0)
+ IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%ADD_PHY(D, 'BERFI', ZBU0)
 
  ENDIF !BUCONF%LBU_ENABLE
+
 END IF
 !
 !-------------------------------------------------------------------------------
@@ -1161,13 +1338,13 @@ END IF
 IF (HSEDIM == 'STAT') THEN
   IF(BUCONF%LBU_ENABLE) THEN
     IF (BUCONF%LBUDGET_RC .AND. OSEDIC) &
-                    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC),'SEDI', PRCS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR),'SEDI', PRRS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI),'SEDI', PRIS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', PRGS(:,:)*PRHODJ(:,:))
+                    CALL TBUDGETS(NBUDGET_RC)%PTR%INIT_PHY(D, 'SEDI', PRCS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%INIT_PHY(D, 'SEDI', PRRS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%INIT_PHY(D, 'SEDI', PRIS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%INIT_PHY(D, 'SEDI', PRSS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%INIT_PHY(D, 'SEDI', PRGS(:,:)*PRHODJ(:,:))
     IF (KRR == 7 .AND. BUCONF%LBUDGET_RH) &
-                    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:,:)*PRHODJ(:,:))
+                    CALL TBUDGETS(NBUDGET_RH)%PTR%INIT_PHY(D, 'SEDI', PRHS(:,:)*PRHODJ(:,:))
   ENDIF
 
   CALL RAIN_ICE_OLD_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
@@ -1181,25 +1358,25 @@ IF (HSEDIM == 'STAT') THEN
 
   IF(BUCONF%LBU_ENABLE) THEN
     IF (BUCONF%LBUDGET_RC .AND. OSEDIC) &
-                    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC),'SEDI', PRCS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR),'SEDI', PRRS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI),'SEDI', PRIS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', PRGS(:,:)*PRHODJ(:,:))
+                    CALL TBUDGETS(NBUDGET_RC)%PTR%END_PHY(D, 'SEDI', PRCS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%END_PHY(D, 'SEDI', PRRS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%END_PHY(D, 'SEDI', PRIS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%END_PHY(D, 'SEDI', PRSS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%END_PHY(D, 'SEDI', PRGS(:,:)*PRHODJ(:,:))
     IF (KRR == 7 .AND. BUCONF%LBUDGET_RH) &
-                    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:,:)*PRHODJ(:,:))
+                    CALL TBUDGETS(NBUDGET_RH)%PTR%END_PHY(D, 'SEDI', PRHS(:,:)*PRHODJ(:,:))
   ENDIF
 
 ELSEIF (HSEDIM == 'SPLI') THEN
   IF(BUCONF%LBU_ENABLE) THEN
     IF (BUCONF%LBUDGET_RC .AND. OSEDIC) &
-                    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC),'SEDI', PRCS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR),'SEDI', PRRS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI),'SEDI', PRIS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', PRGS(:,:)*PRHODJ(:,:))
+                    CALL TBUDGETS(NBUDGET_RC)%PTR%INIT_PHY(D, 'SEDI', PRCS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%INIT_PHY(D, 'SEDI', PRRS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%INIT_PHY(D, 'SEDI', PRIS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%INIT_PHY(D, 'SEDI', PRSS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%INIT_PHY(D, 'SEDI', PRGS(:,:)*PRHODJ(:,:))
     IF (KRR == 7 .AND. BUCONF%LBUDGET_RH) &
-                    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:,:)*PRHODJ(:,:))
+                    CALL TBUDGETS(NBUDGET_RH)%PTR%INIT_PHY(D, 'SEDI', PRHS(:,:)*PRHODJ(:,:))
   ENDIF
 
   CALL RAIN_ICE_OLD_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, KSIZE, &
@@ -1213,13 +1390,13 @@ ELSEIF (HSEDIM == 'SPLI') THEN
 
   IF(BUCONF%LBU_ENABLE) THEN
     IF (BUCONF%LBUDGET_RC .AND. OSEDIC) &
-                    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC),'SEDI', PRCS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR),'SEDI', PRRS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI),'SEDI', PRIS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:,:)*PRHODJ(:,:))
-    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', PRGS(:,:)*PRHODJ(:,:))
+                    CALL TBUDGETS(NBUDGET_RC)%PTR%END_PHY(D, 'SEDI', PRCS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%END_PHY(D, 'SEDI', PRRS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%END_PHY(D, 'SEDI', PRIS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RS) CALL TBUDGETS(NBUDGET_RS)%PTR%END_PHY(D, 'SEDI', PRSS(:,:)*PRHODJ(:,:))
+    IF (BUCONF%LBUDGET_RG) CALL TBUDGETS(NBUDGET_RG)%PTR%END_PHY(D, 'SEDI', PRGS(:,:)*PRHODJ(:,:))
     IF (KRR == 7 .AND. BUCONF%LBUDGET_RH) &
-                    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:,:)*PRHODJ(:,:))
+                    CALL TBUDGETS(NBUDGET_RH)%PTR%END_PHY(D, 'SEDI', PRHS(:,:)*PRHODJ(:,:))
   ENDIF
 ELSEIF (HSEDIM == 'NONE') THEN
 ELSE
@@ -1227,18 +1404,21 @@ ELSE
 END IF
 
   !sedimentation of rain fraction
-  DO JI = D%NIB,D%NIE
-    ZRAINFR(JI,IKE)=0.
+  DO JIJ = D%NIJB, D%NIJE
+    ZRAINFR(JIJ,IKE)=0.
+  END DO
+
+  DO JIJ = D%NIJB, D%NIJE
     DO JK=IKE-KKL, IKB, -KKL
-      IF (PRRS(JI,JK)*PTSTEP .GT. ICED%XRTMIN(3)) THEN
+      IF (PRRS(JIJ,JK)*PTSTEP .GT. ICED%XRTMIN(3)) THEN
 
-        ZRAINFR(JI,JK)=MAX(ZRAINFR(JI,JK), ZRAINFR(JI,JK+KKL))
+        ZRAINFR(JIJ,JK)=MAX(ZRAINFR(JIJ,JK), ZRAINFR(JIJ,JK+KKL))
 
-        IF (ZRAINFR(JI,JK)==0) THEN
-          ZRAINFR(JI,JK)=1.
+        IF (ZRAINFR(JIJ,JK)==0) THEN
+          ZRAINFR(JIJ,JK)=1.
         END IF
       ELSE
-        ZRAINFR(JI,JK)=0.
+        ZRAINFR(JIJ,JK)=0.
       END IF
     END DO
   END DO

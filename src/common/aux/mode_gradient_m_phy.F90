@@ -443,13 +443,9 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZX    ! metric coefficient
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PGX_M_U  ! result at flux
                                                               ! side
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZGX_M_U
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZY, ZDXX
-INTEGER  IIU,IKU,JI,JK,IKL, IKA
+INTEGER  IIU,IKU,JI,IKL, IKA
 !
 INTEGER :: IJU
-INTEGER :: JIJK,JIJKOR,JIJKEND
-INTEGER :: JI_1JK, JIJK_1, JI_1JK_1, JIJKP1, JI_1JKP1
 !
 !
 !-------------------------------------------------------------------------------
@@ -582,7 +578,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),INTENT(OUT) :: PGY_M_V  ! result at flux
                                                               ! side
 !REAL, DIMENSION(D%NIT*D%NJT*D%NKT) :: ZGY_M_V
 !REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZY, ZDYY,ZDZZ,ZDZY
-INTEGER  IJU,IKU,JI,JJ,JK,IKL, IKA
+INTEGER  IJU,IKU,JJ,JK,IKL, IKA
 !
 !-------------------------------------------------------------------------------
 !

@@ -10,7 +10,7 @@ MODULE MODI_LIMA_PRECIP_SCAVENGING
                                         PRRT, PRHODREF, PRHODJ, PZZ,        &
                                         PPABST, PTHT, PSVT, PRSVS, PINPAP )
        USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
-       USE MODD_BUDGET,          only: TBUDGETDATA,TBUDGETCONF_T
+       USE MODD_BUDGET,          ONLY: TBUDGETDATA_PTR,TBUDGETCONF_T
        USE MODD_CST,             ONLY: CST_T
        USE MODD_NSV,             ONLY: NSV_T
        IMPLICIT NONE
@@ -19,7 +19,7 @@ MODULE MODI_LIMA_PRECIP_SCAVENGING
        TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
        TYPE(CST_T),              INTENT(IN)    :: CST
        TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
-       TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+       TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
        INTEGER,                  INTENT(IN)    :: KBUDGETS
 !
        CHARACTER(LEN=4),       INTENT(IN)      :: HCLOUD   ! cloud paramerization

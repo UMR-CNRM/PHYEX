@@ -80,7 +80,6 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZNORMT             ! Normal distribution t
 REAL,    DIMENSION(:), ALLOCATABLE :: ZPSH_R             ! Shattering probability work vectors
 REAL,    DIMENSION(SIZE(PRRT))     :: ZPSH               ! Shattering probability
 LOGICAL, DIMENSION(:), ALLOCATABLE :: LTEMP              ! Define the mask where ZNORMT is negligible
-INTEGER :: II
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('LIMA_RAINDROP_SHATTERING_FREEZING', 0, ZHOOK_HANDLE)
 P_RI_RDSF(:)=0.

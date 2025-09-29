@@ -187,23 +187,23 @@ CALL MNH_MEM_GET( ZZW1,  SIZE(PRHODREF), 7 )
   CALL COUNTJV_DEVICE( GWORK(:), I1H(:), IHAIL )
 #endif
 !
-  IF( IHAIL>0 ) THEN
 !PW:used init/end instead of add because zzw1 is produced and used with different conditions
 ! => can not use directly zzw1 in Budget_store_add
-    if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'WETH', Unpack ( pths(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'WETH', Unpack ( prcs(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rr ) call Budget_store_init( tbudgets(NBUDGET_RR), 'WETH', Unpack ( prrs(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'WETH', Unpack ( pris(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rs ) call Budget_store_init( tbudgets(NBUDGET_RS), 'WETH', Unpack ( prss(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rg ) call Budget_store_init( tbudgets(NBUDGET_RG), 'WETH', Unpack ( prgs(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rh ) call Budget_store_init( tbudgets(NBUDGET_RH), 'WETH', Unpack ( prhs(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'WETH', Unpack ( pths(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'WETH', Unpack ( prcs(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rr ) call Budget_store_init( tbudgets(NBUDGET_RR), 'WETH', Unpack ( prrs(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'WETH', Unpack ( pris(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rs ) call Budget_store_init( tbudgets(NBUDGET_RS), 'WETH', Unpack ( prss(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rg ) call Budget_store_init( tbudgets(NBUDGET_RG), 'WETH', Unpack ( prgs(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rh ) call Budget_store_init( tbudgets(NBUDGET_RH), 'WETH', Unpack ( prhs(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+IF( IHAIL>0 ) THEN
 !
 !*       7.2    compute the Wet growth of hail
 !
@@ -471,20 +471,21 @@ CALL MNH_MEM_GET( ZZW1,  SIZE(PRHODREF), 7 )
     END DO
 !$acc end kernels
 
-    if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'WETH', Unpack ( pths(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'WETH', Unpack ( prcs(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rr ) call Budget_store_end( tbudgets(NBUDGET_RR), 'WETH', Unpack ( prrs(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'WETH', Unpack ( pris(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rs ) call Budget_store_end( tbudgets(NBUDGET_RS), 'WETH', Unpack ( prss(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rg ) call Budget_store_end( tbudgets(NBUDGET_RG), 'WETH', Unpack ( prgs(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rh ) call Budget_store_end( tbudgets(NBUDGET_RH), 'WETH', Unpack ( prhs(:) * prhodj(:), &
-                                             mask = omicro(:,:,:), field = 0. ) )
+END IF
+if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'WETH', Unpack ( pths(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'WETH', Unpack ( prcs(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rr ) call Budget_store_end( tbudgets(NBUDGET_RR), 'WETH', Unpack ( prrs(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'WETH', Unpack ( pris(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rs ) call Budget_store_end( tbudgets(NBUDGET_RS), 'WETH', Unpack ( prss(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rg ) call Budget_store_end( tbudgets(NBUDGET_RG), 'WETH', Unpack ( prgs(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rh ) call Budget_store_end( tbudgets(NBUDGET_RH), 'WETH', Unpack ( prhs(:) * prhodj(:), &
+                                         mask = omicro(:,:,:), field = 0. ) )
 !
 !
 ! ici LRECONVH et un flag pour autoriser une reconversion partielle de
@@ -517,13 +518,15 @@ CALL MNH_MEM_GET( ZZW1,  SIZE(PRHODREF), 7 )
 !
 !*       7.5    Melting of the hailstones
 !
-    if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'HMLT', Unpack ( pths(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rr ) call Budget_store_init( tbudgets(NBUDGET_RR), 'HMLT', Unpack ( prrs(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rh ) call Budget_store_init( tbudgets(NBUDGET_RH), 'HMLT', Unpack ( prhs(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-
+if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'HMLT', Unpack ( pths(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rr ) call Budget_store_init( tbudgets(NBUDGET_RR), 'HMLT', Unpack ( prrs(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rh ) call Budget_store_init( tbudgets(NBUDGET_RH), 'HMLT', Unpack ( prhs(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+!
+IF( IHAIL>0 ) THEN
+!
 !$acc kernels
 !$acc loop independent
     DO JJ = 1, IHAIL
@@ -547,13 +550,13 @@ CALL MNH_MEM_GET( ZZW1,  SIZE(PRHODREF), 7 )
     END DO
 !$acc end kernels
 
-    if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'HMLT', Unpack ( pths(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rr ) call Budget_store_end( tbudgets(NBUDGET_RR), 'HMLT', Unpack ( prrs(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-    if ( lbudget_rh ) call Budget_store_end( tbudgets(NBUDGET_RH), 'HMLT', Unpack ( prhs(:) * prhodj(:), &
-                                              mask = omicro(:,:,:), field = 0. ) )
-  END IF
+END IF
+if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'HMLT', Unpack ( pths(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rr ) call Budget_store_end( tbudgets(NBUDGET_RR), 'HMLT', Unpack ( prrs(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
+if ( lbudget_rh ) call Budget_store_end( tbudgets(NBUDGET_RH), 'HMLT', Unpack ( prhs(:) * prhodj(:), &
+                                          mask = omicro(:,:,:), field = 0. ) )
 !
 IF (MPPDB_INITIALIZED) THEN
   !Check all INOUT arrays

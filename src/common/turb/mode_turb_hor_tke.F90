@@ -58,7 +58,6 @@ USE MODD_LES, ONLY: TLES_t
 !
 USE MODI_SHUMAN
 USE MODE_SHUMAN_PHY
-USE MODE_GRADIENT_M_PHY, ONLY: GX_M_U_PHY, GY_M_V_PHY
 USE MODI_GRADIENT_M
 USE MODI_LES_MEAN_SUBGRID
 !
@@ -93,7 +92,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(OUT)   ::  PTRH     ! horizontal tr
 !
 !*       0.2  declaration of local variables
 !
-INTEGER :: IKB, IKU, IIT, IJT, IKT, JI, JJ, JK
+INTEGER :: IKB, IKU, IIT, IJT, IKT, JI, JJ
 !
 REAL, DIMENSION(D%NIT,D%NJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF 
                                     ! coefficients for the uncentred gradient 

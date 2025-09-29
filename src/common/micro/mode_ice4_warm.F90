@@ -6,12 +6,12 @@
 MODULE MODE_ICE4_WARM
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_WARM(CST, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
+SUBROUTINE ICE4_WARM(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
                     &PRHODREF, PLVFACT, PT, PPRES, PTHT, &
                     &PLBDAR, PLBDAR_RF, PKA, PDV, PCJ, &
                     &PHLC_LCF, PHLC_HCF, PHLC_LRC, PHLC_HRC, &
                     &PCF, PRF, &
-                    &PRVT, PRCT, PRRT, &
+                    &PRVT, PRCT, PRRT, PCONC, PACRF, &
                     &PRCAUTR, PRCACCR, PRREVAV)
 !!
 !!**  PURPOSE
@@ -26,12 +26,14 @@ SUBROUTINE ICE4_WARM(CST, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, HSUBG_RC
 !!    -------------
 !!
 !!     R. El Khatib 24-Aug-2021 Optimizations
+!      K.I Ivarsson 10-2018: Possibility to use Kogan autoconversion and alternative collision factor
 !
 !
 !*      0. DECLARATIONS
 !          ------------
 !
 USE MODD_CST,            ONLY: CST_t
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 !
@@ -43,6 +45,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
@@ -69,7 +72,9 @@ REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRF      ! Rain fraction
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRVT     ! Water vapor m.r. at t
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRRT     ! Rain water m.r. at t
-REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRCAUTR   ! Autoconversion of r_c for r_r production
+REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCONC    ! Cloud Droplet number concentration
+REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PACRF    ! Collision factor cloud droplet-rain
+REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRCAUTR  ! Autoconversion of r_c for r_r production
 REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRCACCR  ! Accretion of r_c for r_r production
 REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRREVAV  ! Evaporation of r_r
 !
@@ -95,8 +100,14 @@ IF (LHOOK) CALL DR_HOOK('ICE4_WARM', 0, ZHOOK_HANDLE)
 DO JL=1, KSIZE
   IF(PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0. .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
-      !HCF*autoconv(HRC/HCF) with simplification
-      PRCAUTR(JL) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JL) - PHLC_HCF(JL)*ICEP%XCRIAUTC/PRHODREF(JL), 0.0)
+      IF(PARAMI%LKOGAN) THEN
+        PRCAUTR(JL) =  1350.0* ICEP%XFRMIN(10)* PCONC(JL)**(-1.79) * &
+            &  (PRCT(JL)/(MAX(ICEP%XFRMIN(11),PCF(JL))))**2.47
+        PRCAUTR(JL) = PRCAUTR(JL)*MAX(ICEP%XFRMIN(11),PCF(JL))
+      ELSE
+        !HCF*autoconv(HRC/HCF) with simplification
+        PRCAUTR(JL) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JL) - PHLC_HCF(JL)*ICEP%XCRIAUTC/PRHODREF(JL), 0.0)
+      ENDIF
     ENDIF
   ELSE
     PRCAUTR(JL) = 0.
@@ -114,7 +125,7 @@ IF (HSUBG_RC_RR_ACCR=='NONE') THEN
   DO JL=1, KSIZE
     IF(PRCT(JL)>ICED%XRTMIN(2) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)) THEN
       IF(.NOT. LDSOFT) THEN
-        PRCACCR(JL) = ICEP%XFCACCR * PRCT(JL)                &
+        PRCACCR(JL) = ICEP%XFCACCR * PRCT(JL) * PACRF(JL)   &
                     & * PLBDAR(JL)**ICEP%XEXCACCR    &
                     & * PRHODREF(JL)**(-ICED%XCEXVT)
       ENDIF

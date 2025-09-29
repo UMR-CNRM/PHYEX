@@ -80,6 +80,8 @@ USE MODD_CST
 USE MODD_CONVPAR
 USE MODD_CONVPAREXT
 USE MODD_DIMPHYEX
+USE MODE_CONVECT_CONDENS, ONLY: CONVECT_CONDENS
+!USE MODE_CONVECT_MIXING_FUNCT, ONLY: CONVECT_MIXING_FUNCT
 !
 !
 IMPLICIT NONE
@@ -142,6 +144,7 @@ INTEGER :: JI             ! horizontal loop index
 INTEGER :: JK, JKP, JKM, JK1, JK2, JKMIN   ! vertical loop index
 REAL    :: ZEPSA          ! R_v / R_d, C_pv / C_pd
 REAL    :: ZRDOCP         ! C_pd / R_d, R_d / C_pd
+REAL    :: ZICE, ZEPS0
 !
 REAL, DIMENSION(KLON)    :: ZUT             ! updraft temperature (K)
 REAL, DIMENSION(KLON)    :: ZUW1, ZUW2      ! square of updraft vert.
@@ -165,9 +168,6 @@ TYPE(DIMPHYEX_T) :: D
 TYPE(CONVPAR_T)  :: CONVPAR
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-
-#include "convect_condens.h"
-#include "convect_mixing_funct.h"
 !-------------------------------------------------------------------------------
 !
 !        0.3   Set loop bounds
@@ -256,6 +256,8 @@ END DO
 !*       3.     Enter loop for updraft computations
 !               ------------------------------------
 !
+ZICE=REAL(KICE)
+ZEPS0=CST%XRD/CST%XRV
 JKMIN = MINVAL( KLCL(:) ) - 1
 DO JK = MAX( IKB + 1, JKMIN ), IKE - 1
   ZWORK6(:) = 1.
@@ -274,7 +276,7 @@ DO JK = MAX( IKB + 1, JKMIN ), IKE - 1
 !
     ZWORK1(:) = PURC(:,JK) + PURR(:,JK)
     ZWORK2(:) = PURI(:,JK) + PURS(:,JK)
-    CALL CONVECT_CONDENS( CST, D, CONVPAR, KICE, PPRES(:,JKP), PUTHL(:,JK), PURW(:,JK),&
+    CALL CONVECT_CONDENS( CST, D, CONVPAR, ZICE, ZEPS0, PPRES(:,JKP), PUTHL(:,JK), PURW(:,JK),&
                           ZWORK1, ZWORK2, PZ(:,JKP), ZUT, ZURV,     &
                           PURC(:,JKP), PURI(:,JKP), ZLV, ZLS, ZCPH )
 !
@@ -349,7 +351,7 @@ DO JK = MAX( IKB + 1, JKMIN ), IKE - 1
     ZWORK2(:) = ZMIXF(:) * PRW(:,JKP)                                      &
                      + ( 1. - ZMIXF(:) ) * PURW(:,JKP)  ! mixed r_w
 !
-    CALL CONVECT_CONDENS( CST, D, CONVPAR, KICE, PPRES(:,JKP), ZWORK1, ZWORK2,        &
+    CALL CONVECT_CONDENS( CST, D, CONVPAR, ZICE, ZEPS0, PPRES(:,JKP), ZWORK1, ZWORK2,        &
                           PURC(:,JKP), PURI(:,JKP), PZ(:,JKP), ZUT,&
                           ZWORK3, ZWORK4, ZWORK5, ZLV, ZLS, ZCPH )
 !        put in enthalpy and r_w and get T r_c, r_i (ZUT, ZWORK4-5)

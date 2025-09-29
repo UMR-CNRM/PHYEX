@@ -141,6 +141,8 @@ IMI = GET_CURRENT_MODEL_INDEX()
 !
 D%NIJT=SIZE(XRT,1)*SIZE(XRT,2)
 D%NKT=SIZE(XRT,3)
+D%NIJB=1
+D%NIJE=D%NIJT
 !
 !*       2.    ALLOCATE  Module MODD_PRECIP_n
 !              ------------------------------

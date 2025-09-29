@@ -97,8 +97,8 @@ IMPLICIT NONE
 !              ------------------------------- 
 !
 !
-INTEGER :: KSIZE1
-INTEGER :: KSIZE2
+INTEGER, INTENT(IN) :: KSIZE1
+INTEGER, INTENT(IN) :: KSIZE2
 INTEGER, INTENT(IN) :: KND    ! Number of discrete size intervals in DS and DR  
 !
 REAL, INTENT(IN) :: PALPHAS   ! First shape parameter of the aggregates 

@@ -123,7 +123,7 @@ REAL, DIMENSION(KDIM),  INTENT(IN)           :: PZZ          ! altitude of flux 
 REAL,                   INTENT(IN)           :: PFTOP_O_FSURF! Flux at BL top / Surface flux
 REAL,                   INTENT(OUT)          :: BL_DEPTH_DIAG1D
 INTEGER :: JK ! loop counters
-INTEGER :: IKB,IIJB,IIJE,IKL
+INTEGER :: IKB,IKL
 REAL    :: ZFLX     ! flux at top of BL
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE

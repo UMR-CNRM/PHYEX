@@ -65,19 +65,16 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-USE MODD_CST,             ONLY: CST_t
-USE MODD_TURB_n,          ONLY: TURB_t
-USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
-USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
-!
-USE MODE_MSG,             ONLY: PRINT_MSG, NVERB_FATAL
-!
+USE MODD_DIMPHYEX,                ONLY: DIMPHYEX_t
+USE MODD_CST,                     ONLY: CST_t
+USE MODD_TURB_n,                  ONLY: TURB_t
+USE MODD_PARAM_MFSHALL_n,         ONLY: PARAM_MFSHALL_t
+USE MODD_RAIN_ICE_PARAM_n,        ONLY: RAIN_ICE_PARAM_t
+USE MODE_MSG,                     ONLY: PRINT_MSG, NVERB_FATAL
 USE MODE_COMPUTE_MF_CLOUD_DIRECT, ONLY: COMPUTE_MF_CLOUD_DIRECT
-USE MODE_COMPUTE_MF_CLOUD_STAT, ONLY: COMPUTE_MF_CLOUD_STAT
+USE MODE_COMPUTE_MF_CLOUD_STAT,   ONLY: COMPUTE_MF_CLOUD_STAT
 USE MODE_COMPUTE_MF_CLOUD_BIGAUS, ONLY: COMPUTE_MF_CLOUD_BIGAUS
-!
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
+USE YOMHOOK,                      ONLY: LHOOK, DR_HOOK, JPHOOK
 
 IMPLICIT NONE
 
@@ -135,8 +132,8 @@ PWEIGHT_MF_CLOUD(:,:) = 0.
 IF (PARAMMF%CMF_CLOUD == 'DIRE') THEN
   !Direct cloud scheme
   CALL COMPUTE_MF_CLOUD_DIRECT(D, PARAMMF, &
-                              &KKLCL(:), PFRAC_UP(:,:), PRC_UP(:,:), PRI_UP(:,:),&
-                              &PRC_MF(:,:), PRI_MF(:,:), PCF_MF(:,:), PWEIGHT_MF_CLOUD(:,:))
+                              &KKLCL, PFRAC_UP, PRC_UP, PRI_UP,&
+                              &PRC_MF, PRI_MF, PCF_MF, PWEIGHT_MF_CLOUD)
   !
 ELSEIF (PARAMMF%CMF_CLOUD == 'STAT') THEN
   !Statistical scheme using the PDF proposed by Bougeault (81, 82) and
@@ -155,7 +152,7 @@ ELSEIF (PARAMMF%CMF_CLOUD == 'BIGA') THEN
                               &PRTM, PTHM, PRM, &
                               &PRHODREF, PEXNM, PPABSM, &
                               &PRC_MF, PRI_MF, PCF_MF, PSIGMF, &
-                              &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PWEIGHT_MF_CLOUD(:,:))
+                              &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PWEIGHT_MF_CLOUD)
   !
 ELSEIF  (PARAMMF%CMF_CLOUD == 'NONE') THEN
   ! No CONVECTIVE CLOUD SCHEME

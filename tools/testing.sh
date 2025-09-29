@@ -7,7 +7,7 @@ set -o pipefail #abort if left command on a pipe fails
 function usage {
   echo "Usage: $0 [-h] [--repo-user USER] [--repo-protocol PROTOCOL] [--repo-repo REPO] [--no-update] [--no-compil]"
   echo "               [--no-exec] [--no-comp] [--no-remove] [--force] [--commit SHA] [--ref REF]"
-  echo "               [--only-model MODEL] [--no-enable-gh-pages] [--perf PERF] [--no-doc-gen]"
+  echo "               [--only-model MODEL] [--no-enable-gh-pages] [--perf PERF] [--no-doc-gen] [--no-coding-checks]"
   echo "               [--hostname HOSTNAME] [--mail MAIL]"
   echo "--repo-user USER"
   echo "                user hosting the PHYEX repository on github,"
@@ -31,6 +31,7 @@ function usage {
   echo "                dont't try to enable the project pages on github"
   echo "--perf FILE     add performance statistics in file FILE"
   echo "--no-doc-gen    do not test the documentation generation"
+  echo "--no-coding-checks do not test coding convntions"
   echo "--hostname HOSTNAME"
   echo "                the context is built using the provided hostname instead of the real hostname"
   echo "                This can be usefull when running on a cluster node which can vary from run to run"
@@ -75,6 +76,7 @@ models=""
 enableghpages=1
 perfopt=""
 docgen=1
+codingchecks=1
 contextHostname=${HOSTNAME}
 checkCommitOptions=""
 declare -A checkCommitOptionsModel
@@ -98,6 +100,7 @@ while [ -n "$1" ]; do
     '--no-enable-gh-pages') enableghpages=0;;
     '--perf') perfopt="--perf $2"; shift;;
     '--no-doc-gen') docgen=0;;
+    '--no-coding-checks') codingchecks=0;;
     '--hostname') contextHostname=$2; shift;;
     '--mail') MAIL=$2; shift;;
     --options-*) checkCommitOptionsModel[$(echo $1 | cut -c 11-)]="$2"; shift;;
@@ -287,6 +290,26 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
   fi
   . "${WORKDIR}/PHYEX/tools/env.sh"
 
+  #Install requirements in a virtual env
+  log 1 "Installing requirements"
+  TEMPDIR=$(mktemp -d)
+  trap "\rm -rf $TEMPDIR; exit_error $?" EXIT
+  cd $TEMPDIR
+  python3 -m venv phyex.env
+  . phyex.env/bin/activate
+  cd ${WORKDIR}/PHYEX
+  set +e
+  pip install -r requirements.txt
+  result=$?
+  set -e
+  log 0 "virtual env installation"
+  if [ ${result} -ne 0 ]; then
+    ret=1
+    log 0 "  virtual env: error"
+  else
+    log 0 "  virtual env: OK"
+  fi
+
   #Enable the gihub project pages
   if [ $enableghpages -eq 1 ]; then
     log 1 "Test if github project pages are enabled"
@@ -468,6 +491,31 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
     else
       ret=1
       log 0 "XXXXX global result for doc generation: ERROR"
+    fi
+  fi
+
+  if [ $codingchecks -eq 1 ]; then
+    retcoding=0
+    log 0 "Test coding conventions"
+
+    codingcmd="check_coding_conventions.sh"
+    log 1 "Coding conventions with ${codingcmd}"
+    set +e
+    ${codingcmd}
+    result=$?
+    set -e
+    if [ ${result} -ne 0 ]; then
+      retcoding=1
+      log 0 "  check coding conventions: non-conforming"
+    else
+      log 0 "  check coding conventions: OK"
+    fi
+
+    if [ $retcoding -eq 0 ]; then
+      log 0 "..... global result for coding conventions: OK"
+    else
+      ret=1
+      log 0 "XXXXX global result for coding conventions: ERROR"
     fi
   fi
 

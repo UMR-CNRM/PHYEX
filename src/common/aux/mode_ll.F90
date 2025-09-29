@@ -64,7 +64,7 @@ SUBROUTINE ADD3DFIELD_ll(TPLIST, PFIELD, HNAME)
 IMPLICIT NONE
           
     TYPE(LIST_ll), POINTER, INTENT(INOUT)         :: TPLIST   ! list of fields
-    REAL, DIMENSION(:,:,:), TARGET, INTENT(OUT)   :: PFIELD   ! field to be added to the list
+    REAL, DIMENSION(:,:,:), TARGET, INTENT(IN)   :: PFIELD   ! field to be added to the list
   !                                              of fields
     character(len=*), intent(in) :: HNAME ! Name of the field to be added
   !

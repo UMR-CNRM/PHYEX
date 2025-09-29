@@ -291,7 +291,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMYM   ! result at flux local
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: IJU            ! Size of the array in the y direction
 !
 !-------------------------------------------------------------------------------
 !
@@ -300,7 +299,6 @@ INTEGER :: IJU            ! Size of the array in the y direction
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MYM',0,ZHOOK_HANDLE)
-IJU=SIZE(PA,2)
 
 !POUR AROME
 
@@ -557,7 +555,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMXM   ! result at flux local
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: IIU            ! Size of the array in the x direction
 !
 !-------------------------------------------------------------------------------
 !
@@ -566,7 +563,6 @@ INTEGER :: IIU            ! Size of the array in the x direction
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MXM',0,ZHOOK_HANDLE)
-IIU = SIZE(PA,1)
 !
 !POUR AROME
 
@@ -946,7 +942,8 @@ END SUBROUTINE MZF_PHY
 !              ------------
 !
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODD_PARAMETERS, ONLY: JPHEXT
+USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
+
 !
 IMPLICIT NONE
 !
@@ -962,33 +959,14 @@ REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDXF   ! result at mass
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JI             ! Loop index in x direction
-INTEGER :: IIU            ! upper bound in x direction of PA 
-!             
-INTEGER :: JJ,IJU
-!             
 !
 !-------------------------------------------------------------------------------
 !
 !*       1.    DEFINITION OF DXF
 !              ------------------
 !
-IIU = SIZE(PA,1)
-IJU = SIZE(PA,2)
-!
-!$acc kernels present(PA,PDXF)
-!$acc loop independent collapse(2)
-  DO JJ=1,IJU
-    DO JI=1+1,IIU
-     PDXF(JI-1,JJ) = PA(JI,JJ) - PA(JI-1,JJ) 
-    END DO
-  END DO
-!
-!$acc loop independent
-  DO JJ=1,IJU
-    PDXF(IIU,JJ)    = PDXF(2*JPHEXT,JJ) 
-  ENDDO
-!$acc end kernels
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'DXF2D_PHY', 'AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE')
+
 !
 !-------------------------------------------------------------------------------
 !
@@ -1131,7 +1109,6 @@ END SUBROUTINE DZF_PHY
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS, ONLY: JPHEXT
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
@@ -1149,12 +1126,6 @@ REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDXM   ! result at flux
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-!
-INTEGER :: JI             ! Loop index in x direction
-INTEGER :: IIU            ! upper bound in x direction of PA 
-!             
-INTEGER :: JJ,IJU
-!            
 !-------------------------------------------------------------------------------
 !
 !*       1.    DEFINITION OF DXM
@@ -1216,7 +1187,6 @@ END SUBROUTINE DXM2D_PHY
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS, ONLY: JPHEXT
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
@@ -1235,8 +1205,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDYM     ! result at flux
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ             ! Loop index in y direction
-INTEGER :: IJU            ! Size of the array in the y direction
 !
 !-------------------------------------------------------------------------------
 !
@@ -1244,14 +1212,6 @@ INTEGER :: IJU            ! Size of the array in the y direction
 !              ------------------
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-IF (LHOOK) CALL DR_HOOK('DYM',0,ZHOOK_HANDLE)
-IJU=SIZE(PA,2)
-!
-DO JJ=2,IJU
-  PDYM(:,JJ,:)          = PA(:,JJ,:) -  PA(:,JJ-1,:)
-END DO
-!
-PDYM(:,1,:)    =  PDYM(:,IJU-2*JPHEXT+1,:)
 CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'DYM_PHY', 'AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE')
 !
 !-------------------------------------------------------------------------------
@@ -1263,7 +1223,6 @@ END SUBROUTINE DYM_PHY
       SUBROUTINE DYM2D_PHY(D,PA,PDYM)
 !     ###############################
 !
-USE MODD_PARAMETERS, ONLY: JPHEXT
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
@@ -1578,7 +1537,6 @@ END SUBROUTINE DYF_PHY
 !              ------------
 !
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODD_PARAMETERS, ONLY: JPHEXT
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
 IMPLICIT NONE
@@ -1595,12 +1553,6 @@ REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDYF   ! result at mass
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ ,JI           ! Loop index in y direction
-INTEGER :: IJU           ! upper bound in y direction of PA 
-!
-!          
-INTEGER :: IIU
-!            
 !-------------------------------------------------------------------------------
 !
 !*       1.    DEFINITION OF DYF
