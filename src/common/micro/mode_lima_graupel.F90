@@ -144,9 +144,9 @@ REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PA_CH
 LOGICAL, DIMENSION(SIZE(PRCT))  :: GDRY
 !
 REAL,    DIMENSION(SIZE(PRCT))  :: Z1, Z2, Z3, Z4
-REAL,    DIMENSION(SIZE(PRCT))  :: ZZX, ZZW, ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6, ZZW7
+REAL,    DIMENSION(SIZE(PRCT))  :: ZZX, ZZW, ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6
 REAL,    DIMENSION(SIZE(PRCT))  :: ZZW3N, ZZW4N, ZZW6N 
-REAL,    DIMENSION(SIZE(PRCT))  :: ZRDRYG, ZRWETG
+REAL,    DIMENSION(SIZE(PRCT))  :: ZRDRYG, ZRWETG, ZRLWETG
 REAL,    DIMENSION(SIZE(PRCT))  :: ZSIGMOIDE
 !
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC1,IVEC2        ! Vectors of indices
@@ -200,10 +200,10 @@ ZZW4(:) = 0. ! RRDRYG
 ZZW4N(:) = 0.! NRDRYG
 ZZW5(:) = 0. ! RIWETG
 ZZW6(:) = 0. ! RSWETG
-ZZW7(:) = 0. ! 
 !
 ZRDRYG(:) = 0.
 ZRWETG(:) = 0.
+ZRLWETG(:) = 0.
 !
 !
 !*       1.  Graupel growth by collection (dry or wet case)
@@ -224,7 +224,7 @@ END WHERE
 GDRY(:) = PRST(:)>LIMAP%XRTMIN(5) .AND. PCST(:)>LIMAP%XCTMIN(5) .AND. PRGT(:)>LIMAP%XRTMIN(6) &
      .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:)
 !
-WHERE( GDRY )
+WHERE( GDRY(:) )
 !
 !*       Select the (ZLBDAG,ZLBDAS) couplet
 !
@@ -291,7 +291,7 @@ END WHERE
 GDRY(:) = PRRT(:)>LIMAP%XRTMIN(3) .AND. PCRT(:)>LIMAP%XCTMIN(3) .AND. PRGT(:)>LIMAP%XRTMIN(6) &
      .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:)
 !
-WHERE( GDRY )
+WHERE( GDRY(:) )
 !
 !*       Select the (ZLBDAG,ZLBDAR) couplet
 !
@@ -362,6 +362,7 @@ ZRDRYG(:) = ZZW1(:) + ZZW2(:) + ZZW3(:) + ZZW4(:)
 !            ------------------------------
 !
 ZZW(:) = 0.0
+!
 WHERE( PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:) )
    ZZW5(:) = ZZW2(:) / (LIMAM%XCOLIG*EXP(LIMAM%XCOLEXIG*(PT(:)-CST%XTT)) ) ! RIWETG
    ZZW6(:) = ZZW3(:) / (LIMAM%XCOLSG*EXP(LIMAM%XCOLEXSG*(PT(:)-CST%XTT)) ) ! RSWETG
@@ -372,14 +373,14 @@ WHERE( PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:) 
               ( PDV(:)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( PT(:) - CST%XTT ))   &
                           *(CST%XESTT-ZZW(:))/(CST%XRV*PT(:))             )
 !
-! Total mass gained by graupel in wet mode
-   ZRWETG(:)  = MAX( 0.0,                                                        &
+! Total liquid water mass gained that can be frozen by graupel in wet mode
+   ZRLWETG(:) = MAX( 0.0,                                                        &
                    ( ZZW(:) * PCGT(:) * ( LIMAM%X0DEPG*       PLBDG(:)**LIMAM%XEX0DEPG +     &
                                           LIMAM%X1DEPG*PCJ(:)*PLBDG(:)**LIMAM%XEX1DEPG ) +   &
-                   ( ZZW5(:)+ZZW6(:) ) * ( CST%XLMTT + (CST%XCI-CST%XCL)*(CST%XTT-PT(:)) )   )   &
+                   ( ZZW5(:)+ZZW6(:) ) * CST%XCI*(CST%XTT-PT(:))  )   &
                    / (CST%XLMTT-CST%XCL*(CST%XTT-PT(:)))                                     )
   !We must agregate, at least, the cold species
-   ZRWETG(:)=MAX(ZRWETG(:), ZZW5(:)+ZZW6(:))
+   ZRWETG(:)= ZRLWETG(:) + ZZW5(:) + ZZW6(:)
 END WHERE
 !
 !            1.f Wet mode and partial conversion to hail
@@ -388,20 +389,16 @@ END WHERE
 ZZW(:) = 0.0
 IHAIL = 0.
 IF (LIMAP%NMOM_H.GE.1) IHAIL = 1. 
-WHERE( ODCOMPUTE(:) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. PT(:)<CST%XTT .AND. &
-       (ZRDRYG(:)-ZZW2(:)-ZZW3(:))>=(ZRWETG(:)-ZZW5(:)-ZZW6(:)) .AND. ZRWETG(:)-ZZW5(:)-ZZW6(:)>0.0 ) 
 !
-! Mass of rain and cloud droplets frozen by graupel in wet mode : RCWETG + RRWETG = RWETG - RIWETG - RSWETG
-   ZZW7(:) = ZRWETG(:) - ZZW5(:) - ZZW6(:)
+WHERE( ODCOMPUTE(:) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ZZW1(:)+ZZW4(:)>=ZRLWETG(:) .AND. ZZW1(:)+ZZW4(:)>0. )
 !
 ! assume a linear percent of conversion of graupel into hail
 ! ZZW = percentage of graupel transformed
-!
    ZZW(:) = ZRDRYG(:)*IHAIL/(ZRWETG(:)+ZRDRYG(:)) 
 !
    P_RC_WETG(:) = - ZZW1(:)
    P_CC_WETG(:) = P_RC_WETG(:) * PCCT(:)/MAX(PRCT(:),LIMAP%XRTMIN(2))
-   P_RR_WETG(:) = - ZZW7(:) + ZZW1(:)
+   P_RR_WETG(:) = - ZRLWETG(:) + ZZW1(:)
    P_CR_WETG(:) = P_RR_WETG(:) * PCRT(:)/MAX(PRRT(:),LIMAP%XRTMIN(3))
    P_RI_WETG(:) = - ZZW5(:)
    P_CI_WETG(:) = P_RI_WETG(:) * PCIT(:)/MAX(PRIT(:),LIMAP%XRTMIN(4))
@@ -411,14 +408,14 @@ WHERE( ODCOMPUTE(:) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) 
    P_CG_WETG(:) = - PCGT(:)/PTSTEP * ZZW(:)
    P_RH_WETG(:) =   PRGT(:)/PTSTEP * ZZW(:) + ZRWETG(:) *     ZZW(:)
    !
-   P_TH_WETG(:) = ZZW7(:) * (PLSFACT(:)-PLVFACT(:))
+   P_TH_WETG(:) = ZRLWETG(:) * (PLSFACT(:)-PLVFACT(:))
 END WHERE
 !
 !            1.g Dry mode
 !            ------------
 !
 WHERE( ODCOMPUTE(:) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. PT(:)<CST%XTT .AND.                  &
-       (ZRDRYG(:)-ZZW2(:)-ZZW3(:))<(ZRWETG(:)-ZZW5(:)-ZZW6(:)) .AND. ZRDRYG(:)>0.0 )
+       (ZZW1(:)+ZZW4(:))<ZRLWETG(:) .AND. ZRDRYG(:)>0.0 )
    !
    P_RC_DRYG(:) = - ZZW1(:)
    P_CC_DRYG(:) = P_RC_DRYG(:) * PCCT(:)/MAX(PRCT(:),LIMAP%XRTMIN(2))
