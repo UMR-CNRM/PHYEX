@@ -97,7 +97,13 @@ IF(HSUBG_AUCV_RC=='NONE') THEN
   !Cloud water is entirely in low or high part
 !$acc kernels
  !$mnh_expand_where(JL=1:KSIZE)
-  WHERE(PRCT(:)>ZRCRAUTC(:) .AND. LDMICRO(:))
+  WHERE(.NOT. LDMICRO(:))
+    ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
+    PHLC_HCF(:)=0.
+    PHLC_LCF(:)=0.
+    PHLC_HRC(:)=0.
+    PHLC_LRC(:)=0.
+  ELSEWHERE(PRCT(:)>ZRCRAUTC(:) .AND. LDMICRO(:))
     PHLC_HCF(:)=1.
     PHLC_LCF(:)=0.
     PHLC_HRC(:)=PRCT(:)
@@ -119,7 +125,13 @@ ELSEIF(HSUBG_AUCV_RC=='CLFR') THEN
   !Cloud water is only in the cloudy part and entirely in low or high part
 !$acc kernels
  !$mnh_expand_where(JL=1:KSIZE)
-  WHERE(PCF(:)>0. .AND. PRCT(:)>ZRCRAUTC(:)*PCF(:) .AND. LDMICRO(:))
+  WHERE(.NOT. LDMICRO(:))
+    ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
+    PHLC_HCF(:)=0.
+    PHLC_LCF(:)=0.
+    PHLC_HRC(:)=0.
+    PHLC_LRC(:)=0.
+  ELSEWHERE(PCF(:)>0. .AND. PRCT(:)>ZRCRAUTC(:)*PCF(:) .AND. LDMICRO(:))
     PHLC_HCF(:)=PCF(:)
     PHLC_LCF(:)=0.
     PHLC_HRC(:)=PRCT(:)
@@ -165,7 +177,13 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
     ! Redelsperger and Sommeria (1986) but organised according to Turner (2011, 2012)
 !$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
-    WHERE (PRCT(:)>ZRCRAUTC(:)+PSIGMA_RC(:) .AND. LDMICRO(:))
+    WHERE(.NOT. LDMICRO(:))
+      ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
+      PHLC_HCF(:)=0.
+      PHLC_LCF(:)=0.
+      PHLC_HRC(:)=0.
+      PHLC_LRC(:)=0.
+    ELSEWHERE(PRCT(:)>ZRCRAUTC(:)+PSIGMA_RC(:) .AND. LDMICRO(:))
       PHLC_HCF(:)=1.
       PHLC_LCF(:)=0.
       PHLC_HRC(:)=PRCT(:)
@@ -204,7 +222,10 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
     END IF
 !$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
-    WHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. LDMICRO(:))
+    WHERE(.NOT. LDMICRO(:))
+      ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
+      ZHLC_RCMAX(:)=0.
+    ELSEWHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. LDMICRO(:))
       ZHLC_RCMAX(:)=ZCOEFFRCM*PRCT(:)/PCF(:)
     ELSEWHERE
       ZHLC_RCMAX(:)=0.
@@ -215,7 +236,11 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
     ! Calculate local mean values int he low and high parts for the 3 PDF forms:
     IF(HSUBG_PR_PDF=='HLCRECTPDF') THEN
       !$mnh_expand_where(JL=1:KSIZE)
-      WHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
+      WHERE(.NOT. LDMICRO(:))
+        ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
+        ZHLC_LRCLOCAL(:)=0.
+        ZHLC_HRCLOCAL(:)=0
+      ELSEWHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
         ZHLC_LRCLOCAL(:)=0.5*ZRCRAUTC(:)
         ZHLC_HRCLOCAL(:)=( ZHLC_RCMAX(:) + ZRCRAUTC(:))/2.0
       ELSEWHERE
@@ -225,7 +250,11 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
       !$mnh_end_expand_where(JL=1:KSIZE)
     ELSE IF(HSUBG_PR_PDF=='HLCTRIANGPDF') THEN
       !$mnh_expand_where(JL=1:KSIZE)
-      WHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
+      WHERE(.NOT. LDMICRO(:))
+        ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
+        ZHLC_LRCLOCAL(:)=0.
+        ZHLC_HRCLOCAL(:)=0
+      ELSEWHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
         ZHLC_LRCLOCAL(:)=( ZRCRAUTC(:) *(3.0 * ZHLC_RCMAX(:) - 2.0 * ZRCRAUTC(:) ) ) &
                         / (3.0 * (2.0 * ZHLC_RCMAX(:) - ZRCRAUTC(:)  ) )
         ZHLC_HRCLOCAL(:)=(ZHLC_RCMAX(:) + 2.0*ZRCRAUTC(:)) / 3.0
@@ -236,7 +265,11 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
       !$mnh_end_expand_where(JL=1:KSIZE)
     ELSE IF(HSUBG_PR_PDF=='HLCQUADRAPDF') THEN
       !$mnh_expand_where(JL=1:KSIZE)
-      WHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
+      WHERE(.NOT. LDMICRO(:))
+        ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
+        ZHLC_LRCLOCAL(:)=0.
+        ZHLC_HRCLOCAL(:)=0
+      ELSEWHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
         ZHLC_LRCLOCAL(:)=(3.0 *ZRCRAUTC(:)**3 - 8.0 *ZRCRAUTC(:)**2 * ZHLC_RCMAX(:) &
                         + 6.0*ZRCRAUTC(:) *ZHLC_RCMAX(:)**2 ) &
                         / &
@@ -250,7 +283,11 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
       !$mnh_end_expand_where(JL=1:KSIZE)
     ELSE IF(HSUBG_PR_PDF=='HLCISOTRIPDF') THEN
       !$mnh_expand_where(JL=1:KSIZE)
-      WHERE (PRCT(:).LE.ZRCRAUTC(:)*PCF(:) .AND. &
+      WHERE(.NOT. LDMICRO(:))
+        ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
+        ZHLC_LRCLOCAL(:)=0.
+        ZHLC_HRCLOCAL(:)=0
+      ELSEWHERE (PRCT(:).LE.ZRCRAUTC(:)*PCF(:) .AND. &
             &PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. &
             &ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
         ZHLC_LRCLOCAL(:)=( (ZHLC_RCMAX(:))**3 &
@@ -272,7 +309,13 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
     END IF
     ! Compare r_cM  to r_cR to know if cloud water content is high enough to split in two parts or not
     !$mnh_expand_where(JL=1:KSIZE)
-    WHERE (PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
+    WHERE(.NOT. LDMICRO(:))
+      ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
+      PHLC_HCF(:)=0.
+      PHLC_LCF(:)=0.
+      PHLC_HRC(:)=0.
+      PHLC_LRC(:)=0.
+    ELSEWHERE (PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
       ! Calculate final values for LCF and HCF:
       PHLC_LCF(:)=PCF(:) &
                     *(ZHLC_HRCLOCAL(:)- &
@@ -318,7 +361,13 @@ IF(HSUBG_AUCV_RI=='NONE') THEN
   !Cloud water is entirely in low or high part
 !$acc kernels
   !$mnh_expand_where(JL=1:KSIZE)
-  WHERE(PRIT(:)>ZCRIAUTI(:) .AND. LDMICRO(:))
+  WHERE(.NOT. LDMICRO(:))
+    ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
+    PHLI_HCF(:)=0.
+    PHLI_LCF(:)=0.
+    PHLI_HRI(:)=0.
+    PHLI_LRI(:)=0.
+  ELSEWHERE(PRIT(:)>ZCRIAUTI(:) .AND. LDMICRO(:))
     PHLI_HCF(:)=1.
     PHLI_LCF(:)=0.
     PHLI_HRI(:)=PRIT(:)
@@ -340,7 +389,13 @@ ELSEIF(HSUBG_AUCV_RI=='CLFR') THEN
   !Cloud water is only in the cloudy part and entirely in low or high part
 !$acc kernels
   !$mnh_expand_where(JL=1:KSIZE)
-  WHERE(PCF(:)>0. .AND. PRIT(:)>ZCRIAUTI(:)*PCF(:) .AND. LDMICRO(:))
+  WHERE(.NOT. LDMICRO(:))
+    ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
+    PHLI_HCF(:)=0.
+    PHLI_LCF(:)=0.
+    PHLI_HRI(:)=0.
+    PHLI_LRI(:)=0.
+  ELSEWHERE(PCF(:)>0. .AND. PRIT(:)>ZCRIAUTI(:)*PCF(:) .AND. LDMICRO(:))
     PHLI_HCF(:)=PCF(:)
     PHLI_LCF(:)=0.
     PHLI_HRI(:)=PRIT(:)
