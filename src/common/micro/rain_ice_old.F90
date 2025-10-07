@@ -455,104 +455,30 @@ LTIW=.FALSE.
 IF (NINT(ICEP%XFRMIN(18)) == 1) LTIW=.TRUE.
 
 !
-!*       1.3    COMPUTE THE DROPLET NUMBER CONCENTRATION
-!   	        ----------------------------------------
-!         (Do it already here, since also used with OCND2=T )
+!*       1.3    COMPUTE VARIABLES FOR SEDIMENTATION
+!   	        -----------------------------------
 
-IF (OSEDIC.OR.OCND2) THEN
+IF (OSEDIC) THEN
   ZRAY(:,:)   = 0.
-  ZZZZ(:,D%NKTE)   = PDZZ(:,D%NKTE)*0.5
-  ZZZT(:,D%NKTE)   = PDZZ(:,D%NKTE)
-  IF (ICEP%XFRMIN(26)>0.001) THEN ! Use alternative concentration given by (XFRMIN(26)
-    ZCONC_TMP(:) = ICEP%XFRMIN(26)
+  IF (ICEP%XFRMIN(26)>0.001 .OR. OAERONRT) THEN
+    ! Assume "average" distr. func for simplicity
     DO JK = D%NKTB,D%NKTE
       DO JIJ = D%NIJB,D%NIJE
-        ZLBC(JIJ,JK)   = 0.5* (ICED%XLBC(2)+ICED%XLBC(1)) ! Assume "average" distr. func for simplicity
+        ZLBC(JIJ,JK)   = 0.5* (ICED%XLBC(2)+ICED%XLBC(1)) 
         ZFSEDC(JIJ,JK) = 0.5* (ICEP%XFSEDC(2)+ICEP%XFSEDC(1))
         ZFSEDC(JIJ,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
-        ZCONC3D(JIJ,JK)= ZCONC_TMP(JIJ)*PPABST(JIJ,JK)/CST%XP00 ! Let it be diluted with decreasing pressure
         ZRAY(JIJ,JK)   = 0.5*( 0.5*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
           0.5*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
       ENDDO
     ENDDO
   ELSE
-
-    DO JIJ = D%NIJB,D%NIJE
-      ZCONC_TMP(JIJ) = PSEA(JIJ)*ICED%XCONC_SEA+(1.-PSEA(JIJ))*ICED%XCONC_LAND
-    ENDDO
-
     DO JK=D%NKTB,D%NKTE
       DO JIJ = D%NIJB,D%NIJE
         ZLBC(JIJ,JK)   = PSEA(JIJ)*ICED%XLBC(2) + (1.-PSEA(JIJ))*ICED%XLBC(1)
         ZFSEDC(JIJ,JK) = (PSEA(JIJ)*ICEP%XFSEDC(2) + (1.-PSEA(JIJ))*ICEP%XFSEDC(1))
         ZFSEDC(JIJ,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
-        ZCONC3D(JIJ,JK)= (1.-PTOWN(JIJ))*ZCONC_TMP(JIJ) + PTOWN(JIJ)*ICED%XCONC_URBAN
         ZRAY(JIJ,JK)   = 0.5*((1.-PSEA(JIJ))*GAMMA(ICED%XNUC + 1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) &
                      & + PSEA(JIJ)*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
-      ENDDO
-    ENDDO
-  ENDIF
-
-  DO JIJ = D%NIJB,D%NIJE
-    ZCONC3D(JIJ,D%NKTE) = ZCONC3D(JIJ,D%NKTE)*MAX(0.001,ICEP%XFRMIN(22))
-  ENDDO
-
-  !Consider CCN obtained from near real time aerosol mixing ratio fields
-  IF (OAERONRT) THEN
-    DO JK = D%NKTB, D%NKTE
-      DO JIJ = D%NIJB, D%NIJE
-        ZCONC3D(JIJ,JK) = PCLDROP(JIJ,JK)
-        ZLBC(JIJ,JK)    = 0.5* (ICED%XLBC(2)+ICED%XLBC(1)) ! Assume "average" distr. func
-        ZFSEDC(JIJ,JK)  = 0.5* (ICEP%XFSEDC(2)+ICEP%XFSEDC(1))
-        ZFSEDC(JIJ,JK)  = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
-        ZRAY(JIJ,JK)    = 0.5*(0.5*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) &
-                      & + 0.5*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
-      ENDDO
-    ENDDO
-  ELSE
-    DO JIJ = D%NIJB, D%NIJE
-      ZCONC_TMP(JIJ)=PSEA(JIJ)*ICED%XCONC_SEA+(1.-PSEA(JIJ))*ICED%XCONC_LAND
-    ENDDO
-    DO JK=D%NKTB,D%NKTE
-      DO JIJ = D%NIJB, D%NIJE
-        ZLBC(JIJ,JK)   = PSEA(JIJ)*ICED%XLBC(2)+(1.-PSEA(JIJ))*ICED%XLBC(1)
-        ZFSEDC(JIJ,JK) = (PSEA(JIJ)*ICEP%XFSEDC(2)+(1.-PSEA(JIJ))*ICEP%XFSEDC(1))
-        ZFSEDC(JIJ,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
-        ZCONC3D(JIJ,JK)= (1.-PTOWN(JIJ))*ZCONC_TMP(JIJ)+PTOWN(JIJ)*ICED%XCONC_URBAN
-        ZRAY(JIJ,JK)   = 0.5*((1.-PSEA(JIJ))*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
-           PSEA(JIJ)*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
-      ENDDO
-    ENDDO
-  ENDIF
-   
-  DO JK=D%NKTE-1,D%NKTB,-1
-    DO JIJ = D%NIJB, D%NIJE
-      ZZZT(JIJ,JK) = ZZZT(JIJ,JK+1) + PDZZ(JIJ,JK)
-      ZZZZ(JIJ,JK) = ZZZT(JIJ,JK) - 0.5*PDZZ(JIJ,JK)
-    ENDDO
-  ENDDO
-
-  IF(ICEP%XFRMIN(22)>0.001)THEN
-    DO JK=D%NKTB,D%NKTE
-      DO JIJ = D%NIJB, D%NIJE
-        ZCONC_TMP(JIJ)  = MAX(0., MIN(1.,(ZZZZ(JIJ,JK)- ZZZZ(JIJ,D%NKTE))/&
-             &(MAX(0.01,ICEP%XFRMIN(29)-ZZZZ(JIJ,D%NKTE)))))
-        ZCONC3D(JIJ,JK) =  ZCONC3D(JIJ,JK)*(ICEP%XFRMIN(22)*(PSEA(JIJ)*ICEP%XFRMIN(30)+&
-             &(1.-PSEA(JIJ)))*(1.-ZCONC_TMP(JIJ)) + ZCONC_TMP(JIJ))
-      END DO
-    END DO
-  ENDIF
-
-  !Consider CCN obtained from near real time aerosol mixing ratio fields
-  IF (OAERONRT) THEN
-    DO JK=D%NKTB,D%NKTE
-      DO JIJ = D%NIJB, D%NIJE
-        ZCONC3D(JIJ,JK) = PCLDROP(JIJ,JK)
-        ZLBC(JIJ,JK)    = 0.5* (ICED%XLBC(2)+ICED%XLBC(1)) ! Assume "average" distr. func
-        ZFSEDC(JIJ,JK)  = 0.5* (ICEP%XFSEDC(2)+ICEP%XFSEDC(1))
-        ZFSEDC(JIJ,JK)  = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
-        ZRAY(JIJ,JK)    = 0.5*(0.5*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
-                             0.5*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
       ENDDO
     ENDDO
   ENDIF
@@ -562,6 +488,58 @@ IF (OSEDIC.OR.OCND2) THEN
       ZLBC(JIJ,JK)      = MAX(MIN(ICED%XLBC(1),ICED%XLBC(2)),ZLBC(JIJ,JK))
     ENDDO
   ENDDO
+ENDIF !OSEDIC
+
+!
+!*       1.4    COMPUTE THE DROPLET NUMBER CONCENTRATION
+!   	        ----------------------------------------
+!         (Do it already here, since also used with OCND2=T )
+
+IF (OSEDIC.OR.OCND2.OR.LKOGAN) THEN
+  ZZZZ(:,D%NKTE)   = PDZZ(:,D%NKTE)*0.5
+  ZZZT(:,D%NKTE)   = PDZZ(:,D%NKTE)
+  DO JK=D%NKTE-1,D%NKTB,-1
+    DO JIJ = D%NIJB, D%NIJE
+      ZZZT(JIJ,JK) = ZZZT(JIJ,JK+1) + PDZZ(JIJ,JK)
+      ZZZZ(JIJ,JK) = ZZZT(JIJ,JK) - 0.5*PDZZ(JIJ,JK)
+    ENDDO
+  ENDDO
+  IF (OAERONRT) THEN
+  !Consider Cloud droplets obtained from CAMS aerosol mixing ratio fields
+    DO JK = D%NKTB, D%NKTE
+      DO JIJ = D%NIJB, D%NIJE
+        ZCONC3D(JIJ,JK) = PCLDROP(JIJ,JK)
+      ENDDO
+    ENDDO
+  ELSEIF (ICEP%XFRMIN(26)>0.001) THEN 
+  ! Use alternative concentration given by XFRMIN(26)
+    ZCONC_TMP(:) = ICEP%XFRMIN(26)
+    DO JK = D%NKTB,D%NKTE
+      DO JIJ = D%NIJB,D%NIJE
+        ZCONC3D(JIJ,JK)= ZCONC_TMP(JIJ)*PPABST(JIJ,JK)/CST%XP00 ! Let it be diluted with decreasing pressure
+      ENDDO
+    ENDDO 
+    IF(ICEP%XFRMIN(22)>0.001)THEN
+      DO JK=D%NKTB,D%NKTE
+        DO JIJ = D%NIJB, D%NIJE
+          ZCONC_TMP(JIJ)  = MAX(0., MIN(1.,(ZZZZ(JIJ,JK)- ZZZZ(JIJ,D%NKTE))/&
+               &(MAX(0.01,ICEP%XFRMIN(29)-ZZZZ(JIJ,D%NKTE)))))
+          ZCONC3D(JIJ,JK) =  ZCONC3D(JIJ,JK)*(ICEP%XFRMIN(22)*(PSEA(JIJ)*ICEP%XFRMIN(30)+&
+               &(1.-PSEA(JIJ)))*(1.-ZCONC_TMP(JIJ)) + ZCONC_TMP(JIJ))
+        END DO
+      END DO
+    ENDIF
+  ELSE
+  ! Constant values over town, sea and land
+    DO JIJ = D%NIJB,D%NIJE
+      ZCONC_TMP(JIJ) = PSEA(JIJ)*ICED%XCONC_SEA+(1.-PSEA(JIJ))*ICED%XCONC_LAND
+    ENDDO
+    DO JK=D%NKTB,D%NKTE
+      DO JIJ = D%NIJB, D%NIJE
+        ZCONC3D(JIJ,JK)= (1.-PTOWN(JIJ))*ZCONC_TMP(JIJ)+PTOWN(JIJ)*ICED%XCONC_URBAN
+      ENDDO
+    ENDDO
+  ENDIF
 ENDIF
 
 DO JK = D%NKTB, D%NKTE
