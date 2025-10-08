@@ -109,7 +109,8 @@ DO II=1,KSIZE
 ENDDO
 !$mnh_expand_where(II=1:KSIZE)
 WHERE(GNEGT(:))
-  ZZW(:)=ZZW(:)-PCIT(:)
+  ! convert between m-3 (ICE3) and kg-1 (LIMA)
+  ZZW(:)=ZZW(:)-PCIT(:)*PRHODREF(:)
   ZZW(:)=MIN(ZZW(:), 50.E3) ! limitation provisoire a 50 l^-1
 END WHERE
 !$mnh_end_expand_where(II=1:KSIZE)
@@ -139,7 +140,8 @@ IF(LIMAP%LFEEDBACKT) THEN
 ENDIF
 !$mnh_expand_where(II=1:KSIZE)
 WHERE(GNEGT(:))
-  PCIT(:)=MAX(ZZW(:)+PCIT(:), PCIT(:))
+  ! convert from m-3 (ICE3) to kg-1 (LIMA)
+  PCIT(:)=MAX(ZZW(:)/PRHODREF(:)+PCIT(:), PCIT(:))
 END WHERE
 !$mnh_end_expand_where(II=1:KSIZE)
 !

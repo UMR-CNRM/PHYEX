@@ -107,7 +107,7 @@ REAL      :: XDICNVS_LIM, XLBDAICNVS_LIM,      & ! Constants for pristine ice
              XC0DEPIS,XC1DEPIS,                & ! deposition conversion to
              XR0DEPIS,XR1DEPIS                   ! snow : ICNVS
 !
-REAL      :: XCOLEXIS,                         & ! Constants for snow
+REAL      :: XCOLIS, XCOLEXIS,                 & ! Constants for snow
              XAGGS_CLARGE1,XAGGS_CLARGE2,      & ! aggregation : AGG
              XAGGS_RLARGE1,XAGGS_RLARGE2,      &
              XFIAGGS,XEXIAGGS
@@ -138,7 +138,7 @@ INTEGER   :: NSCLBDAI
 REAL      :: XAUTO3, XAUTO4,                   & ! Constants for pristine ice
              XLAUTS,   XLAUTS_THRESHOLD,       & ! autoconversion : AUT
              XITAUTS, XITAUTS_THRESHOLD,       & ! (ini_ice_com)
-             XTEXAUTI
+             XTEXAUTI, XTIMAUTI
 !
 REAL      :: XCONCI_MAX                          ! Limitation of the pristine
                                    ! ice concentration (init and grid-nesting)
@@ -261,6 +261,7 @@ REAL, POINTER :: XLBEXI => NULL(), &
                  XC1DEPIS => NULL(), &
                  XR0DEPIS => NULL(), &
                  XR1DEPIS => NULL(), &
+                 XCOLIS => NULL(), &
                  XCOLEXIS => NULL(), &
                  XAGGS_CLARGE1 => NULL(), &
                  XAGGS_CLARGE2 => NULL(), &
@@ -299,6 +300,7 @@ REAL, POINTER :: XLBEXI => NULL(), &
                  XITAUTS => NULL(), &
                  XITAUTS_THRESHOLD => NULL(), &
                  XTEXAUTI => NULL(), &
+                 XTIMAUTI => NULL(), &
                  XCONCI_MAX => NULL(), &
                  XFREFFI => NULL(), &
                  XALPHA1 => NULL(), &
@@ -461,6 +463,7 @@ IF(.NOT. ASSOCIATED(XLBEXI)) THEN
   XC1DEPIS           => PARAM_LIMA_COLD%XC1DEPIS
   XR0DEPIS           => PARAM_LIMA_COLD%XR0DEPIS
   XR1DEPIS           => PARAM_LIMA_COLD%XR1DEPIS
+  XCOLIS             => PARAM_LIMA_COLD%XCOLIS
   XCOLEXIS           => PARAM_LIMA_COLD%XCOLEXIS
   XAGGS_CLARGE1      => PARAM_LIMA_COLD%XAGGS_CLARGE1
   XAGGS_CLARGE2      => PARAM_LIMA_COLD%XAGGS_CLARGE2
@@ -490,6 +493,7 @@ IF(.NOT. ASSOCIATED(XLBEXI)) THEN
   XITAUTS            => PARAM_LIMA_COLD%XITAUTS
   XITAUTS_THRESHOLD  => PARAM_LIMA_COLD%XITAUTS_THRESHOLD
   XTEXAUTI           => PARAM_LIMA_COLD%XTEXAUTI
+  XTIMAUTI           => PARAM_LIMA_COLD%XTIMAUTI
   XCONCI_MAX         => PARAM_LIMA_COLD%XCONCI_MAX
   XFREFFI            => PARAM_LIMA_COLD%XFREFFI
   XALPHA1            => PARAM_LIMA_COLD%XALPHA1

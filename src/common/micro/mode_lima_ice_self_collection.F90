@@ -82,11 +82,11 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('LIMA_ICE_SELF_COLLECTION', 0, ZHOOK_HANDLE)
 ZONE(:) = 1.
 P_CI_ISC(:)      = 0.
+!
+IF (LIMAP%LCRYSTAL_SHAPE) THEN
 P_SHCI_ISC(:,:)  = 0.
 P_SHRI_ISCS(:)   = 0.
 P_SHCI_ISCS(:,:) = 0.
-!
-IF (LIMAP%LCRYSTAL_SHAPE) THEN
 !
 !
 !*       1.1    Plate + Plate / Column + Column / Droxtal + Droxtal --> Bullet-rosette
