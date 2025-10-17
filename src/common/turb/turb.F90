@@ -260,6 +260,11 @@ USE MODD_TURB_n,     ONLY: TURB_t
 USE MODD_NEB_n,      ONLY: NEB_t
 !
 USE MODE_BL89,                ONLY: BL89
+USE MODE_CLOUD_MODIF_LM,      ONLY: CLOUD_MODIF_LM
+USE MODE_COMPUTE_FUNCTION_THERMO_NEW_STAT, ONLY: COMPUTE_FUNCTION_THERMO_NEW_STAT
+USE MODE_COMPUTE_FUNCTION_THERMO, ONLY: COMPUTE_FUNCTION_THERMO
+USE MODE_DEAR,                ONLY: DEAR
+USE MODE_DELT,                ONLY: DELT
 USE MODE_EMOIST,              ONLY: EMOIST
 USE MODE_ETHETA,              ONLY: ETHETA
 USE MODE_GRADIENT_U_PHY,      ONLY: GZ_U_UW_PHY
@@ -462,11 +467,8 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::     &
           ZATHETA_ICE,ZAMOIST_ICE,    &  ! coefficients for s = f (Thetal,Rnp)
           ZRVSAT, ZDRVSATDT,          &  ! local array for routine compute_function_thermo
           ZWORK1,ZWORK2,              &  ! working array syntax
-          ZETHETA,ZEMOIST,            &  ! coef ETHETA and EMOIST (for DEAR routine)
-          ZDTHLDZ,ZDRTDZ,             &  ! dtheta_l/dz, drt_dz used for computing the stablity criterion
           ZCOEF_AMPL,                 &  ! Amplification coefficient of the mixing length
                                          ! when the instability criterium is verified (routine CLOUD_MODIF_LM)
-          ZLM_CLOUD,                  &  ! Turbulent mixing length in the clouds (routine CLOUD_MODIF_LM)
           ZTEMP_BUD
 !
 !
@@ -493,8 +495,6 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV) :: ZRSVS
 REAL                :: ZEXPL        ! 1-TURBN%XIMPL deg of expl.
 REAL                :: ZRVORD       ! RV/RD
 REAL                :: ZEPS         ! XMV / XMD
-REAL                :: ZD           ! distance to the surface (for routine DELT)
-REAL                :: ZVAR         ! Intermediary variable (for routine DEAR)
 REAL                :: ZPENTE       ! Slope of the amplification straight line (for routine CLOUD_MODIF_LM)
 REAL                :: ZCOEF_AMPL_CEI_NUL! Ordonnate at the origin of the
                                          ! amplification straight line (for routine CLOUD_MODIF_LM)
@@ -605,7 +605,7 @@ END DO
 !
 !*      2.2 Exner function at t
 !
-IF (OOCEAN) THEN
+IF (GOCEAN) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZEXN(IIJB:IIJE,1:IKT) = 1.
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -642,15 +642,15 @@ IF (KRRL >=1) THEN
   IF ( KRRI >= 1 ) THEN
     IF (NEBN%LSTATNW) THEN
        !wc call new functions depending on statnew
-       CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
-                                 ZLVOCPEXNM,ZAMOIST,ZATHETA)
-       CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
-                                 ZLSOCPEXNM,ZAMOIST_ICE,ZATHETA_ICE)
+       CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(D, CST, CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
+                                 ZLVOCPEXNM,ZAMOIST,ZATHETA, PPABST)
+       CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(D, CST, CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
+                                 ZLSOCPEXNM,ZAMOIST_ICE,ZATHETA_ICE, PPABST)
     ELSE
-      CALL COMPUTE_FUNCTION_THERMO(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
-                                 ZLVOCPEXNM,ZAMOIST,ZATHETA)
-      CALL COMPUTE_FUNCTION_THERMO(CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
-                                 ZLSOCPEXNM,ZAMOIST_ICE,ZATHETA_ICE)
+      CALL COMPUTE_FUNCTION_THERMO(D,CST,CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
+                                 ZLVOCPEXNM,ZAMOIST,ZATHETA,PRT,PPABST,KRR)
+      CALL COMPUTE_FUNCTION_THERMO(D,CST,CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
+                                 ZLSOCPEXNM,ZAMOIST_ICE,ZATHETA_ICE,PRT,PPABST,KRR)
     ENDIF
     !
 !$acc kernels present_cr( zamoist, zatheta, zlocpexnm, zlvocpexnm, zlsocpexnm, zamoist_ice, zatheta_ice )
@@ -673,11 +673,11 @@ IF (KRRL >=1) THEN
   ELSE
     !wc call new stat functions or not
     IF (NEBN%LSTATNW) THEN
-      CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
-                                 ZLOCPEXNM,ZAMOIST,ZATHETA)
+      CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(D,CST,CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
+                                 ZLOCPEXNM,ZAMOIST,ZATHETA,PPABST)
     ELSE
-      CALL COMPUTE_FUNCTION_THERMO(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
-                                   ZLOCPEXNM,ZAMOIST,ZATHETA)
+      CALL COMPUTE_FUNCTION_THERMO(D,CST,CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
+                                   ZLOCPEXNM,ZAMOIST,ZATHETA,PRT,PPABST,KRR)
     ENDIF
   END IF
   !
@@ -777,7 +777,7 @@ SELECT CASE (TURBN%CTURBLEN)
 !$acc kernels present_cr(ZSHEAR)
     ZSHEAR(:,:)=0.
 !$acc end kernels
-    CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
+    CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,GOCEAN)
   !
   !*      3.2 RM17 mixing length
   !           ------------------
@@ -797,7 +797,7 @@ SELECT CASE (TURBN%CTURBLEN)
                                     + ZDVDZ(IIJB:IIJE,1:IKT)*ZDVDZ(IIJB:IIJE,1:IKT))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
-    CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
+    CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,GOCEAN)
   !
   !*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths
   !           --------------------------------------------------
@@ -817,9 +817,9 @@ SELECT CASE (TURBN%CTURBLEN)
                                     + ZDVDZ(IIJB:IIJE,1:IKT)*ZDVDZ(IIJB:IIJE,1:IKT))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
-    CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
+    CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,GOCEAN)
 
-    CALL DELT(ZLMW,ODZ=.FALSE.)
+    CALL DELT(D, TURBN, O2D, .FALSE., GOCEAN, PZZ, PDYY, PDXX, PDIRCOSZW, ZLMW)
     ! The minimum mixing length is chosen between Horizontal grid mesh (not taking into account the vertical grid mesh) and RM17.
     ! For large horizontal grid meshes, this is equal to RM17
     ! For LES grid meshes, this is equivalent to Deardorff : the base mixing lentgh is the horizontal grid mesh,
@@ -836,13 +836,16 @@ SELECT CASE (TURBN%CTURBLEN)
   !           -------------------
   !
   CASE ('DELT')
-    CALL DELT(ZLM,ODZ=.TRUE.)
+    CALL DELT(D, TURBN, O2D, .TRUE., GOCEAN, PZZ, PDYY, PDXX, PDIRCOSZW, ZLMW)
   !
   !*      3.5 Deardorff mixing length
   !           -----------------------
   !
   CASE ('DEAR')
-    CALL DEAR(ZLM)
+    CALL DEAR(D, CST, TURBN, KRR, KRRI, O2D, OCOMPUTE_SRC, GOCEAN, &
+    & ZLM, PRT, PDZZ, PZZ, PTKET, PTHVREF, &
+    & PTHLT, ZLOCPEXNM, PSRCT, ZAMOIST, PDIRCOSZW, &
+    & PDXX, PDYY, ZATHETA)
   !
   !*      3.6 Blackadar mixing length
   !           -----------------------
@@ -880,7 +883,12 @@ END SELECT
 !
 !*      3.5 Mixing length modification for cloud
 !           -----------------------
-IF (OCLOUDMODIFLM) CALL CLOUD_MODIF_LM
+IF (OCLOUDMODIFLM) CALL CLOUD_MODIF_LM(D, CST, CSTURB, TURBN, TPFILE, TZFIELD, KRR, KRRI, &
+  & OCLOUDMODIFLM, GOCEAN, OCOMPUTE_SRC, O2D, HTURBLEN_CL, &
+  & PDZZ, PDXX, PDYY, PZZ, &
+  & PRT, PTKET, PTHLT, ZTHLM, ZRM, PTHVREF, &
+  & ZLOCPEXNM, PSRCT, PCOEF_AMPL_SAT, ZAMOIST, ZATHETA, PDIRCOSZW,  &
+  & PCEI, PCEI_MIN, PCEI_MAX, ZLM)
 ENDIF  ! end LHARRAT
 
 !
@@ -1112,7 +1120,7 @@ END IF
 
 CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
           KRR,KRRL,KRRI,KGRADIENTSLEO,                   &
-          OOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
+          GOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
           ISV,KSV_LGBEG,KSV_LGEND,                       &
           ZEXPL, O2D, ONOMIXLG, OFLAT,                   &
           OCOUPLES,OBLOWSNOW,OFLYER, PRSNOW,             &
@@ -1765,704 +1773,4 @@ IF(PRESENT(PLEM)) PLEM(IIJB:IIJE,IKTB:IKTE) = ZLM(IIJB:IIJE,IKTB:IKTE)
 !----------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('TURB',1,ZHOOK_HANDLE)
-CONTAINS
-!
-!     ########################################################################
-      SUBROUTINE COMPUTE_FUNCTION_THERMO(PALP,PBETA,PGAM,PLTT,PC,PT,PEXN,PCP,&
-                                         PLOCPEXN,PAMOIST,PATHETA            )
-!     ########################################################################
-!!
-!!****  *COMPUTE_FUNCTION_THERMO* routine to compute several thermo functions
-!
-!!    AUTHOR
-!!    ------
-!!
-!!     JP Pinty      *LA*
-!!
-!!    MODIFICATIONS
-!!    -------------
-!!      Original   24/02/03
-!!
-!-------------------------------------------------------------------------------
-!
-!*       0.    DECLARATIONS
-!              ------------
-!
-IMPLICIT NONE
-!
-!*       0.1   Declarations of dummy arguments
-!
-REAL,                   INTENT(IN)    :: PALP,PBETA,PGAM,PLTT,PC
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PT,PEXN,PCP
-!
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PLOCPEXN
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
-!
-!-------------------------------------------------------------------------------
-!
-  IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO',0,ZHOOK_HANDLE2)
-  ZEPS = CST%XMV / CST%XMD
-  !
-  !*       1.1 Lv/Cph at  t
-  !
-!$acc kernels present_cr(PLOCPEXN)  ! present(ZRVSAT,ZDRVSATDT) ! present(PLOCPEXN) ! present ZDRVSATDT)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  PLOCPEXN(IIJB:IIJE,1:IKT) = ( PLTT + (CST%XCPV-PC) *  (PT(IIJB:IIJE,1:IKT)-CST%XTT) ) &
-                                     / PCP(IIJB:IIJE,1:IKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)                                    
-!$acc end kernels
-  !
-!$acc kernels present_cr(ZRVSAT,ZDRVSATDT)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  !*      1.2 Saturation vapor pressure at t
-  !
-  ZRVSAT(IIJB:IIJE,1:IKT) =  EXP( PALP - PBETA/PT(IIJB:IIJE,1:IKT) - PGAM*LOG( PT(IIJB:IIJE,1:IKT) ) )
-  !
-  !*      1.3 saturation  mixing ratio at t
-  !
-  !YS Added protection (AROME 2024-03-12 crashs)
-    ZRVSAT(IIJB:IIJE,1:IKT) =  ZRVSAT(IIJB:IIJE,1:IKT) &
-                               * ZEPS / MAX(1.E-3, PPABST(IIJB:IIJE,1:IKT) - ZRVSAT(IIJB:IIJE,1:IKT) )
-  !
-  !*      1.4 compute the saturation mixing ratio derivative (rvs')
-  !
-  ZDRVSATDT(IIJB:IIJE,1:IKT) = ( PBETA / PT(IIJB:IIJE,1:IKT)  - PGAM ) / PT(IIJB:IIJE,1:IKT)   &
-                 * ZRVSAT(IIJB:IIJE,1:IKT) * ( 1. + ZRVSAT(IIJB:IIJE,1:IKT) / ZEPS )
-  !
-  !*      1.5 compute Amoist
-  !
-  PAMOIST(IIJB:IIJE,1:IKT)=  0.5 / ( 1.0 + ZDRVSATDT(IIJB:IIJE,1:IKT) * PLOCPEXN(IIJB:IIJE,1:IKT) )
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  !$acc end kernels
-  !
-  !*      1.6 compute Atheta
-  !
-  !$acc kernels
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  PATHETA(IIJB:IIJE,1:IKT)= PAMOIST(IIJB:IIJE,1:IKT) * PEXN(IIJB:IIJE,1:IKT) *               &
-        ( ( ZRVSAT(IIJB:IIJE,1:IKT) - PRT(IIJB:IIJE,1:IKT,1) ) * PLOCPEXN(IIJB:IIJE,1:IKT) / &
-          ( 1. + ZDRVSATDT(IIJB:IIJE,1:IKT) * PLOCPEXN(IIJB:IIJE,1:IKT) )        *               &
-          (                                                                  &
-           ZRVSAT(IIJB:IIJE,1:IKT) * (1. + ZRVSAT(IIJB:IIJE,1:IKT)/ZEPS)                         &
-                        * ( -2.*PBETA/PT(IIJB:IIJE,1:IKT) + PGAM ) / PT(IIJB:IIJE,1:IKT)**2      &
-          +ZDRVSATDT(IIJB:IIJE,1:IKT) * (1. + 2. * ZRVSAT(IIJB:IIJE,1:IKT)/ZEPS)                 &
-                        * ( PBETA/PT(IIJB:IIJE,1:IKT) - PGAM ) / PT(IIJB:IIJE,1:IKT)             &
-          )                                                                  &
-         - ZDRVSATDT(IIJB:IIJE,1:IKT)                                                  &
-        )
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  !$acc end kernels
-  !
-  !*      1.7 Lv/Cph/Exner at t-1
-  !
-  !$acc kernels
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  PLOCPEXN(IIJB:IIJE,1:IKT) = PLOCPEXN(IIJB:IIJE,1:IKT) / PEXN(IIJB:IIJE,1:IKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  !$acc end kernels
-!
-IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO',1,ZHOOK_HANDLE2)
-END SUBROUTINE COMPUTE_FUNCTION_THERMO
-
-!     ########################################################################
-      SUBROUTINE COMPUTE_FUNCTION_THERMO_NEW_STAT(PALP,PBETA,PGAM,PLTT,PC,PT,PEXN,PCP,&
-                                         PLOCPEXN,PAMOIST,PATHETA            )
-!     ########################################################################
-!!
-!!****  *COMPUTE_FUNCTION_THERMO* routine to compute several thermo functions
-!
-!!    AUTHOR
-!!    ------
-!!
-!!     JP Pinty      *LA*
-!!
-!!    MODIFICATIONS
-!!    -------------
-!!      Original   24/02/03
-!!     Modified: Wim de Rooy 06-02-2019
-!!
-!-------------------------------------------------------------------------------
-!
-!*       0.    DECLARATIONS
-!              ------------
-!
-IMPLICIT NONE
-!
-!*       0.1   Declarations of dummy arguments
-!
-REAL, INTENT(IN)                      :: PALP,PBETA,PGAM,PLTT,PC
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PT,PEXN,PCP
-!
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PLOCPEXN
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
-!
-!-------------------------------------------------------------------------------
-!
-  IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO_NEW_STAT',0,ZHOOK_HANDLE2)
-  ZEPS = CST%XMV / CST%XMD
-   !
-   !*       1.1 Lv/Cph at  t
-   !
-!$acc kernels
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  PLOCPEXN(IIJB:IIJE,1:IKT) = ( PLTT + (CST%XCPV-PC) *  (PT(IIJB:IIJE,1:IKT)-CST%XTT) ) / PCP(IIJB:IIJE,1:IKT)
-  !
-  !*      1.2 Saturation vapor pressure at t
-  !
-  ZRVSAT(IIJB:IIJE,1:IKT) =  EXP( PALP - PBETA/PT(IIJB:IIJE,1:IKT) - PGAM*LOG( PT(IIJB:IIJE,1:IKT) ) )
-  !
-  !*      1.3 saturation  mixing ratio at t
-  !
-  ZRVSAT(IIJB:IIJE,1:IKT) =  ZRVSAT(IIJB:IIJE,1:IKT) * ZEPS / ( PPABST(IIJB:IIJE,1:IKT) - ZRVSAT(IIJB:IIJE,1:IKT) )
-  !
-  !*      1.4 compute the saturation mixing ratio derivative (rvs')
-  !
-  ZDRVSATDT(IIJB:IIJE,1:IKT) = ( PBETA / PT(IIJB:IIJE,1:IKT)  - PGAM ) / PT(IIJB:IIJE,1:IKT)   &
-                 * ZRVSAT(IIJB:IIJE,1:IKT) * ( 1. + ZRVSAT(IIJB:IIJE,1:IKT) / ZEPS )
-  !
-  !*      1.5 compute Amoist
-  !
-  PAMOIST(IIJB:IIJE,1:IKT)=  1.0 / ( 1.0 + ZDRVSATDT(IIJB:IIJE,1:IKT) * PLOCPEXN(IIJB:IIJE,1:IKT) )
-  !
-  !*      1.6 compute Atheta
-  !
-  PATHETA(IIJB:IIJE,1:IKT)= PAMOIST(IIJB:IIJE,1:IKT) * PEXN(IIJB:IIJE,1:IKT) * ZDRVSATDT(IIJB:IIJE,1:IKT)
-  !
-  !*      1.7 Lv/Cph/Exner at t-1
-  !
-  PLOCPEXN(IIJB:IIJE,1:IKT) = PLOCPEXN(IIJB:IIJE,1:IKT) / PEXN(IIJB:IIJE,1:IKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-!
-IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO_NEW_STAT',1,ZHOOK_HANDLE2)
-END SUBROUTINE COMPUTE_FUNCTION_THERMO_NEW_STAT
-
-!
-!     ####################
-      SUBROUTINE DELT(PLM,ODZ)
-!     ####################
-!!
-!!****  *DELT* routine to compute mixing length for DELT case
-!
-!!    AUTHOR
-!!    ------
-!!
-!!     M Tomasini      *Meteo-France
-!!
-!!    MODIFICATIONS
-!!    -------------
-!!      Original   01/05
-!!
-!-------------------------------------------------------------------------------
-!
-!*       0.    DECLARATIONS
-!              ------------
-!
-!*       0.1   Declarations of dummy arguments
-!
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PLM
-LOGICAL,                INTENT(IN)    :: ODZ
-!-------------------------------------------------------------------------------
-!
-IF (LHOOK) CALL DR_HOOK('TURB:DELT',0,ZHOOK_HANDLE2)
-!
-CALL MXF_PHY(D,PDXX,ZWORK1)
-IF (.NOT. O2D) THEN
-  CALL MYF_PHY(D,PDYY,ZWORK2)
-END IF
-!
-IF (ODZ) THEN
-!$acc kernels present_cr(PLM)
-  ! Dz is take into account in the computation
-  DO JK = IKTB,IKTE ! 1D turbulence scheme
-    !$mnh_expand_array(JIJ=IIJB:IIJE)
-    PLM(IIJB:IIJE,JK) = PZZ(IIJB:IIJE,JK+IKL) - PZZ(IIJB:IIJE,JK)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  END DO
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PLM(IIJB:IIJE,IKU) = PLM(IIJB:IIJE,IKE)
-  PLM(IIJB:IIJE,IKA) = PZZ(IIJB:IIJE,IKB) - PZZ(IIJB:IIJE,IKA)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-!$acc end kernels
-  IF ( TURBN%CTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
-    IF ( O2D) THEN
-!$acc kernels present_cr(PLM)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      PLM(IIJB:IIJE,1:IKT) = SQRT( PLM(IIJB:IIJE,1:IKT)*ZWORK1(IIJB:IIJE,1:IKT) )
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-    ELSE
-!$acc kernels present_cr(PLM)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      PLM(IIJB:IIJE,1:IKT) = (PLM(IIJB:IIJE,1:IKT)*ZWORK1(IIJB:IIJE,1:IKT) &
-                                   * ZWORK2(IIJB:IIJE,1:IKT) ) ** (1./3.)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-    END IF
-  END IF
-ELSE
-  ! Dz not taken into account in computation to assure invariability with vertical grid mesh
-!$acc kernels present_cr(PLM)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  PLM(IIJB:IIJE,1:IKT)=1.E10
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-  IF ( TURBN%CTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
-    IF ( O2D) THEN
-      !$acc kernels present_cr(PLM)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      PLM(:,:) = ZWORK1(:,:)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      !$acc end kernels
-    ELSE
-      !$acc kernels present_cr(PLM)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      PLM(IIJB:IIJE,1:IKT) = (ZWORK1(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT) ) ** (1./2.)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      !$acc end kernels
-    END IF
-  END IF
-END IF
-!
-!  mixing length limited by the distance normal to the surface
-!  (with the same factor as for BL89)
-!
-IF (.NOT. TURBN%LRMC01) THEN
-  ZALPHA=0.5**(-1.5)
-  !
-!$acc kernels
-  DO JIJ=IIJB,IIJE
-    IF (GOCEAN) THEN
-      DO JK=IKTE,IKTB,-1
-        ZD=ZALPHA*(PZZ(JIJ,IKTE+1)-PZZ(JIJ,JK))
-        IF ( PLM(JIJ,JK)>ZD) THEN
-          PLM(JIJ,JK)=ZD
-        ELSE
-          EXIT
-        ENDIF
-      END DO
-    ELSE
-      DO JK=IKTB,IKTE
-        ZD=ZALPHA*(0.5*(PZZ(JIJ,JK)+PZZ(JIJ,JK+IKL))&
-        -PZZ(JIJ,IKB)) *PDIRCOSZW(JIJ)
-        IF ( PLM(JIJ,JK)>ZD) THEN
-          PLM(JIJ,JK)=ZD
-        ELSE
-          EXIT
-        ENDIF
-      END DO
-    ENDIF
-  END DO
-!$acc end kernels
-END IF
-!
-!$acc kernels
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-PLM(IIJB:IIJE,IKA) = PLM(IIJB:IIJE,IKB)
-PLM(IIJB:IIJE,IKU) = PLM(IIJB:IIJE,IKE)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
-!$acc end kernels
-!
-IF (LHOOK) CALL DR_HOOK('TURB:DELT',1,ZHOOK_HANDLE2)
-END SUBROUTINE DELT
-!
-!     ####################
-      SUBROUTINE DEAR(PLM)
-!     ####################
-!!
-!!****  *DEAR* routine to compute mixing length for DEARdorff case
-!
-!!    AUTHOR
-!!    ------
-!!
-!!     M Tomasini      *Meteo-France
-!!
-!!    MODIFICATIONS
-!!    -------------
-!!      Original   01/05
-!!      I.Sandu (Sept.2006) : Modification of the stability criterion
-!!                            (theta_v -> theta_l)
-!!
-!-------------------------------------------------------------------------------
-!
-!*       0.    DECLARATIONS
-!              ------------
-!
-!*       0.1   Declarations of dummy arguments
-!
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PLM
-!
-LOGICAL :: GZD
-!-------------------------------------------------------------------------------
-!
-!   initialize the mixing length with the mesh grid
-IF (LHOOK) CALL DR_HOOK('TURB:DEAR',0,ZHOOK_HANDLE2)
-IF ( TURBN%CTURBDIM /= '1DIM' ) THEN
-  CALL MXF_PHY(D,PDXX,ZWORK1)
-  IF (.NOT. O2D) THEN
-    CALL MYF_PHY(D,PDYY,ZWORK2)
-  END IF
-END IF
-! 1D turbulence scheme
-!$acc kernels present_cr(PLM)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
-PLM(IIJB:IIJE,IKTB:IKTE) = PZZ(IIJB:IIJE,IKTB+IKL:IKTE+IKL) - PZZ(IIJB:IIJE,IKTB:IKTE)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-PLM(IIJB:IIJE,IKU) = PLM(IIJB:IIJE,IKE)
-PLM(IIJB:IIJE,IKA) = PZZ(IIJB:IIJE,IKB) - PZZ(IIJB:IIJE,IKA)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
-!$acc end kernels
-!
-IF ( TURBN%CTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
-  IF ( O2D) THEN
-    !$acc kernels present_cr(PLM)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    PLM(IIJB:IIJE,1:IKT) = SQRT( PLM(IIJB:IIJE,1:IKT)*ZWORK1(IIJB:IIJE,1:IKT) )
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    !$acc end kernels
-  ELSE
-    !$acc kernels present_cr(PLM)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    PLM(IIJB:IIJE,1:IKT) = (PLM(IIJB:IIJE,1:IKT)*ZWORK1(IIJB:IIJE,1:IKT) &
-                                 * ZWORK2(IIJB:IIJE,1:IKT) ) ** (1./3.)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    !$acc end kernels
-  END IF
-END IF
-!   compute a mixing length limited by the stability
-!
-CALL ETHETA(D,CST,KRR,KRRI,PTHLT,PRT,ZLOCPEXNM,ZATHETA,PSRCT,GOCEAN,OCOMPUTE_SRC,ZETHETA)
-CALL EMOIST(D,CST,KRR,KRRI,PTHLT,PRT,ZLOCPEXNM,ZAMOIST,PSRCT,GOCEAN,ZEMOIST)
-!
-IF (KRR>0) THEN
-!$acc kernels
-!$acc loop independent collapse(2)
-  DO JK=IKTB+1,IKTE-1
-    DO JIJ=IIJB,IIJE
-      ZDTHLDZ(JIJ,JK)= 0.5*((PTHLT(JIJ,JK+IKL)-PTHLT(JIJ,JK    ))/PDZZ(JIJ,JK+IKL)+ &
-                              (PTHLT(JIJ,JK    )-PTHLT(JIJ,JK-IKL))/PDZZ(JIJ,JK    ))
-      ZDRTDZ(JIJ,JK) = 0.5*((PRT(JIJ,JK+IKL,1)-PRT(JIJ,JK    ,1))/PDZZ(JIJ,JK+IKL)+ &
-                              (PRT(JIJ,JK    ,1)-PRT(JIJ,JK-IKL,1))/PDZZ(JIJ,JK    ))
-    END DO
-  END DO
-!$acc end kernels
-
-!$acc kernels
-!$acc loop independent collapse(2) private(ZVAR)
-  DO JK=IKTB+1,IKTE-1
-    DO JIJ=IIJB,IIJE
-      IF (GOCEAN) THEN
-        ZVAR=CST%XG*(CST%XALPHAOC*ZDTHLDZ(JIJ,JK)-CST%XBETAOC*ZDRTDZ(JIJ,JK))
-      ELSE
-        ZVAR=CST%XG/PTHVREF(JIJ,JK)*                                                  &
-           (ZETHETA(JIJ,JK)*ZDTHLDZ(JIJ,JK)+ZEMOIST(JIJ,JK)*ZDRTDZ(JIJ,JK))
-      END IF
-      !
-      IF (ZVAR>0.) THEN
-        PLM(JIJ,JK)=MAX(CST%XMNH_EPSILON,MIN(PLM(JIJ,JK), &
-                      0.76* SQRT(PTKET(JIJ,JK)/ZVAR)))
-      END IF
-    END DO
-  END DO
-!$acc end kernels
-
-ELSE! For dry atmos or unsalted ocean runs
-!$acc kernels
-!$acc loop independent collapse(2) private(ZVAR)
-  DO JK=IKTB+1,IKTE-1
-    DO JIJ=IIJB,IIJE
-      ZDTHLDZ(JIJ,JK)= 0.5*((PTHLT(JIJ,JK+IKL)-PTHLT(JIJ,JK    ))/PDZZ(JIJ,JK+IKL)+ &
-                              (PTHLT(JIJ,JK    )-PTHLT(JIJ,JK-IKL))/PDZZ(JIJ,JK    ))
-      IF (GOCEAN) THEN
-        ZVAR= CST%XG*CST%XALPHAOC*ZDTHLDZ(JIJ,JK)
-      ELSE
-        ZVAR= CST%XG/PTHVREF(JIJ,JK)*ZETHETA(JIJ,JK)*ZDTHLDZ(JIJ,JK)
-      END IF
-!
-      IF (ZVAR>0.) THEN
-        PLM(JIJ,JK)=MAX(CST%XMNH_EPSILON,MIN(PLM(JIJ,JK), &
-                      0.76* SQRT(PTKET(JIJ,JK)/ZVAR)))
-      END IF
-    END DO
-  END DO
-!$acc end kernels
-END IF
-!$acc kernels present(ZWORK2D, PLM)
-!  special case near the surface
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-ZDTHLDZ(IIJB:IIJE,IKB)=(PTHLT(IIJB:IIJE,IKB+IKL)-PTHLT(IIJB:IIJE,IKB))/PDZZ(IIJB:IIJE,IKB+IKL)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
-! For dry simulations
-IF (KRR>0) THEN
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZDRTDZ(IIJB:IIJE,IKB)=(PRT(IIJB:IIJE,IKB+IKL,1)-PRT(IIJB:IIJE,IKB,1))/PDZZ(IIJB:IIJE,IKB+IKL)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-ELSE
-  ZDRTDZ(:,IKB)=0
-ENDIF
-!
-IF (GOCEAN) THEN
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZWORK2D(IIJB:IIJE)=CST%XG*(CST%XALPHAOC*ZDTHLDZ(IIJB:IIJE,IKB)-CST%XBETAOC*ZDRTDZ(IIJB:IIJE,IKB))
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-ELSE
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZWORK2D(IIJB:IIJE)=CST%XG/PTHVREF(IIJB:IIJE,IKB)*                                           &
-              (ZETHETA(IIJB:IIJE,IKB)*ZDTHLDZ(IIJB:IIJE,IKB)+ZEMOIST(IIJB:IIJE,IKB)*ZDRTDZ(IIJB:IIJE,IKB))
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-END IF
-!$mnh_expand_where(JIJ=IIJB:IIJE)
-WHERE(ZWORK2D(IIJB:IIJE)>0.)
-  PLM(IIJB:IIJE,IKB)=MAX(CST%XMNH_EPSILON,MIN( PLM(IIJB:IIJE,IKB),                 &
-                    0.76* SQRT(PTKET(IIJB:IIJE,IKB)/ZWORK2D(IIJB:IIJE))))
-END WHERE
-!$mnh_end_expand_where(JIJ=IIJB:IIJE)
-!
-!  mixing length limited by the distance normal to the surface (with the same factor as for BL89)
-!
-IF (.NOT. TURBN%LRMC01) THEN
-  ZALPHA=0.5**(-1.5)
-  !
-  !$acc loop independent private(GZD,ZD)
-  DO JIJ=IIJB,IIJE
-    GZD = .TRUE.
-    IF (GOCEAN) THEN
-      !$acc loop seq
-      DO JK=IKTE,IKTB,-1
-        ZD=ZALPHA*(PZZ(JIJ,IKTE+1)-PZZ(JIJ,JK))
-        IF ( ( PLM(JIJ,JK)>ZD) .AND. GZD ) THEN
-          PLM(JIJ,JK)=ZD
-        ELSE
-          GZD = .FALSE.
-        ENDIF
-      END DO
-    ELSE
-      DO JK=IKTB,IKTE
-        ZD=ZALPHA*(0.5*(PZZ(JIJ,JK)+PZZ(JIJ,JK+IKL))-PZZ(JIJ,IKB)) &
-          *PDIRCOSZW(JIJ)
-        IF ( ( PLM(JIJ,JK)>ZD) .AND. GZD ) THEN
-          PLM(JIJ,JK)=ZD
-        ELSE
-          GZD = .FALSE.
-        ENDIF
-      END DO
-    ENDIF
-  END DO
-END IF
-!
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-PLM(IIJB:IIJE,IKA) = PLM(IIJB:IIJE,IKB)
-PLM(IIJB:IIJE,IKE) = PLM(IIJB:IIJE,IKE-IKL)
-PLM(IIJB:IIJE,IKU) = PLM(IIJB:IIJE,IKU-IKL)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
-!
-!$acc end kernels
-IF (LHOOK) CALL DR_HOOK('TURB:DEAR',1,ZHOOK_HANDLE2)
-END SUBROUTINE DEAR
-!
-!     #########################
-      SUBROUTINE CLOUD_MODIF_LM
-!     #########################
-!!
-!!*****CLOUD_MODIF_LM routine to:
-!!       1/ change the mixing length in the clouds
-!!       2/ emphasize the mixing length in the cloud
-!!           by the coefficient ZCOEF_AMPL calculated here
-!!             when the CEI index is above ZCEI_MIN.
-!!
-!!
-!!      ZCOEF_AMPL ^
-!!                 |
-!!                 |
-!!  ZCOEF_AMPL_SAT -                       ---------- Saturation
-!!    (XDUMMY1)    |                      -
-!!                 |                     -
-!!                 |                    -
-!!                 |                   -
-!!                 |                  - Amplification
-!!                 |                 - straight
-!!                 |                - line
-!!                 |               -
-!!                 |              -
-!!                 |             -
-!!                 |            -
-!!                 |           -
-!!               1 ------------
-!!                 |
-!!                 |
-!!               0 -----------|------------|----------> PCEI
-!!                 0      ZCEI_MIN     ZCEI_MAX
-!!                        (XDUMMY2)    (XDUMMY3)
-!!
-!!
-!!
-!!    AUTHOR
-!!    ------
-!!     M. Tomasini   *CNRM METEO-FRANCE
-!!
-!!    MODIFICATIONS
-!!    -------------
-!!     Original   09/07/04
-!!
-!-------------------------------------------------------------------------------
-!
-!*       0.    DECLARATIONS
-!              ------------
-!
-IMPLICIT NONE
-!
-!-------------------------------------------------------------------------------
-!
-!*       1.    INITIALISATION
-!              --------------
-!
-IF (LHOOK) CALL DR_HOOK('TURB:CLOUD_MODIF_LM',0,ZHOOK_HANDLE2)
-ZPENTE = ( PCOEF_AMPL_SAT - 1. ) / ( PCEI_MAX - PCEI_MIN )
-ZCOEF_AMPL_CEI_NUL = 1. - ZPENTE * PCEI_MIN
-!
-!$acc kernels
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZCOEF_AMPL(IIJB:IIJE,1:IKT) = 1.
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-!
-!*       2.    CALCULATION OF THE AMPLIFICATION COEFFICIENT
-!              --------------------------------------------
-!
-! Saturation
-!
-!$acc kernels
-!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
-WHERE ( PCEI(IIJB:IIJE,1:IKT)>=PCEI_MAX ) 
-  ZCOEF_AMPL(IIJB:IIJE,1:IKT)=PCOEF_AMPL_SAT
-END WHERE
-!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-!
-! Between the min and max limits of CEI index, linear variation of the
-! amplification coefficient ZCOEF_AMPL as a function of CEI
-!
-!$acc kernels
-!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
-WHERE ( PCEI(IIJB:IIJE,1:IKT) <  PCEI_MAX .AND. PCEI(IIJB:IIJE,1:IKT) >  PCEI_MIN)
-  ZCOEF_AMPL(IIJB:IIJE,1:IKT) = ZPENTE * PCEI(IIJB:IIJE,1:IKT) + ZCOEF_AMPL_CEI_NUL
-END WHERE
-!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-!
-!
-!*       3.    CALCULATION OF THE MIXING LENGTH IN CLOUDS
-!              ------------------------------------------
-!
-IF (HTURBLEN_CL == TURBN%CTURBLEN) THEN
-!$acc kernels
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  ZLM_CLOUD(:,:) = ZLM(:,:)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-ELSE
-  SELECT CASE (HTURBLEN_CL)
-  !
-  !*         3.1 BL89 mixing length
-  !           ------------------
-  CASE ('BL89','RM17','HM21')
-    !$acc kernels
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZSHEAR(:,:)=0.
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    !$acc end kernels
-    CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD,OOCEAN)
-  !
-  !*         3.2 Delta mixing length
-  !           -------------------
-  CASE ('DELT')
-    CALL DELT(ZLM_CLOUD,ODZ=.TRUE.)
-  !
-  !*         3.3 Deardorff mixing length
-  !           -----------------------
-  CASE ('DEAR')
-    CALL DEAR(ZLM_CLOUD)
-  !
-  END SELECT
-ENDIF
-!
-!*       4.    MODIFICATION OF THE MIXING LENGTH IN THE CLOUDS
-!              -----------------------------------------------
-!
-! Impression before modification of the mixing length
-IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
-  TZFIELD = TFIELDMETADATA(            &
-    CMNHNAME   = 'LM_CLEAR_SKY',       &
-    CSTDNAME   = '',                   &
-    CLONGNAME  = 'LM_CLEAR_SKY',       &
-    CUNITS     = 'm',                  &
-    CDIR       = 'XY',                 &
-    CCOMMENT   = 'X_Y_Z_LM CLEAR SKY', &
-    NGRID      = 1,                    &
-    NTYPE      = TYPEREAL,             &
-    NDIMS      = 3,                    &
-    LTIMEDEP   = .TRUE.                )
-!$acc update self(ZLM)
-  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZLM)
-ENDIF
-!
-! Amplification of the mixing length when the criteria are verified
-!
-!$acc kernels
-!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
-WHERE (ZCOEF_AMPL(IIJB:IIJE,1:IKT) /= 1.) 
-  ZLM(IIJB:IIJE,1:IKT) = ZCOEF_AMPL(IIJB:IIJE,1:IKT)*ZLM_CLOUD(IIJB:IIJE,1:IKT)
-END WHERE
-!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-!
-! Cloud mixing length in the clouds at the points which do not verified the CEI
-!
-!$acc kernels
-!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
-WHERE (PCEI(IIJB:IIJE,1:IKT) == -1.)
-  ZLM(IIJB:IIJE,1:IKT) = ZLM_CLOUD(IIJB:IIJE,1:IKT)
-END WHERE
-!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-!
-!
-!*       5.    IMPRESSION
-!              ----------
-!
-IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
-  TZFIELD = TFIELDMETADATA(         &
-    CMNHNAME   = 'COEF_AMPL',       &
-    CSTDNAME   = '',                &
-    CLONGNAME  = 'COEF_AMPL',       &
-    CUNITS     = '1',               &
-    CDIR       = 'XY',              &
-    CCOMMENT   = 'X_Y_Z_COEF AMPL', &
-    NGRID      = 1,                 &
-    NTYPE      = TYPEREAL,          &
-    NDIMS      = 3,                 &
-    LTIMEDEP   = .TRUE.             )
-!$acc update self(ZCOEF_AMPL)
-  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZCOEF_AMPL)
-  !
-  TZFIELD = TFIELDMETADATA(        &
-    CMNHNAME   = 'LM_CLOUD',       &
-    CSTDNAME   = '',               &
-    CLONGNAME  = 'LM_CLOUD',       &
-    CUNITS     = 'm',              &
-    CDIR       = 'XY',             &
-    CCOMMENT   = 'X_Y_Z_LM CLOUD', &
-    NGRID      = 1,                &
-    NTYPE      = TYPEREAL,         &
-    NDIMS      = 3,                &
-    LTIMEDEP   = .TRUE.            )
-!$acc update self(ZLM_CLOUD)
-  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZLM_CLOUD)
-  !
-ENDIF
-!
-IF (LHOOK) CALL DR_HOOK('TURB:CLOUD_MODIF_LM',1,ZHOOK_HANDLE2)
-END SUBROUTINE CLOUD_MODIF_LM
-!
 END SUBROUTINE TURB
