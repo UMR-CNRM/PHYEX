@@ -176,7 +176,7 @@ INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice var.
 !
 LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
-                                 ! diagnostic fields in the syncronous FM-file
+                                 ! diagnostic fields in the syncronous file
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  OHARAT
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and

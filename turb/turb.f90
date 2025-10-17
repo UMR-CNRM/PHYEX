@@ -93,12 +93,11 @@
 !!      the turbulence parameterization is 2D or 3D( TURBN%CTURBDIM='3DIM' ).
 !!      7- The sources for TKE are computed, along with the dissipation of TKE
 !!      if TURBN%CTURBLEN='KEPS'.
-!!      8- Some turbulence-related quantities are stored in the synchronous
-!!      FM-file.
+!!      8- Some turbulence-related quantities are stored in the synchronous file.
 !!      9- The non-conservative variables are retrieved.
 !!
 !!
-!!      The saving of the fields in the synchronous FM-file is controlled by:
+!!      The saving of the fields in the synchronous file is controlled by:
 !!        * TURBN%LTURB_FLX => saves all the turbulent fluxes and correlations
 !!        * TURBN%LTURB_DIAG=> saves the turbulent Prandtl and Schmidt numbers, the
 !!                       source terms of TKE and dissipation of TKE
