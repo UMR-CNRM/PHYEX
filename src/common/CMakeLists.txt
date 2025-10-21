@@ -20,8 +20,6 @@ ecbuild_add_option( FEATURE PHYEX_BUILD_PROGS
                     DESCRIPTION "Build PHYEX program executables"
                     DEFAULT OFF )
 
-
-
 if(HAVE_DOUBLE_PRECISION)
   list(APPEND precision_list dp) 
 endif()
@@ -45,15 +43,20 @@ file(GLOB PHYEX_SOURCES
     ${CMAKE_SOURCE_DIR}/micro/*90
 ) 
 set(PHYEX_ENTRYPOINTS
-  aux/ini_phyex.F90
-  micro/rain_ice.F90
-  turb/shallow_mf.F90
-  turb/turb.F90
-  micro/ice_adjust.F90
-  micro/lima.F90
-  micro/lima_adjust_split.F90
+    aux/ini_phyex.F90
+    micro/rain_ice.F90
+    turb/shallow_mf.F90
+    turb/turb.F90
+    micro/ice_adjust.F90
+    micro/lima.F90
+    micro/lima_adjust_split.F90
 )
 
+if(EXISTS ${CMAKE_SOURCE_DIR}/pyphyex.F90)
+  list(APPEND PHYEX_ENTRYPOINTS pyphyex.F90)
+endif()
+
+# diry headers and include dirs : 
 set(GLOB PHYEX_HEADERS
     ${CMAKE_SOURCE_DIR}/turb/*h
     ${CMAKE_SOURCE_DIR}/micro/*h
@@ -61,9 +64,6 @@ set(GLOB PHYEX_HEADERS
 if(EXISTS ${CMAKE_SOURCE_DIR}/conv)
   file(GLOB CONV_HEADERS ${CMAKE_SOURCE_DIR}/conv/*h)
   list(APPEND PHYEX_HEADERS ${CONV_HEADERS})
-endif()
-if(EXISTS ${CMAKE_SOURCE_DIR}/pyphyex.F90)
-  list(APPEND PHYEX_ENTRYPOINTS pyphyex.F90)
 endif()
 
 set(PHYEX_INCLUDEDIRS
@@ -75,9 +75,10 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/conv)
   list(APPEND PHYEX_INCLUDEDIRS ${CMAKE_SOURCE_DIR}/conv)
 endif()
 
-#-----------------------------------------------------------------------
-# Library
-#-----------------------------------------------------------------------
+#---------------
+#  Library
+#---------------
+
 foreach(PRECISION ${precision_list})
   
 ecbuild_add_library(
@@ -92,16 +93,19 @@ ecbuild_add_library(
   PUBLIC_INCLUDES     ${PHYEX_HEADERS}
   INSTALL_HEADERS     ALL
   HEADER_DESTINATION include/${PRECISION}
-
   PRIVATE_INCLUDES
     ${PHYEX_INCLUDEDIRS}
+		 ) 
 
-) 
 
+# Install Library 
 install(TARGETS phyex_${PRECISION}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 
+
+
+# Install Modules 
 fortran_modules_install(
         TARGET phyex_${PRECISION}
         MODULE_DIR ${CMAKE_CURRENT_BINARY_DIR}/modules_${PRECISION}

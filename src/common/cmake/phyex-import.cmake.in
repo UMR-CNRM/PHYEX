@@ -1,0 +1,46 @@
+# This file is included during
+#
+#    find_package( PHYEX [COMPONENTS (double|single)] [QUIET] [REQUIRED] )
+#
+# Supported COMPONENTS: double single 
+#
+# If available following targets will be exported:
+# - fa_dp  Double precision PHYEX library
+# - fa_sp  Single precision PHYEX library
+
+
+##################################################################
+## Export project variables
+
+set( PHYEX_VERSION_STR             @PHYEX_VERSION_STR@ )
+set( PHYEX_HAVE_SINGLE_PRECISION   @PHYEX_HAVE_SINGLE_PRECISION@ )
+set( PHYEX_HAVE_DOUBLE_PRECISION   @PHYEX_HAVE_DOUBLE_PRECISION@ )
+set( PHYEX_REQUIRES_PRIVATE_DEPENDENCIES @PACKAGE_REQUIRES_PRIVATE_DEPENDENCIES@ )
+
+if( NOT ${CMAKE_FIND_PACKAGE_NAME}_FIND_QUIETLY )
+  message( STATUS "Found PHYEX version ${PHYEX_VERSION_STR}" )
+endif()
+
+##################################################################
+## Export project dependencies
+
+include( CMakeFindDependencyMacro )
+if( PHYEX_REQUIRES_PRIVATE_DEPENDENCIES OR CMAKE_Fortran_COMPILER_LOADED )
+    if( NOT CMAKE_Fortran_COMPILER_LOADED )
+        enable_language( Fortran )
+    endif()
+    find_dependency( fiat HINTS ${CMAKE_CURRENT_LIST_DIR}/../fiat PATHS @fiat_DIR@ @fiat_ROOT@ )
+endif()
+
+
+##################################################################
+## Handle components
+
+set( ${CMAKE_FIND_PACKAGE_NAME}_single_FOUND ${PHYEX_HAVE_SINGLE_PRECISION} )
+set( ${CMAKE_FIND_PACKAGE_NAME}_double_FOUND ${PHYEX_HAVE_DOUBLE_PRECISION} )
+
+foreach( _component ${${CMAKE_FIND_PACKAGE_NAME}_FIND_COMPONENTS} )
+  if( NOT ${CMAKE_FIND_PACKAGE_NAME}_${_component}_FOUND AND ${CMAKE_FIND_PACKAGE_NAME}_FIND_REQUIRED )
+    message( SEND_ERROR "PHYEX was not build with support for COMPONENT ${_component}" )
+  endif()
+endforeach()
