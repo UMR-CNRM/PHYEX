@@ -10,10 +10,9 @@ SUBROUTINE ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, KMICRO, PTSTEP, &
                         &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
                         &PEXN, PRHODREF, PPABST, PCIT, PCLDFR, &
-                        &PICLDFR, PZZZ, PCONC3D, &
-                        &PSSIO, PSSIU, PIFR, &
                         &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
                         &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
+                        &PICLDFR, PZZZ, PCONC3D, PSSIO, PSSIU, PIFR, &
                         &PBUDGETS, PLATHAM_IAGGS)
 !     ######################################################################
 !

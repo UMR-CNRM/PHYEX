@@ -630,10 +630,9 @@ CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI,               &
                PTHS, PRS, &
                PEVAP3D,                                              &
-               PRAINFR, PSIGS,                                       &
+               PRAINFR, PSIGS, ZWTH, ZWR,                            &
                PICLDFR, ZZZZ, ZCONC3D,                               &
                PSSIO, PSSIU, PIFR,                                   &
-               ZWTH, ZWR, &
                ZBUDGETS, PLATHAM_IAGGS)
 !
 IF(BUCONF%LBU_ENABLE .OR. OELEC) THEN

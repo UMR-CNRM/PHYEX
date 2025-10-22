@@ -11,9 +11,8 @@ SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                     &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
                     &PEXN, PRHODREF, PPABST, PCIT, PCLDFR, &
                     &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
-                    &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, &
+                    &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
                     &PICLDFR, PZZZ, PCONC3D, PSSIO, PSSIU, PIFR, &
-                    &PTHT, PRT, &
                     &PBUDGETS, PLATHAM_IAGGS)
 !     ######################################################################
 !
@@ -327,13 +326,13 @@ IF(PARAMI%LPACK_MICRO) THEN
                         &KRR, OSAVE_MICRO, LLMICRO, OELEC, &
                         &ZEXN, ZRHODREF, &
                         &ZPABST, ZCIT, ZCLDFR, &
-                        &ZICLDFR, ZZZZ, ZCONC3D, &
-                        &ZSSIO, ZSSIU, ZIFR, &
                         &ZHLC_HCF, ZHLC_HRC, &
                         &ZHLI_HCF, ZHLI_HRI, &
                         &ZTHS, ZRS, ZRREVAV, &
                         &ZRAINFR, ZSIGS, &
                         &ZTHT, ZRT, &
+                        &ZICLDFR, ZZZZ, ZCONC3D, &
+                        &ZSSIO, ZSSIU, ZIFR, &
                         &ZBUDGETS, &
                         &ZLATHAM_IAGGS)
       !
@@ -416,13 +415,13 @@ ELSE ! PARAMI%LPACK_MICRO
                     &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
                     &PEXN, PRHODREF, &
                     &PPABST, PCIT, PCLDFR, &
-                    &PICLDFR, PZZZ, PCONC3D, &
-                    &PSSIO, PSSIU, PIFR, &
                     &PHLC_HCF, PHLC_HRC, &
                     &PHLI_HCF, PHLI_HRI,  &
                     &PTHS, PRS, PRREVAV, &
                     &PRAINFR, PSIGS, &
                     &PTHT, PRT, &
+                    &PICLDFR, PZZZ, PCONC3D, &
+                    &PSSIO, PSSIU, PIFR, &
                     &PBUDGETS, &
                     &PLATHAM_IAGGS)
 
