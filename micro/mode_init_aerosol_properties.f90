@@ -125,6 +125,11 @@ IF ( NMOD_CCN .GE. 1 ) THEN
       RCCN(:)   = (/ 0.4E-6 , 0.25E-6 , 0.1E-6 /)
       LOGSIGCCN(:) = (/ 0.64 , 0.47 , 0.47 /)
       RHOCCN(:) = (/ 2160. , 2000. , 1750. /)
+   CASE ('CAMS_PT')
+! sea-salt (MAP-IO), sulfate, hydrophilic (GADS data)
+      RCCN(:)      = (/0.0715E-6  ,  0.25E-6 , 0.1E-6 /)
+      LOGSIGCCN(:) = (/0.4187    , 0.47 ,    0.47     /)
+      RHOCCN(:)    = (/ 1173.    , 2000. , 1750.     /)
    CASE ('CAMS_JPP')
 ! sea-salt, sulfate, hydrophilic (GADS data)
       RCCN(:)      = (/ 0.209E-6 , 0.0695E-6 , 0.0212E-6 /)
@@ -160,40 +165,6 @@ IF ( NMOD_CCN .GE. 1 ) THEN
       call Print_msg(NVERB_FATAL,'GEN','INIT_AEROSOL_PROPERTIES','CCN_MODES must be JUNGFRAU, COPT, CAMS, CAMS_JPP,'// &
                                                                  'CAMS_ACC, CAMS_AIT, SIRTA, CPS00, MOCAGE or FREETROP')
    ENDSELECT
-
-IF (LORILAM) THEN   ! for sulphates and hydrophilic aerosols
-  IF (.NOT.(ALLOCATED(XRHOI))) ALLOCATE(XRHOI(NSP+NSOA+NCARB))
-  XRHOI(:)          = 1.8e3
-  XRHOI(JP_AER_H2O) = 1.0e3   ! water
-  XRHOI(JP_AER_DST) = XDENSITY_DUST   ! water
-
-  ! assumption: we choose to put sulfates and hydrophilics compounds in mode J (accumulation)
-  IF (CRGUNIT=="MASS") THEN
-  RCCN(2)   = XINIRADIUSJ * EXP(-3.*(LOG(XINISIGJ))**2) * 1E-6 ! Sulfates
-  RCCN(3)   = XINIRADIUSJ * EXP(-3.*(LOG(XINISIGJ))**2) * 1E-6 ! Hydrophilic
-  ELSE
-  RCCN(2)   = XINIRADIUSJ * 1E-6  ! Sulfates
-  RCCN(3)   = XINIRADIUSJ * 1E-6  ! Hydrophilic
-
-  END IF
-  LOGSIGCCN(2) = LOG(XINISIGJ)
-  LOGSIGCCN(3) = LOG(XINISIGJ)
-  RHOCCN(2)    = XRHOI(JP_AER_SO4) 
-  RHOCCN(3)    = XRHOI(JP_AER_OC)
-END IF
-IF (LSALT) THEN ! for sea salts
-  JMOD = 1
-  IF (NMODE_SLT >= 5) JMOD = 4  ! choose mode 4 of Ovadnevaite 2014 (r = 0.115 µm, sigma = 1.53)
-  IF (NMODE_SLT == 3) JMOD = 1  ! choose mode 1 of Vig01 (r = 0.2 µm, sigma = 1.9) or Sch04 (r = 0.14 µm, sigma = 1.59)
-  IF (CRGUNITS=="MASS") THEN
-  RCCN(1)   = XINIRADIUS_SLT(JMOD) * EXP(-3.*(LOG(XINISIG_SLT(JMOD)))**2) * 1E-6
-  ELSE
-  RCCN(1)   = XINIRADIUS_SLT(JMOD) * 1E-6
-  END IF
-  LOGSIGCCN(1) = LOG(XINISIG_SLT(JMOD))
-  RHOCCN(1) = XDENSITY_SALT
-END IF
-
 !
   DO I=1, MIN(NMOD_CCN,3)
     XR_MEAN_CCN(I) = RCCN(I)
@@ -348,9 +319,9 @@ IF ( NMOD_IFN .GE. 1 ) THEN
       IF (.NOT.(ASSOCIATED(XMDIAM_IFN))) CALL PARAM_LIMA_ALLOCATE('XMDIAM_IFN', NSPECIE)
       IF (.NOT.(ASSOCIATED(XSIGMA_IFN))) CALL PARAM_LIMA_ALLOCATE('XSIGMA_IFN', NSPECIE)
       IF (.NOT.(ASSOCIATED(XRHO_IFN)))   CALL PARAM_LIMA_ALLOCATE('XRHO_IFN', NSPECIE)
-      XMDIAM_IFN = (/0.09E-6, 3.0E-6, 0.025E-6, 0.2E-6/)
-      XSIGMA_IFN = (/1.75, 2.15, 2.0, 1.6 /)
-      XRHO_IFN   = (/1800., 2600., 1000., 1500./) 
+      XMDIAM_IFN = (/0.8E-6, 3.0E-6, 0.09E-6, 0.2E-6/)
+      XSIGMA_IFN = (/1.9, 1.6, 1.6, 1.6 /)
+      XRHO_IFN   = (/2300., 2300., 1860., 1500./)
    CASE ('CAMS_JPP')
 ! sea-salt, sulfate, hydrophilic (GADS data)
 ! 2 species, dust-metallic and hydrophobic (as BC)
@@ -405,41 +376,6 @@ IF ( NMOD_IFN .GE. 1 ) THEN
          XRHO_IFN   = (/2300., 2300., 1860., 1000./)
       END IF
    ENDSELECT
-
-IF (LORILAM) THEN
-  IDX=1
-
-  IF ((IDX+1) .LE. NMOD_IFN) THEN
-  IF (CRGUNIT=="MASS") THEN
-   XMDIAM_IFN(IDX+1)   = 2 * XINIRADIUSJ * EXP(-3.*(LOG(XINISIGJ))**2) * 1E-6
-  ELSE
-   XMDIAM_IFN(IDX+1)   = 2 * XINIRADIUSJ * 1E-6
-  END IF
-  XRHO_IFN(IDX+1)    = XRHOI(JP_AER_BC)
-  XSIGMA_IFN(IDX+1)  = XINISIGI
-  END IF
-
-  IF ((IDX+2) .LE. NMOD_IFN) THEN
-    IF (CRGUNIT=="MASS") THEN
-     XMDIAM_IFN(IDX+2)   = 2 * XINIRADIUSJ * EXP(-3.*(LOG(XINISIGJ))**2) * 1E-6
-    ELSE
-     XMDIAM_IFN(IDX+2)   = 2 * XINIRADIUSJ * 1E-6
-    END IF
-  XRHO_IFN(IDX+2)    = XRHOI(JP_AER_OC)
-  XSIGMA_IFN(IDX+2)  = XINISIGJ
-  END IF
-END IF
-IF (LDUST) THEN
-   IF (CRGUNITD=="MASS") THEN
-     XMDIAM_IFN(1) = 2.*XINIRADIUS(JPDUSTORDER(3))*EXP(-3.*(LOG(XINISIG(JPDUSTORDER(3))))**2)
-    ELSE
-     XMDIAM_IFN(1) = 2.*XINIRADIUS(JPDUSTORDER(3))
-    END IF
-  XSIGMA_IFN(1)  = XINISIG(JPDUSTORDER(3))
-  XRHO_IFN(1) = XDENSITY_DUST
-  
-
-END IF
 
 ! internal mixing
 !
