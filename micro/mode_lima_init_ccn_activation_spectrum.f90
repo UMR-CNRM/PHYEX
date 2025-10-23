@@ -35,6 +35,7 @@ CONTAINS
 !              ------------
 !
 USE MODD_CST, ONLY : XMV, XAVOGADRO, XBOLTZ, XRHOLW
+USE MODD_PRECISION, ONLY: MNHREAL64
 !
 USE MODI_GAMMA_INC
 USE MODI_HYPGEO
@@ -57,19 +58,19 @@ REAL,             INTENT(OUT) :: XKAPPA         ! kappa
 !
 INTEGER, PARAMETER            :: M = 1000        ! Number of points (S,Nccn) used to fit the spectra
 INTEGER, PARAMETER            :: N = 3          ! Number of parameters to adjust
-REAL, DIMENSION(N)            :: PARAMS         ! Parameters to adjust by the LM algorithm (k, mu, beta)
-REAL, DIMENSION(M)            :: FVEC           ! Array to store the distance between theoretical and fitted spectra
+REAL(KIND=MNHREAL64), DIMENSION(N)            :: PARAMS         ! Parameters to adjust by the LM algorithm (k, mu, beta)
+REAL(KIND=MNHREAL64), DIMENSION(M)            :: FVEC           ! Array to store the distance between theoretical and fitted spectra
 INTEGER                       :: IFLAG          ! 
 INTEGER                       :: INFO           ! 
 REAL                          :: TOL = 1.E-16   ! Fit precision required
 !
 INTEGER                       :: II, IJ         ! Loop indices
 !
-REAL                          :: XW             ! 
+REAL(KIND=MNHREAL64)                          :: XW             ! 
 REAL                          :: XDDRY = 0.1E-6 ! Dry diameter for which to compute Scrit
-REAL                          :: XSCRIT         ! Scrit for dry diameter XDDRY
-REAL                          :: XMIN  = 0.1E-6 ! minimum diameter for root search (m)
-REAL                          :: XMAX  = 10.E-6 ! maximum diameter for root search (m)
+REAL(KIND=MNHREAL64)                          :: XSCRIT         ! Scrit for dry diameter XDDRY
+REAL(KIND=MNHREAL64)                          :: XMIN  = 0.1E-6_MNHREAL64 ! minimum diameter for root search (m)
+REAL(KIND=MNHREAL64)                          :: XMAX  = 10.E-6_MNHREAL64 ! maximum diameter for root search (m)
 REAL                          :: XPREC = 1.E-8  ! precision wanted for root (m)
 !
 !REAL                          :: XKAPPA         ! kappa coefficient
@@ -152,7 +153,7 @@ DO IJ=1, SIZE(XT)
 !*       3.     Compute C, k, mu, beta, using the Levenberg-Marquardt algorithm
 !               ---------------------------------------------------------------
 !
-   PARAMS(1:3) = (/ 1., 1., 1000. /)
+   PARAMS(1:3) = (/ 1._MNHREAL64, 1._MNHREAL64, 1000._MNHREAL64 /)
    IFLAG = 1
    call lmdif1 ( DISTANCE, M, N, PARAMS, FVEC, TOL, INFO )
 !
@@ -222,19 +223,21 @@ IMPLICIT NONE
 !
 !*       0.1 declarations of arguments and result
 !
-REAL,    INTENT(INOUT)  :: PX1, PX2, PXACC
+REAL(KIND=MNHREAL64),    INTENT(INOUT)  :: PX1, PX2
+REAL,    INTENT(INOUT)  :: PXACC
 REAL,    INTENT(IN)     :: XDDRY, XKAPPA, XT
-REAL                    :: PZRIDDR
+REAL(KIND=MNHREAL64)                    :: PZRIDDR
 !
 !*       0.2 declarations of local variables
 !
 !
 INTEGER, PARAMETER      :: MAXIT=60
-REAL                    :: fh,fl, fm,fnew
-REAL                    :: s,xh,xl,xm,xnew
+REAL(KIND=MNHREAL64)         :: fh,fl, fm
+REAL(KIND=MNHREAL64)         :: fnew
+REAL(KIND=MNHREAL64)         :: s,xh,xl,xm,xnew
 INTEGER                 :: j
 !
-PZRIDDR= 999999.
+PZRIDDR= 999999._MNHREAL64
 fl     = DSDD(PX1,XDDRY,XKAPPA,XT)
 fh     = DSDD(PX2,XDDRY,XKAPPA,XT)
 !
@@ -242,13 +245,13 @@ fh     = DSDD(PX2,XDDRY,XKAPPA,XT)
       xl         = PX1
       xh         = PX2
       do j=1,MAXIT
-         xm     = 0.5*(xl+xh)
+         xm     = 0.5_MNHREAL64*(xl+xh)
          fm = DSDD(xm,XDDRY,XKAPPA,XT)
          s      = sqrt(fm**2-fl*fh)
          if (s == 0.0) then
             GO TO 101
          endif
-         xnew  = xm+(xm-xl)*(sign(1.0,fl-fh)*fm/s)
+         xnew  = xm+(xm-xl)*(sign(1.0_MNHREAL64,fl-fh)*fm/s)
          if (abs(xnew - PZRIDDR) <= PXACC) then
             GO TO 101 
          endif
@@ -269,7 +272,7 @@ fh     = DSDD(PX2,XDDRY,XKAPPA,XT)
             xl    =PZRIDDR
             fl=fnew
          else if (PX2 .lt. 0.05) then
-            PX2 = PX2 + 1.0E-2
+            PX2 = PX2 + 1.0E-2_MNHREAL64
 !            PRINT*, 'PX2 ALWAYS too small, we put a greater one : PX2 =',PX2
             fh   = DSDD(PX2,XDDRY,XKAPPA,XT)
             go to 100
@@ -290,7 +293,7 @@ fh     = DSDD(PX2,XDDRY,XKAPPA,XT)
       fh   = DSDD(PX2,XDDRY,XKAPPA,XT)
       go to 100
    else
-      PZRIDDR=0.0
+      PZRIDDR=0.0_MNHREAL64
       go to 101
    end if
 !
@@ -338,12 +341,12 @@ fh     = DSDD(PX2,XDDRY,XKAPPA,XT)
 !
 !*       0.1 declarations of arguments and result
 !
-    REAL, INTENT(IN)  :: XD     ! supersaturation is already in no units
+    REAL(KIND=MNHREAL64), INTENT(IN)  :: XD     ! supersaturation is already in no units
     REAL, INTENT(IN)  :: XDDRY  ! supersaturation is already in no units
     REAL, INTENT(IN)  :: XKAPPA ! supersaturation is already in no units
     REAL, INTENT(IN)  :: XT     ! supersaturation is already in no units
 !
-    REAL              :: DS     ! result
+    REAL(KIND=MNHREAL64)   :: DS     ! result
 !
 !*       0.2 declarations of local variables
 !
@@ -399,24 +402,24 @@ END FUNCTION DSDD
     integer, intent(in) :: M
     integer, intent(in) :: N
     real, intent(in) ::    X(N)
-    real, intent(out) ::    FVEC(M)
+    real(KIND=MNHREAL64), intent(out) ::    FVEC(M)
     integer, intent(inout) :: IFLAG
 !
 !*       0.2 declarations of local variables
 !
     integer I
-    real    C
-    real    ZW
+    real(KIND=MNHREAL64)    C
+    real(KIND=MNHREAL64)    ZW
 !    
     ! print *, "X = ", X
     IF ( ANY(X .LT.0.) .OR. X(1).gt.2*X(2)) THEN
-       FVEC(:) = 999999.
+       FVEC(:) = 999999._MNHREAL64
     ELSE
        C=gamma(X(2))*X(3)**(X(1)/2)/gamma(1+X(1)/2)/gamma(X(2)-X(1)/2)
        DO I=1, M
           ! XS in "no units", ie XS=0.01 for a 1% suersaturation
           !       ZW= C * (XS(I)/100)**X(1) * HYPGEO(X(2),X(1)/2,X(1)/2+1,X(3),XS(I)/100)
-          ZW= C * (XS(I))**X(1) * HYPGEO(X(2),X(1)/2,X(1)/2+1,X(3),XS(I))
+          ZW= REAL(C * (XS(I))**X(1) * HYPGEO(X(2),X(1)/2,X(1)/2+1,X(3),XS(I)),MNHREAL64)
 !!$       IF (X(3)*(XS(I)/100)**2 .LT. 0.98) THEN
 !!$          CALL HYPSER(X(2),X(1)/2,X(1)/2+1,-X(3)*(XS(I)/100)**2,ZW2)
 !!$          print *, "args= ", X(2), X(1)/2, X(1)/2+1, -X(3)*(XS(I)/100)**2, " hypser = ", ZW2
@@ -427,7 +430,7 @@ END FUNCTION DSDD
           IF ( ZW.GT.0. .AND. XNCCN(I).GT.0.) THEN
              FVEC(I) = LOG(ZW) - LOG(XNCCN(I))
           ELSE
-             FVEC(I) = 0.
+             FVEC(I) = 0._MNHREAL64
           END IF
           !FVEC(I) = LOG(MAX(ZW,1.E-24)) - LOG(MAX(XNCCN(I),1.E-24))
           !FVEC(I) = ZW - XNCCN(I)
