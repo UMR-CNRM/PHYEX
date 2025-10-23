@@ -66,11 +66,12 @@ END MODULE MODI_ICE_ADJUST_BIS
 !          ------------
 !
 USE MODD_CST,   ONLY: XCPD, XRD, XP00, CST
+USE MODD_CONF_n, ONLY: NRRL, NRRI
 USE MODD_NEB_n, ONLY: NEBN
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+USE MODE_COMPUTE_FUNCTION_THERMO
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 !
-USE MODI_COMPUTE_FUNCTION_THERMO
 USE MODI_THLRT_FROM_THRVRCRI
 !
 USE MODE_ll
@@ -88,11 +89,11 @@ REAL, DIMENSION(:,:,:,:),INTENT(INOUT)  :: PR    ! Total mixing ratios to transf
 !
 !       0.2  declaration of local variables
 REAL, DIMENSION(SIZE(PTH,1),SIZE(PTH,2),SIZE(PTH,3)) :: ZTHL, ZRW, ZRV, ZRC, &
-                                                        ZRI, ZWORK
+                                                        ZRI, ZWORK, ZCP
 REAL, DIMENSION(SIZE(PTH,1),SIZE(PTH,2),SIZE(PTH,3)) :: ZFRAC_ICE, ZRSATW, ZRSATI
 REAL, DIMENSION(SIZE(PTH,1),SIZE(PTH,2),SIZE(PTH,3)) :: ZT, ZEXN, ZLVOCPEXN,ZLSOCPEXN
 REAL, DIMENSION(SIZE(PTH,1),SIZE(PTH,2), 16) :: ZBUF
-INTEGER :: IRR, JK
+INTEGER :: IRR, JK, JRR
 CHARACTER(LEN=1) :: YFRAC_ICE
 !
 INTEGER :: IINFO_ll
@@ -121,17 +122,29 @@ ZFRAC_ICE(:,:,:) = 0.
 !*      2 Computation
 !         -----------
 !
+CALL FILL_DIMPHYEX(YLDIMPHYEX, SIZE(PTH,1), SIZE(PTH,2), SIZE(PTH,3), .TRUE.)
 ZEXN(:,:,:)=(PP(:,:,:)/XP00)**(XRD/XCPD)
 !
-CALL COMPUTE_FUNCTION_THERMO( IRR,                                &
-                              PTH, PR, ZEXN, PP,                  &
-                              ZT,ZLVOCPEXN,ZLSOCPEXN              )
+ZCP(:,:,:)=CST%XCPD
+!
+IF (IRR > 0) ZCP(:,:,:) = ZCP(:,:,:) + CST%XCPV * PR(:,:,:,1)
+DO JRR = 2,1+NRRL                          ! loop on the liquid components
+  ZCP(:,:,:)  = ZCP(:,:,:) + CST%XCL * PR(:,:,:,JRR)
+END DO
+!
+DO JRR = 2+NRRL,1+NRRL+NRRI                ! loop on the solid components   
+  ZCP(:,:,:)  = ZCP(:,:,:)  + CST%XCI * PR(:,:,:,JRR)
+END DO
 
+CALL COMPUTE_FUNCTION_THERMO(YLDIMPHYEX,CST,CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
+                                 ZLVOCPEXN,ZWORK,ZWORK,PR,PP,IRR) !ZWORK(out) is not used hereafter
+
+CALL COMPUTE_FUNCTION_THERMO(YLDIMPHYEX,CST,CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
+                                 ZLSOCPEXN,ZWORK,ZWORK,PR,PP,IRR) !ZWORK(out) is not used hereafter
 !
 CALL THLRT_FROM_THRVRCRI( IRR, PTH, PR, ZLVOCPEXN, ZLSOCPEXN,&
                           ZTHL, ZRW                          )
 !
-CALL FILL_DIMPHYEX(YLDIMPHYEX, SIZE(PTH,1), SIZE(PTH,2), SIZE(PTH,3), .TRUE.)
 DO JK=1, SIZE(PTH,3)
   CALL TH_R_FROM_THL_RT(YLDIMPHYEX, CST, NEBN, YFRAC_ICE,ZFRAC_ICE(:,:,JK),PP(:,:,JK), &
                         ZTHL(:,:,JK), ZRW(:,:,JK), PTH(:,:,JK),  &
