@@ -122,11 +122,11 @@ IF (ASSOCIATED(XRTMIN)) RETURN    ! In case of nesting microphysics, constants o
 CALL PARAM_LIMA_ALLOCATE('XRTMIN', 7)
 XRTMIN(1) = 1.0E-10   ! rv
 XRTMIN(2) = 1.0E-10   ! rc
-XRTMIN(3) = 1.0E-10   ! rr
+XRTMIN(3) = 1.0E-8   ! rr
 XRTMIN(4) = 1.0E-10   ! ri
-XRTMIN(5) = 1.0E-10   ! rs
-XRTMIN(6) = 1.0E-10   ! rg
-XRTMIN(7) = 1.0E-10   ! rh
+XRTMIN(5) = 1.0E-8   ! rs
+XRTMIN(6) = 1.0E-8   ! rg
+XRTMIN(7) = 1.0E-8   ! rh
 CALL PARAM_LIMA_ALLOCATE('XCTMIN', 7)
 XCTMIN(1) = 1.0       ! Not used
 XCTMIN(2) = 1.0E-3    ! Nc
