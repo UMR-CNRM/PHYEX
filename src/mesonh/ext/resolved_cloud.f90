@@ -586,17 +586,14 @@ IF (HCLOUD == 'LIMA' .AND. ((LORILAM).OR.(LDUST).OR.(LSALT))) THEN
                 PZZ(IIB:IIE,IJB:IJE,IKB:IKE))
 
 ! LIMA : variable instant t --> tendance s
-  PSVS(:,:,:,NSV_LIMA_CCN_FREE)   = ZSVT(:,:,:,NSV_LIMA_CCN_FREE) * &
-                                    PRHODJ(:,:,:) / PTSTEP
-  PSVS(:,:,:,NSV_LIMA_CCN_FREE+1) = ZSVT(:,:,:,NSV_LIMA_CCN_FREE+1) * &
-                                    PRHODJ(:,:,:) / PTSTEP
-  PSVS(:,:,:,NSV_LIMA_CCN_FREE+2) = ZSVT(:,:,:,NSV_LIMA_CCN_FREE+2) * &
-                                    PRHODJ(:,:,:) / PTSTEP
-
-  PSVS(:,:,:,NSV_LIMA_IFN_FREE)   = ZSVT(:,:,:,NSV_LIMA_IFN_FREE) * &
-                                    PRHODJ(:,:,:) / PTSTEP
-  PSVS(:,:,:,NSV_LIMA_IFN_FREE+1) = ZSVT(:,:,:,NSV_LIMA_IFN_FREE+1) * &
-                                    PRHODJ(:,:,:) / PTSTEP
+  DO JSV = 1, NMOD_CCN
+    PSVS(:,:,:,NSV_LIMA_CCN_FREE+JSV-1) = ZSVT(:,:,:,NSV_LIMA_CCN_FREE+JSV-1) * &
+                                          PRHODJ(:,:,:) / PTSTEP
+  END DO
+  DO JSV = 1, NMOD_IFN
+    PSVS(:,:,:,NSV_LIMA_IFN_FREE+JSV-1) = ZSVT(:,:,:,NSV_LIMA_IFN_FREE+JSV-1) * &
+                                          PRHODJ(:,:,:) / PTSTEP
+  END DO
   !
   DEALLOCATE(ZSVT)
 END IF
@@ -1592,7 +1589,6 @@ IF (HELEC /= 'NONE') THEN
     PSVS(:,:,:,JSV) = PSVS(:,:,:,JSV) * PRHODJ(:,:,:)
   END DO
 !
-!++cb-- ce qui suit n'est plus present en version standard en 5-6 : pourquoi ?
 ! Note that the LiNOx Conc. (in mol/mol) is PSVS (:,::,NSV_LNOXBEG)
 ! but there is no need to *PRHODJ(:,:,:) as it is done implicitly
 ! during unit conversion in flash_geom.

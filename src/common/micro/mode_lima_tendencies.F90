@@ -10,34 +10,34 @@ CONTAINS
   SUBROUTINE LIMA_TENDENCIES (PTSTEP, LDCOMPUTE,                                                   &
                               PEXNREF, PRHODREF, PPABST, PTHT,                                     &
                               PRVT, PRCT, PRRT, PRIT, PRST, PRGT, PRHT,                            &
-                              PCCT, PCRT, PCIT, PCST, PCGT, PCHT, PCIT_SHAPE,                      & !++cb--
-                              P_TH_HONC, P_RC_HONC, P_CC_HONC, P_SHCI_HONC,                        & !++cb--
+                              PCCT, PCRT, PCIT, PCST, PCGT, PCHT, PCIT_SHAPE,                      &
+                              P_TH_HONC, P_RC_HONC, P_CC_HONC, P_SHCI_HONC,                        &
                               P_CC_SELF,                                                           &
                               P_RC_AUTO, P_CC_AUTO, P_CR_AUTO,                                     &
                               P_RC_ACCR, P_CC_ACCR,                                                &
                               P_CR_SCBU,                                                           &
                               P_TH_EVAP, P_RR_EVAP, P_CR_EVAP,                                     &
-                              P_RI_CNVI, P_CI_CNVI, P_SHCI_CNVI,                                   & !++cb--
+                              P_RI_CNVI, P_CI_CNVI, P_SHCI_CNVI,                                   &
                               P_TH_DEPS, P_RS_DEPS,                                                &
-                              P_TH_DEPI, P_RI_DEPI, P_SHCI_HACH,                                   & !++cb--
-                              P_RI_CNVS, P_CI_CNVS, P_SHCI_CNVS,                                   & !++cb--
-                              P_CS_SSC, P_CI_ISC, P_SHCI_ISC, P_SHRI_ISCS, P_SHCI_ISCS,            & !++mt--
-                              P_RI_AGGS, P_CI_AGGS, P_SHCI_AGGS,                                   & !++cb--
+                              P_TH_DEPI, P_RI_DEPI, P_SHCI_HACH,                                   &
+                              P_RI_CNVS, P_CI_CNVS, P_SHCI_CNVS,                                   &
+                              P_CS_SSC, P_CI_ISC, P_SHCI_ISC, P_SHRI_ISCS, P_SHCI_ISCS,            &
+                              P_RI_AGGS, P_CI_AGGS, P_SHCI_AGGS,                                   &
                               P_TH_DEPG, P_RG_DEPG,                                                &
                               P_TH_BERFI, P_RC_BERFI,                                              &
                               P_TH_RIM, P_CC_RIM, P_CS_RIM, P_RC_RIMSS, P_RC_RIMSG, P_RS_RIMCG,    &
-                              P_RI_HMS, P_CI_HMS, P_RS_HMS, P_SHCI_HMS,                            & !++cb--
+                              P_RI_HMS, P_CI_HMS, P_RS_HMS, P_SHCI_HMS,                            &
                               P_TH_ACC, P_CR_ACC, P_CS_ACC, P_RR_ACCSS, P_RR_ACCSG, P_RS_ACCRG,    &
                               P_RS_CMEL, P_CS_CMEL,                                                &
-                              P_TH_CFRZ, P_RR_CFRZ, P_CR_CFRZ, P_RI_CFRZ, P_CI_CFRZ, P_SHCI_CFRZ,  & !++cb--
-                              P_RI_CIBU, P_CI_CIBU, P_SHCI_CIBU,                                   & !++cb--
-                              P_RI_RDSF, P_CI_RDSF, P_SHCI_RDSF,                                   & !++cb--
+                              P_TH_CFRZ, P_RR_CFRZ, P_CR_CFRZ, P_RI_CFRZ, P_CI_CFRZ, P_SHCI_CFRZ,  &
+                              P_RI_CIBU, P_CI_CIBU, P_SHCI_CIBU,                                   &
+                              P_RI_RDSF, P_CI_RDSF, P_SHCI_RDSF,                                   &
                               P_TH_WETG, P_RC_WETG, P_CC_WETG, P_RR_WETG, P_CR_WETG,               &
                               P_RI_WETG, P_CI_WETG, P_RS_WETG, P_CS_WETG, P_RG_WETG, P_CG_WETG,    &
-                              P_RH_WETG, P_SHCI_WETG,                                              & !++cb--
+                              P_RH_WETG, P_SHCI_WETG,                                              &
                               P_TH_DRYG, P_RC_DRYG, P_CC_DRYG, P_RR_DRYG, P_CR_DRYG,               &
-                              P_RI_DRYG, P_CI_DRYG, P_RS_DRYG, P_CS_DRYG, P_RG_DRYG, P_SHCI_DRYG,  & !++cb--
-                              P_RI_HMG, P_CI_HMG, P_RG_HMG, P_SHCI_HMG,                            & !++cb--
+                              P_RI_DRYG, P_CI_DRYG, P_RS_DRYG, P_CS_DRYG, P_RG_DRYG, P_SHCI_DRYG,  &
+                              P_RI_HMG, P_CI_HMG, P_RG_HMG, P_SHCI_HMG,                            &
                               P_TH_GMLT, P_RR_GMLT, P_CR_GMLT, P_CG_GMLT,                          &
                               P_TH_DEPH, P_RH_DEPH,                                                &
                               P_TH_WETH, P_RC_WETH, P_CC_WETH, P_RR_WETH, P_CR_WETH,               &
@@ -45,7 +45,7 @@ CONTAINS
                               P_RG_COHG, P_CG_COHG,                                                &
                               P_TH_HMLT, P_RR_HMLT, P_CR_HMLT, P_CH_HMLT,                          &
                               PA_TH, PA_RV, PA_RC, PA_CC, PA_RR, PA_CR,                            &
-                              PA_RI, PA_CI, PA_CI_SHAPE, PA_RS, PA_CS, PA_RG, PA_CG, PA_RH, PA_CH, & !++cb--
+                              PA_RI, PA_CI, PA_CI_SHAPE, PA_RS, PA_CS, PA_RG, PA_CG, PA_RH, PA_CH, &
                               PEVAP3D,                                                             &
                               PCF1D, PIF1D, PPF1D,                                                 &
                               PLATHAM_IAGGS                                                        )
@@ -81,8 +81,8 @@ USE MODD_CST,              ONLY : XP00, XRD, XRV, XMD, XMV, XCPD, XCPV, XCL, XCI
                                   XALPW, XBETAW, XGAMW, XALPI, XBETAI, XGAMI
 USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN,  LCIBU, LRDSF, LKHKO, LSNOW_T, &
                                   NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H, &
-                                  LCRYSTAL_SHAPE, NNB_CRYSTAL_SHAPE,              & !++cb--
-                                  LICE_ISC                                          ! ++mt--
+                                  LCRYSTAL_SHAPE, NNB_CRYSTAL_SHAPE,              &
+                                  LICE_ISC
 USE MODD_PARAM_LIMA_WARM,  ONLY : XLBC, XLBEXC, XLBR, XLBEXR, XCCR, XCXR
 USE MODD_PARAM_LIMA_MIXED, ONLY : XLBG, XLBEXG, XCCG, XCXG, XLBH, XLBEXH, XCCH, XCXH
 USE MODD_PARAM_LIMA_COLD,  ONLY : XSCFAC, XLBI, XLBEXI, XLBS, XLBEXS, XLBDAS_MAX, XTRANS_MP_GAMMAS,  &
@@ -96,7 +96,7 @@ USE MODE_LIMA_DROPS_SELF_COLLECTION, ONLY: LIMA_DROPS_SELF_COLLECTION
 USE MODE_LIMA_RAIN_EVAPORATION, ONLY: LIMA_RAIN_EVAPORATION
 USE MODE_LIMA_ICE_DEPOSITION, ONLY: LIMA_ICE_DEPOSITION
 USE MODE_LIMA_SNOW_DEPOSITION, ONLY: LIMA_SNOW_DEPOSITION
-USE MODE_LIMA_ICE_SELF_COLLECTION, ONLY: LIMA_ICE_SELF_COLLECTION ! ++mt--
+USE MODE_LIMA_ICE_SELF_COLLECTION, ONLY: LIMA_ICE_SELF_COLLECTION
 USE MODE_LIMA_SNOW_SELF_COLLECTION, ONLY: LIMA_SNOW_SELF_COLLECTION
 USE MODE_LIMA_ICE_AGGREGATION_SNOW, ONLY: LIMA_ICE_AGGREGATION_SNOW
 USE MODE_LIMA_GRAUPEL_DEPOSITION, ONLY: LIMA_GRAUPEL_DEPOSITION
@@ -112,7 +112,7 @@ USE MODE_LIMA_HAIL, ONLY: LIMA_HAIL
 !
 USE MODE_LIMA_BERGERON, ONLY: LIMA_BERGERON
 !
-USE MODE_LIMA_SHAPE_COMPUTE_LBDA, ONLY: LIMA_SHAPE_COMPUTE_LBDA !++cb--
+USE MODE_LIMA_SHAPE_COMPUTE_LBDA, ONLY: LIMA_SHAPE_COMPUTE_LBDA
 !
 IMPLICIT NONE
 !
@@ -179,12 +179,10 @@ REAL, DIMENSION(:,:), INTENT(INOUT) :: P_SHCI_CNVS
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_SSC   ! self collection of snow (SSC) : Ns
 !
-! ++mt++
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_ISC     ! ice self collection 
 REAL, DIMENSION(:,:), INTENT(INOUT) :: P_SHCI_ISC
 REAL, DIMENSION(:,:), INTENT(INOUT) :: P_SHCI_ISCS   ! transfert to snow
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_SHRI_ISCS  
-! --mt--
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_AGGS
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_AGGS  ! aggregation of ice on snow (AGGS) : ri, Ni, rs=-ri
 REAL, DIMENSION(:,:), INTENT(INOUT) :: P_SHCI_AGGS
@@ -362,13 +360,11 @@ REAL,    DIMENSION(SIZE(PRCT))  :: ZRST
 REAL,    DIMENSION(SIZE(PRCT))  :: ZRGT
 REAL,    DIMENSION(SIZE(PRCT))  :: ZRHT
 !
-!++cb++
 ! variables for ice crystal shapes
 INTEGER :: ISIZE ! size of 1D array
 INTEGER :: JSH   ! loop index for ice crystal shapes
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZRIT_SHAPE
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZLBDAI_SHAPE
-!--cb--
 !
 !-------------------------------------------------------------------------------
 ! Pre-compute quantities
@@ -485,7 +481,6 @@ WHERE (ZRIT(:)>XRTMIN(4) .AND. PCIT(:)>XCTMIN(4) .AND. LDCOMPUTE(:))
    ZLBDI(:) = ( XLBI*PCIT(:) / ZRIT(:) )**XLBEXI
 END WHERE
 !
-!++cb++ 
 IF (LCRYSTAL_SHAPE) THEN
   ISIZE = SIZE(PCIT)
   ALLOCATE(ZLBDAI_SHAPE(ISIZE,NNB_CRYSTAL_SHAPE))
@@ -496,7 +491,6 @@ IF (LCRYSTAL_SHAPE) THEN
 ELSE
   ALLOCATE(ZLBDAI_SHAPE(0,0))
 END IF
-!--cb--
 !
 ! Snow : additional option for LSNOW_T if NMOM_S=1
 ZLBDS(:)  = 1.E10
@@ -562,8 +556,6 @@ IF (NMOM_C.GE.1 .AND. NMOM_I.GE.1) THEN
    PA_RC(:) = PA_RC(:) + P_RC_HONC(:)
    IF (NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_HONC(:)
    PA_RI(:) = PA_RI(:) - P_RC_HONC(:)
-!++cb++ 31/01/24
-!   IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:) - P_CC_HONC(:)
    IF (NMOM_I.GE.2) THEN
      IF (.NOT. LCRYSTAL_SHAPE) THEN
        PA_CI(:) = PA_CI(:) - P_CC_HONC(:)
@@ -572,16 +564,10 @@ IF (NMOM_C.GE.1 .AND. NMOM_I.GE.1) THEN
 ! ne faudrait-il pas plutot mettre une variable droxtal ? (pour faibles sursaturation par rapport a la glace)
 ! --> tester les sursaturations pour voir si ca vaut le coup d'avoir les 2
 ! Pour le moment, on affecte 0.2 * P_CC_HONC aux colonnes et 0.8 * P_CC_HONC aux polycristaux
-!++cb++ 15/04/24 formation de droxtal par HONC
-!       P_SHCI_HONC(:,2) =  -0.2 * P_CC_HONC(:)
-!       P_SHCI_HONC(:,3) =  -0.8 * P_CC_HONC(:)
-!       PA_CI_SHAPE(:,2) = PA_CI_SHAPE(:,2) + P_SHCI_HONC(:,2) !- 0.2 * P_CC_HONC(:)
-!       PA_CI_SHAPE(:,3) = PA_CI_SHAPE(:,3) + P_SHCI_HONC(:,3) !- 0.8 * P_CC_HONC(:)
        P_SHCI_HONC(:,4) =  -P_CC_HONC(:)
        PA_CI_SHAPE(:,4) = PA_CI_SHAPE(:,4) + P_SHCI_HONC(:,4)
      END IF
    END IF
-!--cb--
    P_TH_ACC(:) = - P_RC_HONC(:) * (ZLSFACT(:)-ZLVFACT(:))
    PA_TH(:) = PA_TH(:) + P_TH_HONC(:)
 END IF
@@ -663,9 +649,7 @@ IF (NMOM_I.GE.1) THEN
                              P_TH_DEPI, P_RI_DEPI, P_SHCI_HACH,               &
                              P_RI_CNVS, P_CI_CNVS, P_SHCI_CNVS                )
    !
-!++cb++ 06/03/24
    IF (LCRYSTAL_SHAPE) P_CI_CNVS(:) = SUM(P_SHCI_CNVS,DIM=2)
-!--cb--
    !
    P_RI_DEPI(:) = P_RI_DEPI(:) * ZIF1D(:)
    P_RI_CNVS(:) = P_RI_CNVS(:) * ZIF1D(:)
@@ -703,7 +687,6 @@ IF (NMOM_S.GE.1) THEN
    !
    PA_RI(:) = PA_RI(:) + P_RI_CNVI(:)
    IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_CNVI(:)
-!++cb++ 31/01/24
 ! distribution sur toutes les particules en proportion (v0)
 ! mais est-ce correct ? a priori, lorsque la neige se sublime elle ne reprend pas une forme bien definie
 ! plutot mettre directement dans polycristaux ? droxtal ?
@@ -711,11 +694,10 @@ IF (NMOM_S.GE.1) THEN
       DO JSH = 1, NNB_CRYSTAL_SHAPE
         WHERE (PCIT(:) > 0.)
           P_SHCI_CNVI(:,JSH) = P_CI_CNVI(:) * MIN(PCIT_SHAPE(:,JSH)/PCIT(:), 1.0)
-          PA_CI_SHAPE(:,JSH) = PA_CI_SHAPE(:,JSH) + P_SHCI_CNVI(:,JSH) !P_CI_CNVI(:) * MIN(PCIT_SHAPE(:,JSH)/PCIT(:), 1.0)
+          PA_CI_SHAPE(:,JSH) = PA_CI_SHAPE(:,JSH) + P_SHCI_CNVI(:,JSH)
         END WHERE
       END DO
    END IF
-!--cb--
    PA_RS(:) = PA_RS(:) - P_RI_CNVI(:) + P_RS_DEPS(:) 
    IF (NMOM_S.GE.2) PA_CS(:) = PA_CS(:) - P_CI_CNVI(:)
    PA_TH(:) = PA_TH(:)                + P_TH_DEPS(:)
@@ -723,7 +705,6 @@ IF (NMOM_S.GE.1) THEN
 
 END IF
 !
-!++mt++ 26/03/2024
 IF(LICE_ISC .AND. NMOM_I.GE.2) THEN
   CALL LIMA_ICE_SELF_COLLECTION (LDCOMPUTE,                                    & 
                                  PRHODREF, ZT,                                 &
@@ -748,7 +729,6 @@ IF(LICE_ISC .AND. NMOM_I.GE.2) THEN
     PA_RI(:) = PA_RI(:) + P_SHRI_ISCS(:)
   END IF
 END IF
-!--mt--
 !
 IF (NMOM_S.GE.2) THEN 
    CALL LIMA_SNOW_SELF_COLLECTION (LDCOMPUTE,           & ! depends on PF
@@ -773,7 +753,7 @@ IF (NMOM_I.GE.1 .AND. NMOM_S.GE.1) THEN
                                    ZRIT/ZIF1D, ZRST/ZPF1D, PCIT/ZIF1D, PCST/ZPF1D, ZLBDI, ZLBDS, &
                                    PLATHAM_IAGGS,                                                &
                                    P_RI_AGGS, P_CI_AGGS,                                         &
-                                   PCIT_SHAPE, ZRIT_SHAPE, ZLBDAI_SHAPE, P_SHCI_AGGS             ) !++cb-- 31/01/24
+                                   PCIT_SHAPE, ZRIT_SHAPE, ZLBDAI_SHAPE, P_SHCI_AGGS             )
    !
    P_CI_AGGS(:) = P_CI_AGGS(:) * ZIF1D(:)
    P_RI_AGGS(:) = P_RI_AGGS(:) * ZIF1D(:)
@@ -782,14 +762,12 @@ IF (NMOM_I.GE.1 .AND. NMOM_S.GE.1) THEN
    IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_AGGS(:)
    PA_RS(:) = PA_RS(:) - P_RI_AGGS(:)
    !
-!++cb++ 31/01/24
    IF (LCRYSTAL_SHAPE) THEN
      DO JSH = 1, NNB_CRYSTAL_SHAPE
        P_SHCI_AGGS(:,JSH) = P_SHCI_AGGS(:,JSH) * ZIF1D(:)
        PA_CI_SHAPE(:,JSH) = PA_CI_SHAPE(:,JSH) + P_SHCI_AGGS(:,JSH)
      END DO
    END IF
-!--cb--
 END IF
 !
 IF (NMOM_G.GE.1) THEN
@@ -841,19 +819,16 @@ IF (NMOM_C.GE.1 .AND. NMOM_S.GE.1) THEN
    IF (NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_RIM(:) 
    PA_RI(:) = PA_RI(:)               + P_RI_HMS(:)
    IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:)               + P_CI_HMS(:)
-!   PA_RS(:) = PA_RS(:) + P_RS_RIM(:) + P_RS_HMS(:)
    PA_RS(:) = PA_RS(:) - P_RC_RIMSS(:) - P_RS_RIMCG(:) + P_RS_HMS(:) ! RCRIMSS < 0 (gain for rs), RSRIMCG > 0 (loss for rs)
    IF (NMOM_S.GE.2) PA_CS(:) = PA_CS(:) + P_CS_RIM(:)
    PA_RG(:) = PA_RG(:) - P_RC_RIMSG(:) + P_RS_RIMCG(:) ! RCRIMSG < 0 (gain for rg), RSRIMCG > 0 (gain for rg)
    IF (NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CS_RIM(:)
    PA_TH(:) = PA_TH(:) + P_TH_RIM(:)
-!++cb++ 31/01/24
 ! ice crystals produced during HM are assumed to be columns (jsh=2) due to the temperature regime
    IF (LCRYSTAL_SHAPE) THEN
      P_SHCI_HMS(:,2)  = P_CI_HMS(:)
      PA_CI_SHAPE(:,2) = PA_CI_SHAPE(:,2) + P_SHCI_HMS(:,2) ! P_CI_HMS(:)
    END IF
-!--cb--
 END IF
 !
 IF (NMOM_R.GE.1 .AND. NMOM_S.GE.1) THEN
@@ -914,16 +889,14 @@ IF (NMOM_R.GE.1) THEN
    IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_CFRZ(:)
    PA_RG(:) = PA_RG(:) - P_RR_CFRZ(:) - P_RI_CFRZ(:)
    IF (NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CR_CFRZ(:)
-!++cb++ 31/01/24
    IF (LCRYSTAL_SHAPE) THEN
      DO JSH = 1, NNB_CRYSTAL_SHAPE
        WHERE (P_CI_CFRZ(:) .LT. 0. .AND. PCIT(:) .GT. 0.)
          P_SHCI_CFRZ(:,JSH) = P_CI_CFRZ(:) * MIN(PCIT_SHAPE(:,JSH)/PCIT(:), 1.0)
-         PA_CI_SHAPE(:,JSH) = PA_CI_SHAPE(:,JSH) + P_SHCI_CFRZ(:,JSH)! P_CI_CFRZ(:) * MIN(PCIT_SHAPE(:,JSH)/PCIT(:), 1.0)
+         PA_CI_SHAPE(:,JSH) = PA_CI_SHAPE(:,JSH) + P_SHCI_CFRZ(:,JSH)
        END WHERE
      END DO
    END IF
-!--cb--
 END IF
 !
 IF (NMOM_S.GE.1 .AND. NMOM_G.GE.1 .AND. LCIBU) THEN
@@ -943,10 +916,8 @@ IF (NMOM_S.GE.1 .AND. NMOM_G.GE.1 .AND. LCIBU) THEN
    IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_CIBU(:)
    PA_RS(:) = PA_RS(:) - P_RI_CIBU(:)
    !
-!++cb++ 31/01/24
    IF (LCRYSTAL_SHAPE) THEN
      ! formation de cristaux de differentes formes en fonction de la gamme de temperature
-     !++cb++ 18/04/24 formation de cristaux primaires uniquement via SIP
       WHERE ((((ZT(:)-XTT) .GT. -3.0)  .AND. ((ZT(:)-XTT) .LT. 0.0))   .OR. &
             (((ZT(:)-XTT) .LE. -9.0)  .AND. ((ZT(:)-XTT) .GT. -40.0)) .OR. &
             (((ZT(:)-XTT) .LE. -40.0) .AND.  (ZSSI(:) .LT. 0.05)))
@@ -959,7 +930,6 @@ IF (NMOM_S.GE.1 .AND. NMOM_G.GE.1 .AND. LCIBU) THEN
         PA_CI_SHAPE(:,2) = PA_CI_SHAPE(:,2) + P_SHCI_CIBU(:,2)
       END WHERE
    END IF
-!--cb--
 END IF
 !
 IF (NMOM_R.GE.1 .AND. NMOM_I.GE.1 .AND. LRDSF) THEN
@@ -979,10 +949,8 @@ IF (NMOM_R.GE.1 .AND. NMOM_I.GE.1 .AND. LRDSF) THEN
    IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_RDSF(:)
    PA_RG(:) = PA_RG(:) - P_RI_RDSF(:)
 !
-!++cb++ 31/01/24
    IF (LCRYSTAL_SHAPE) THEN
      ! formation de cristaux de differentes formes en fonction de la gamme de temperature
-     !++cb++ 18/04/24 formation de cristaux primaires uniquement via SIP
      WHERE ((((ZT(:)-XTT) .GT. -3.0)  .AND. ((ZT(:)-XTT) .LT. 0.0))   .OR. &
             (((ZT(:)-XTT) .LE. -9.0)  .AND. ((ZT(:)-XTT) .GT. -40.0)) .OR. &
             (((ZT(:)-XTT) .LE. -40.0) .AND.  (ZSSI(:) .LT. 0.05)))
@@ -995,7 +963,6 @@ IF (NMOM_R.GE.1 .AND. NMOM_I.GE.1 .AND. LRDSF) THEN
         PA_CI_SHAPE(:,2) = PA_CI_SHAPE(:,2) + P_SHCI_RDSF(:,2)
       END WHERE
    END IF
-!--cb--
 END IF
 !
 IF (NMOM_G.GE.1) THEN
@@ -1021,7 +988,6 @@ IF (NMOM_G.GE.1) THEN
                       PA_TH, PA_RC, PA_CC, PA_RR, PA_CR,                     &
                       PA_RI, PA_CI, PA_RS, PA_CS, PA_RG, PA_CG, PA_RH, PA_CH )
    !
-!++cb++ 31/01/24
    IF (LCRYSTAL_SHAPE) THEN
      ! dry and wet growth of graupel
      DO JSH = 1, NNB_CRYSTAL_SHAPE
@@ -1034,9 +1000,8 @@ IF (NMOM_G.GE.1) THEN
      ! Hallett-Mossop
      ! ice crystals produced during HM are assumed to be columns (jsh=2) due to the temperature regime
      P_SHCI_HMG(:,2)  = P_CI_HMG(:)
-     PA_CI_SHAPE(:,2) = PA_CI_SHAPE(:,2) + P_SHCI_HMG(:,2) !P_CI_HMG(:)
+     PA_CI_SHAPE(:,2) = PA_CI_SHAPE(:,2) + P_SHCI_HMG(:,2)
    END IF
-!--cb--
 END IF
 !
 IF (NMOM_H.GE.1) THEN
@@ -1049,7 +1014,6 @@ IF (NMOM_H.GE.1) THEN
    PA_RV(:) = PA_RV(:) - P_RH_DEPH(:)
    PA_RH(:) = PA_RH(:) + P_RH_DEPH(:)
    PA_TH(:) = PA_TH(:) + P_TH_DEPH(:)
-!     CALL LIMA_HAIL_GROWTH   LIMA_HAIL_CONVERSION   LIMA_HAIL_MELTING
    CALL LIMA_HAIL (PTSTEP, LDCOMPUTE,                                     & ! depends on PF, CF, IF
                    PRHODREF, PPABST, ZT, ZKA, ZDV, ZCJ,                   &
                    PRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, ZRHT,              &
@@ -1064,10 +1028,8 @@ IF (NMOM_H.GE.1) THEN
                    PA_RI, PA_CI, PA_RS, PA_CS, PA_RG, PA_CG, PA_RH, PA_CH )
 END IF
 !
-!++cb++
 IF (ALLOCATED(ZRIT_SHAPE))   DEALLOCATE(ZRIT_SHAPE)
 IF (ALLOCATED(ZLBDAI_SHAPE)) DEALLOCATE(ZLBDAI_SHAPE)
-!--cb--
 !  
 END SUBROUTINE LIMA_TENDENCIES
 END MODULE MODE_LIMA_TENDENCIES
