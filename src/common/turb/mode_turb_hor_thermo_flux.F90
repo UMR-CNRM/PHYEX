@@ -138,7 +138,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS         ! var. at
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZFLX,ZFLXC ! work arrays
 !
-INTEGER             :: JI,JJ,JK
 INTEGER             :: IKB,IKE,IKU, IKT, IIT, IJT
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain  

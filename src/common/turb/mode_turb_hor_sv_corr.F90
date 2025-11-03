@@ -113,7 +113,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM         ! scalar 
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT)       &
                                      :: ZFLX, ZA
 !
-INTEGER             :: JSV, JI, JJ, JK          ! loop counter
+INTEGER             :: JSV          ! loop counter
 INTEGER             :: IKU, IIT, IJT, IKT
 !
 REAL :: ZTIME1, ZTIME2

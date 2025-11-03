@@ -92,7 +92,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(OUT)   ::  PTRH     ! horizontal tr
 !
 !*       0.2  declaration of local variables
 !
-INTEGER :: IKB, IKU, IIT, IJT, IKT, JI, JJ, JK
+INTEGER :: IKB, IKU, IIT, IJT, IKT, JI, JJ
 !
 REAL, DIMENSION(D%NIT,D%NJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF 
                                     ! coefficients for the uncentred gradient 
