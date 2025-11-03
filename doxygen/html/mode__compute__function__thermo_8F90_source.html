@@ -180,28 +180,29 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    <span class="comment">!</span></div>
 <div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="comment">!$mnh_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )</span></div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    patheta(iijb:iije, 1:ikt) = pamoist(iijb:iije, 1:ikt)*pexn(iijb:iije, 1:ikt)*((zrvsat(iijb:iije, 1:ikt) - prt(iijb:iije,  &amp;</div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    &amp; 1:ikt, 1))*plocpexn(iijb:iije, 1:ikt) / (1. + zdrvsatdt(iijb:iije, 1:ikt)*plocpexn(iijb:iije, 1:ikt))*(zrvsat(iijb:iije,  &amp;</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    &amp; 1:ikt)*(1. + zrvsat(iijb:iije, 1:ikt) / zeps)*(-2.*pbeta / pt(iijb:iije, 1:ikt) + pgam) / pt(iijb:iije, 1:ikt)**2 +  &amp;</div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    &amp; zdrvsatdt(iijb:iije, 1:ikt)*(1. + 2.*zrvsat(iijb:iije, 1:ikt) / zeps)*(pbeta / pt(iijb:iije, 1:ikt) - pgam) / &amp;</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    &amp; pt(iijb:iije,1:ikt)) - zdrvsatdt(iijb:iije, 1:ikt))</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="comment">!$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )</span></div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    <span class="comment">!</span></div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    <span class="comment">!*      1.7 Lv/Cph/Exner at t-1</span></div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <span class="comment">!</span></div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="comment">!$acc kernels</span></div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="comment">!$mnh_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )</span></div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    plocpexn(iijb:iije, 1:ikt) = plocpexn(iijb:iije, 1:ikt) / pexn(iijb:iije, 1:ikt)</div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span><span class="comment">!$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )</span></div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    <span class="comment">!</span></div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;TURB:COMPUTE_FUNCTION_THERMO&#39;</span>, 1, zhook_handle2)</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    patheta(iijb:iije, 1:ikt) = pamoist(iijb:iije, 1:ikt)*pexn(iijb:iije, 1:ikt)*((zrvsat(iijb:iije, 1:ikt) &amp;</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    &amp; - prt(iijb:iije, 1:ikt, 1))*plocpexn(iijb:iije, 1:ikt) / (1. + zdrvsatdt(iijb:iije, 1:ikt)*&amp; </div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    &amp; plocpexn(iijb:iije, 1:ikt))*(zrvsat(iijb:iije, 1:ikt)*(1. + zrvsat(iijb:iije, 1:ikt) / zeps)*&amp;</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    &amp; (-2.*pbeta / pt(iijb:iije, 1:ikt) + pgam) / pt(iijb:iije, 1:ikt)**2 +  &amp;</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    &amp; zdrvsatdt(iijb:iije, 1:ikt)*(1. + 2.*zrvsat(iijb:iije, 1:ikt) / zeps)*(pbeta / pt(iijb:iije, 1:ikt) - pgam) / &amp;</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    &amp; pt(iijb:iije,1:ikt)) - zdrvsatdt(iijb:iije, 1:ikt))</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="comment">!$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )</span></div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    <span class="comment">!</span></div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <span class="comment">!*      1.7 Lv/Cph/Exner at t-1</span></div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>    <span class="comment">!</span></div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="comment">!$acc kernels</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span><span class="comment">!$mnh_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )</span></div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    plocpexn(iijb:iije, 1:ikt) = plocpexn(iijb:iije, 1:ikt) / pexn(iijb:iije, 1:ikt)</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="comment">!$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    <span class="comment">!</span></div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;TURB:COMPUTE_FUNCTION_THERMO&#39;</span>, 1, zhook_handle2)</div>
 </div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>  <span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__compute__function__thermo.html#afb336c2e8f301a91838f61431191a8ed">compute_function_thermo</a></div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__compute__function__thermo.html">mode_compute_function_thermo</a></div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>  <span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__compute__function__thermo.html#afb336c2e8f301a91838f61431191a8ed">compute_function_thermo</a></div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__compute__function__thermo.html">mode_compute_function_thermo</a></div>
 <div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span> </div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span> </div>
 <div class="ttc" id="anamespacemodd__cst_html"><div class="ttname"><a href="namespacemodd__cst.html">modd_cst</a></div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00007">modd_cst.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__dimphyex_html"><div class="ttname"><a href="namespacemodd__dimphyex.html">modd_dimphyex</a></div><div class="ttdef"><b>Definition</b> <a href="modd__dimphyexn_8F90_source.html#l00007">modd_dimphyexn.F90:7</a></div></div>
 <div class="ttc" id="anamespacemode__compute__function__thermo_html"><div class="ttname"><a href="namespacemode__compute__function__thermo.html">mode_compute_function_thermo</a></div><div class="ttdef"><b>Definition</b> <a href="mode__compute__function__thermo_8F90_source.html#l00006">mode_compute_function_thermo.F90:6</a></div></div>
