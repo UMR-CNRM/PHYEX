@@ -836,7 +836,7 @@ SELECT CASE (TURBN%CTURBLEN)
   !           -------------------
   !
   CASE ('DELT')
-    CALL DELT(D, TURBN, O2D, .TRUE., GOCEAN, PZZ, PDYY, PDXX, PDIRCOSZW, ZLMW)
+    CALL DELT(D, TURBN, O2D, .TRUE., GOCEAN, PZZ, PDYY, PDXX, PDIRCOSZW, ZLM)
   !
   !*      3.5 Deardorff mixing length
   !           -----------------------
