@@ -265,8 +265,6 @@ USE MODE_COMPUTE_FUNCTION_THERMO_NEW_STAT, ONLY: COMPUTE_FUNCTION_THERMO_NEW_STA
 USE MODE_COMPUTE_FUNCTION_THERMO, ONLY: COMPUTE_FUNCTION_THERMO
 USE MODE_DEAR,                ONLY: DEAR
 USE MODE_DELT,                ONLY: DELT
-USE MODE_EMOIST,              ONLY: EMOIST
-USE MODE_ETHETA,              ONLY: ETHETA
 USE MODE_GRADIENT_U_PHY,      ONLY: GZ_U_UW_PHY
 USE MODE_GRADIENT_V_PHY,      ONLY: GZ_V_VW_PHY
 USE MODE_GRADIENT_W_PHY,      ONLY: GZ_W_M_PHY
@@ -465,10 +463,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::     &
           ZSHEAR, ZDUDZ, ZDVDZ,       &  ! horizontal-wind vertical gradient
           ZLVOCPEXNM,ZLSOCPEXNM,      &  ! Lv/Cp/EXNREF and Ls/Cp/EXNREF at t-1
           ZATHETA_ICE,ZAMOIST_ICE,    &  ! coefficients for s = f (Thetal,Rnp)
-          ZRVSAT, ZDRVSATDT,          &  ! local array for routine compute_function_thermo
           ZWORK1,ZWORK2,              &  ! working array syntax
-          ZCOEF_AMPL,                 &  ! Amplification coefficient of the mixing length
-                                         ! when the instability criterium is verified (routine CLOUD_MODIF_LM)
           ZTEMP_BUD
 !
 !
@@ -494,10 +489,6 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV) :: ZRSVS
 !
 REAL                :: ZEXPL        ! 1-TURBN%XIMPL deg of expl.
 REAL                :: ZRVORD       ! RV/RD
-REAL                :: ZEPS         ! XMV / XMD
-REAL                :: ZPENTE       ! Slope of the amplification straight line (for routine CLOUD_MODIF_LM)
-REAL                :: ZCOEF_AMPL_CEI_NUL! Ordonnate at the origin of the
-                                         ! amplification straight line (for routine CLOUD_MODIF_LM)
 !
 INTEGER             :: IIJB,IIJE,IKB,IKE      ! index value for the
 ! Beginning and the End of the physical domain for the mass points
@@ -527,7 +518,7 @@ INTEGER :: ISV
 !*      1.1 Set the internal domains, ZEXPL
 !
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE,ZHOOK_HANDLE2
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB',0,ZHOOK_HANDLE)
 !
 IF (TURBN%LHARAT .AND. TURBN%CTURBDIM /= '1DIM') THEN
