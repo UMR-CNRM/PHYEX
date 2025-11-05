@@ -136,7 +136,7 @@ CONTAINS
     PCOEF_AMPL_CEI_NUL = 1. - ZPENTE*PCEI_MIN
     !
 !$acc kernels
-!$mnh_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
+!$mnh_expand_array( JIJ=IIJB:IIJE,JK=1:IKT )
     ZCOEF_AMPL(IIJB:IIJE, 1:IKT) = 1.
 !$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
 !$acc end kernels
@@ -147,7 +147,7 @@ CONTAINS
     ! Saturation
     !
 !$acc kernels
-!$mnh_expand_where ( JIJ=IIJB:IIJE,JK=1:IKT )
+!$mnh_expand_where( JIJ=IIJB:IIJE,JK=1:IKT )
     WHERE (PCEI(IIJB:IIJE, 1:IKT) >= PCEI_MAX)
       ZCOEF_AMPL(IIJB:IIJE, 1:IKT) = PCOEF_AMPL_SAT
     END WHERE
@@ -158,7 +158,7 @@ CONTAINS
     ! amplification coefficient ZCOEF_AMPL as a function of CEI
     !
 !$acc kernels
-!$mnh_expand_where ( JIJ=IIJB:IIJE,JK=1:IKT )
+!$mnh_expand_where( JIJ=IIJB:IIJE,JK=1:IKT )
     WHERE (PCEI(IIJB:IIJE, 1:IKT) < PCEI_MAX .and. PCEI(IIJB:IIJE, 1:IKT) > PCEI_MIN)
       ZCOEF_AMPL(IIJB:IIJE, 1:IKT) = ZPENTE*PCEI(IIJB:IIJE, 1:IKT) + PCOEF_AMPL_CEI_NUL
     END WHERE
@@ -171,7 +171,7 @@ CONTAINS
     !
     IF (HTURBLEN_CL == TURBN%CTURBLEN) THEN
 !$acc kernels
-!$mnh_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
+!$mnh_expand_array( JIJ=IIJB:IIJE,JK=1:IKT )
       PLM_CLOUD(:, :) = PLM(:, :)
 !$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
 !$acc end kernels
@@ -182,7 +182,7 @@ CONTAINS
       SELECT CASE (HTURBLEN_CL)
       CASE ('BL89', 'RM17', 'HM21')
 !$acc kernels
-!$mnh_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
+!$mnh_expand_array( JIJ=IIJB:IIJE,JK=1:IKT )
         ZSHEAR(:, :) = 0.
 !$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
 !$acc end kernels
@@ -227,7 +227,7 @@ ENDIF
     ! Amplification of the mixing length when the criteria are verified
     !
 !$acc kernels
-!$mnh_expand_where ( JIJ=IIJB:IIJE,JK=1:IKT )
+!$mnh_expand_where( JIJ=IIJB:IIJE,JK=1:IKT )
     WHERE (ZCOEF_AMPL(IIJB:IIJE, 1:IKT) /= 1.)
       PLM(IIJB:IIJE, 1:IKT) = ZCOEF_AMPL(IIJB:IIJE, 1:IKT)*PLM_CLOUD(IIJB:IIJE, 1:IKT)
     END WHERE
@@ -237,7 +237,7 @@ ENDIF
     ! Cloud mixing length in the clouds at the points which do not verified the CEI
     !
 !$acc kernels
-!$mnh_expand_where ( JIJ=IIJB:IIJE,JK=1:IKT )
+!$mnh_expand_where( JIJ=IIJB:IIJE,JK=1:IKT )
     WHERE (PCEI(IIJB:IIJE, 1:IKT) == -1.)
       PLM(IIJB:IIJE, 1:IKT) = PLM_CLOUD(IIJB:IIJE, 1:IKT)
     END WHERE

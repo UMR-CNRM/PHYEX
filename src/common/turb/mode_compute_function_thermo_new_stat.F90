@@ -62,7 +62,7 @@ SUBROUTINE COMPUTE_FUNCTION_THERMO_NEW_STAT (D, CST, PALP, PBETA, PGAM, PLTT, PC
     !*       1.1 Lv/Cph at  t
     !
 !$acc kernels
-!$mnh_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
+!$mnh_expand_array( JIJ=IIJB:IIJE,JK=1:IKT )
     PLOCPEXN(IIJB:IIJE, 1:IKT) = (PLTT + (CST%XCPV - PC)*(PT(IIJB:IIJE, 1:IKT) - CST%XTT)) / PCP(IIJB:IIJE, 1:IKT)
     !
     !*      1.2 Saturation vapor pressure at t

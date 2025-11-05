@@ -64,13 +64,13 @@ SUBROUTINE COMPUTE_FUNCTION_THERMO (D, CST, PALP, PBETA, PGAM, PLTT, PC, PT, PEX
     !
     ! present(ZRVSAT,ZDRVSATDT) ! present(PLOCPEXN) ! present(ZDRVSATDT)
 !$acc kernels present_cr( PLOCPEXN )
-!$mnh_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
+!$mnh_expand_array( JIJ=IIJB:IIJE,JK=1:IKT )
     PLOCPEXN(IIJB:IIJE, 1:IKT) = (PLTT + (CST%XCPV - PC)*(PT(IIJB:IIJE, 1:IKT) - CST%XTT)) / PCP(IIJB:IIJE, 1:IKT)
 !$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
 !$acc end kernels
     !
 !$acc kernels present_cr( ZRVSAT,ZDRVSATDT )
-!$mnh_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
+!$mnh_expand_array( JIJ=IIJB:IIJE,JK=1:IKT )
     !*      1.2 Saturation vapor pressure at t
     !
     ZRVSAT(IIJB:IIJE, 1:IKT) = EXP(PALP - PBETA / PT(IIJB:IIJE, 1:IKT) - PGAM*LOG(PT(IIJB:IIJE, 1:IKT)))
@@ -94,7 +94,7 @@ SUBROUTINE COMPUTE_FUNCTION_THERMO (D, CST, PALP, PBETA, PGAM, PLTT, PC, PT, PEX
     !*      1.6 compute Atheta
     !
 !$acc kernels
-!$mnh_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
+!$mnh_expand_array( JIJ=IIJB:IIJE,JK=1:IKT )
     PATHETA(IIJB:IIJE, 1:IKT) = PAMOIST(IIJB:IIJE, 1:IKT)*PEXN(IIJB:IIJE, 1:IKT)*((ZRVSAT(IIJB:IIJE, 1:IKT) &
     & - PRT(IIJB:IIJE, 1:IKT, 1))*PLOCPEXN(IIJB:IIJE, 1:IKT) / (1. + ZDRVSATDT(IIJB:IIJE, 1:IKT)*& 
     & PLOCPEXN(IIJB:IIJE, 1:IKT))*(ZRVSAT(IIJB:IIJE, 1:IKT)*(1. + ZRVSAT(IIJB:IIJE, 1:IKT) / ZEPS)*&
@@ -107,7 +107,7 @@ SUBROUTINE COMPUTE_FUNCTION_THERMO (D, CST, PALP, PBETA, PGAM, PLTT, PC, PT, PEX
     !*      1.7 Lv/Cph/Exner at t-1
     !
 !$acc kernels
-!$mnh_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
+!$mnh_expand_array( JIJ=IIJB:IIJE,JK=1:IKT )
     PLOCPEXN(IIJB:IIJE, 1:IKT) = PLOCPEXN(IIJB:IIJE, 1:IKT) / PEXN(IIJB:IIJE, 1:IKT)
 !$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
 !$acc end kernels
