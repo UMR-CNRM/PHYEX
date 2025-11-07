@@ -165,7 +165,9 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
         elif vartype == 'TYPE(PHYEX_T)':
             pass
         elif vartype.startswith('TYPE('):
-            raise NotImplementedError(f'Does not know how to deal with argument of type {vartype}')
+            raise NotImplementedError('Does not know how to deal with' +
+                                      f'argument of type {vartype} ' +
+                                      f'in {fortran_in}')
         elif var['n'] == 'KSPLITR':
             moduleList.append('USE MODD_CLOUDPAR_n, ONLY: KSPLITR => NSPLITR')
             argList2.append('KSPLITR')
