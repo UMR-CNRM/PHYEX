@@ -121,10 +121,10 @@ DO JL=1, KSIZE
                              &                        ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS )/ &
                              &(PRHODREF(JL)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(JL))))
       ELSE
-        PRS_TEND(JL, IFREEZ1)=PRS_TEND(JL, IFREEZ1)* PRST(JL) *(ICEP%X0DEPS*PLBDAS(JL)**(ICED%XBS+ICEP%XEX0DEPS) + &
+        PRS_TEND(JL, IFREEZ1)=PRS_TEND(JL, IFREEZ1)* PRST(JL) *(ICEP%X0DEPS*       PLBDAS(JL)**ICEP%XEX0DEPS + &
                              &                        ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**(ICED%XBS+ICEP%XEX1DEPS )* &
            (1+0.5*(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS))/ &
-                             &((CST%XLMTT-CST%XCL*(CST%XTT-PT(JL))))
+                             &(PRHODREF(JL)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(JL))))
       ENDIF
       PRS_TEND(JL, IFREEZ2)=(PRHODREF(JL)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-PT(JL)))   ) / &
                            &(PRHODREF(JL)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(JL))))

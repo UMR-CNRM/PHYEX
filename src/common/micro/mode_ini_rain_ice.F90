@@ -863,7 +863,14 @@ CALL READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                  
                       PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PFVELOS,PCR,PDR, &
                       PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN,        &
                       PFDINFTY                                                        )
-IF( .TRUE.                                              ) THEN
+IF( (KACCLBDAS/=RAIN_ICE_PARAMN%NACCLBDAS) .OR. (KACCLBDAR/=RAIN_ICE_PARAMN%NACCLBDAR) .OR. (KND/=IND) .OR. &
+    (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
+    (PALPHAR/=XALPHAR) .OR. (PNUR/=XNUR)                               .OR. &
+    (PESR/=ZESR) .OR. (PBS/=XBS) .OR. (PBR/=XBR)                       .OR. &
+    (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. (PCR/=XCR) .OR. (PDR/=XDR) .OR. &
+    (PACCLBDAS_MAX/=RAIN_ICE_PARAMN%XACCLBDAS_MAX) .OR. (PACCLBDAR_MAX/=RAIN_ICE_PARAMN%XACCLBDAR_MAX) .OR. &
+    (PACCLBDAS_MIN/=RAIN_ICE_PARAMN%XACCLBDAS_MIN) .OR. (PACCLBDAR_MIN/=RAIN_ICE_PARAMN%XACCLBDAR_MIN) .OR. &
+    (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RRCOLSS ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
                  ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  RAIN_ICE_PARAMN%XACCLBDAS_MAX, RAIN_ICE_PARAMN%XACCLBDAR_MAX, &
