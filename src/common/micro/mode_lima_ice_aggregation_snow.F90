@@ -99,9 +99,9 @@ IF (LIMAP%NMOM_I.EQ.1) THEN
       ZZW1(:) = LIMAC%XFIAGGS * EXP( LIMAC%XCOLEXIS*(PT(:)-CST%XTT) ) &
                         * PLATHAM_IAGGS(:)            &
                         * PRIT(:)                     &
-                        * PCST(:) * (1+(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEXIAGGS/LIMAP%XALPHAS) &
+                        * PRST(:) * (1+(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEXIAGGS/LIMAP%XALPHAS) &
                         * PRHODREF(:)**(-LIMAP%XCEXVT+1.) &
-                        * PLBDS(:)**LIMAC%XEXIAGGS
+                        * PLBDS(:)**(LIMAC%XBS+LIMAC%XEXIAGGS)
 !
       P_RI_AGGS(:) = - ZZW1(:)
    END WHERE
@@ -121,6 +121,7 @@ ELSE
          P_RI_AGGS(:) = - ZZW2(:)
       END WHERE
    ELSE
+      P_SHCI_AGGS(:,:) = 0.
       DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
          WHERE ( PRIT(:) > LIMAP%XRTMIN(4) .AND. PRST(:) > LIMAP%XRTMIN(5) .AND. PCST(:) > LIMAP%XCTMIN(5) .AND. &
               PCIT_SHAPE(:,ISH) > 0. .AND. PRIT_SHAPE(:,ISH) > 0. .AND. &
