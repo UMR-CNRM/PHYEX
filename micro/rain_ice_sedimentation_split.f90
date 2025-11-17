@@ -366,11 +366,10 @@ IF ( OSEDIC ) THEN
   ZTMP2 = 0.5 * GAMMA( XNUC2 + 1.0 / XALPHAC2 ) / ( GAMMA( XNUC2 ) )
 END IF
 !
-ZINVTSTEP=1./PTSTEP
-ZTSPLITR= PTSTEP / REAL(KSPLITR)
-!
 !$acc kernels present_cr(ZOMPSEA,ZTMP1_2D,zconc_tmp,ztmp3_2d,ztmp2_2d,ztmp4_2d,ZLBC,ZFSEDC) &
 !$acc & present_cr(zconc3d,zray,zprrs,zprss)
+ZINVTSTEP=1./PTSTEP
+ZTSPLITR= PTSTEP / REAL(KSPLITR)
 !
 IF ( OSEDIC )  PINPRC (:,:) = 0.
 IF ( ODEPOSC ) PINDEP (:,:) = 0.
