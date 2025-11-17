@@ -233,16 +233,16 @@ END MODULE MODI_RAIN_ICE_OLD
 !
 USE modd_budget,         only: lbu_enable
 USE MODD_CONF,           only: LCHECK
-USE MODD_CST,            only: CST_XCI => XCI, CST_XCL => XCL, CST_XCPD => XCPD , &
-                               CST_XCPV => XCPV, CST_XLSTT => XLSTT, CST_XLVTT  => XLVTT, CST_XTT => XTT, &
-                               CST_XALPI => XALPI , CST_XBETAI => XBETAI, CST_XGAMI => XGAMI, &
-                               CST_XMD => XMD, CST_XMV => XMV 
+USE MODD_CST,             only: CST_XALPI => XALPI , CST_XBETAI => XBETAI, &
+                                CST_XCI => XCI, CST_XCL => XCL, CST_XCPD => XCPD , &
+                                CST_XCPV => XCPV, CST_XGAMI => XGAMI, CST_XLVTT  => XLVTT, &
+                                CST_XLSTT => XLSTT, CST_XMD => XMD, CST_XMV => XMV, CST_XTT => XTT
 
 USE MODD_LES,            only: LLES_CALL
 USE MODD_PARAMETERS,     only: JPVEXT, XNEGUNDEF
 USE MODD_PARAM_ICE_n,      only: CSUBG_PR_PDF, LDEPOSC
 USE MODD_RAIN_ICE_DESCR_n, only: RAIN_ICE_DESCRN, DESCR_XLBEXR => XLBEXR, DESCR_XLBR => XLBR , XRTMIN
-USE MODD_RAIN_ICE_PARAM_n, only: PARAM_XCRIAUTC => XCRIAUTC
+USE MODD_RAIN_ICE_PARAM_n, only: XCRIAUTC
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 
 USE MODE_MSG
@@ -420,7 +420,6 @@ REAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3))   &
 REAL :: XCI, XCL, XCPD, XCPV, XLSTT, XLVTT, XTT, &
         XALPI, XBETAI, XGAMI, XMD, XMV
 REAL :: XLBEXR, XLBR
-REAL :: XCRIAUTC
 !
 !-------------------------------------------------------------------------------
 !
@@ -442,8 +441,6 @@ XMV = CST_XMV
 !
 XLBEXR = DESCR_XLBEXR
 XLBR = DESCR_XLBR
-!
-XCRIAUTC = PARAM_XCRIAUTC
 !
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
 IIT=SIZE(PDZZ,1)
