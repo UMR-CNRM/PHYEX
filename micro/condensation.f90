@@ -369,7 +369,7 @@ END DO
 #endif
 !$acc kernels
 !$acc_cr loop independent gang vector
-!$mnh_do_concurrent(  JK=IKTB:IKTE , JIJ=IIJB:IIJE )      
+!$mnh_do_concurrent( JIJ=IIJB:IIJE , JK=IKTB:IKTE )      
   IF (OCND2) THEN
      !  ZDZ(JIJ,JK) = PZZ(JIJ,JKP) - PZZ(JIJ,JKP-IKL)
      !CALL ICECLOUD(D,PPABS(:,JK),PZZ(:,JK),ZDZ(:), &
