@@ -5,7 +5,7 @@
 MODULE MODE_TRIDIAG_THERMO
 IMPLICIT NONE
 CONTAINS       
-SUBROUTINE TRIDIAG_THERMO(D,PVARM,PF,PDFDDTDZ,PTSTEP,PIMPL,  &
+SUBROUTINE TRIDIAG_THERMO(D,PVARM,PF,PDFDDTDZ,PTSTEP,TURBN_PIMPL,  &
                                  PDZZ,PRHODJ,PVARP             )
 !      #################################################
 !
@@ -131,7 +131,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PVARM   ! variable at t-1      at m
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PF      ! flux in dT/dt=-dF/dz at flux point
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PDFDDTDZ! dF/d(dT/dz)          at flux point
 REAL,                   INTENT(IN) :: PTSTEP  ! Double time step
-REAL,                   INTENT(IN) :: PIMPL   ! implicit weight
+REAL,                   INTENT(IN) :: TURBN_PIMPL   ! implicit weight
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PDZZ    ! Dz                   at flux point
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PRHODJ  ! (dry rho)*J          at mass point
 !
@@ -154,13 +154,18 @@ INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
 INTEGER             :: IIJB,IIJE    ! start, end of ij loops in physical domain
 INTEGER             :: IKL
 !
+REAL                :: PIMPL ! bypass AMD GPU perf problem with scalar pointer
 ! ---------------------------------------------------------------------------
 !                                              
 !*      1.  Preliminaries
 !           -------------
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+!
 IF (LHOOK) CALL DR_HOOK('TRIDIAG_THERMO',0,ZHOOK_HANDLE)
+!
+PIMPL = TURBN_PIMPL
+!
 !$acc data present( zrhodj_dfddtdz_o_dz2, zmzm_rhodj, za, zb, zc, zy, zgam, zbet, zmzm_rhodj )
 IKT=D%NKT  
 IKTB=D%NKTB          
