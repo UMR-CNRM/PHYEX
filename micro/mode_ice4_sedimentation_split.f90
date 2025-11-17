@@ -489,10 +489,9 @@ END IF
 !$acc kernels
 PINPRX(:) = 0.
 ZINVTSTEP=1./PTSTEP
-ZRSMIN(:) = ICED%XRTMIN(:) * ZINVTSTEP
-!!$DO JI = 1, SIZE(ICED%XRTMIN)
-!!$  ZRSMIN(JI) = ICED%XRTMIN(JI) * ZINVTSTEP
-!!$END DO
+! pyfortool bug with % & (:) --> split init of ZRSMIN in 2 lines 
+ZRSMIN(:) = ICED%XRTMIN(:)
+ZRSMIN(:) = ZRSMIN(:) * ZINVTSTEP
 ZREMAINT(:) = 0.
 ZREMAINT(:) = PTSTEP
 !$acc end kernels
