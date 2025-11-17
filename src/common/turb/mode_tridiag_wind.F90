@@ -5,7 +5,7 @@
 MODULE MODE_TRIDIAG_WIND
 IMPLICIT NONE
 CONTAINS       
-SUBROUTINE TRIDIAG_WIND(D,PVARM,PSEA_CU,PA,PCOEFS,PTSTEP,PEXPL,PIMPL, &
+SUBROUTINE TRIDIAG_WIND(D,PVARM,PSEA_CU,PA,PCOEFS,PTSTEP,IN_PEXPL,IN_PIMPL, &
                                              PRHODJA,PSOURCE,PVARP )
        USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !      #############################################################
@@ -131,7 +131,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN)  :: PA          ! upper diag. eleme
 REAL, DIMENSION(D%NIJT),      INTENT(IN)  :: PCOEFS      ! implicit coeff for the
                                                       ! surface flux
 REAL,                      INTENT(IN)  :: PTSTEP      ! Double time step
-REAL,                      INTENT(IN)  :: PEXPL,PIMPL ! weights of the temporal scheme
+REAL,                      INTENT(IN)  :: IN_PEXPL,IN_PIMPL ! weights of the temporal scheme
 REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN)  :: PRHODJA     ! (dry rho)*J averaged 
 REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN)  :: PSOURCE     ! source term of PVAR    
 !
@@ -150,13 +150,20 @@ INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
 INTEGER             :: IIJB, IIJE   ! start, end of ij loops in physical domain
 INTEGER             :: IKL
 !
+REAL                :: PEXPL,PIMPL,PTSTEP_IN ! bypass AMD GPU perf problem with scalar pointer
 ! ---------------------------------------------------------------------------
 !                                              
 !*      1.  COMPUTE THE RIGHT HAND SIDE
 !           ---------------------------
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+!
 IF (LHOOK) CALL DR_HOOK('TRIDIAG_WIND',0,ZHOOK_HANDLE)
+!
+PEXPL = IN_PEXPL
+PIMPL = IN_PIMPL
+PTSTEP_IN = PTSTEP
+!
 !$acc data present( ZY, ZGAM, ZBET )
 IKT=D%NKT
 IKTB=D%NKTB
@@ -171,7 +178,7 @@ IIJE=D%NIJE
 !
 !$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE)
-ZY(IIJB:IIJE,IKB) = PVARM(IIJB:IIJE,IKB)  + PTSTEP*PSOURCE(IIJB:IIJE,IKB) -   &
+ZY(IIJB:IIJE,IKB) = PVARM(IIJB:IIJE,IKB)  + PTSTEP_IN*PSOURCE(IIJB:IIJE,IKB) -   &
   PEXPL / PRHODJA(IIJB:IIJE,IKB) * PA(IIJB:IIJE,IKB+IKL) * &
   (PVARM(IIJB:IIJE,IKB+IKL) - PVARM(IIJB:IIJE,IKB)) &
  - PIMPL*PCOEFS(IIJB:IIJE)*PTSTEP*PSEA_CU(IIJB:IIJE)
