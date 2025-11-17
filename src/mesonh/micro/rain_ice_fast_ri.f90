@@ -27,9 +27,9 @@ SUBROUTINE RAIN_ICE_FAST_RI(OMICRO, PRHODREF, PRIT, PRHODJ, PZT, PSSI, PLSFACT, 
 use modd_budget,         only: lbudget_th, lbudget_rc, lbudget_ri, &
                                NBUDGET_TH, NBUDGET_RC, NBUDGET_RI, &
                                tbudgets
-USE MODD_CST,            only: XTT
-USE MODD_RAIN_ICE_DESCR_n, only: XDI, XLBEXI, XLBI, XRTMIN
-USE MODD_RAIN_ICE_PARAM_n, only: X0DEPI, X2DEPI
+USE MODD_CST,            only: CST_XTT => XTT
+USE MODD_RAIN_ICE_DESCR_n, only: DESCR_XDI => XDI, DESCR_XLBEXI => XLBEXI, DESCR_XLBI => XLBI, XRTMIN
+USE MODD_RAIN_ICE_PARAM_n, only: PARAM_X0DEPI => X0DEPI, PARAM_X2DEPI => X2DEPI
 
 use mode_budget,         only: Budget_store_add, Budget_store_end, Budget_store_init
 #ifdef MNH_OPENACC
@@ -77,7 +77,20 @@ REAL,    DIMENSION(:), pointer, contiguous :: ZLBEXI
 #endif
 !
 INTEGER :: JL,JLU
+!
+REAL :: XTT
+REAL :: XDI, XLBEXI, XLBI
+REAL :: X0DEPI, X2DEPI
 !-------------------------------------------------------------------------------
+!
+XTT = CST_XTT
+!
+XDI = DESCR_XDI
+XLBEXI = DESCR_XLBEXI
+XLBI = DESCR_XLBI
+!
+X0DEPI = PARAM_X0DEPI
+X2DEPI = PARAM_X2DEPI
 !
 ! IN variables
 !
