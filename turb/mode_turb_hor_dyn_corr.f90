@@ -77,7 +77,7 @@ USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
 USE MODD_CST
-USE MODD_CTURB
+USE MODD_CTURB,          ONLY: CTURB_XCMFS => XCMFS
 use modd_field,          only: tfieldmetadata, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
@@ -206,10 +206,16 @@ REAL, DIMENSION(D%NIT,D%NJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF , ZDZZ
                                     ! coefficients for the uncentred gradient 
                                     ! computation near the ground
 TYPE(TFIELDMETADATA) :: TZFIELD
+!
+REAL :: XCMFS
+!
 ! --------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
 !             ------------------------
+!
+XCMFS = CTURB_XCMFS
+!
 NULLIFY(TZFIELDS_ll)
 !
 IKB = 1+JPVEXT               
