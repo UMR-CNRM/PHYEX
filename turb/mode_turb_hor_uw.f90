@@ -67,7 +67,7 @@ USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
 USE MODD_CST
-USE MODD_CTURB
+USE MODD_CTURB,          ONLY: CTURB_XCMFS => XCMFS
 USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
@@ -143,10 +143,15 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GX_W_UW_PWM
 !
 REAL :: ZTIME1, ZTIME2
 TYPE(TFIELDMETADATA) :: TZFIELD
+!
+REAL :: XCMFS
+!
 ! ---------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
 !             ------------------------
+!
+XCMFS = CTURB_XCMFS
 !
 IKB = 1+JPVEXT               
 IKE = SIZE(PWM,3)-JPVEXT    
