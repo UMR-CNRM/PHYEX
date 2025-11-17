@@ -32,13 +32,16 @@ SUBROUTINE RAIN_ICE_SEDIMENTATION_SPLIT( KIB, KIE, KJB, KJE, KKB, KKE, KKTB, KKT
 use modd_budget,         only: lbudget_rc, lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, &
                                NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, &
                                tbudgets
-USE MODD_CST,            only: XCPD, XP00, XRD, XRHOLW
-USE MODD_PARAM_ICE_n,      only: XVDEPOSC
-USE MODD_RAIN_ICE_DESCR_n, only: XCC, XCONC_LAND, xconc_sea, xconc_urban, XDC, XCEXVT, &
-                               XALPHAC, XNUC, XALPHAC2, XNUC2, XLBEXC, XRTMIN, XLBEXC, XLBC
-USE MODD_RAIN_ICE_PARAM_n, only: XEXSEDG, XEXSEDH, XEXCSEDI, XEXSEDR, XEXSEDS, &
-                               XFSEDG, XFSEDH, XFSEDI, XFSEDR, XFSEDS, XFSEDC
-
+USE MODD_CST,            only: CST_XCPD => XCPD, CST_XP00 => XP00, CST_XRD => XRD, CST_XRHOLW => XRHOLW
+USE MODD_PARAM_ICE_n,      only: PARAM_XVDEPOSC => XVDEPOSC
+USE MODD_RAIN_ICE_DESCR_n, only: DESCR_XCC => XCC, DESCR_XCONC_LAND => XCONC_LAND, DESCR_xconc_sea => xconc_sea, &
+                                 DESCR_xconc_urban => xconc_urban, DESCR_XDC => XDC, DESCR_XCEXVT => XCEXVT, &
+                                 DESCR_XALPHAC => XALPHAC, DESCR_XNUC => XNUC, DESCR_XALPHAC2 => XALPHAC2, &
+                                 DESCR_XNUC2 => XNUC2, DESCR_XLBEXC => XLBEXC, XLBC, XRTMIN
+USE MODD_RAIN_ICE_PARAM_n, only: PARAM_XEXSEDG => XEXSEDG, PARAM_XEXSEDH => XEXSEDH, PARAM_XEXCSEDI => XEXCSEDI,&
+                                 PARAM_XEXSEDR => XEXSEDR,  PARAM_XEXSEDS => XEXSEDS, &
+                                 PARAM_XFSEDG => XFSEDG, PARAM_XFSEDH => XFSEDH, PARAM_XFSEDI => XFSEDI, &
+                                 PARAM_XFSEDR => XFSEDR, PARAM_XFSEDS => XFSEDS, XFSEDC
 use mode_budget,         only: Budget_store_init, Budget_store_end
 use mode_mppdb
 #ifndef MNH_OPENACC
@@ -75,15 +78,15 @@ LOGICAL,                            INTENT(IN)    :: OSEDIC  ! Switch for drople
 LOGICAL,                            INTENT(IN)    :: ODEPOSC ! Switch for droplet depos.
 REAL, DIMENSION(:,:),               INTENT(INOUT) :: PINPRC  ! Cloud instant precip
 REAL, DIMENSION(:,:),               INTENT(INOUT) :: PINDEP  ! Cloud instant deposition
-REAL, DIMENSION(:,:),               INTENT(OUT)   :: PINPRR  ! Rain instant precip
-REAL, DIMENSION(:,:),               INTENT(OUT)   :: PINPRS  ! Snow instant precip
-REAL, DIMENSION(:,:),               INTENT(OUT)   :: PINPRG  ! Graupel instant precip
+REAL, DIMENSION(:,:),               INTENT(INOUT) :: PINPRR  ! Rain instant precip
+REAL, DIMENSION(:,:),               INTENT(INOUT) :: PINPRS  ! Snow instant precip
+REAL, DIMENSION(:,:),               INTENT(INOUT) :: PINPRG  ! Graupel instant precip
 REAL, DIMENSION(:,:,:),             INTENT(IN)    :: PDZZ    ! Layer thikness (m)
 REAL, DIMENSION(:,:,:),             INTENT(IN)    :: PRHODREF! Reference density
 REAL, DIMENSION(:,:,:),             INTENT(IN)    :: PPABST  ! absolute pressure at t
 REAL, DIMENSION(:,:,:),             INTENT(IN)    :: PTHT    ! Theta at time t
 REAL, DIMENSION(:,:,:),             INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
-REAL, DIMENSION(:,:,:),             INTENT(OUT)   :: PINPRR3D! Rain inst precip 3D
+REAL, DIMENSION(:,:,:),             INTENT(INOUT) :: PINPRR3D! Rain inst precip 3D
 REAL, DIMENSION(:,:,:),             INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
 REAL, DIMENSION(:,:,:),             INTENT(IN)    :: PRCT    ! Cloud water m.r. at t
 REAL, DIMENSION(:,:,:),             INTENT(INOUT) :: PRRS    ! Rain water m.r. source
@@ -96,10 +99,10 @@ REAL, DIMENSION(:,:,:),             INTENT(INOUT) :: PRGS    ! Graupel m.r. sour
 REAL, DIMENSION(:,:,:),             INTENT(IN)    :: PRGT    ! Graupel/hail m.r. at t
 REAL, DIMENSION(:,:),     OPTIONAL, INTENT(IN)    :: PSEA    ! Sea Mask
 REAL, DIMENSION(:,:),     OPTIONAL, INTENT(IN)    :: PTOWN   ! Fraction that is town
-REAL, DIMENSION(:,:),     OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
+REAL, DIMENSION(:,:),     OPTIONAL, INTENT(INOUT) :: PINPRH  ! Hail instant precip
 REAL, DIMENSION(:,:,:),   OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
 REAL, DIMENSION(:,:,:),   OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
-REAL, DIMENSION(:,:,:,:), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-air precipitation fluxes
+REAL, DIMENSION(:,:,:,:), OPTIONAL, INTENT(INOUT) :: PFPR    ! upper-air precipitation fluxes
 !
 !*       0.2  declaration of local variables
 !
@@ -149,7 +152,44 @@ REAL,    DIMENSION(:,:,:), POINTER, CONTIGUOUS :: ZWSED       ! sedimentation fl
 INTEGER :: IIU,IJU,IKU, IIJKU
 LOGICAL :: GKRR_7,GSEDIC
 !
+REAL :: XCPD, XP00, XRD, XRHOLW
+REAL :: XVDEPOSC
+REAL :: XCC, XCONC_LAND, xconc_sea, xconc_urban, XDC, XCEXVT, &
+        XALPHAC, XNUC, XALPHAC2, XNUC2, XLBEXC
+REAL ::  XEXSEDG, XEXSEDH, XEXCSEDI, XEXSEDR, XEXSEDS, &
+     XFSEDG, XFSEDH, XFSEDI, XFSEDR, XFSEDS
+!
 !-------------------------------------------------------------------------------
+!
+XCPD = CST_XCPD
+XP00 = CST_XP00
+XRD = CST_XRD
+XRHOLW = CST_XRHOLW
+!
+XVDEPOSC = PARAM_XVDEPOSC
+!
+XCC = DESCR_XCC
+XCONC_LAND = DESCR_XCONC_LAND
+xconc_sea = DESCR_xconc_sea
+xconc_urban = DESCR_xconc_urban
+XDC = DESCR_XDC
+XCEXVT = DESCR_XCEXVT
+XALPHAC = DESCR_XALPHAC
+XNUC = DESCR_XNUC
+XALPHAC2 = DESCR_XALPHAC2
+XNUC2 = DESCR_XNUC2
+XLBEXC = DESCR_XLBEXC
+!
+XEXSEDG = PARAM_XEXSEDG
+XEXSEDH = PARAM_XEXSEDH
+XEXCSEDI = PARAM_XEXCSEDI
+XEXSEDR = PARAM_XEXSEDR
+XEXSEDS = PARAM_XEXSEDS
+XFSEDG = PARAM_XFSEDG
+XFSEDH = PARAM_XFSEDH
+XFSEDI = PARAM_XFSEDI
+XFSEDR = PARAM_XFSEDR
+XFSEDS = PARAM_XFSEDS
 !
 ! IN variables
 !
@@ -326,10 +366,11 @@ IF ( OSEDIC ) THEN
   ZTMP2 = 0.5 * GAMMA( XNUC2 + 1.0 / XALPHAC2 ) / ( GAMMA( XNUC2 ) )
 END IF
 !
-!$acc kernels present_cr(ZOMPSEA,ZTMP1_2D,zconc_tmp,ztmp3_2d,ztmp2_2d,ztmp4_2d,ZLBC,ZFSEDC) &
-!$acc & present_cr(zconc3d,zray,zprrs,zprss)
 ZINVTSTEP=1./PTSTEP
 ZTSPLITR= PTSTEP / REAL(KSPLITR)
+!
+!$acc kernels present_cr(ZOMPSEA,ZTMP1_2D,zconc_tmp,ztmp3_2d,ztmp2_2d,ztmp4_2d,ZLBC,ZFSEDC) &
+!$acc & present_cr(zconc3d,zray,zprrs,zprss)
 !
 IF ( OSEDIC )  PINPRC (:,:) = 0.
 IF ( ODEPOSC ) PINDEP (:,:) = 0.
