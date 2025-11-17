@@ -1078,9 +1078,11 @@ ENDIF
       END IF
     END IF
     !
+!$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZWORK1(:,:) = PRP(:,:) - PRM(:,:,1)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
   CALL DZM_PHY(D,ZWORK1,ZWORK2)
   IF (TURBN%LHARAT) THEN
     ZFLXZ(:,:) = ZF(:,:)                   &
