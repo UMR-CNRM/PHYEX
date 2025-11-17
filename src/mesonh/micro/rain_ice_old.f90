@@ -233,13 +233,16 @@ END MODULE MODI_RAIN_ICE_OLD
 !
 USE modd_budget,         only: lbu_enable
 USE MODD_CONF,           only: LCHECK
-USE MODD_CST,            only: XCI, XCL, XCPD, XCPV, XLSTT, XLVTT, XTT, &
-                               XALPI, XBETAI, XGAMI, XMD, XMV, XTT
+USE MODD_CST,            only: CST_XCI => XCI, CST_XCL => XCL, CST_XCPD => XCPD , &
+                               CST_XCPV => XCPV, CST_XLSTT => XLSTT, CST_XLVTT  => XLVTT, CST_XTT => XTT, &
+                               CST_XALPI => XALPI , CST_XBETAI => XBETAI, CST_XGAMI => XGAMI, &
+                               CST_XMD => XMD, CST_XMV => XMV 
+
 USE MODD_LES,            only: LLES_CALL
 USE MODD_PARAMETERS,     only: JPVEXT, XNEGUNDEF
 USE MODD_PARAM_ICE_n,      only: CSUBG_PR_PDF, LDEPOSC
-USE MODD_RAIN_ICE_DESCR_n, only: RAIN_ICE_DESCRN, XLBEXR, XLBR, XRTMIN
-USE MODD_RAIN_ICE_PARAM_n, only: XCRIAUTC
+USE MODD_RAIN_ICE_DESCR_n, only: RAIN_ICE_DESCRN, DESCR_XLBEXR => XLBEXR, DESCR_XLBR => XLBR , XRTMIN
+USE MODD_RAIN_ICE_PARAM_n, only: PARAM_XCRIAUTC => XCRIAUTC
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 
 USE MODE_MSG
@@ -414,10 +417,33 @@ REAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3))   &
 REAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3))   &
                                   :: ZT ! Temperature
 !
+REAL :: XCI, XCL, XCPD, XCPV, XLSTT, XLVTT, XTT, &
+        XALPI, XBETAI, XGAMI, XMD, XMV
+REAL :: XLBEXR, XLBR
+REAL :: XCRIAUTC
+!
 !-------------------------------------------------------------------------------
 !
 !*       1.     COMPUTE THE LOOP BOUNDS
 !               -----------------------
+!
+XCI = CST_XCI
+XCL = CST_XCL
+XCPD = CST_XCPD
+XCPV = CST_XCPV
+XLSTT = CST_XLSTT
+XLVTT = CST_XLVTT
+XTT = CST_XTT
+XALPI = CST_XALPI
+XBETAI = CST_XBETAI
+XGAMI =  CST_XGAMI
+XMD = CST_XMD
+XMV = CST_XMV
+!
+XLBEXR = DESCR_XLBEXR
+XLBR = DESCR_XLBR
+!
+XCRIAUTC = PARAM_XCRIAUTC
 !
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
 IIT=SIZE(PDZZ,1)
@@ -682,13 +708,13 @@ IF( KSIZE >= 0 ) THEN
       WHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:))
         ! Calculate final values for LCF and HCF:
         ZHLC_LCF(:) = ZCF(:) &
-                       * ( ZHLC_HRCLOCAL - &
+                       * ( ZHLC_HRCLOCAL(:) - &
                        ( ZRCT(:) / ZCF(:) ) ) &
-                       / (ZHLC_HRCLOCAL - ZHLC_LRCLOCAL)
+                       / (ZHLC_HRCLOCAL(:) - ZHLC_LRCLOCAL(:) )
         ZHLC_HCF(:) = MAX(0., ZCF(:) - ZHLC_LCF(:))
         !
         ! Calculate final values for LRC and HRC:
-        ZHLC_LRC(:) = ZHLC_LRCLOCAL * ZHLC_LCF(:)
+        ZHLC_LRC(:) = ZHLC_LRCLOCAL(:) * ZHLC_LCF(:)
         ZHLC_HRC(:) = MAX(0., ZRCT(:) - ZHLC_LRC(:))
       ELSEWHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0. .AND. ZHLC_RCMAX(:).LE.ZRCRAUTC(:))
         ! Put all available cloud water and his fraction in the low part
