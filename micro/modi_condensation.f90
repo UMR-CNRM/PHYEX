@@ -29,7 +29,7 @@ TYPE(NEB_t),                  INTENT(IN)    :: NEBN
 TYPE(TURB_t),                 INTENT(IN)    :: TURBN
 CHARACTER(LEN=1),             INTENT(IN)    :: HFRAC_ICE
 CHARACTER(LEN=4),             INTENT(IN)    :: HCONDENS
-CHARACTER(LEN=*),             INTENT(IN)    :: HLAMBDA3 ! formulation for lambda3 coeff
+CHARACTER(LEN=4),             INTENT(IN)    :: HLAMBDA3 ! formulation for lambda3 coeff
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PPABS  ! pressure (Pa)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PZZ    ! height of model levels (m)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODREF
