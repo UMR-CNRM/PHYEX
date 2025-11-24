@@ -461,7 +461,7 @@ IF (NINT(ICEP%XFRMIN(18)) == 1) LTIW=.TRUE.
 
 IF (OSEDIC) THEN
   ZRAY(:,:)   = 0.
-  IF (ICEP%XFRMIN(26)>0.001 .OR. OAERONRT) THEN
+  IF (ICEP%XFRMIN(26)>0.001 .OR. (OAERONRT.AND.PARAMI%LEXCLDROP)) THEN
     ! Assume "average" distr. func for simplicity
     DO JK = D%NKTB,D%NKTE
       DO JIJ = D%NIJB,D%NIJE
@@ -505,8 +505,8 @@ IF (OSEDIC.OR.OCND2.OR.LKOGAN) THEN
       ZZZZ(JIJ,JK) = ZZZT(JIJ,JK) - 0.5*PDZZ(JIJ,JK)
     ENDDO
   ENDDO
-  IF (OAERONRT) THEN
-  !Consider Cloud droplets obtained from CAMS aerosol mixing ratio fields
+  IF (PARAMI%LEXCLDROP) THEN
+  !Consider external cloud droplet number concentration.
     DO JK = D%NKTB, D%NKTE
       DO JIJ = D%NIJB, D%NIJE
         ZCONC3D(JIJ,JK) = PCLDROP(JIJ,JK)
