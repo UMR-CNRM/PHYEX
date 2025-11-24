@@ -326,6 +326,8 @@ IMI = GET_CURRENT_MODEL_INDEX()
 !
 D%NIJT=SIZE(PRT,1)*SIZE(PRT,2)
 D%NKT=SIZE(PRT,3)
+D%NIJB=1
+D%NIJE=D%NIJT
 !
 !-------------------------------------------------------------------------------
 !

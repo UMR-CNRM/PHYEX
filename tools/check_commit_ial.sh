@@ -775,21 +775,23 @@ if [ $compilation -eq 1 ]; then
     exescript Output_compilation ics_masterodb
     if [ -f bin/MASTERODB \
          -a $(grep Error Output_compilation | \
+              grep -v ErrorCovariance3D | \
               grep -v TestErrorHandler | \
               grep -v "'Error" | \
               grep -v "'CPLNG: Error" | \
               grep -v '"Error' | \
               grep -v "'*** Error" | \
               grep -v "\-\- Up-to-date:" | wc -l) -ne 0 ]; then
-      echo "MASTERODB was produced but errors occured during compilation:"
+      echo "check_commit_ial: MASTERODB was produced but errors occured during compilation:"
       grep Error Output_compilation | \
+            grep -v ErrorCovariance3D | \
             grep -v TestErrorHandler | \
             grep -v "'Error" | \
             grep -v "'CPLNG: Error" | \
             grep -v '"Error' | \
             grep -v "'*** Error" | \
             grep -v "\-\- Up-to-date:"
-      echo "MASTERODB suppressed!"
+      echo "check_commit_ial: MASTERODB suppressed!"
       rm -f bin/MASTERODB
       exit 12
     fi
