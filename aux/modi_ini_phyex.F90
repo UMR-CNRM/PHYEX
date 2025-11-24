@@ -4,11 +4,13 @@ INTERFACE
 SUBROUTINE INI_PHYEX(HPROGRAM, TPFILE, LDNEEDNAM, KLUOUT, KFROM, KTO, &
                     &PTSTEP, PDZMIN, &
                     &CMICRO, CSCONV, CTURB, &
-                    &LDCHANGEMODEL, LDDEFAULTVAL, LDREADNAM, LDCHECK,&
+                    &PHYAERO, &
+                    &LDCHANGEMODEL, LDDEFAULTVAL, LDREADNAM, LDCHECK, &
                     &KPRINT, LDINIT, &
                     &PHYEX_IN, PHYEX_OUT)
 !
 USE MODD_PHYEX, ONLY: PHYEX_t
+USE MODD_PHYEX_AERO, ONLY: PHYEX_AERO_t
 USE MODD_CST, ONLY: CST_t
 USE MODD_PARAM_ICE_n, ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
@@ -42,6 +44,7 @@ INTEGER, OPTIONAL, INTENT(IN) :: KPRINT       !< Print level (defaults to 0): 0 
 LOGICAL, OPTIONAL, INTENT(IN) :: LDINIT       !< Must we call the init routines
 TYPE(PHYEX_t), OPTIONAL, INTENT(IN)    :: PHYEX_IN    !< Structure for constants (IN)
 TYPE(PHYEX_t), OPTIONAL, INTENT(INOUT) :: PHYEX_OUT   !< Structure for constants (OUT)
+TYPE(PHYEX_AERO_t), OPTIONAL, INTENT(INOUT) :: PHYAERO  !< Aerosol properties
 
 !IMPORTANT NOTE on PHYEX_OUT arguments.
 !Logically this argument should be declared with INTENT(OUT) but in this case ifort (at least) breaks the

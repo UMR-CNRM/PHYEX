@@ -1,5 +1,6 @@
 {
-"IALcommit":"CY50T1_toT2.02",
+"IALrepo":"https://github.com/SebastienRietteMTO/IAL.git",
+"IALcommit":"SR_remove_ial_dep_for_phyex",
 "IALbundle_tag":"BDL50T1_toT2.02",
 "cycle":"50t1",
 "scripttag":"",
