@@ -276,7 +276,6 @@ END FUNCTION SM_FOES_1D
 !!
 !!    EXTERNAL
 !!    --------
-!!      FMLOOK    : to retrieve logical unit number
 !!      SM_FOES   : to compute saturation vapor pressure
 !!
 !!    IMPLICIT ARGUMENTS
@@ -346,11 +345,8 @@ INTEGER                                           :: ITER    ! iteration number 
 REAL                                              :: ZEPS    ! a small number
 INTEGER, DIMENSION(3)                             :: IMAXLOC ! localisation of
                                                              ! a maximum
-INTEGER                                           :: ILUOUT,IRESP
-                                                             ! logical unit for
-                                                             ! output-listing
-                                                             ! and error code
 INTEGER                                           :: JRR     ! loop counter
+CHARACTER(LEN=20) :: HITERMAX, HZEPS, HMAXVALZDT, HPMRIMAXLOC, HZTIMAXLOC
 !-------------------------------------------------------------------------------
 !
 !*       1.    COMPUTE VAPOR MIXING RATIO
@@ -382,19 +378,21 @@ END DO
 !              --------------
 !
 IF ( ANY(ZDT > ZEPS) ) THEN
-  CALL FMLOOK_ll(HLUOUT,HLUOUT,ILUOUT,IRESP)
-  WRITE(ILUOUT,*) 'ERROR IN FUNCTION SM_PMR_HU (module MODE_THERMO)'
-  WRITE(ILUOUT,*) 'FUNCTION FAILS TO CONVERGE AFTER ', ITERMAX,' ITERATIONS'
-  WRITE(ILUOUT,*) 'EPS = ' , ZEPS
-  IMAXLOC(:) = MAXLOC(ZDT)
-  WRITE(ILUOUT,*) 'MAXIMUM RESIDUAL DT :', MAXVAL(ZDT)
-!  WRITE(ILUOUT,*) 'LOCATION OF THIS MAXIMUM I=',IMAXLOC(1),' J=',IMAXLOC(2), &
-!                  ' K=',IMAXLOC(3)
-  WRITE(ILUOUT,*) 'MR AT THIS MAXIMUM : ', PMR(IMAXLOC(1),IMAXLOC(2),IMAXLOC(3))
-  WRITE(ILUOUT,*) 'T AT THIS MAXIMUM : ', ZT(IMAXLOC(1),IMAXLOC(2),IMAXLOC(3))
-  WRITE(ILUOUT,*) 'JOB ABORTED '
-  FLUSH(unit=ILUOUT)
-  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'SM_PMR_HU_3D', 'failed to converge' )
+  WRITE(HITERMAX, '(i10)') ITERMAX
+  WRITE(HZEPS, '(f10.4)') ZEPS
+  IMAXLOC = MAXLOC(ZDT)
+  WRITE(HMAXVALZDT, '(f10.4)') MAXVAL(ZDT)
+  WRITE(HPMRIMAXLOC, '(f10.4)') PMR(IMAXLOC(1),IMAXLOC(2),IMAXLOC(3))
+  WRITE(HZTIMAXLOC, '(f10.4)') ZT(IMAXLOC(1),IMAXLOC(2),IMAXLOC(3))
+  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'SM_PMR_HU_1D', &
+                &['ERROR IN FUNCTION SM_PMR_HU (module MODE_THERMO)', &
+                & 'FUNCTION FAILS TO CONVERGE AFTER ' // TRIM(HITERMAX) // ' ITERATIONS', &
+                & 'EPS = ' // TRIM(HZEPS), &
+                & 'MAXIMUM RESIDUAL DT :' // TRIM(HMAXVALZDT), &
+                & 'MR AT THIS MAXIMUM : ' // TRIM(HPMRIMAXLOC), &
+                & 'T AT THIS MAXIMUM : ' // TRIM(HZTIMAXLOC), &
+                & 'JOB ABORTED ', &
+                & 'failed to converge'])
 END IF
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:SM_PMR_HU_3D',1,ZHOOK_HANDLE)
@@ -425,7 +423,6 @@ END FUNCTION SM_PMR_HU_3D
 !!
 !!    EXTERNAL
 !!    --------
-!!      FMLOOK    : to retrieve logical unit number
 !!      SM_FOES   : to compute saturation vapor pressure
 !!
 !!    IMPLICIT ARGUMENTS
@@ -491,10 +488,7 @@ INTEGER                                           :: ITER    ! iteration number 
 REAL                                              :: ZEPS    ! a small number
 INTEGER,DIMENSION(1)                              :: IMAXLOC ! localisation of
                                                              ! a maximum
-INTEGER                                           :: ILUOUT,IRESP
-                                                             ! logical unit for
-                                                             ! output-listing
-                                                             ! and error code
+CHARACTER(LEN=20) :: HITERMAX, HZEPS, HMAXVALZDT, HPMRIMAXLOC, HZTIMAXLOC
 !-------------------------------------------------------------------------------
 !
 !*       1.    COMPUTE VAPOR MIXING RATIO
@@ -527,16 +521,21 @@ END DO
 !              --------------
 !
 IF (ANY(ZDT>ZEPS)) THEN
-  CALL FMLOOK_ll(HLUOUT,HLUOUT,ILUOUT,IRESP)
-  WRITE(ILUOUT,*) 'ERROR IN FUNCTION SM_PMR_HU (module MODE_THERMO)'
-  WRITE(ILUOUT,*) 'FUNCTION FAILS TO CONVERGE AFTER ', ITERMAX,' ITERATIONS'
-  WRITE(ILUOUT,*) 'EPS = ' , ZEPS
+  WRITE(HITERMAX, '(i10)') ITERMAX
+  WRITE(HZEPS, '(f10.4)') ZEPS
   IMAXLOC = MAXLOC(ZDT)
-  WRITE(ILUOUT,*) 'MAXIMUM RESIDUAL DT :', MAXVAL(ZDT)
-  WRITE(ILUOUT,*) 'MR AT THIS MAXIMUM : ', PMR(IMAXLOC)
-  WRITE(ILUOUT,*) 'T AT THIS MAXIMUM : ', ZT(IMAXLOC)
-  WRITE(ILUOUT,*) 'JOB ABORTED '
-  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'SM_PMR_HU_1D', 'failed to converge' )
+  WRITE(HMAXVALZDT, '(f10.4)') MAXVAL(ZDT)
+  WRITE(HPMRIMAXLOC, '(f10.4)') PMR(IMAXLOC)
+  WRITE(HZTIMAXLOC, '(f10.4)') ZT(IMAXLOC)
+  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'SM_PMR_HU_1D', &
+                &['ERROR IN FUNCTION SM_PMR_HU (module MODE_THERMO)', &
+                & 'FUNCTION FAILS TO CONVERGE AFTER ' // TRIM(HITERMAX) // ' ITERATIONS', &
+                & 'EPS = ' // TRIM(HZEPS), &
+                & 'MAXIMUM RESIDUAL DT :' // TRIM(HMAXVALZDT), &
+                & 'MR AT THIS MAXIMUM : ' // TRIM(HPMRIMAXLOC), &
+                & 'T AT THIS MAXIMUM : ' // TRIM(HZTIMAXLOC), &
+                & 'JOB ABORTED ', &
+                & 'failed to converge'])
 END IF
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:SM_PMR_HU_1D',1,ZHOOK_HANDLE)
