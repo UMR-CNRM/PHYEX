@@ -231,14 +231,14 @@ END MODULE MODI_RAIN_ICE_OLD
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE modd_budget,         only: lbu_enable
+USE MODD_BUDGET,         only: BUDGET_LBU_ENABLE => LBU_ENABLE
 USE MODD_CONF,           only: LCHECK
 USE MODD_CST,             only: CST_XALPI => XALPI , CST_XBETAI => XBETAI, &
                                 CST_XCI => XCI, CST_XCL => XCL, CST_XCPD => XCPD , &
                                 CST_XCPV => XCPV, CST_XGAMI => XGAMI, CST_XLVTT  => XLVTT, &
                                 CST_XLSTT => XLSTT, CST_XMD => XMD, CST_XMV => XMV, CST_XTT => XTT
 
-USE MODD_LES,            only: LLES_CALL
+USE MODD_LES,            only: LES_LLES_CALL => LLES_CALL
 USE MODD_PARAMETERS,     only: JPVEXT, XNEGUNDEF
 USE MODD_PARAM_ICE_n,      only: CSUBG_PR_PDF, LDEPOSC
 USE MODD_RAIN_ICE_DESCR_n, only: RAIN_ICE_DESCRN, DESCR_XLBEXR => XLBEXR, DESCR_XLBR => XLBR , XRTMIN
@@ -368,7 +368,7 @@ REAL, DIMENSION(KSIZE) :: ZTHT    ! Potential temperature
 REAL, DIMENSION(KSIZE) :: ZTHLT   ! Liquid potential temperature
 !
 REAL, DIMENSION(KSIZE) :: ZRHODREF  ! RHO Dry REFerence
-REAL, DIMENSION(MERGE(KSIZE,0,LBU_ENABLE .OR. LLES_CALL .OR. LCHECK)) :: ZRHODJ    ! RHO times Jacobian
+REAL, DIMENSION(MERGE(KSIZE,0,BUDGET_LBU_ENABLE .OR. LES_LLES_CALL .OR. LCHECK)) :: ZRHODJ    ! RHO times Jacobian
 REAL, DIMENSION(KSIZE) :: ZPRES     ! Pressure
 REAL, DIMENSION(KSIZE) :: ZEXNREF   ! EXNer Pressure REFerence
 REAL, DIMENSION(KSIZE) :: ZLSFACT   ! L_s/(Pi_ref*C_ph)
@@ -420,6 +420,8 @@ REAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3))   &
 REAL :: XCI, XCL, XCPD, XCPV, XLSTT, XLVTT, XTT, &
         XALPI, XBETAI, XGAMI, XMD, XMV
 REAL :: XLBEXR, XLBR
+LOGICAL :: LBU_ENABLE
+LOGICAL :: LLES_CALL
 !
 !-------------------------------------------------------------------------------
 !
@@ -441,6 +443,10 @@ XMV = CST_XMV
 !
 XLBEXR = DESCR_XLBEXR
 XLBR = DESCR_XLBR
+!
+LBU_ENABLE = BUDGET_LBU_ENABLE
+!
+LLES_CALL = LES_LLES_CALL
 !
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
 IIT=SIZE(PDZZ,1)
