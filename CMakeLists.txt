@@ -54,22 +54,26 @@ set(PHYEX_ENTRYPOINTS
   micro/lima_adjust_split.F90
 )
 
-
 set(GLOB PHYEX_HEADERS
-    ${CMAKE_SOURCE_DIR}/conv/*h
     ${CMAKE_SOURCE_DIR}/turb/*h
     ${CMAKE_SOURCE_DIR}/micro/*h
 )
+if(EXISTS ${CMAKE_SOURCE_DIR}/conv)
+  file(GLOB CONV_HEADERS ${CMAKE_SOURCE_DIR}/conv/*h)
+  list(APPEND PHYEX_HEADERS ${CONV_HEADERS})
+endif()
 if(EXISTS ${CMAKE_SOURCE_DIR}/pyphyex.F90)
   list(APPEND PHYEX_ENTRYPOINTS pyphyex.F90)
 endif()
 
 set(PHYEX_INCLUDEDIRS
   ${CMAKE_SOURCE_DIR}/aux
-  ${CMAKE_SOURCE_DIR}/conv
   ${CMAKE_SOURCE_DIR}/micro
   ${CMAKE_SOURCE_DIR}/turb
 )
+if(EXISTS ${CMAKE_SOURCE_DIR}/conv)
+  list(APPEND PHYEX_INCLUDEDIRS ${CMAKE_SOURCE_DIR}/conv)
+endif()
 
 #-----------------------------------------------------------------------
 # Library
