@@ -335,9 +335,12 @@ if [ "$pyfortool_opts_env" != "" -o -n "${pyfortool_options-}" ]; then
           find $rep -type f -not -name '.*.swp'  -not -name '.*.swo' | while read file; do
             if [ "$(echo $file | grep '\.')" != '' -a \
                  $(echo $file | rev | cut -d. -f1 | rev) != 'fypp' -a \
-                 $(echo $file | rev | cut -d. -f1 | rev) != 'yaml' ]; then
+                 $(echo $file | rev | cut -d. -f1 | rev) != 'yaml' -a \
+                 $(echo $file | rev | cut -d. -f1 | rev) != 'in' -a \
+                 $(echo $file | rev | cut -d. -f1 | rev) != 'cmake' ]; then
               #Files without extension are certainly not source code files
               #.fypp and .yaml files cannot be read by pyfortool
+              #.in and .cmake are cmake files
               cmd="pyfortool --wrapH $pyfortool_options $extra_opts" #--wrapH allows to deal with h files
               [ $verbose -gt 1 ] && echo $cmd "$file"
               $cmd "$file"
