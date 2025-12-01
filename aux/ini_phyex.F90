@@ -34,6 +34,9 @@ SUBROUTINE INI_PHYEX(HPROGRAM, TPFILE, LDNEEDNAM, KLUOUT, KFROM, KTO, &
 !  An alternative to this solution is not to copy the variable inside a PHYEX module but add it directly
 !  to the parametrisation call arguments.
 !
+USE PARKIND1, ONLY: JPRB
+USE MODD_PRECISION, ONLY: MNHREAL
+!
 USE MODD_PHYEX, ONLY: PHYEX_t
 USE MODD_PHYEX_AERO, ONLY: PHYEX_AERO_t
 USE MODD_CST, ONLY: CST, PRINT_CST
@@ -118,6 +121,7 @@ TYPE(PHYEX_AERO_t), OPTIONAL, INTENT(INOUT) :: PHYAERO  !< Aerosol properties
 
 LOGICAL :: LLINIT, LLCHANGEMODEL, LLCHECK
 INTEGER :: IPRINT
+REAL :: Z_DEFAULT_KIND
 !
 !**       ARGUMENTS
 !
@@ -129,6 +133,16 @@ LLCHANGEMODEL=.TRUE.
 IF(PRESENT(LDCHANGEMODEL)) LLCHANGEMODEL=LDCHANGEMODEL
 IPRINT=0
 IF(PRESENT(KPRINT)) IPRINT=KPRINT
+!
+!**       PRECISION CHECK
+!
+IF(KIND(Z_DEFAULT_KIND) /= JPRB .OR. KIND(Z_DEFAULT_KIND) /= MNHREAL) THEN 
+  PRINT*, "Inconsistent compilation option" 
+  PRINT*, "  PARKIND1 has been compiled with kind=", JPRB 
+  PRINT*, "  MODD_PRECISION has been compiled with kind=", MNHREAL
+  PRINT*, "  PHYEX has been compiled with kind=", KIND(Z_DEFAULT_KIND) 
+  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'INI_PHYEX', "Inconsistent compilation option")
+ENDIF
 !
 !**       CST
 !
