@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-find_package(ecbuild 3.7 REQUIRED)
+find_package(ecbuild 3.11 REQUIRED)
 project(PHYEX VERSION 1.0 LANGUAGES Fortran)
 
 include(phyex_macros)
@@ -8,17 +8,17 @@ include(phyex_macros)
 # Options
 #-----------------------------------------------------------------------
 
-ecbuild_add_option( FEATURE DOUBLE_PRECISION
-                    DESCRIPTION "Compile on double precision"
-                    DEFAULT ON )
+ecbuild_add_option(FEATURE DOUBLE_PRECISION
+                   DESCRIPTION "Compile on double precision"
+                   DEFAULT ON)
 
-ecbuild_add_option( FEATURE SINGLE_PRECISION
-                    DESCRIPTION "Compile on single precision"
-                    DEFAULT OFF ) 
+ecbuild_add_option(FEATURE SINGLE_PRECISION
+                   DESCRIPTION "Compile on single precision"
+                   DEFAULT OFF)
 
-ecbuild_add_option( FEATURE PHYEX_BUILD_PROGS
-                    DESCRIPTION "Build PHYEX program executables"
-                    DEFAULT OFF )
+ecbuild_add_option(FEATURE PHYEX_BUILD_PROGS
+                   DESCRIPTION "Build PHYEX program executables"
+                   DEFAULT OFF)
 
 if(HAVE_DOUBLE_PRECISION)
   list(APPEND precision_list dp) 
@@ -39,9 +39,9 @@ ecbuild_find_package(NAME fiat REQUIRED)
 #-----------------------------------------------------------------------
 
 file(GLOB PHYEX_SOURCES
-    ${CMAKE_SOURCE_DIR}/aux/*90
-    ${CMAKE_SOURCE_DIR}/turb/*90
-    ${CMAKE_SOURCE_DIR}/micro/*90
+     ${CMAKE_SOURCE_DIR}/aux/*90
+     ${CMAKE_SOURCE_DIR}/turb/*90
+     ${CMAKE_SOURCE_DIR}/micro/*90
 ) 
 set(PHYEX_ENTRYPOINTS
     aux/ini_phyex.F90
@@ -67,9 +67,9 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/conv)
 endif()
 
 set(PHYEX_INCLUDEDIRS
-  ${CMAKE_SOURCE_DIR}/aux
-  ${CMAKE_SOURCE_DIR}/micro
-  ${CMAKE_SOURCE_DIR}/turb
+    ${CMAKE_SOURCE_DIR}/aux
+    ${CMAKE_SOURCE_DIR}/micro
+    ${CMAKE_SOURCE_DIR}/turb
 )
 if(EXISTS ${CMAKE_SOURCE_DIR}/conv)
   list(APPEND PHYEX_INCLUDEDIRS ${CMAKE_SOURCE_DIR}/conv)
@@ -78,8 +78,8 @@ endif()
 if(HAVE_PHYEX_BUILD_PROGS)
   # Source file directories
   file(GLOB PHYEXPROGS_SOURCES
-      ${CMAKE_SOURCE_DIR}/support/*90
-      ${CMAKE_SOURCE_DIR}/progs/*90
+       ${CMAKE_SOURCE_DIR}/support/*90
+       ${CMAKE_SOURCE_DIR}/progs/*90
   ) 
 
   # Entry points
@@ -94,6 +94,15 @@ endif()
 #---------------
 
 foreach(PRECISION ${precision_list})
+  #---------------
+  #  Determine suitable compilation option to use for unqualified REALs
+  #---------------
+
+  if(${PRECISION} STREQUAL "dp")
+    set(PHYEX_COMPILE_OPTIONS_REAL ${ECBUILD_Fortran_COMPILE_OPTIONS_REAL8})
+  else()
+    set(PHYEX_COMPILE_OPTIONS_REAL ${ECBUILD_Fortran_COMPILE_OPTIONS_REAL4})
+  endif()
   
   #---------------
   #  Internal library (to prevent multiple compilations)
@@ -111,10 +120,15 @@ foreach(PRECISION ${precision_list})
     PRIVATE_INCLUDES ${PHYEX_INCLUDEDIRS}
   )
 
-  # For module files to be available
+  # Compilation option to use for unqualified REALs
+  target_compile_options(internal_phyex_${PRECISION} PUBLIC
+    $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
+
+
+  # For module files to be available and to be in different location depending on the precision
   fortran_modules_install(
-      TARGET internal_phyex_${PRECISION}
-      MODULE_DIR ${CMAKE_CURRENT_BINARY_DIR}/modules_${PRECISION}
+    TARGET internal_phyex_${PRECISION}
+    MODULE_DIR ${CMAKE_CURRENT_BINARY_DIR}/modules_${PRECISION}
   )
 
   #---------------
@@ -134,18 +148,22 @@ foreach(PRECISION ${precision_list})
     HEADER_DESTINATION include/${PRECISION}
     PRIVATE_INCLUDES ${PHYEX_INCLUDEDIRS}
   ) 
-  
+
+  # Compilation option to use for unqualified REALs
+  target_compile_options(phyex_${PRECISION} PUBLIC
+    $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
+
   # Install Library 
   install(
-      TARGETS phyex_${PRECISION}
-      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    TARGETS phyex_${PRECISION}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
   
   # Install Modules 
   fortran_modules_install(
-      TARGET phyex_${PRECISION}
-      MODULE_DIR ${CMAKE_CURRENT_BINARY_DIR}/modules_${PRECISION}
-  	  INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/modules/${PRECISION}
+    TARGET phyex_${PRECISION}
+    MODULE_DIR ${CMAKE_CURRENT_BINARY_DIR}/modules_${PRECISION}
+  	INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/modules/${PRECISION}
   )
   
   #---------------
@@ -167,6 +185,16 @@ foreach(PRECISION ${precision_list})
     if(DEFINED FPP_FLAGS_TESTPROGS)
       target_compile_definitions(phyexprogs_${PRECISION} PUBLIC ${FPP_FLAGS_TESTPROGS})
     endif()
+
+    # For module files to be in different location depending on the precision
+    fortran_modules_install(
+      TARGET phyexprogs_${PRECISION}
+      MODULE_DIR ${CMAKE_CURRENT_BINARY_DIR}/modules_${PRECISION}
+    )
+
+    # Compilation option to use for unqualified REALs
+    target_compile_options(phyexprogs_${PRECISION} PUBLIC
+      $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
     
     # Build all executables
     foreach(EP ${PHYEXPROGS_ENTRYPOINTS})
@@ -185,6 +213,10 @@ foreach(PRECISION ${precision_list})
       if(DEFINED FPP_FLAGS_TESTPROGS)
         target_compile_definitions(${NAME}_${PRECISION} PUBLIC ${FPP_FLAGS_TESTPROGS})
       endif()
+
+      # Compilation option to use for unqualified REALs
+      target_compile_options(${NAME}_${PRECISION} PUBLIC
+        $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
     endforeach()
   endif()
 
