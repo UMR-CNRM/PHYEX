@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -49,7 +49,6 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_U_UV ! result UV point
 !
 END FUNCTION GY_U_UV
 !
-#ifdef MNH_OPENACC
 !
 !
 SUBROUTINE GY_U_UV_DEVICE(PA,PDYY,PDZZ,PDZY,PGY_U_UV_DEVICE)
@@ -61,7 +60,6 @@ REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZY     ! metric coefficient dzy
 REAL, DIMENSION(:,:,:), INTENT(OUT) :: PGY_U_UV_DEVICE ! result UV point
 !
 END SUBROUTINE GY_U_UV_DEVICE
-#endif
 !
 FUNCTION GZ_U_UW(PA,PDZZ, KKA, KKU, KL)      RESULT(PGZ_U_UW)
 IMPLICIT NONE
@@ -213,7 +211,7 @@ INTEGER  :: JIU,JJU,JKU
 INTEGER  :: JI,JJ,JK
 !----------------------------------------------------------------------------
 
-!$acc data present( PA, PDXX, PDZZ, PDZX, PGX_U_M_DEVICE )
+!$acc data present_crm( PA, PDXX, PDZZ, PDZX, PGX_U_M_DEVICE )
 
 JIU =  size(pa, 1 )
 JJU =  size(pa, 2 )
@@ -226,7 +224,7 @@ CALL MNH_MEM_GET( ztmp1_device, JIU, JJU, JKU )
 CALL MNH_MEM_GET( ztmp2_device, JIU, JJU, JKU )
 CALL MNH_MEM_GET( ztmp3_device, JIU, JJU, JKU )
 
-!$acc data present( ztmp1_device, ztmp2_device, ztmp3_device )
+!$acc data present_crm( ztmp1_device, ztmp2_device, ztmp3_device )
 
 !
 !*       1.    DEFINITION of GX_U_M_DEVICE
@@ -369,7 +367,6 @@ END IF
 END FUNCTION GY_U_UV
 !
 !
-#ifdef MNH_OPENACC
 !     #########################################################
       SUBROUTINE GY_U_UV_DEVICE(PA,PDYY,PDZZ,PDZY,PGY_U_UV_DEVICE)
 !     #########################################################
@@ -404,20 +401,25 @@ INTEGER  :: JI,JJ,JK
 !
 !----------------------------------------------------------------------------
 
-!$acc data present( PA, PDYY, PDZZ, PDZY, PGY_U_UV_DEVICE )
+!$acc data present_crm( PA, PDYY, PDZZ, PDZY, PGY_U_UV_DEVICE )
 
 JIU =  size(pa, 1 )
 JJU =  size(pa, 2 )
 JKU =  size(pa, 3 )
 
 !Pin positions in the pools of MNH memory
+#ifdef MNH_OPENACC
 CALL MNH_MEM_POSITION_PIN( 'GY_U_UV' )
 
 CALL MNH_MEM_GET( ztmp1_device, JIU, JJU, JKU )
 CALL MNH_MEM_GET( ztmp2_device, JIU, JJU, JKU )
 CALL MNH_MEM_GET( ztmp3_device, JIU, JJU, JKU )
-
-!$acc data present( ztmp1_device, ztmp2_device, ztmp3_device )
+#else
+ALLOCATE(ztmp1_device(JIU, JJU, JKU ))
+ALLOCATE(ztmp2_device(JIU, JJU, JKU ))
+ALLOCATE(ztmp3_device(JIU, JJU, JKU ))
+#endif 
+!$acc data present_crm( ztmp1_device, ztmp2_device, ztmp3_device )
 
 !
 !*       1.    DEFINITION of GY_U_UV_DEVICE
@@ -457,15 +459,17 @@ END IF
 !$acc end data
 
 !Release all memory allocated with MNH_MEM_GET calls since last call to MNH_MEM_POSITION_PIN
+#ifdef MNH_OPENACC
 CALL MNH_MEM_RELEASE( 'GY_U_UV' )
-
+#else
+DEALLOCATE(ZTMP1_DEVICE, ZTMP2_DEVICE, ZTMP3_DEVICE)
+#endif
 !$acc end data
 
 !----------------------------------------------------------------------------
 !
 END SUBROUTINE GY_U_UV_DEVICE
 !
-#endif
 !
 !     #######################################################
       FUNCTION GZ_U_UW(PA,PDZZ, KKA, KKU, KL)      RESULT(PGZ_U_UW)

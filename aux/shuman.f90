@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -8,6 +8,91 @@
 !     ##################
 !
 IMPLICIT NONE
+INTERFACE DXM
+ FUNCTION DXM(PA)  RESULT(PDXM)
+ IMPLICIT NONE
+ REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
+ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXM   ! result at flux side
+ END FUNCTION DXM
+ !
+ FUNCTION DXM_2D(PA)  RESULT(PDXM)
+ IMPLICIT NONE
+ REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at mass localization
+ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PDXM   ! result at flux side
+ END FUNCTION DXM_2D
+END INTERFACE
+!
+INTERFACE DYM
+ FUNCTION DYM(PA)  RESULT(PDYM)
+ IMPLICIT NONE
+ REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
+ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYM   ! result at flux side
+ END FUNCTION DYM
+!
+ FUNCTION DYM_2D(PA)  RESULT(PDYM)
+ IMPLICIT NONE
+ REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at mass localization
+ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PDYM   ! result at flux side
+ END FUNCTION DYM_2D
+END INTERFACE
+!
+INTERFACE MXM
+ FUNCTION MXM(PA)  RESULT(PMXM)
+ IMPLICIT NONE
+ REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
+ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXM   ! result at flux localization 
+ END FUNCTION MXM
+ !
+ FUNCTION MXM_2D(PA)  RESULT(PMXM)
+ IMPLICIT NONE
+ REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at mass localization
+ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMXM   ! result at flux localization 
+ END FUNCTION MXM_2D
+END INTERFACE
+!
+INTERFACE MYM
+ FUNCTION MYM(PA)  RESULT(PMYM)
+ IMPLICIT NONE
+ REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
+ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYM   ! result at flux localization 
+ END  FUNCTION MYM
+ !
+ FUNCTION MYM_2D(PA)  RESULT(PMYM)
+ IMPLICIT NONE
+ REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at mass localization
+ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMYM   ! result at flux localization 
+ END  FUNCTION MYM_2D
+END INTERFACE
+!
+INTERFACE MXF
+ FUNCTION MXF(PA)  RESULT(PMXF)
+ IMPLICIT NONE
+ REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXF   ! result at mass localization 
+ END FUNCTION MXF
+!
+ FUNCTION MXF_2D(PA)  RESULT(PMXF)
+ IMPLICIT NONE
+ REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at flux side
+ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMXF   ! result at mass localization 
+ END FUNCTION MXF_2D
+!
+END INTERFACE
+!
+INTERFACE MYF
+ FUNCTION MYF_2D(PA)  RESULT(PMYF)
+ IMPLICIT NONE
+ REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at flux side
+ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMYF   ! result at mass localization 
+ END FUNCTION MYF_2D
+ ! 
+ FUNCTION MYF(PA)  RESULT(PMYF)
+ IMPLICIT NONE
+ REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYF   ! result at mass localization 
+ END FUNCTION MYF
+END INTERFACE
+!
 INTERFACE
 !
 FUNCTION DXF(PA)  RESULT(PDXF)
@@ -16,23 +101,11 @@ REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux s
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXF   ! result at mass localization
 END FUNCTION DXF
 !
-FUNCTION DXM(PA)  RESULT(PDXM)
-IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXM   ! result at flux side
-END FUNCTION DXM
-!
 FUNCTION DYF(PA)  RESULT(PDYF)
 IMPLICIT NONE
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYF   ! result at mass localization 
 END FUNCTION DYF
-!
-FUNCTION DYM(PA)  RESULT(PDYM)
-IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYM   ! result at flux side
-END FUNCTION DYM
 !
 FUNCTION DZF(PA)  RESULT(PDZF)
 IMPLICIT NONE
@@ -45,30 +118,6 @@ IMPLICIT NONE
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZM   ! result at flux side
 END FUNCTION DZM
-!
-FUNCTION MXF(PA)  RESULT(PMXF)
-IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXF   ! result at mass localization 
-END FUNCTION MXF
-!
-FUNCTION MXM(PA)  RESULT(PMXM)
-IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXM   ! result at flux localization 
-END FUNCTION MXM
-!
-FUNCTION MYF(PA)  RESULT(PMYF)
-IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYF   ! result at mass localization 
-END FUNCTION MYF
-!
-FUNCTION MYM(PA)  RESULT(PMYM)
-IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYM   ! result at flux localization 
-END  FUNCTION MYM
 !
 FUNCTION MZF(PA)  RESULT(PMZF)
 IMPLICIT NONE
@@ -125,7 +174,7 @@ END MODULE MODI_SHUMAN
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!    V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -204,6 +253,79 @@ END DO
 END FUNCTION MXF
 !
 !     ###############################
+      FUNCTION MXF_2D(PA)  RESULT(PMXF)
+!     ###############################
+!
+!!****  *MXF_2D* -  Shuman operator : mean operator in x direction for a 
+!!                                 variable at a flux side
+!!    SAME AS MXF for a 2D Variable (selection of the level K) only in turb_hor*
+!!
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_PARAMETERS
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMXF   ! result at mass localization 
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JI, JJ     ! Loop indices
+INTEGER :: IIU, IJU  ! upper bounds of PA
+!
+#ifdef _OPT_LINEARIZED_LOOPS
+INTEGER :: JIJ,JIJOR,JIJEND
+#endif
+! 
+!
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF MXF
+!              ------------------
+!
+IIU = SIZE(PA,1)
+IJU = SIZE(PA,2)
+!
+#ifndef _OPT_LINEARIZED_LOOPS
+  DO JJ = 1, IJU
+    DO JI = 1 + 1, IIU
+      PMXF(JI-1,JJ) = 0.5*( PA(JI-1,JJ)+PA(JI,JJ) )
+    ENDDO
+  ENDDO
+!
+PMXF(IIU,:)    = PMXF(2*JPHEXT,:) 
+#else
+JIJOR  = 1 + 1
+JIJEND = IIU*IJU
+!
+!CDIR NODEP
+!OCL NOVREC
+DO JIJ=JIJOR , JIJEND
+  PMXF(JIJ-1,1) = 0.5*( PA(JIJ-1,1)+PA(JIJ,1) )
+END DO
+!
+!CDIR NODEP
+!OCL NOVREC
+DO JI=1,JPHEXT
+   DO JJ=1,IJU*IU
+      PMXF(IIU-JPHEXT+JI,JJ) = PMXF(JPHEXT+JI,JJ) ! for reprod JPHEXT <> 1
+   END DO
+END DO
+#endif
+!
+!-------------------------------------------------------------------------------
+!
+END FUNCTION MXF_2D
+
+!     ###############################
       FUNCTION MXM(PA)  RESULT(PMXM)
 !     ###############################
 !
@@ -241,7 +363,7 @@ END FUNCTION MXF
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!    V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -324,6 +446,80 @@ END DO
 END FUNCTION MXM
 !
 !     ###############################
+      FUNCTION MXM_2D(PA)  RESULT(PMXM)
+!     ###############################
+!
+!!****  *MXM* -  Shuman operator : mean operator in x direction for a 
+!!                                 mass variable 
+!!
+!!    SAME AS MXM for a 2D Variable (selection of the level K) only in turb_hor*
+! 
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_PARAMETERS
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMXM   ! result at flux localization 
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JI, JJ     ! Loop indices
+INTEGER :: IIU, IJU  ! upper bounds of PA
+!
+#ifdef _OPT_LINEARIZED_LOOPS
+INTEGER :: JIJ,JIJOR,JIJEND
+#endif
+!            
+!
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF MXM
+!              ------------------
+!
+IIU = SIZE(PA,1)
+IJU = SIZE(PA,2)
+!
+#ifndef _OPT_LINEARIZED_LOOPS
+  DO JJ = 1, IJU
+    DO JI = 1 + 1, IIU
+      PMXM(JI,JJ) = 0.5*( PA(JI,JJ)+PA(JI-1,JJ) )
+    ENDDO
+  ENDDO
+!
+  DO JJ=1,IJU
+    PMXM(1,JJ)    = PMXM(IIU-2*JPHEXT+1,JJ)  	!TODO: voir si ce n'est pas plutot JPHEXT+1
+  ENDDO
+#else
+JIJOR  = 1 + 1
+JIJEND = IIU*IJU
+!
+!CDIR NODEP
+!OCL NOVREC
+DO JIJ=JIJOR , JIJEND
+   PMXM(JIJ,1) = 0.5*( PA(JIJ,1)+PA(JIJ-1,1) )
+END DO
+!
+!CDIR NODEP
+!OCL NOVREC
+DO JI=1,JPHEXT
+   DO JJ=1,IJU*IU
+      PMXM(JI,JJ) = PMXM(IIU-2*JPHEXT+JI,JJ) ! for reprod JPHEXT <> 1
+   END DO
+END DO
+#endif
+!
+!-------------------------------------------------------------------------------
+!
+END FUNCTION MXM_2D
+
+!     ###############################
       FUNCTION MYF(PA)  RESULT(PMYF)
 !     ###############################
 !
@@ -361,7 +557,7 @@ END FUNCTION MXM
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!    V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -434,6 +630,74 @@ END DO
 END FUNCTION MYF
 !
 !     ###############################
+      FUNCTION MYF_2D(PA)  RESULT(PMYF)
+!     ###############################
+!
+!!****  *MYF_2D* -  Shuman operator : mean operator in y direction for a 
+!!                                 variable at a flux side
+!!    SAME AS MYF for a 2D Variable (selection of the level K) only in turb_hor*
+!!
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_PARAMETERS
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMYF   ! result at mass localization 
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JI, JJ     ! Loop indices
+INTEGER :: IIU, IJU  ! upper bounds of PA
+!
+#ifdef _OPT_LINEARIZED_LOOPS
+INTEGER :: JIJ,JIJOR,JIJEND
+#endif
+!       
+!
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF MYF
+!              ------------------
+!
+IIU = SIZE(PA,1)
+IJU = SIZE(PA,2)
+!
+#ifndef _OPT_LINEARIZED_LOOPS
+  DO JJ=1,IJU-1
+    DO JI=1,IIU !TODO: remplacer le 1 par JPHEXT ?
+      PMYF(JI,JJ) = 0.5*( PA(JI,JJ)+PA(JI,JJ+1) )
+    END DO
+  END DO
+#else
+JIJOR  = 1 + IIU
+JIJEND = IIU*IJU
+!
+!CDIR NODEP
+!OCL NOVREC
+DO JIJ=JIJOR , JIJEND
+   PMYF(JIJ-IIU,1) = 0.5*( PA(JIJ-IIU,1)+PA(JIJ,1) )
+END DO
+#endif
+!
+DO JJ=1,JPHEXT
+   PMYF(:,IJU-JPHEXT+JJ) = PMYF(:,JPHEXT+JJ) ! for reprod JPHEXT <> 1
+END DO
+!
+!
+!-------------------------------------------------------------------------------
+!
+END FUNCTION MYF_2D
+
+!     ###############################
       FUNCTION MYM(PA)  RESULT(PMYM)
 !     ###############################
 !
@@ -471,7 +735,7 @@ END FUNCTION MYF
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!    V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -542,6 +806,71 @@ END DO
 END FUNCTION MYM
 !
 !     ###############################
+      FUNCTION MYM_2D(PA)  RESULT(PMYM)
+!     ###############################
+!
+!!****  *MYM* -  Shuman operator : mean operator in y direction for a 
+!!                                 mass variable 
+!!
+!!    SAME AS MYM for a 2D Variable (selection of the level K) only in turb_hor*
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_PARAMETERS
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMYM   ! result at flux localization 
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JI, JJ     ! Loop indices
+INTEGER :: IIU, IJU  ! upper bounds of PA
+!
+#ifdef _OPT_LINEARIZED_LOOPS
+INTEGER :: JIJ,JIJOR,JIJEND
+#endif
+!   
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF MYM
+!              ------------------
+!
+IIU=SIZE(PA,1)
+IJU=SIZE(PA,2)
+!
+#ifndef _OPT_LINEARIZED_LOOPS
+  DO JJ=2,IJU !TODO: remplacer le 1+1 par 1+JPHEXT ?
+    DO JI=1,IIU
+      PMYM(JI,JJ) = 0.5*( PA(JI,JJ)+PA(JI,JJ-1) )
+    END DO
+  END DO
+#else
+JIJOR  = 1 + IIU
+JIJEND = IIU*IJU
+!CDIR NODEP
+!OCL NOVREC
+DO JIJ=JIJOR , JIJEND
+   PMYM(JIJ,1) = 0.5*( PA(JIJ,1)+PA(JIJ-IIU,1) )
+END DO
+#endif
+!
+DO JJ=1,JPHEXT
+   PMYM(:,JJ)  = PMYM(:,IJU-2*JPHEXT+JJ) ! for reprod JPHEXT <> 1
+END DO
+!
+!-------------------------------------------------------------------------------
+!
+END FUNCTION MYM_2D
+!
+!     ###############################
       FUNCTION MZF(PA)  RESULT(PMZF)
 !     ###############################
 !
@@ -576,7 +905,7 @@ END FUNCTION MYM
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!    V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -676,7 +1005,7 @@ END FUNCTION MZF
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!    V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -784,7 +1113,7 @@ END FUNCTION MZM
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!    V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -867,6 +1196,77 @@ END DO
 END FUNCTION DXF
 !
 !     ###############################
+      FUNCTION DXM_2D(PA)  RESULT(PDXM)
+!     ###############################
+!
+!!****  *DXM_2D* -  Shuman operator : finite difference operator in x direction
+!!                                  for a variable in 2D at a mass localization
+!!
+!!    SAME AS DXM for a 2D Variable (selection of the level K) only in turb_hor*
+!
+USE MODD_PARAMETERS
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PDXM   ! result at flux side
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JI, JJ     ! Loop indices
+INTEGER :: IIU, IJU  ! upper bounds of PA
+!
+#ifdef _OPT_LINEARIZED_LOOPS
+INTEGER :: JJ
+INTEGER :: JIJ,JIJOR,JIJEND
+#endif
+!   
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF DXM
+!              ------------------
+!
+IIU = SIZE(PA,1)
+IJU = SIZE(PA,2)
+!
+#ifndef _OPT_LINEARIZED_LOOPS
+  DO JJ=1,IJU
+    DO JI=1+1,IIU !TODO: remplacer le 1 par JPHEXT ?
+      PDXM(JI,JJ) = PA(JI,JJ) - PA(JI-1,JJ) 
+    END DO
+  END DO
+!
+  DO JJ=1,IJU
+    PDXM(1,JJ)    = PDXM(IIU-2*JPHEXT+1,JJ)   !TODO: remplacer -2*JPHEXT+1 par -JPHEXT ?
+  ENDDO
+#else
+JIJOR  = 1 + 1
+JIJEND = IIU*IJU
+!
+!CDIR NODEP
+!OCL NOVREC
+DO JIJ=JIJOR , JIJEND
+   PDXM(JIJ,1) = PA(JIJ,1) - PA(JIJ-1,1) 
+END DO
+!
+!CDIR NODEP
+!OCL NOVREC
+DO JI=1,JPHEXT
+   DO JJ=1,IJU
+      PDXM(JI,JJ) = PDXM(IIU-2*JPHEXT+JI,JJ) ! for reprod JPHEXT <> 1
+   END DO
+END DO
+#endif
+!
+!-------------------------------------------------------------------------------
+!
+END FUNCTION DXM_2D
+:
+!     ###############################
       FUNCTION DXM(PA)  RESULT(PDXM)
 !     ###############################
 !
@@ -904,7 +1304,7 @@ END FUNCTION DXF
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!    V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -1021,7 +1421,7 @@ END FUNCTION DXM
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!    V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -1129,7 +1529,7 @@ END FUNCTION DYF
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!    V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -1205,6 +1605,77 @@ END DO
 END FUNCTION DYM
 !
 !     ###############################
+      FUNCTION DYM_2D(PA)  RESULT(PDYM)
+!     ###############################
+!
+!!****  *DYM* -  Shuman operator : finite difference operator in y direction
+!!                                  for a variable at a mass localization
+!!
+!!    SAME AS DYM for a 2D Variable (selection of the level K) only in turb_hor*
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_PARAMETERS
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PDYM   ! result at flux side
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JI, JJ     ! Loop indices
+INTEGER :: IIU, IJU  ! upper bounds of PA
+!
+#ifdef _OPT_LINEARIZED_LOOPS
+INTEGER :: JIJ,JIJOR,JIJEND
+#endif
+!     
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF DYM
+!              ------------------
+!
+IIU=SIZE(PA,1)
+IJU=SIZE(PA,2)
+!
+#ifndef _OPT_LINEARIZED_LOOPS
+  DO JJ=2,IJU !TODO: remplacer le 2 par JPHEXT+1 ?
+    DO JI=1,IIU
+      PDYM(JI,JJ) = PA(JI,JJ) - PA(JI,JJ-1) 
+    END DO
+  END DO
+!
+DO JJ=1,JPHEXT
+   PDYM(:,JJ) = PDYM(:,IJU-2*JPHEXT+JJ) ! for reprod JPHEXT <> 1
+END DO
+#else
+JIJOR  = 1 + IIU
+JIJEND = IIU*IJU
+!
+!CDIR NODEP
+!OCL NOVREC
+DO JIJ=JIJOR , JIJEND
+   PDYM(JIJ,1)           = PA(JIJ,1)  -  PA(JIJ-IIU,1) 
+END DO
+!
+DO JJ=1,JPHEXT
+   PDYM(:,JJ) = PDYM(:,IJU-2*JPHEXT+JJ) ! for reprod JPHEXT <> 1
+END DO
+#endif
+!
+!
+!-------------------------------------------------------------------------------
+!
+END FUNCTION DYM_2D
+!
+!     ###############################
       FUNCTION DZF(PA)  RESULT(PDZF)
 !     ###############################
 !
@@ -1239,7 +1710,7 @@ END FUNCTION DYM
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!    V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -1344,7 +1815,7 @@ END FUNCTION DZF
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!    V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
