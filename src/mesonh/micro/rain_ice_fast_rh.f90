@@ -89,12 +89,23 @@ REAL,     DIMENSION(:),     intent(inout) :: PUSW     ! Undersaturation over wat
 !
 INTEGER                              :: IHAIL, IGWET
 INTEGER                              :: JJ, JL
-INTEGER, DIMENSION(size(PRHODREF))   :: I1H, I1W
-INTEGER, DIMENSION(:), ALLOCATABLE   :: IVEC1, IVEC2      ! Vectors of indices for interpolations
-REAL,    DIMENSION(:), ALLOCATABLE   :: ZVEC1,ZVEC2,ZVEC3 ! Work vectors for interpolations
-REAL,    DIMENSION(:), ALLOCATABLE   :: ZVECLBDAG, ZVECLBDAH, ZVECLBDAS
-REAL,    DIMENSION(size(PRHODREF))   :: ZZW               ! Work array
-REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
+#ifndef MNH_OPENACC
+INTEGER, DIMENSION(:),   ALLOCATABLE :: I1H, I1W
+INTEGER, DIMENSION(:),   ALLOCATABLE :: IVEC1, IVEC2      ! Vectors of indices for interpolations
+LOGICAL, DIMENSION(:),   ALLOCATABLE :: GWORK
+REAL,    DIMENSION(:),   ALLOCATABLE :: ZVEC1,ZVEC2,ZVEC3 ! Work vectors for interpolations
+REAL,    DIMENSION(:),   ALLOCATABLE :: ZVECLBDAG, ZVECLBDAH, ZVECLBDAS
+REAL,    DIMENSION(:),   ALLOCATABLE :: ZZW               ! Work array
+REAL,    DIMENSION(:,:), ALLOCATABLE :: ZZW1              ! Work arrays
+#else
+INTEGER, DIMENSION(:),   pointer, contiguous :: I1H, I1W
+INTEGER, DIMENSION(:),   pointer, contiguous :: IVEC1, IVEC2      ! Vectors of indices for interpolations
+LOGICAL, DIMENSION(:),   pointer, contiguous :: GWORK
+REAL,    DIMENSION(:),   pointer, contiguous :: ZVEC1,ZVEC2,ZVEC3 ! Work vectors for interpolations
+REAL,    DIMENSION(:),   pointer, contiguous :: ZVECLBDAG, ZVECLBDAH, ZVECLBDAS
+REAL,    DIMENSION(:),   pointer, contiguous :: ZZW               ! Work array
+REAL,    DIMENSION(:,:), pointer, contiguous :: ZZW1              ! Work arrays
+#endif
 !
 !-------------------------------------------------------------------------------
 !
@@ -197,8 +208,10 @@ IF( IHAIL>0 ) THEN
 !
 !*       7.2    compute the Wet growth of hail
 !
+!$acc kernels
     ZZW1(:,:) = 0.0
 !
+!$acc loop independent
     DO JJ = 1, IHAIL
       JL = I1H(JJ)
       PLBDAH(JL)  = XLBH * ( PRHODREF(JL) * MAX( PRHT(JL), XRTMIN(7) ) )**XLBEXH
@@ -213,22 +226,24 @@ IF( IHAIL>0 ) THEN
         ZZW1(JL,2) = MIN( PRIS(JL),XFWETH * PRIT(JL) * ZZW(JL) )             ! RIWETH
       END IF
     END DO
+!$acc end kernels
 !
 !*       7.2.1  accretion of aggregates on the hailstones
 !
-    IGWET = 0
-    DO JJ = 1, IHAIL
-      JL = I1H(JJ)
-      IF ( PRST(JL)>XRTMIN(5) .AND. PRSS(JL)>0.0 ) THEN
-        IGWET = IGWET + 1
-        I1W(IGWET) = JL
-      END IF
-    END DO
+!$acc kernels present_cr(GWORK)
+    GWORK(1:IHAIL) = PRST(I1H(1:IHAIL))>XRTMIN(5) .AND. PRSS(I1H(1:IHAIL))>0.0
+!$acc end kernels
+#ifndef MNH_OPENACC
+    IGWET = COUNTJV( GWORK(1:IHAIL), I1W(:) )
+#else
+    CALL COUNTJV_DEVICE( GWORK(1:IHAIL), I1W(:), IGWET )
+#endif
 !
     IF( IGWET>0 ) THEN
 !
 !*       7.2.2  allocations
 !
+#ifndef MNH_OPENACC
       ALLOCATE(ZVECLBDAH(IGWET))
       ALLOCATE(ZVECLBDAS(IGWET))
       ALLOCATE(ZVEC1(IGWET))
@@ -236,9 +251,24 @@ IF( IHAIL>0 ) THEN
       ALLOCATE(ZVEC3(IGWET))
       ALLOCATE(IVEC1(IGWET))
       ALLOCATE(IVEC2(IGWET))
+#else
+      !Pin positions in the pools of MNH memory
+      CALL MNH_MEM_POSITION_PIN( 'RAIN_ICE_FAST_RH 2' )
+
+      CALL MNH_MEM_GET( ZVECLBDAH, IGWET )
+      CALL MNH_MEM_GET( ZVECLBDAS, IGWET )
+      CALL MNH_MEM_GET( ZVEC1,     IGWET )
+      CALL MNH_MEM_GET( ZVEC2,     IGWET )
+      CALL MNH_MEM_GET( ZVEC3,     IGWET )
+      CALL MNH_MEM_GET( IVEC1,     IGWET )
+      CALL MNH_MEM_GET( IVEC2,     IGWET )
+
+!$acc data present( ZVECLBDAH, ZVECLBDAS, ZVEC1, ZVEC2, ZVEC3, IVEC1, IVEC2 )
+#endif
 !
 !*       7.2.3  select the (PLBDAH,PLBDAS) couplet
 !
+!$acc kernels
       ZVECLBDAH(1:IGWET) = PLBDAH(I1W(1:IGWET))
       ZVECLBDAS(1:IGWET) = PLBDAS(I1W(1:IGWET))
 !
@@ -259,6 +289,7 @@ IF( IHAIL>0 ) THEN
 !*       7.2.5  perform the bilinear interpolation of the normalized
 !               SWETH-kernel
 !
+!$acc loop independent
       DO JJ = 1,IGWET
         ZVEC3(JJ) = (  XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                      - XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
@@ -268,6 +299,7 @@ IF( IHAIL>0 ) THEN
                                                           * (ZVEC1(JJ) - 1.0)
       END DO
 !
+!$acc loop independent
       DO JJ = 1, IGWET
         JL = I1W(JJ)
         ZZW1(JL,3) = MIN( PRSS(JL),XFSWETH*ZVEC3(JJ)                       & ! RSWETH
@@ -277,6 +309,10 @@ IF( IHAIL>0 ) THEN
                             XLBSWETH2/( ZVECLBDAH(JJ)   * ZVECLBDAS(JJ)   ) + &
                             XLBSWETH3/(               ZVECLBDAS(JJ)**2) ) )
       END DO
+!$acc end kernels
+
+!$acc end data
+#ifndef MNH_OPENACC
       DEALLOCATE(ZVECLBDAS)
       DEALLOCATE(ZVECLBDAH)
       DEALLOCATE(IVEC2)
@@ -284,23 +320,28 @@ IF( IHAIL>0 ) THEN
       DEALLOCATE(ZVEC3)
       DEALLOCATE(ZVEC2)
       DEALLOCATE(ZVEC1)
+#else
+      !Release all memory allocated with MNH_MEM_GET calls since last call to MNH_MEM_POSITION_PIN
+      CALL MNH_MEM_RELEASE( 'RAIN_ICE_FAST_RH 2' )
+#endif
     END IF
 !
 !*       7.2.6  accretion of graupeln on the hailstones
 !
-    IGWET = 0
-    DO JJ = 1, IHAIL
-      JL = I1H(JJ)
-      IF ( PRGT(JL)>XRTMIN(6) .AND. PRGS(JL)>0.0 ) THEN
-        IGWET = IGWET + 1
-        I1W(IGWET) = JL
-      END IF
-    END DO
+!$acc kernels present_cr(GWORK)
+    GWORK(1:IHAIL) = PRGT(I1H(1:IHAIL))>XRTMIN(6) .AND. PRGS(I1H(1:IHAIL))>0.0
+!$acc end kernels
+#ifndef MNH_OPENACC
+    IGWET = COUNTJV( GWORK(1:IHAIL), I1W(:) )
+#else
+    CALL COUNTJV_DEVICE( GWORK(1:IHAIL), I1W(:), IGWET )
+#endif
 !
     IF( IGWET>0 ) THEN
 !
 !*       7.2.7  allocations
 !
+#ifndef MNH_OPENACC
       ALLOCATE(ZVECLBDAG(IGWET))
       ALLOCATE(ZVECLBDAH(IGWET))
       ALLOCATE(ZVEC1(IGWET))
@@ -308,9 +349,24 @@ IF( IHAIL>0 ) THEN
       ALLOCATE(ZVEC3(IGWET))
       ALLOCATE(IVEC1(IGWET))
       ALLOCATE(IVEC2(IGWET))
+#else
+      !Pin positions in the pools of MNH memory
+      CALL MNH_MEM_POSITION_PIN( 'RAIN_ICE_FAST_RH 3' )
+
+      CALL MNH_MEM_GET( ZVECLBDAG, IGWET )
+      CALL MNH_MEM_GET( ZVECLBDAH, IGWET )
+      CALL MNH_MEM_GET( ZVEC1,     IGWET )
+      CALL MNH_MEM_GET( ZVEC2,     IGWET )
+      CALL MNH_MEM_GET( ZVEC3,     IGWET )
+      CALL MNH_MEM_GET( IVEC1,     IGWET )
+      CALL MNH_MEM_GET( IVEC2,     IGWET )
+
+!$acc data present( ZVECLBDAG, ZVECLBDAH, ZVEC1, ZVEC2, ZVEC3, IVEC1, IVEC2 )
+#endif
 !
 !*       7.2.8  select the (PLBDAH,PLBDAG) couplet
 !
+!$acc kernels
       ZVECLBDAG(1:IGWET) = PLBDAG(I1W(1:IGWET))
       ZVECLBDAH(1:IGWET) = PLBDAH(I1W(1:IGWET))
 !
@@ -331,6 +387,7 @@ IF( IHAIL>0 ) THEN
 !*       7.2.10 perform the bilinear interpolation of the normalized
 !               GWETH-kernel
 !
+!$acc loop independent
       DO JJ = 1,IGWET
         ZVEC3(JJ) = (  XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
                      - XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
@@ -340,6 +397,7 @@ IF( IHAIL>0 ) THEN
                                                           * (ZVEC1(JJ) - 1.0)
       END DO
 !
+!$acc loop independent
       DO JJ = 1, IGWET
         JL = I1W(JJ)
         ZZW1(JL,5) = MAX(MIN( PRGS(JL),XFGWETH*ZVEC3(JJ)                       & ! RGWETH
@@ -349,6 +407,10 @@ IF( IHAIL>0 ) THEN
                             XLBGWETH2/( ZVECLBDAH(JJ)   * ZVECLBDAG(JJ)   ) + &
                             XLBGWETH3/(               ZVECLBDAG(JJ)**2) ) ),0. )
       END DO
+!$acc end kernels
+
+!$acc end data
+#ifndef MNH_OPENACC
       DEALLOCATE(ZVECLBDAH)
       DEALLOCATE(ZVECLBDAG)
       DEALLOCATE(IVEC2)
@@ -356,10 +418,16 @@ IF( IHAIL>0 ) THEN
       DEALLOCATE(ZVEC3)
       DEALLOCATE(ZVEC2)
       DEALLOCATE(ZVEC1)
+#else
+      !Release all memory allocated with MNH_MEM_GET calls since last call to MNH_MEM_POSITION_PIN
+      CALL MNH_MEM_RELEASE( 'RAIN_ICE_FAST_RH 3' )
+#endif
     END IF
 !
 !*       7.3    compute the Wet growth of hail
 !
+!$acc kernels
+!$acc loop independent
     DO JJ = 1, IHAIL
       JL = I1H(JJ)
       IF ( PZT(JL)<XTT ) THEN
@@ -375,6 +443,7 @@ IF( IHAIL>0 ) THEN
                     ( ZZW1(JL,2)+ZZW1(JL,3)+ZZW1(JL,5) ) *                  &
                     ( PRHODREF(JL)*(XLMTT+(XCI-XCL)*(XTT-PZT(JL)))   ) ) / &
                           ( PRHODREF(JL)*(XLMTT-XCL*(XTT-PZT(JL))) ) )
+
 !
         ZZW1(JL,6) = MAX( ZZW(JL) - ZZW1(JL,2) - ZZW1(JL,3) - ZZW1(JL,5),0.) ! RCWETH+RRWETH
         IF ( ZZW1(JL,6)/=0.) THEN
@@ -401,6 +470,7 @@ IF( IHAIL>0 ) THEN
         END IF
       END IF
     END DO
+!$acc end kernels
 
 END IF
 if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'WETH', Unpack ( pths(:) * prhodj(:), &
@@ -457,6 +527,8 @@ if ( lbudget_rh ) call Budget_store_init( tbudgets(NBUDGET_RH), 'HMLT', Unpack (
                                           mask = omicro(:,:,:), field = 0. ) )
 !
 IF( IHAIL>0 ) THEN
+!$acc kernels
+!$acc loop independent
     DO JJ = 1, IHAIL
       JL = I1H(JJ)
       IF( PRHS(JL)>0.0 .AND. PZT(JL)>XTT ) THEN
@@ -476,6 +548,7 @@ IF( IHAIL>0 ) THEN
         PTHS(JL) = PTHS(JL) - ZZW(JL)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(-RHMLTR))
       END IF
     END DO
+!$acc end kernels
 
 END IF
 if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'HMLT', Unpack ( pths(:) * prhodj(:), &
