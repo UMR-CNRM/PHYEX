@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -364,8 +364,6 @@ IKT=D%NKT
 IIJB=D%NIJB
 IIJE=D%NIJE
 IIJT=D%NIJT
-!-------------------------------------------------------------------------------
-!
 ZICEDRTMIN(1:KRR)=ICED%XRTMIN(1:KRR)
 !-------------------------------------------------------------------------------
 !
@@ -489,7 +487,7 @@ DO JK=IKTB,IKTE
 ENDDO
 !$acc kernels
 !$acc loop independent collapse(2)
-DO JK=IKTB,IKTE                                                                                                                     
+DO JK=IKTB,IKTE 
   DO JIJ=IIJB,IIJE
     CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(JIJ, JK), &
                          PTHT(JIJ, JK), PPABST(JIJ, JK), PRHODREF(JIJ, JK), &                                       

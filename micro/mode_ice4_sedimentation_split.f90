@@ -817,7 +817,6 @@ DO CONCURRENT(JK = IKTB:IKTE , JIJ = IIJB:IIJE )
 !!$  ENDDO
 ENDDO
 !$acc end kernels
-!
   !
 !$acc kernels
   GANYREMAINT = .FALSE.

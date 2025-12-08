@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -467,7 +467,6 @@ ELSE IF (O2D) THEN                      ! 3D case in a 2D model
                                         * PEMOIST(:,:) * PETHETA(:,:) &
                                         * ZWORK4(:,:)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-
 !
     PRED2TH3(:,IKB)=PRED2TH3(:,IKB+IKL)
     PRED2R3(:,IKB)=PRED2R3(:,IKB+IKL) 

@@ -746,7 +746,7 @@ END IF
 !
 !*       0.     Check mean diameter for cloud, rain  and ice
 !               --------------------------------------------
-! if ( BUCONF%lbu_enable ) then
+! if ( BUCONF%LBU_ENABLE ) then
 !   if ( BUCONF%lbudget_rc .and. lwarm .and. lrain ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', zrcs(:, :, :) * prhodj(:, :, :) )
 !   if ( BUCONF%lbudget_rr .and. lwarm .and. lrain ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', zrrs(:, :, :) * prhodj(:, :, :) )
 !   if ( BUCONF%lbudget_ri .and. lcold .and. lsnow ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', zris(:, :, :) * prhodj(:, :, :) )
@@ -797,7 +797,7 @@ END IF
 !!$   END WHERE
 !!$END IF
 !
-! if ( BUCONF%lbu_enable ) then
+! if ( BUCONF%LBU_ENABLE ) then
 !   if ( BUCONF%lbudget_rc .and. lwarm .and. lrain ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', zrcs(:, :, :) * prhodj(:, :, :) )
 !   if ( BUCONF%lbudget_rr .and. lwarm .and. lrain ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', zrrs(:, :, :) * prhodj(:, :, :) )
 !   if ( BUCONF%lbudget_ri .and. lcold .and. lsnow ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', zris(:, :, :) * prhodj(:, :, :) )
@@ -823,7 +823,7 @@ PINPRI=0.
 PINPRS=0.
 PINPRG=0.
 PINPRH=0.
-if ( BUCONF%lbu_enable ) then
+if ( BUCONF%LBU_ENABLE ) then
   if ( BUCONF%lbudget_th ) &
        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
   if ( BUCONF%lbudget_rc .and. nmom_c.ge.1 .and. lsedc ) &
@@ -1013,7 +1013,7 @@ ZTHS(:,:,:) = ZT(:,:,:) / ZEXN(:,:,:) * ZINV_TSTEP
 !
 ! Call budgets
 !
-if ( BUCONF%lbu_enable ) then
+if ( BUCONF%LBU_ENABLE ) then
   if ( BUCONF%lbudget_th ) &
        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
   if ( BUCONF%lbudget_rc .and. nmom_c.ge.1 .and. lsedc ) &
@@ -1094,7 +1094,7 @@ END IF
 !!$Z_RR_CVRC(:,:,:) = 0.
 !!$Z_CR_CVRC(:,:,:) = 0.
 !!$IF (NMOM_R.GE.2) THEN
-!!$   if( BUCONF%lbu_enable ) then
+!!$   if( BUCONF%LBU_ENABLE ) then
 !!$    if ( BUCONF%lbudget_rc ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC),                    'R2C1', zrcs(:, :, :) * prhodj(:, :, :) )
 !!$    if ( BUCONF%lbudget_rr ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR),                    'R2C1', zrrs(:, :, :) * prhodj(:, :, :) )
 !!$    if ( BUCONF%lbudget_sv .and. nmom_c.ge.2) &
@@ -1111,7 +1111,7 @@ END IF
 !!$   ZCCS(:,:,:) = ZCCS(:,:,:) - Z_CR_CVRC(:,:,:)/PTSTEP
 !!$   ZCRS(:,:,:) = ZCRS(:,:,:) + Z_CR_CVRC(:,:,:)/PTSTEP
 !!$
-!!$   if( BUCONF%lbu_enable ) then
+!!$   if( BUCONF%LBU_ENABLE ) then
 !!$    if ( BUCONF%lbudget_rc ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC),                    'R2C1', zrcs(:, :, :) * prhodj(:, :, :) )
 !!$    if ( BUCONF%lbudget_rr ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR),                    'R2C1', zrrs(:, :, :) * prhodj(:, :, :) )
 !!$    if ( BUCONF%lbudget_sv .and. nmom_c.ge.2) &
@@ -2560,7 +2560,7 @@ IF ( LHHONI) PSVS(:,:,:,ISV_LIMA_HOM_HAZE) = ZHOMFT(:,:,:) *ZINV_TSTEP
 !
 ! Call budgets
 !
-if ( BUCONF%lbu_enable ) then
+if ( BUCONF%LBU_ENABLE ) then
   allocate( zrhodjontstep(size( prhodj, 1), size( prhodj, 2), size( prhodj, 3) ) )
   zrhodjontstep(:, :, :) = zinv_tstep * prhodj(:, :, :)
 

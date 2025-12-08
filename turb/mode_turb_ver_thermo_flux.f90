@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -513,7 +513,7 @@ IF (GFWTH) THEN
   CALL M3_WTH_W2TH(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,ZKEFF,PTKEM,Z3RDMOMENT)
   CALL D_M3_WTH_W2TH_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,&
    & PD,PBLL_O_E,PETHETA,ZKEFF,PTKEM,ZWORK1)
-!
+  !
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZF(:,:)= ZF(:,:) + Z3RDMOMENT(:,:) * PFWTH(:,:)
@@ -529,7 +529,7 @@ IF (GFTH2) THEN
   CALL D_M3_WTH_WTH2_O_DDTDZ(D,CSTURB,TURBN,Z3RDMOMENT,PREDTH1,PREDR1,&
     & PD,PBLL_O_E,PETHETA,ZWORK1)
   CALL MZM_PHY(D,PFTH2,ZWORK2)
-!
+  !
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZF(:,:) = ZF(:,:) + Z3RDMOMENT(:,:) &
@@ -544,7 +544,7 @@ END IF
 IF (GFWR) THEN
   CALL M3_WTH_W2R(D,CSTURB,TURBN,PD,ZKEFF,PTKEM,PBLL_O_E,PEMOIST,PDTH_DZ,ZWORK1)
   CALL D_M3_WTH_W2R_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,ZKEFF,PTKEM,PBLL_O_E,PEMOIST,ZWORK2)
-!
+  !
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZF(:,:) = ZF(:,:) + ZWORK1(:,:) * PFWR(:,:)
@@ -560,7 +560,7 @@ IF (GFR2) THEN
   CALL MZM_PHY(D,PFR2,ZWORK2)
   CALL D_M3_WTH_WR2_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,&
     & ZKEFF,PTKEM,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST,ZWORK3)
-!
+  !
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)    
   ZF(:,:) = ZF(:,:) + ZWORK1(:,:) * ZWORK2(:,:)
@@ -576,7 +576,7 @@ IF (GFTHR) THEN
     & PLEPS,PEMOIST,Z3RDMOMENT)
   CALL D_M3_WTH_WTHR_O_DDTDZ(D,CSTURB,TURBN,Z3RDMOMENT,PREDTH1,PREDR1,PD,PBLL_O_E,PETHETA,ZWORK1)
   CALL MZM_PHY(D,PFTHR, ZWORK2)
-!
+  !
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZF(:,:) = ZF(:,:) + Z3RDMOMENT(:,:) &
@@ -615,9 +615,10 @@ ELSE ! atmosp bottom
     !$mnh_end_expand_array(JIJ=IIJB:IIJE) 
 !$acc end kernels
   END IF
-    ! atmos top
+  !
+  ! atmos top
 !$acc kernels
-      ZF(:,IKE+1)=0.
+  ZF(:,IKE+1)=0.
 !$acc end kernels
 END IF
 !
@@ -916,7 +917,7 @@ IF (KRR /= 0) THEN
     CALL M3_WR_W2R(D,CSTURB,TURBN,PREDR1,PREDTH1,PD,ZKEFF,PTKEM,Z3RDMOMENT)
     CALL D_M3_WR_W2R_O_DDRDZ(D,CSTURB,TURBN,PREDR1,PREDTH1,PD,&
      & PBLL_O_E,PEMOIST,ZKEFF,PTKEM,ZWORK1)
-  !
+    !
 !$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZF(:,:)= ZF(:,:) + Z3RDMOMENT(:,:) * PFWR(:,:)
@@ -932,7 +933,7 @@ IF (KRR /= 0) THEN
     CALL MZM_PHY(D,PFR2,ZWORK1)
     CALL D_M3_WR_WR2_O_DDRDZ(D,CSTURB,TURBN,Z3RDMOMENT,PREDR1,&
      & PREDTH1,PD,PBLL_O_E,PEMOIST,ZWORK2)
-  !
+    !
 !$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZF(:,:) = ZF(:,:) + Z3RDMOMENT(:,:) &
@@ -949,7 +950,7 @@ IF (KRR /= 0) THEN
      & PTKEM,PBLL_O_E,PETHETA,PDR_DZ,ZWORK1)
     CALL D_M3_WR_W2TH_O_DDRDZ(D,CSTURB,TURBN,PREDR1,PREDTH1,&
      & PD,ZKEFF,PTKEM,PBLL_O_E,PETHETA,ZWORK2)
-  !
+    !
 !$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZF(:,:) = ZF(:,:) + ZWORK1(:,:) * PFWTH(:,:)
@@ -983,7 +984,7 @@ IF (KRR /= 0) THEN
     CALL MZM_PHY(D,PFTHR,ZWORK1)
     CALL D_M3_WR_WTHR_O_DDRDZ(D,CSTURB,TURBN,Z3RDMOMENT,PREDR1, &
      & PREDTH1,PD,PBLL_O_E,PEMOIST,ZWORK2)
-  !
+    !
 !$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZF(:,:) = ZF(:,:) + Z3RDMOMENT(:,:) &

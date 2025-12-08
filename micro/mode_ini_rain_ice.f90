@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -1121,7 +1121,7 @@ IND      = 50    ! Number of interval used to integrate the dimensional
 ZEGR     = 1.0   ! distributions when computing the kernel XKER_RDRYG
 ZFDINFTY = 20.0
 !
-IF( .NOT.ASSOCIATED(XKER_RDRYG) ) THEN 
+IF( .NOT.ASSOCIATED(XKER_RDRYG) ) THEN
   CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RDRYG', RAIN_ICE_PARAMN%NDRYLBDAG,RAIN_ICE_PARAMN%NDRYLBDAR)
   !$acc enter data create(XKER_RDRYG)
 END IF

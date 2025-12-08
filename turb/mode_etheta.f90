@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -117,9 +117,9 @@ IF (OOCEAN) THEN                                    ! ocean case
 ELSE   
  IF ( KRR == 0) THEN                                ! dry case
 !$acc kernels
- !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  PETHETA(:,:) = 1.
- !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+   PETHETA(:,:) = 1.
+   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
  ELSE IF ( KRR == 1 ) THEN                           ! only vapor
 !$acc kernels
@@ -135,7 +135,7 @@ ELSE
   ZRW(:,:) = PRM(:,:,1)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
-!
+  !
   IF ( KRRI>0 ) THEN  ! rc and ri case
 !$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
