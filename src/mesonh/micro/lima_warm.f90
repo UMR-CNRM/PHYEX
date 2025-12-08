@@ -34,7 +34,7 @@ INTEGER,                  INTENT(IN)    :: KSPLITR    ! Number of small time ste
 REAL,                     INTENT(IN)    :: PTSTEP     ! Double Time step
                                                       ! (single if cold start)
 INTEGER,                  INTENT(IN)    :: KMI        ! Model index 
-TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT) :: TPFILE     ! Output file
 INTEGER,                  INTENT(IN)    :: KRR        ! Number of moist variables
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ        ! Height (z)
@@ -178,7 +178,7 @@ INTEGER,                  INTENT(IN)    :: KSPLITR    ! Number of small time ste
 REAL,                     INTENT(IN)    :: PTSTEP     ! Double Time step
                                                       ! (single if cold start)
 INTEGER,                  INTENT(IN)    :: KMI        ! Model index 
-TYPE(TFILEDATA),          INTENT(IN)   :: TPFILE     ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT) :: TPFILE     ! Output file
 INTEGER,                  INTENT(IN)    :: KRR        ! Number of moist variables
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ        ! Height (z)

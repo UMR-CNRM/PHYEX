@@ -104,8 +104,8 @@ INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model version (modd_conf)
-TYPE(TFILEDATA),          INTENT(INOUT)    ::  TPFILE       ! Output file
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
+TYPE(TFILEDATA),          INTENT(INOUT)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDXX   ! 1./PDXX
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDYY   ! 1./PDYY

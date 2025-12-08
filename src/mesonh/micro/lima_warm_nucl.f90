@@ -24,7 +24,7 @@ LOGICAL,                  INTENT(IN)    :: OACTIT     ! Switch to activate the
 REAL,                     INTENT(IN)    :: PTSTEP     ! Double Time step
                                                       ! (single if cold start)
 INTEGER,                  INTENT(IN)    :: KMI        ! Model index 
-TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT) :: TPFILE     ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF   ! Reference density
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
@@ -144,7 +144,7 @@ LOGICAL,                  INTENT(IN)    :: OACTIT     ! Switch to activate the
 REAL,                     INTENT(IN)    :: PTSTEP     ! Double Time step
                                                       ! (single if cold start)
 INTEGER,                  INTENT(IN)    :: KMI        ! Model index 
-TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT) :: TPFILE     ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF   ! Reference density
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF    ! Reference Exner function

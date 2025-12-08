@@ -177,7 +177,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PDXX,PDYY,PDZZ,PDZX,PDZY ! metr
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PZZ          ! physical height w-pt
 REAL,                    INTENT(IN)   ::  PTSTEP       ! Time step 
 REAL,                    INTENT(IN)   ::  PEXPL        ! Coef. temporal. disc.
-TYPE(TFILEDATA),         INTENT(INOUT)::  TPFILE       ! Output file
+TYPE(TFILEDATA),         INTENT(INOUT)   ::  TPFILE       ! Output file
 LOGICAL,                 INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
 LOGICAL,                 INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 REAL, DIMENSION(D%NIJT),        INTENT(IN)    :: PSFUM,PSFVM ! momentum sfc flux

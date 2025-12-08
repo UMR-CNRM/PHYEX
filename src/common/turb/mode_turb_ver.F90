@@ -264,7 +264,7 @@ LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for la
 LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model version
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
-TYPE(TFILEDATA),        INTENT(INOUT)::  TPFILE       ! Output file
+TYPE(TFILEDATA),        INTENT(INOUT)   ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                       ! Metric coefficients

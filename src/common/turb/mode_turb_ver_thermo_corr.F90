@@ -249,7 +249,7 @@ INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and version 
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
-TYPE(TFILEDATA),        INTENT(INOUT)::  TPFILE       ! Output file
+TYPE(TFILEDATA),        INTENT(INOUT)   ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDZZ, PDXX, PDYY, PDZX, PDZY
                                                       ! Metric coefficients
