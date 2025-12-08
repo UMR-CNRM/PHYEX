@@ -8,7 +8,8 @@
 !
 INTERFACE MOMG
 !
-FUNCTION MOMG_X0D(PALPHA, PNU, PP)  RESULT(PMOMG)
+PURE FUNCTION MOMG_X0D(PALPHA, PNU, PP)  RESULT(PMOMG)
+!$acc routine seq
 REAL, INTENT(IN) :: PALPHA, PNU
 REAL, INTENT(IN) :: PP
 REAL             :: PMOMG
@@ -53,12 +54,12 @@ END MODULE MODI_MOMG
 !             ---------------------------------
 !
 !     ##############################################
-      FUNCTION MOMG_X0D(PALPHA, PNU, PP)  RESULT(PMOMG)
+      PURE FUNCTION MOMG_X0D(PALPHA, PNU, PP)  RESULT(PMOMG)
 !     ##############################################
 !
-USE MODI_GAMMA
 !
-IMPLICIT NONE
+!$acc routine seq
+USE MODI_GAMMA, ONLY: GAMMA
 !
 IMPLICIT NONE
 !

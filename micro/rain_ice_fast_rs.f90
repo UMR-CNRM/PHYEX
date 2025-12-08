@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -262,14 +262,14 @@ if ( lbudget_rg ) call Budget_store_init( tbudgets(NBUDGET_RG), 'RIM', Unpack ( 
       JL = I1(JJ)
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
       ZZW1(JJ) = MIN( PRCS(JL),                           &
-                     XCRIMSS * ZVEC1(JJ) * PRCT(JL)       & ! RCRIMSS
-                             *   ZVECLBDAS(JJ)**XEXCRIMSS &
-                             * PRHODREF(JL)**(-XCEXVT) )
+                     XCRIMSS * ZVEC1(JJ) * PRCT(JL) * PRST(JL)      & ! RCRIMSS
+                             *   ZVECLBDAS(JJ)**(XBS+XEXCRIMSS) &
+                             * PRHODREF(JL)**(-XCEXVT+1) )
 #else
       ZZW1(JJ) = MIN( PRCS(JL),                                &
-                     XCRIMSS * ZVEC1(JJ) * PRCT(JL)            & ! RCRIMSS
-                             * BR_POW(ZVECLBDAS(JJ),XEXCRIMSS) &
-                             * BR_POW(PRHODREF(JL),-XCEXVT) )
+                     XCRIMSS * ZVEC1(JJ) * PRCT(JL) * PRST(JL)      & ! RCRIMSS
+                             * BR_POW(ZVECLBDAS(JJ),XBS+XEXCRIMSS) &
+                             * BR_POW(PRHODREF(JL),-XCEXVT+1) )
 #endif
       PRCS(JL) = PRCS(JL) - ZZW1(JJ)
       PRSS(JL) = PRSS(JL) + ZZW1(JJ)
@@ -303,21 +303,21 @@ END IF
       IF ( PRSS(JL) > 0.0 ) THEN
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
         ZZW2(JJ) = MIN( PRCS(JL),                       &
-                    XCRIMSG * PRCT(JL)                  & ! RCRIMSG
-                            * ZVECLBDAS(JJ)**XEXCRIMSG  &
-                            * PRHODREF(JL)**(-XCEXVT)   &
+                    XCRIMSG * PRCT(JL) *PRST(JL)                 & ! RCRIMSG
+                            * ZVECLBDAS(JJ)**(XBS+XEXCRIMSG)  &
+                            * PRHODREF(JL)**(-XCEXVT+1)   &
                             - ZZW1(JJ) )
         ZZW3(JJ) = MIN( PRSS(JL),                                          &
-                        XSRIMCG * ZVECLBDAS(JJ)**XEXSRIMCG                 & ! RSRIMCG
+                        PRST(JL) * PRHODREF(JL) * XSRIMCG * ZVECLBDAS(JJ)**(XBS+XEXSRIMCG)                 & ! RSRIMCG
                                 * (1.0 - ZVEC1(JJ) )/(PTSTEP*PRHODREF(JL)) )
 #else
         ZZW2(JJ) = MIN( PRCS(JL),                             &
-                    XCRIMSG * PRCT(JL)                        & ! RCRIMSG
-                            * BR_POW(ZVECLBDAS(JJ),XEXCRIMSG) &
-                            * BR_POW(PRHODREF(JL),-XCEXVT)    &
+                    XCRIMSG * PRCT(JL) *PRST(JL)                        & ! RCRIMSG
+                            * BR_POW(ZVECLBDAS(JJ),XBS+XEXCRIMSG) &
+                            * BR_POW(PRHODREF(JL),-XCEXVT+1)    &
                             - ZZW1(JJ) )
         ZZW3(JJ) = MIN( PRSS(JL),                                          &
-                        XSRIMCG * BR_POW(ZVECLBDAS(JJ),XEXSRIMCG)          & ! RSRIMCG
+                        PRST(JL) * PRHODREF(JL) * XSRIMCG * BR_POW(ZVECLBDAS(JJ),XBS+XEXSRIMCG)          & ! RSRIMCG
                                 * (1.0 - ZVEC1(JJ) )/(PTSTEP*PRHODREF(JL)) )
 #endif
         PRCS(JL) = PRCS(JL) - ZZW2(JJ)
@@ -339,6 +339,7 @@ IF (MPPDB_INITIALIZED) THEN
 END IF
 !$acc end data
 
+#ifndef MNH_OPENACC
     DEALLOCATE(ZZW3)
     DEALLOCATE(ZZW2)
     DEALLOCATE(ZZW1)
@@ -465,13 +466,13 @@ if ( lbudget_rg ) call Budget_store_init( tbudgets(NBUDGET_RG), 'ACC', Unpack ( 
       JL = I1(JJ)
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
       ZZW2(JJ) =                                                          & !! coef of RRACCS
-              XFRACCSS * ZVECLBDAS(JJ)**XCXS * PRHODREF(JL)**(-XCEXVT-1.) &
+              XFRACCSS * ( PRST(JL)*ZVECLBDAS(JJ)**XBS )*( PRHODREF(JL)**(-XCEXVT) )  &
          *( XLBRACCS1 / ZVECLBDAS(JJ)**2                                  &
           + XLBRACCS2 / ( ZVECLBDAS(JJ)    * ZVECLBDAR(JJ)    )           &
           + XLBRACCS3 / ZVECLBDAR(JJ)**2 ) / ZVECLBDAR(JJ)**4
 #else
       ZZW2(JJ) =                                                                      & !! coef of RRACCS
-              XFRACCSS * BR_POW(ZVECLBDAS(JJ),XCXS) * BR_POW(PRHODREF(JL),-XCEXVT-1.) &
+              XFRACCSS * ( PRST(JL)*BR_POW(ZVECLBDAS(JJ),XBS) * BR_POW(PRHODREF(JL),-XCEXVT)) &
          *( XLBRACCS1 / BR_P2(ZVECLBDAS(JJ))                                          &
           + XLBRACCS2 / ( ZVECLBDAS(JJ)    * ZVECLBDAR(JJ)    )                       &
           + XLBRACCS3 / BR_P2(ZVECLBDAR(JJ)) ) / BR_POW(ZVECLBDAR(JJ),4.0)
@@ -531,13 +532,13 @@ END IF
         IF ( ZZW2(JJ) > 0.0 ) THEN
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
           ZZW3(JJ) = MIN( PRSS(JL),XFSACCRG*ZVEC3(JJ)*                  & ! RSACCRG
-                 ZVECLBDAS(JJ)**(XCXS-XBS) * PRHODREF(JL)**(-XCEXVT-1.) &
+                 PRST(JL) * PRHODREF(JL)**(-XCEXVT) &
              * ( XLBSACCR1 / ZVECLBDAR(JJ)**2                           &
                + XLBSACCR2 /( ZVECLBDAR(JJ) * ZVECLBDAS(JJ) )           &
                + XLBSACCR3 / ZVECLBDAS(JJ)**2 ) / ZVECLBDAR(JJ) )
 #else
           ZZW3(JJ) = MIN( PRSS(JL),XFSACCRG*ZVEC3(JJ)*                  & ! RSACCRG
-                 BR_POW(ZVECLBDAS(JJ),XCXS-XBS) * BR_POW(PRHODREF(JL),-XCEXVT-1.) &
+                 PRST(JL) * BR_POW(PRHODREF(JL),-XCEXVT) &
              * ( XLBSACCR1 / BR_P2(ZVECLBDAR(JJ))                           &
                + XLBSACCR2 /( ZVECLBDAR(JJ) * ZVECLBDAS(JJ) )           &
                + XLBSACCR3 / BR_P2(ZVECLBDAS(JJ)) ) / ZVECLBDAR(JJ) )
@@ -600,14 +601,14 @@ if ( lbudget_rg ) call Budget_store_end( tbudgets(NBUDGET_RG), 'ACC', Unpack ( p
 ! compute RSMLT
 !
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
-    ZZW(JJ)  = MIN( PRSS(JJ), XFSCVMG*MAX( 0.0,( -ZZW(JJ) *             &
-                           ( X0DEPS*       PLBDAS(JJ)**XEX0DEPS +     &
-                             X1DEPS*PCJ(JJ)*PLBDAS(JJ)**XEX1DEPS ) ) / &
+    ZZW(JJ)  = MIN( PRSS(JJ), XFSCVMG*MAX( 0.0,( -ZZW(JJ) * PRST(JJ) * PRHODREF(JJ) *     &
+                           ( X0DEPS*       PLBDAS(JJ)**(XBS+XEX0DEPS) +     &
+                             X1DEPS*PCJ(JJ)*PLBDAS(JJ)**(XBS+XEX1DEPS) ) ) / &
                                              ( PRHODREF(JJ)*XLMTT ) ) )
 #else
-    ZZW(JJ)  = MIN( PRSS(JJ), XFSCVMG*MAX( 0.0,( -ZZW(JJ) *                    &
-                           ( X0DEPS*       BR_POW(PLBDAS(JJ),XEX0DEPS) +     &
-                             X1DEPS*PCJ(JJ)*BR_POW(PLBDAS(JJ),XEX1DEPS) ) ) / &
+    ZZW(JJ)  = MIN( PRSS(JJ), XFSCVMG*MAX( 0.0,( -ZZW(JJ) * PRST(JJ) * PRHODREF(JJ) * &
+                           ( X0DEPS*       BR_POW(PLBDAS(JJ),XBS+XEX0DEPS) +     &
+                             X1DEPS*PCJ(JJ)*BR_POW(PLBDAS(JJ),XBS+XEX1DEPS) ) ) / &
                                              ( PRHODREF(JJ)*XLMTT ) ) )
 #endif
 !

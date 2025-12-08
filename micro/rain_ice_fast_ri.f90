@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -66,7 +66,17 @@ REAL,     DIMENSION(:),     INTENT(INOUT) :: PTHS     ! Theta source
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(size(PRHODREF)) :: ZZW  ! Work array
+#ifndef MNH_OPENACC
+LOGICAL, DIMENSION(:), ALLOCATABLE :: GWORK
+REAL,    DIMENSION(:), ALLOCATABLE :: ZZW  ! Work array
+REAL,    DIMENSION(:), ALLOCATABLE :: ZLBEXI
+#else
+LOGICAL, DIMENSION(:), pointer, contiguous :: GWORK
+REAL,    DIMENSION(:), pointer, contiguous :: ZZW  ! Work array
+REAL,    DIMENSION(:), pointer, contiguous :: ZLBEXI
+#endif
+!
+INTEGER :: JL,JLU
 !-------------------------------------------------------------------------------
 !
 ! IN variables
@@ -129,12 +139,17 @@ CALL MNH_MEM_GET( ZLBEXI, SIZE(PRHODREF) )
   if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'IMLT', Unpack ( pris(:) * prhodj(:), &
                                            mask = omicro(:,:,:), field = 0. ) )
 
-  WHERE( PRIS(:)>0.0 .AND. PZT(:)>XTT )
+!$acc kernels
+  GWORK(:) = PRIS(:)>0.0 .AND. PZT(:)>XTT
+ !$mnh_expand_where(JL=1:JLU)
+  WHERE( GWORK(:) )
     PRCS(:) = PRCS(:) + PRIS(:)
     PTHS(:) = PTHS(:) - PRIS(:)*(PLSFACT(:)-PLVFACT(:)) ! f(L_f*(-RIMLTC))
     PRIS(:) = 0.0
     PCIT(:) = 0.0
   END WHERE
+ !$mnh_end_expand_where()
+!$acc end kernels
 
   if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'IMLT', Unpack ( pths(:) * prhodj(:), &
                                            mask = omicro(:,:,:), field = 0. ) )
@@ -145,15 +160,47 @@ CALL MNH_MEM_GET( ZLBEXI, SIZE(PRHODREF) )
 !
 !*       7.2    Bergeron-Findeisen effect: RCBERI
 !
+!$acc kernels
   zzw(:) = 0.
-  WHERE( PRCS(:)>0.0 .AND. PSSI(:)>0.0 .AND. PRIT(:)>XRTMIN(4) .AND. PCIT(:)>0.0 )
+  GWORK(:) = PRCS(:)>0.0 .AND. PSSI(:)>0.0 .AND. PRIT(:)>XRTMIN(4) .AND. PCIT(:)>0.0
+#if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
+ !$mnh_expand_where(JL=1:JLU)
+  WHERE( GWORK(:) )
     ZZW(:) = MIN(1.E8,XLBI*( PRHODREF(:)*PRIT(:)/PCIT(:) )**XLBEXI) ! Lbda_i
     ZZW(:) = MIN( PRCS(:),( PSSI(:) / (PRHODREF(:)*PAI(:)) ) * PCIT(:) * &
                   ( X0DEPI/ZZW(:) + X2DEPI*PCJ(:)*PCJ(:)/ZZW(:)**(XDI+2.0) ) )
     PRCS(:) = PRCS(:) - ZZW(:)
     PRIS(:) = PRIS(:) + ZZW(:)
     PTHS(:) = PTHS(:) + ZZW(:)*(PLSFACT(:)-PLVFACT(:)) ! f(L_f*(RCBERI))
-  END WHERE
+ END WHERE
+ !$mnh_end_expand_where()
+#else
+
+!!$ Le DO concurrent n'est pas bit-reproductible BUG NVHPC 20.7
+ !$mnh_do_concurrent( JL=1:JLU )
+    ZLBEXI(JL) = XLBEXI
+    IF ( GWORK(JL)  ) THEN
+       ZZW(JL) = MIN(1.E8,XLBI*BR_POW( PRHODREF(JL)*PRIT(JL)/PCIT(JL), ZLBEXI(JL) ) ) ! Lbda_i
+       ZZW(JL) = MIN( PRCS(JL),( PSSI(JL) / (PRHODREF(JL)*PAI(JL)) ) * PCIT(JL) * &
+            ( X0DEPI/ZZW(JL) + X2DEPI*PCJ(JL)*PCJ(JL)/BR_POW(ZZW(JL),XDI+2.0) ) )
+       PRCS(JL) = PRCS(JL) - ZZW(JL)
+       PRIS(JL) = PRIS(JL) + ZZW(JL)
+       PTHS(JL) = PTHS(JL) + ZZW(JL)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(RCBERI))
+    END IF
+ !$mnh_end_do() ! CONCURRENT
+ 
+!!! WHERE( GWORK(:) )
+   !!!! ZLBEXI(:) = XLBEXI
+    !!!!ZZW(:) = MIN(1.E8,XLBI*BR_POW( PRHODREF(:)*PRIT(:)/PCIT(:), ZLBEXI(:) ) ) ! Lbda_i
+    !!!!ZZW(:) = MIN( PRCS(:),( PSSI(:) / (PRHODREF(:)*PAI(:)) ) * PCIT(:) * &
+        !!! ( X0DEPI/ZZW(:) + X2DEPI*PCJ(:)*PCJ(:)/BR_POW(ZZW(:),XDI+2.0) ) )
+    !!!PRCS(:) = PRCS(:) - ZZW(:)
+    !!!!PRIS(:) = PRIS(:) + ZZW(:)
+    !!!!PTHS(:) = PTHS(:) + ZZW(:)*(PLSFACT(:)-PLVFACT(:)) ! f(L_f*(RCBERI))
+ !!!!END WHERE
+ 
+#endif 
+!$acc end kernels
 
   if ( lbudget_th ) call Budget_store_add( tbudgets(NBUDGET_TH), 'BERFI', Unpack (  zzw(:) * ( plsfact(:) - plvfact(:) ) &
                                                                      * prhodj(:), mask = omicro(:,:,:), field = 0. ) )
