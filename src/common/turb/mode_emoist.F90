@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -107,9 +107,9 @@ IKT=D%NKT
 IF (OOCEAN) THEN
  IF ( KRR == 0 ) THEN                                ! Unsalted
 !$acc kernels
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
    PEMOIST(IIJB:IIJE,:) = 0.
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
  ELSE
 !$acc kernels
@@ -137,7 +137,7 @@ ELSE
   ZDELTA = (CST%XRV/CST%XRD) - 1.
   ZRW(IIJB:IIJE,:) = PRM(IIJB:IIJE,:,1)
 !$acc end kernels
-!
+  !
   IF ( KRRI>0) THEN  ! rc and ri case
 !$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)

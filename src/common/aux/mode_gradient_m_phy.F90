@@ -621,10 +621,10 @@ IF (.NOT. OFLAT) THEN
 !
 ELSE
 !  PGY_M_V = DYM(PY)/PDYY
-!$acc kernels   
+!$acc kernels 
   PGY_M_V(:,2:IJU,:) = ( PY(:,2:IJU,:)-PY(:,1:IJU-1,:) ) &
                                / PDYY(:,2:IJU,:)
-!$acc end kernels   
+!$acc end kernels
 !
 ENDIF
 !$acc kernels   

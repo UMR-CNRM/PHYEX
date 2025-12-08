@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -18,6 +18,7 @@ CONTAINS
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+!USE MODD_ELEC_DESCR, ONLY: XECHARGE
 !
 IMPLICIT NONE
 !

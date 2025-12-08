@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -526,9 +526,6 @@ INTEGER :: ISV
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE,ZHOOK_HANDLE2
 IF (LHOOK) CALL DR_HOOK('TURB',0,ZHOOK_HANDLE)
-print*,"PRESENT(PSSTFL) = ",PRESENT(PSSTFL)
-print*,"PRESENT(PSSTFL_C) = ",PRESENT(PSSTFL_C)
-print*,"SIZE(PSSTFL_C,1) = ",SIZE(PSSTFL_C,1)
 !
 IF (TURBN%LHARAT .AND. TURBN%CTURBDIM /= '1DIM') THEN
   CALL ABOR1('TURBN%LHARATU only implemented for option TURBN%CTURBDIM=1DIM!')
@@ -650,7 +647,7 @@ IF (KRRL >=1) THEN
       CALL COMPUTE_FUNCTION_THERMO(CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
                                  ZLSOCPEXNM,ZAMOIST_ICE,ZATHETA_ICE)
     ENDIF
-!
+    !
 !$acc kernels present_cr( zamoist, zatheta, zlocpexnm, zlvocpexnm, zlsocpexnm, zamoist_ice, zatheta_ice )
     !$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
     WHERE(PRT(IIJB:IIJE,1:IKT,2)+PRT(IIJB:IIJE,1:IKT,4)>0.0)

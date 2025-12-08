@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -100,7 +100,7 @@ END WHERE
 IF(HSUBG_AUCV_RC=='NONE') THEN
   !Cloud water is entirely in low or high part
 !$acc kernels
-  !$mnh_expand_where(JL=1:KSIZE)
+ !$mnh_expand_where(JL=1:KSIZE)
   WHERE(PRCT(:)>ZRCRAUTC(:) .AND. LDMICRO(:))
     PHLC_HCF(:)=1.
     PHLC_LCF(:)=0.
@@ -122,7 +122,7 @@ IF(HSUBG_AUCV_RC=='NONE') THEN
 ELSEIF(HSUBG_AUCV_RC=='CLFR') THEN
   !Cloud water is only in the cloudy part and entirely in low or high part
 !$acc kernels
-  !$mnh_expand_where(JL=1:KSIZE)
+ !$mnh_expand_where(JL=1:KSIZE)
   WHERE(PCF(:)>0. .AND. PRCT(:)>ZRCRAUTC(:)*PCF(:) .AND. LDMICRO(:))
     PHLC_HCF(:)=PCF(:)
     PHLC_LCF(:)=0.
@@ -321,8 +321,8 @@ ENDWHERE
 !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
 IF(HSUBG_AUCV_RI=='NONE') THEN
-!$acc kernels
   !Cloud water is entirely in low or high part
+!$acc kernels
   !$mnh_expand_where(JL=1:KSIZE)
   WHERE(PRIT(:)>ZCRIAUTI(:) .AND. LDMICRO(:))
     PHLI_HCF(:)=1.
@@ -343,8 +343,8 @@ IF(HSUBG_AUCV_RI=='NONE') THEN
   !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
 ELSEIF(HSUBG_AUCV_RI=='CLFR') THEN
-!$acc kernels
   !Cloud water is only in the cloudy part and entirely in low or high part
+!$acc kernels
   !$mnh_expand_where(JL=1:KSIZE)
   WHERE(PCF(:)>0. .AND. PRIT(:)>ZCRIAUTI(:)*PCF(:) .AND. LDMICRO(:))
     PHLI_HCF(:)=PCF(:)

@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1996-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1996-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -331,16 +331,16 @@ IF ( .NOT. NEBN%LSUBG_COND ) THEN
       END IF
     ENDDO
   ENDDO
-!$acc end kernels
+  !$acc end kernels
 ELSE !NEBN%LSUBG_COND case
-  ! Tests on characters strings can break the vectorization, or at least they would
-  ! slow down considerably the performance of a vector loop. One should use tests on
-  ! reals, integers or booleans only. REK.
-  LLNONE=PARAMI%CSUBG_MF_PDF=='NONE'
-  LLTRIANGLE=PARAMI%CSUBG_MF_PDF=='TRIANGLE'
-  LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
-  LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
   !$acc kernels
+    ! Tests on characters strings can break the vectorization, or at least they would
+    ! slow down considerably the performance of a vector loop. One should use tests on
+    ! reals, integers or booleans only. REK.
+    LLNONE=PARAMI%CSUBG_MF_PDF=='NONE'
+    LLTRIANGLE=PARAMI%CSUBG_MF_PDF=='TRIANGLE'
+    LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
+    LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
   !$acc loop independent collapse(2)
   DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE

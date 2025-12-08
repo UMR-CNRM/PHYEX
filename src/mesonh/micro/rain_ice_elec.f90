@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2002-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2002-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -227,9 +227,6 @@ USE MODD_RAIN_ICE_PARAM_n
 USE MODD_REF,             ONLY: XTHVREFZ
 
 use mode_budget,          only: Budget_store_add, Budget_store_init, Budget_store_end
-#ifdef MNH_PGI
-USE MODE_PACK_PGI
-#endif
 use mode_tools,           only: Countjv
 
 USE MODI_MOMG
