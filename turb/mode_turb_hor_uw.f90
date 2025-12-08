@@ -102,7 +102,7 @@ INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
 INTEGER,                  INTENT(IN)    ::  KRR          ! number of moist var.
 INTEGER,                  INTENT(IN)    ::  KSV          ! number of sv var.
 LOGICAL,                  INTENT(IN)    ::  OFLAT        ! Logical for zero ororography
-TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT)    ::  TPFILE       ! Output file
 !
 
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.

@@ -253,7 +253,7 @@ LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
-TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
+TYPE(TFILEDATA),        INTENT(INOUT)   ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDXX, PDYY, PDZZ, PDZX, PDZY
                                                       ! Metric coefficients

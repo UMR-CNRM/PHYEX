@@ -181,7 +181,7 @@ LOGICAL,                INTENT(IN)   ::  OOCEAN ! switch for ocean version
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 
-TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients

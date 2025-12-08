@@ -37,7 +37,7 @@ INTEGER,                  INTENT(IN)    :: KSPLITR ! Number of small time step
                                       ! integration for  rain sedimendation
 REAL,                     INTENT(IN)    :: PTSTEP ! Time step :XTSTEP in namelist
 INTEGER,                  INTENT(IN)    :: KMI     ! Model index 
-TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE   ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT) :: TPFILE   ! Output file
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ     ! Height (z)
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
@@ -263,7 +263,7 @@ INTEGER,                  INTENT(IN)    :: KSPLITR ! Number of small time step
                                       ! integration for  rain sedimendation
 REAL,                     INTENT(IN)    :: PTSTEP ! Time step :XTSTEP in namelist
 INTEGER,                  INTENT(IN)    :: KMI     ! Model index 
-TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE   ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT) :: TPFILE   ! Output file
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ     ! Height (z)
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
