@@ -360,7 +360,6 @@ IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 0, ZHOOK_HANDLE)
 IKTB=D%NKTB
 IKTE=D%NKTE
 IKB=D%NKB
-IKT=D%NKT
 IIJB=D%NIJB
 IIJE=D%NIJE
 IIJT=D%NIJT
@@ -485,6 +484,7 @@ DO JK=IKTB,IKTE
     ENDIF
   ENDDO
 ENDDO
+!$acc end kernels
 !$acc kernels
 !$acc loop independent collapse(2)
 DO JK=IKTB,IKTE 

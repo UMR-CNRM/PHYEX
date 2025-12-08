@@ -516,7 +516,7 @@ ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc
 !  
 !    constante for ecRad effective radius
 ZRHOIW = 0.917
-XREFFI = (3*XAI/(2*ZRHOIW*10**3*XGAMMAI)*MOMG(XALPHAI,XNUI,XBI)/MOMG(XALPHAI,XNUI,XDELTAI))*1E6
+XREFFI = (3*XAI/(2*ZRHOIW*10.**3*XGAMMAI)*MOMG(XALPHAI,XNUI,XBI)/MOMG(XALPHAI,XNUI,XDELTAI))*1E6
 !
 !-------------------------------------------------------------------------------
 !

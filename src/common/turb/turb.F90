@@ -805,7 +805,7 @@ SELECT CASE (TURBN%CTURBLEN)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
     CALL MYF_PHY(D,ZWORK2,ZDVDZ)
     !
-    !$acc kernels
+    !$acc kernels present_cr( ZSHEAR, ZDUDZ, ZDVDZ)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZSHEAR(IIJB:IIJE,1:IKT) = SQRT(ZDUDZ(IIJB:IIJE,1:IKT)*ZDUDZ(IIJB:IIJE,1:IKT) &
                                     + ZDVDZ(IIJB:IIJE,1:IKT)*ZDVDZ(IIJB:IIJE,1:IKT))
@@ -820,7 +820,7 @@ SELECT CASE (TURBN%CTURBLEN)
     !and it is limited by a stability-based length (RM17), as was done in Deardorff length (but taking into account shear as well)
     ! For grid meshes in the grey zone, then this is the smaller of the two.
     !
-    !$acc kernels
+    !$acc kernels present_cr(ZLM, ZLMW)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZLM(IIJB:IIJE,1:IKT) = MIN(ZLM(IIJB:IIJE,1:IKT),TURBN%XCADAP*ZLMW(IIJB:IIJE,1:IKT))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
