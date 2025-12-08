@@ -61,7 +61,7 @@ IIJE=D%NIJE
 !-------------------------------------------------------------------------------
 !
 !$acc kernels
-PPRFR(IKB:IKE,IJB:IJE,IKE)=0.
+PPRFR(IIJB:IIJE,IKE)=0.
 !$acc end kernels
 IF(PRESENT(PRH)) THEN
 !$acc kernels
@@ -76,6 +76,7 @@ DO JK=IKE-IKL, IKB, -IKL
         IF (PPRFR(JIJ,JK)==0) THEN
           PPRFR(JIJ,JK)=1.
         END IF
+      ELSE
         PPRFR(JIJ,JK)=0.
       END IF
     END DO
@@ -94,6 +95,7 @@ DO JK=IKE-IKL, IKB, -IKL
         IF (PPRFR(JIJ,JK)==0) THEN
           PPRFR(JIJ,JK)=1.
         END IF
+      ELSE
         PPRFR(JIJ,JK)=0.
       END IF
     END DO

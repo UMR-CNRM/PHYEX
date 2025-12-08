@@ -320,8 +320,8 @@ IF ( .NOT. OSIGMAS ) THEN
 !$acc end kernels
   ! Determine tropopause/inversion  height from minimum temperature
 !$acc kernels
-  ITPL(:)  = IKB+IKL
-  ZTMIN(:) = 400.
+  ITPL(:,:)  = IKB+IKL
+  ZTMIN(:,:) = 400.
 !$acc end kernels
 !$acc kernels
 !$acc loop independent collapse(2)
@@ -393,7 +393,7 @@ END DO
       IF (PRC_IN(JIJ,JK)+PRI_IN(JIJ,JK) > 1.E-20) THEN
         ZFRAC(JIJ,JK) = PRI_IN(JIJ,JK) / (PRC_IN(JIJ,JK)+PRI_IN(JIJ,JK))
       ENDIF
-      CALL COMPUTE_FRAC_ICE(CST, HFRAC_ICE, NEBN, ZFRAC(JIJ), PT(JIJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
+    CALL COMPUTE_FRAC_ICE(CST, HFRAC_ICE, NEBN, ZFRAC(JIJ,JK), PT(JIJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
   ENDIF
     ZQSL(JIJ,JK)   = CST%XRD / CST%XRV * ZPV(JIJ,JK) / ( PPABS(JIJ,JK) - ZPV(JIJ,JK) )
     ZQSI(JIJ,JK)   = CST%XRD / CST%XRV * ZPIV(JIJ,JK) / ( PPABS(JIJ,JK) - ZPIV(JIJ,JK) )

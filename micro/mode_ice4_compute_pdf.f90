@@ -149,8 +149,6 @@ ELSEIF(HSUBG_AUCV_RC=='ADJU') THEN
   ELSEWHERE
     ZSUMRC(:)=0.
   ENDWHERE
-  !$mnh_end_expand_where(JL=1:KSIZE)
-  !$mnh_expand_where(JL=1:KSIZE)
   WHERE(ZSUMRC(:) .GT. 0. .AND. LDMICRO(:))
     PHLC_LRC(:)=PHLC_LRC(:)*PRCT(:)/ZSUMRC(:)
     PHLC_HRC(:)=PHLC_HRC(:)*PRCT(:)/ZSUMRC(:)

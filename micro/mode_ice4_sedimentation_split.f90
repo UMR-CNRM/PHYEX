@@ -560,12 +560,15 @@ DO WHILE (GANYREMAINT)
     IF (OELEC .AND. OSEDIM_BEARD) THEN
       CALL ELEC_BEARD_EFFECT(D, CST, ICED, HCLOUD, KSPE, GMASK, PT, PRHODREF, PTHVREFZIKB, &
                              PRXT, PQXT, PEFIELDW, ZLBDA3, ZBEARDCOEFF)
+!$acc kernels
+!$acc loop independent collapse(2)
       DO JK = IKTB,IKTE
         DO JIJ = IIJB,IIJE
           ZWSED(JIJ,JK)  = ZWSED(JIJ,JK)  * ZBEARDCOEFF(JIJ,JK)
           ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZBEARDCOEFF(JIJ,JK)
         END DO
       END DO
+!$acc end kernels
     END IF
   ELSEIF(KSPE==4) THEN
     ! ******* for pristine ice
@@ -609,12 +612,15 @@ DO WHILE (GANYREMAINT)
     IF (OELEC .AND. OSEDIM_BEARD) THEN
       CALL ELEC_BEARD_EFFECT(D, CST, ICED, HCLOUD, KSPE, GMASK, PT, PRHODREF, PTHVREFZIKB, &
                              PRXT, PQXT, PEFIELDW, ZLBDA3, ZBEARDCOEFF)
+!$acc kernels
+!$acc loop independent collapse(2)
       DO JK = IKTB,IKTE
         DO JIJ = IIJB,IIJE
           ZWSED(JIJ,JK)  = ZWSED(JIJ,JK)  * ZBEARDCOEFF(JIJ,JK)
           ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZBEARDCOEFF(JIJ,JK)
         END DO
       END DO
+!$acc end kernels
     END IF
   ELSEIF(KSPE==5) THEN
     ! ******* for snow
@@ -629,6 +635,8 @@ DO WHILE (GANYREMAINT)
     !The following lines must be kept equal to the computation in the general case ("for other species" case below)
     ZFSED=ICEP%XFSEDS
     ZEXSED=ICEP%XEXSEDS
+!$acc kernels
+!$acc loop independent collapse(2)
     DO JK = IKTB,IKTE
       DO JIJ = IIJB,IIJE
         IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
@@ -637,6 +645,7 @@ DO WHILE (GANYREMAINT)
         ENDIF
       ENDDO
     ENDDO
+!$end kernels
 #else
 !$acc kernels
     !$acc_cr loop independent
@@ -670,12 +679,15 @@ DO WHILE (GANYREMAINT)
     IF (OELEC .AND. OSEDIM_BEARD) THEN
       CALL ELEC_BEARD_EFFECT(D, CST, ICED, HCLOUD, KSPE, GMASK, PT, PRHODREF, PTHVREFZIKB,&
                              PRXT, PQXT, PEFIELDW, ZLBDA3, ZBEARDCOEFF)
+!$acc kernels
+!$acc loop independent collapse(2)
       DO JK = IKTB,IKTE
         DO JIJ = IIJB,IIJE
           ZWSED(JIJ,JK)  = ZWSED(JIJ,JK)  * ZBEARDCOEFF(JIJ,JK)
           ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZBEARDCOEFF(JIJ,JK)
         END DO
       END DO
+!$acc end kernels
     END IF
 #endif
   ELSE
@@ -766,12 +778,15 @@ DO WHILE (GANYREMAINT)
     IF (OELEC .AND. OSEDIM_BEARD) THEN
       CALL ELEC_BEARD_EFFECT(D, CST, ICED, HCLOUD, KSPE, GMASK, PT, PRHODREF, PTHVREFZIKB, &
                              PRXT, PQXT, PEFIELDW, ZLBDA3, ZBEARDCOEFF)
+!$acc kernels
+!$acc loop independent collapse(2)
       DO JK = IKTB,IKTE
         DO JIJ = IIJB,IIJE
           ZWSED(JIJ,JK)  = ZWSED(JIJ,JK)  * ZBEARDCOEFF(JIJ,JK)
           ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZBEARDCOEFF(JIJ,JK)
         END DO
       END DO
+!$acc end kernels
     END IF
   ENDIF
 !$acc kernels
