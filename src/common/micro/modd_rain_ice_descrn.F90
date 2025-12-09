@@ -4,6 +4,9 @@
 !MNH_LIC for details. version 1.
 !     ##########################
       MODULE MODD_RAIN_ICE_DESCR_n
+
+!$ACDC methods 
+
 !     ##########################
 !> @file
 !!****  *MODD_RAIN_ICE_DESCR_n* - declaration of the microphysical descriptive

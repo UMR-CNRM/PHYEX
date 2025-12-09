@@ -1,5 +1,8 @@
 !     ######spl
       MODULE MODD_CONVPAREXT
+
+!$ACDC methods 
+
 !     ######################
 !
 IMPLICIT NONE
