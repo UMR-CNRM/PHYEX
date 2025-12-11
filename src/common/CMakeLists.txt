@@ -39,13 +39,13 @@ ecbuild_find_package(NAME fiat REQUIRED)
 #-----------------------------------------------------------------------
 
 file(GLOB PHYEX_SOURCES
-     aux/*F90
-     turb/*F90
-     micro/*F90
+     ${CMAKE_CURRENT_SOURCE_DIR}/aux/*F90
+     ${CMAKE_CURRENT_SOURCE_DIR}/turb/*F90
+     ${CMAKE_CURRENT_SOURCE_DIR}/micro/*F90
 ) 
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/conv)
   file(GLOB PHYEX_CONV_SOURCES
-       conv/*F90
+       ${CMAKE_CURRENT_SOURCE_DIR}/conv/*F90
   )
   list(APPEND PHYEX_SOURCES ${PHYEX_CONV_SOURCES})
 endif()
