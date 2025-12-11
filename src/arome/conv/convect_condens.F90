@@ -99,7 +99,7 @@ REAL, DIMENSION(D%NIT),   INTENT(OUT):: PCPH   ! specific heat C_ph
 INTEGER :: JITER, JI      ! iteration index
 !
 REAL :: ZEI           ! ice saturation mixing ratio
-REAL, DIMENSION(D%NIT)    :: ZWORK1 ! work arrays
+REAL, DIMENSION(D%NIT)    :: ZWORK1
 REAL :: ZWORK2, ZWORK3, ZTMP, ZXTFRDZ, ZCPVMCL, ZCPVMCI
 !
 !
@@ -128,29 +128,29 @@ IF (LHOOK) CALL DR_HOOK('CONVECT_CONDENS',0,ZHOOK_HANDLE)
 !
 !*       2.     Enter the iteration loop
 !               ------------------------
-!
+!    
 ZXTFRDZ=CONVPAR%XTFRZ1 - CONVPAR%XTFRZ2
 ZCPVMCL=CST%XCPV-CST%XCL
 ZCPVMCI=CST%XCPV-CST%XCI
 DO JITER = 1,6
   DO JI=D%NIB,D%NIE
-  ZTMP = ALOG( PT(JI) )
-  PEW(JI) = EXP( CST%XALPW - CST%XBETAW / PT(JI) - CST%XGAMW * ZTMP )
-  PEW(JI) = PEPS0 * PEW(JI) / ( PPRES(JI) - PEW(JI) )
-  ZEI = EXP( CST%XALPI - CST%XBETAI / PT(JI) - CST%XGAMI * ZTMP )
-  ZEI = PEPS0 * ZEI / ( PPRES(JI) - ZEI )    
-  !    
-  ZWORK2 = MAX( 0., MIN(1., ( CONVPAR%XTFRZ1 - PT(JI) ) / ZXTFRDZ ) ) * PICE !  freezing interval
-  ZTMP = PRW(JI) - ( ( 1. - ZWORK2 ) * PEW(JI) + ZWORK2 * ZEI )
-  PRC(JI)    = MAX( 0., ( 1. - ZWORK2 ) * ZTMP )
-  PRI(JI)    = MAX( 0.,  ZWORK2 * ZTMP )
+     ZTMP = ALOG( PT(JI) )
+     PEW(JI) = EXP( CST%XALPW - CST%XBETAW / PT(JI) - CST%XGAMW * ZTMP )
+     PEW(JI) = PEPS0 * PEW(JI) / ( PPRES(JI) - PEW(JI) )
+     ZEI = EXP( CST%XALPI - CST%XBETAI / PT(JI) - CST%XGAMI * ZTMP )
+     ZEI = PEPS0 * ZEI / ( PPRES(JI) - ZEI )    
+!    
+     ZWORK2 = MAX( 0., MIN(1., ( CONVPAR%XTFRZ1 - PT(JI) ) / ZXTFRDZ ) ) * PICE ! freezing interval
+     ZTMP = PRW(JI) - ( ( 1. - ZWORK2 ) * PEW(JI) + ZWORK2 * ZEI )
+     PRC(JI)    = MAX( 0., ( 1. - ZWORK2 ) * ZTMP )
+     PRI(JI)    = MAX( 0.,  ZWORK2 * ZTMP )
 
-  ZTMP = PT(JI) - CST%XTT
-  PLV(JI)    = CST%XLVTT + ZCPVMCL * ZTMP ! compute L_v
-  PLS(JI)    = CST%XLSTT + ZCPVMCI * ZTMP ! compute L_i
+     ZTMP = PT(JI) - CST%XTT
+     PLV(JI)    = CST%XLVTT + ZCPVMCL * ZTMP ! compute L_v
+     PLS(JI)    = CST%XLSTT + ZCPVMCI * ZTMP ! compute L_i
 
-  ZTMP     = ( PTHL(JI) + PRC(JI) * PLV(JI) + PRI(JI) * PLS(JI) - ZWORK1(JI) ) / PCPH(JI)
-  PT(JI) = MAX( 175., MIN( 330., ( PT(JI) + ( ZTMP - PT(JI) ) * 0.4 ) ) ) !  force convergence
+     ZTMP     = ( PTHL(JI) + PRC(JI) * PLV(JI) + PRI(JI) * PLS(JI) - ZWORK1(JI) ) / PCPH(JI)
+     PT(JI) = MAX( 175., MIN( 330., ( PT(JI) + ( ZTMP - PT(JI) ) * 0.4 ) ) ) ! force convergence
   END DO
 END DO
 !
