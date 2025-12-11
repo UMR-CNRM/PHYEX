@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-find_package(ecbuild 3.11 REQUIRED)
+find_package(ecbuild 3.11 REQUIRED HINTS ${CMAKE_SOURCE_DIR})
 project(PHYEX VERSION 1.0 LANGUAGES Fortran)
 
 include(phyex_macros)
@@ -39,10 +39,11 @@ ecbuild_find_package(NAME fiat REQUIRED)
 #-----------------------------------------------------------------------
 
 file(GLOB PHYEX_SOURCES
-     ${CMAKE_SOURCE_DIR}/aux/*90
-     ${CMAKE_SOURCE_DIR}/turb/*90
-     ${CMAKE_SOURCE_DIR}/micro/*90
+     aux/*F90
+     turb/*F90
+     micro/*F90
 ) 
+
 set(PHYEX_ENTRYPOINTS
     aux/ini_phyex.F90
     micro/rain_ice.F90
@@ -52,34 +53,33 @@ set(PHYEX_ENTRYPOINTS
     micro/lima.F90
     micro/lima_adjust_split.F90
 )
-if(EXISTS ${CMAKE_SOURCE_DIR}/pyphyex.F90)
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/pyphyex.F90)
   list(APPEND PHYEX_ENTRYPOINTS pyphyex.F90)
 endif()
 
 # diry headers and include dirs : 
 set(GLOB PHYEX_HEADERS
-    ${CMAKE_SOURCE_DIR}/turb/*h
-    ${CMAKE_SOURCE_DIR}/micro/*h
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/phyex/turb>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/phyex/micro>
 )
-if(EXISTS ${CMAKE_SOURCE_DIR}/conv)
-  file(GLOB CONV_HEADERS ${CMAKE_SOURCE_DIR}/conv/*h)
-  list(APPEND PHYEX_HEADERS ${CONV_HEADERS})
-endif()
+#if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/conv)
+#  list(APPEND PHYEX_HEADERS $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/phyex/conv>)
+#endif()
 
 set(PHYEX_INCLUDEDIRS
-    ${CMAKE_SOURCE_DIR}/aux
-    ${CMAKE_SOURCE_DIR}/micro
-    ${CMAKE_SOURCE_DIR}/turb
+    ${CMAKE_CURRENT_SOURCE_DIR}/aux
+    ${CMAKE_CURRENT_SOURCE_DIR}/micro
+    ${CMAKE_CURRENT_SOURCE_DIR}/turb
 )
-if(EXISTS ${CMAKE_SOURCE_DIR}/conv)
-  list(APPEND PHYEX_INCLUDEDIRS ${CMAKE_SOURCE_DIR}/conv)
-endif()
+#if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/conv)
+#  list(APPEND PHYEX_INCLUDEDIRS ${CMAKE_CURRENT_SOURCE_DIR}/conv)
+#endif()
 
 if(HAVE_PHYEX_BUILD_PROGS)
   # Source file directories
   file(GLOB PHYEXPROGS_SOURCES
-       ${CMAKE_SOURCE_DIR}/support/*90
-       ${CMAKE_SOURCE_DIR}/progs/*90
+       ${CMAKE_CURRENT_SOURCE_DIR}/support/*90
+       ${CMAKE_CURRENT_SOURCE_DIR}/progs/*90
   ) 
 
   # Entry points
@@ -116,7 +116,6 @@ foreach(PRECISION ${precision_list})
       mpi_serial
       parkind_${PRECISION}
     TYPE STATIC
-    NOINSTALL
     PRIVATE_INCLUDES ${PHYEX_INCLUDEDIRS}
   )
 
