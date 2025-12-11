@@ -13,7 +13,7 @@ CONTAINS
 !
 
 !      #################################################
-       SUBROUTINE TRIDIAG_W(PVARM,PF,PDFDDWDZ,PTSTEP, &
+       SUBROUTINE TRIDIAG_W(D,PVARM,PF,PDFDDWDZ,PTSTEP, &
                                  PMZF_DZZ,PRHODJ,PVARP)
 !      #################################################
 !
@@ -131,25 +131,13 @@ CONTAINS
 !
 !*       0. DECLARATIONS
 !
+USE MODD_DIMPHYEX,   ONLY : DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY : JPVEXT
+USE MODE_SHUMAN_PHY, ONLY : MZM_PHY
 
-use mode_mppdb
-
-#ifndef MNH_OPENACC
-USE MODI_SHUMAN
-#else
-USE MODI_SHUMAN_DEVICE
-#endif
-#if defined(MNH_BITREP) || defined(MNH_BITREP_OMP)
-USE MODI_BITREP
-#endif
 #ifdef MNH_COMPILER_CCE
 !$mnh_undef(LOOP)
 !$mnh_undef(OPENACC)
-#endif
-!
-#ifdef MNH_OPENACC
-USE MODE_MNH_ZWORK,      ONLY: MNH_MEM_GET, MNH_MEM_POSITION_PIN, MNH_MEM_RELEASE
 #endif
 !
 IMPLICIT NONE
@@ -157,6 +145,7 @@ IMPLICIT NONE
 !
 !*       0.1 declarations of arguments
 !
+TYPE(DIMPHYEX_t),       INTENT(IN) :: D
 REAL, DIMENSION(:,:,:), INTENT(IN) :: PVARM   ! variable at t-1      at flux point
 REAL, DIMENSION(:,:,:), INTENT(IN) :: PF      ! flux in dT/dt=-dF/dz at mass point
 REAL, DIMENSION(:,:,:), INTENT(IN) :: PDFDDWDZ! dF/d(dW/dz)          at mass point
@@ -168,11 +157,13 @@ REAL, DIMENSION(:,:,:), INTENT(OUT):: PVARP   ! variable at t+1      at flux poi
 !
 !*       0.2 declarations of local variables
 !
-REAL, DIMENSION(:,:,:), pointer , contiguous :: ZRHODJ_DFDDWDZ_O_DZ2
-REAL, DIMENSION(:,:,:), pointer , contiguous :: ZMZM_RHODJ
-REAL, DIMENSION(:,:,:), pointer , contiguous :: ZA, ZB, ZC
-REAL, DIMENSION(:,:,:), pointer , contiguous :: ZY ,ZGAM ! RHS of the equation, 3D work array
-REAL, DIMENSION(:,:),   pointer , contiguous :: ZBET     ! 2D work array
+REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2),SIZE(PVARM,3))  :: ZRHODJ_DFDDWDZ_O_DZ2
+REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2),SIZE(PVARM,3))  :: ZMZM_RHODJ
+REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2),SIZE(PVARM,3))  :: ZA, ZB, ZC
+REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2),SIZE(PVARM,3))  :: ZY ,ZGAM 
+                                         ! RHS of the equation, 3D work array
+REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2))                :: ZBET
+                                         ! 2D work array
 !
 INTEGER                              :: JK            ! loop counter
 INTEGER                              :: IKB,IKE       ! inner vertical limits
@@ -183,41 +174,9 @@ INTEGER  :: JI,JJ
 
 !$acc data present_crm( PVARM, PF, PDFDDWDZ, PMZF_DZZ, PRHODJ, PVARP )
 
-if ( mppdb_initialized ) then
-  !Check all in arrays
-  call Mppdb_check( pvarm,    "Tridiag_w beg:pvarm"    )
-  call Mppdb_check( pf,       "Tridiag_w beg:pf"       )
-  call Mppdb_check( pdfddwdz, "Tridiag_w beg:pdfddwdz" )
-  call Mppdb_check( pmzf_dzz, "Tridiag_w beg:pmzf_dzz" )
-  call Mppdb_check( prhodj,   "Tridiag_w beg:prhodj"   )
-end if
-
 JIU =  size( pvarm, 1 )
 JJU =  size( pvarm, 2 )
 JKU =  size( pvarm, 3 )
-
-#ifndef MNH_OPENACC
-allocate( zrhodj_dfddwdz_o_dz2(JIU,JJU,JKU ) )
-allocate( zmzm_rhodj          (JIU,JJU,JKU ) )
-allocate( za                  (JIU,JJU,JKU ) )
-allocate( zb                  (JIU,JJU,JKU ) )
-allocate( zc                  (JIU,JJU,JKU ) )
-allocate( zy                  (JIU,JJU,JKU ) )
-allocate( zgam                (JIU,JJU,JKU ) )
-allocate( zbet                (JIU,JJU ) )
-#else
-!Pin positions in the pools of MNH memory
-CALL MNH_MEM_POSITION_PIN( 'TRIDIAG_W' )
-
-CALL MNH_MEM_GET( zrhodj_dfddwdz_o_dz2,JIU,JJU,JKU )
-CALL MNH_MEM_GET( zmzm_rhodj          ,JIU,JJU,JKU )
-CALL MNH_MEM_GET( za                  ,JIU,JJU,JKU )
-CALL MNH_MEM_GET( zb                  ,JIU,JJU,JKU )
-CALL MNH_MEM_GET( zc                  ,JIU,JJU,JKU )
-CALL MNH_MEM_GET( zy                  ,JIU,JJU,JKU )
-CALL MNH_MEM_GET( zgam                ,JIU,JJU,JKU )
-CALL MNH_MEM_GET( zbet                ,JIU,JJU )
-#endif 
 
 !$acc data present( ZRHODJ_DFDDWDZ_O_DZ2, ZMZM_RHODJ, ZA, ZB, ZC, ZY, ZGAM, ZBET )
 
@@ -228,19 +187,12 @@ CALL MNH_MEM_GET( zbet                ,JIU,JJU )
 IKB=1+JPVEXT
 IKE=SIZE(PVARM,3)-JPVEXT 
 !
-#ifndef MNH_OPENACC
-ZMZM_RHODJ  = MZM(PRHODJ)
-#else
-CALL MZM_DEVICE(PRHODJ,ZMZM_RHODJ)
-#endif
+CALL MZM_PHY(D,PRHODJ,ZMZM_RHODJ)
+
 !$acc kernels ! async 
-#if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
-ZRHODJ_DFDDWDZ_O_DZ2 = PRHODJ*PDFDDWDZ/PMZF_DZZ**2
-#else
 !$mnh_expand_array(JI=1:JIU,JJ=1:JJU,JK=1:JKU)
-   ZRHODJ_DFDDWDZ_O_DZ2(:,:,:) = PRHODJ(:,:,:)*PDFDDWDZ(:,:,:)/BR_P2(PMZF_DZZ(:,:,:))
-!$mnh_end_expand_array()
-#endif
+ZRHODJ_DFDDWDZ_O_DZ2(:,:,:) = PRHODJ(:,:,:)*PDFDDWDZ(:,:,:)/PMZF_DZZ(:,:,:)**2
+!$mnh_end_expand_array(JI=1:JIU,JJ=1:JJU,JK=1:JKU)
 !$acc end kernels
 !
 !$acc kernels ! async
@@ -418,24 +370,8 @@ END DO
    PVARP(JI,JJ,IKE+1)=0.
 !$mnh_end_do()
 !$acc end kernels
-
-if ( mppdb_initialized ) then
-  !Check all out arrays
-  call Mppdb_check( pvarp, "Tridiag_w end:pvarp" )
-end if
-
+!
 !$acc end data
-
-#ifndef MNH_OPENACC
-deallocate (ZRHODJ_DFDDWDZ_O_DZ2, ZMZM_RHODJ, ZA, ZB, ZC, ZY, ZGAM, ZBET)
-#else
-!Release all memory allocated with MNH_MEM_GET calls since last call to MNH_MEM_POSITION_PIN
-CALL MNH_MEM_RELEASE( 'TRIDIAG_W' )
-#endif
-
-
-!$acc end data
-
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE TRIDIAG_W

@@ -6,7 +6,7 @@
 MODULE MODE_TURB_HOR_DYN_CORR
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_DYN_CORR(TURBN,TLES,KSPLT, PTSTEP,         &
+      SUBROUTINE TURB_HOR_DYN_CORR(D,TURBN,TLES,KSPLT, PTSTEP,       &
                       KRR, KSV,OFLAT,O2D,                            &
                       TPFILE,                                        &
                       PK,PINV_PDZZ,                                  &
@@ -75,6 +75,7 @@ USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
 USE MODD_CST
 USE MODD_CTURB
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 use modd_field,          only: tfieldmetadata, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
@@ -101,6 +102,7 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(DIMPHYEX_t),         INTENT(IN)   :: D
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
 TYPE(TLES_t),             INTENT(INOUT) :: TLES          ! modd_les structure
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
@@ -507,7 +509,7 @@ END IF
 ZDFDDWDZ(:,:,:)    = - XCMFS * PK(:,:,:) * (4./3.)
 ZDFDDWDZ(:,:,:IKB) = 0.
 !
-CALL TRIDIAG_W(PWM,ZFLX,ZDFDDWDZ,PTSTEP,ZMZF_DZZ,PRHODJ,ZWP)
+CALL TRIDIAG_W(D,PWM,ZFLX,ZDFDDWDZ,PTSTEP,ZMZF_DZZ,PRHODJ,ZWP)
 !
 PRWS = PRWS(:,:,:) + MZM(PRHODJ(:,:,:))*(ZWP(:,:,:)-PWM(:,:,:))/PTSTEP
 !

@@ -74,12 +74,6 @@ INTEGER                :: IINFO_ll       ! return code of parallel routine
 
 !$acc data present_crm(PLM,PLEPS)
 
-if ( mppdb_initialized ) then
-  !Check all inout arrays
-  call Mppdb_check( plm,   "Update_lm beg:plm"   )
-  call Mppdb_check( pleps, "Update_lm beg:pleps" )
-end if
-!
 !*       1.    COMPUTE DIMENSIONS OF ARRAYS :
 !              ----------------------------
 IIB = D%NIB
