@@ -38,7 +38,7 @@ SUBROUTINE ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, PARAMI, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST, ONLY: CST_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
@@ -94,7 +94,7 @@ REAL :: ZINVTSTEP, ZGAC, ZGC, ZGAC2, ZGC2, ZRAYDEFO
 REAL, DIMENSION(D%NIJT) :: ZTSORHODZ        ! TimeStep Over (Rhodref times delta Z)
 REAL, DIMENSION(D%NIJT,0:1,2:KRR) :: ZSED   ! sedimentation flux array for each species and for above and current levels
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT',0,ZHOOK_HANDLE)

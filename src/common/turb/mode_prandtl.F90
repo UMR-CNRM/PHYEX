@@ -594,10 +594,8 @@ DO JSV=1,KSV
         ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
-      ELSE
-        ZW1 = ZWORK2
+        CALL MZM_PHY(D,ZWORK1,ZW1)
       END IF
-    ELSE
 !$acc kernels
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZWORK1(:,:) = (CST%XG / PTHVREF(:,:) * PLM(:,:) &
