@@ -469,6 +469,7 @@ ELSE IF (O2D) THEN                      ! 3D case in a 2D model
                                         * PEMOIST(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT) &
                                         * ZWORK4(IIJB:IIJE,1:IKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+
 !
     PRED2TH3(IIJB:IIJE,IKB)=PRED2TH3(IIJB:IIJE,IKB+IKL)
     PRED2R3(IIJB:IIJE,IKB)=PRED2R3(IIJB:IIJE,IKB+IKL) 
@@ -579,29 +580,35 @@ DO JSV=1,KSV
   ELSE  IF (O2D) THEN ! 3D case in a 2D model
 !
     IF (OOCEAN) THEN
-!      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!      ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG *CST%XALPHAOC * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) &
-!                                       / PTKEM(IIJB:IIJE,1:IKT))**2
-!      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!      CALL MZM_PHY(D,ZWORK1,ZWORK2)
-!      IF (KRR /= 0) THEN
-!        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!        ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
-!        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!      ELSE
-!        ZW1 = ZWORK2
-!      END IF
+      !!mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG *CST%XALPHAOC * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) &
+      !                                 / PTKEM(IIJB:IIJE,1:IKT))**2
+      !!mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !CALL MZM_PHY(D,ZWORK1,ZWORK2)
+      !IF (KRR /= 0) THEN
+      !  !mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !  ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
+      !  !mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !ELSE
+      !  ZW1 = ZWORK2
+      !END IF
     ELSE
       !Compute only once and reuse in next JSV iterations
       IF ( JSV == 1 ) THEN
 !$acc kernels
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-        ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * PLM(IIJB:IIJE,1:IKT) &
-                                      * PLEPS(IIJB:IIJE,1:IKT) / PTKEM(IIJB:IIJE,1:IKT))**2
+        ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
         CALL MZM_PHY(D,ZWORK1,ZW1)
       END IF
+!$acc kernels
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK1(:,:) = (CST%XG / PTHVREF(:,:) * PLM(:,:) &
+                                      * PLEPS(:,:) / PTKEM(:,:))**2
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
+      CALL MZM_PHY(D,ZWORK1,ZW1)  
       !
       CALL GX_M_M_PHY(D,OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX,ZGXMM_PSV)
       !Already computed CALL GX_M_M_PHY(D,OFLAT,PTHLM,PDXX,PDZZ,PDZX,ZGXMM_PTH)
@@ -648,30 +655,30 @@ DO JSV=1,KSV
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
       END IF
+!$acc end kernels
     END IF
 !
   ELSE ! 3D case in a 3D model
 !
     IF (OOCEAN) THEN
-!      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!      ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG *CST%XALPHAOC * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) &
-!                                       / PTKEM(IIJB:IIJE,1:IKT))**2
-!      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!      CALL MZM_PHY(D,ZWORK1,ZWORK2)
-!      IF (KRR /= 0) THEN
-!        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!        ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
-!        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!      ELSE
-!        ZW1 = ZWORK2
-!      END IF
+      !!mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG *CST%XALPHAOC * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) &
+      !                                 / PTKEM(IIJB:IIJE,1:IKT))**2
+      !!mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !CALL MZM_PHY(D,ZWORK1,ZWORK2)
+      !IF (KRR /= 0) THEN
+      !  !mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !  ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
+      !  !mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !ELSE
+      !  ZW1 = ZWORK2
+      !END IF
     ELSE
       !Compute only once and reuse in next JSV iterations
       IF ( JSV == 1 ) THEN
 !$acc kernels
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-        ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * PLM(IIJB:IIJE,1:IKT) &
-                                      * PLEPS(IIJB:IIJE,1:IKT) / PTKEM(IIJB:IIJE,1:IKT))**2
+        ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
         CALL MZM_PHY(D,ZWORK1,ZW1)

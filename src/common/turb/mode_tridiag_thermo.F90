@@ -175,13 +175,10 @@ IIJE=D%NIJE
 !
 CALL MZM_PHY(D,PRHODJ,ZMZM_RHODJ)
 !$acc kernels present_cr(ZRHODJ_DFDDTDZ_O_DZ2)
-!$acc loop independent collapse(2)
-DO JK=IKTB,IKTE
-  DO JIJ=IIJB,IIJE
-    ZRHODJ_DFDDTDZ_O_DZ2(JIJ,JK) = ZMZM_RHODJ(JIJ,JK)*PDFDDTDZ(JIJ,JK) &
-                                                    /PDZZ(JIJ,JK)**2
-  ENDDO
-END DO
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,1:IKT) = ZMZM_RHODJ(IIJB:IIJE,1:IKT)*PDFDDTDZ(IIJB:IIJE,1:IKT) &
+                                                /PDZZ(IIJB:IIJE,1:IKT)**2
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
 !
 !$acc kernels

@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -32,11 +32,11 @@ SUBROUTINE RAIN_ICE_SEDIMENTATION_SPLIT( KIB, KIE, KJB, KJE, KKB, KKE, KKTB, KKT
 use modd_budget,         only: lbudget_rc, lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, &
                                NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, &
                                tbudgets
-USE MODD_CST,            only: XCPD, XP00, XRD, XRHOLW
-USE MODD_PARAM_ICE_n,      only: XVDEPOSC
-USE MODD_RAIN_ICE_DESCR_n, only: XCC, XCONC_LAND, xconc_sea, xconc_urban, XDC, XCEXVT, &
+use MODD_CST,            only: XCPD, XP00, XRD, XRHOLW
+use MODD_PARAM_ICE,      only: XVDEPOSC
+use MODD_RAIN_ICE_DESCR, only: XCC, XCONC_LAND, xconc_sea, xconc_urban, XDC, XCEXVT, &
                                XALPHAC, XNUC, XALPHAC2, XNUC2, XLBEXC, XRTMIN, XLBEXC, XLBC
-USE MODD_RAIN_ICE_PARAM_n, only: XEXSEDG, XEXSEDH, XEXCSEDI, XEXSEDR, XEXSEDS, &
+use MODD_RAIN_ICE_PARAM, only: XEXSEDG, XEXSEDH, XEXCSEDI, XEXSEDR, XEXSEDS, &
                                XFSEDG, XFSEDH, XFSEDI, XFSEDR, XFSEDS, XFSEDC
 
 use mode_budget,         only: Budget_store_init, Budget_store_end
@@ -54,6 +54,8 @@ USE MODI_BITREP
 #ifdef MNH_OPENACC
 USE MODE_MNH_ZWORK,      ONLY: MNH_MEM_GET, MNH_MEM_POSITION_PIN, MNH_MEM_RELEASE
 #endif
+
+USE MODI_GAMMA, ONLY: GAMMA
 
 #if defined(MNH_COMPILER_CCE) && defined(MNH_BITREP_OMP)
 !$mnh_undef(LOOP)
@@ -321,6 +323,11 @@ if ( lbudget_rh )              call Budget_store_init( tbudgets(NBUDGET_RH), 'SE
 !
 !        O. Initialization of for sedimentation
 !
+IF ( OSEDIC ) THEN
+  ZTMP1 = 0.5 * GAMMA( XNUC  + 1.0 / XALPHAC  ) / ( GAMMA( XNUC  ) )
+  ZTMP2 = 0.5 * GAMMA( XNUC2 + 1.0 / XALPHAC2 ) / ( GAMMA( XNUC2 ) )
+END IF
+!
 !$acc kernels present_cr(ZOMPSEA,ZTMP1_2D,zconc_tmp,ztmp3_2d,ztmp2_2d,ztmp4_2d,ZLBC,ZFSEDC) &
 !$acc & present_cr(zconc3d,zray,zprrs,zprss)
 ZINVTSTEP=1./PTSTEP
@@ -338,9 +345,6 @@ IF ( GPRESENT_PFPR ) PFPR(:,:,:,:) = 0.
 !*       1. Parameters for cloud sedimentation
 !
 IF ( OSEDIC ) THEN
-  ZTMP1 = 0.5 * GAMMA( XNUC  + 1.0 / XALPHAC  ) / ( GAMMA( XNUC  ) )
-  ZTMP2 = 0.5 * GAMMA( XNUC2 + 1.0 / XALPHAC2 ) / ( GAMMA( XNUC2 ) )
-
   IF ( GPRESENT_PSEA ) THEN
      !$mnh_do_concurrent( JI=1:IIU , JJ=1:IJU )
         ZOMPSEA  (JI,JJ) = 1.-PSEA(JI,JJ)
@@ -357,11 +361,13 @@ IF ( OSEDIC ) THEN
           ZRAY   (JI,JJ,JK) = ZTMP4_2D(JI,JJ)
       !$mnh_end_do()
   ELSE
+    ZTMP3 = MAX(1.,ZTMP1)    
+    !$mnh_expand_array(JI=1:IIU ,  JJ=1:IJU , JK=KKTB:KKTE)      
     ZLBC   (:,:,:) = XLBC(1)
     ZFSEDC (:,:,:) = XFSEDC(1)
     ZCONC3D(:,:,:) = XCONC_LAND
-    ZTMP3 = MAX(1.,ZTMP1)
     ZRAY   (:,:,:) = ZTMP3
+    !$mnh_end_expand_array()
   END IF
 END IF
 !

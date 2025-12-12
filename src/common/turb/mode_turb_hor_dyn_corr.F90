@@ -78,6 +78,7 @@ USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
 USE MODD_CST
 USE MODD_CTURB
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 use modd_field,          only: tfieldmetadata, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
@@ -729,10 +730,6 @@ ZDFDDWDZ(:,:,:)    = - XCMFS * PK(:,:,:) * (4./3.)
 ZDFDDWDZ(:,:,1:IKB) = 0.
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKB)
 !$acc end kernels
-!
-!!! wait for the computation of ZFLX(:,:,IKB-1) and ZDFDDWDZ
-!!$acc ! wait(3) async(2)
-!!$acc ! wait(2)
 !
 CALL TRIDIAG_W(D,PWM,ZFLX,ZDFDDWDZ,PTSTEP,ZMZF_DZZ,PRHODJ,ZWP)
 !

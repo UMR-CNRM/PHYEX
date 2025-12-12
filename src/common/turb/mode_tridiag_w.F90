@@ -131,8 +131,10 @@ CONTAINS
 !
 !*       0. DECLARATIONS
 !
+USE MODD_DIMPHYEX,   ONLY : DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY : JPVEXT
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+USE MODE_SHUMAN_PHY, ONLY : MZM_PHY
 
 #ifdef MNH_COMPILER_CCE
 !$mnh_undef(LOOP)
@@ -144,10 +146,10 @@ IMPLICIT NONE
 !
 !*       0.1 declarations of arguments
 !
-TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PVARM   ! variable at t-1      at flux point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PF      ! flux in dT/dt=-dF/dz at mass point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDFDDWDZ! dF/d(dW/dz)          at mass point
+TYPE(DIMPHYEX_t),       INTENT(IN) :: D
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PVARM   ! variable at t-1      at flux point
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PF      ! flux in dT/dt=-dF/dz at mass point
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDFDDWDZ! dF/d(dW/dz)          at mass point
 REAL,                   INTENT(IN) :: PTSTEP  ! Double time step
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PMZF_DZZ! Dz                   at mass point
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRHODJ  ! (dry rho)*J          at mass point
@@ -170,7 +172,6 @@ INTEGER  :: JI,JJ
 ! ---------------------------------------------------------------------------
 
 !$acc data present_crm( PVARM, PF, PDFDDWDZ, PMZF_DZZ, PRHODJ, PVARP )
-
 !$acc data present( ZRHODJ_DFDDWDZ_O_DZ2, ZMZM_RHODJ, ZA, ZB, ZC, ZY, ZGAM, ZBET )
 
 !
@@ -183,7 +184,7 @@ IIT=D%NIT
 IJT=D%NJT
 IKT=D%NKT
 !
-ZMZM_RHODJ  = MZM(PRHODJ)
+CALL MZM_PHY(D,PRHODJ,ZMZM_RHODJ)
 
 !$acc kernels ! async 
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
@@ -366,7 +367,7 @@ END DO
    PVARP(JI,JJ,IKE+1)=0.
 !$mnh_end_do()
 !$acc end kernels
-
+!
 !$acc end data
 !-------------------------------------------------------------------------------
 !
