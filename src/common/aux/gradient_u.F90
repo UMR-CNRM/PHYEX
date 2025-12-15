@@ -283,3 +283,25 @@ PGZ_U_UW(:,:,:)= DZM(PA, KKA, KKU, KL) / MXM(PDZZ)
 !
 IF (LHOOK) CALL DR_HOOK('GZ_U_UW',1,ZHOOK_HANDLE)
 END FUNCTION GZ_U_UW
+!
+!     #########################################################
+      SUBROUTINE GY_U_UV_DEVICE(PA,PDYY,PDZZ,PDZY,PGY_U_UV_DEVICE)
+!     #########################################################
+!
+!*       0.    DECLARATIONS
+!
+!
+IMPLICIT NONE
+!
+!
+!*       0.1   declarations of arguments and result
+!
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PA       ! variable at the U point
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDYY     ! metric coefficient dyy
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZZ     ! metric coefficient dzz
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZY     ! metric coefficient dzy
+!
+REAL, DIMENSION(:,:,:), INTENT(OUT) :: PGY_U_UV_DEVICE ! result UV point
+! DO NOTHING FOR COMMON/AROME-IAL/LMDZ
+! THIS INTERFACE SHOULD BE REMOVED ONCE SHUMAN-GRADIENT ARE UNIFORMIZED
+END SUBROUTINE GY_U_UV_DEVICE

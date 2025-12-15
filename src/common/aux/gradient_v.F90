@@ -282,3 +282,25 @@ PGZ_V_VW(:,:,:)= DZM(PA, KKA, KKU, KL) / MYM(PDZZ)
 !
 IF (LHOOK) CALL DR_HOOK('GZ_V_VW',1,ZHOOK_HANDLE)
 END FUNCTION GZ_V_VW
+!
+!     #########################################################
+      SUBROUTINE GX_V_UV_DEVICE(PA,PDXX,PDZZ,PDZX,PGX_V_UV_DEVICE)
+!     #########################################################
+!
+!*       0.    DECLARATIONS
+!
+!
+IMPLICIT NONE
+!
+!
+!*       0.1   declarations of arguments and result
+!
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PA       ! variable at the V point
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDXX     ! metric coefficient dxx
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZZ     ! metric coefficient dzz
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZX     ! metric coefficient dzx
+!
+REAL, DIMENSION(:,:,:), INTENT(OUT) :: PGX_V_UV_DEVICE ! result UV point
+! DO NOTHING FOR COMMON/AROME-IAL/LMDZ
+! THIS INTERFACE SHOULD BE REMOVED ONCE SHUMAN-GRADIENT ARE UNIFORMIZED
+END SUBROUTINE GX_V_UV_DEVICE
