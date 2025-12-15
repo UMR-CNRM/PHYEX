@@ -248,7 +248,7 @@ LOGICAL,                INTENT(IN)   ::  OFLYER       ! MesoNH flyer diagnostic
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
-TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
+TYPE(TFILEDATA),        INTENT(INOUT)::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDZZ
                                                       ! Metric coefficients
@@ -417,8 +417,8 @@ DO JSV=1,KSV
   IF ( (TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. TLES%LLES_CALL .OR. OFLYER ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
-     ZFLXZ(IIJB:IIJE,1:IKT) = -ZCSV * PPSI_SV(IIJB:IIJE,1:IKT,JSV) * MZM(PLM*SQRT(PTKEM)) / PDZZ * &
-                  DZM( TURBN%XIMPL*ZRES(IIJB:IIJE,1:IKT) + PEXPL*PSVM(IIJB:IIJE,1:IKT,JSV) )
+     ZFLXZ(:,:) = -ZCSV * PPSI_SV(:,:,JSV) * MZM(PLM*SQRT(PTKEM)) / PDZZ * &
+                  DZM( TURBN%XIMPL*ZRES(:,:) + PEXPL*PSVM(:,:,JSV) )
     ! surface flux
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
     ! (in presence of slopes)

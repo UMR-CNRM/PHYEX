@@ -244,7 +244,7 @@ INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and version 
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
-TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
+TYPE(TFILEDATA),        INTENT(INOUT)::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDZZ, PDXX, PDYY, PDZX, PDZY
                                                       ! Metric coefficients
@@ -570,8 +570,8 @@ END IF
 
   END IF
   !
-    ZFLXZ(IIJB:IIJE,1:IKT)   = ZF(IIJB:IIJE,1:IKT) + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:IKT) &
-    * MZF(DZM(PTHLP(IIJB:IIJE,1:IKT) - PTHLM(IIJB:IIJE,1:IKT)) / PDZZ(IIJB:IIJE,1:IKT) )
+    ZFLXZ(:,:)   = ZF(:,:) + TURBN%XIMPL * ZDFDDTDZ(:,:) &
+    * MZF(DZM(PTHLP(:,:) - PTHLM(:,:)) / PDZZ(:,:) )
   !
   ! special case near the ground ( uncentred gradient )
   IF (TURBN%LHARAT) THEN
@@ -705,8 +705,8 @@ END IF
 !$acc end kernels
     END IF
   ELSE
-    ZF(IIJB:IIJE,1:IKT) = TURBN%XCTV*PLM(IIJB:IIJE,1:IKT)*PLEPS(IIJB:IIJE,1:IKT)* &
-    MZF(0.5*(PPHI3(IIJB:IIJE,1:IKT)+PPSI3(IIJB:IIJE,1:IKT))*PDTH_DZ(IIJB:IIJE,1:IKT)*PDR_DZ(IIJB:IIJE,1:IKT))
+    ZF(:,:) = TURBN%XCTV*PLM(:,:)*PLEPS(:,:)* &
+    MZF(0.5*(PPHI3(:,:)+PPSI3(:,:))*PDTH_DZ(:,:)*PDR_DZ(:,:))
   ENDIF
 !$acc kernels present_cr(ZDFDDTDZ,ZDFDDRDZ)  
     ZDFDDTDZ(:,:) = 0.     ! this term, because of discretization, is treated separately
@@ -819,12 +819,12 @@ END IF
     END IF
     !
     IF (TURBN%LHARAT) THEN
-      ZFLXZ(IIJB:IIJE,1:IKT)   = ZF(IIJB:IIJE,1:IKT)                  &
-        + TURBN%XIMPL * PLMF(IIJB:IIJE,1:IKT)*PLEPSF(IIJB:IIJE,1:IKT)*0.5   &
-        * (2. *PDR_DZ(IIJB:IIJE,1:IKT)  *DZM(PTHLP(IIJB:IIJE,1:IKT) - PTHLM(IIJB:IIJE,1:IKT)) / PDZZ(IIJB:IIJE,1:IKT)             &
-               + 2. *PDTH_DZ(IIJB:IIJE,1:IKT) *DZM(PRP(IIJB:IIJE,1:IKT) - PRM(IIJB:IIJE,1:IKT,1)) / PDZZ(IIJB:IIJE,1:IKT))        &
-    + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:IKT) * MZF(DZM(PTHLP(IIJB:IIJE,1:IKT) - PTHLM(IIJB:IIJE,1:IKT)) / PDZZ(IIJB:IIJE,1:IKT)) &
-    + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:IKT) * MZF(DZM(PRP(IIJB:IIJE,1:IKT) - PRM(IIJB:IIJE,1:IKT,1)) / PDZZ(IIJB:IIJE,1:IKT))
+      ZFLXZ(:,:)   = ZF(:,:)                  &
+        + TURBN%XIMPL * PLMF(:,:)*PLEPSF(:,:)*0.5   &
+        * (2. *PDR_DZ(:,:)  *DZM(PTHLP(:,:) - PTHLM(:,:)) / PDZZ(:,:)                 &
+               + 2. *PDTH_DZ(:,:) *DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:))            &
+        + TURBN%XIMPL * ZDFDDTDZ(:,:) * MZF(DZM(PTHLP(:,:) - PTHLM(:,:)) / PDZZ(:,:)) &
+        + TURBN%XIMPL * ZDFDDRDZ(:,:) * MZF(DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:))
       IF (NEBN%LSTATNW) THEN    
 !$acc kernels
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -842,14 +842,14 @@ END IF
       CALL D_PSI3DRDZ_O_DDRDZ(D,CSTURB,TURBN,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,TURBN%CTURBDIM,GUSERV,ZWKPHIPSI4)
       ! d(psi3*drdz )/ddrdz term  
       !
-      ZFLXZ(IIJB:IIJE,1:IKT)   = ZF(IIJB:IIJE,1:IKT)                          &
-        + TURBN%XIMPL * TURBN%XCTV*PLM(IIJB:IIJE,1:IKT)*PLEPS(IIJB:IIJE,1:IKT)*0.5 &
-        * MZF((ZWKPHIPSI1(IIJB:IIJE,1:IKT)+ZWKPHIPSI2(IIJB:IIJE,1:IKT))& 
-        * PDR_DZ(IIJB:IIJE,1:IKT)*DZM(PTHLP(IIJB:IIJE,1:IKT) - PTHLM(IIJB:IIJE,1:IKT)) /PDZZ(IIJB:IIJE,1:IKT) &
-                    + (ZWKPHIPSI3(IIJB:IIJE,1:IKT) + ZWKPHIPSI4(IIJB:IIJE,1:IKT)) & 
-                    *PDTH_DZ(IIJB:IIJE,1:IKT)*DZM(PRP(IIJB:IIJE,1:IKT) - PRM(IIJB:IIJE,1:IKT,1))/PDZZ(IIJB:IIJE,1:IKT))    &
-        + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:IKT) * MZF(DZM(PTHLP(IIJB:IIJE,1:IKT) - PTHLM(IIJB:IIJE,1:IKT)) / PDZZ(IIJB:IIJE,1:IKT))         &
-        + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:IKT) * MZF(DZM(PRP(IIJB:IIJE,1:IKT) - PRM(IIJB:IIJE,1:IKT,1)) / PDZZ(IIJB:IIJE,1:IKT))
+      ZFLXZ(:,:)   = ZF(:,:)                          &
+        + TURBN%XIMPL * TURBN%XCTV*PLM(:,:)*PLEPS(:,:)*0.5 &
+        * MZF((ZWKPHIPSI1(:,:)+ZWKPHIPSI2(:,:))& 
+        * PDR_DZ(:,:)*DZM(PTHLP(:,:) - PTHLM(:,:)) /PDZZ(:,:) &
+                    + (ZWKPHIPSI3(:,:) + ZWKPHIPSI4(:,:)) & 
+                    *PDTH_DZ(:,:)*DZM(PRP(:,:) - PRM(:,:,1))/PDZZ(:,:))    &
+        + TURBN%XIMPL * ZDFDDTDZ(:,:) * MZF(DZM(PTHLP(:,:) - PTHLM(:,:)) / PDZZ(:,:))         &
+        + TURBN%XIMPL * ZDFDDRDZ(:,:) * MZF(DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:))
     ENDIF
     !
     ! special case near the ground ( uncentred gradient )
@@ -976,7 +976,7 @@ END IF
 !
     ! Compute the turbulent variance F and F' at time t-dt.
 IF (TURBN%LHARAT) THEN
-  ZF(IIJB:IIJE,1:IKT) = PLMF(IIJB:IIJE,1:IKT)*PLEPSF(IIJB:IIJE,1:IKT)*MZF(PDR_DZ(IIJB:IIJE,1:IKT)**2)
+  ZF(:,:) = PLMF(:,:)*PLEPSF(:,:)*MZF(PDR_DZ(:,:)**2)
   IF (NEBN%LSTATNW) THEN
 !$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -985,8 +985,8 @@ IF (TURBN%LHARAT) THEN
 !$acc end kernels
   END IF
 ELSE
-  ZF(IIJB:IIJE,1:IKT) = TURBN%XCTV*PLM(IIJB:IIJE,1:IKT)*PLEPS(IIJB:IIJE,1:IKT)& 
-                                *MZF(PPSI3(IIJB:IIJE,1:IKT)*PDR_DZ(IIJB:IIJE,1:IKT)**2)
+  ZF(:,:) = TURBN%XCTV*PLM(:,:)*PLEPS(:,:)& 
+                                *MZF(PPSI3(:,:)*PDR_DZ(:,:)**2)
 ENDIF
 !$acc kernels
     ZDFDDRDZ(:,:) = 0.     ! this term, because of discretization, is treated separately
@@ -1084,10 +1084,10 @@ ENDIF
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL DZM_PHY(D,ZWORK1,ZWORK2)
   IF (TURBN%LHARAT) THEN
-    ZFLXZ(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT)                   &
-          + TURBN%XIMPL * PLMF(IIJB:IIJE,1:IKT) *PLEPSF(IIJB:IIJE,1:IKT) &
-            * MZF(2.*PDR_DZ(IIJB:IIJE,1:IKT)* DZM(PRP(IIJB:IIJE,1:IKT) - PRM(IIJB:IIJE,1:IKT,1)) / PDZZ(IIJB:IIJE,1:IKT)) &
-          + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:IKT) * MZF(DZM(PRP(IIJB:IIJE,1:IKT) - PRM(IIJB:IIJE,1:IKT,1)) / PDZZ(IIJB:IIJE,1:IKT))
+    ZFLXZ(:,:) = ZF(:,:)                   &
+          + TURBN%XIMPL * PLMF(:,:) *PLEPSF(:,:) &
+            * MZF(2.*PDR_DZ(:,:)* DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:)) &
+          + TURBN%XIMPL * ZDFDDRDZ(:,:) * MZF(DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:))
     IF (NEBN%LSTATNW) THEN
 !$acc kernels
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -1098,10 +1098,10 @@ ENDIF
   ELSE
     CALL D_PSI3DRDZ2_O_DDRDZ(D,CSTURB,TURBN,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,PDR_DZ,TURBN%CTURBDIM,GUSERV,ZWKPHIPSI1)
     !
-    ZFLXZ(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT)                             &
-          + TURBN%XIMPL * TURBN%XCTV*PLM(IIJB:IIJE,1:IKT) *PLEPS(IIJB:IIJE,1:IKT) &
-            * MZF(ZWKPHIPSI1(IIJB:IIJE,1:IKT)*DZM(PRP(IIJB:IIJE,1:IKT) - PRM(IIJB:IIJE,1:IKT,1)) / PDZZ(IIJB:IIJE,1:IKT)) &
-          + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:IKT) * MZF(DZM(PRP(IIJB:IIJE,1:IKT) - PRM(IIJB:IIJE,1:IKT,1)) / PDZZ(IIJB:IIJE,1:IKT))
+    ZFLXZ(:,:) = ZF(:,:)                             &
+          + TURBN%XIMPL * TURBN%XCTV*PLM(:,:) *PLEPS(:,:) &
+            * MZF(ZWKPHIPSI1(:,:)*DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:)) &
+          + TURBN%XIMPL * ZDFDDRDZ(:,:) * MZF(DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:))
   ENDIF
     !
     ! special case near the ground ( uncentred gradient )

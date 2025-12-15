@@ -247,7 +247,7 @@ LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
-TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
+TYPE(TFILEDATA),        INTENT(INOUT)::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDXX, PDYY, PDZZ, PDZX, PDZY
                                                       ! Metric coefficients
@@ -404,8 +404,8 @@ ZFLUXSFCV(IIJB:IIJE)=PSFVM(IIJB:IIJE)
 !
 ! Preparation of the arguments for TRIDIAG_WIND
 !
-ZA(IIJB:IIJE,1:IKT)    = -PTSTEP * ZCMFS * MXM( ZKEFF(IIJB:IIJE,1:IKT) ) * &
-               MXM(MZM( PRHODJ(IIJB:IIJE,1:IKT) )) / MXM (PDZZ(IIJB:IIJE,1:IKT))**2
+ZA(:,:)    = -PTSTEP * ZCMFS * MXM( ZKEFF(:,:) ) * &
+               MXM(MZM( PRHODJ(:,:) )) / MXM (PDZZ(:,:))**2
 !
 !
 ! Compute the source of U wind component
@@ -426,7 +426,7 @@ ZCOEFS(IIJB:IIJE)=  ZCOEFFLXU(IIJB:IIJE) * PCOSSLOPE(IIJB:IIJE) * PDIRCOSZW(IIJB
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
 !
-ZCOEFS(IIJB:IIJE)=MXM(ZCOEFS(IIJB:IIJE) / PDZZ(IIJB:IIJE,IKB) )
+ZCOEFS(:)=MXM(ZCOEFS(:) / PDZZ(:,IKB) )
 !
 !
 !$acc kernels
@@ -438,8 +438,8 @@ ZSOURCE(IIJB:IIJE,IKTB+1:IKTE-1) = 0.
 ! Sfx flux assumed to be in SI & at vorticity point
 !
 IF (GOCEAN) THEN  ! Ocean model
-  ZSOURCE(IIJB:IIJE,IKE) = MXM(ZFLUXSFCU(IIJB:IIJE)/PDZZ(IIJB:IIJE,IKE)) &
-       *0.5 * ( 1. + MXM(PRHODJ(IIJB:IIJE,IKU)) / MXM(PRHODJ(IIJB:IIJE,IKE)))
+  ZSOURCE(:,IKE) = MXM(ZFLUXSFCU(:)/PDZZ(:,IKE)) &
+       *0.5 * ( 1. + MXM(PRHODJ(:,IKU)) / MXM(PRHODJ(:,IKE)))
   !
   ! Zero flux at the ocean domain bottom
 !$acc kernels
@@ -461,14 +461,14 @@ ELSE ! Atmosphere
 !
   ! add the vertical part or the surface flux at the U,W vorticity point
 !
-    ZSOURCE(IIJB:IIJE,IKB) =                                  &
-      (   MXM( ZSOURCE(IIJB:IIJE,IKB)   / PDZZ(IIJB:IIJE,IKB) ) &
-       +  MXM( ZCOEFFLXU(IIJB:IIJE) / PDZZ(IIJB:IIJE,IKB)       &
-               *ZUSLOPEM(IIJB:IIJE)                           &
-              -ZCOEFFLXV(IIJB:IIJE) / PDZZ(IIJB:IIJE,IKB)       &
-               *ZVSLOPEM(IIJB:IIJE)                      )    &
-       -  ZCOEFS(IIJB:IIJE) * PUM(IIJB:IIJE,IKB) * TURBN%XIMPL  &
-      ) * 0.5 * ( 1. + MXM(PRHODJ(IIJB:IIJE,IKA)) / MXM(PRHODJ(IIJB:IIJE,IKB)) )
+    ZSOURCE(:,IKB) =                                  &
+      (   MXM( ZSOURCE(:,IKB)   / PDZZ(:,IKB) ) &
+       +  MXM( ZCOEFFLXU(:) / PDZZ(:,IKB)       &
+               *ZUSLOPEM(:)                           &
+              -ZCOEFFLXV(:) / PDZZ(:,IKB)       &
+               *ZVSLOPEM(:)                      )    &
+       -  ZCOEFS(:) * PUM(:,IKB) * TURBN%XIMPL  &
+      ) * 0.5 * ( 1. + MXM(PRHODJ(:,IKA)) / MXM(PRHODJ(:,IKB)) )
 !
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -484,14 +484,14 @@ CALL TRIDIAG_WIND(D,PUM,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,   &
 !
 !  Compute the equivalent tendency for the U wind component
 !
-PRUS(IIJB:IIJE,1:IKT)=PRUS(IIJB:IIJE,1:IKT)+MXM(PRHODJ(IIJB:IIJE,1:IKT))*(ZRES(IIJB:IIJE,1:IKT)-PUM(IIJB:IIJE,1:IKT))/PTSTEP
+PRUS(:,:)=PRUS(:,:)+MXM(PRHODJ(:,:))*(ZRES(:,:)-PUM(:,:))/PTSTEP
 !
 !*       5.2  Partial TKE Dynamic Production
 !
 ! vertical flux of the U wind component
 !
-ZFLXZ(IIJB:IIJE,1:IKT)     = -ZCMFS * MXM(ZKEFF(IIJB:IIJE,1:IKT)) * &
-                  DZM(TURBN%XIMPL*ZRES(IIJB:IIJE,1:IKT) + PEXPL*PUM(IIJB:IIJE,1:IKT)) / MXM(PDZZ(IIJB:IIJE,1:IKT))
+ZFLXZ(:,:)     = -ZCMFS * MXM(ZKEFF(:,:)) * &
+                  DZM(TURBN%XIMPL*ZRES(:,:) + PEXPL*PUM(:,:)) / MXM(PDZZ(:,:))
 !
 IF (GOCEAN) THEN
 !$acc kernels
@@ -501,10 +501,10 @@ IF (GOCEAN) THEN
 !$acc end kernels
 ELSE
   ! surface flux
-  ZFLXZ(IIJB:IIJE,IKB)   =   MXM(PDZZ(IIJB:IIJE,IKB))  *                   &
-    ( ZSOURCE(IIJB:IIJE,IKB)                                       &
-     +ZCOEFS(IIJB:IIJE) * ZRES(IIJB:IIJE,IKB) * TURBN%XIMPL                &
-    ) / 0.5 / ( 1. + MXM(PRHODJ(IIJB:IIJE,IKA)) / MXM(PRHODJ(IIJB:IIJE,IKB)) )
+  ZFLXZ(:,IKB)   =   MXM(PDZZ(:,IKB))  *                   &
+    ( ZSOURCE(:,IKB)                                       &
+     +ZCOEFS(:) * ZRES(:,IKB) * TURBN%XIMPL                &
+    ) / 0.5 / ( 1. + MXM(PRHODJ(:,IKA)) / MXM(PRHODJ(:,IKB)) )
   !
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -539,21 +539,21 @@ PWU(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT)
 ! Contribution to the TKE dynamic production of TKE
 ! (computed at mass point)
 !
-PDP(IIJB:IIJE,1:IKT) = - MZF( MXF ( ZFLXZ * GZ_U_UW(PUM,PDZZ) )  )
+PDP(:,:) = - MZF( MXF ( ZFLXZ * GZ_U_UW(PUM,PDZZ) )  )
 !
 ! Special cases near surface
 IF (GOCEAN) THEN
   ! evaluate the dynamic production at w(IKE) and store in PDP(IKE)
   ! before to be extrapolated in tke_eps routine
-  PDP(IIJB:IIJE,IKE) = - MXF (                            &
-    ZFLXZ(IIJB:IIJE,IKE-IKL) * (PUM(IIJB:IIJE,IKE)-PUM(IIJB:IIJE,IKE-IKL))  &
-                           / MXM(PDZZ(IIJB:IIJE,IKE-IKL))   &
+  PDP(:,IKE) = - MXF (                            &
+    ZFLXZ(:,IKE-IKL) * (PUM(:,IKE)-PUM(:,IKE-IKL))  &
+                           / MXM(PDZZ(:,IKE-IKL))   &
                            ) 
 ELSE ! Atmosphere
   ! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)
-  PDP(IIJB:IIJE,IKB) = - MXF (                              &
-    ZFLXZ(IIJB:IIJE,IKB+IKL) * (PUM(IIJB:IIJE,IKB+IKL)-PUM(IIJB:IIJE,IKB))  &
-                         / MXM(PDZZ(IIJB:IIJE,IKB+IKL))     &
+  PDP(:,IKB) = - MXF (                              &
+    ZFLXZ(:,IKB+IKL) * (PUM(:,IKB+IKL)-PUM(:,IKB))  &
+                         / MXM(PDZZ(:,IKB+IKL))     &
                          )
 !
 END IF
@@ -591,38 +591,38 @@ IF(TURBN%CTURBDIM=='3DIM') THEN
   !
   IF (.NOT. OFLAT) THEN
     !
-    PRWS(IIJB:IIJE,1:IKT)= PRWS                                      &
-                -DXF( MZM( MXM(PRHODJ) /PDXX(IIJB:IIJE,1:IKT) )  * ZFLXZ(IIJB:IIJE,1:IKT) )  &
+    PRWS(:,:)= PRWS                                      &
+                -DXF( MZM( MXM(PRHODJ) /PDXX(:,:) )  * ZFLXZ(:,:) )  &
                 +DZM( PRHODJ / MZF(PDZZ ) *                &
-                      MXF( MZF( ZFLXZ(IIJB:IIJE,1:IKT)*PDZX(IIJB:IIJE,1:IKT) ) / PDXX(IIJB:IIJE,1:IKT) )      &
+                      MXF( MZF( ZFLXZ(:,:)*PDZX(:,:) ) / PDXX(:,:) )      &
                     )
   ELSE
-    PRWS(IIJB:IIJE,1:IKT)= PRWS(IIJB:IIJE,1:IKT) -DXF( MZM( MXM(PRHODJ) /PDXX(IIJB:IIJE,1:IKT) )  * ZFLXZ(IIJB:IIJE,1:IKT) )
+    PRWS(:,:)= PRWS(:,:) -DXF( MZM( MXM(PRHODJ) /PDXX(:,:) )  * ZFLXZ(:,:) )
   END IF
   !
   ! Complete the TKE dynamical production with the W wind contribution 
   !
-  ZA(IIJB:IIJE,1:IKT)=-MZF( MXF ( ZFLXZ * GX_W_UW(OFLAT,PWM,PDXX,PDZZ,PDZX) )  )
+  ZA(:,:)=-MZF( MXF ( ZFLXZ * GX_W_UW(OFLAT,PWM,PDXX,PDZZ,PDZX) )  )
   !
   ! Special cases near surface
   IF (GOCEAN) THEN
     ! evaluate the dynamic production at w(IKE) in PDP(IKE)
   !
-    ZA(IIJB:IIJE,IKE) = - MXF(ZFLXZ(IIJB:IIJE,IKE) *  DXM(PWM(IIJB:IIJE,IKE)) &
-                            / (0.5*(PDXX(IIJB:IIJE,IKE-IKL)+PDXX(IIJB:IIJE,IKE))) )
+    ZA(:,IKE) = - MXF(ZFLXZ(:,IKE) *  DXM(PWM(:,IKE)) &
+                            / (0.5*(PDXX(:,IKE-IKL)+PDXX(:,IKE))) )
   !
   ELSE !Atmosphere
     ! evaluate the dynamic production at w(IKB+IKL) in PDP(IKB)
-  ZA(IIJB:IIJE,IKB) = - MXF (                               &
-   ZFLXZ(IIJB:IIJE,IKB+IKL) *                               &
-     ( DXM( PWM(IIJB:IIJE,IKB+IKL) )                        &
-      -MXM(  (PWM(IIJB:IIJE,IKB+2*IKL   )-PWM(IIJB:IIJE,IKB+IKL))   &
-              /(PDZZ(IIJB:IIJE,IKB+2*IKL)+PDZZ(IIJB:IIJE,IKB+IKL))  &
-            +(PWM(IIJB:IIJE,IKB+IKL)-PWM(IIJB:IIJE,IKB  ))          &
-              /(PDZZ(IIJB:IIJE,IKB+IKL)+PDZZ(IIJB:IIJE,IKB  ))      &
+  ZA(:,IKB) = - MXF (                               &
+   ZFLXZ(:,IKB+IKL) *                               &
+     ( DXM( PWM(:,IKB+IKL) )                        &
+      -MXM(  (PWM(:,IKB+2*IKL   )-PWM(:,IKB+IKL))   &
+              /(PDZZ(:,IKB+2*IKL)+PDZZ(:,IKB+IKL))  &
+            +(PWM(:,IKB+IKL)-PWM(:,IKB  ))          &
+              /(PDZZ(:,IKB+IKL)+PDZZ(:,IKB  ))      &
           )                                         &
-        * PDZX(IIJB:IIJE,IKB+IKL)                           &
-     ) / (0.5*(PDXX(IIJB:IIJE,IKB+IKL)+PDXX(IIJB:IIJE,IKB)))        &
+        * PDZX(:,IKB+IKL)                           &
+     ) / (0.5*(PDXX(:,IKB+IKL)+PDXX(:,IKB)))        &
                           )
   END IF
   !
@@ -663,7 +663,7 @@ END IF
 !
 ! Preparation of the arguments for TRIDIAG_WIND
 !!
-ZA(IIJB:IIJE,1:IKT) = -PTSTEP * ZCMFS * MYM( ZKEFF ) * MYM(MZM( PRHODJ )) / MYM( PDZZ )**2
+ZA(:,:) = -PTSTEP * ZCMFS * MYM( ZKEFF ) * MYM(MZM( PRHODJ )) / MYM( PDZZ )**2
 !
 ! Compute the source of V wind component
 ! compute the coefficient between the vertical flux and the 2 components of the
@@ -681,12 +681,12 @@ ZCOEFS(IIJB:IIJE)=  ZCOEFFLXU(IIJB:IIJE) * PSINSLOPE(IIJB:IIJE) * PDIRCOSZW(IIJB
 !$acc end kernels
 !
 ! average this flux to be located at the V,W vorticity point
-ZCOEFS(IIJB:IIJE)=MYM(ZCOEFS(IIJB:IIJE) / PDZZ(IIJB:IIJE,IKB) )
+ZCOEFS(:)=MYM(ZCOEFS(:) / PDZZ(:,IKB) )
 !
 ! No flux in SOURCE TERM NULL OUTSIDE BC
 !$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKB+1:IKE-1)
-ZSOURCE(IIJB:IIJE,IKB+1IIJB:IIJEIKE-1) = 0.
+ZSOURCE(IIJB:IIJE,IKB+1:IKE-1) = 0.
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKB+1:IKE-1)
 !$acc end kernels
 !
@@ -700,8 +700,8 @@ IF (GOCEAN) THEN ! Ocean case
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
   ! average this flux to be located at the U,W vorticity point
-  ZSOURCE(IIJB:IIJE,IKE) = MYM(ZFLUXSFCV(IIJB:IIJE) / PDZZ(IIJB:IIJE,IKE)) &
-        *0.5 * ( 1. + MYM(PRHODJ(IIJB:IIJE,IKU)) / MYM(PRHODJ(IIJB:IIJE,IKE)))
+  ZSOURCE(:,IKE) = MYM(ZFLUXSFCV(:) / PDZZ(:,IKE)) &
+        *0.5 * ( 1. + MYM(PRHODJ(:,IKU)) / MYM(PRHODJ(:,IKE)))
   !No flux at the ocean domain bottom
 !$acc kernels present_cr(ZSOURCE)
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -721,14 +721,14 @@ ELSE ! Atmos case
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
 !
-    ZSOURCE(IIJB:IIJE,IKB) =                                      &
-      (   MYM( ZSOURCE(IIJB:IIJE,IKB)   / PDZZ(IIJB:IIJE,IKB) )     &
-       +  MYM( ZCOEFFLXU(IIJB:IIJE) / PDZZ(IIJB:IIJE,IKB)           &
-              *ZUSLOPEM(IIJB:IIJE)                                &
-              +ZCOEFFLXV(IIJB:IIJE) / PDZZ(IIJB:IIJE,IKB)           &
-              *ZVSLOPEM(IIJB:IIJE)                      )         &
-       - ZCOEFS(IIJB:IIJE) * PVM(IIJB:IIJE,IKB) * TURBN%XIMPL       &
-      ) * 0.5 * ( 1. + MYM(PRHODJ(IIJB:IIJE,IKA)) / MYM(PRHODJ(IIJB:IIJE,IKB)) )
+    ZSOURCE(:,IKB) =                                      &
+      (   MYM( ZSOURCE(:,IKB)   / PDZZ(:,IKB) )     &
+       +  MYM( ZCOEFFLXU(:) / PDZZ(:,IKB)           &
+              *ZUSLOPEM(:)                                &
+              +ZCOEFFLXV(:) / PDZZ(:,IKB)           &
+              *ZVSLOPEM(:)                      )         &
+       - ZCOEFS(:) * PVM(:,IKB) * TURBN%XIMPL       &
+      ) * 0.5 * ( 1. + MYM(PRHODJ(:,IKA)) / MYM(PRHODJ(:,IKB)) )
 !
   !No flux at the atmosphere top
 !$acc kernels present_cr(ZSOURCE)
@@ -744,14 +744,14 @@ CALL TRIDIAG_WIND(D,PVM,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,  &
 !
 ! Compute the equivalent tendency for the V wind component
 !
-PRVS(IIJB:IIJE,1:IKT)=PRVS(IIJB:IIJE,1:IKT)+MYM(PRHODJ(IIJB:IIJE,1:IKT))*(ZRES(IIJB:IIJE,1:IKT)-PVM(IIJB:IIJE,1:IKT))/PTSTEP
+PRVS(:,:)=PRVS(:,:)+MYM(PRHODJ(:,:))*(ZRES(:,:)-PVM(:,:))/PTSTEP
 !
 !
 !*       6.2  Complete 1D dynamic Production
 !
 !  vertical flux of the V wind component
 !
-ZFLXZ(IIJB:IIJE,1:IKT)   = -ZCMFS * MYM(ZKEFF) * &
+ZFLXZ(:,:)   = -ZCMFS * MYM(ZKEFF) * &
               DZM( TURBN%XIMPL*ZRES + PEXPL*PVM ) / MYM(PDZZ)
 !
 IF (GOCEAN) THEN
@@ -761,10 +761,10 @@ IF (GOCEAN) THEN
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
 ELSE
-ZFLXZ(IIJB:IIJE,IKB)   =   MYM(PDZZ(IIJB:IIJE,IKB))  *                       &
-  ( ZSOURCE(IIJB:IIJE,IKB)                                           &
-   +ZCOEFS(IIJB:IIJE) * ZRES(IIJB:IIJE,IKB) * TURBN%XIMPL                    &
-  ) / 0.5 / ( 1. + MYM(PRHODJ(IIJB:IIJE,IKA)) / MYM(PRHODJ(IIJB:IIJE,IKB)) )
+ZFLXZ(:,IKB)   =   MYM(PDZZ(:,IKB))  *                       &
+  ( ZSOURCE(:,IKB)                                           &
+   +ZCOEFS(:) * ZRES(:,IKB) * TURBN%XIMPL                    &
+  ) / 0.5 / ( 1. + MYM(PRHODJ(:,IKA)) / MYM(PRHODJ(:,IKB)) )
   !
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -801,23 +801,23 @@ PWV(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT)
 !  Contribution to the TKE dynamical production 
 !    computed at mass point
 !
-ZA(IIJB:IIJE,1:IKT) = - MZF( MYF ( ZFLXZ * GZ_V_VW(PVM, PDZZ) ) )
+ZA(:,:) = - MZF( MYF ( ZFLXZ * GZ_V_VW(PVM, PDZZ) ) )
 !
 ! Special cases at surface
 IF (GOCEAN) THEN
   ! evaluate the dynamic production at w(IKE) in PDP(IKE)
   ! before extrapolation done in routine tke_eps_source
-  ZA(IIJB:IIJE,IKE) = - MYF (                                                  &
-   ZFLXZ(IIJB:IIJE,IKE-IKL) * (PVM(IIJB:IIJE,IKE)-PVM(IIJB:IIJE,IKE-IKL))  &
-                          / MYM(PDZZ(IIJB:IIJE,IKE-IKL))                   &
+  ZA(:,IKE) = - MYF (                                                  &
+   ZFLXZ(:,IKE-IKL) * (PVM(:,IKE)-PVM(:,IKE-IKL))  &
+                          / MYM(PDZZ(:,IKE-IKL))                   &
                           )
 !
 ELSE ! Atmosphere
   ! evaluate the dynamic production at w(IKB+IKL) in PDP(IKB)
-ZA(IIJB:IIJE,IKB)  =                                                 &
+ZA(:,IKB)  =                                                 &
                  - MYF (                                          &
-ZFLXZ(IIJB:IIJE,IKB+IKL) * (PVM(IIJB:IIJE,IKB+IKL)-PVM(IIJB:IIJE,IKB))  &
-                       / MYM(PDZZ(IIJB:IIJE,IKB+IKL))               &
+ZFLXZ(:,IKB+IKL) * (PVM(:,IKB+IKL)-PVM(:,IKB))  &
+                       / MYM(PDZZ(:,IKB+IKL))               &
                        )
 END IF
 !
@@ -859,36 +859,36 @@ IF(TURBN%CTURBDIM=='3DIM') THEN
   !
   IF (.NOT. O2D) THEN
     IF (.NOT. OFLAT) THEN
-      PRWS(IIJB:IIJE,1:IKT)= PRWS(IIJB:IIJE,1:IKT)                                   &
+      PRWS(:,:)= PRWS(:,:)                                   &
                   -DYF( MZM( MYM(PRHODJ) /PDYY ) * ZFLXZ )   &
                   +DZM( PRHODJ / MZF(PDZZ ) *                &
                         MYF( MZF( ZFLXZ*PDZY ) / PDYY )      &
                       )
     ELSE
-      PRWS(IIJB:IIJE,1:IKT)= PRWS(IIJB:IIJE,1:IKT) -DYF( MZM( MYM(PRHODJ) /PDYY ) * ZFLXZ )
+      PRWS(:,:)= PRWS(:,:) -DYF( MZM( MYM(PRHODJ) /PDYY ) * ZFLXZ )
     END IF
   END IF
   ! 
   ! Complete the Dynamical production with the W wind component 
   IF (.NOT. O2D) THEN
-    ZA(IIJB:IIJE,1:IKT) = - MZF( MYF ( ZFLXZ(IIJB:IIJE,1:IKT) * GY_W_VW(OFLAT, PWM,PDYY,PDZZ,PDZY) )  )
+    ZA(:,:) = - MZF( MYF ( ZFLXZ(:,:) * GY_W_VW(OFLAT, PWM,PDYY,PDZZ,PDZY) )  )
     ! Special case near surface 
     IF (GOCEAN) THEN
       ! evaluate the dynamic production at w(IKE) and stored in PDP(IKE)
-      ZA(IIJB:IIJE,IKE) = -MYF(ZFLXZ(IIJB:IIJE,IKE) *  DYM(PWM(IIJB:IIJE,IKE)) &
-                            / (0.5*(PDYY(IIJB:IIJE,IKE-IKL)+PDYY(IIJB:IIJE,IKE))))
+      ZA(:,IKE) = -MYF(ZFLXZ(:,IKE) *  DYM(PWM(:,IKE)) &
+                            / (0.5*(PDYY(:,IKE-IKL)+PDYY(:,IKE))))
     ELSE ! Atmosphere
       ! evaluate the dynamic production at w(IKB+IKL) and stored in PDP(IKB)
-    ZA(IIJB:IIJE,IKB) = - MYF (                                &
-     ZFLXZ(IIJB:IIJE,IKB+IKL) *                                &
-       ( DYM( PWM(IIJB:IIJE,IKB+IKL) )                         &
-        -MYM(  (PWM(IIJB:IIJE,IKB+2*IKL)-PWM(IIJB:IIJE,IKB+IKL))       &
-                /(PDZZ(IIJB:IIJE,IKB+2*IKL)+PDZZ(IIJB:IIJE,IKB+IKL))   &
-              +(PWM(IIJB:IIJE,IKB+IKL)-PWM(IIJB:IIJE,IKB  ))           &
-                /(PDZZ(IIJB:IIJE,IKB+IKL)+PDZZ(IIJB:IIJE,IKB  ))       &
+    ZA(:,IKB) = - MYF (                                &
+     ZFLXZ(:,IKB+IKL) *                                &
+       ( DYM( PWM(:,IKB+IKL) )                         &
+        -MYM(  (PWM(:,IKB+2*IKL)-PWM(:,IKB+IKL))       &
+                /(PDZZ(:,IKB+2*IKL)+PDZZ(:,IKB+IKL))   &
+              +(PWM(:,IKB+IKL)-PWM(:,IKB  ))           &
+                /(PDZZ(:,IKB+IKL)+PDZZ(:,IKB  ))       &
             )                                          &
-          * PDZY(IIJB:IIJE,IKB+IKL)                            &
-       ) / (0.5*(PDYY(IIJB:IIJE,IKB+IKL)+PDYY(IIJB:IIJE,IKB)))         &
+          * PDZY(:,IKB+IKL)                            &
+       ) / (0.5*(PDYY(:,IKB+IKL)+PDYY(:,IKB)))         &
                             )
     !
     END IF
@@ -926,8 +926,8 @@ END IF
 !             -----------------------------------------------
 !
 IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. TURBN%CTURBDIM == '1DIM') THEN
-  ZFLXZ(IIJB:IIJE,1:IKT)= (2./3.) * PTKEM(IIJB:IIJE,1:IKT)                     &
-     -ZCMFS*PLM(IIJB:IIJE,1:IKT)*SQRT(PTKEM(IIJB:IIJE,1:IKT))*GZ_W_M(PWM,PDZZ)
+  ZFLXZ(:,:)= (2./3.) * PTKEM(:,:)                     &
+     -ZCMFS*PLM(:,:)*SQRT(PTKEM(:,:))*GZ_W_M(PWM,PDZZ)
   ! to be tested &
   !   +XCMFB*(4./3.)*PLM(:,:,:)/SQRT(PTKEM(:,:,:))*PTP(:,:,:)
   ! stores the W variance

@@ -172,7 +172,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PDXX,PDYY,PDZZ,PDZX,PDZY ! metr
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PZZ          ! physical height w-pt
 REAL,                    INTENT(IN)   ::  PTSTEP       ! Time step 
 REAL,                    INTENT(IN)   ::  PEXPL        ! Coef. temporal. disc.
-TYPE(TFILEDATA),         INTENT(IN)   ::  TPFILE       ! Output file
+TYPE(TFILEDATA),         INTENT(INOUT)::  TPFILE       ! Output file
 LOGICAL,                 INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
 LOGICAL,                 INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 REAL, DIMENSION(D%NIJT),        INTENT(IN)    :: PSFUM,PSFVM ! momentum sfc flux
@@ -277,11 +277,12 @@ END IF
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ZFLX(IIJB:IIJE,1:IKT) = TURBN%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT)) / PLEPS(IIJB:IIJE,1:IKT)
-ZSOURCE(IIJB:IIJE,1:IKT) = ( PRTKES(IIJB:IIJE,1:IKT) +  PRTKEMS(IIJB:IIJE,1:IKT) ) &
-                                     / PRHODJ(IIJB:IIJE,1:IKT) - PTKEM(IIJB:IIJE,1:IKT) / PTSTEP &
-   + PDP(IIJB:IIJE,1:IKT) + PTP(IIJB:IIJE,1:IKT) + ZTR(IIJB:IIJE,1:IKT) & 
-   - PEXPL * ZFLX(IIJB:IIJE,1:IKT) * PTKEM(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!
+ZSOURCE(:,:) = ( PRTKES(:,:) +  PRTKEMS(:,:) ) &
+                                     / PRHODJ(:,:) - PTKEM(:,:) / PTSTEP &
+   + PDP(:,:) + PTP(:,:) + ZTR(:,:) & 
+   - PEXPL * ZFLX(:,:) * PTKEM(:,:)
 !
 !*       2.2  implicit vertical TKE transport
 !
@@ -298,7 +299,8 @@ END IF
 ! Compute the vector giving the elements just under the diagonal for the 
 ! matrix inverted in TRIDIAG 
 !
-ZA(IIJB:IIJE,1:IKT) = - PTSTEP * CSTURB%XCET * MZM(ZKEFF) * MZM(PRHODJ) / PDZZ(IIJB:IIJE,1:IKT)**2
+!
+ZA(:,:) = - PTSTEP * CSTURB%XCET * MZM(ZKEFF) * MZM(PRHODJ) / PDZZ(:,:)**2
 !
 ! Compute TKE at time t+deltat: ( stored in ZRES )
 !
@@ -342,9 +344,8 @@ IF ( TLES%LLES_CALL .OR.                         &
 !
 ! Compute the cartesian vertical flux of TKE in ZFLX
 !
-    ZFLX(IIJB:IIJE,1:IKT)   = - CSTURB%XCET * MZM(ZKEFF(IIJB:IIJE,1:IKT)) *   &
-                              DZM(TURBN%XIMPL * ZRES(IIJB:IIJE,1:IKT) + PEXPL * PTKEM(IIJB:IIJE,1:IKT) ) &
-                              / PDZZ(IIJB:IIJE,1:IKT)
+    ZFLX(:,:)   = - CSTURB%XCET * MZM(ZKEFF(:,:)) *   &
+                  DZM(TURBN%XIMPL * ZRES(:,:) + PEXPL * PTKEM(:,:) ) / PDZZ(:,:)
 !
 !$acc kernels
   ZFLX(IIJB:IIJE,IKB) = 0.
@@ -353,9 +354,7 @@ IF ( TLES%LLES_CALL .OR.                         &
 !
 ! Compute the whole turbulent TRansport of TKE:
 !
-  PTR(IIJB:IIJE,1:IKT)= PTR(IIJB:IIJE,1:IKT) - &
-                        DZF( MZM(PRHODJ(IIJB:IIJE,1:IKT)) * ZFLX(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT) ) &
-                        /PRHODJ(IIJB:IIJE,1:IKT)
+  PTR(:,:)= PTR(:,:) - DZF( MZM(PRHODJ(:,:)) * ZFLX(:,:) / PDZZ(:,:) ) /PRHODJ(:,:)
 !
 ! Storage in the LES configuration
 !

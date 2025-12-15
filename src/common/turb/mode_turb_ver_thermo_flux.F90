@@ -274,7 +274,7 @@ LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
-TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
+TYPE(TFILEDATA),        INTENT(INOUT)::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDZZ, PDXX, PDYY, PDZX, PDZY ! Metric coefficients
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the normal to the ground surface
@@ -748,10 +748,10 @@ END IF
 !
 ! Contribution of the conservative temperature flux to the buoyancy flux
 IF (OOCEAN) THEN
-  PTP(IIJB:IIJE,1:IKT)= CST%XG*CST%XALPHAOC * MZF(ZFLXZ(IIJB:IIJE,1:IKT))
+  PTP(:,:)= CST%XG*CST%XALPHAOC * MZF(ZFLXZ(:,:))
 ELSE
   IF (KRR /= 0) THEN
-    PTP(IIJB:IIJE,1:IKT)  =  PBETA(IIJB:IIJE,1:IKT) * MZF( MZM(PETHETA) * ZFLXZ(IIJB:IIJE,1:IKT) )
+    PTP(:,:)  =  PBETA(:,:) * MZF( MZM(PETHETA) * ZFLXZ(:,:) )
 !$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     PTP(IIJB:IIJE,IKB)=  PBETA(IIJB:IIJE,IKB) * PETHETA(IIJB:IIJE,IKB) *   &
@@ -759,13 +759,13 @@ ELSE
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
   ELSE
-   PTP(IIJB:IIJE,1:IKT)=  PBETA(IIJB:IIJE,1:IKT) * MZF(ZFLXZ(IIJB:IIJE,1:IKT))
+    PTP(:,:)=  PBETA(:,:) * MZF(ZFLXZ(:,:))
   END IF
 END IF
 !
 ! Buoyancy flux at flux points
 !
-PWTHV(IIJB:IIJE,1:IKT) = MZM(PETHETA) * ZFLXZ(IIJB:IIJE,1:IKT)
+PWTHV(:,:) = MZM(PETHETA) * ZFLXZ(:,:)
 
 !$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -1147,9 +1147,9 @@ IF (KRR /= 0) THEN
   !
   ! Contribution of the conservative water flux to the Buoyancy flux
   IF (OOCEAN) THEN
-    ZA(IIJB:IIJE,1:IKT)=  -CST%XG * CST%XBETAOC * MZF(ZFLXZ )
+    ZA(:,:)=  -CST%XG * CST%XBETAOC * MZF(ZFLXZ )
   ELSE
-    ZA(IIJB:IIJE,1:IKT)   =  PBETA(IIJB:IIJE,1:IKT) * MZF( MZM(PEMOIST) * ZFLXZ )
+    ZA(:,:)   =  PBETA(:,:) * MZF( MZM(PEMOIST) * ZFLXZ )
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZA(IIJB:IIJE,IKB) =  PBETA(IIJB:IIJE,IKB) * PEMOIST(IIJB:IIJE,IKB) *   &
                    0.5 * ( ZFLXZ(IIJB:IIJE,IKB) + ZFLXZ(IIJB:IIJE,IKB+IKL) )
@@ -1161,7 +1161,7 @@ IF (KRR /= 0) THEN
   !
   ! Buoyancy flux at flux points
   !
-  PWTHV(IIJB:IIJE,1:IKT) = PWTHV(IIJB:IIJE,1:IKT) + MZM(PEMOIST) * ZFLXZ(IIJB:IIJE,1:IKT)
+  PWTHV(:,:) = PWTHV(:,:) + MZM(PEMOIST) * ZFLXZ(:,:)
   !
 !$acc kernels 
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -1278,8 +1278,8 @@ IF ( ((TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. TLES%LLES_CALL) .AND. (KRRL > 
 !$acc end kernels
   !  
   ! compute <w Rc>
-  ZFLXZ(IIJB:IIJE,1:IKT) = MZM( PAMOIST(IIJB:IIJE,1:IKT) * 2.* PSRCM(IIJB:IIJE,1:IKT) ) * ZFLXZ(IIJB:IIJE,1:IKT) + &
-                 MZM( PATHETA(IIJB:IIJE,1:IKT) * 2.* PSRCM(IIJB:IIJE,1:IKT) ) * ZA(IIJB:IIJE,1:IKT)
+  ZFLXZ(:,:) = MZM( PAMOIST(:,:) * 2.* PSRCM(:,:) ) * ZFLXZ(:,:) + &
+                 MZM( PATHETA(:,:) * 2.* PSRCM(:,:) ) * ZA(:,:)
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZFLXZ(IIJB:IIJE,IKA) = ZFLXZ(IIJB:IIJE,IKB)

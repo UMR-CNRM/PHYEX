@@ -177,7 +177,7 @@ LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimension
 LOGICAL,                INTENT(IN)   :: O2D           ! Logical for 2D model version (modd_conf)
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! Kind of turbulence param.
-TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
+TYPE(TFILEDATA),        INTENT(INOUT)   ::  TPFILE       ! Output file
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDXX,PDYY,PDZZ,PDZX,PDZY
                                                   ! metric coefficients
 !
@@ -328,52 +328,54 @@ END IF
 ZMINVAL = (1.-1./CSTURB%XPHI_LIM)
 !
 !$acc kernels present(ZW1,ZW2)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-   ZW1(:,:) = 1.
-   ZW2(:,:) = 1.
-   !
-   IF (PREDTH1(:,:)+PREDR1(:,:)<-ZMINVAL)THEN
-    ZW1(:,:) = (-ZMINVAL) / (PREDTH1(:,:)+PREDR1(:,:))
-   ENDIF
-   !
-   IF (PREDTH1(:,:)<-ZMINVAL)THEN
-    ZW2(:,:) = (-ZMINVAL) / (PREDTH1(:,:))
-   ENDIF
-   ZW2(:,:) = MIN(ZW1(:,:),ZW2(:,:))
-   !
-   ZW1(:,:) = 1.
-   IF (PREDR1(:,:)<-ZMINVAL)THEN
-    ZW1(:,:) = (-ZMINVAL) / (PREDR1(:,:))
-   ENDIF
-   ZW1(:,:) = MIN(ZW2(:,:),ZW1(:,:))
-   !
-   !
-   !       3. Modification of Mixing length and dissipative length
-   !          ----------------------------------------------------
-   !
-   PBLL_O_E(:,:) = PBLL_O_E(:,:) * ZW1(:,:)
-   PREDTH1(:,:)  = PREDTH1(:,:)  * ZW1(:,:)
-   PREDR1(:,:)   = PREDR1(:,:)   * ZW1(:,:)
-   !
-   !       4. Threshold for very small (in absolute value) Redelperger numbers
-   !          ----------------------------------------------------------------
-   !
-   IF(PREDTH1(:,:) < 0.) THEN
-    ZW2(:,:)=-1.
-   ELSE
-    ZW2(:,:)=1.
-   END IF
-   PREDTH1(:,:)= ZW2(:,:) * MAX(CST%XMNH_TINY_12, ZW2(:,:)*PREDTH1(:,:))
-   !
-   IF (KRR /= 0) THEN                ! moist case
-    IF(PREDR1(:,:) < 0.) THEN
-     ZW2(:,:)=-1.
-    ELSE
-     ZW2(:,:)=1.
-    END IF
-    PREDR1(:,:)= ZW2(:,:) * MAX(CST%XMNH_TINY_12, ZW2(:,:)*PREDR1(:,:))
-   END IF
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+DO JK=1, IKT
+   DO JIJ=IIJB, IIJE
+       ZW1(JIJ, JK) = 1.
+       ZW2(JIJ, JK) = 1.
+       !
+       IF (PREDTH1(JIJ, JK)+PREDR1(JIJ, JK)<-ZMINVAL)THEN
+        ZW1(JIJ, JK) = (-ZMINVAL) / (PREDTH1(JIJ, JK)+PREDR1(JIJ, JK))
+       ENDIF
+       !
+       IF (PREDTH1(JIJ, JK)<-ZMINVAL)THEN
+        ZW2(JIJ, JK) = (-ZMINVAL) / (PREDTH1(JIJ, JK))
+       ENDIF
+       ZW2(JIJ, JK) = MIN(ZW1(JIJ, JK),ZW2(JIJ, JK))
+       !
+       ZW1(JIJ, JK) = 1.
+       IF (PREDR1(JIJ, JK)<-ZMINVAL)THEN
+        ZW1(JIJ, JK) = (-ZMINVAL) / (PREDR1(JIJ, JK))
+       ENDIF
+       ZW1(JIJ, JK) = MIN(ZW2(JIJ, JK),ZW1(JIJ, JK))
+       !
+       !
+       !       3. Modification of Mixing length and dissipative length
+       !          ----------------------------------------------------
+       !
+       PBLL_O_E(JIJ, JK) = PBLL_O_E(JIJ, JK) * ZW1(JIJ, JK)
+       PREDTH1(JIJ, JK)  = PREDTH1(JIJ, JK)  * ZW1(JIJ, JK)
+       PREDR1(JIJ, JK)   = PREDR1(JIJ, JK)   * ZW1(JIJ, JK)
+       !
+       !       4. Threshold for very small (in absolute value) Redelperger numbers
+       !          ----------------------------------------------------------------
+       !
+       IF(PREDTH1(JIJ, JK) < 0.) THEN
+        ZW2(JIJ, JK)=-1.
+       ELSE
+        ZW2(JIJ, JK)=1.
+       END IF
+       PREDTH1(JIJ, JK)= ZW2(JIJ, JK) * MAX(CST%XMNH_TINY_12, ZW2(JIJ, JK)*PREDTH1(JIJ, JK))
+       !
+       IF (KRR /= 0) THEN                ! moist case
+        IF(PREDR1(JIJ, JK) < 0.) THEN
+         ZW2(JIJ, JK)=-1.
+        ELSE
+         ZW2(JIJ, JK)=1.
+        END IF
+        PREDR1(JIJ, JK)= ZW2(JIJ, JK) * MAX(CST%XMNH_TINY_12, ZW2(JIJ, JK)*PREDR1(JIJ, JK))
+       END IF
+  END DO
+END DO
 !$acc end kernels
 !
 !
