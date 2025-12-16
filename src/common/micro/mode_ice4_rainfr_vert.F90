@@ -46,7 +46,7 @@ INTEGER :: IKB, IKE, IKL, IIJB, IIJE
 !*       0.2  declaration of local variables
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER :: JIJ, JK
+INTEGER :: JIJ, JK, JJ
 LOGICAL :: MASK
 !
 !-------------------------------------------------------------------------------
@@ -61,7 +61,7 @@ IIJE=D%NIJE
 !-------------------------------------------------------------------------------
 !
 !$acc kernels
-PPRFR(IKB:IKE,IJB:IJE,IKE)=0.
+PPRFR(IIJB:IIJE,IKE)=0.
 !$acc end kernels
 DO JK=IKE-IKL, IKB, -IKL
   IF(PRESENT(PRH)) THEN

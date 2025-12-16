@@ -10,7 +10,6 @@
 !
 !     ###########################################
       PURE FUNCTION GAMMA_X0D(PX)  RESULT(PGAMMA)
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###########################################
 !
 !
@@ -51,9 +50,6 @@
 !*       0. DECLARATIONS
 !           ------------
 !
-#if defined(MNH_BITREP) || defined(MNH_BITREP_OMP)
-USE MODI_BITREP
-#endif
 !
 IMPLICIT NONE
 
@@ -71,8 +67,6 @@ INTEGER                              :: JJ ! Loop index
 REAL                                 :: ZSER,ZSTP,ZTMP,ZX,ZY,ZCOEF(6)
 REAL                                 :: ZPI
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-IF (LHOOK) CALL DR_HOOK('GAMMA_X0D',0,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
 !
 !*       1. SOME CONSTANTS
@@ -100,11 +94,7 @@ ELSE
 END IF
 ZY = ZX
 ZTMP =  ZX + 5.5
-#if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
-ZTMP = (ZX + 0.5) * ALOG(ZTMP) - ZTMP
-#else
-ZTMP = (ZX + 0.5) * BR_LOG(ZTMP) - ZTMP
-#endif
+ZTMP = (ZX + 0.5) * LOG(ZTMP) - ZTMP
 ZSER = 1.000000000190015
 !
 DO JJ = 1, 6
@@ -113,17 +103,9 @@ DO JJ = 1, 6
 END DO
 !
 IF (PX .LT. 0.) THEN
-#if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
-  PGAMMA = ZPI / SIN(ZPI*PX) / EXP(ZTMP + ALOG(ZSTP*ZSER/ZX))
-#else
-  PGAMMA = ZPI / SIN(ZPI*PX) / BR_EXP(ZTMP + BR_LOG(ZSTP*ZSER/ZX))
-#endif
+  PGAMMA = ZPI / SIN(ZPI*PX) / EXP(ZTMP + LOG(ZSTP*ZSER/ZX))
 ELSE
-#if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
-  PGAMMA = EXP(ZTMP + ALOG(ZSTP*ZSER/ZX))
-#else
-  PGAMMA = BR_EXP(ZTMP + BR_LOG(ZSTP*ZSER/ZX))
-#endif
+  PGAMMA = EXP(ZTMP + LOG(ZSTP*ZSER/ZX))
 END IF
 RETURN
 !
@@ -137,7 +119,6 @@ END FUNCTION GAMMA_X0D
 !
 !     ###########################################
       PURE FUNCTION GAMMA_X1D(PX)  RESULT(PGAMMA)
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###########################################
 !
 !
@@ -179,9 +160,6 @@ END FUNCTION GAMMA_X0D
 !*       0. DECLARATIONS
 !           ------------
 !
-#if defined(MNH_BITREP) || defined(MNH_BITREP_OMP)
-USE MODI_BITREP
-#endif
 !
 IMPLICIT NONE
 !
@@ -197,8 +175,6 @@ REAL, DIMENSION(SIZE(PX))            :: ZSER,ZSTP,ZTMP,ZX,ZY
 REAL                                 :: ZCOEF(6)
 REAL                                 :: ZPI
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-IF (LHOOK) CALL DR_HOOK('GAMMA_X1D',0,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
 !
 !*       1. SOME CONSTANTS
@@ -219,11 +195,7 @@ WHERE ( PX(:)<0.0 )
 END WHERE
 ZY(:) = ZX(:)
 ZTMP(:) =  ZX(:) + 5.5
-#if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
-ZTMP(:) = (ZX(:) + 0.5)*ALOG(ZTMP(:)) - ZTMP(:)
-#else
-ZTMP(:) = (ZX(:) + 0.5)*BR_LOG(ZTMP(:)) - ZTMP(:)
-#endif
+ZTMP(:) = (ZX(:) + 0.5)*LOG(ZTMP(:)) - ZTMP(:)
 ZSER(:) = 1.000000000190015
 !
 DO JJ = 1 , 6
@@ -231,11 +203,7 @@ DO JJ = 1 , 6
   ZSER(:) = ZSER(:) + ZCOEF(JJ)/ZY(:)
 END DO
 !
-#if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
-PGAMMA(:) = EXP( ZTMP(:) + ALOG( ZSTP*ZSER(:)/ZX(:) ) )
-#else
-PGAMMA(:) = BR_EXP( ZTMP(:) + BR_LOG( ZSTP*ZSER(:)/ZX(:) ) )
-#endif
+PGAMMA(:) = EXP( ZTMP(:) + LOG( ZSTP*ZSER(:)/ZX(:) ) )
 WHERE ( PX(:)<0.0 )
   PGAMMA(:) = ZPI/SIN(ZPI*PX(:))/PGAMMA(:)
 END WHERE

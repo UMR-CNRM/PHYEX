@@ -1882,9 +1882,13 @@ IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
 !$acc kernels present_crm(PDYF,PA)
-!$mnh_expand_array(JI=1:IIU,JJ=1:IJU-1,JK=1:IKU)
-  PDYF(1:IIU,1:IJU-1,1:IKU) = PA(1:IIU,2:IJU+1,1:IKU) - PA(1:IIU,1:IJU-1,1:IKU)
-!$mnh_end_expand_array(JI=1:IIU,JJ=1:IJU-1,JK=1:IKU)
+DO JK=1,IKU
+  DO JJ=1,IJU-1
+    DO JI=1,IIU
+      PDYF(JI,JJ,JK) = PA(JI,JJ+1 ,JK) - PA(JI,JJ,JK)
+    ENDDO
+  ENDDO
+ENDDO
 !
 !$acc loop seq
 DO JJ=1,JPHEXT
@@ -1985,9 +1989,11 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 !
 !$acc kernels present_crm(PDYF,PA)
-!$mnh_expand_array(JI=1:IIU,JJ=1:IJU-1)
-  PDYF(1:IIU,1:IJU-1) = PA(1:IIU,2:IJU+1) - PA(1:IIU,1:IJU-1)
-!$mnh_end_expand_array(JI=1:IIU,JJ=1:IJU-1)
+DO JJ=1,IJU-1
+  DO JI=1,IIU 
+    PDYF(JI,JJ) = PA(JI,JJ+1) - PA(JI,JJ)
+  ENDDO
+ENDDO
 !
 !$acc loop seq
 DO JJ=1,JPHEXT

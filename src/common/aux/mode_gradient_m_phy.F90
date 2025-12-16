@@ -92,7 +92,7 @@ IKL=D%NKL
 !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=IKTB:IKTE)
 PGZ_M_W(IIB:IIE,IJB:IJE,IKTB:IKTE) =  (PY(IIB:IIE,IJB:IJE,IKTB:IKTE)-PY(IIB:IIE,IJB:IJE,IKTB-IKL:IKTE-IKL)) &
                            / PDZZ(IIB:IIE,IJB:IJE,IKTB:IKTE)
-!$mnh_end_expand_array()
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=IKTB:IKTE)
 !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 PGZ_M_W(IIB:IIE,IJB:IJE,IKU)=  (PY(IIB:IIE,IJB:IJE,IKU)-PY(IIB:IIE,IJB:IJE,IKU-IKL))  &
                            / PDZZ(IIB:IIE,IJB:IJE,IKU)
