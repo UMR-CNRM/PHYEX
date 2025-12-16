@@ -317,7 +317,7 @@ LNEW_ADJUST  =.TRUE.     ! FALSE to retreive the previous MASDEV4_1 version
 ZT0  = XTT               ! Usefull if LPRETREATMENT=T or LNEW_ADJUST=T
 ZT00 = XTT-40.           ! Usefull if LPRETREATMENT=T or LNEW_ADJUST=T
 !
-CLAMBDA3='CB'
+CLAMBDA3='CB  '
 !
 !-------------------------------------------------------------------------------
 if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'DEPI', pths(:, :, :) * prhodj(:, :, :) )
