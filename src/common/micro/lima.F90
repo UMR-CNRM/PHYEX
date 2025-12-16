@@ -1197,14 +1197,14 @@ END IF
 !*       2.     Compute cloud, ice and precipitation fractions
 !               ----------------------------------------------
 !
-!CALL LIMA_COMPUTE_CLOUD_FRACTIONS (LIMAP, D,                          &
-!                                   ZCCT, ZRCT,                        &
-!                                   ZCRT, ZRRT,                        &
-!                                   ZCIT, ZRIT,                        &
-!                                   ZCST, ZRST,                        &
-!                                   ZCGT, ZRGT,                        &
-!                                   ZCHT, ZRHT,                        &
-!                                   PCLDFR, PICEFR, PPRCFR             )
+CALL LIMA_COMPUTE_CLOUD_FRACTIONS (LIMAP, D,                          &
+                                   ZCCT, ZRCT,                        &
+                                   ZCRT, ZRRT,                        &
+                                   ZCIT, ZRIT,                        &
+                                   ZCST, ZRST,                        &
+                                   ZCGT, ZRGT,                        &
+                                   ZCHT, ZRHT,                        &
+                                   PCLDFR, PICEFR, PPRCFR             )
 !
 !
 !-------------------------------------------------------------------------------
@@ -1277,6 +1277,20 @@ END IF
 !               ------------------------------
 !
 LLMICRO(:,:)=.TRUE.
+IF (KRR==7) THEN
+   LLMICRO(:,:)=ZRCT(:,:)>LIMAP%XRTMIN(2) .OR. &
+        ZRRT(:,:)>LIMAP%XRTMIN(3) .OR. &
+        ZRIT(:,:)>LIMAP%XRTMIN(4) .OR. &
+        ZRST(:,:)>LIMAP%XRTMIN(5) .OR. &
+        ZRGT(:,:)>LIMAP%XRTMIN(6) .OR. &
+        ZRHT(:,:)>LIMAP%XRTMIN(7)
+ELSE
+   LLMICRO(:,:)=ZRCT(:,:)>LIMAP%XRTMIN(2) .OR. &
+        ZRRT(:,:)>LIMAP%XRTMIN(3) .OR. &
+        ZRIT(:,:)>LIMAP%XRTMIN(4) .OR. &
+        ZRST(:,:)>LIMAP%XRTMIN(5) .OR. &
+        ZRGT(:,:)>LIMAP%XRTMIN(6)
+ENDIF
 ! PHLC_HRC should never be larger than PRCT
 !PCLDFR(:,:)=MAX(PCLDFR(:,:),PHLC_HCF(:,:))
 !PHLC_HRC(:,:)=MIN(PHLC_HRC(:,:),ZRCT(:,:))
