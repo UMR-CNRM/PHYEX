@@ -62,6 +62,8 @@ REAL, ALLOCATABLE   :: PRTKES_OUT         (:,:,:)
 REAL, ALLOCATABLE   :: PFLXZTHVMF         (:,:,:)
 REAL, ALLOCATABLE   :: PHGRAD             (:,:,:,:) !(KLON,1,KLEV+2,KGRADIENTS)
 REAL, ALLOCATABLE   :: PZS                (:,:)
+REAL, ALLOCATABLE   :: ZSEA_UCU           (:,:)
+REAL, ALLOCATABLE   :: ZSEA_VCU           (:,:)
 
 !OUT
 REAL, ALLOCATABLE   :: PSIGS              (:,:,:)
@@ -176,7 +178,7 @@ CALL GETDATA_TURB (NPROMA, NGPBLKS, NFLEVG, KRR, KRRL, KRRI, KSV, KLEV, &
                   &PTHM, ZRM, &
                   &PRUS, PRVS, PRWS, PRTHS, ZRRS, ZRSVS, PRTKES_OUT, &
                   &PFLXZTHVMF, &
-                  &PHGRAD, PZS, &
+                  &PHGRAD, PZS, ZSEA_UCU, ZSEA_VCU, &
                   !OUT only (needed to allocate the array to be passed to the subroutine)
                   &PSIGS, &
                   &ZWTH,ZWRC,ZWSV,PDP,PTP,PTDIFF,PTDISS, &
@@ -305,6 +307,7 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, 
    & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
    & PRHODJ(:,:,IBL),PTHVREF(:,:,IBL), PHGRAD, PZS,                             &
    & PSFTH(:,IBL),PSFRV(:,IBL),PSFSV(:,:,IBL),PSFU(:,IBL),PSFV(:,IBL),                          &
+   & ZSEA_UCU(:,IBL), ZSEA_VCU(:,IBL), &
    & PPABSM(:,:,IBL),PUM(:,:,IBL),PVM(:,:,IBL),PWM(:,:,IBL),PTKEM(:,:,IBL),ZSVM(:,:,:,IBL),PSRCM(:,:,IBL),                  &
    & PLENGTHM(:,:,IBL),PLENGTHH(:,:,IBL),MFMOIST(:,:,IBL),                            &
    & ZBL_DEPTH(:,IBL),ZSBL_DEPTH(:,IBL),                                 &
