@@ -133,7 +133,7 @@ DO JV=0,KRR
   ZVART(:,JV)=PVART(:,JV)
   PA(:,JV)=0.
   PB(:,JV)=0.
- !$mnh_end_expand_array()
+ !$mnh_end_expand_array(JP=1:KPROMA)
 ENDDO  
 !$acc end kernels
 !

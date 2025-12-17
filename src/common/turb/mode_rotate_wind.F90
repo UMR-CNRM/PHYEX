@@ -193,14 +193,11 @@ DO JJ=IJB,IJE
                    (1.-ZCOEFM(JI,JJ)) * ZUINT(JI,JJ+JLOC(JI,JJ))
     ZWFIN(JI,JJ) = ZCOEFM(JI,JJ)      * ZWINT(JI,JJ)                +    &
                    (1.-ZCOEFM(JI,JJ)) * ZWINT(JI,JJ+JLOC(JI,JJ))
-  END DO
-END DO
 !
 !*      3.    ROTATE THE WIND
 !             ---------------
 !
 !
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
     PUSLOPE(JI,JJ) = PCOSSLOPE(JI,JJ) * PDIRCOSZW(JI,JJ) * ZUFIN(JI,JJ) +   &
                      PSINSLOPE(JI,JJ) * PDIRCOSZW(JI,JJ) * ZVFIN(JI,JJ) +   &
                             SQRT(1.-PDIRCOSZW(JI,JJ)**2) * ZWFIN(JI,JJ)
@@ -208,7 +205,8 @@ END DO
     PVSLOPE(JI,JJ) =-PSINSLOPE(JI,JJ)                    * ZUFIN(JI,JJ) +   &
                      PCOSSLOPE(JI,JJ)                    * ZVFIN(JI,JJ)
     !
-!$mnh_end_expand_array()
+  END DO
+END DO
 !
 !$acc end kernels
 !
