@@ -200,6 +200,8 @@ REAL(KIND=JPRB), POINTER ::  ZDIRCOSZW(:,:)
 REAL(KIND=JPRB), POINTER    ::  ZCOSSLOPE(:,:)   ! cosinus of the anglebetween i and the slope vector
 REAL(KIND=JPRB), POINTER    ::  ZSINSLOPE(:,:)   ! sinus of the angle between i and the slope vector
 
+REAL(KIND=JPRB)    ::  ZSEA_UCU(KLON)   ! u-speed component of sea current 
+REAL(KIND=JPRB)    ::  ZSEA_VCU(KLON)    ! v-speed component of sea current
 
 REAL(KIND=JPRB)         :: ZCEI       (KLON,KLEV+2)     
 REAL(KIND=JPRB)         :: ZBL_DEPTH  (KLON,1)         
@@ -301,6 +303,8 @@ ZDIRCOSYW=>ZONE(:,:)
 ZDIRCOSZW=>ZONE(:,:)
 ZCOSSLOPE=>ZONE(:,:)
 ZSINSLOPE=>ZERO(:,:)
+ZSEA_UCU=0.
+ZSEA_VCU=0.
 
 !------------------------------------------------------------------------------
 !
@@ -420,6 +424,7 @@ CALL TURB (PHYEX%CST,PHYEX%CSTURB,TBUCONF,PHYEX%TURBN, PHYEX%NEBN, D,YLTLES,&
    & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
    & PRHODJ,PTHVREF,PHGRADLEO,PHGRADGOG,PZS,&
    & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
+   & ZSEA_UCU,ZSEA_VCU,                                    &
    & PPABSM,PUM,PVM,PWM,PTKEM,ZSVM,PSRCM,                  &
    & PLENGTHM,PLENGTHH,MFMOIST,                            &
    & ZBL_DEPTH,ZSBL_DEPTH,                                 &
