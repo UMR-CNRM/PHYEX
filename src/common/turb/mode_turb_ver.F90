@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -18,6 +18,7 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
                       PRHODJ,PTHVREF,PSFUM,PSFVM,                   &
                       PSFTHM,PSFRM,PSFSVM,PSFTHP,PSFRP,PSFSVP,      &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
+                      PSEA_UCU,PSEA_VCU,                            &
                       PUM,PVM,PWM,PUSLOPEM,PVSLOPEM,PTHLM,PRM,PSVM, &
                       PTKEM,PLM,PLENGTHM,PLENGTHH,PLEPS,MFMOIST,    &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PFRAC_ICE,    &
@@ -297,6 +298,8 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes link
        ! at time t - dt
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSEA_UCU     ! ocean current along X
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSEA_VCU     ! ocean current along Y
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PUM,PVM,PWM,PTHLM 
   ! Wind and potential temperature at t-Delta t
@@ -326,8 +329,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFWR         ! d(w'2r'  )/dz
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz
-REAL, DIMENSION(D%NIJT),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
-REAL, DIMENSION(D%NIJT),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%CTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LRMC01))      ,INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PLMO         ! Monin-Obukhov length
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)   ::  PRUS, PRVS, PRWS, PRTHLS
@@ -570,6 +573,7 @@ CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,TLES,KSV,O2D,OFLAT,      &
                       PEXPL,PTSTEP,TPFILE,                          &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
+                      PSEA_UCU,PSEA_VCU,                            &
                       PRHODJ,PSFUM,PSFVM,                           &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
                       PTHLM,PRM,PSVM,PUM,PVM,PWM,PUSLOPEM,PVSLOPEM, &

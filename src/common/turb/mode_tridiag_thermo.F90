@@ -1,11 +1,11 @@
-!MNH_LIC Copyright 2003-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2003-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 MODULE MODE_TRIDIAG_THERMO
 IMPLICIT NONE
 CONTAINS       
-SUBROUTINE TRIDIAG_THERMO(D,PVARM,PF,PDFDDTDZ,PTSTEP,PIMPL,  &
+SUBROUTINE TRIDIAG_THERMO(D,PVARM,PF,PDFDDTDZ,PTSTEP,TURBN_PIMPL,  &
                                  PDZZ,PRHODJ,PVARP             )
 !      #################################################
 !
@@ -131,7 +131,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PVARM   ! variable at t-1      at m
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PF      ! flux in dT/dt=-dF/dz at flux point
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PDFDDTDZ! dF/d(dT/dz)          at flux point
 REAL,                   INTENT(IN) :: PTSTEP  ! Double time step
-REAL,                   INTENT(IN) :: PIMPL   ! implicit weight
+REAL,                   INTENT(IN) :: TURBN_PIMPL   ! implicit weight
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PDZZ    ! Dz                   at flux point
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PRHODJ  ! (dry rho)*J          at mass point
 !
@@ -154,13 +154,18 @@ INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
 INTEGER             :: IIJB,IIJE    ! start, end of ij loops in physical domain
 INTEGER             :: IKL
 !
+REAL                :: PIMPL ! bypass AMD GPU perf problem with scalar pointer
 ! ---------------------------------------------------------------------------
 !                                              
 !*      1.  Preliminaries
 !           -------------
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+!
 IF (LHOOK) CALL DR_HOOK('TRIDIAG_THERMO',0,ZHOOK_HANDLE)
+!
+PIMPL = TURBN_PIMPL
+!
 !$acc data present( zrhodj_dfddtdz_o_dz2, zmzm_rhodj, za, zb, zc, zy, zgam, zbet, zmzm_rhodj )
 IKT=D%NKT  
 IKTB=D%NKTB          
@@ -175,10 +180,14 @@ IIJE=D%NIJE
 !
 CALL MZM_PHY(D,PRHODJ,ZMZM_RHODJ)
 !$acc kernels present_cr(ZRHODJ_DFDDTDZ_O_DZ2)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,1:IKT) = ZMZM_RHODJ(IIJB:IIJE,1:IKT)*PDFDDTDZ(IIJB:IIJE,1:IKT) &
-                                                /PDZZ(IIJB:IIJE,1:IKT)**2
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$mnh_do_concurrent(JIJ = IIJB:IIJE , JK = IKTB:IKTE )
+DO JK=IKTB,IKTE
+  DO JIJ=IIJB,IIJE
+    ZRHODJ_DFDDTDZ_O_DZ2(JIJ,JK) = ZMZM_RHODJ(JIJ,JK)*PDFDDTDZ(JIJ,JK) &
+                                                /PDZZ(JIJ,JK)**2
+  END DO
+END DO
+!$mnh_end_do()
 !$acc end kernels
 !
 !$acc kernels

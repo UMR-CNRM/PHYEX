@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -46,7 +46,7 @@ INTEGER :: IKB, IKE, IKL, IIJB, IIJE
 !*       0.2  declaration of local variables
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER :: JIJ, JK
+INTEGER :: JIJ, JK, JJ
 LOGICAL :: MASK
 !
 !-------------------------------------------------------------------------------
@@ -63,10 +63,11 @@ IIJE=D%NIJE
 !$acc kernels
 PPRFR(IIJB:IIJE,IKE)=0.
 !$acc end kernels
-DO JK=IKE-IKL, IKB, -IKL
-  IF(PRESENT(PRH)) THEN
+IF(PRESENT(PRH)) THEN
 !$acc kernels
-!$acc loop independent
+!$acc loop seq
+DO JK=IKE-IKL, IKB, -IKL
+!$acc loop gang independent
     DO JIJ = IIJB, IIJE
       MASK=PRR(JIJ,JK) .GT. ICED%XRTMIN(3) .OR. PRS(JIJ,JK) .GT. ICED%XRTMIN(5) &
       .OR. PRG(JIJ,JK) .GT. ICED%XRTMIN(6) .OR. PRH(JIJ,JK) .GT. ICED%XRTMIN(7)
@@ -79,10 +80,13 @@ DO JK=IKE-IKL, IKB, -IKL
         PPRFR(JIJ,JK)=0.
       END IF
     END DO
+END DO
 !$acc end kernels
-  ELSE
+ELSE
 !$acc kernels
-!$acc loop independent
+!$acc loop seq
+DO JK=IKE-IKL, IKB, -IKL
+!$acc loop gang independent
     DO JIJ = IIJB, IIJE
       MASK=PRR(JIJ,JK) .GT. ICED%XRTMIN(3) .OR. PRS(JIJ,JK) .GT. ICED%XRTMIN(5) &
       .OR. PRG(JIJ,JK) .GT. ICED%XRTMIN(6)
@@ -95,9 +99,9 @@ DO JK=IKE-IKL, IKB, -IKL
         PPRFR(JIJ,JK)=0.
       END IF
     END DO
-!$acc end kernels
-  END IF
 END DO
+!$acc end kernels
+END IF
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_RAINFR_VERT',1,ZHOOK_HANDLE)
 !

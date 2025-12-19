@@ -9,7 +9,7 @@ CONTAINS
 !     ##########################################################################
   SUBROUTINE LIMA_CCN_HOM_FREEZING (LIMAP, LIMAC, D, CST, PRHODREF, PEXNREF, PPABST, PW_NU, &
                                     PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
-                                    PCCT, PCRT, PCIT, PCIT_SHAPE, PNFT, PNHT ,            &
+                                    PCCT, PCRT, PCIT, PCIT_SHAPE, PNFT, PNHT, &
                                     PICEFR, PTOT_RV_HONH                      )
 !     ##########################################################################
 !
@@ -30,6 +30,7 @@ CONTAINS
 !!      Original             15/03/2018 
 !  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
 !  C. Barthe   07/06/2022: save mixing ratio change for cloud electrification
+!  C. Barthe   25/01/2024: add several shapes for ice crystals 
 !
 !-------------------------------------------------------------------------------
 !
@@ -95,7 +96,7 @@ REAL, DIMENSION(:,:), ALLOCATABLE :: ZNFT    ! available nucleus conc. source
 REAL, DIMENSION(:),   ALLOCATABLE :: ZCIT    ! Pristine ice conc. source
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZCIT_SHAPE ! Ice crystal conc. at t for each shape
 REAL, DIMENSION(:),   ALLOCATABLE :: ZZNHT   ! Nucleated Ice nuclei conc. source
-                                             !by Homogeneous freezing
+                                             ! by Homogeneous freezing
 !
 REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2))   &
                                   :: ZNHT  ! Nucleated Ice nuclei conc. source
@@ -269,14 +270,14 @@ IF (INEGT.GT.0) THEN
       ALLOCATE(ZBFACT(INEGT))
 !
       WHERE( (ZZT(:)<CST%XTT-35.0) .AND. (ZSI(:)>ZZY(:)) )
-            ZLS(:)   = CST%XLSTT+(CST%XCPV-CST%XCI)*ZTCELSIUS(:)          ! Ls
+         ZLS(:)   = CST%XLSTT+(CST%XCPV-CST%XCI)*ZTCELSIUS(:)          ! Ls
 !
-            ZPSI1(:) = ZZY(:) * (CST%XG/(CST%XRD*ZZT(:)))*(ZEPS*ZLS(:)/(CST%XCPD*ZZT(:))-1.)
+         ZPSI1(:) = ZZY(:) * (CST%XG/(CST%XRD*ZZT(:)))*(ZEPS*ZLS(:)/(CST%XCPD*ZZT(:))-1.)
 !                                                         ! Psi1 (a1*Scr in KL01)
 ! BV correction PSI2 enlever 1/ZEPS ?
-!            ZPSI2(:) = ZSI(:) * (1.0/ZEPS+1.0/ZRVT(:)) +                           &
-            ZPSI2(:) = ZSI(:) * (1.0/ZRVT(:)) +                           &
-                 ZZY(:) * ((ZLS(:)/ZZT(:))**2)/(CST%XCPD*CST%XRV) 
+!         ZPSI2(:) = ZSI(:) * (1.0/ZEPS+1.0/ZRVT(:)) +                           &
+         ZPSI2(:) = ZSI(:) * (1.0/ZRVT(:)) +                           &
+                    ZZY(:) * ((ZLS(:)/ZZT(:))**2)/(CST%XCPD*CST%XRV) 
 !                                                         ! Psi2 (a2+a3*Scr in KL01)
             ZTAU(:) = 1.0 / ( MAX( LIMAC%XC1_HONH,LIMAC%XC1_HONH*(LIMAC%XC2_HONH-LIMAC%XC3_HONH*ZZT(:)) ) *&
                  ABS( (LIMAC%XDLNJODT1_HONH - LIMAC%XDLNJODT2_HONH*ZZT(:))       *             &

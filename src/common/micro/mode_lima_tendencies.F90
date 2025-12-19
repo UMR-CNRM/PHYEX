@@ -70,6 +70,9 @@ CONTAINS
 !       B. Vie          03/2022: Add option for 1-moment pristine ice
 !       C. Barthe       06/2022: change some mass transfer rates to be consistent with ICE3, for cloud electrification
 !       C. Barthe       06/2023: add Latham effet for IAGGS
+!       C. Barthe       01/2024: add several shapes for ice crystals
+!       M. Taufour      03/2024: add ice crystal self-collection
+!       I. Vongpaseut   01/2024: add dependence on temperature for RDSF
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -106,6 +109,8 @@ USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 USE MODD_CST, ONLY:CST_T
 USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
+!
+USE MODE_LIMA_SHAPE_COMPUTE_LBDA, ONLY: LIMA_SHAPE_COMPUTE_LBDA
 !
 IMPLICIT NONE
 !
@@ -851,10 +856,8 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
    IF (LIMAP%NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_RIM(:) 
    PA_RI(:) = PA_RI(:)               + P_RI_HMS(:)
    IF (LIMAP%NMOM_I.GE.2) PA_CI(:) = PA_CI(:)               + P_CI_HMS(:)
-!   PA_RS(:) = PA_RS(:) + P_RS_RIM(:) + P_RS_HMS(:)
    PA_RS(:) = PA_RS(:) - P_RC_RIMSS(:) - P_RS_RIMCG(:) + P_RS_HMS(:) ! RCRIMSS < 0 (gain for rs), RSRIMCG > 0 (loss for rs)
    IF (LIMAP%NMOM_S.GE.2) PA_CS(:) = PA_CS(:) + P_CS_RIM(:)
-!   PA_RG(:) = PA_RG(:) + P_RG_RIM(:)
    PA_RG(:) = PA_RG(:) - P_RC_RIMSG(:) + P_RS_RIMCG(:) ! RCRIMSG < 0 (gain for rg), RSRIMCG > 0 (gain for rg)
    IF (LIMAP%NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CS_RIM(:)
    PA_TH(:) = PA_TH(:) + P_TH_RIM(:)
@@ -866,7 +869,6 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
 END IF
 !
 IF (LIMAP%NMOM_R.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
-!++cb++
    CALL LIMA_RAIN_ACCR_SNOW (CST, LIMAP, LIMAW, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                         & ! depends on PF
                              PRHODREF, ZT,                                     &
                              ZRRT/ZPF1D, ZCRT/ZPF1D, ZRST/ZPF1D, ZCST/ZPF1D, ZLBDR, ZLBDS, ZLVFACT, ZLSFACT, &
@@ -877,7 +879,6 @@ IF (LIMAP%NMOM_R.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
    P_RR_ACCSG(:) = P_RR_ACCSG(:) * ZPF1D(:)
    P_RS_ACCRG(:) = P_RS_ACCRG(:) * ZPF1D(:)
    P_TH_ACC(:)   = (P_RR_ACCSS(:) + P_RR_ACCSG(:)) * (ZLSFACT(:)-ZLVFACT(:))
-!   PA_RR(:) = PA_RR(:) + P_RR_ACC(:)
    PA_RR(:) = PA_RR(:) - P_RR_ACCSS(:) - P_RR_ACCSG(:)
    IF (LIMAP%NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_ACC(:)
    PA_RS(:) = PA_RS(:) + P_RR_ACCSS(:) - P_RS_ACCRG(:)
@@ -966,7 +967,6 @@ IF (LIMAP%NMOM_S.GE.1 .AND. LIMAP%NMOM_G.GE.1 .AND. LIMAP%LCIBU) THEN
         PA_CI_SHAPE(:,2) = PA_CI_SHAPE(:,2) + P_SHCI_CIBU(:,2)
       END WHERE
    END IF
-
 END IF
 !
 IF (LIMAP%NMOM_R.GE.1 .AND. LIMAP%NMOM_I.GE.1 .AND. LIMAP%LRDSF) THEN
@@ -1037,7 +1037,7 @@ IF (LIMAP%NMOM_G.GE.1) THEN
      ! Hallett-Mossop
      ! ice crystals produced during HM are assumed to be columns (jsh=2) due to the temperature regime
      P_SHCI_HMG(:,2)  = P_CI_HMG(:)
-     PA_CI_SHAPE(:,2) = PA_CI_SHAPE(:,2) + P_SHCI_HMG(:,2) !P_CI_HMG(:)
+     PA_CI_SHAPE(:,2) = PA_CI_SHAPE(:,2) + P_SHCI_HMG(:,2)
    END IF
 END IF
 !
@@ -1051,7 +1051,6 @@ IF (LIMAP%NMOM_H.GE.1) THEN
    PA_RV(:) = PA_RV(:) - P_RH_DEPH(:)
    PA_RH(:) = PA_RH(:) + P_RH_DEPH(:)
    PA_TH(:) = PA_TH(:) + P_TH_DEPH(:)
-!     CALL LIMA_HAIL_GROWTH   LIMA_HAIL_CONVERSION   LIMA_HAIL_MELTING
    CALL LIMA_HAIL (CST, LIMAP, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                              & ! depends on PF, CF, IF
                    PRHODREF, PPABST, ZT, ZKA, ZDV, ZCJ,                   &
                    PRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, ZRHT,              &

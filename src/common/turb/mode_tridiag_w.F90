@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2011-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2011-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -146,10 +146,10 @@ IMPLICIT NONE
 !
 !*       0.1 declarations of arguments
 !
-TYPE(DIMPHYEX_t),       INTENT(IN) :: D
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PVARM   ! variable at t-1      at flux point
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PF      ! flux in dT/dt=-dF/dz at mass point
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PDFDDWDZ! dF/d(dW/dz)          at mass point
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PVARM   ! variable at t-1      at flux point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PF      ! flux in dT/dt=-dF/dz at mass point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDFDDWDZ! dF/d(dW/dz)          at mass point
 REAL,                   INTENT(IN) :: PTSTEP  ! Double time step
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PMZF_DZZ! Dz                   at mass point
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRHODJ  ! (dry rho)*J          at mass point
@@ -367,7 +367,6 @@ END DO
    PVARP(JI,JJ,IKE+1)=0.
 !$mnh_end_do()
 !$acc end kernels
-!
 !$acc end data
 !-------------------------------------------------------------------------------
 !

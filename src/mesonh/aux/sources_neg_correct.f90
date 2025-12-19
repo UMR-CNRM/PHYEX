@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2020-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2020-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -9,6 +9,8 @@
 !  J. Escobar  21/07/2020: bug <-> array of size(:,:,:,0) => return if krr=0
 !  P. Wautelet 10/02/2021: budgets: add missing sources for NSV_C2R2BEG+3 budget
 !  C. Barthe   03/02/2022: add corrections for electric charges
+!  C. Barthe   24/01/2024: add corrections for concentration of ice crystal with 
+!                          different habits in LIMA
 !-----------------------------------------------------------------
 module mode_sources_neg_correct
 
@@ -58,7 +60,8 @@ use modd_nsv,        only: nsv_c2r2beg, nsv_c2r2end, nsv_lima_beg, nsv_lima_end,
                            nsv_lima_ni, nsv_lima_ns, nsv_lima_ng, nsv_lima_nh,                             &
                            nsv_elecbeg, nsv_elecend
 use modd_param_lima, only: lspro_lima => lspro, &
-                           xctmin_lima => xctmin, xrtmin_lima => xrtmin
+                           xctmin_lima => xctmin, xrtmin_lima => xrtmin, &
+                           lcrystal_shape, nnb_crystal_shape  !++cb-- 24/01/24
 
 use mode_budget,         only: Budget_store_init, Budget_store_end
 #ifdef MNH_OPENACC
@@ -92,11 +95,12 @@ integer :: jr
 integer :: jrmax
 integer :: jsv
 integer :: isv_lima_end
+integer :: jsh  ! loop index for ice crystal shapes  !++cb--
 real, dimension(:, :, :), pointer, contiguous :: zt, zexn, zlv, zls, zcph, zcor
 REAL, DIMENSION(:,:,:), pointer , contiguous :: ZTEMP_BUD
 logical, dimension(:, :, :), pointer, contiguous :: zmask
 real, dimension(:, :, :), pointer, contiguous :: zadd, zion_number !++cb--
-
+real, dimension(size(prths,1),size(prths,2),size(prths,3)) :: zni_tot ! total concentration of ice crystals !++cb--
 logical :: GELEC_ELE , GELEC_ELE4
 
 if ( krr == 0 ) return
@@ -302,7 +306,7 @@ zexn(:, :, :) = ( ppabst(:, :, :) / xp00 ) ** (xrd / xcpd )
 !$acc end kernels
 #else
 !$acc kernels
-!$acc_nv loop collapse(3)
+!$acc_nv loop collapse(3) independent
 !$acc_cr loop independent
 DO CONCURRENT(jk=1:jku,jj=1:jju,ji=1:jiu)
 !DO CONCURRENT(jk=1:1,jj=1:1,ji=1:jiu*jju*jku)
@@ -329,7 +333,6 @@ if ( GELEC_ELE ) then
   allocate( zadd( Size( prths, 1 ), Size( prths, 2 ), Size( prths, 3 ) ) )
   allocate( zion_number( Size( prths, 1 ), Size( prths, 2 ), Size( prths, 3 ) ) )
 end if
-!--cb--
 
 deallocate( zt )
 #endif
@@ -369,9 +372,9 @@ CLOUD: select case ( hcloud )
     else
       jrmax = Size( prrs, 4 )
     end if
+if ( GELEC_ELE ) then
 !$acc kernels
     do jr = 4, jrmax
-      if ( GELEC_ELE ) then
       !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
         WHERE ( prrs(:, :, :, jr) < 0.)
           prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jr)
@@ -388,7 +391,11 @@ CLOUD: select case ( hcloud )
           prsvs(:,:,:,nsv_elecbeg+jr-1) = 0.0
         END WHERE
       !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
-      else
+    end do
+!$acc end kernels
+else
+!$acc kernels
+    do jr = 4, jrmax
       !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
         WHERE ( prrs(:, :, :, jr) < 0.)
           prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jr)
@@ -397,9 +404,9 @@ CLOUD: select case ( hcloud )
           prrs(:, :, :, jr) = 0.
         END WHERE
       !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
-      end if
     end do
 !$acc end kernels
+end if
 !
 !   cloud
     if ( hbudname == 'NETUR' ) then
@@ -407,9 +414,9 @@ CLOUD: select case ( hcloud )
     else
       jrmax = 3
     end if
+if ( GELEC_ELE ) then
 !$acc kernels
     do jr = 2, jrmax
-      if ( GELEC_ELE ) then
         !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
         WHERE ( prrs(:, :, :, jr) < 0.)
           prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jr)
@@ -426,7 +433,11 @@ CLOUD: select case ( hcloud )
           prsvs(:,:,:,nsv_elecbeg+jr-1) = 0.0
         END WHERE
         !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
-      else
+    end do
+!$acc end kernels
+else
+!$acc kernels
+    do jr = 2, jrmax
         !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
         WHERE ( prrs(:, :, :, jr) < 0.)
           prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jr)
@@ -435,9 +446,9 @@ CLOUD: select case ( hcloud )
           prrs(:, :, :, jr) = 0.
         END WHERE
         !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
-      end if
     end do
 !$acc end kernels
+end if
 !
 ! if rc or ri are positive, we can correct negative rv
     if ( GELEC_ELE ) then
@@ -506,35 +517,6 @@ CLOUD: select case ( hcloud )
 !$acc end kernels
     end if
 !
-!++cb++ 08/06/23 deplace a la fin pour traiter aussi le cas de lima
-! cascade the electric charge in the absence of hydrometeor
-!    if ( GELEC_ELE ) then
-!      do jr = krr, 5, -1
-!        WHERE(prrs(:,:,:,jr) < xrtmin_elec(jr))
-!          prsvs(:,:,:,nsv_elecbeg-2+jr) = prsvs(:,:,:,nsv_elecbeg-2+jr) + &
-!                                          prsvs(:,:,:,nsv_elecbeg-1+jr)
-!          prsvs(:,:,:,nsv_elecbeg-1+jr) = 0.0
-!        END WHERE
-!      end do
-!      jr = 3
-!      WHERE(prrs(:,:,:,jr) < xrtmin_elec(jr))
-!        prsvs(:,:,:,nsv_elecbeg-2+jr) = prsvs(:,:,:,nsv_elecbeg-2+jr) + &
-!                                        prsvs(:,:,:,nsv_elecbeg-1+jr)
-!        prsvs(:,:,:,nsv_elecbeg-1+jr) = 0.0
-!      END WHERE
-!      do jr = 4, 2, -2
-!        WHERE(prrs(:,:,:,jr) < xrtmin_elec(jr))
-!          zion_number(:,:,:) = abs(prsvs(:,:,:,nsv_elecbeg-1+jr)) / xecharge
-!          zadd(:,:,:) = 0.5 + sign(0.5, prsvs(:,:,:,nsv_elecbeg-1+jr))
-!          prsvs(:,:,:,nsv_elecbeg) = prsvs(:,:,:,nsv_elecbeg) +  &
-!                                     zadd(:,:,:) * zion_number(:,:,:)
-!          prsvs(:,:,:,nsv_elecend) = prsvs(:,:,:,nsv_elecend) +  &
-!                                    (1. - zadd(:,:,:)) * zion_number(:,:,:)
-!          prsvs(:,:,:,nsv_elecbeg-1+jr) = 0.0
-!        END WHERE
-!      end do            
-!    end if
-!--cb--
 !
   case( 'C2R2', 'KHKO' )
 !$acc kernels
@@ -653,7 +635,19 @@ CLOUD: select case ( hcloud )
 ! Correction WHERE ri<0 or Ni<0
     if ( krr.GE.4 ) then
       zmask(:,:,:)=(prrs(:, :, :, 4) < xrtmin_lima(4) / ptstep)
-      if (nsv_lima_ni.gt.0) zmask(:,:,:)=(zmask(:,:,:) .or. prsvs(:, :, :, nsv_lima_ni) < xctmin_lima(4) / ptstep)
+!++cb++ 24/01/24
+      zni_tot(:, :, :) = 0.
+      if (lcrystal_shape) then
+        ! compute the total ice crystal concentration
+        do jsh = 1, nnb_crystal_shape
+          zni_tot(:, :, :) = zni_tot(:, :, :) + prsvs(:, :, :, nsv_lima_ni+jsh-1)
+        end do
+      else
+        zni_tot(:, :, :) = prsvs(:, :,: , nsv_lima_ni)
+      end if 
+!      if (nsv_lima_ni.gt.0) zmask(:,:,:)=(zmask(:,:,:) .or. prsvs(:, :, :, nsv_lima_ni) < xctmin_lima(4) / ptstep)
+      if (nsv_lima_ni.gt.0) zmask(:,:,:)=(zmask(:,:,:) .or. zni_tot(:, :, :) < xctmin_lima(4) / ptstep)
+!--cb--
       WHERE ( zmask(:,:,:) )
         prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, 4)
         prths(:, :, :) = prths(:, :, :) - prrs(:, :, :, 4) * zls(:, :, :) /  &
@@ -688,7 +682,16 @@ CLOUD: select case ( hcloud )
         prrs(:, :, :, 4) = prrs(:, :, :, 4) - zcor(:, :, :)
       END WHERE
       if (nsv_lima_ni.gt.0) then
-         WHERE (prrs(:, :, :, 4) == 0.)  prsvs(:, :, :, nsv_lima_ni) = 0.
+!++cb++ 24/01/24
+!         WHERE (prrs(:, :, :, 4) == 0.)  prsvs(:, :, :, nsv_lima_ni) = 0.
+        if (.not. lcrystal_shape) then
+          WHERE (prrs(:, :, :, 4) == 0.)  prsvs(:, :, :, nsv_lima_ni) = 0.
+        else
+          do jsh = 1, nnb_crystal_shape
+            WHERE (prrs(:, :, :, 4) == 0.)  prsvs(:, :, :, nsv_lima_ni+jsh-1) = 0.
+          end do
+        end if
+!--cb--
       end if
     end if
 !

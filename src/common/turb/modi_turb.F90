@@ -19,6 +19,7 @@ INTERFACE
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
               & PRHODJ,PTHVREF,PHGRADLEO,PHGRADGOG,PZS,               &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
+              & PSEA_UCU,PSEA_VCU,                                    &
               & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
               & PBL_DEPTH,PSBL_DEPTH,                                 &
@@ -105,6 +106,8 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 REAL, DIMENSION(D%NIJT,KSV), INTENT(IN)      ::  PSFSV
 ! normal surface fluxes of Scalar var.
 !
+REAL, DIMENSION(D%NIJT), INTENT(IN)      ::  PSEA_UCU,PSEA_VCU ! Sea surface currents
+!
 !    prognostic variables at t- deltat
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABST      ! Pressure at time t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PUT,PVT,PWT ! wind components
@@ -113,8 +116,8 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVT        ! passive scal. va
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)),   INTENT(IN) ::  PSRCT       ! Second-order flux
                       ! s'rc'/2Sigma_s2 at time t-1 multiplied by Lambda_3
-REAL, DIMENSION(D%NIJT),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
-REAL, DIMENSION(D%NIJT),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%CTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LRMC01))      ,INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
 !
 !    variables for cloud mixing length
 REAL, DIMENSION(MERGE(D%NIJT,0,OCLOUDMODIFLM),&

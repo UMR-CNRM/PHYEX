@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -36,7 +36,6 @@
 !!    MODIFICATIONS
 !!    -------------
 !!      Original    04/12/95                      
-!!       J.-P. Pinty   29/11/02 add cloud droplet cond/eva parameters for C3R5
 !!       G.Delautier 2014 : fusion MODD_RAIN_KHKO_PARAM et MODD_RAIN_C2R2_PARAM
 !!
 !-------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -8,9 +8,9 @@
 !*       1.   FUNCTION GAMMA FOR SCALAR VARIABLE
 ! 
 !
-!     ######################################
+!     ###########################################
       PURE FUNCTION GAMMA_X0D(PX)  RESULT(PGAMMA)
-!     ######################################
+!     ###########################################
 !
 !
 !!****  *GAMMA * -  Gamma  function
@@ -50,6 +50,7 @@
 !*       0. DECLARATIONS
 !           ------------
 !
+!
 IMPLICIT NONE
 
 !$acc routine seq
@@ -63,13 +64,7 @@ REAL                                 :: PGAMMA
 !*       0.2 declarations of local variables
 !
 INTEGER                              :: JJ ! Loop index
-REAL                                 :: ZSER,ZSTP,ZTMP,ZX,ZY
-REAL, DIMENSION(6), PARAMETER        :: ZCOEF=(/76.18009172947146, &
-                                               &-86.50532032941677, &
-                                               & 24.01409824083091, &
-                                               & -1.231739572450155, &
-                                               &  0.1208650973866179E-2, &
-                                               & -0.5395239384953E-5/)
+REAL                                 :: ZSER,ZSTP,ZTMP,ZX,ZY,ZCOEF(6)
 REAL                                 :: ZPI
 !
 !-------------------------------------------------------------------------------
@@ -77,6 +72,12 @@ REAL                                 :: ZPI
 !*       1. SOME CONSTANTS
 !           --------------
 !
+ZCOEF(1) = 76.18009172947146
+ZCOEF(2) =-86.50532032941677
+ZCOEF(3) = 24.01409824083091
+ZCOEF(4) = -1.231739572450155
+ZCOEF(5) =  0.1208650973866179E-2
+ZCOEF(6) = -0.5395239384953E-5
 ZSTP     =  2.5066282746310005
 !
 ZPI = 3.141592654
@@ -116,9 +117,9 @@ END FUNCTION GAMMA_X0D
 !*       1.   FUNCTION GAMMA FOR 1D ARRAY
 ! 
 !
-!     ######################################
+!     ###########################################
       PURE FUNCTION GAMMA_X1D(PX)  RESULT(PGAMMA)
-!     ######################################
+!     ###########################################
 !
 !
 !!****  *GAMMA * -  Gamma  function
@@ -159,6 +160,7 @@ END FUNCTION GAMMA_X0D
 !*       0. DECLARATIONS
 !           ------------
 !
+!
 IMPLICIT NONE
 !
 !*       0.1 declarations of arguments and result
@@ -169,14 +171,8 @@ REAL, DIMENSION(SIZE(PX))            :: PGAMMA
 !*       0.2 declarations of local variables
 !
 INTEGER                              :: JJ ! Loop index
-INTEGER                              :: JI ! Loop index
-REAL                                 :: ZSER, ZSTP, ZTMP, ZX, ZY
-REAL, DIMENSION(6), PARAMETER        :: ZCOEF=(/76.18009172947146, &
-                                               &-86.50532032941677, &
-                                               & 24.01409824083091, &
-                                               & -1.231739572450155, &
-                                               &  0.1208650973866179E-2, &
-                                               & -0.5395239384953E-5/)
+REAL, DIMENSION(SIZE(PX))            :: ZSER,ZSTP,ZTMP,ZX,ZY
+REAL                                 :: ZCOEF(6)
 REAL                                 :: ZPI
 !
 !-------------------------------------------------------------------------------
@@ -184,37 +180,33 @@ REAL                                 :: ZPI
 !*       1. SOME CONSTANTS
 !           --------------
 !
+ZCOEF(1) = 76.18009172947146
+ZCOEF(2) =-86.50532032941677
+ZCOEF(3) = 24.01409824083091
+ZCOEF(4) = -1.231739572450155
+ZCOEF(5) =  0.1208650973866179E-2
+ZCOEF(6) = -0.5395239384953E-5
 ZSTP     =  2.5066282746310005
 !
 ZPI = 3.141592654
+ZX(:) = PX(:)
+WHERE ( PX(:)<0.0 )
+  ZX(:) = 1.- PX(:)
+END WHERE
+ZY(:) = ZX(:)
+ZTMP(:) =  ZX(:) + 5.5
+ZTMP(:) = (ZX(:) + 0.5)*LOG(ZTMP(:)) - ZTMP(:)
+ZSER(:) = 1.000000000190015
 !
-!-------------------------------------------------------------------------------
-!
-!*       2. COMPUTE GAMMA
-!           -------------
-!  
-DO JI = 1, SIZE(PX)
-  IF (PX(JI) .LT. 0.) THEN
-    ZX = 1. - PX(JI)
-  ELSE 
-    ZX = PX(JI)
-  END IF
-  ZY = ZX
-  ZTMP =  ZX + 5.5
-  ZTMP = (ZX + 0.5) * LOG(ZTMP) - ZTMP
-  ZSER = 1.000000000190015
-!
-  DO JJ = 1, 6
-    ZY = ZY + 1.0
-    ZSER = ZSER + ZCOEF(JJ) / ZY
-  END DO
-!
-  IF (PX(JI) .LT. 0.) THEN
-    PGAMMA = ZPI / SIN(ZPI*PX(JI)) / EXP(ZTMP + LOG(ZSTP*ZSER/ZX))
-  ELSE
-    PGAMMA = EXP(ZTMP + LOG(ZSTP*ZSER/ZX))
-  END IF
+DO JJ = 1 , 6
+  ZY(:) = ZY(:) + 1.0
+  ZSER(:) = ZSER(:) + ZCOEF(JJ)/ZY(:)
 END DO
+!
+PGAMMA(:) = EXP( ZTMP(:) + LOG( ZSTP*ZSER(:)/ZX(:) ) )
+WHERE ( PX(:)<0.0 )
+  PGAMMA(:) = ZPI/SIN(ZPI*PX(:))/PGAMMA(:)
+END WHERE
 RETURN
 !
 END FUNCTION GAMMA_X1D

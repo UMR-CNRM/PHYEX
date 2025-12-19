@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -328,6 +328,9 @@ IIJT=D%NIJT
 ZICEDRTMIN(1:KRR)=ICED%XRTMIN(1:KRR)
 !-------------------------------------------------------------------------------
 !
+IF(PARAMI%LOCND2) THEN
+  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'LOCND2 OPTION NOT CODED IN THIS RAIN_ICE VERSION')
+END IF
 !$acc kernels
 ZINV_TSTEP=1./PTSTEP
 !
@@ -393,19 +396,26 @@ DO JK = IKTB,IKTE
   ENDDO
 ENDDO
 !$acc end kernels
+!
 !        1.1    Compute cloud liquid number concentration
 !               -----------------------------------------
 ! Model level height
+!$acc kernels
+!$acc loop independent
 DO JIJ=IIJB,IIJE
   ZZSUM = 0.
+!$acc loop seq
   DO JK=IKTE,IKTB, -1
     ZZSUM = ZZSUM + PDZZ(JIJ,JK)
     ZZZZ(JIJ,JK) = ZZSUM - PDZZ(JIJ,JK)*0.5
   ENDDO
 ENDDO
+!$acc end kernels
 
+!$acc kernels
 ZCONC3D(:,:) = ICED%XCONC_LAND
 IF( LLCONC .AND. PARAMI%LEXCLDROP) THEN
+!$acc loop independent collapse(2)
   DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       ZCONC3D(JIJ,JK)=PCONC3D(JIJ,JK)
@@ -416,6 +426,7 @@ ELSE
    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'WITH LEXCLDROP=TRUE CLOUD DROPLET FIELDS MUST BE PRESENT IN RAIN_ICE')
   END IF
   IF(LLSEA_AND_TOWN .AND. ICEP%XFRMIN(26)<0.001) THEN
+!$acc loop independent collapse(2)
     DO JK=IKTB,IKTE
       DO JIJ=IIJB,IIJE
         ZCONC_TMP(JIJ) = PSEA(JIJ)*ICED%XCONC_SEA+(1.-PSEA(JIJ))*ICED%XCONC_LAND
@@ -424,6 +435,7 @@ ELSE
     ENDDO
   ENDIF
   IF(ICEP%XFRMIN(26)>0.001)THEN
+!$acc loop independent collapse(2)
     DO JK=IKTB,IKTE
       DO JIJ=IIJB,IIJE
         ZCONC3D(JIJ,JK) = ICEP%XFRMIN(26)*PPABST(JIJ,JK)/CST%XP00
@@ -437,6 +449,7 @@ ELSE
     ENDDO
   ENDIF
 ENDIF
+!$acc end kernels
 !
 !
 !-------------------------------------------------------------------------------

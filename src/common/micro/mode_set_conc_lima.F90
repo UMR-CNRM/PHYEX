@@ -68,6 +68,7 @@ CONTAINS
 !  B. Vié      03/03/2020: secure physical tests
 !  P. Wautelet 04/06/2020: correct array start for microphys. concentrations + add kmi dummy argument
 !                          (this subroutine is also called for other models)
+!  C. Barthe   24/01/2024: add several ice crystal shapes
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -188,12 +189,6 @@ IF (NMOM_I.GE.2) THEN
    ZCONC = 100.E3 ! maximum ice concentration set at 100/L
    IF (.NOT. LCRYSTAL_SHAPE) THEN
     WHERE ( PRT(D%NIJB:D%NIJE,:,4) > 1.E-11 .AND. PSVT(D%NIJB:D%NIJE,:,ISV_LIMA_NI)<ZSVTHR )
-!
-!      PSVT(:,:,TNSV%NSV_LIMA_NI_A(kmi)) = MIN( PRHODREF(:,:) /                                     &
-!           ( XRHOLI * XAI*(10.E-06)**XBI * PRT(:,:,4) ), &
-!           ZCONC )
-! Correction
-!      PSVT(:,:,ISV_LIMA_NI) = MIN(PRT(:,:,4)/(0.82*(10.E-06)**2.5),ZCONC )
       PSVT(D%NIJB:D%NIJE,:,ISV_LIMA_NI) = MIN(PRT(D%NIJB:D%NIJE,:,4)/(XAI*(10.E-06)**XBI),ZCONC )
     END WHERE
     WHERE ( PRT(D%NIJB:D%NIJE,:,4) <= 1.E-11 .AND. PSVT(D%NIJB:D%NIJE,:,ISV_LIMA_NI)<ZSVTHR )
@@ -227,7 +222,6 @@ IF (NMOM_I.GE.2) THEN
          PSVT(D%NIJB:D%NIJE,:,ISV_LIMA_IFN_NUCL) = 0.0
       END WHERE
    END IF
-
 END IF
 !
 IF (ISV_LIMA_NS.GE.1) THEN

@@ -22,6 +22,8 @@
 !!      C. Barthe            14/03/2022  add CIBU and RDSF
 !       J. Wurtz                03/2022: new snow characteristics
 !       M. Taufour              07/2022: add concentration for snow, graupel, hail
+!       C. Barthe               01/2024: add several ice crystal shapes
+!!      M. Taufour              03/2024: add ice crystal self collection (ISC)
 !!
 !-------------------------------------------------------------------------------
 USE MODD_PARAMETERS, ONLY: JPSVNAMELGTMAX

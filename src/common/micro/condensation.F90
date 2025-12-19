@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2002-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2002-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -163,8 +163,8 @@ INTEGER :: JIJ, JK, JKP                         ! loop index
 INTEGER :: IKTB, IKTE, IKB, IKE, IKL, IIJB, IIJE
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZTLK, ZRT     ! work arrays for T_l and total water mixing ratio
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZL            ! length scale
-INTEGER, DIMENSION(D%NIJT)  :: ITPL            ! top levels of troposphere
-REAL,    DIMENSION(D%NIJT)  :: ZTMIN           ! minimum Temp. related to ITPL
+INTEGER, DIMENSION(D%NIJT,D%NKT)  :: ITPL            ! top levels of troposphere
+REAL,    DIMENSION(D%NIJT,D%NKT)  :: ZTMIN           ! minimum Temp. related to ITPL
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZLV, ZLS, ZCPD
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZGCOND, ZAUTC, ZAUTI, ZGAUV, ZGAUC, ZGAUI, ZGAUTC, ZGAUTI, ZCRIAUTI   ! Used for Gaussian PDF integration
@@ -324,16 +324,16 @@ IF ( .NOT. OSIGMAS ) THEN
 !$acc end kernels
   ! Determine tropopause/inversion  height from minimum temperature
 !$acc kernels
-  ITPL(:)  = IKB+IKL
-  ZTMIN(:) = 400.
+  ITPL(:,:)  = IKB+IKL
+  ZTMIN(:,:) = 400.
 !$acc end kernels
 !$acc kernels
 !$acc loop independent collapse(2)
   DO JK = IKTB+1,IKTE-1
     DO JIJ=IIJB,IIJE
-      IF ( PT(JIJ,JK) < ZTMIN(JIJ) ) THEN
-        ZTMIN(JIJ) = PT(JIJ,JK)
-        ITPL(JIJ) = JK
+      IF ( PT(JIJ,JK) < ZTMIN(JIJ,JK) ) THEN
+        ZTMIN(JIJ,JK) = PT(JIJ,JK)
+        ITPL(JIJ,JK) = JK
       ENDIF
     END DO
   END DO
@@ -347,7 +347,7 @@ IF ( .NOT. OSIGMAS ) THEN
       ! free troposphere
       ZL(JIJ,JK) = ZL0
       ZZZ(JIJ,JK) =  PZZ(JIJ,JK) -  PZZ(JIJ,IKB)
-      JKP = ITPL(JIJ)
+      JKP = ITPL(JIJ,JK)
       ! approximate length for boundary-layer
       IF ( ZL0 > ZZZ(JIJ,JK) ) ZL(JIJ,JK) = ZZZ(JIJ,JK)
       ! gradual decrease of length-scale near and above tropopause
@@ -395,8 +395,13 @@ IF (OCND2) THEN
 !$acc end kernels
 END IF
 
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+!$mnh_undef(OPENACC)
+#endif
 !$acc kernels
-!$acc loop independent collapse(2)
+!$acc_cr loop independent gang vector
+!$mnh_do_concurrent( JIJ=IIJB:IIJE , JK=IKTB:IKTE )      
 DO JK=IKTB,IKTE
   DO JIJ = IIJB, IIJE
   IF (.NOT. OCND2) THEN
@@ -474,7 +479,9 @@ DO JK=IKTB,IKTE
       ! Gaussian Probability Density Function around ZQ1
       ! Computation of ZG and ZGAM(=erf(ZG))
       ZGCOND(JIJ,JK) = -ZQ1(JIJ,JK)/SQRT(2.)
-      ZGAUV(JIJ,JK) = 1 + ERF(-ZGCOND(JIJ,JK))
+
+      !Approximation of erf function for Gaussian distribution
+      ZGAUV(JIJ,JK) = 1 - SIGN(1., ZGCOND(JIJ,JK)) * SQRT(1-EXP(-4*ZGCOND(JIJ,JK)**2/CST%XPI))
 
       !Computation Cloud Fraction
       PCLDFR(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUV(JIJ,JK)))
@@ -497,7 +504,8 @@ DO JK=IKTB,IKTE
         IF(1-ZFRAC(JIJ,JK) > 1.E-20)THEN
           ZAUTC(JIJ,JK) = (ZSBAR(JIJ,JK) - ICEP%XCRIAUTC/(PRHODREF(JIJ,JK)*(1-ZFRAC(JIJ,JK))))/ZSIGMA(JIJ,JK)
           ZGAUTC(JIJ,JK) = -ZAUTC(JIJ,JK)/SQRT(2.)
-          ZGAUC(JIJ,JK) = 1 + ERF(-ZGAUTC(JIJ,JK))
+          !Approximation of erf function for Gaussian distribution
+          ZGAUC(JIJ,JK) = 1 - SIGN(1., ZGAUTC(JIJ,JK)) * SQRT(1-EXP(-4*ZGAUTC(JIJ,JK)**2/CST%XPI))
           PHLC_HCF(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUC(JIJ,JK)))
           PHLC_HRC(JIJ,JK) = (1-ZFRAC(JIJ,JK))*(EXP(-ZGAUTC(JIJ,JK)**2)-ZGAUTC(JIJ,JK)*SQRT(CST%XPI)*ZGAUC(JIJ,JK))*ZSIGMA(JIJ,JK)/SQRT(2.*CST%XPI)
           PHLC_HRC(JIJ,JK) = PHLC_HRC(JIJ,JK) + ICEP%XCRIAUTC/PRHODREF(JIJ,JK) * PHLC_HCF(JIJ,JK)
@@ -517,7 +525,8 @@ DO JK=IKTB,IKTE
           ZCRIAUTI(JIJ,JK)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JIJ,JK)-CST%XTT)+ICEP%XBCRIAUTI))
           ZAUTI(JIJ,JK) = (ZSBAR(JIJ,JK) - ZCRIAUTI(JIJ,JK)/ZFRAC(JIJ,JK))/ZSIGMA(JIJ,JK)
           ZGAUTI(JIJ,JK) = -ZAUTI(JIJ,JK)/SQRT(2.)
-          ZGAUI(JIJ,JK) = 1 + ERF(-ZGAUTI(JIJ,JK))
+          !Approximation of erf function for Gaussian distribution
+          ZGAUI(JIJ,JK) = 1 - SIGN(1., ZGAUTI(JIJ,JK)) * SQRT(1-EXP(-4*ZGAUTI(JIJ,JK)**2/CST%XPI))
           PHLI_HCF(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUI(JIJ,JK)))
           PHLI_HRI(JIJ,JK) = ZFRAC(JIJ,JK)*(EXP(-ZGAUTI(JIJ,JK)**2)-ZGAUTI(JIJ,JK)*SQRT(CST%XPI)*ZGAUI(JIJ,JK))*ZSIGMA(JIJ,JK)/SQRT(2.*CST%XPI)
           PHLI_HRI(JIJ,JK) = PHLI_HRI(JIJ,JK) + ZCRIAUTI(JIJ,JK)*PHLI_HCF(JIJ,JK)
@@ -637,8 +646,9 @@ DO JK=IKTB,IKTE
 
       PSIGRC(JIJ,JK) = PSIGRC(JIJ,JK)* MIN( 3. , MAX(1.,1.-ZQ1(JIJ,JK)) )
   END IF
+ END DO
 END DO
-END DO
+!$mnh_end_do()
 !$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('CONDENSATION',1,ZHOOK_HANDLE)

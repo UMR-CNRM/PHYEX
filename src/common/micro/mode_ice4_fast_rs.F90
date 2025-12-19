@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -104,8 +104,12 @@ IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RS', 0, ZHOOK_HANDLE)
 !
 !*       5.0    maximum freezing rate
 !
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+#endif
+!
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -140,12 +144,13 @@ DO JL=1, KSIZE
     ZFREEZ_RATE(JL)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       5.1    cloud droplet riming of the aggregates
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF (PRCT(JL)>ICED%XRTMIN(2) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. ICEP%LNEWCOEFF) THEN
@@ -161,6 +166,7 @@ DO JL=1, KSIZE
     PRS_TEND(JL, IRSRIMCG)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 ! Collection of cloud droplets by snow: this rate is used for riming (T<0) and for conversion/melting (T>0)
@@ -253,7 +259,7 @@ IF(.NOT. LDSOFT) THEN
 ENDIF
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   ! More restrictive RIM mask to be used for riming by negative temperature only
   IF(GRIM(JL) .AND. PT(JL)<CST%XTT) THEN
@@ -272,12 +278,13 @@ DO JL=1, KSIZE
     PRSRIMCG(JL)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       5.2    rain accretion onto the aggregates
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL = 1, KSIZE
   IF (PRRT(JL)>ICED%XRTMIN(3) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     GACC(JL) = .TRUE.
@@ -288,6 +295,7 @@ DO JL = 1, KSIZE
     PRS_TEND(JL, IRSACCRG)=0.
   END IF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 IF(.NOT. LDSOFT) THEN
 !$acc kernels
@@ -369,7 +377,7 @@ IF(.NOT. LDSOFT) THEN
 ENDIF
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   ! More restrictive ACC mask to be used for accretion by negative temperature only
   IF(GACC(JL) .AND. PT(JL)<CST%XTT) THEN
@@ -388,13 +396,14 @@ DO JL=1, KSIZE
     PRSACCRG(JL)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !
 !*       5.3    Conversion-Melting of the aggregates
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PRST(JL)>ICED%XRTMIN(5) .AND. PT(JL)>CST%XTT .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -441,6 +450,7 @@ DO JL=1, KSIZE
     PRCMLTSR(JL)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RS', 1, ZHOOK_HANDLE)
 !

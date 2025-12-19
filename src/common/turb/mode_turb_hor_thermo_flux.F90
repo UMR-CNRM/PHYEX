@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -98,7 +98,7 @@ INTEGER,                  INTENT(IN)    :: KRRL          ! number of liquid wate
 INTEGER,                  INTENT(IN)    :: KRRI          ! number of ice water var.
 LOGICAL,                  INTENT(IN)    ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                  INTENT(IN)    ::  O2D          ! Logical for 2D model version (modd_conf)
-TYPE(TFILEDATA),          INTENT(INOUT)    ::  TPFILE       ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT) ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
                                                         ! PK = PLM * SQRT(PTKEM)
