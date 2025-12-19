@@ -116,6 +116,12 @@ foreach(PRECISION ${precision_list})
   target_compile_options(phyex_${PRECISION} PUBLIC
     $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
 
+  
+if( CMAKE_Fortran_COMPILER_ID MATCHES "GNU" )   # TODO: CLEAN 
+ ecbuild_add_fortran_flags( -ffree-line-length-none NO_FAIL )
+endif()
+
+
   # Install Library 
   install(
     TARGETS phyex_${PRECISION}
