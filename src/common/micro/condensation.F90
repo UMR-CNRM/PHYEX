@@ -163,8 +163,8 @@ INTEGER :: JIJ, JK, JKP                         ! loop index
 INTEGER :: IKTB, IKTE, IKB, IKE, IKL, IIJB, IIJE
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZTLK, ZRT     ! work arrays for T_l and total water mixing ratio
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZL            ! length scale
-INTEGER, DIMENSION(D%NIJT,D%NKT)  :: ITPL            ! top levels of troposphere
-REAL,    DIMENSION(D%NIJT,D%NKT)  :: ZTMIN           ! minimum Temp. related to ITPL
+INTEGER, DIMENSION(D%NIJT)  :: ITPL            ! top levels of troposphere
+REAL,    DIMENSION(D%NIJT)  :: ZTMIN           ! minimum Temp. related to ITPL
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZLV, ZLS, ZCPD
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZGCOND, ZAUTC, ZAUTI, ZGAUV, ZGAUC, ZGAUI, ZGAUTC, ZGAUTI, ZCRIAUTI   ! Used for Gaussian PDF integration
@@ -324,16 +324,17 @@ IF ( .NOT. OSIGMAS ) THEN
 !$acc end kernels
   ! Determine tropopause/inversion  height from minimum temperature
 !$acc kernels
-  ITPL(:,:)  = IKB+IKL
-  ZTMIN(:,:) = 400.
+  ITPL(:)  = IKB+IKL
+  ZTMIN(:) = 400.
 !$acc end kernels
 !$acc kernels
-!$acc loop independent collapse(2)
+!$acc loop seq
   DO JK = IKTB+1,IKTE-1
+!$acc loop gang independent
     DO JIJ=IIJB,IIJE
-      IF ( PT(JIJ,JK) < ZTMIN(JIJ,JK) ) THEN
-        ZTMIN(JIJ,JK) = PT(JIJ,JK)
-        ITPL(JIJ,JK) = JK
+      IF ( PT(JIJ,JK) < ZTMIN(JIJ) ) THEN
+        ZTMIN(JIJ) = PT(JIJ,JK)
+        ITPL(JIJ) = JK
       ENDIF
     END DO
   END DO
@@ -341,13 +342,14 @@ IF ( .NOT. OSIGMAS ) THEN
   ! Set the mixing length scale
 !$acc kernels
   ZL(:,IKB) = 20.
-!$acc loop independent collapse(2) private(JKP)
+!$acc loop seq
   DO JK = IKB+IKL,IKE,IKL
+!$acc loop gang independent private(JKP)
     DO JIJ=IIJB,IIJE
       ! free troposphere
       ZL(JIJ,JK) = ZL0
       ZZZ(JIJ,JK) =  PZZ(JIJ,JK) -  PZZ(JIJ,IKB)
-      JKP = ITPL(JIJ,JK)
+      JKP = ITPL(JIJ)
       ! approximate length for boundary-layer
       IF ( ZL0 > ZZZ(JIJ,JK) ) ZL(JIJ,JK) = ZZZ(JIJ,JK)
       ! gradual decrease of length-scale near and above tropopause
