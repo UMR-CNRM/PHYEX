@@ -54,7 +54,8 @@ use modd_budget,     only: lbudget_th, lbudget_rv, lbudget_rc, lbudget_rr, lbudg
                            NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, &
                            NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1,            &
                            tbudgets
-use modd_cst,        only: xci, xcl, xcpd, xcpv, xlstt, xlvtt, xp00, xrd, xtt
+use modd_cst,        only: cst_xci => xci , cst_xcl => xcl , cst_xcpd => xcpd , cst_xcpv => xcpv , cst_xlstt => xlstt , &
+                           cst_xlvtt => xlvtt , cst_xp00 => xp00 , cst_xrd => xrd, cst_xtt => xtt
 use modd_elec_descr, only: xrtmin_elec, xecharge
 use modd_nsv,        only: nsv_c2r2beg, nsv_c2r2end, nsv_lima_beg, nsv_lima_end, nsv_lima_nc, nsv_lima_nr, &
                            nsv_lima_ni, nsv_lima_ns, nsv_lima_ng, nsv_lima_nh,                             &
@@ -103,12 +104,24 @@ real, dimension(:, :, :), pointer, contiguous :: zadd, zion_number !++cb--
 real, dimension(size(prths,1),size(prths,2),size(prths,3)) :: zni_tot ! total concentration of ice crystals !++cb--
 logical :: GELEC_ELE , GELEC_ELE4
 
+REAL :: xci, xcl, xcpd, xcpv, xlstt, xlvtt, xp00, xrd, xtt
+
 if ( krr == 0 ) return
 
 GELEC_ELE  = ( helec(1:3) == 'ELE' )
 GELEC_ELE4 = ( helec == 'ELE4' )
 
 zcor => null()
+
+xci = cst_xci
+xcl = cst_xcl
+xcpd = cst_xcpd
+xcpv = cst_xcpv
+xlstt = cst_xlstt
+xlvtt = cst_xlvtt
+xp00 = cst_xp00
+xrd = cst_xrd
+xtt = cst_xtt
 
 jiu = Size(prths, 1 )
 jju = Size(prths, 2 )
@@ -372,9 +385,9 @@ CLOUD: select case ( hcloud )
     else
       jrmax = Size( prrs, 4 )
     end if
-if ( GELEC_ELE ) then
 !$acc kernels
     do jr = 4, jrmax
+      if ( GELEC_ELE ) then
       !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
         WHERE ( prrs(:, :, :, jr) < 0.)
           prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jr)
@@ -391,11 +404,7 @@ if ( GELEC_ELE ) then
           prsvs(:,:,:,nsv_elecbeg+jr-1) = 0.0
         END WHERE
       !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
-    end do
-!$acc end kernels
-else
-!$acc kernels
-    do jr = 4, jrmax
+      else
       !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
         WHERE ( prrs(:, :, :, jr) < 0.)
           prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jr)
@@ -404,9 +413,9 @@ else
           prrs(:, :, :, jr) = 0.
         END WHERE
       !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+      end if
     end do
 !$acc end kernels
-end if
 !
 !   cloud
     if ( hbudname == 'NETUR' ) then
@@ -414,9 +423,9 @@ end if
     else
       jrmax = 3
     end if
-if ( GELEC_ELE ) then
 !$acc kernels
     do jr = 2, jrmax
+      if ( GELEC_ELE ) then
         !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
         WHERE ( prrs(:, :, :, jr) < 0.)
           prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jr)
@@ -433,11 +442,7 @@ if ( GELEC_ELE ) then
           prsvs(:,:,:,nsv_elecbeg+jr-1) = 0.0
         END WHERE
         !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
-    end do
-!$acc end kernels
-else
-!$acc kernels
-    do jr = 2, jrmax
+      else
         !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
         WHERE ( prrs(:, :, :, jr) < 0.)
           prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jr)
@@ -446,9 +451,9 @@ else
           prrs(:, :, :, jr) = 0.
         END WHERE
         !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+      end if
     end do
 !$acc end kernels
-end if
 !
 ! if rc or ri are positive, we can correct negative rv
     if ( GELEC_ELE ) then
