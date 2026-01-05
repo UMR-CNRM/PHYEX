@@ -5,6 +5,13 @@ MODULE phyex_bridge
     USE MODI_RAIN_ICE, ONLY : RAIN_ICE
     USE MODI_SHALLOW_CONVECTION, ONLY : SHALLOW_CONVECTION
     USE PARKIND1, ONLY : JPIM, JPRB
+
+    ! Define working precision based on JPRB (adjusts to sp or dp build)
+#ifdef SINGLE_PRECISION
+    INTEGER, PARAMETER :: WP = C_FLOAT
+#else
+    INTEGER, PARAMETER :: WP = C_DOUBLE
+#endif
     USE MODD_DIMPHYEX, ONLY : DIMPHYEX_t
     USE MODD_CST, ONLY : CST_t, CST
     USE MODD_RAIN_ICE_PARAM_n
@@ -33,9 +40,9 @@ CONTAINS
         ptr_cldfr, ptr_icldfr, ptr_wcldfr                                  &
     ) BIND(C, name="c_ice_adjust")
     
-        ! C-compatible arguments (using C_FLOAT for single precision)
+        ! C-compatible arguments (using WP for working precision)
         INTEGER(C_INT), VALUE, INTENT(IN) :: nlon, nlev, krr
-        REAL(C_FLOAT), VALUE, INTENT(IN) :: timestep
+        REAL(WP), VALUE, INTENT(IN) :: timestep
         
         ! C pointers for input arrays
         TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_sigqsat      ! 1D: (nlon)
@@ -66,14 +73,14 @@ CONTAINS
         TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_icldfr       ! 2D: (nlon, nlev)
         TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_wcldfr       ! 2D: (nlon, nlev)
 
-        ! Fortran pointers to map C data (using C_FLOAT for single precision)
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:) :: f_sigqsat
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_pabs, f_sigs, f_th, f_exn, f_exn_ref
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_rho_dry_ref, f_rv, f_rc, f_ri
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_rr, f_rs, f_rg
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_cf_mf, f_rc_mf, f_ri_mf
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_rvs, f_rcs, f_ris, f_ths
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_cldfr, f_icldfr, f_wcldfr
+        ! Fortran pointers to map C data (using WP for working precision)
+        REAL(KIND=WP), POINTER, DIMENSION(:) :: f_sigqsat
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_pabs, f_sigs, f_th, f_exn, f_exn_ref
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_rho_dry_ref, f_rv, f_rc, f_ri
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_rr, f_rs, f_rg
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_cf_mf, f_rc_mf, f_ri_mf
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_rvs, f_rcs, f_ris, f_ths
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_cldfr, f_icldfr, f_wcldfr
         
         ! Local variables for PHYEX structures
         TYPE(DIMPHYEX_t) :: D
@@ -84,12 +91,12 @@ CONTAINS
         TYPE(TBUDGETCONF_t) :: BUCONF
         TYPE(TBUDGETDATA_PTR), DIMENSION(0) :: TBUDGETS
         
-        ! Additional required arrays (using C_FLOAT)
-        REAL(KIND=C_FLOAT), ALLOCATABLE, DIMENSION(:,:) :: PRHODJ, PZZ
-        REAL(KIND=C_FLOAT), ALLOCATABLE, DIMENSION(:,:) :: PMFCONV
-        REAL(KIND=C_FLOAT), ALLOCATABLE, DIMENSION(:,:) :: PWEIGHT_MF_CLOUD
-        REAL(KIND=C_FLOAT), ALLOCATABLE, DIMENSION(:,:) :: PSSIO, PSSIU, PIFR
-        REAL(KIND=C_FLOAT), ALLOCATABLE, DIMENSION(:,:) :: PSRCS
+        ! Additional required arrays (using WP)
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PRHODJ, PZZ
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PMFCONV
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PWEIGHT_MF_CLOUD
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PSSIO, PSSIU, PIFR
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PSRCS
         LOGICAL :: LMFCONV, OCOMPUTE_SRC
         
         ! Convert C pointers to Fortran arrays
@@ -177,18 +184,18 @@ CONTAINS
         PRHODJ = f_rho_dry_ref
         
         ! Set height field (simplified - could be passed as parameter)
-        PZZ = 0.0_C_FLOAT
+        PZZ = 0.0_WP
         
         ! Initialize mass flux arrays
-        PMFCONV = 0.0_C_FLOAT
-        PWEIGHT_MF_CLOUD = 0.0_C_FLOAT
+        PMFCONV = 0.0_WP
+        PWEIGHT_MF_CLOUD = 0.0_WP
         LMFCONV = .FALSE.
         
         ! Initialize output arrays
-        PSSIO = 0.0_C_FLOAT
-        PSSIU = 0.0_C_FLOAT
-        PIFR = 0.0_C_FLOAT
-        PSRCS = 0.0_C_FLOAT
+        PSSIO = 0.0_WP
+        PSSIU = 0.0_WP
+        PIFR = 0.0_WP
+        PSRCS = 0.0_WP
         OCOMPUTE_SRC = .FALSE.
         
         ! Call the actual ICE_ADJUST routine (using global CST module)
@@ -213,8 +220,8 @@ CONTAINS
 
     ! C-callable initialization for RAIN_ICE
     SUBROUTINE c_ini_rain_ice_wrap(timestep, dzmin, krr, hcloud) BIND(C, name="c_ini_rain_ice")
-        REAL(C_FLOAT), VALUE, INTENT(IN) :: timestep
-        REAL(C_FLOAT), VALUE, INTENT(IN) :: dzmin
+        REAL(WP), VALUE, INTENT(IN) :: timestep
+        REAL(WP), VALUE, INTENT(IN) :: dzmin
         INTEGER(C_INT), VALUE, INTENT(IN) :: krr
         CHARACTER(KIND=C_CHAR), DIMENSION(4), INTENT(IN) :: hcloud
 
@@ -253,9 +260,9 @@ CONTAINS
         ptr_rain_ice_param, ptr_rain_ice_descr                             &
     ) BIND(C, name="c_rain_ice")
     
-        ! C-compatible arguments (using C_FLOAT for single precision)
+        ! C-compatible arguments (using WP for working precision)
         INTEGER(C_INT), VALUE, INTENT(IN) :: nlon, nlev, krr
-        REAL(C_FLOAT), VALUE, INTENT(IN) :: timestep
+        REAL(WP), VALUE, INTENT(IN) :: timestep
         
         ! C pointers for 2D input arrays
         TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_exn, ptr_dzz, ptr_rhodj
@@ -283,22 +290,22 @@ CONTAINS
         ! C pointers for parameter structures
         TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rain_ice_param, ptr_rain_ice_descr
 
-        ! Fortran pointers to map C data (using C_FLOAT for single precision)
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_exn, f_dzz, f_rhodj
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_rhodref, f_exnref, f_pabs
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_cldfr, f_icldfr
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_ssio, f_ssiu, f_ifr
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_tht, f_rvt, f_rct
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_rrt, f_rit, f_rst, f_rgt
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_sigs
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_cit
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_hlc_hrc, f_hlc_hcf
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_hli_hri, f_hli_hcf
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_ths, f_rvs, f_rcs
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_rrs, f_ris, f_rss, f_rgs
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_evap3d, f_rainfr
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:) :: f_inprc, f_inprr
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:) :: f_inprs, f_inprg, f_indep
+        ! Fortran pointers to map C data (using WP for working precision)
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_exn, f_dzz, f_rhodj
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_rhodref, f_exnref, f_pabs
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_cldfr, f_icldfr
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_ssio, f_ssiu, f_ifr
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_tht, f_rvt, f_rct
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_rrt, f_rit, f_rst, f_rgt
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_sigs
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_cit
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_hlc_hrc, f_hlc_hcf
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_hli_hri, f_hli_hcf
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_ths, f_rvs, f_rcs
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_rrs, f_ris, f_rss, f_rgs
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_evap3d, f_rainfr
+        REAL(KIND=WP), POINTER, DIMENSION(:) :: f_inprc, f_inprr
+        REAL(KIND=WP), POINTER, DIMENSION(:) :: f_inprs, f_inprg, f_indep
 
         ! Local variables for PHYEX structures
         TYPE(DIMPHYEX_t) :: D
@@ -439,7 +446,7 @@ CONTAINS
         ! C-compatible arguments
         INTEGER(C_INT), VALUE, INTENT(IN) :: nlon, nlev, kice, kbdia, ktdia
         INTEGER(C_INT), VALUE, INTENT(IN) :: osettadj_int, och1conv_int, kch1
-        REAL(C_FLOAT), VALUE, INTENT(IN) :: ptadjs
+        REAL(WP), VALUE, INTENT(IN) :: ptadjs
 
         ! C pointers for 1D input arrays
         TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_ptkecls     ! 1D: (nlon)
@@ -469,13 +476,13 @@ CONTAINS
         TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_pch1ten     ! 3D: (nlon, nlev, kch1)
 
         ! Fortran pointers to map C data
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:) :: f_ptkecls
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_ppabst, f_pzz, f_ptt
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_prvt, f_prct, f_prit, f_pwt
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_ptten, f_prvten, f_prcten, f_priten
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:) :: f_pumf
+        REAL(KIND=WP), POINTER, DIMENSION(:) :: f_ptkecls
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_ppabst, f_pzz, f_ptt
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_prvt, f_prct, f_prit, f_pwt
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_ptten, f_prvten, f_prcten, f_priten
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_pumf
         INTEGER(KIND=C_INT), POINTER, DIMENSION(:) :: f_kcltop, f_kclbas
-        REAL(KIND=C_FLOAT), POINTER, DIMENSION(:,:,:) :: f_pch1, f_pch1ten
+        REAL(KIND=WP), POINTER, DIMENSION(:,:,:) :: f_pch1, f_pch1ten
 
         ! Local variables for PHYEX structures
         TYPE(DIMPHYEX_t) :: D
@@ -559,44 +566,44 @@ CONTAINS
         NSV%NSV_CHEMEND = 0
 
         ! Initialize CONVPAR structure (deep convection parameters)
-        CONVPAR%XA25 = 625.0E6_C_FLOAT     ! Reference grid area (25km)^2
-        CONVPAR%XCRAD = 1500.0_C_FLOAT     ! Cloud radius (m)
-        CONVPAR%XCDEPTH = 3000.0_C_FLOAT   ! Minimum necessary cloud depth
-        CONVPAR%XENTR = 0.03_C_FLOAT       ! Entrainment constant
-        CONVPAR%XZLCL = 3500.0_C_FLOAT     ! Max LCL height
-        CONVPAR%XZPBL = 6000.0_C_FLOAT     ! Minimum PBL height
-        CONVPAR%XWTRIG = 6.0_C_FLOAT       ! Trigger vertical velocity
-        CONVPAR%XNHGAM = 1.3333_C_FLOAT    ! Non-hydrostatic pressure factor
-        CONVPAR%XTFRZ1 = 268.16_C_FLOAT    ! Freezing interval begin
-        CONVPAR%XTFRZ2 = 248.16_C_FLOAT    ! Freezing interval end
-        CONVPAR%XRHDBC = 0.9_C_FLOAT       ! Relative humidity below cloud
-        CONVPAR%XRCONV = 0.015_C_FLOAT     ! Precipitation conversion constant
-        CONVPAR%XSTABT = 0.75_C_FLOAT      ! Stability in fractional time integration
-        CONVPAR%XSTABC = 0.95_C_FLOAT      ! Stability in CAPE adjustment
-        CONVPAR%XUSRDPTH = 16500.0_C_FLOAT ! Pressure thickness for updraft moisture
-        CONVPAR%XMELDPTH = 10000.0_C_FLOAT ! Layer for precipitation melt
-        CONVPAR%XUVDP = 0.7_C_FLOAT        ! Pressure perturbation in momentum transport
+        CONVPAR%XA25 = 625.0E6_WP     ! Reference grid area (25km)^2
+        CONVPAR%XCRAD = 1500.0_WP     ! Cloud radius (m)
+        CONVPAR%XCDEPTH = 3000.0_WP   ! Minimum necessary cloud depth
+        CONVPAR%XENTR = 0.03_WP       ! Entrainment constant
+        CONVPAR%XZLCL = 3500.0_WP     ! Max LCL height
+        CONVPAR%XZPBL = 6000.0_WP     ! Minimum PBL height
+        CONVPAR%XWTRIG = 6.0_WP       ! Trigger vertical velocity
+        CONVPAR%XNHGAM = 1.3333_WP    ! Non-hydrostatic pressure factor
+        CONVPAR%XTFRZ1 = 268.16_WP    ! Freezing interval begin
+        CONVPAR%XTFRZ2 = 248.16_WP    ! Freezing interval end
+        CONVPAR%XRHDBC = 0.9_WP       ! Relative humidity below cloud
+        CONVPAR%XRCONV = 0.015_WP     ! Precipitation conversion constant
+        CONVPAR%XSTABT = 0.75_WP      ! Stability in fractional time integration
+        CONVPAR%XSTABC = 0.95_WP      ! Stability in CAPE adjustment
+        CONVPAR%XUSRDPTH = 16500.0_WP ! Pressure thickness for updraft moisture
+        CONVPAR%XMELDPTH = 10000.0_WP ! Layer for precipitation melt
+        CONVPAR%XUVDP = 0.7_WP        ! Pressure perturbation in momentum transport
 
         ! Initialize CVP_SHAL structure (shallow convection parameters)
-        CVP_SHAL%XA25 = 625.0E6_C_FLOAT       ! Reference grid area
-        CVP_SHAL%XCRAD = 1500.0_C_FLOAT       ! Cloud radius
-        CVP_SHAL%XCTIME_SHAL = 10800.0_C_FLOAT ! Convective adjustment time
-        CVP_SHAL%XCDEPTH = 2500.0_C_FLOAT     ! Minimum cloud depth
-        CVP_SHAL%XCDEPTH_D = 3000.0_C_FLOAT   ! Maximum cloud thickness
-        CVP_SHAL%XDTPERT = 1.0_C_FLOAT        ! Temperature perturbation at LCL
-        CVP_SHAL%XATPERT = 0.0_C_FLOAT        ! Parameter for temp perturbation
-        CVP_SHAL%XBTPERT = 0.0_C_FLOAT        ! Parameter for temp perturbation
-        CVP_SHAL%XENTR = 0.03_C_FLOAT         ! Entrainment constant
-        CVP_SHAL%XZLCL = 3500.0_C_FLOAT       ! Max LCL height
-        CVP_SHAL%XZPBL = 6000.0_C_FLOAT       ! Minimum PBL height
-        CVP_SHAL%XWTRIG = 6.0_C_FLOAT         ! Trigger vertical velocity
-        CVP_SHAL%XNHGAM = 1.3333_C_FLOAT      ! Non-hydrostatic pressure factor
-        CVP_SHAL%XTFRZ1 = 268.16_C_FLOAT      ! Freezing interval begin
-        CVP_SHAL%XTFRZ2 = 248.16_C_FLOAT      ! Freezing interval end
-        CVP_SHAL%XSTABT = 0.75_C_FLOAT        ! Stability factor
-        CVP_SHAL%XSTABC = 0.95_C_FLOAT        ! Stability in CAPE adjustment
-        CVP_SHAL%XAW = 1.0_C_FLOAT            ! WLCL parameter A
-        CVP_SHAL%XBW = 0.0_C_FLOAT            ! WLCL parameter B
+        CVP_SHAL%XA25 = 625.0E6_WP       ! Reference grid area
+        CVP_SHAL%XCRAD = 1500.0_WP       ! Cloud radius
+        CVP_SHAL%XCTIME_SHAL = 10800.0_WP ! Convective adjustment time
+        CVP_SHAL%XCDEPTH = 2500.0_WP     ! Minimum cloud depth
+        CVP_SHAL%XCDEPTH_D = 3000.0_WP   ! Maximum cloud thickness
+        CVP_SHAL%XDTPERT = 1.0_WP        ! Temperature perturbation at LCL
+        CVP_SHAL%XATPERT = 0.0_WP        ! Parameter for temp perturbation
+        CVP_SHAL%XBTPERT = 0.0_WP        ! Parameter for temp perturbation
+        CVP_SHAL%XENTR = 0.03_WP         ! Entrainment constant
+        CVP_SHAL%XZLCL = 3500.0_WP       ! Max LCL height
+        CVP_SHAL%XZPBL = 6000.0_WP       ! Minimum PBL height
+        CVP_SHAL%XWTRIG = 6.0_WP         ! Trigger vertical velocity
+        CVP_SHAL%XNHGAM = 1.3333_WP      ! Non-hydrostatic pressure factor
+        CVP_SHAL%XTFRZ1 = 268.16_WP      ! Freezing interval begin
+        CVP_SHAL%XTFRZ2 = 248.16_WP      ! Freezing interval end
+        CVP_SHAL%XSTABT = 0.75_WP        ! Stability factor
+        CVP_SHAL%XSTABC = 0.95_WP        ! Stability in CAPE adjustment
+        CVP_SHAL%XAW = 1.0_WP            ! WLCL parameter A
+        CVP_SHAL%XBW = 0.0_WP            ! WLCL parameter B
         CVP_SHAL%LLSMOOTH = .TRUE.            ! Smoothing flag
 
         ! Initialize physical constants

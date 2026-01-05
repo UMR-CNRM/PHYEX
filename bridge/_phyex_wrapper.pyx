@@ -9,12 +9,13 @@ through a C bridge defined in phyex_bridge.F90.
 import numpy as np
 cimport numpy as np
 
-# Declare memory view data types for single precision (JPRB/float32)
-ctypedef np.float32_t DTYPE_t
+# Declare memory view data types for double precision (JPRB/float64)
+# Note: PHYEX is built with double precision (parkind_dp), so we use float64
+ctypedef np.float64_t DTYPE_t
 
 # External C Declaration matching phyex_bridge.F90
 cdef extern:
-    void c_ini_rain_ice(float timestep, float dzmin, int krr, char *hcloud)
+    void c_ini_rain_ice(double timestep, double dzmin, int krr, char *hcloud)
 
     void c_shallow_convection(
         int nlon,
@@ -23,111 +24,111 @@ cdef extern:
         int kbdia,
         int ktdia,
         int osettadj_int,
-        float ptadjs,
+        double ptadjs,
         int och1conv_int,
         int kch1,
-        float *ptr_ppabst,
-        float *ptr_pzz,
-        float *ptr_ptkecls,
-        float *ptr_ptt,
-        float *ptr_prvt,
-        float *ptr_prct,
-        float *ptr_prit,
-        float *ptr_pwt,
-        float *ptr_ptten,
-        float *ptr_prvten,
-        float *ptr_prcten,
-        float *ptr_priten,
+        double *ptr_ppabst,
+        double *ptr_pzz,
+        double *ptr_ptkecls,
+        double *ptr_ptt,
+        double *ptr_prvt,
+        double *ptr_prct,
+        double *ptr_prit,
+        double *ptr_pwt,
+        double *ptr_ptten,
+        double *ptr_prvten,
+        double *ptr_prcten,
+        double *ptr_priten,
         np.int32_t *ptr_kcltop,
         np.int32_t *ptr_kclbas,
-        float *ptr_pumf,
-        float *ptr_pch1,
-        float *ptr_pch1ten
+        double *ptr_pumf,
+        double *ptr_pch1,
+        double *ptr_pch1ten
     )
 
     void c_ice_adjust(
         int nlon,
         int nlev, 
         int krr,
-        float timestep,
-        float *ptr_sigqsat,
-        float *ptr_pabs,
-        float *ptr_sigs,
-        float *ptr_th,
-        float *ptr_exn,
-        float *ptr_exn_ref,
-        float *ptr_rho_dry_ref,
-        float *ptr_rv,
-        float *ptr_rc,
-        float *ptr_ri,
-        float *ptr_rr,
-        float *ptr_rs,
-        float *ptr_rg,
-        float *ptr_cf_mf,
-        float *ptr_rc_mf,
-        float *ptr_ri_mf,
-        float *ptr_rvs,
-        float *ptr_rcs,
-        float *ptr_ris,
-        float *ptr_ths,
-        float *ptr_cldfr,
-        float *ptr_icldfr,
-        float *ptr_wcldfr
+        double timestep,
+        double *ptr_sigqsat,
+        double *ptr_pabs,
+        double *ptr_sigs,
+        double *ptr_th,
+        double *ptr_exn,
+        double *ptr_exn_ref,
+        double *ptr_rho_dry_ref,
+        double *ptr_rv,
+        double *ptr_rc,
+        double *ptr_ri,
+        double *ptr_rr,
+        double *ptr_rs,
+        double *ptr_rg,
+        double *ptr_cf_mf,
+        double *ptr_rc_mf,
+        double *ptr_ri_mf,
+        double *ptr_rvs,
+        double *ptr_rcs,
+        double *ptr_ris,
+        double *ptr_ths,
+        double *ptr_cldfr,
+        double *ptr_icldfr,
+        double *ptr_wcldfr
     )
     
     void c_rain_ice(
         int nlon,
         int nlev,
         int krr,
-        float timestep,
+        double timestep,
         # 2D input arrays
-        float *ptr_exn,
-        float *ptr_dzz,
-        float *ptr_rhodj,
-        float *ptr_rhodref,
-        float *ptr_exnref,
-        float *ptr_pabs,
-        float *ptr_cldfr,
-        float *ptr_icldfr,
-        float *ptr_ssio,
-        float *ptr_ssiu,
-        float *ptr_ifr,
-        float *ptr_tht,
-        float *ptr_rvt,
-        float *ptr_rct,
-        float *ptr_rrt,
-        float *ptr_rit,
-        float *ptr_rst,
-        float *ptr_rgt,
-        float *ptr_sigs,
+        double *ptr_exn,
+        double *ptr_dzz,
+        double *ptr_rhodj,
+        double *ptr_rhodref,
+        double *ptr_exnref,
+        double *ptr_pabs,
+        double *ptr_cldfr,
+        double *ptr_icldfr,
+        double *ptr_ssio,
+        double *ptr_ssiu,
+        double *ptr_ifr,
+        double *ptr_tht,
+        double *ptr_rvt,
+        double *ptr_rct,
+        double *ptr_rrt,
+        double *ptr_rit,
+        double *ptr_rst,
+        double *ptr_rgt,
+        double *ptr_sigs,
         # 2D input/output arrays
-        float *ptr_cit,
-        float *ptr_hlc_hrc,
-        float *ptr_hlc_hcf,
-        float *ptr_hli_hri,
-        float *ptr_hli_hcf,
-        float *ptr_ths,
-        float *ptr_rvs,
-        float *ptr_rcs,
-        float *ptr_rrs,
-        float *ptr_ris,
-        float *ptr_rss,
-        float *ptr_rgs,
+        double *ptr_cit,
+        double *ptr_hlc_hrc,
+        double *ptr_hlc_hcf,
+        double *ptr_hli_hri,
+        double *ptr_hli_hcf,
+        double *ptr_ths,
+        double *ptr_rvs,
+        double *ptr_rcs,
+        double *ptr_rrs,
+        double *ptr_ris,
+        double *ptr_rss,
+        double *ptr_rgs,
         # 2D output arrays
-        float *ptr_evap3d,
-        float *ptr_rainfr,
+        double *ptr_evap3d,
+        double *ptr_rainfr,
         # 1D output arrays
-        float *ptr_inprc,
-        float *ptr_inprr,
-        float *ptr_inprs,
-        float *ptr_inprg,
-        float *ptr_indep
+        double *ptr_inprc,
+        double *ptr_inprr,
+        double *ptr_inprs,
+        double *ptr_inprg,
+        double *ptr_indep
     )
 
 # Python-Callable Wrapper Function
 def ice_adjust(
     # Scalar parameters
-    float timestep,
+    double timestep,
     int krr,
     # 1D arrays (Fortran-contiguous)
     np.ndarray[DTYPE_t, ndim=1, mode="fortran"] sigqsat,
@@ -200,7 +201,7 @@ def ice_adjust(
     Notes
     -----
     - All 2D arrays must be Fortran-contiguous with shape (nlon, nlev)
-    - All arrays must be float32 (np.float32) for single precision
+    - All arrays must be float64 (np.float64) for single precision
     - Tendency arrays (rvs, rcs, ris, ths) are both input and output
     - Cloud fraction arrays (cldfr, icldfr, wcldfr) are output only
     
@@ -211,8 +212,8 @@ def ice_adjust(
     >>> 
     >>> # Initialize arrays (Fortran order, single precision)
     >>> nlon, nlev = 10, 20
-    >>> sigqsat = np.ones(nlon, dtype=np.float32, order='F') * 0.01
-    >>> pabs = np.ones((nlon, nlev), dtype=np.float32, order='F') * 85000.0
+    >>> sigqsat = np.ones(nlon, dtype=np.float64, order='F') * 0.01
+    >>> pabs = np.ones((nlon, nlev), dtype=np.float64, order='F') * 85000.0
     >>> # ... initialize other arrays ...
     >>> 
     >>> # Call ice_adjust
@@ -271,7 +272,7 @@ def ice_adjust(
 # Python-Callable Wrapper for RAIN_ICE
 def rain_ice(
     # Scalar parameters
-    float timestep,
+    double timestep,
     int krr,
     # 2D input arrays (Fortran-contiguous)
     np.ndarray[DTYPE_t, ndim=2, mode="fortran"] exn,
@@ -322,32 +323,32 @@ def rain_ice(
     
     Parameters
     ----------
-    timestep : float32
+    timestep : float64
         Time step (seconds)
     krr : int
         Number of moist variables (typically 6 for vapor+cloud+rain+ice+snow+graupel)
     
-    2D Input Arrays (all float32, shape: nlon × nlev, Fortran-contiguous):
+    2D Input Arrays (all float64, shape: nlon × nlev, Fortran-contiguous):
     exn, dzz, rhodj, rhodref, exnref, pabs : atmospheric state
     cldfr, icldfr, ssio, ssiu, ifr : cloud fractions and supersaturation
     tht, rvt, rct, rrt, rit, rst, rgt : mixing ratios at time t
     sigs : subgrid turbulence parameter
     
-    2D Input/Output Arrays (float32, shape: nlon × nlev):
+    2D Input/Output Arrays (float64, shape: nlon × nlev):
     cit : pristine ice number concentration
     hlc_hrc, hlc_hcf, hli_hri, hli_hcf : homogeneous/heterogeneous cloud parameters
     ths, rvs, rcs, rrs, ris, rss, rgs : tendency arrays
     
-    2D Output Arrays (float32, shape: nlon × nlev):
+    2D Output Arrays (float64, shape: nlon × nlev):
     evap3d : rain evaporation profile
     rainfr : precipitation fraction
     
-    1D Output Arrays (float32, shape: nlon):
+    1D Output Arrays (float64, shape: nlon):
     inprc, inprr, inprs, inprg, indep : instantaneous precipitation rates
     
     Notes
     -----
-    - All arrays must be float32 (np.float32) for single precision
+    - All arrays must be float64 (np.float64) for single precision
     - All arrays must be Fortran-contiguous (order='F')
     - Tendency and output arrays are modified in-place
     """
@@ -412,7 +413,7 @@ def rain_ice(
     
     # Arrays are modified in-place, no return needed
 
-def init_rain_ice(float timestep, float dzmin, int krr, str hcloud="AROME"):
+def init_rain_ice(double timestep, double dzmin, int krr, str hcloud="AROME"):
     """
     Initialize Fortran microphysics global structures (ICEP, ICED).
 
@@ -483,17 +484,17 @@ def shallow_convection(
         Vertical computations limited to nkt+1-ktdia (default 1)
     osettadj : bool
         Logical to set convective adjustment time by user
-    ptadjs : float32
+    ptadjs : float64
         User defined adjustment time (seconds)
     och1conv : bool
         Include chemical tracer transport
     kch1 : int
         Number of chemical species
 
-    1D Input Arrays (float32, shape: nlon, Fortran-contiguous):
+    1D Input Arrays (float64, shape: nlon, Fortran-contiguous):
     ptkecls : TKE in the cloud layer (m2/s2)
 
-    2D Input Arrays (float32, shape: nlon × nlev, Fortran-contiguous):
+    2D Input Arrays (float64, shape: nlon × nlev, Fortran-contiguous):
     ppabst : grid scale pressure at time t (Pa)
     pzz : height of model layer (m)
     ptt : grid scale temperature at time t (K)
@@ -502,7 +503,7 @@ def shallow_convection(
     prit : grid scale cloud ice mixing ratio (kg/kg)
     pwt : grid scale vertical velocity (m/s)
 
-    2D Input/Output Arrays (float32, shape: nlon × nlev):
+    2D Input/Output Arrays (float64, shape: nlon × nlev):
     ptten : convective temperature tendency (K/s)
     prvten : convective water vapor tendency (1/s)
     prcten : convective cloud water tendency (1/s)
@@ -513,13 +514,13 @@ def shallow_convection(
     kcltop : cloud top level (0 if no convection)
     kclbas : cloud base level (0 if no convection)
 
-    3D Input/Output Arrays (float32, shape: nlon × nlev × kch1):
+    3D Input/Output Arrays (float64, shape: nlon × nlev × kch1):
     pch1 : grid scale chemical species
     pch1ten : species convective tendency (1/s)
 
     Notes
     -----
-    - All arrays must be float32 (np.float32) for single precision
+    - All arrays must be float64 (np.float64) for single precision
     - All arrays must be Fortran-contiguous (order='F')
     - Tendency and output arrays are modified in-place
 
@@ -530,8 +531,8 @@ def shallow_convection(
     >>>
     >>> # Initialize arrays (Fortran order, single precision)
     >>> nlon, nlev, kch1 = 10, 20, 1
-    >>> ptkecls = np.ones(nlon, dtype=np.float32, order='F') * 0.1
-    >>> ppabst = np.ones((nlon, nlev), dtype=np.float32, order='F') * 85000.0
+    >>> ptkecls = np.ones(nlon, dtype=np.float64, order='F') * 0.1
+    >>> ppabst = np.ones((nlon, nlev), dtype=np.float64, order='F') * 85000.0
     >>> # ... initialize other arrays ...
     >>>
     >>> # Call shallow_convection
