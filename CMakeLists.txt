@@ -29,10 +29,17 @@ if(HAVE_SINGLE_PRECISION)
 endif()
 
 #-----------------------------------------------------------------------
-# Dependencies 
+# Dependencies
 #-----------------------------------------------------------------------
 
-ecbuild_find_package(NAME fiat REQUIRED)
+# Fetch fiat from GitHub
+include(FetchContent)
+FetchContent_Declare(
+  fiat
+  GIT_REPOSITORY https://github.com/ecmwf-ifs/fiat
+  GIT_TAG        main
+)
+FetchContent_MakeAvailable(fiat)
 
 #-----------------------------------------------------------------------
 # Source structure
