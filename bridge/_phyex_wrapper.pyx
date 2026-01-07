@@ -46,6 +46,34 @@ cdef extern:
         double *ptr_pch1ten
     )
 
+    void c_turb(
+        int nlon,
+        int nlev,
+        int krr,
+        double ptstep,
+        double *ptr_pdxx,
+        double *ptr_pdyy,
+        double *ptr_pdzz,
+        double *ptr_pzz,
+        double *ptr_prhodj,
+        double *ptr_pthvref,
+        double *ptr_psfth,
+        double *ptr_psfrv,
+        double *ptr_ppabst,
+        double *ptr_put,
+        double *ptr_pvt,
+        double *ptr_pwt,
+        double *ptr_ptket,
+        double *ptr_pthlt,
+        double *ptr_prt,
+        double *ptr_prus,
+        double *ptr_prvs,
+        double *ptr_prws,
+        double *ptr_prthls,
+        double *ptr_prrs,
+        double *ptr_prtkes
+    )
+
     void c_ice_adjust(
         int nlon,
         int nlev, 
@@ -604,6 +632,158 @@ def shallow_convection(
         &ptten[0, 0], &prvten[0, 0], &prcten[0, 0], &priten[0, 0],
         &kcltop[0], &kclbas[0], &pumf[0, 0],
         &pch1[0, 0, 0], &pch1ten[0, 0, 0]
+    )
+
+    # Arrays are modified in-place, no return needed
+
+
+# Python-Callable Wrapper for TURB
+def turb(
+    # Scalar parameters
+    double ptstep,
+    int krr,
+    # 2D input arrays (Fortran-contiguous)
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] pdxx,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] pdyy,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] pdzz,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] pzz,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] prhodj,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] pthvref,
+    np.ndarray[DTYPE_t, ndim=1, mode="fortran"] psfth,
+    np.ndarray[DTYPE_t, ndim=1, mode="fortran"] psfrv,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] ppabst,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] put,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] pvt,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] pwt,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] ptket,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] pthlt,
+    np.ndarray[DTYPE_t, ndim=3, mode="fortran"] prt,
+    # Input/output arrays
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] prus,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] prvs,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] prws,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] prthls,
+    np.ndarray[DTYPE_t, ndim=3, mode="fortran"] prrs,
+    np.ndarray[DTYPE_t, ndim=2, mode="fortran"] prtkes
+):
+    """
+    Call the PHYEX TURB routine.
+
+    Computes turbulent source terms for momentum, temperature, moisture, and TKE.
+
+    Parameters
+    ----------
+    ptstep : float64
+        Time step (seconds)
+    krr : int
+        Number of moist variables
+
+    2D Input Arrays (all float64, shape: nlon × nlev, Fortran-contiguous):
+    pdxx, pdyy, pdzz : metric coefficients
+    pzz : physical height (m)
+    prhodj : dry density * Jacobian (kg/m³)
+    pthvref : reference virtual potential temperature (K)
+    ppabst : absolute pressure (Pa)
+    put, pvt, pwt : wind components (m/s)
+    ptket : turbulent kinetic energy (m²/s²)
+    pthlt : liquid potential temperature (K)
+
+    1D Input Arrays (float64, shape: nlon):
+    psfth : surface flux of potential temperature (K m/s)
+    psfrv : surface flux of water vapor (kg/kg m/s)
+
+    3D Input Arrays (float64, shape: nlon × nlev × krr):
+    prt : water mixing ratios (kg/kg)
+
+    2D Input/Output Arrays (float64, shape: nlon × nlev):
+    prus, prvs, prws : momentum source terms (m/s²)
+    prthls : potential temperature source term (K/s)
+    prtkes : TKE source term (m²/s³)
+
+    3D Input/Output Arrays (float64, shape: nlon × nlev × krr):
+    prrs : water mixing ratio source terms (1/s)
+
+    Notes
+    -----
+    - All arrays must be float64 (np.float64)
+    - All arrays must be Fortran-contiguous (order='F')
+    - Source term arrays are modified in-place
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from _phyex_wrapper import turb
+    >>>
+    >>> # Initialize arrays (Fortran order, float64)
+    >>> nlon, nlev, krr = 10, 20, 6
+    >>> ptstep = 60.0
+    >>> pdxx = np.ones((nlon, nlev), dtype=np.float64, order='F') * 1000.0
+    >>> # ... initialize other arrays ...
+    >>>
+    >>> # Call turb
+    >>> turb(
+    ...     ptstep=ptstep, krr=krr,
+    ...     pdxx=pdxx, pdyy=pdyy, pdzz=pdzz, pzz=pzz,
+    ...     prhodj=prhodj, pthvref=pthvref,
+    ...     psfth=psfth, psfrv=psfrv,
+    ...     ppabst=ppabst, put=put, pvt=pvt, pwt=pwt,
+    ...     ptket=ptket, pthlt=pthlt, prt=prt,
+    ...     prus=prus, prvs=prvs, prws=prws,
+    ...     prthls=prthls, prrs=prrs, prtkes=prtkes
+    ... )
+    """
+
+    # Get dimensions
+    cdef int nlon = pdxx.shape[0]
+    cdef int nlev = pdxx.shape[1]
+
+    # Validate 2D array shapes
+    cdef list arrays_2d = [
+        ('pdxx', pdxx), ('pdyy', pdyy), ('pdzz', pdzz), ('pzz', pzz),
+        ('prhodj', prhodj), ('pthvref', pthvref), ('ppabst', ppabst),
+        ('put', put), ('pvt', pvt), ('pwt', pwt), ('ptket', ptket),
+        ('pthlt', pthlt), ('prus', prus), ('prvs', prvs), ('prws', prws),
+        ('prthls', prthls), ('prtkes', prtkes)
+    ]
+
+    for name, arr in arrays_2d:
+        if arr.shape[0] != nlon or arr.shape[1] != nlev:
+            raise ValueError(
+                "{} shape mismatch: expected ({}, {}), got ({}, {})".format(
+                    name, nlon, nlev, arr.shape[0], arr.shape[1])
+            )
+
+    # Validate 1D array shapes
+    if psfth.shape[0] != nlon:
+        raise ValueError("psfth shape mismatch: expected ({},), got ({},)".format(
+            nlon, psfth.shape[0]))
+    if psfrv.shape[0] != nlon:
+        raise ValueError("psfrv shape mismatch: expected ({},), got ({},)".format(
+            nlon, psfrv.shape[0]))
+
+    # Validate 3D array shapes
+    if prt.shape[0] != nlon or prt.shape[1] != nlev or prt.shape[2] != krr:
+        raise ValueError(
+            "prt shape mismatch: expected ({}, {}, {}), got ({}, {}, {})".format(
+                nlon, nlev, krr, prt.shape[0], prt.shape[1], prt.shape[2])
+        )
+
+    if prrs.shape[0] != nlon or prrs.shape[1] != nlev or prrs.shape[2] != krr:
+        raise ValueError(
+            "prrs shape mismatch: expected ({}, {}, {}), got ({}, {}, {})".format(
+                nlon, nlev, krr, prrs.shape[0], prrs.shape[1], prrs.shape[2])
+        )
+
+    # Call the Fortran function through C bridge
+    c_turb(
+        nlon, nlev, krr, ptstep,
+        &pdxx[0, 0], &pdyy[0, 0], &pdzz[0, 0], &pzz[0, 0],
+        &prhodj[0, 0], &pthvref[0, 0],
+        &psfth[0], &psfrv[0],
+        &ppabst[0, 0], &put[0, 0], &pvt[0, 0], &pwt[0, 0],
+        &ptket[0, 0], &pthlt[0, 0], &prt[0, 0, 0],
+        &prus[0, 0], &prvs[0, 0], &prws[0, 0],
+        &prthls[0, 0], &prrs[0, 0, 0], &prtkes[0, 0]
     )
 
     # Arrays are modified in-place, no return needed
