@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -112,12 +112,16 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RG', 0, ZHOOK_HANDLE)
 !
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+#endif
+!
 !-------------------------------------------------------------------------------
 !
 !*       6.1    rain contact freezing
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PRIT(JL)>ICED%XRTMIN(4) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -145,6 +149,7 @@ DO JL=1, KSIZE
     PRICFRR(JL)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !
@@ -152,7 +157,7 @@ ENDDO
 !
 ! Wet and dry collection of rc and ri on graupel
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PRGT(JL)>ICED%XRTMIN(6) .AND. PRCT(JL)>ICED%XRTMIN(2) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -174,11 +179,12 @@ DO JL=1, KSIZE
     PRG_TEND(JL, IRIWETG)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 
 ! Wet and dry collection of rs on graupel (6.2.1)
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL = 1, KSIZE
   IF (PRST(JL)>ICED%XRTMIN(5) .AND. PRGT(JL)>ICED%XRTMIN(6) .AND. LDCOMPUTE(JL)) THEN
     GDRY(JL) = .TRUE.
@@ -192,6 +198,7 @@ DO JL = 1, KSIZE
     PRG_TEND(JL, IRSWETG)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 
 IF(.NOT. LDSOFT) THEN
@@ -239,7 +246,7 @@ ENDIF
 !*       6.2.6  accretion of raindrops on the graupeln
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL = 1, KSIZE
   IF (PRRT(JL)>ICED%XRTMIN(3) .AND. PRGT(JL)>ICED%XRTMIN(6) .AND. LDCOMPUTE(JL)) THEN
     GDRY(JL) = .TRUE.
@@ -248,6 +255,7 @@ DO JL = 1, KSIZE
     PRG_TEND(JL, IRRDRYG)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 IF(.NOT. LDSOFT) THEN
   !
@@ -273,16 +281,17 @@ IF(.NOT. LDSOFT) THEN
 ENDIF
 
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   ZRDRYG_INIT(JL)=PRG_TEND(JL, IRCDRYG)+PRG_TEND(JL, IRIDRYG)+ &
                  &PRG_TEND(JL, IRSDRYG)+PRG_TEND(JL, IRRDRYG)
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 
 !Freezing rate and growth mode
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PRGT(JL)>ICED%XRTMIN(6) .AND. LDCOMPUTE(JL)) THEN
     !Freezing rate
@@ -328,6 +337,7 @@ DO JL=1, KSIZE
     LLDRYG(JL)=.FALSE.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 
 ! Part of ZRWETG to be converted into hail
@@ -355,7 +365,7 @@ ELSE
 ENDIF
 
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   !Aggregated minus collected
   IF(LDWETG(JL)) THEN
@@ -383,12 +393,13 @@ DO JL=1, KSIZE
     PRSDRYG(JL)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       6.5    Melting of the graupeln
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PRGT(JL)>ICED%XRTMIN(6) .AND. PT(JL)>CST%XTT .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -410,6 +421,7 @@ DO JL=1, KSIZE
     PRGMLTR(JL)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RG', 1, ZHOOK_HANDLE)

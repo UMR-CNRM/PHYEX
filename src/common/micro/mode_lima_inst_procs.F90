@@ -33,6 +33,8 @@ CONTAINS
 !!    MODIFICATIONS
 !!    -------------
 !!      Original             15/03/2018
+!!      C. Barthe     01/2024 add several shapes for ice crystals (only IMLT)
+!!      C. Barthe     03/2024 add HONR for Ng
 !!
 !-------------------------------------------------------------------------------
 !

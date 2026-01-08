@@ -37,6 +37,7 @@ CONTAINS
 !  B. Vie      03/03/2020: use DTHRAD instead of dT/dt in Smax diagnostic computation
 !  B. Vie         03/2022: Add option for 1-moment pristine ice
 !  C. Barthe      06/2022: add dummy arguments (mass transfer rates) for cloud electrication 
+!  C. Barthe      01/2024: add several shapes for ice crystals
 !-------------------------------------------------------------------------------
 !
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
@@ -279,6 +280,9 @@ IF ( LIMAP%LNUCL .AND. LIMAP%NMOM_I>=2 .AND. .NOT.LIMAP%LMEYERS .AND. LIMAP%NMOD
       END DO
     END IF
   END IF
+  !
+  IF (ALLOCATED(Z_SHCI_HIND)) DEALLOCATE(Z_SHCI_HIND)
+  IF (ALLOCATED(Z_SHCI_HINC)) DEALLOCATE(Z_SHCI_HINC)
 END IF
 !
 !-------------------------------------------------------------------------------

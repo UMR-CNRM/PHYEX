@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1996-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1996-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -445,7 +445,7 @@ WHERE (PRCT(:,:,:)>XRTMIN(2) .AND. PCCT(:,:,:)>XCTMIN(2))
   ZWLBDC(:,:,:)  = ZWLBDC3(:,:,:)**XLBEXC
 END WHERE
 !
-IF (HCLOUD=='C2R2'.OR. HCLOUD=='C3R5' ) THEN
+IF (HCLOUD=='C2R2') THEN
   ZWLBDR3(:,:,:) = 1.E30
   ZWLBDR(:,:,:)  = 1.E10
   WHERE (PRRT(:,:,:)>XRTMIN(3) .AND. PCRT(:,:,:)>XCTMIN(3))
@@ -484,7 +484,7 @@ IF (ORAIN) THEN
 !  optimization by looking for locations where
 !  the microphysical fields are larger than a minimal value only !!!
 !
-  IF (HCLOUD=='C2R2'.OR. HCLOUD=='C3R5') THEN
+  IF (HCLOUD=='C2R2') THEN
     CALL C2R2_COALESCENCE
   ELSE ! KHKO
     CALL KHKO_COALESCENCE
@@ -1527,7 +1527,7 @@ ZW(:,:,:) = 0.0
 ZLV(:,:,:) = XLVTT + (XCPV-XCL)*(ZT(:,:,:)-XTT)   !!!latent heat of vaporization
 !
 GEVAP(:,:,:) = .FALSE.
-IF (HCLOUD=='C2R2'.OR. HCLOUD=='C3R5') THEN
+IF (HCLOUD=='C2R2') THEN
   GEVAP(IIB:IIE,IJB:IJE,IKB:IKE) =                              &
     PRRS(IIB:IIE,IJB:IJE,IKB:IKE)> 0.0 .AND.                    &
     PRVT(IIB:IIE,IJB:IJE,IKB:IKE)<ZRVSAT(IIB:IIE,IJB:IJE,IKB:IKE)
@@ -1587,7 +1587,7 @@ IF( IEVAP >= 1 ) THEN
 !
 !*       5.3  Compute the evaporation tendency
 !
-  IF (HCLOUD =='C2R2'.OR. HCLOUD=='C3R5') THEN
+  IF (HCLOUD =='C2R2') THEN
     ZZW2(:) = MIN( ZZW2(:) * ZZW3(:) * ZRRT(:) *        &
                 (X0EVAR*ZLBDR(:)**XEX0EVAR + X1EVAR*ZRHODREF(:)**XEX2EVAR* &
                  ZLBDR(:)**XEX1EVAR),ZRRS(:) )
@@ -1639,7 +1639,7 @@ IF( IEVAP >= 1 ) THEN
 !
 END IF
 
-IF (HCLOUD == 'C2R2'.OR. HCLOUD=='C3R5') THEN
+IF (HCLOUD == 'C2R2') THEN
 !*       5.5  Update Nr if:  80 microns < Dr < D_h
 !
   GEVAP(:,:,:) = PRRS(:,:,:)>ZRTMIN(3) .AND. PCRS(:,:,:)>ZCTMIN(3) .AND. &

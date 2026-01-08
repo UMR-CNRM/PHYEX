@@ -44,6 +44,7 @@ CONTAINS
 !  J. Wurtz       03/2022: new snow characteristics
 !  C. Barthe   03/06/2022: add sedimentation for electric charges
 !  C. Barthe   02/06/2023: add the Beard effect (electric field)
+!  C. Barthe   26/01/2024: add several ice crystal shapes
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS

@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -29,9 +29,12 @@ SUBROUTINE RAIN_ICE_NUCLEATION(KIB, KIE, KJB, KJE, KKTB, KKTE,KRR,PTSTEP,&
 use modd_budget,          only: lbudget_th, lbudget_rv, lbudget_ri, &
                                 NBUDGET_TH, NBUDGET_RV, NBUDGET_RI, &
                                 tbudgets
-USE MODD_CST,             only: XALPI, XALPW, XBETAI, XBETAW, XCI, XCL, XCPD, XCPV, XGAMI, XGAMW, &
-                                XLSTT, XMD, XMV, XP00, XRD, XTT
-USE MODD_RAIN_ICE_PARAM_n,  only: XALPHA1, XALPHA2, XBETA1, XBETA2, XMNU0, XNU10, XNU20
+USE MODD_CST,             only: CST_XALPI => XALPI , CST_XALPW => XALPW, CST_XBETAI => XBETAI, CST_XBETAW => XBETAW , &
+                                CST_XCI => XCI, CST_XCL => XCL, CST_XCPD => XCPD , &
+                                CST_XCPV => XCPV, CST_XGAMI => XGAMI, CST_XGAMW => XGAMW , &
+                                CST_XLSTT => XLSTT, CST_XMD => XMD, CST_XMV => XMV, CST_XP00 => XP00, CST_XRD => XRD, CST_XTT => XTT
+USE MODD_RAIN_ICE_PARAM_n,  only: PARAM_XALPHA1 => XALPHA1, PARAM_XALPHA2 => XALPHA2, PARAM_XBETA1 => XBETA1, &
+                                  PARAM_XBETA2 => XBETA2, PARAM_XMNU0 => XMNU0, PARAM_XNU10 => XNU10, PARAM_XNU20 => XNU20
 
 use mode_budget,          only: Budget_store_init, Budget_store_end
 use mode_mppdb
@@ -99,8 +102,37 @@ REAL,    DIMENSION(:,:,:), POINTER, CONTIGUOUS :: ZW      ! work array
 INTEGER :: JIU,JJU,JKU, JIJKU
 
 INTEGER :: JI,JJ,JK
+
+REAL :: XALPI, XALPW, XBETAI, XBETAW, XCI, XCL, XCPD, XCPV, XGAMI, XGAMW, &
+        XLSTT, XMD, XMV, XP00, XRD, XTT
+REAL :: XALPHA1, XALPHA2, XBETA1, XBETA2, XMNU0, XNU10, XNU20
 !
 !-------------------------------------------------------------------------------
+!
+XALPI = CST_XALPI
+XALPW = CST_XALPW
+XBETAI = CST_XBETAI
+XBETAW = CST_XBETAW
+XCI = CST_XCI
+XCL = CST_XCL
+XCPD = CST_XCPD
+XCPV = CST_XCPV
+XGAMI =  CST_XGAMI
+XGAMW = CST_XGAMW
+XLSTT = CST_XLSTT
+XMD = CST_XMD
+XMV = CST_XMV
+XP00 = CST_XP00
+XRD = CST_XRD
+XTT = CST_XTT
+!
+XALPHA1 = PARAM_XALPHA1
+XALPHA2 = PARAM_XALPHA2
+XBETA1 = PARAM_XBETA1
+XBETA2 = PARAM_XBETA2
+XMNU0 = PARAM_XMNU0
+XNU10 = PARAM_XNU10
+XNU20 = PARAM_XNU20
 !
 ! IN variables
 !
@@ -310,6 +342,7 @@ IF( INEGT >= 1 ) THEN
     !$mnh_do_concurrent ( JL=1:INEGT )
       ZW(I1(JL), I2(JL), I3(JL)) = ZZW( JL )
     !$mnh_end_do()
+  !$mnh_expand(JI=1:JIU,JJ=1:JJU,JK=1:JKU)
     ZW(:,:,:) = MAX( ZW(:,:,:) ,0.0 ) *XMNU0/(PRHODREF(:,:,:)*PTSTEP)
     PRIS(:,:,:) = PRIS(:,:,:) + ZW(:,:,:)
     PRVS(:,:,:) = PRVS(:,:,:) - ZW(:,:,:)
@@ -323,6 +356,7 @@ IF( INEGT >= 1 ) THEN
                    + XCI*(PRIT(:,:,:)+PRST(:,:,:)+PRGT(:,:,:)))*PEXNREF(:,:,:) )
     END IF
                                  ! f(L_s*(RVHENI))
+  !$mnh_end_expand(JI=1:JIU,JJ=1:JJU,JK=1:JKU)
     !$mnh_do_concurrent ( JL=1:INEGT )
        ZZW(JL) = MAX( ZZW(JL)+ZCIT(JL),ZCIT(JL) )
     !$mnh_end_do()

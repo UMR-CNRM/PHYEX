@@ -66,6 +66,7 @@ CONTAINS
 !  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
 !  P. Wautelet 27/02/2020: bugfix: P_TH_HIND was not accumulated (will affect budgets) + add P_TH_HINC dummy argument
 !                          + change intent of *_HIND and *_HINC dummy arguments (INOUT->OUT)
+!  C. Barthe   25/01/2024: add several shapes for ice crystals
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS

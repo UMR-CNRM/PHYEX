@@ -252,14 +252,12 @@ END MODULE MODI_RESOLVED_CLOUD
 !!                                  modify the  correction of negative values
 !!      Modifications: June 08, 00  (J.-P. Pinty and J.-M. Cohard)
 !!                                  add the C2R2 scheme
-!!      Modifications: April 08, 01  (J.-P. Pinty)
-!!                                  add the C3R5 scheme
 !!      Modifications: July  21, 01  (J.-P. Pinty)
 !!                                  Add OHHONI and PW_ACT (for haze freezing)
 !!      Modifications: Sept 21, 01  (J.-P. Pinty)
 !!                                  Add XCONC_CCN limitation
 !!      Modifications: Nov  21, 02  (J.-P. Pinty)
-!!                                  Add ICE4 and C3R5 options
+!!                                  Add ICE4 option
 !!                     June, 2005   (V. Masson)
 !!                                  Technical change in interface for scalar arguments
 !!      Modifications : March, 2006 (O.Geoffroy)
@@ -292,6 +290,7 @@ END MODULE MODI_RESOLVED_CLOUD
 !  C. Barthe   20/03/2023: to avoid duplicating sources, cloud electrification is integrated in the microphysics
 !                          CELLS can be used with rain_ice with LRED=T and with LIMA with LPTSPLIT=T
 !                          the adjustement for cloud electricity is also externalized
+!  C. Barthe   24/01/2024: remove useless comments for ELEC
 !  A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !  A. Marcel Jan 2025: relaxation of the small fraction assumption
 !-------------------------------------------------------------------------------
@@ -308,7 +307,7 @@ USE MODD_ELEC_n,           ONLY: XEFIELDU, XEFIELDV, XEFIELDW
 USE MODD_ELEC_PARAM,       ONLY: ELEC_PARAM
 USE MODD_IO,               ONLY: TFILEDATA
 USE MODD_NEB_n,            ONLY: NEBN, CCONDENS, CLAMBDA3
-USE MODD_NSV,              ONLY: NSV, NSV_C1R3END, NSV_C2R2BEG, NSV_C2R2END,                       &
+USE MODD_NSV,              ONLY: NSV, NSV_C2R2BEG, NSV_C2R2END,                                    &
                                  NSV_LIMA_BEG, NSV_LIMA_END, NSV_LIMA_CCN_FREE, NSV_LIMA_IFN_FREE, &
                                  NSV_LIMA_NC, NSV_LIMA_NI, NSV_LIMA_NR,                            &
                                  NSV_AEREND, NSV_DSTEND, NSV_SLTEND,                               &
@@ -326,6 +325,11 @@ USE MODD_REF,              ONLY: XTHVREFZ
 USE MODD_SALT,             ONLY: LSALT
 USE MODD_TURB_n,           ONLY: TURBN
 !
+#ifndef MNH_OPENACC
+use mode_tools,                        only: Countjv
+#else
+use mode_tools,                        only: Countjv_device
+#endif
 USE MODE_ll
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 USE MODE_MPPDB
@@ -494,7 +498,10 @@ INTEGER :: IKU
 INTEGER :: IINFO_ll      ! return code of parallel routine
 INTEGER :: JK,JI,JL
 !
-!
+INTEGER, DIMENSION(SIZE(PEXNREF)) :: I1,I2,I3 ! Used to replace the COUNT
+LOGICAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3)) &
+                                  :: GMICRO ! Test where to compute all processes
+INTEGER   :: IMICRO ! Test where to compute all processes
 !
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZDZZ
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZEXN
@@ -564,9 +571,6 @@ LMFCONV=(SIZE(PMFCONV)/=0)
 IF (HCLOUD == 'C2R2' .OR. HCLOUD == 'KHKO') THEN
   ISVBEG = NSV_C2R2BEG
   ISVEND = NSV_C2R2END
-ELSE IF (HCLOUD == 'C3R5') THEN
-  ISVBEG = NSV_C2R2BEG
-  ISVEND = NSV_C1R3END
 ELSE IF (HCLOUD == 'LIMA') THEN
   ISVBEG = NSV_LIMA_BEG
   IF (.NOT. LDUST .AND. .NOT. LSALT .AND. .NOT. LORILAM) THEN
@@ -606,17 +610,14 @@ IF (HCLOUD == 'LIMA' .AND. ((LORILAM).OR.(LDUST).OR.(LSALT))) THEN
                 PZZ(IIB:IIE,IJB:IJE,IKB:IKE))
 
 ! LIMA : variable instant t --> tendance s
-  PSVS(:,:,:,NSV_LIMA_CCN_FREE)   = ZSVT(:,:,:,NSV_LIMA_CCN_FREE) * &
-                                    PRHODJ(:,:,:) / PTSTEP
-  PSVS(:,:,:,NSV_LIMA_CCN_FREE+1) = ZSVT(:,:,:,NSV_LIMA_CCN_FREE+1) * &
-                                    PRHODJ(:,:,:) / PTSTEP
-  PSVS(:,:,:,NSV_LIMA_CCN_FREE+2) = ZSVT(:,:,:,NSV_LIMA_CCN_FREE+2) * &
-                                    PRHODJ(:,:,:) / PTSTEP
-
-  PSVS(:,:,:,NSV_LIMA_IFN_FREE)   = ZSVT(:,:,:,NSV_LIMA_IFN_FREE) * &
-                                    PRHODJ(:,:,:) / PTSTEP
-  PSVS(:,:,:,NSV_LIMA_IFN_FREE+1) = ZSVT(:,:,:,NSV_LIMA_IFN_FREE+1) * &
-                                    PRHODJ(:,:,:) / PTSTEP
+  DO JSV = 1, NMOD_CCN
+    PSVS(:,:,:,NSV_LIMA_CCN_FREE+JSV-1) = ZSVT(:,:,:,NSV_LIMA_CCN_FREE+JSV-1) * &
+                                          PRHODJ(:,:,:) / PTSTEP
+  END DO
+  DO JSV = 1, NMOD_IFN
+    PSVS(:,:,:,NSV_LIMA_IFN_FREE+JSV-1) = ZSVT(:,:,:,NSV_LIMA_IFN_FREE+JSV-1) * &
+                                          PRHODJ(:,:,:) / PTSTEP
+  END DO
   !
   DEALLOCATE(ZSVT)
 END IF
@@ -635,7 +636,7 @@ DO JRR = 1,KRR
 END DO
 !$acc end kernels
 !
-IF (HCLOUD=='C2R2' .OR. HCLOUD=='C3R5' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
+IF (HCLOUD=='C2R2' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
 !$acc kernels
 !$acc loop independent
   DO JSV = ISVBEG, ISVEND
@@ -667,7 +668,7 @@ IF( GEAST  )  PRT(IIE+1:,:,:,2:) = 0.0
 IF( GSOUTH )  PRT(:,:IJB-1,:,2:) = 0.0
 IF( GNORTH )  PRT(:,IJE+1:,:,2:) = 0.0
 !
-IF (HCLOUD=='C2R2' .OR. HCLOUD=='C3R5' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
+IF (HCLOUD=='C2R2' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
 !$acc loop independent
 DO JI=1,JPHEXT
   PSVS(JI,     :,      :, ISVBEG:ISVEND) = PSVS(IIB, :,   :, ISVBEG:ISVEND)
@@ -695,8 +696,7 @@ PRS(:,:,IKE+1,:) = PRS(:,:,IKE,:)
 PRT(:,:,IKB-1,:) = PRT(:,:,IKB,:)
 PRT(:,:,IKE+1,:) = PRT(:,:,IKE,:)
 !
-IF (HCLOUD == 'C2R2' .OR. HCLOUD == 'C3R5' .OR. HCLOUD == 'KHKO' &
-                                           .OR. HCLOUD == 'LIMA') THEN
+IF (HCLOUD == 'C2R2' .OR. HCLOUD == 'KHKO' .OR. HCLOUD == 'LIMA') THEN
   PSVS(:,:,IKB-1,ISVBEG:ISVEND) = PSVS(:,:,IKB,ISVBEG:ISVEND)
   PSVS(:,:,IKE+1,ISVBEG:ISVEND) = PSVS(:,:,IKE,ISVBEG:ISVEND)
   PSVT(:,:,IKB-1,ISVBEG:ISVEND) = PSVT(:,:,IKB,ISVBEG:ISVEND)
@@ -762,10 +762,7 @@ call Sources_neg_correct( hcloud, helec, 'NEGA', krr, ptstep, ppabst, ptht, prt,
 !*       4.     CLOUD ELECTRICITY
 !               -----------------
 !
-!++cb++ 01/06/23
-!IF (HELEC == 'ELE4') &
 IF (HELEC(1:3) == 'ELE') THEN 
-!--cb--
 !
 !*       4.1    Ion source from drift motion and cosmic rays
 !
@@ -1082,7 +1079,26 @@ SELECT CASE ( HCLOUD )
                             PSVS(:,:,:,NSV_ELECEND),                              &
                             PSEA, PTOWN                                           )
       ELSE
-        CALL RAIN_ICE_OLD (YLDIMPHYEX, OSEDIC, CSEDIM, HSUBG_AUCV, OWARM, 1, IKU, 1,&
+        !
+        !  optimization by looking for locations where
+        !  the microphysical fields are larger than a minimal value only !!!
+        !
+        !$acc kernels present_cr(GMICRO)
+        GMICRO(:,:,:) = .FALSE.
+        GMICRO(IIB:IIE,IJB:IJE,:) =                          &
+                PRT(IIB:IIE,IJB:IJE,:,2)>XRTMIN(2) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,3)>XRTMIN(3) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,4)>XRTMIN(4) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,5)>XRTMIN(5) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,6)>XRTMIN(6)
+        !$acc end kernels
+#ifndef MNH_OPENACC
+        IMICRO = COUNTJV( GMICRO(:,:,:),I1(:),I2(:),I3(:))
+#else
+        CALL COUNTJV_DEVICE(GMICRO(:,:,:),I1(:),I2(:),I3(:),IMICRO)
+#endif
+        CALL RAIN_ICE_OLD (YLDIMPHYEX, IMICRO, I1, I2, I3, GMICRO,                  &
+                      OSEDIC, CSEDIM, HSUBG_AUCV, OWARM, 1, IKU, 1,                 &
                       KSPLITR, PTSTEP, KRR,                                         &
                       ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,        &
                       PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                             &
@@ -1353,7 +1369,27 @@ SELECT CASE ( HCLOUD )
       DEALLOCATE(ZEFIELDW)
       !
     ELSE
-      CALL RAIN_ICE_OLD (YLDIMPHYEX, OSEDIC, CSEDIM, HSUBG_AUCV, OWARM, 1, IKU, 1,    &
+      !
+      !  optimization by looking for locations where
+      !  the microphysical fields are larger than a minimal value only !!!
+      !
+      !$acc kernels present_cr(GMICRO)
+      GMICRO(:,:,:) = .FALSE.
+      GMICRO(IIB:IIE,IJB:IJE,:) =                          &
+                PRT(IIB:IIE,IJB:IJE,:,2)>XRTMIN(2) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,3)>XRTMIN(3) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,4)>XRTMIN(4) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,5)>XRTMIN(5) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,6)>XRTMIN(6) .OR. &
+                PRT(IIB:IIE,IJB:IJE,:,7)>XRTMIN(7)
+      !$acc end kernels
+#ifndef MNH_OPENACC
+        IMICRO = COUNTJV( GMICRO(:,:,:),I1(:),I2(:),I3(:))
+#else
+        CALL COUNTJV_DEVICE(GMICRO(:,:,:),I1(:),I2(:),I3(:),IMICRO)
+#endif
+      CALL RAIN_ICE_OLD (YLDIMPHYEX, IMICRO, I1, I2, I3, GMICRO,        &
+                    OSEDIC, CSEDIM, HSUBG_AUCV, OWARM, 1, IKU, 1,         &
                     KSPLITR, PTSTEP, KRR,                                 &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                     PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                     &
@@ -1611,7 +1647,7 @@ DO JRR = 1,KRR
   PRS(:,:,:,JRR)  = PRS(:,:,:,JRR) * PRHODJ(:,:,:)
 END DO
 !
-IF (HCLOUD=='C2R2' .OR. HCLOUD=='C3R5' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
+IF (HCLOUD=='C2R2' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') THEN
   DO JSV = ISVBEG, ISVEND
     PSVS(:,:,:,JSV) = PSVS(:,:,:,JSV) * PRHODJ(:,:,:)
   ENDDO
@@ -1622,7 +1658,6 @@ IF (HELEC /= 'NONE') THEN
     PSVS(:,:,:,JSV) = PSVS(:,:,:,JSV) * PRHODJ(:,:,:)
   END DO
 !
-!++cb-- ce qui suit n'est plus present en version standard en 5-6 : pourquoi ?
 ! Note that the LiNOx Conc. (in mol/mol) is PSVS (:,::,NSV_LNOXBEG)
 ! but there is no need to *PRHODJ(:,:,:) as it is done implicitly
 ! during unit conversion in flash_geom.

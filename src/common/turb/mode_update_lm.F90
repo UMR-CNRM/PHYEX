@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2006-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2006-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -65,7 +65,8 @@ INTEGER             :: IIB      ! First physical index in x direction
 INTEGER             :: IJB      ! First physical index in y direction
 INTEGER             :: IIE      ! last  physical index in x direction
 INTEGER             :: IJE      ! last  physical index in y direction
-INTEGER             :: JI       ! loop index
+INTEGER             :: JI,JJ,JK    ! loop index
+INTEGER             :: JIU,JJU,JKU ! dime
 !
 LOGICAL                :: GNORTH, GSOUTH, GWEST, GEAST
 TYPE(LIST_ll), POINTER :: TZLM_ll   ! list of fields to exchange
@@ -81,6 +82,10 @@ IIB = D%NIB
 IIE = D%NIE
 IJB = D%NJB
 IJE = D%NJE
+JIU=D%NIT
+JJU=D%NJT
+JKU=D%NKT
+!
 NULLIFY(TZLM_ll)
 !
 GWEST  = ( HLBCX(1) /= 'CYCL' .AND. LWEST_ll() )
@@ -111,30 +116,42 @@ GNORTH = ( HLBCY(2) /= 'CYCL' .AND. LNORTH_ll() )
 
 IF ( GWEST ) THEN
   !$acc kernels async
-  PLM  (IIB-1,:,:) = PLM  (IIB,:,:)
-  PLEPS(IIB-1,:,:) = PLEPS(IIB,:,:)
+  DO JK=1,JKU 
+   DO JJ=1,JJU 
+  PLM(IIB-1,JJ,JK) = PLM(IIB,JJ,JK)
+  PLEPS(IIB-1,JJ,JK) = PLEPS(IIB,JJ,JK)
+   ENDDO
+  ENDDO
   !$acc end kernels
 END IF
 IF ( GEAST ) THEN
   !$acc kernels async
-  PLM  (IIE+1,:,:) = PLM  (IIE,:,:)
-  PLEPS(IIE+1,:,:) = PLEPS(IIE,:,:)
+  DO JK=1,JKU 
+   DO JJ=1,JJU 
+    PLM(IIE+1,JJ,JK) = PLM(IIE,JJ,JK)
+    PLEPS(IIE+1,JJ,JK) = PLEPS(IIE,JJ,JK)
+   ENDDO
+  ENDDO
   !$acc end kernels
 END IF
 IF ( GSOUTH ) THEN
   !$acc kernels async 
-  DO JI=1,SIZE(PLM,1)
-    PLM  (JI,IJB-1,:) = PLM  (JI,IJB,:)
-    PLEPS(JI,IJB-1,:) = PLEPS(JI,IJB,:)
-  END DO
+  DO JK=1,JKU 
+   DO JI=1,JIU 
+     PLM(JI,IJB-1,JK) = PLM(JI,IJB,JK)
+     PLEPS(JI,IJB-1,JK) = PLEPS(JI,IJB,JK)
+   ENDDO
+  ENDDO
   !$acc end kernels
 END IF
 IF ( GNORTH ) THEN
   !$acc kernels async
-  DO JI=1,SIZE(PLM,1)
-    PLM  (JI,IJE+1,:) = PLM  (JI,IJE,:)
-    PLEPS(JI,IJE+1,:) = PLEPS(JI,IJE,:)
- END DO
+  DO JK=1,JKU 
+   DO JI=1,JIU 
+    PLM(JI,IJE+1,JK) = PLM(JI,IJE,JK)
+    PLEPS(JI,IJE+1,JK) = PLEPS(JI,IJE,JK)
+   ENDDO
+  ENDDO
  !$acc end kernels
 END IF
 !$acc wait

@@ -323,13 +323,13 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       if [[ $commit == mesonh${separator}* ]]; then
         $prep_code $prepCodeOpts --renameFf --ilooprm -c $commit PHYEX #This commit is ready for inclusion
       else
-        $prep_code $prepCodeOpts --renameFf --ilooprm -c $commit $expand_options $subs -m mesonh PHYEX
+        $prep_code $prepCodeOpts --renameFf --ilooprm $expand_options -c $commit $subs -m mesonh PHYEX -- --removeExtraDOinMnhDoConcurrent
       fi
     else
       echo "Copy $fromdir"
       mkdir PHYEX
       scp -q -r $fromdir/src PHYEX/
-      $prep_code $prepCodeOpts --renameFf --ilooprm $expand_options $subs -m mesonh PHYEX
+      $prep_code $prepCodeOpts --renameFf --ilooprm $expand_options $subs -m mesonh PHYEX -- --removeExtraDOinMnhDoConcurrent
     fi
     rm -rf PHYEX/.git
     find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs

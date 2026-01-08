@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -296,7 +296,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !*      10.   < V'V'>
 !*      11.   < W'W'>
 ! 
-      CALL       TURB_HOR_DYN_CORR(D,TURBN,TLES,KSPLT, PTSTEP,         &
+      CALL       TURB_HOR_DYN_CORR(D,TURBN,TLES,KSPLT, PTSTEP,       &
                       KRR,KSV,OFLAT, O2D,                            &
                       TPFILE,                                        &
                       PK,PINV_PDZZ,                                  &

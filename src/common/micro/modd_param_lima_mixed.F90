@@ -17,6 +17,7 @@
 !!      C. Barthe            14/03/2022  add CIBU and RDSF
 !       J. Wurtz                03/2022: new snow characteristics
 !       M. Taufour              07/2022: add concentration for snow, graupel, hail
+!       I. Vongpaseut           01/2024: add dependance on temperature for RDSF
 !!
 !-------------------------------------------------------------------------------
 !

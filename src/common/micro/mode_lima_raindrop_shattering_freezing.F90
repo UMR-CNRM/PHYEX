@@ -25,6 +25,7 @@ CONTAINS
 !!    MODIFICATIONS
 !!    -------------
 !!      Original    04/2022  duplicate from original for LIMA_SPLIT
+!!    I. Vongapseut 01/2024  Add a dependance on temperature
 !
 !-------------------------------------------------------------------------------
 !

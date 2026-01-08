@@ -10,8 +10,6 @@ CONTAINS
   SUBROUTINE LIMA_DROPLETS_RIMING_SNOW (CST, LIMAP, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                               &
                                         PRHODREF, PT,                                           &
                                         PRCT, PCCT, PRST, PCST, PLBDC, PLBDS, PLVFACT, PLSFACT, &
-!++cb++
-!                                        P_TH_RIM, P_RC_RIM, P_CC_RIM, P_RS_RIM, P_CS_RIM, P_RG_RIM,       &
                                         P_TH_RIM, P_CC_RIM, P_CS_RIM,                           &
                                         P_RC_RIMSS, P_RC_RIMSG, P_RS_RIMCG,                     &
                                         P_RI_HMS, P_CI_HMS, P_RS_HMS                            )
@@ -72,16 +70,11 @@ REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDS   !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLVFACT ! 
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT ! 
 !
-!++cb++
-!REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RC_RIM
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_RIM
-!REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_RIM
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CS_RIM
-!REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RG_RIM
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RC_RIMSS
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RC_RIMSG
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_RIMCG
-!--cb--
 !
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_RIM
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RI_HMS
@@ -91,7 +84,7 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_HMS
 !*       0.2   Declarations of local variables :
 !
 REAL,    DIMENSION(SIZE(PRCT))  :: ZZW1, ZZW2, ZZW3, ZZW4, ZZW5
-REAL,    DIMENSION(SIZE(PRCT))  :: Z_RC_RIM, Z_RS_RIM, Z_RG_RIM    !++cb--
+REAL,    DIMENSION(SIZE(PRCT))  :: Z_RC_RIM, Z_RS_RIM, Z_RG_RIM
 !
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC2              ! Vector of indices
 REAL,    DIMENSION(SIZE(PRCT))  :: ZVEC1,ZVEC2,ZVEC1W ! Work vectors
@@ -145,7 +138,6 @@ DO II = 1, SIZE(PRCT)
     P_CC_RIM(II) = Z_RC_RIM(II) * (PCCT(II) / PRCT(II)) ! Lambda_c**3
     !
     ! Cloud droplets collected on small aggregates add to snow
-!      P_RS_RIM(II) = - P_RC_RIM(II) * ZZW1(II)
     Z_RS_RIM(II)   = -Z_RC_RIM(II) * ZZW1(II)
     P_RC_RIMSS(II) = Z_RC_RIM(II) * ZZW1(II)  ! < 0, loss of mass for rc
     !

@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -51,7 +51,7 @@ CONTAINS
 !
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_CST
-USE MODD_CTURB
+USE MODD_CTURB,          ONLY: CTURB_XCET => XCET
 USE MODD_PARAMETERS
 USE MODD_LES, ONLY: TLES_t
 !
@@ -101,10 +101,14 @@ REAL, DIMENSION(D%NIT,D%NJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZFLX
 !
 REAL :: ZTIME1, ZTIME2
+!
+REAL :: XCET
 ! ---------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
 !             ------------------------
+!
+XCET = CTURB_XCET
 !
 IKB = 1.+JPVEXT
 IKU = SIZE(PTKEM,3)

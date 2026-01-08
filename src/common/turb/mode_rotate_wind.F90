@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -138,8 +138,9 @@ IIE = IIU - 1
 IJE = IJU - 1
 IKB = 1+JPVEXT
 !
-!
-!$acc kernels
+!$acc kernels present(pdircosyw,zvint,zwfin,zcoefm,zufin,pdxx,pdircosxw) &
+!$acc present (zwint,zwground,zvfin,puslope,pdircoszw,zuint,psinslope,pw,pcosslope) &
+!$acc present (pdyy,pu,pv,pvslope,zwground,zuint,jloc,zwint,pdzz,iloc)
 !$mnh_expand_array(JI=1:IIU,JJ=1:IJU)
 PUSLOPE(:,:)=0.
 PVSLOPE(:,:)=0.
@@ -155,6 +156,7 @@ JLOC(:,:)=NINT(SIGN(1.,-PSINSLOPE(:,:)))
 !
 ! interpolation in x direction
 !
+!$acc loop collapse(2) independent
 DO JJ=1,IJU
   DO JI=IIB,IIE
     ZCOEFF(JI,JJ) =                                                  &
@@ -176,6 +178,7 @@ END DO
 !
 ! interpolation in y direction
 !
+!$acc loop collapse(2) independent
 DO JJ=IJB,IJE
   DO JI=IIB,IIE
     ZCOEFF(JI,JJ) =                                                     &
@@ -190,22 +193,20 @@ DO JJ=IJB,IJE
                    (1.-ZCOEFM(JI,JJ)) * ZUINT(JI,JJ+JLOC(JI,JJ))
     ZWFIN(JI,JJ) = ZCOEFM(JI,JJ)      * ZWINT(JI,JJ)                +    &
                    (1.-ZCOEFM(JI,JJ)) * ZWINT(JI,JJ+JLOC(JI,JJ))
-  END DO
-END DO
 !
 !*      3.    ROTATE THE WIND
 !             ---------------
 !
 !
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-    PUSLOPE(IIB:IIE,IJB:IJE) = PCOSSLOPE(IIB:IIE,IJB:IJE) * PDIRCOSZW(IIB:IIE,IJB:IJE) * ZUFIN(IIB:IIE,IJB:IJE) +   &
-                     PSINSLOPE(IIB:IIE,IJB:IJE) * PDIRCOSZW(IIB:IIE,IJB:IJE) * ZVFIN(IIB:IIE,IJB:IJE) +   &
-                            SQRT(1.-PDIRCOSZW(IIB:IIE,IJB:IJE)**2) * ZWFIN(IIB:IIE,IJB:IJE)
+    PUSLOPE(JI,JJ) = PCOSSLOPE(JI,JJ) * PDIRCOSZW(JI,JJ) * ZUFIN(JI,JJ) +   &
+                     PSINSLOPE(JI,JJ) * PDIRCOSZW(JI,JJ) * ZVFIN(JI,JJ) +   &
+                            SQRT(1.-PDIRCOSZW(JI,JJ)**2) * ZWFIN(JI,JJ)
     !              
-    PVSLOPE(IIB:IIE,IJB:IJE) =-PSINSLOPE(IIB:IIE,IJB:IJE)                    * ZUFIN(IIB:IIE,IJB:IJE) +   &
-                     PCOSSLOPE(IIB:IIE,IJB:IJE)                    * ZVFIN(IIB:IIE,IJB:IJE)
+    PVSLOPE(JI,JJ) =-PSINSLOPE(JI,JJ)                    * ZUFIN(JI,JJ) +   &
+                     PCOSSLOPE(JI,JJ)                    * ZVFIN(JI,JJ)
     !
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  END DO
+END DO
 !
 !$acc end kernels
 !
