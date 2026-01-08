@@ -116,34 +116,42 @@ GNORTH = ( HLBCY(2) /= 'CYCL' .AND. LNORTH_ll() )
 
 IF ( GWEST ) THEN
   !$acc kernels async
-  !$mnh_expand_array(JJ=1:JJU,JK=1:JKU)
-  PLM(IIB-1,:,:) = PLM(IIB,:,:)
-  PLEPS(IIB-1,:,:) = PLEPS(IIB,:,:)
-  !$mnh_end_expand_array(JJ=1:JJU,JK=1:JKU)
+  DO JK=1,JKU 
+   DO JJ=1,JJU 
+  PLM(IIB-1,JJ,JK) = PLM(IIB,JJ,JK)
+  PLEPS(IIB-1,JJ,JK) = PLEPS(IIB,JJ,JK)
+   ENDDO
+  ENDDO
   !$acc end kernels
 END IF
 IF ( GEAST ) THEN
   !$acc kernels async
-  !$mnh_expand_array(JJ=1:JJU,JK=1:JKU)
-  PLM(IIE+1,:,:) = PLM(IIE,:,:)
-  PLEPS(IIE+1,:,:) = PLEPS(IIE,:,:)
-  !$mnh_end_expand_array(JJ=1:JJU,JK=1:JKU)
+  DO JK=1,JKU 
+   DO JJ=1,JJU 
+    PLM(IIE+1,JJ,JK) = PLM(IIE,JJ,JK)
+    PLEPS(IIE+1,JJ,JK) = PLEPS(IIE,JJ,JK)
+   ENDDO
+  ENDDO
   !$acc end kernels
 END IF
 IF ( GSOUTH ) THEN
   !$acc kernels async 
-  !$mnh_expand_array(JI=1:JIU,JK=1:JKU)
-  PLM(:,IJB-1,:) = PLM(:,IJB,:)
-  PLEPS(:,IJB-1,:) = PLEPS(:,IJB,:)
-  !$mnh_end_expand_array(JI=1:JIU,JK=1:JKU)
+  DO JK=1,JKU 
+   DO JI=1,JIU 
+     PLM(JI,IJB-1,JK) = PLM(JI,IJB,JK)
+     PLEPS(JI,IJB-1,JK) = PLEPS(JI,IJB,JK)
+   ENDDO
+  ENDDO
   !$acc end kernels
 END IF
 IF ( GNORTH ) THEN
   !$acc kernels async
-  !$mnh_expand_array(JI=1:JIU,JK=1:JKU)
-  PLM(:,IJE+1,:) = PLM(:,IJE,:)
-  PLEPS(:,IJE+1,:) = PLEPS(:,IJE,:)
-  !$mnh_end_expand_array(JI=1:JIU,JK=1:JKU)
+  DO JK=1,JKU 
+   DO JI=1,JIU 
+    PLM(JI,IJE+1,JK) = PLM(JI,IJE,JK)
+    PLEPS(JI,IJE+1,JK) = PLEPS(JI,IJE,JK)
+   ENDDO
+  ENDDO
  !$acc end kernels
 END IF
 !$acc wait

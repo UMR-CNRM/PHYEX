@@ -309,7 +309,7 @@ ENDDO
 !$acc end kernels
 !
 !$acc kernels
-!$mnh_do_concurrent(JIJ = IIJB:IIJE , JK = IKTB:IKTE )
+!$mnh_do_concurrent(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
 DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
     !
