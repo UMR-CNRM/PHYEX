@@ -429,19 +429,21 @@ END IF
 !               in the geometrical set of (Lbda_g,Lbda_s) couplet use to
 !               tabulate the SDRYG-kernel
 !
-    ZVEC1(1:IGDRY) = MAX( 1.00001, MIN( REAL(NDRYLBDAG)-0.00001,           &
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
+    ZVEC1(1:IGDRY) = MAX( 1.00001, MIN( REAL(NDRYLBDAG)-0.00001,           &
                           XDRYINTP1G * LOG( ZVECLBDAG(1:IGDRY) ) + XDRYINTP2G ) )
 #else
+    ZVEC1(1:IGDRY) = MAX( 1.00001, MIN( REAL(NDRYLBDAG)-0.00001,           &
                           XDRYINTP1G * BR_LOG( ZVECLBDAG(1:IGDRY) ) + XDRYINTP2G ) )
 #endif
     IVEC1(1:IGDRY) = INT( ZVEC1(1:IGDRY) )
     ZVEC1(1:IGDRY) = ZVEC1(1:IGDRY) - REAL( IVEC1(1:IGDRY) )
 !
-    ZVEC2(1:IGDRY) = MAX( 1.00001, MIN( REAL(NDRYLBDAS)-0.00001,           &
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
+    ZVEC2(1:IGDRY) = MAX( 1.00001, MIN( REAL(NDRYLBDAS)-0.00001,           &
                           XDRYINTP1S * LOG( ZVECLBDAS(1:IGDRY) ) + XDRYINTP2S ) )
 #else
+    ZVEC2(1:IGDRY) = MAX( 1.00001, MIN( REAL(NDRYLBDAS)-0.00001,           &
                           XDRYINTP1S * BR_LOG( ZVECLBDAS(1:IGDRY) ) + XDRYINTP2S ) )
 #endif
     IVEC2(1:IGDRY) = INT( ZVEC2(1:IGDRY) )
@@ -552,19 +554,21 @@ END IF
 !               in the geometrical set of (Lbda_g,Lbda_r) couplet use to
 !               tabulate the RDRYG-kernel
 !
-    ZVEC1(1:IGDRY) = MAX( 1.00001, MIN( REAL(NDRYLBDAG)-0.00001,           &
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
+    ZVEC1(1:IGDRY) = MAX( 1.00001, MIN( REAL(NDRYLBDAG)-0.00001,           &
                           XDRYINTP1G * LOG( ZVECLBDAG(1:IGDRY) ) + XDRYINTP2G ) )
 #else
+    ZVEC1(1:IGDRY) = MAX( 1.00001, MIN( REAL(NDRYLBDAG)-0.00001,           &
                           XDRYINTP1G * BR_LOG( ZVECLBDAG(1:IGDRY) ) + XDRYINTP2G ) )
 #endif
     IVEC1(1:IGDRY) = INT( ZVEC1(1:IGDRY) )
     ZVEC1(1:IGDRY) = ZVEC1(1:IGDRY) - REAL( IVEC1(1:IGDRY) )
 !
-    ZVEC2(1:IGDRY) = MAX( 1.00001, MIN( REAL(NDRYLBDAR)-0.00001,           &
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
+    ZVEC2(1:IGDRY) = MAX( 1.00001, MIN( REAL(NDRYLBDAR)-0.00001,           &
                           XDRYINTP1R * LOG( ZVECLBDAR(1:IGDRY) ) + XDRYINTP2R ) )
 #else
+    ZVEC2(1:IGDRY) = MAX( 1.00001, MIN( REAL(NDRYLBDAR)-0.00001,           &
                           XDRYINTP1R * BR_LOG( ZVECLBDAR(1:IGDRY) ) + XDRYINTP2R ) )
 #endif
     IVEC2(1:IGDRY) = INT( ZVEC2(1:IGDRY) )

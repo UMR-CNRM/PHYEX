@@ -167,14 +167,17 @@ subroutine Countjv1d_device(ltab, i1,ic)
 
   integer :: idx
   integer :: ji
+  logical :: ltest_fakeopenacc
 
 !$acc data present( ltab, i1 )
 
 #ifndef _FAKEOPENACC
-if ( (.not. mppdb_initialized ) .and. (mnh_idevice_type_current .ne. acc_device_host ) ) then
+ltest_fakeopenacc = mnh_idevice_type_current .ne. acc_device_host
 #else
-if (.not. mppdb_initialized ) then
+ltest_fakeopenacc = .true.
 #endif
+
+if ( (.not. mppdb_initialized ) .and. (ltest_fakeopenacc) ) then
 
 ic = 0
    
@@ -237,14 +240,17 @@ subroutine Countjv2d_device(ltab, i1, i2, ic)
 
   integer :: idx
   integer :: ji, jj
+  logical :: ltest_fakeopenacc
 
 !$acc data present( ltab, i1, i2 )
 
 #ifndef _FAKEOPENACC
-if ( (.not. mppdb_initialized ) .and. (mnh_idevice_type_current .ne. acc_device_host ) ) then
+ltest_fakeopenacc = mnh_idevice_type_current .ne. acc_device_host
 #else
-if (.not. mppdb_initialized ) then
+ltest_fakeopenacc = .true.
 #endif
+
+if ( (.not. mppdb_initialized ) .and. (ltest_fakeopenacc) ) then
 
 ic = 0   
      
@@ -314,14 +320,17 @@ subroutine Countjv3d_device(ltab, i1, i2, i3, ic)
 
   integer :: idx
   integer :: ji, jj, jk
+  logical :: ltest_fakeopenacc
 
 !$acc data present( ltab, i1, i2, i3 )
 
 #ifndef _FAKEOPENACC
-if ( (.not. mppdb_initialized ) .and. (mnh_idevice_type_current .ne. acc_device_host ) ) then
+ltest_fakeopenacc = mnh_idevice_type_current .ne. acc_device_host
 #else
-if (.not. mppdb_initialized ) then
+ltest_fakeopenacc = .true.
 #endif
+
+if ( (.not. mppdb_initialized ) .and. (ltest_fakeopenacc) ) then
 
 ic = 0
    

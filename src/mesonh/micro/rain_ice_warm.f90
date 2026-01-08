@@ -208,11 +208,12 @@ zzw(JL) = 0.
       GWORK(:) = PRCT(:)>XRTMIN(2) .AND. PRRT(:)>XRTMIN(3) .AND. PRCS(:)>0.0
      !$mnh_do_concurrent ( JL=1:JLU )
         IF ( GWORK(JL) )  THEN
-           ZZW(JL) = MIN( PRCS(JL), XFCACCR * PRCT(JL) &
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)       
+           ZZW(JL) = MIN( PRCS(JL), XFCACCR * PRCT(JL) &
                 * PLBDAR(JL)**XEXCACCR    &
                 * PRHODREF(JL)**(-XCEXVT) )
 #else
+           ZZW(JL) = MIN( PRCS(JL), XFCACCR * PRCT(JL) &
                 * BR_POW(PLBDAR(JL),XEXCACCR)  &
                 * BR_POW(PRHODREF(JL),-XCEXVT) )
 #endif
@@ -239,15 +240,17 @@ zzw(JL) = 0.
      !$mnh_do_concurrent ( JL=1:JLU )
         IF ( GWORK(JL) ) THEN
            !Accretion due to rain falling in high cloud content
-           ZZW(JL) = XFCACCR * ( PHLC_HRC(JL)/PHLC_HCF(JL) ) &
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)      
+           ZZW(JL) = XFCACCR * ( PHLC_HRC(JL)/PHLC_HCF(JL) ) &
                 * PLBDAR_RF(JL)**XEXCACCR         &
                 * PRHODREF(JL)**(-XCEXVT)         &
+                * PHLC_HCF(JL)
 #else
+           ZZW(JL) = XFCACCR * ( PHLC_HRC(JL)/PHLC_HCF(JL) ) &
                 * BR_POW(PLBDAR_RF(JL),XEXCACCR)         &
                 * BR_POW(PRHODREF(JL),-XCEXVT)           &
-#endif
                 * PHLC_HCF(JL)
+#endif
         END IF
      !$mnh_end_do() ! CONCURRENT
      GWORK(:) = PHLC_LRC(:)>XRTMIN(2) .AND. PRRT(:)>XRTMIN(3) .AND. PRCS(:)>0.0 .AND. PHLC_LCF(:)>0
@@ -318,14 +321,16 @@ zzw(JL) = 0.
              ! Undersaturation over water
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
              ZZW(JL) = ( XLVTT+(XCPV-XCL)*(PZT(JL)-XTT) )**2 / ( PKA(JL)*XRV*PZT(JL)**2 ) &
+                  + ( XRV*PZT(JL) ) / ( PDV(JL)*ZZW(JL) )
 #else
              ZZW(JL) = BR_P2( XLVTT+(XCPV-XCL)*(PZT(JL)-XTT) ) / ( PKA(JL)*XRV*BR_P2(PZT(JL)) ) &
-#endif
                   + ( XRV*PZT(JL) ) / ( PDV(JL)*ZZW(JL) )
-             ZZW(JL) = MIN( PRRS(JL),( MAX( 0.0,PUSW(JL) )/(PRHODREF(JL)*ZZW(JL)) ) *            &
+#endif
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)       
+             ZZW(JL) = MIN( PRRS(JL),( MAX( 0.0,PUSW(JL) )/(PRHODREF(JL)*ZZW(JL)) ) *            &
                   ( X0EVAR*PLBDAR(JL)**XEX0EVAR+X1EVAR*PCJ(JL)*PLBDAR(JL)**XEX1EVAR ) )
 #else
+             ZZW(JL) = MIN( PRRS(JL),( MAX( 0.0,PUSW(JL) )/(PRHODREF(JL)*ZZW(JL)) ) *            &
                   ( X0EVAR*BR_POW(PLBDAR(JL),XEX0EVAR)+X1EVAR*PCJ(JL)*BR_POW(PLBDAR(JL),XEX1EVAR) ) )
 #endif
              PRRS(JL) = PRRS(JL) - ZZW(JL)

@@ -297,10 +297,11 @@ if ( lbudget_rg ) call Budget_store_init( tbudgets(NBUDGET_RG), 'RIM', Unpack ( 
 !               set of Lbda_s used to tabulate some moments of the incomplete
 !               gamma function
 !
-    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN( REAL(NGAMINC)-0.00001,           &
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
+    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN( REAL(NGAMINC)-0.00001,           &
                           XRIMINTP1 * LOG( ZVECLBDAS(1:IGRIM) ) + XRIMINTP2 ) )
 #else
+    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN( REAL(NGAMINC)-0.00001,           &
                           XRIMINTP1 * BR_LOG( ZVECLBDAS(1:IGRIM) ) + XRIMINTP2 ) )
 #endif
     IVEC2(1:IGRIM) = INT( ZVEC2(1:IGRIM) )
@@ -488,19 +489,21 @@ if ( lbudget_rg ) call Budget_store_init( tbudgets(NBUDGET_RG), 'ACC', Unpack ( 
 !               in the geometrical set of (Lbda_s,Lbda_r) couplet use to
 !               tabulate the RACCSS-kernel
 !
-    ZVEC1(1:IGACC) = MAX( 1.00001, MIN( REAL(NACCLBDAS)-0.00001,           &
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
+    ZVEC1(1:IGACC) = MAX( 1.00001, MIN( REAL(NACCLBDAS)-0.00001,           &
                           XACCINTP1S * LOG( ZVECLBDAS(1:IGACC) ) + XACCINTP2S ) )
 #else
+    ZVEC1(1:IGACC) = MAX( 1.00001, MIN( REAL(NACCLBDAS)-0.00001,           &
                           XACCINTP1S * BR_LOG( ZVECLBDAS(1:IGACC) ) + XACCINTP2S ) )
 #endif
     IVEC1(1:IGACC) = INT( ZVEC1(1:IGACC) )
     ZVEC1(1:IGACC) = ZVEC1(1:IGACC) - REAL( IVEC1(1:IGACC) )
 !
-    ZVEC2(1:IGACC) = MAX( 1.00001, MIN( REAL(NACCLBDAR)-0.00001,           &
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
+    ZVEC2(1:IGACC) = MAX( 1.00001, MIN( REAL(NACCLBDAR)-0.00001,           &
                           XACCINTP1R * LOG( ZVECLBDAR(1:IGACC) ) + XACCINTP2R ) )
 #else
+    ZVEC2(1:IGACC) = MAX( 1.00001, MIN( REAL(NACCLBDAR)-0.00001,           &
                           XACCINTP1R * BR_LOG( ZVECLBDAR(1:IGACC) ) + XACCINTP2R ) )
 #endif
     IVEC2(1:IGACC) = INT( ZVEC2(1:IGACC) )

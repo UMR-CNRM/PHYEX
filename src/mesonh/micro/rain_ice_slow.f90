@@ -119,6 +119,7 @@ XLSTT = CST_XLSTT
 XMNH_HUGE_12_LOG = CST_XMNH_HUGE_12_LOG
 XP00 = CST_XP00
 XRV =  CST_XRV
+XTT = CST_XTT
 !
 XCEXVT = DESCR_XCEXVT
 XBS = DESCR_XBS
@@ -215,10 +216,11 @@ CALL MNH_MEM_GET( zz_diff,  SIZE(PLSFACT) )
   GWORK(:) = PZT(:)<XTT-35.0 .AND. PRCT(:)>XRTMIN(2) .AND. PRCS(:)>0.
   !$mnh_do_concurrent( JL=1:JLU )
   IF ( GWORK(JL) ) THEN
-    ZZW(JL) = MIN( PRCS(JL),XHON*PRHODREF(JL)*PRCT(JL)       &
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
+    ZZW(JL) = MIN( PRCS(JL),XHON*PRHODREF(JL)*PRCT(JL)       &
                                  *EXP( MIN(XMNH_HUGE_12_LOG,XALPHA3*(PZT(JL)-XTT)-XBETA3) ) )
 #else
+    ZZW(JL) = MIN( PRCS(JL),XHON*PRHODREF(JL)*PRCT(JL)       &
                                  *BR_EXP(MIN(XMNH_HUGE_12_LOG, XALPHA3*(PZT(JL)-XTT)-XBETA3) ) )
 #endif
     PRIS(JL) = PRIS(JL) + ZZW(JL)
@@ -302,10 +304,11 @@ CALL MNH_MEM_GET( zz_diff,  SIZE(PLSFACT) )
   GWORK(:) = PRST(:)>0.0
   !$mnh_do_concurrent( JL=1:JLU )
     IF ( GWORK(JL) ) THEN
-      PLBDAS(JL)  = MIN( XLBDAS_MAX,                                           &
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
+      PLBDAS(JL)  = MIN( XLBDAS_MAX,                                           &
                          XLBS*( PRHODREF(JL)*MAX( PRST(JL),XRTMIN(5) ) )**XLBEXS )
 #else
+      PLBDAS(JL)  = MIN( XLBDAS_MAX,                                           &
                          XLBS*BR_POW( PRHODREF(JL)*MAX( PRST(JL),XRTMIN(5) ),XLBEXS ) )
 #endif
     ELSE
@@ -421,10 +424,11 @@ CALL MNH_MEM_GET( zz_diff,  SIZE(PLSFACT) )
   GWORK(:) = PRGT(:)>XRTMIN(6) .AND. PRGS(:)>0.0
   !$mnh_do_concurrent ( JL=1:JLU )
     IF ( GWORK(JL) ) THEN
-      ZZW(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
+      ZZW(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
                 ( X0DEPG*PLBDAG(JL)**XEX0DEPG + X1DEPG*PCJ(JL)*PLBDAG(JL)**XEX1DEPG )
 #else
+      ZZW(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
                 ( X0DEPG*BR_POW(PLBDAG(JL),XEX0DEPG) + X1DEPG*PCJ(JL)*BR_POW(PLBDAG(JL),XEX1DEPG) )
 #endif
       ZZW(JL) =   MIN( PRVS(JL),ZZW(JL)      )*(0.5+SIGN(0.5,ZZW(JL))) &
