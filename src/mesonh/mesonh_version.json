@@ -1,13 +1,13 @@
 {
-"refversion":"MNH-57X-dev-OPENACC-FFT-f314fd53",
+"refversion":"MNH-600-dev-473daaa2f",
 "testing": {
-            "007_16janvier/008_run2":"d4612ab",
-            "007_16janvier/008_run2_turb3D":"d4612ab",
-            "007_16janvier/008_run2_lredf":"d4612ab",
-            "COLD_BUBBLE/002_mesonh":"d4612ab",
-            "ARMLES/RUN":"d4612ab",
-            "COLD_BUBBLE_3D/002_mesonh":"d4612ab",
-            "OCEAN_LES/004_run2":"d4612ab",
-            "014_LIMA/002_mesonh":"d4612ab"
+            "007_16janvier/008_run2":"dc35279",
+            "007_16janvier/008_run2_turb3D":"dc35279",
+            "007_16janvier/008_run2_lredf":"dc35279",
+            "COLD_BUBBLE/002_mesonh":"dc35279",
+            "ARMLES/RUN":"dc35279",
+            "COLD_BUBBLE_3D/002_mesonh":"dc35279",
+            "OCEAN_LES/004_run2":"dc35279",
+            "014_LIMA/002_mesonh":"dc35279"
            }
 }
