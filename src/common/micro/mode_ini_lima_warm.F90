@@ -110,10 +110,15 @@ XBR = 3.0
 XCR = 842.
 XDR = 0.8
 !
-XF0R = 0.780
-!Correction BVIE Pruppacher 1997 eq. 13-61
-!XF1R = 0.265
-XF1R = 0.308
+IF (NMOM_R.EQ.1) THEN
+   XF0R = 1.
+   XF1R = 0.26
+ELSE
+   XF0R = 0.780
+   !Correction BVIE Pruppacher 1997 eq. 13-61
+   !XF1R = 0.265
+   XF1R = 0.308
+END IF
 !
 !
 !------------------------------------------------------------------------------
@@ -411,7 +416,7 @@ XEX1EVAR = 2.0 - (XDR+1.0)*0.5
 XEX2EVAR = -0.5*XCEXVT
 !
 X0EVAR = (12.0)*XF0R*GAMMA_X0D(XNUR+1./XALPHAR)/GAMMA_X0D(XNUR+3./XALPHAR)
-X1EVAR = (12.0)*XF1R*((ZRHO00)**(XCEXVT)*(XCR/0.15E-4))**0.5*    &
+X1EVAR = (12.0)*XF1R*XCR**0.5*    &
            GAMMA_X0D(XNUR+(XDR+3.0)/(2.0*XALPHAR))/GAMMA_X0D(XNUR+3./XALPHAR)
 !
 XCEVAP = 0.86

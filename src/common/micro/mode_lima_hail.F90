@@ -173,7 +173,7 @@ ZZW3(:) = 0. ! RSWETH
 ZZW3N(:) = 0.! NSWETH
 ZZW4(:) = 0. ! RGWETH
 ZZW4N(:) = 0.! NGWETH
-ZZW5(:) = 0. ! RCWETH+RRWETH
+ZZW5(:) = 0. ! RRWETH
 ZZW6(:) = 0. ! RSWETH
 !
 ZRWETH(:) = 0.
@@ -347,12 +347,12 @@ WHERE( PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:) >LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:)
 END WHERE
 WHERE( PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:) >LIMAP%XCTMIN(6) .AND. PRRT(:)>LIMAP%XRTMIN(3) &
      .AND. PCRT(:) >LIMAP%XCTMIN(3) .AND. ODCOMPUTE(:) )
-   ! Mass of rain frozen by hail RRWETH
+   ! Mass of rain frozen by hail or shedded after droplet collection RRWETH
    ZZW5(:) = ZRWETH(:) - ZZW2(:) - ZZW3(:) - ZZW4(:) - ZZW1(:)
 END WHERE
 !
 ZZW(:) = 0.0
-WHERE( ODCOMPUTE(:) .AND. PT(:)<CST%XTT .AND. ZZW5(:)>0.0 ) 
+WHERE( ODCOMPUTE(:) .AND. PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:) >LIMAP%XCTMIN(6) .AND. ZZW1(:)+ZZW5(:)>0.) 
    P_RC_WETH(:) = - ZZW1(:)
    P_CC_WETH(:) = P_RC_WETH(:) * PCCT(:)/MAX(PRCT(:),LIMAP%XRTMIN(2))
    P_RR_WETH(:) = - ZZW5(:)

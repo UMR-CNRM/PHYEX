@@ -53,6 +53,7 @@ REAL    :: XTSTEP_TS              ! maximum time for the sub-time-step
 !
 ! 1.1 Cold scheme configuration
 !
+LOGICAL :: LICE3                  ! TRUE to mimic the ICE3 scheme
 LOGICAL :: LNUCL                  ! TRUE to enable ice nucleation
 LOGICAL :: LSEDI                  ! TRUE to enable pristine ice sedimentation
 LOGICAL :: LHHONI                 ! TRUE to enable freezing of haze particules
@@ -138,6 +139,12 @@ REAL      :: XNDEBRIS_CIBU              ! Number of ice crystal debris produced
 !
 REAL      :: XPSH_MAX_RDSF              ! shattering probability normal distribution maximum
 !
+! 1-m autoconversion
+LOGICAL :: LCRIAUTI     !< .T. to compute XACRIAUTI and XBCRIAUTI (from XCRIAUTI and XT0CRIAUTI);
+                        !! .F. to compute XT0CRIAUTI (from XCRIAUTI and XBCRIAUTI)
+REAL :: XT0CRIAUTI  !< Threshold temperature (???) for the ice->snow autoconversion threshold
+REAL :: XCRIAUTI, XACRIAUTI, XBCRIAUTI
+!
 !-------------------------------------------------------------------------------
 !
 !
@@ -188,10 +195,16 @@ CHARACTER(LEN=10), DIMENSION(JPLIMACCNMAX) :: HTYPE_CCN ! 'M' or 'C' CCN type
 REAL                  :: XFSOLUB_CCN,       & ! Fractionnal solubility of the CCN
                          XACTEMP_CCN,       & ! Expected temperature of CCN activation
                          XAERDIFF, XAERHEIGHT ! For the vertical gradient of aerosol distribution
+CHARACTER(LEN=4) :: CSUBG_PR_PDF     !< pdf for subgrid precipitation
+CHARACTER(LEN=4) :: CSUBG_AUCV_RC    !< type of subgrid rc->rr autoconv. method
+CHARACTER(LEN=4) :: CSUBG_AUCV_RI    !< type of subgrid ri->rs autoconv. method
 !
 ! Cloud droplet deposition
 !
 REAL :: XVDEPOC
+!
+! 1-m autoconversion threshold
+REAL :: XCRIAUTC
 !
 !-------------------------------------------------------------------------------
 !
@@ -245,6 +258,7 @@ TYPE(PARAM_LIMA_T), TARGET, SAVE :: PARAM_LIMA
 LOGICAL, POINTER :: LLIMA_DIAG => NULL(), &
                     LPTSPLIT => NULL(), &
                     LFEEDBACKT => NULL(), &
+                    LICE3 => NULL(), &
                     LNUCL => NULL(), &
                     LSEDI => NULL(), &
                     LHHONI => NULL(), &
@@ -268,6 +282,7 @@ LOGICAL, POINTER :: LLIMA_DIAG => NULL(), &
                     LCCN_HOM => NULL(), &
                     LSCAV => NULL(), &
                     LAERO_MASS => NULL(),&
+                    LCRIAUTI => NULL(), &
                     LSIGMOIDE_G => NULL(),&
                     LSIGMOIDE_NG => NULL()
 
@@ -314,6 +329,11 @@ REAL, POINTER :: XMRSTEP => NULL(), &
                  XACTEMP_CCN => NULL(), &
                  XAERDIFF => NULL(), &
                  XAERHEIGHT => NULL(), &
+                 XT0CRIAUTI => NULL(), &
+                 XCRIAUTI => NULL(), &
+                 XACRIAUTI => NULL(), &
+                 XBCRIAUTI => NULL(), &
+                 XCRIAUTC => NULL(), &
                  XVDEPOC => NULL(), &
                  XT0SCAV => NULL(), &
                  XTREF => NULL(), &
@@ -374,8 +394,11 @@ CHARACTER(LEN=8), POINTER :: CCCN_MODES => NULL()
 CHARACTER(LEN=3), POINTER :: HPARAM_CCN => NULL()
 CHARACTER(LEN=3), POINTER :: HINI_CCN => NULL()
 CHARACTER(LEN=10), DIMENSION(:), POINTER :: HTYPE_CCN
+CHARACTER(LEN=4),POINTER :: CSUBG_PR_PDF => NULL()
+CHARACTER(LEN=4),POINTER :: CSUBG_AUCV_RC=>NULL()
+CHARACTER(LEN=4),POINTER :: CSUBG_AUCV_RI=>NULL()
 
-NAMELIST/NAM_PARAM_LIMA/LNUCL, LSEDI, LHHONI, LMEYERS,                     &         
+NAMELIST/NAM_PARAM_LIMA/LICE3, LNUCL, LSEDI, LHHONI, LMEYERS,              &         
                         NMOM_I, NMOM_S, NMOM_G, NMOM_H,                    & 
                         NMOD_IFN, XIFN_CONC, LIFN_HOM,                     &
                         CIFN_SPECIES, CINT_MIXING, NMOD_IMM, NIND_SPECIE,  &
@@ -393,7 +416,9 @@ NAMELIST/NAM_PARAM_LIMA/LNUCL, LSEDI, LHHONI, LMEYERS,                     &
                         XFSOLUB_CCN, XACTEMP_CCN, XAERDIFF, XAERHEIGHT,    &                                         
                         LSCAV, LAERO_MASS, LDEPOC, XVDEPOC, LACTTKE,       &                                         
                         LPTSPLIT, LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS,&
-                        LSIGMOIDE_NG, LSIGMOIDE_G, XSIGMOIDE_G, XMVDMIN_G
+                        LSIGMOIDE_NG, LSIGMOIDE_G, XSIGMOIDE_G, XMVDMIN_G, &
+                        XCRIAUTC, XCRIAUTI, XACRIAUTI, XBCRIAUTI, LCRIAUTI, XT0CRIAUTI,&
+                        CSUBG_PR_PDF, CSUBG_AUCV_RC, CSUBG_AUCV_RI
 
 CONTAINS
 SUBROUTINE PARAM_LIMA_ASSOCIATE()
@@ -406,6 +431,7 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   LLIMA_DIAG         => PARAM_LIMA%LLIMA_DIAG          
   LPTSPLIT           => PARAM_LIMA%LPTSPLIT
   LFEEDBACKT         => PARAM_LIMA%LFEEDBACKT
+  LICE3              => PARAM_LIMA%LICE3
   LNUCL              => PARAM_LIMA%LNUCL
   LSEDI              => PARAM_LIMA%LSEDI
   LHHONI             => PARAM_LIMA%LHHONI
@@ -431,6 +457,7 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   LAERO_MASS         => PARAM_LIMA%LAERO_MASS
   LSIGMOIDE_G        => PARAM_LIMA%LSIGMOIDE_G
   LSIGMOIDE_NG       => PARAM_LIMA%LSIGMOIDE_NG
+  LCRIAUTI           => PARAM_LIMA%LCRIAUTI
 
   NMAXITER           => PARAM_LIMA%NMAXITER
   NMOM_I             => PARAM_LIMA%NMOM_I
@@ -474,6 +501,11 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   XACTEMP_CCN        => PARAM_LIMA%XACTEMP_CCN
   XAERDIFF           => PARAM_LIMA%XAERDIFF
   XAERHEIGHT         => PARAM_LIMA%XAERHEIGHT
+  XT0CRIAUTI         => PARAM_LIMA%XT0CRIAUTI
+  XCRIAUTI           => PARAM_LIMA%XCRIAUTI
+  XACRIAUTI          => PARAM_LIMA%XACRIAUTI
+  XBCRIAUTI          => PARAM_LIMA%XBCRIAUTI
+  XCRIAUTC           => PARAM_LIMA%XCRIAUTC
   XVDEPOC            => PARAM_LIMA%XVDEPOC
   XT0SCAV            => PARAM_LIMA%XT0SCAV
   XTREF              => PARAM_LIMA%XTREF
@@ -512,6 +544,9 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   HPARAM_CCN         => PARAM_LIMA%HPARAM_CCN
   HINI_CCN           => PARAM_LIMA%HINI_CCN
   HTYPE_CCN          => PARAM_LIMA%HTYPE_CCN
+  CSUBG_PR_PDF       => PARAM_LIMA%CSUBG_PR_PDF
+  CSUBG_AUCV_RC      => PARAM_LIMA%CSUBG_AUCV_RC
+  CSUBG_AUCV_RI      => PARAM_LIMA%CSUBG_AUCV_RI
 ENDIF
 IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_ASSOCIATE', 1, ZHOOK_HANDLE)
 END SUBROUTINE PARAM_LIMA_ASSOCIATE
@@ -691,6 +726,7 @@ IF(GLDEFAULTVAL) THEN
   !- To change the default value for a given application,                                                 
   !  an "IF(HPROGRAM=='...')" condition must be used.
 
+  LICE3=.FALSE.
   LNUCL=.TRUE.
   LSEDI=.TRUE.
   LHHONI = .FALSE.
@@ -767,6 +803,15 @@ IF(GLDEFAULTVAL) THEN
   LSIGMOIDE_NG = .FALSE.
   XSIGMOIDE_G = 1.E8
   XMVDMIN_G = 125.E-6
+  LCRIAUTI=.FALSE.
+  XCRIAUTC=0.5E-3
+  XCRIAUTI=0.2E-4 !  Revised value by Chaboureau et al. (2001)
+  XACRIAUTI=0.06
+  XBCRIAUTI=-3.5
+  XT0CRIAUTI=(LOG10(XCRIAUTI)-XBCRIAUTI)/0.06
+  CSUBG_PR_PDF='SIGM'
+  CSUBG_AUCV_RC='NONE'
+  CSUBG_AUCV_RI='NONE'
 ENDIF
 !
 !*      2. NAMELIST
@@ -775,15 +820,38 @@ ENDIF
 IF(GLREADNAM) THEN
   CALL POSNAM_PHY(TFILENAM, 'NAM_PARAM_LIMA', ODNEEDNAM, GLFOUND)
   IF(GLFOUND) READ(UNIT=TFILENAM%NLU, NML=NAM_PARAM_LIMA)
+  IF (LICE3) THEN
+     NMOM_C=1
+     NMOM_R=1
+     NMOM_I=1
+     NMOM_S=1
+     NMOM_G=1
+     NMOM_H=MIN(NMOM_H,1)
+     NMOD_CCN=0
+     NMOD_IFN=0
+     LMURAKAMI=.TRUE.
+     LKESSLERAC=.TRUE.
+     XALPHAR=1.
+     XNUR=1.
+  END IF
 ENDIF
 !
 !*      3. CHECKS
 !       ---------
 !
 IF(GLCHECK) THEN
-  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CPRISTINE_ICE_LIMA', CPRISTINE_ICE_LIMA, &
-                                  'PLAT', 'COLU', 'BURO', 'POIR', &
-                                  'YPLA', 'YCOL', 'YBUR','YDRO', 'YHCO', 'YHBU')
+  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CSUBG_PR_PDF', CSUBG_PR_PDF, 'SIGM', 'HLCRECTPD', 'HLCTRIANGPDF', &
+                                                                'HLCQUADRAPDF', 'HLCISOTRIPDF')
+  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CSUBG_AUCV_RC', CSUBG_AUCV_RC, 'PDF ', 'CLFR', 'NONE', 'ADJU', 'SIGM')
+  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CSUBG_AUCV_RI', CSUBG_AUCV_RI, 'NONE', 'CLFR', 'ADJU')
+  IF (LICE3) THEN
+    CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CPRISTINE_ICE_LIMA', CPRISTINE_ICE_LIMA, &
+         'PLAT', 'COLU', 'BURO')
+  ELSE
+    CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CPRISTINE_ICE_LIMA', CPRISTINE_ICE_LIMA, &
+         'PLAT', 'COLU', 'BURO', 'POIR', &
+         'YPLA', 'YCOL', 'YBUR','YDRO', 'YHCO', 'YHBU')
+  END IF
   IF (LCRYSTAL_SHAPE) THEN
     DO ISH = 1, NNB_CRYSTAL_SHAPE
       CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'HTYPE_CRYSTAL_SHAPE', HTYPE_CRYSTAL_SHAPE(ISH), &
