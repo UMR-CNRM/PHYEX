@@ -167,11 +167,11 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;LIMA_ICE_SELF_COLLECTION&#39;</span>, 0, zhook_handle)</div>
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>zone(:) = 1.</div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>p_ci_isc(:)      = 0.</div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>p_shci_isc(:,:)  = 0.</div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>p_shri_iscs(:)   = 0.</div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>p_shci_iscs(:,:) = 0.</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="comment">!</span></div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="keywordflow">IF</span> (limap%LCRYSTAL_SHAPE) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="comment">!</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="keywordflow">IF</span> (limap%LCRYSTAL_SHAPE) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>p_shci_isc(:,:)  = 0.</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>p_shri_iscs(:)   = 0.</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>p_shci_iscs(:,:) = 0.</div>
 <div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="comment">!</span></div>
 <div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="comment">!</span></div>
 <div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="comment">!*       1.1    Plate + Plate / Column + Column / Droxtal + Droxtal --&gt; Bullet-rosette</span></div>

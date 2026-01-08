@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:ab9039208ab8fb8cb069fc8fb5479d712" id="r_ab9039208ab8fb8cb069fc8fb5479d712"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__rain__accr__snow.html#ab9039208ab8fb8cb069fc8fb5479d712">lima_rain_accr_snow</a> (cst, limap, limaw, limac, limam, ksize, ptstep, odcompute, prhodref, pt, prrt, pcrt, prst, pcst, plbdr, plbds, plvfact, plsfact, p_th_acc, p_cr_acc, p_cs_acc, p_rr_accss, p_rr_accsg, p_rs_accrg)</td></tr>
-<tr class="separator:ab9039208ab8fb8cb069fc8fb5479d712"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aebd130e1f7f2134ea29981b2c83eb7a1" id="r_aebd130e1f7f2134ea29981b2c83eb7a1"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__lima__rain__accr__snow.html#aebd130e1f7f2134ea29981b2c83eb7a1">lima_rain_accr_snow</a> (cst, limap, limaw, limac, limam, ksize, ptstep, odcompute, prhodref, ppres, pt, prvt, prct, pcct, prrt, pcrt, prst, pcst, plbdc, plbdr, plbds, pcf1d, ppf1d, plvfact, plsfact, pdv, pka, pcj, priaggs, p_th_rim, p_cc_rim, p_cs_rim, p_rc_rimss, p_rc_rimsg, p_rs_rimcg, p_ri_hms, p_ci_hms, p_rs_hms, p_th_acc, p_cr_acc, p_cs_acc, p_rr_accss, p_rr_accsg, p_rs_accrg)</td></tr>
+<tr class="separator:aebd130e1f7f2134ea29981b2c83eb7a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="ab9039208ab8fb8cb069fc8fb5479d712" name="ab9039208ab8fb8cb069fc8fb5479d712"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab9039208ab8fb8cb069fc8fb5479d712">&#9670;&#160;</a></span>lima_rain_accr_snow()</h2>
+<a id="aebd130e1f7f2134ea29981b2c83eb7a1" name="aebd130e1f7f2134ea29981b2c83eb7a1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aebd130e1f7f2134ea29981b2c83eb7a1">&#9670;&#160;</a></span>lima_rain_accr_snow()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -146,7 +146,31 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>ppres</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>pt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>prvt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>prct</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>pcct</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -176,6 +200,12 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>plbdc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plbdr</em>, </td>
         </tr>
         <tr>
@@ -188,6 +218,18 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>pcf1d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>ppf1d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plvfact</em>, </td>
         </tr>
         <tr>
@@ -195,6 +237,84 @@ Functions/Subroutines</h2></td></tr>
           <td></td>
           <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
           <td class="paramname"><em>plsfact</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>pdv</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>pka</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>pcj</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>priaggs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
+          <td class="paramname"><em>p_th_rim</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
+          <td class="paramname"><em>p_cc_rim</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
+          <td class="paramname"><em>p_cs_rim</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
+          <td class="paramname"><em>p_rc_rimss</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
+          <td class="paramname"><em>p_rc_rimsg</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
+          <td class="paramname"><em>p_rs_rimcg</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
+          <td class="paramname"><em>p_ri_hms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
+          <td class="paramname"><em>p_ci_hms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(out)&#160;</td>
+          <td class="paramname"><em>p_rs_hms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -244,8 +364,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__lima__rain__accr__snow_ab9039208ab8fb8cb069fc8fb5479d712_cgraph.png" border="0" usemap="#anamespacemode__lima__rain__accr__snow_ab9039208ab8fb8cb069fc8fb5479d712_cgraph" alt=""/></div>
-<map name="anamespacemode__lima__rain__accr__snow_ab9039208ab8fb8cb069fc8fb5479d712_cgraph" id="anamespacemode__lima__rain__accr__snow_ab9039208ab8fb8cb069fc8fb5479d712_cgraph">
+<div class="center"><img src="namespacemode__lima__rain__accr__snow_aebd130e1f7f2134ea29981b2c83eb7a1_cgraph.png" border="0" usemap="#anamespacemode__lima__rain__accr__snow_aebd130e1f7f2134ea29981b2c83eb7a1_cgraph" alt=""/></div>
+<map name="anamespacemode__lima__rain__accr__snow_aebd130e1f7f2134ea29981b2c83eb7a1_cgraph" id="anamespacemode__lima__rain__accr__snow_aebd130e1f7f2134ea29981b2c83eb7a1_cgraph">
 <area shape="rect" title=" " alt="" coords="5,5,212,45"/>
 <area shape="rect" href="mode__lima__rain__accr__snow_8F90.html#a0918186b5bda5fc56669291113b8ec90" title=" " alt="" coords="260,13,387,38"/>
 <area shape="poly" title=" " alt="" coords="212,23,246,23,246,28,212,28"/>
@@ -254,12 +374,12 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__lima__rain__accr__snow_ab9039208ab8fb8cb069fc8fb5479d712_icgraph.png" border="0" usemap="#anamespacemode__lima__rain__accr__snow_ab9039208ab8fb8cb069fc8fb5479d712_icgraph" alt=""/></div>
-<map name="anamespacemode__lima__rain__accr__snow_ab9039208ab8fb8cb069fc8fb5479d712_icgraph" id="anamespacemode__lima__rain__accr__snow_ab9039208ab8fb8cb069fc8fb5479d712_icgraph">
+<div class="center"><img src="namespacemode__lima__rain__accr__snow_aebd130e1f7f2134ea29981b2c83eb7a1_icgraph.png" border="0" usemap="#anamespacemode__lima__rain__accr__snow_aebd130e1f7f2134ea29981b2c83eb7a1_icgraph" alt=""/></div>
+<map name="anamespacemode__lima__rain__accr__snow_aebd130e1f7f2134ea29981b2c83eb7a1_icgraph" id="anamespacemode__lima__rain__accr__snow_aebd130e1f7f2134ea29981b2c83eb7a1_icgraph">
 <area shape="rect" title=" " alt="" coords="325,5,532,45"/>
-<area shape="rect" href="namespacemode__lima__tendencies.html#acefa2d69ebd2194440988a2afd517425" title=" " alt="" coords="104,5,277,45"/>
+<area shape="rect" href="namespacemode__lima__tendencies.html#a979afc73321e0bb962caf6d004610f90" title=" " alt="" coords="104,5,277,45"/>
 <area shape="poly" title=" " alt="" coords="312,28,278,28,278,23,312,23"/>
-<area shape="rect" href="lima_8F90.html#a45fe64d21afbc6cace563fda83cb1e79" title=" " alt="" coords="5,13,56,38"/>
+<area shape="rect" href="lima_8F90.html#a44669a04dd97ef6c68aeb7803059fd3c" title=" " alt="" coords="5,13,56,38"/>
 <area shape="poly" title=" " alt="" coords="90,28,57,28,57,23,90,23"/>
 </map>
 </div>

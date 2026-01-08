@@ -190,69 +190,68 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="keywordflow">   END WHERE</span></div>
 <div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span><span class="comment">!</span></div>
 <div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span><span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (limap%NMOM_C.EQ.1 .AND. limap%NMOM_R.EQ.1) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>   gaccr(:) = prrt(:)&gt;limap%XRTMIN(3) .AND. pcrt(:)&gt;limap%XCTMIN(3) .AND. &amp;</div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>              prct(:)&gt;limap%XRTMIN(2) .AND. pcct(:)&gt;limap%XCTMIN(2)</div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>   <span class="keywordflow">WHERE</span> ( gaccr(:) )</div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>      p_rc_accr(:) = - limaw%XFCACCR * prct(:)    &amp;</div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>                   * plbdr(:)**limaw%XEXCACCR     &amp;</div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>                   * prhodref(:)**(-limap%XCEXVT)</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="keywordflow">   END WHERE</span></div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span><span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="comment">!</span></div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>   <span class="keywordflow">WHERE</span>( prct(:)&gt;limap%XRTMIN(2) .AND. pcct(:)&gt;limap%XCTMIN(2) .AND. prrt(:)&gt;limap%XRTMIN(3) &amp;</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>        .AND. pcrt(:)&gt;limap%XCTMIN(3) .AND. odcompute(:) )</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>      zw2(:) = max( 0.0,limaw%XLAUTR*prhodref(:)*prct(:)*(limaw%XAUTO1/plbdc(:)**4-limaw%XLAUTR_THRESHOLD) ) <span class="comment">! L </span></div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>      zw4(:) = limaw%XACCR1/plbdr(:)</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="keywordflow">   END WHERE</span></div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="comment">!</span></div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>   gaccr(:) = odcompute(:)      .AND. &amp;</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>              prrt(:)&gt;limap%XRTMIN(3) .AND. &amp;</div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>              pcrt(:)&gt;limap%XCTMIN(3) .AND. &amp;</div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>              prct(:)&gt;limap%XRTMIN(2) .AND. &amp;</div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>              pcct(:)&gt;limap%XCTMIN(2) .AND. &amp;</div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>              (prrt(:)&gt;1.2*zw2(:)/prhodref(:) .OR. &amp;</div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>                zw4(:)&gt;=max(limaw%XACCR2,limaw%XACCR3/(limaw%XACCR4/plbdc(:)-limaw%XACCR5)) )</div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span><span class="comment">!</span></div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span><span class="comment">! Accretion for D&gt;100 10-6 m</span></div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>   <span class="keywordflow">WHERE</span>( gaccr(:).AND.(zw4(:)&gt;1.e-4) )</div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>      zw3(:) = min(plbdc3(:) / plbdr3(:),1.e15)</div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>      zw1(:) = ( pcct(:)*pcrt(:) / plbdc3(:) )*prhodref(:)</div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>      zw2(:) = zw1(:)*(limaw%XACCR_CLARGE1+limaw%XACCR_CLARGE2*zw3(:))</div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span><span class="comment">!</span></div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>      p_cc_accr(:) = - zw2(:)</div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span><span class="comment">!</span></div>
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>      zw1(:) = ( zw1(:) / plbdc3(:) )</div>
-<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>      zw2(:) = zw1(:)*(limaw%XACCR_RLARGE1+limaw%XACCR_RLARGE2*zw3(:))</div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span><span class="comment">!</span></div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>      p_rc_accr(:) = - zw2(:)</div>
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span><span class="keywordflow">   END WHERE</span></div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span><span class="comment">!</span></div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span><span class="comment">! Accretion for D&lt;100 10-6 m</span></div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>   <span class="keywordflow">WHERE</span>( gaccr(:).AND.(zw4(:)&lt;=1.e-4) )</div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>      zw3(:) = min(plbdc3(:) / plbdr3(:), 1.e8)</div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>      zw1(:) = ( pcct(:)*pcrt(:) / plbdc3(:) )*prhodref(:)</div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>      zw1(:) =  zw1(:)/plbdc3(:)</div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>   </div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>      zw3(:) = zw3(:)**2</div>
-<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>      zw2(:) = zw1(:)*(limaw%XACCR_CSMALL1+limaw%XACCR_CSMALL2*zw3(:))</div>
-<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span><span class="comment">!</span></div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>      p_cc_accr(:) = - zw2(:)</div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span><span class="comment">!</span></div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>      zw1(:) = zw1(:) / plbdc3(:)</div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>      zw2(:) = zw1(:)*(limaw%XACCR_RSMALL1+limaw%XACCR_RSMALL2*zw3(:))</div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span><span class="comment">!</span></div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>      p_rc_accr(:) = - zw2(:)</div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="keywordflow">   END WHERE</span></div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span><span class="comment">!</span></div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>   gaccr(:) = prrt(:)&gt;limap%XRTMIN(3) .AND. prct(:)&gt;limap%XRTMIN(2)</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>   <span class="keywordflow">WHERE</span> ( gaccr(:) )</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>      p_rc_accr(:) = - limaw%XFCACCR * prct(:)    &amp;</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>                   * plbdr(:)**limaw%XEXCACCR     &amp;</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>                   * prhodref(:)**(-limap%XCEXVT)</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span><span class="keywordflow">   END WHERE</span></div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span><span class="comment">!</span></div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>   <span class="keywordflow">WHERE</span>( prct(:)&gt;limap%XRTMIN(2) .AND. pcct(:)&gt;limap%XCTMIN(2) .AND. prrt(:)&gt;limap%XRTMIN(3) &amp;</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>        .AND. pcrt(:)&gt;limap%XCTMIN(3) .AND. odcompute(:) )</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>      zw2(:) = max( 0.0,limaw%XLAUTR*prhodref(:)*prct(:)*(limaw%XAUTO1/plbdc(:)**4-limaw%XLAUTR_THRESHOLD) ) <span class="comment">! L </span></div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>      zw4(:) = limaw%XACCR1/plbdr(:)</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="keywordflow">   END WHERE</span></div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="comment">!</span></div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>   gaccr(:) = odcompute(:)      .AND. &amp;</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>              prrt(:)&gt;limap%XRTMIN(3) .AND. &amp;</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>              pcrt(:)&gt;limap%XCTMIN(3) .AND. &amp;</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>              prct(:)&gt;limap%XRTMIN(2) .AND. &amp;</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>              pcct(:)&gt;limap%XCTMIN(2) .AND. &amp;</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>              (prrt(:)&gt;1.2*zw2(:)/prhodref(:) .OR. &amp;</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>                zw4(:)&gt;=max(limaw%XACCR2,limaw%XACCR3/(limaw%XACCR4/plbdc(:)-limaw%XACCR5)) )</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span><span class="comment">!</span></div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span><span class="comment">! Accretion for D&gt;100 10-6 m</span></div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>   <span class="keywordflow">WHERE</span>( gaccr(:).AND.(zw4(:)&gt;1.e-4) )</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>      zw3(:) = min(plbdc3(:) / plbdr3(:),1.e15)</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>      zw1(:) = ( pcct(:)*pcrt(:) / plbdc3(:) )*prhodref(:)</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>      zw2(:) = zw1(:)*(limaw%XACCR_CLARGE1+limaw%XACCR_CLARGE2*zw3(:))</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span><span class="comment">!</span></div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>      p_cc_accr(:) = - zw2(:)</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span><span class="comment">!</span></div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>      zw1(:) = ( zw1(:) / plbdc3(:) )</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>      zw2(:) = zw1(:)*(limaw%XACCR_RLARGE1+limaw%XACCR_RLARGE2*zw3(:))</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span><span class="comment">!</span></div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>      p_rc_accr(:) = - zw2(:)</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span><span class="keywordflow">   END WHERE</span></div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span><span class="comment">!</span></div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span><span class="comment">! Accretion for D&lt;100 10-6 m</span></div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>   <span class="keywordflow">WHERE</span>( gaccr(:).AND.(zw4(:)&lt;=1.e-4) )</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>      zw3(:) = min(plbdc3(:) / plbdr3(:), 1.e8)</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>      zw1(:) = ( pcct(:)*pcrt(:) / plbdc3(:) )*prhodref(:)</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>      zw1(:) =  zw1(:)/plbdc3(:)</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>   </div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>      zw3(:) = zw3(:)**2</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>      zw2(:) = zw1(:)*(limaw%XACCR_CSMALL1+limaw%XACCR_CSMALL2*zw3(:))</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span><span class="comment">!</span></div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>      p_cc_accr(:) = - zw2(:)</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span><span class="comment">!</span></div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>      zw1(:) = zw1(:) / plbdc3(:)</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>      zw2(:) = zw1(:)*(limaw%XACCR_RSMALL1+limaw%XACCR_RSMALL2*zw3(:))</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="comment">!</span></div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>      p_rc_accr(:) = - zw2(:)</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span><span class="keywordflow">   END WHERE</span></div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="comment">!</span></div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="comment">!</span></div>
 <div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span><span class="comment">!</span></div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span><span class="comment">!</span></div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span><span class="comment">!</span></div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;LIMA_DROPLETS_ACCRETION&#39;</span>, 1, zhook_handle)</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span><span class="comment">!</span></div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;LIMA_DROPLETS_ACCRETION&#39;</span>, 1, zhook_handle)</div>
 </div>
-<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__lima__droplets__accretion.html#a5de1ace8a71a722550a4c828a922b321">lima_droplets_accretion</a></div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__lima__droplets__accretion.html">mode_lima_droplets_accretion</a></div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__lima__droplets__accretion.html#a5de1ace8a71a722550a4c828a922b321">lima_droplets_accretion</a></div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__lima__droplets__accretion.html">mode_lima_droplets_accretion</a></div>
 <div class="ttc" id="anamespacemodd__param__lima__warm_html"><div class="ttname"><a href="namespacemodd__param__lima__warm.html">modd_param_lima_warm</a></div><div class="ttdef"><b>Definition</b> <a href="modd__param__lima__warm_8F90_source.html#l00007">modd_param_lima_warm.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__param__lima_html"><div class="ttname"><a href="namespacemodd__param__lima.html">modd_param_lima</a></div><div class="ttdef"><b>Definition</b> <a href="modd__param__lima_8F90_source.html#l00007">modd_param_lima.F90:7</a></div></div>
 <div class="ttc" id="anamespacemode__lima__droplets__accretion_html"><div class="ttname"><a href="namespacemode__lima__droplets__accretion.html">mode_lima_droplets_accretion</a></div><div class="ttdef"><b>Definition</b> <a href="mode__lima__droplets__accretion_8F90_source.html#l00006">mode_lima_droplets_accretion.F90:6</a></div></div>

@@ -258,7 +258,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>zzw3n(:) = 0.<span class="comment">! NSWETH</span></div>
 <div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>zzw4(:) = 0. <span class="comment">! RGWETH</span></div>
 <div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>zzw4n(:) = 0.<span class="comment">! NGWETH</span></div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>zzw5(:) = 0. <span class="comment">! RCWETH+RRWETH</span></div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>zzw5(:) = 0. <span class="comment">! RRWETH</span></div>
 <div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>zzw6(:) = 0. <span class="comment">! RSWETH</span></div>
 <div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span><span class="comment">!</span></div>
 <div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>zrweth(:) = 0.</div>
@@ -432,12 +432,12 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span><span class="keywordflow">END WHERE</span></div>
 <div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span><span class="keywordflow">WHERE</span>( prht(:)&gt;limap%XRTMIN(6) .AND. pcht(:) &gt;limap%XCTMIN(6) .AND. prrt(:)&gt;limap%XRTMIN(3) &amp;</div>
 <div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span>     .AND. pcrt(:) &gt;limap%XCTMIN(3) .AND. odcompute(:) )</div>
-<div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span>   <span class="comment">! Mass of rain frozen by hail RRWETH</span></div>
+<div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span>   <span class="comment">! Mass of rain frozen by hail or shedded after droplet collection RRWETH</span></div>
 <div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span>   zzw5(:) = zrweth(:) - zzw2(:) - zzw3(:) - zzw4(:) - zzw1(:)</div>
 <div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span><span class="keywordflow">END WHERE</span></div>
 <div class="line"><a id="l00353" name="l00353"></a><span class="lineno">  353</span><span class="comment">!</span></div>
 <div class="line"><a id="l00354" name="l00354"></a><span class="lineno">  354</span>zzw(:) = 0.0</div>
-<div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span><span class="keywordflow">WHERE</span>( odcompute(:) .AND. pt(:)&lt;cst%XTT .AND. zzw5(:)&gt;0.0 ) </div>
+<div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span><span class="keywordflow">WHERE</span>( odcompute(:) .AND. prht(:)&gt;limap%XRTMIN(6) .AND. pcht(:) &gt;limap%XCTMIN(6) .AND. zzw1(:)+zzw5(:)&gt;0.) </div>
 <div class="line"><a id="l00356" name="l00356"></a><span class="lineno">  356</span>   p_rc_weth(:) = - zzw1(:)</div>
 <div class="line"><a id="l00357" name="l00357"></a><span class="lineno">  357</span>   p_cc_weth(:) = p_rc_weth(:) * pcct(:)/max(prct(:),limap%XRTMIN(2))</div>
 <div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span>   p_rr_weth(:) = - zzw5(:)</div>

@@ -84,12 +84,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:aedede318ea55fea4785f60c637a69212" id="r_aedede318ea55fea4785f60c637a69212"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lima__adjust__split_8F90.html#aedede318ea55fea4785f60c637a69212">lima_adjust_split</a> (limap, limaw, tnsv, d, cst, nebn, turbn, buconf, tbudgets, kbudgets, krr, hcondens, hlambda3, kcarb, ksoa, ksp, odust, osalt, oorilam, osubg_cond, osigmas, ptstep, psigqsat, prhodref, prhodj, pexnref, psigs, omfconv, pmfconv, ppabst, pzz, odthrad, pdthrad, pw_nu, prt, prs, psvt, psvs, hactccn, paero, psolorg, pmi, pths, ocompute_src, psrcs, pcldfr, picefr, prc_mf, pri_mf, pcf_mf)</td></tr>
-<tr class="separator:aedede318ea55fea4785f60c637a69212"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f1efc31f2871b54a66aaa402f467e1e" id="r_a6f1efc31f2871b54a66aaa402f467e1e"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lima__adjust__split_8F90.html#a6f1efc31f2871b54a66aaa402f467e1e">lima_adjust_split</a> (limap, limaw, tnsv, d, cst, nebn, turbn, buconf, tbudgets, kbudgets, krr, hcondens, hlambda3, kcarb, ksoa, ksp, odust, osalt, oorilam, osubg_cond, osigmas, ptstep, psigqsat, prhodref, prhodj, pexnref, psigs, omfconv, pmfconv, ppabst, pzz, odthrad, pdthrad, pw_nu, prt, prs, psvt, psvs, hactccn, paero, psolorg, pmi, pths, ocompute_src, psrcs, pcldfr, picefr, prc_mf, pri_mf, pcf_mf, pice_cld_wgt, pweight_mf_cloud, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, phlc_hrc_mf, phlc_hcf_mf, phli_hri_mf, phli_hcf_mf)</td></tr>
+<tr class="separator:a6f1efc31f2871b54a66aaa402f467e1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="aedede318ea55fea4785f60c637a69212" name="aedede318ea55fea4785f60c637a69212"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aedede318ea55fea4785f60c637a69212">&#9670;&#160;</a></span>lima_adjust_split()</h2>
+<a id="a6f1efc31f2871b54a66aaa402f467e1e" name="a6f1efc31f2871b54a66aaa402f467e1e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6f1efc31f2871b54a66aaa402f467e1e">&#9670;&#160;</a></span>lima_adjust_split()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -392,7 +392,67 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>pcf_mf</em>&#160;</td>
+          <td class="paramname"><em>pcf_mf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>pice_cld_wgt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>pweight_mf_cloud</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out), optional&#160;</td>
+          <td class="paramname"><em>phlc_hrc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out), optional&#160;</td>
+          <td class="paramname"><em>phlc_hcf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out), optional&#160;</td>
+          <td class="paramname"><em>phli_hri</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out), optional&#160;</td>
+          <td class="paramname"><em>phli_hcf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>phlc_hrc_mf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>phlc_hcf_mf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>phli_hri_mf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>phli_hcf_mf</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -406,8 +466,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="lima__adjust__split_8F90_aedede318ea55fea4785f60c637a69212_cgraph.png" border="0" usemap="#alima__adjust__split_8F90_aedede318ea55fea4785f60c637a69212_cgraph" alt=""/></div>
-<map name="alima__adjust__split_8F90_aedede318ea55fea4785f60c637a69212_cgraph" id="alima__adjust__split_8F90_aedede318ea55fea4785f60c637a69212_cgraph">
+<div class="center"><img src="lima__adjust__split_8F90_a6f1efc31f2871b54a66aaa402f467e1e_cgraph.png" border="0" usemap="#alima__adjust__split_8F90_a6f1efc31f2871b54a66aaa402f467e1e_cgraph" alt=""/></div>
+<map name="alima__adjust__split_8F90_a6f1efc31f2871b54a66aaa402f467e1e_cgraph" id="alima__adjust__split_8F90_a6f1efc31f2871b54a66aaa402f467e1e_cgraph">
 <area shape="rect" title=" " alt="" coords="5,13,139,38"/>
 <area shape="rect" href="namespacemode__lima__ccn__activation.html#abc1c855d76ed81dd65e912638061e76a" title=" " alt="" coords="187,5,383,45"/>
 <area shape="poly" title=" " alt="" coords="139,23,173,23,173,28,139,28"/>

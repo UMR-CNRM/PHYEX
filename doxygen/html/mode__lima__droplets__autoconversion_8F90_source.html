@@ -163,7 +163,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>zw1(:) = 0.0</div>
 <div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="comment">!</span></div>
 <div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="keywordflow">IF</span> (limap%NMOM_C.EQ.1 .AND. limap%LKESSLERAC) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>   p_rc_auto(:) = - 1.e-3 * max( prct(:) - 0.5e-3 / prhodref(:), 0. )</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>   p_rc_auto(:) = - 1.e-3 * max( prct(:) - limap%XCRIAUTC / prhodref(:), 0. )</div>
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (limap%LKHKO) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="comment">!</span></div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="comment">!        1. Autoconversion of cloud droplets</span></div>

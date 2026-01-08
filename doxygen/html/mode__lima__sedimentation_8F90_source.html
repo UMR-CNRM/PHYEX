@@ -181,270 +181,252 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="comment">!</span></div>
 <div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="comment">!*       0.2   Declarations of local variables :</span></div>
 <div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="comment">!</span></div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="keywordtype">INTEGER</span> :: IK, IL, IN                     <span class="comment">! Loop index</span></div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="keywordtype">INTEGER</span> :: IK, IL, IN, JK, JIJ            <span class="comment">! Loop index</span></div>
 <div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="keywordtype">INTEGER</span> :: ISEDIM                         <span class="comment">! Case number of sedimentation</span></div>
 <div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="comment">!</span></div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="keywordtype">LOGICAL</span>, <span class="keywordtype">DIMENSION(D%NIJT, D%NKT)</span> :: GSEDIM      <span class="comment">! Test where to compute the SED processes</span></div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="keywordtype">LOGICAL</span> :: GSEDIM      <span class="comment">! Test where to compute the SED processes</span></div>
 <div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT, D%NKT)</span> :: ZW,       &amp; <span class="comment">! Work array</span></div>
 <div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>                                     ZWDT        <span class="comment">! Temperature change</span></div>
 <div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,0:D%NKT+1)</span> &amp;</div>
 <div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>                           :: ZWSEDR,   &amp; <span class="comment">! Sedimentation of MMR</span></div>
 <div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>                              ZWSEDC      <span class="comment">! Sedimentation of number conc.</span></div>
 <div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="comment">!</span></div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(:)</span>, <span class="keywordtype">ALLOCATABLE</span>         &amp;</div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>                           :: ZRS,      &amp; <span class="comment">! m.r. source</span></div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>                              ZCS,      &amp; <span class="comment">! conc. source</span></div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>                              ZRHODREF, &amp; <span class="comment">! RHO Dry REFerence</span></div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>                              ZPABST,   &amp; <span class="comment">! Pressure</span></div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>                              ZT,       &amp; <span class="comment">! Temperature</span></div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>                              ZZW,      &amp; <span class="comment">! Work array</span></div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>                              ZZX,      &amp; <span class="comment">! Work array</span></div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>                              ZZY,      &amp; <span class="comment">! Work array</span></div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>                              ZLBDA,    &amp; <span class="comment">! Slope parameter</span></div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>                              ZCC         <span class="comment">! Cunningham corrective term for droplets fall speed</span></div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="keywordtype">REAL</span>                       :: ZZW,      &amp; <span class="comment">! Work array</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>                              ZZX,      &amp; <span class="comment">! Work array</span></div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>                              ZZY,      &amp; <span class="comment">! Work array</span></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>                              ZLBDA,    &amp; <span class="comment">! Slope parameter</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>                              ZCC         <span class="comment">! Cunningham corrective term for droplets fall speed</span></div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="comment">!</span></div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span><span class="keywordtype">INTEGER</span> , <span class="keywordtype">DIMENSION(D%NIJT*D%NKT)</span> :: I1,I3 <span class="comment">! Indexes for PACK replacement</span></div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="comment">!</span></div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><span class="keywordtype">REAL</span>    :: ZC                             <span class="comment">! Cpl or Cpi</span></div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="keywordtype">INTEGER</span> :: IMOMENTS</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span><span class="keywordtype">REAL</span>(KIND=jphook) :: zhook_handle</div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="comment">!</span></div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="keywordtype">INTEGER</span> , <span class="keywordtype">DIMENSION(D%NIJT*D%NKT)</span> :: I1,I3 <span class="comment">! Indexes for PACK replacement</span></div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="comment">!</span></div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span><span class="keywordtype">REAL</span>    :: ZTSPLITG                       <span class="comment">! Small time step for rain sedimentation</span></div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span><span class="keywordtype">REAL</span>    :: ZC                             <span class="comment">! Cpl or Cpi</span></div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span><span class="keywordtype">INTEGER</span> :: IMOMENTS</div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span><span class="keywordtype">REAL</span>(KIND=jphook) :: zhook_handle</div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span><span class="comment">!</span></div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span><span class="comment">! Variables for cloud electricity</span></div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span><span class="keywordtype">REAL</span> :: ZCX, ZXX  <span class="comment">! C and x parameters for N-lambda relationship</span></div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(:)</span>,     <span class="keywordtype">ALLOCATABLE</span> :: ZQS, &amp;    <span class="comment">! Electric charge density source</span></div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>                                       ZZQ, &amp;    <span class="comment">! Work array</span></div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>                                       ZES       <span class="comment">! e in q-D relationship</span></div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(MERGE(D%NIJT, 0, OELEC), &amp;
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="comment">! Variables for cloud electricity</span></div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="keywordtype">REAL</span>                                :: ZZQ, &amp;    <span class="comment">! Work array</span></div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>                                       ZES       <span class="comment">! e in q-D relationship</span></div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(MERGE(D%NIJT, 0, OELEC), &amp;
                &amp;MERGE(D%NKT, 0, OELEC))</span> :: ZWSEDQ, &amp;   <span class="comment">! Sedimentation of electric charge density</span></div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>                                         &amp; ZLBDA3</div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span><span class="keywordtype">TYPE</span>(PARAM_LIMA_MIXED_T),<span class="keywordtype">INTENT(IN)</span>::LIMAM</div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima__cold_1_1param__lima__cold__t.html">param_lima_cold_t</a>),<span class="keywordtype">INTENT(IN)</span>::LIMAC</div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima__warm_1_1param__lima__warm__t.html">param_lima_warm_t</a>),<span class="keywordtype">INTENT(IN)</span>::LIMAW</div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>),<span class="keywordtype">INTENT(IN)</span>::LIMAP</div>
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT, D%NKT)</span>:: ZBEARDCOEFF <span class="comment">! effect of electrical forces on terminal fall speed</span></div>
-<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span><span class="comment">!</span></div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span><span class="comment">!</span></div>
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;LIMA_SEDIMENTATION&#39;</span>, 0, zhook_handle)</div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>imoments=kmoments</div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span><span class="comment">!</span></div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span><span class="comment">! Time splitting</span></div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span><span class="comment">!</span></div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>ztsplitg= ptstep / real(limap%NSPLITSED(kid))</div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span><span class="comment">!</span></div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>zwdt(:,:)=0.</div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>pinpr(:) = 0.</div>
-<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>pfpr(:,:) = 0.</div>
-<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>zwsedr(:,:) = 0.</div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>zwsedc(:,:) = 0.</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>                                         &amp; ZLBDA3</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span><span class="keywordtype">TYPE</span>(PARAM_LIMA_MIXED_T),<span class="keywordtype">INTENT(IN)</span>::LIMAM</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima__cold_1_1param__lima__cold__t.html">param_lima_cold_t</a>),<span class="keywordtype">INTENT(IN)</span>::LIMAC</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima__warm_1_1param__lima__warm__t.html">param_lima_warm_t</a>),<span class="keywordtype">INTENT(IN)</span>::LIMAW</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>),<span class="keywordtype">INTENT(IN)</span>::LIMAP</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT, D%NKT)</span>:: ZBEARDCOEFF <span class="comment">! effect of electrical forces on terminal fall speed</span></div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span><span class="comment">!</span></div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>       :: ZMAX_TSTEP1D <span class="comment">! Maximum CFL in column</span></div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span> :: ZMAX_TSTEP2D <span class="comment">! Maximum CFL in column</span></div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>       :: ZREMAINT   <span class="comment">! Remaining time until the timestep end</span></div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span><span class="keywordtype">LOGICAL</span> :: ZANYREMAINT</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span><span class="keywordtype">REAL</span>                            :: ZINVTSTEP</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span><span class="keywordtype">REAL</span>                            :: ZMRCHANGE</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span><span class="keywordtype">REAL</span>                            :: ZCCHANGE</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span><span class="keywordtype">REAL</span>                            :: ZQCHANGE</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span><span class="comment">!</span></div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;LIMA_SEDIMENTATION&#39;</span>, 0, zhook_handle)</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span><span class="comment">!</span></div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>zinvtstep=1./ptstep</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>imoments=kmoments</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>pinpr(:) = 0.</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>prs(d%NIJB:d%NIJE,:) = prs(d%NIJB:d%NIJE,:) * ptstep</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span><span class="keywordflow">IF</span> (kmoments==2) pcs(d%NIJB:d%NIJE,:) = pcs(d%NIJB:d%NIJE,:) * ptstep</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span><span class="keywordflow">IF</span> (oelec)       pqs(d%NIJB:d%NIJE,:) = pqs(d%NIJB:d%NIJE,:) * ptstep</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span><span class="keywordflow">DO</span> ik = d%NKTB , d%NKTE</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>   zw(d%NIJB:d%NIJE,ik)=1./(pdzz(d%NIJB:d%NIJE,ik)*prhodref(d%NIJB:d%NIJE,ik))</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span><span class="keywordflow">END DO</span></div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span><span class="keywordflow">IF</span> (hphase==<span class="stringliteral">&#39;L&#39;</span>) zc=cst%XCL</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span><span class="keywordflow">IF</span> (hphase==<span class="stringliteral">&#39;I&#39;</span>) zc=cst%XCI</div>
 <div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span><span class="comment">!</span></div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>prs(d%NIJB:d%NIJE,:) = prs(d%NIJB:d%NIJE,:) * ptstep</div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="keywordflow">IF</span> (kmoments==2) pcs(d%NIJB:d%NIJE,:) = pcs(d%NIJB:d%NIJE,:) * ptstep</div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span><span class="keywordflow">IF</span> (oelec)       pqs(d%NIJB:d%NIJE,:) = pqs(d%NIJB:d%NIJE,:) * ptstep</div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span><span class="keywordflow">DO</span> ik = d%NKTB , d%NKTE</div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>   zw(d%NIJB:d%NIJE,ik)=ztsplitg/pdzz(d%NIJB:d%NIJE,ik)</div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span><span class="keywordflow">END DO</span></div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="comment">! Time splitting</span></div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="comment">!</span></div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>zremaint(:) = 0.</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>zremaint(:) = ptstep</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>zanyremaint = .true.</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span><span class="keywordflow">DO</span> <span class="keywordflow">WHILE</span> (zanyremaint)</div>
 <div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="comment">!</span></div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span><span class="keywordflow">IF</span> (hphase==<span class="stringliteral">&#39;L&#39;</span>) zc=cst%XCL</div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span><span class="keywordflow">IF</span> (hphase==<span class="stringliteral">&#39;I&#39;</span>) zc=cst%XCI</div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span><span class="comment">!</span></div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span><span class="comment">! When pristine ice is 1-moment, nb concentration is parameterized following </span></div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span><span class="comment">! McFarquhar and Heymsfield (1997) for columns as in ICE3</span></div>
-<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="keywordflow">IF</span> (kid==4 .AND. imoments==1) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>   imoments=2</div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>   <span class="keywordflow">WHERE</span>(prs(d%NIJB:d%NIJE,:)&gt;0) pcs(d%NIJB:d%NIJE,:)=1/(4*cst%XPI*900.) * prs(d%NIJB:d%NIJE,:) * &amp;</div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>        max(0.05e6,-0.15319e6-0.021454e6*log(prhodref(d%NIJB:d%NIJE,:)*prs(d%NIJB:d%NIJE,:)))**3</div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>   zwdt(:,:)=0.</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>   pfpr(:,:) = 0.</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>   zwsedr(:,:) = 0.</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>   zwsedc(:,:) = 0.</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>   zwsedq(:,:) = 0.</div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>   zlbda3(:,:) = 0.</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>   <span class="comment">!</span></div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>      </div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>   <span class="keywordflow">DO</span> jk = d%NKTB,d%NKTE</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>      <span class="keywordflow">DO</span> jij = d%NIJB,d%NIJE</div>
 <div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span><span class="comment">!</span></div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span><span class="comment">! ################################</span></div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span><span class="comment">! Compute the sedimentation fluxes</span></div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span><span class="comment">! ################################</span></div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span><span class="comment">!</span></div>
-<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span><span class="keywordflow">DO</span> in = 1 ,  limap%NSPLITSED(kid)</div>
-<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>  <span class="comment">! Computation only where enough ice, snow, graupel or hail</span></div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>   gsedim(:,:) = .false.</div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>   gsedim(d%NIJB:d%NIJE,d%NKTB:d%NKTE) = prs(d%NIJB:d%NIJE,d%NKTB:d%NKTE)&gt;limap%XRTMIN(kid)</div>
-<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>   <span class="keywordflow">IF</span> (imoments==2)  gsedim(d%NIJB:d%NIJE,:) = gsedim(d%NIJB:d%NIJE,:) .AND. pcs(d%NIJB:d%NIJE,:)&gt;limap%XCTMIN(kid)</div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>   isedim = countjv( gsedim(:,:),i1(:),i3(:))</div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span><span class="comment">!</span></div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>   <span class="keywordflow">IF</span>( isedim &gt;= 1 ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span><span class="comment">!</span></div>
-<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>      <span class="keyword">ALLOCATE</span>(zrhodref(isedim))</div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>      <span class="keyword">ALLOCATE</span>(zpabst(isedim))</div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>      <span class="keyword">ALLOCATE</span>(zt(isedim))</div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>      <span class="keyword">ALLOCATE</span>(zrs(isedim))</div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>      <span class="keyword">ALLOCATE</span>(zcs(isedim))</div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>      <span class="keyword">ALLOCATE</span>(zlbda(isedim)) ; zlbda(:) = 1.e10</div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>      <span class="keyword">ALLOCATE</span>(zcc(isedim))   ; zcc(:) = 1.0</div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>      <span class="keyword">ALLOCATE</span>(zzw(isedim))   ; zzw(:) = 0.0</div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>      <span class="keyword">ALLOCATE</span>(zzx(isedim))   ; zzx(:) = 0.0</div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>      <span class="keyword">ALLOCATE</span>(zzy(isedim))   ; zzy(:) = 0.0</div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>      <span class="comment">!</span></div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>      <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>        zwsedq(:,:) = 0.</div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>        <span class="keyword">ALLOCATE</span>(zes(isedim)) ; zes(:) = 0.0</div>
-<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>        <span class="keyword">ALLOCATE</span>(zqs(isedim)) ; zqs(:) = 0.0</div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>        <span class="keyword">ALLOCATE</span>(zzq(isedim)) ; zzq(:) = 0.0</div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span><span class="keywordflow">      END IF</span>      </div>
-<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span><span class="comment">!</span></div>
-<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>      <span class="keywordflow">DO</span> il = 1,isedim</div>
-<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>         zrhodref(il) = prhodref(i1(il),i3(il))</div>
-<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>         zpabst(il) = ppabst(i1(il),i3(il))</div>
-<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>         zt(il) = pt(i1(il),i3(il))</div>
-<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>         zrs(il) = prs(i1(il),i3(il))</div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>         <span class="keywordflow">IF</span> (imoments==2) zcs(il) = pcs(i1(il),i3(il))</div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>         <span class="keywordflow">IF</span> (oelec)       zqs(il) = pqs(i1(il),i3(il))</div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>         <span class="keywordflow">IF</span> (limap%LCRYSTAL_SHAPE .AND. imoments == 2 .AND. kid == 4) &amp;</div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>           zlbda(il) = plbdai_shape(i1(il),i3(il))</div>
-<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span><span class="keywordflow">      END DO</span></div>
-<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span><span class="comment">!</span></div>
-<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span><span class="comment">! Compute lambda</span></div>
-<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>      <span class="keywordflow">IF</span> (kid == 5 .AND. limap%NMOM_S.EQ.1 .AND. limap%LSNOW_T) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>         zlbda(:) = 1.e10</div>
-<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>         <span class="keywordflow">WHERE</span>(zt(:)&gt;263.15 .AND. zrs(:)&gt;limap%XRTMIN(5))</div>
-<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>            zlbda(:) = max(min(limac%XLBDAS_MAX, 10**(14.554-0.0423*zt(:))),limac%XLBDAS_MIN)</div>
-<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span><span class="keywordflow">         END WHERE</span></div>
-<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>         <span class="keywordflow">WHERE</span>(zt(:)&lt;=263.15 .AND. zrs(:)&gt;limap%XRTMIN(5))</div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>            zlbda(:) = max(min(limac%XLBDAS_MAX, 10**(6.226-0.0106*zt(:))),limac%XLBDAS_MIN)</div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span><span class="keywordflow">         END WHERE</span></div>
-<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>         zlbda(:) = zlbda(:)*limac%XTRANS_MP_GAMMAS</div>
-<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>         zzw(:) = limap%XFSEDR(kid) * zrhodref(:)**(1.-limap%XCEXVT)*zrs(:)* &amp;</div>
-<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>              (1 + (limac%XFVELOS/zlbda(:))**limap%XALPHAS)**(-limap%XNUS-(limap%XD(kid)+limac%XBS)/limap%XALPHAS) &amp;</div>
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>              * zlbda(:)**(-limap%XD(kid))</div>
-<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>      <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 4 .AND. imoments==2 .AND. limap%LCRYSTAL_SHAPE) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>         zzy(:) = zrhodref(:)**(-limap%XCEXVT) * zlbda(:)**(-limac%XDI_SHAPE(kishape))</div>
-<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>         zzw(:) = limac%XFSEDRI_SHAPE(kishape) * zrs(:) * zzy(:) * zrhodref(:)</div>
-<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>         zzx(:) = limac%XFSEDCI_SHAPE(kishape) * zcs(:) * zzy(:) * zrhodref(:)</div>
-<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>      <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>         <span class="keywordflow">IF</span> (imoments==1) zlbda(:) = limap%XLB(kid) * ( zrhodref(:) * zrs(:) )**limap%XLBEX(kid)</div>
-<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>         <span class="keywordflow">IF</span> (imoments==2) zlbda(:) = ( limap%XLB(kid)*zcs(:) / zrs(:) )**limap%XLBEX(kid)</div>
-<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>         zzy(:) = zrhodref(:)**(-limap%XCEXVT) * zlbda(:)**(-limap%XD(kid))</div>
-<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>         <span class="keywordflow">IF</span> (limap%LSNOW_T .AND. kid==5) &amp;</div>
-<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>              zzy(:) = zzy(:) * (1 + (limac%XFVELOS/zlbda(:))**limap%XALPHAS)**(-limap%XNUS-(limap%XD(kid)+limac%XBS)/limap%XALPHAS)</div>
-<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>         zzw(:) = limap%XFSEDR(kid) * zrs(:) * zzy(:) * zrhodref(:)</div>
-<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span><span class="keywordflow">      END IF</span> <span class="comment">! Wurtz</span></div>
-<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span><span class="comment">!</span></div>
-<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>      <span class="keywordflow">IF</span> (kmoments==2 .AND. .NOT.(limap%LCRYSTAL_SHAPE .AND. kid==4)) &amp;</div>
-<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>         zzx(:) = limap%XFSEDC(kid) * zcs(:) * zzy(:) * zrhodref(:)</div>
-<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span> </div>
-<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>      <span class="keywordflow">IF</span> (kid==2) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>         <span class="comment">! mean cloud droplet diameter</span></div>
-<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>         zcc(:) = limaw%XGCC/zlbda(:)</div>
-<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>         <span class="comment">! correction factor for cloud droplet terminal fall speed</span></div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>         zcc(:) = 1.+1.26*6.6e-8*(101325./zpabst(:))*(zt(:)/293.15)/zcc(:)</div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>         zzw(:) = zcc(:) * zzw(:)</div>
-<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>         zzx(:) = zcc(:) * zzx(:)</div>
-<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span><span class="keywordflow">      END IF</span></div>
-<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span><span class="comment">!</span></div>
-<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span><span class="comment">! If the electrical scheme is activated, the electric field can impact the sedimentation</span></div>
-<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>      zbeardcoeff(:,:) = 1.0</div>
-<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>      <span class="keywordflow">IF</span> (oelec .AND. elecd%LSEDIM_BEARD) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>        zlbda3(:,:) = unpack( zlbda(:),mask=gsedim(:,:),field=0.0 )</div>
-<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>        <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__elec__beard__effect.html#a1294ed60c5f7fc904f054eb043ed03a5">elec_beard_effect</a>(d, cst, <span class="stringliteral">&#39;LIMA&#39;</span>, kid, gsedim, pt, prhodref, pthvrefzikb, &amp;</div>
-<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>                               prs, pqs, pefieldw, zlbda3, zbeardcoeff, &amp;</div>
-<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>                               limap=limap, limapc=limac, limapw=limaw, limapm=limam)</div>
-<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span><span class="keywordflow">      END IF</span></div>
-<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span><span class="comment">!</span></div>
-<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>      zwsedr(:,1:d%NKT) = unpack( zzw(:),mask=gsedim(:,:),field=0.0 )</div>
-<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>      zwsedr(d%NIJB:d%NIJE,d%NKTB:d%NKTE) = min( zwsedr(d%NIJB:d%NIJE,d%NKTB:d%NKTE) * zbeardcoeff(d%NIJB:d%NIJE,d%NKTB:d%NKTE), &amp;</div>
-<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>                                       prs(d%NIJB:d%NIJE,d%NKTB:d%NKTE) * prhodref(d%NIJB:d%NIJE,d%NKTB:d%NKTE) /      &amp;</div>
-<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>                                                                zw(d%NIJB:d%NIJE,d%NKTB:d%NKTE) )</div>
-<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>      <span class="keywordflow">IF</span> (kmoments==2) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>         zwsedc(:,1:d%NKT) = unpack( zzx(:),mask=gsedim(:,:),field=0.0 )</div>
-<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>         zwsedc(d%NIJB:d%NIJE,d%NKTB:d%NKTE) = min( zwsedc(d%NIJB:d%NIJE,d%NKTB:d%NKTE) * zbeardcoeff(d%NIJB:d%NIJE,d%NKTB:d%NKTE), &amp;</div>
-<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>                                          pcs(d%NIJB:d%NIJE,d%NKTB:d%NKTE) * prhodref(d%NIJB:d%NIJE,d%NKTB:d%NKTE) /      &amp;</div>
-<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>                                                                   zw(d%NIJB:d%NIJE,d%NKTB:d%NKTE) )</div>
-<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span><span class="keywordflow">      END IF</span></div>
-<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span><span class="comment">!</span></div>
-<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span><span class="comment">! Sedimentation of electric charges</span></div>
-<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>      <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>        <span class="comment">! compute e of the q-D relationship</span></div>
-<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>        <span class="keywordflow">IF</span> (imoments == 2) <span class="keywordflow">THEN</span>  <span class="comment">! 2-moment species</span></div>
-<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>          <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__elec__compute__ex.html#a521f2c8257d9921e8ef5c73aa92a8307">elec_compute_ex</a> (kid, imoments, isedim, <span class="stringliteral">&#39;LIMA&#39;</span>, ptstep, zrhodref, limap%XRTMIN(kid), &amp;</div>
-<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>                                zrs, zqs, zes, plbdx=zlbda, pcx=zcs)</div>
-<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>        <span class="keywordflow">ELSE</span>                     <span class="comment">! 1-moment species</span></div>
-<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>          <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__elec__compute__ex.html#a521f2c8257d9921e8ef5c73aa92a8307">elec_compute_ex</a> (kid, imoments, isedim, <span class="stringliteral">&#39;LIMA&#39;</span>, ptstep, zrhodref, limap%XRTMIN(kid), &amp;</div>
-<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>                                zrs, zqs, zes, plbdx=zlbda)</div>
-<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span><span class="keywordflow">        END IF</span></div>
-<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>        <span class="comment">!</span></div>
-<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>        <span class="comment">! number concentration for 1-moment species</span></div>
-<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span>        <span class="comment">! for precipitating hydrometeors, N=C\lambda^x, except for snow if lsnow_t=t</span></div>
-<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span>        <span class="keywordflow">IF</span> (imoments == 1) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>          <span class="keywordflow">IF</span> (kid == 5) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>            zcx = limac%XCCS</div>
-<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>            zxx = limac%XCXS</div>
-<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>          <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 6) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>            zcx = limam%XCCG</div>
-<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>            zxx = limam%XCXG</div>
-<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span>          <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 7) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>            zcx = limam%XCCH</div>
-<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>            zxx = limam%XCXH</div>
-<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span><span class="keywordflow">          END IF</span></div>
-<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>          zcs(:) = zcx * zlbda(:)**zxx</div>
-<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span><span class="keywordflow">        END IF</span></div>
-<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>        <span class="comment">!</span></div>
-<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span>        zzq(:) = zrhodref(:)**(1.-limap%XCEXVT) * zes(:) * zcs(:) * elecp%XFQSED(kid) * zlbda(:)**(-elecp%XDQ(kid))</div>
-<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>        <span class="comment">!</span></div>
-<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>        <span class="comment">! correction for cloud droplet terminal fall speed</span></div>
-<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>        <span class="keywordflow">IF</span> (kid == 2)  zzq(:) = zzq(:) * zcc(:)</div>
-<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>        <span class="comment">!</span></div>
-<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>        zwsedq(:,1:d%NKT) = unpack( zzq(:),mask=gsedim(:,:),field=0.0 )</div>
-<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span>        zwsedq(d%NIJB:d%NIJE,1:d%NKT) = zwsedq(d%NIJB:d%NIJE,1:d%NKT) * zbeardcoeff(d%NIJB:d%NIJE,1:d%NKT)</div>
-<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>        zwsedq(d%NIJB:d%NIJE,d%NKTB:d%NKTE) = sign(min(abs(zwsedq(d%NIJB:d%NIJE,d%NKTB:d%NKTE)),                                                 &amp;</div>
-<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>                                             abs(pqs(d%NIJB:d%NIJE,d%NKTB:d%NKTE)*prhodref(d%NIJB:d%NIJE,d%NKTB:d%NKTE)/zw(d%NIJB:d%NIJE,d%NKTB:d%NKTE))), &amp;</div>
-<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>                                         zwsedq(d%NIJB:d%NIJE,d%NKTB:d%NKTE))</div>
-<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span><span class="keywordflow">      END IF</span>      </div>
-<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>      </div>
-<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>      <span class="keywordflow">DO</span> ik = d%NKTB , d%NKTE</div>
-<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>         prs(d%NIJB:d%NIJE,ik) = prs(d%NIJB:d%NIJE,ik) + zw(d%NIJB:d%NIJE,ik)*    &amp;</div>
-<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>              (zwsedr(d%NIJB:d%NIJE,ik+d%NKL)-zwsedr(d%NIJB:d%NIJE,ik))/prhodref(d%NIJB:d%NIJE,ik)</div>
-<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>         pfpr(d%NIJB:d%NIJE,ik) = zwsedr(d%NIJB:d%NIJE,ik)</div>
-<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>         <span class="keywordflow">IF</span> (kmoments==2) pcs(d%NIJB:d%NIJE,ik) = pcs(d%NIJB:d%NIJE,ik) + zw(d%NIJB:d%NIJE,ik)*    &amp;</div>
-<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span>              (zwsedc(d%NIJB:d%NIJE,ik+d%NKL)-zwsedc(d%NIJB:d%NIJE,ik))/prhodref(d%NIJB:d%NIJE,ik)</div>
-<div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span>         <span class="comment">! Heat transport</span></div>
-<div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span>         <span class="comment">!PRT_SUM(:,IK-D%NKL) = PRT_SUM(:,IK-D%NKL) + ZW(:,IK-D%NKL)*ZWSEDR(:,IK)/PRHODREF(:,IK-D%NKL)</span></div>
-<div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span>         <span class="comment">!PRT_SUM(:,IK) = PRT_SUM(:,IK) - ZW(:,IK)*ZWSEDR(:,IK)/PRHODREF(:,IK)</span></div>
-<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span>         <span class="comment">!PCPT(:,IK-D%NKL) = PCPT(:,IK-D%NKL) + ZC * (ZW(:,IK-D%NKL)*ZWSEDR(:,IK)/PRHODREF(:,IK-D%NKL))</span></div>
-<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span>         <span class="comment">!PCPT(:,IK) = PCPT(:,IK) - ZC * (ZW(:,IK)*ZWSEDR(:,IK)/PRHODREF(:,IK))</span></div>
-<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span>         <span class="comment">!ZWDT(:,IK) =(PRHODREF(:,IK+D%NKL)*(1.+PRT_SUM(:,IK))*PCPT(:,IK)*PT(:,IK) + &amp;</span></div>
-<div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span>         <span class="comment">!     ZW(:,IK)*ZWSEDR(:,IK+1)*ZC*PT(:,IK+D%NKL)) / &amp;</span></div>
-<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span>         <span class="comment">!     (PRHODREF(:,IK+D%NKL)*(1.+PRT_SUM(:,IK))*PCPT(:,IK) + ZW(:,IK)*ZWSEDR(:,IK+D%NKL)*ZC)</span></div>
-<div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>         <span class="comment">!ZWDT(:,IK) = ZWDT(:,IK) - PT(:,IK)</span></div>
-<div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span>         <span class="keywordflow">IF</span> (oelec) pqs(d%NIJB:d%NIJE,ik) = pqs(d%NIJB:d%NIJE,ik) + zw(d%NIJB:d%NIJE,ik) *    &amp;</div>
-<div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span>                                 (zwsedq(d%NIJB:d%NIJE,ik+d%NKL) - zwsedq(d%NIJB:d%NIJE,ik)) / prhodref(d%NIJB:d%NIJE,ik)</div>
-<div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span>         </div>
-<div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span><span class="keywordflow">      END DO</span></div>
-<div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span>      <span class="comment">!</span></div>
-<div class="line"><a id="l00333" name="l00333"></a><span class="lineno">  333</span>      <span class="keyword">DEALLOCATE</span>(zrhodref)</div>
-<div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span>      <span class="keyword">DEALLOCATE</span>(zpabst)</div>
-<div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span>      <span class="keyword">DEALLOCATE</span>(zt)</div>
-<div class="line"><a id="l00336" name="l00336"></a><span class="lineno">  336</span>      <span class="keyword">DEALLOCATE</span>(zrs)</div>
-<div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span>      <span class="keyword">DEALLOCATE</span>(zcs)</div>
-<div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span>      <span class="keyword">DEALLOCATE</span>(zcc)</div>
-<div class="line"><a id="l00339" name="l00339"></a><span class="lineno">  339</span>      <span class="keyword">DEALLOCATE</span>(zlbda)</div>
-<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span>      <span class="keyword">DEALLOCATE</span>(zzw)</div>
-<div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span>      <span class="keyword">DEALLOCATE</span>(zzx)</div>
-<div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span>      <span class="keyword">DEALLOCATE</span>(zzy)</div>
-<div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span>      <span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(zqs))    <span class="keyword">DEALLOCATE</span>(zqs)</div>
-<div class="line"><a id="l00344" name="l00344"></a><span class="lineno">  344</span>      <span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(zzq))    <span class="keyword">DEALLOCATE</span>(zzq)</div>
-<div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span>      <span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(zes))    <span class="keyword">DEALLOCATE</span>(zes)      </div>
-<div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span>      <span class="comment">!      </span></div>
-<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span>      pinpr(d%NIJB:d%NIJE) = pinpr(d%NIJB:d%NIJE) + zwsedr(d%NIJB:d%NIJE,d%NKB)/cst%XRHOLW/limap%NSPLITSED(kid)                          <span class="comment">! in m/s</span></div>
-<div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span>      <span class="comment">!PT(:,:) = PT(:,:) + ZWDT(:,:)</span></div>
-<div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span>      </div>
-<div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span><span class="keywordflow">   END IF</span></div>
-<div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span><span class="keywordflow">END DO</span></div>
-<div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span><span class="comment">!</span></div>
-<div class="line"><a id="l00353" name="l00353"></a><span class="lineno">  353</span>prs(d%NIJB:d%NIJE,:) = prs(d%NIJB:d%NIJE,:) / ptstep</div>
-<div class="line"><a id="l00354" name="l00354"></a><span class="lineno">  354</span><span class="keywordflow">IF</span> (kmoments==2) pcs(d%NIJB:d%NIJE,:) = pcs(d%NIJB:d%NIJE,:) / ptstep</div>
-<div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span><span class="keywordflow">IF</span> (oelec) pqs(d%NIJB:d%NIJE,:) = pqs(d%NIJB:d%NIJE,:) / ptstep</div>
-<div class="line"><a id="l00356" name="l00356"></a><span class="lineno">  356</span><span class="comment">!</span></div>
-<div class="line"><a id="l00357" name="l00357"></a><span class="lineno">  357</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;LIMA_SEDIMENTATION&#39;</span>, 1, zhook_handle)</div>
-<div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__lima__sedimentation.html#ad5d080255221def1b9da5ec90c72ca2e">lima_sedimentation</a></div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span><span class="comment">! When pristine ice is 1-moment, nb concentration is parameterized following </span></div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span><span class="comment">! McFarquhar and Heymsfield (1997) for columns as in ICE3</span></div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>         <span class="keywordflow">IF</span> (kid==4 .AND. imoments==1) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>            imoments=2</div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>            <span class="keywordflow">IF</span> (prs(jij,jk)&gt;limap%XRTMIN(kid) .AND. zremaint(jij)&gt;0.) pcs(jij,jk)=1/(4*cst%XPI*900.) * prs(jij,jk) * &amp;</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>                 max(0.05e6,-0.15319e6-0.021454e6*log(prhodref(jij,jk)*prs(jij,jk)))**3</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span><span class="keywordflow">         END IF</span></div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span><span class="comment">!</span></div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span><span class="comment">! ################################</span></div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span><span class="comment">! Compute the sedimentation fluxes</span></div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span><span class="comment">! ################################</span></div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span><span class="comment">!</span></div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>         gsedim = prs(jij,jk)&gt;limap%XRTMIN(kid) .AND. zremaint(jij)&gt;0.</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>         <span class="keywordflow">IF</span> (imoments==2)  gsedim = gsedim .AND. pcs(jij,jk)&gt;limap%XCTMIN(kid)</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="comment">!</span></div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>         <span class="keywordflow">IF</span>( gsedim ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span><span class="comment">!</span></div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>            zlbda = 1.e10</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>            zcc = 1.0</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>            zzw = 0.0</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>            zzx = 0.0</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>            zzy = 0.0</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>            <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>               zes = 0.0</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>               zzq = 0.0</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span><span class="keywordflow">            END IF</span></div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span><span class="comment">! Compute lambda</span></div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>            <span class="keywordflow">IF</span> (kid == 5 .AND. limap%NMOM_S.EQ.1 .AND. limap%LSNOW_T) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>               zlbda= 1.e10</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>               <span class="keywordflow">IF</span> (pt(jij,jk)&gt;263.15 .AND. prs(jij,jk)&gt;limap%XRTMIN(5)) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>                  zlbda = max(min(limac%XLBDAS_MAX, 10**(14.554-0.0423*pt(jij,jk))),limac%XLBDAS_MIN)</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>               <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span>(pt(jij,jk)&lt;=263.15 .AND. prs(jij,jk)&gt;limap%XRTMIN(5)) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>                  zlbda = max(min(limac%XLBDAS_MAX, 10**(6.226-0.0106*pt(jij,jk))),limac%XLBDAS_MIN)</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span><span class="keywordflow">               END IF</span></div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>               zlbda = zlbda*limac%XTRANS_MP_GAMMAS</div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>               zwsedr(jij,jk) = limap%XFSEDR(kid) * prhodref(jij,jk)**(1.-limap%XCEXVT)*prs(jij,jk)* &amp;</div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>                    (1 + (limac%XFVELOS/zlbda)**limap%XALPHAS)**(-limap%XNUS-(limap%XD(kid)+limac%XBS)/limap%XALPHAS) &amp;</div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>                    * zlbda**(-limap%XD(kid))</div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>            <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 4 .AND. imoments==2 .AND. limap%LCRYSTAL_SHAPE) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>               zzy = prhodref(jij,jk)**(-limap%XCEXVT) * zlbda**(-limac%XDI_SHAPE(kishape))</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>               zwsedr(jij,jk) = limac%XFSEDRI_SHAPE(kishape) * prs(jij,jk) * zzy * prhodref(jij,jk)</div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>               zwsedc(jij,jk) = limac%XFSEDCI_SHAPE(kishape) * pcs(jij,jk) * zzy * prhodref(jij,jk)</div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>               zlbda = plbdai_shape(jij,jk)</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>            <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>               <span class="keywordflow">IF</span> (imoments==1) zlbda = limap%XLB(kid) * ( prhodref(jij,jk) * prs(jij,jk) )**limap%XLBEX(kid)</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>               <span class="keywordflow">IF</span> (imoments==2) zlbda = ( limap%XLB(kid)*pcs(jij,jk) / prs(jij,jk) )**limap%XLBEX(kid)</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>               zzy = prhodref(jij,jk)**(-limap%XCEXVT) * zlbda**(-limap%XD(kid))</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>               <span class="keywordflow">IF</span> (limap%LSNOW_T .AND. kid==5) &amp;</div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>                    zzy = zzy * (1 + (limac%XFVELOS/zlbda)**limap%XALPHAS)**(-limap%XNUS-(limap%XD(kid)+limac%XBS)/limap%XALPHAS)</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>               zwsedr(jij,jk) = limap%XFSEDR(kid) * prs(jij,jk) * zzy * prhodref(jij,jk)</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span><span class="keywordflow">            END IF</span> <span class="comment">! Wurtz</span></div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>            <span class="comment">!</span></div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>            <span class="keywordflow">IF</span> (kmoments==2 .AND. .NOT.(limap%LCRYSTAL_SHAPE .AND. kid==4)) &amp;</div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>                 zwsedc(jij,jk) = limap%XFSEDC(kid) * pcs(jij,jk) * zzy * prhodref(jij,jk)</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>            </div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>            <span class="keywordflow">IF</span> (kid==2) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>               <span class="comment">! mean cloud droplet diameter</span></div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>               zcc = limaw%XGCC/zlbda</div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>               <span class="comment">! correction factor for cloud droplet terminal fall speed</span></div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>               zcc = 1.+1.26*6.6e-8*(101325./ppabst(jij,jk))*(pt(jij,jk)/293.15)/zcc</div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>               zwsedr(jij,jk) = zcc * zwsedr(jij,jk)</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>               zwsedc(jij,jk) = zcc * zwsedc(jij,jk)</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span><span class="keywordflow">            END IF</span></div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>            <span class="comment">!</span></div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>            <span class="comment">!</span></div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span><span class="comment">!            IF (OELEC) THEN</span></div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span><span class="comment">!               ! compute e of the q-D relationship</span></div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span><span class="comment">!               IF (IMOMENTS == 2) THEN  ! 2-moment species</span></div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span><span class="comment">!                  CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, &#39;LIMA&#39;, PTSTEP, ZRHODREF, LIMAP%XRTMIN(KID), &amp;</span></div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span><span class="comment">!                       PRS(JIJ,JK), PQS(JIJ,JK), ZES, PLBDX=ZLBDA, PCX=PCS(JIJ,JK))</span></div>
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span><span class="comment">!               ELSE                     ! 1-moment species</span></div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span><span class="comment">!                  CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, &#39;LIMA&#39;, PTSTEP, ZRHODREF, LIMAP%XRTMIN(KID), &amp;</span></div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span><span class="comment">!                       PRS(JIJ,JK), PQS(JIJ,JK), ZES, PLBDX=ZLBDA)</span></div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span><span class="comment">!               END IF</span></div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span><span class="comment">!               !</span></div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span><span class="comment">!               IF (ELECD%LSEDIM_BEARD) ZLBDA3(JIJ,JK) = ZLBDA</span></div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span><span class="comment">!               !</span></div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span><span class="comment">!               IF (IMOMENTS == 1) THEN</span></div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span><span class="comment">!                  IF (KID == 5) THEN</span></div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span><span class="comment">!                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAC%XCCS*ZLBDA**LIMAC%XCXS * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))</span></div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span><span class="comment">!                  ELSE IF (KID == 6) THEN</span></div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span><span class="comment">!                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAC%XCCG*ZLBDA**LIMAC%XCXG * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))</span></div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span><span class="comment">!                  ELSE IF (KID == 7) THEN</span></div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span><span class="comment">!                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAC%XCCH*ZLBDA**LIMAC%XCXH * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))</span></div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span><span class="comment">!                  ELSE</span></div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span><span class="comment">!                     ZWSEDQ(JIJ,JK) = 0.</span></div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span><span class="comment">!                  END IF</span></div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span><span class="comment">!               ELSE</span></div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span><span class="comment">!                  ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * PCS(JIJ,JK) * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))</span></div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span><span class="comment">!               END IF</span></div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span><span class="comment">!               IF (KID == 2) ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZCC</span></div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span><span class="comment">!            END IF</span></div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>            <span class="comment">!</span></div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span><span class="keywordflow">         END IF</span></div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span><span class="keywordflow">      END DO</span></div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span><span class="keywordflow">   END DO</span></div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span><span class="comment">!</span></div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span><span class="comment">! If the electrical scheme is activated, the electric field can impact the sedimentation</span></div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span><span class="comment">!   ZBEARDCOEFF = 1.0</span></div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span><span class="comment">!   IF (OELEC .AND. ELECD%LSEDIM_BEARD) THEN</span></div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span><span class="comment">!      CALL ELEC_BEARD_EFFECT(D, CST, &#39;LIMA&#39;, KID, GSEDIM, PT, PRHODREF, PTHVREFZIKB, &amp;</span></div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span><span class="comment">!           PRS, PQS, PEFIELDW, ZLBDA3, ZBEARDCOEFF, &amp;</span></div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span><span class="comment">!           LIMAP=LIMAP, LIMAPC=LIMAC, LIMAPW=LIMAW, LIMAPM=LIMAM)</span></div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span><span class="comment">!      ZWSEDR(:,:)=ZWSEDR(:,:)*ZBEARDCOEFF(:,:)</span></div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span><span class="comment">!      ZWSEDC(:,:)=ZWSEDC(:,:)*ZBEARDCOEFF(:,:)</span></div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span><span class="comment">!      ZWSEDQ(:,:)=ZWSEDQ(:,:)*ZBEARDCOEFF(:,:)</span></div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span><span class="comment">!   END IF</span></div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>   <span class="comment">!</span></div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>   zmax_tstep1d(:) = zremaint(:)</div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>   <span class="keywordflow">DO</span> jk = d%NKTB,d%NKTE</div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>      <span class="keywordflow">DO</span> jij = d%NIJB,d%NIJE</div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>         zmax_tstep2d(jij,jk) = zremaint(jij)</div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span><span class="keywordflow">      END DO</span></div>
+<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span><span class="keywordflow">   END DO</span></div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>   <span class="comment">!</span></div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>   <span class="keywordflow">DO</span> jk = d%NKTB,d%NKTE</div>
+<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>      <span class="keywordflow">DO</span> jij = d%NIJB,d%NIJE</div>
+<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>         <span class="keywordflow">IF</span>(prs(jij,jk)&gt;limap%XRTMIN(kid) .AND. zwsedr(jij, jk)&gt;1.e-20 .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>            zmax_tstep2d(jij,jk) = 0.8 * prhodref(jij, jk) * prs(jij, jk) * pdzz(jij, jk) / zwsedr(jij, jk)</div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span><span class="keywordflow">         ENDIF</span></div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span><span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span><span class="keywordflow">   ENDDO</span></div>
+<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>   <span class="comment">!</span></div>
+<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>   <span class="keywordflow">DO</span> jk = d%NKTB,d%NKTE</div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>      <span class="keywordflow">DO</span> jij = d%NIJB,d%NIJE</div>
+<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span>         <span class="keywordflow">IF</span>(prs(jij,jk)&gt;limap%XRTMIN(kid) .AND. zwsedr(jij, jk)&gt;1.e-20 .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>            zmax_tstep1d(jij) = min(zmax_tstep1d(jij), zmax_tstep2d(jij,jk))</div>
+<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span><span class="keywordflow">         ENDIF</span></div>
+<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span><span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span><span class="keywordflow">   ENDDO</span></div>
+<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>   <span class="comment">!</span></div>
+<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>   <span class="keywordflow">DO</span> jij = d%NIJB, d%NIJE</div>
+<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>      zremaint(jij) = zremaint(jij) - zmax_tstep1d(jij)</div>
+<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span>      pinpr(jij) = pinpr(jij) + zwsedr(jij,d%NKB) / cst%XRHOLW * (zmax_tstep1d(jij) * zinvtstep)</div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span><span class="keywordflow">   ENDDO</span></div>
+<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>   <span class="comment">!</span></div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>   <span class="keywordflow">DO</span> jk = d%NKTB, d%NKTE</div>
+<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>      <span class="keywordflow">DO</span> jij = d%NIJB, d%NIJE</div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>         zmrchange = zmax_tstep1d(jij) * zw(jij,jk)*(zwsedr(jij,jk+d%NKL)-zwsedr(jij,jk))</div>
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>         prs(jij,jk) = prs(jij,jk) + zmrchange</div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>         pfpr(jij,jk) = pfpr(jij,jk) + zwsedr(jij,jk) * (zmax_tstep1d(jij) * zinvtstep)</div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>         <span class="keywordflow">IF</span> (kmoments==2) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>            zcchange = zmax_tstep1d(jij) * zw(jij,jk)*(zwsedc(jij,jk+d%NKL)-zwsedc(jij,jk))</div>
+<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>            pcs(jij,jk) = pcs(jij,jk) + zcchange</div>
+<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span><span class="keywordflow">         END IF</span></div>
+<div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span>         <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span>            zqchange = zmax_tstep1d(jij) * zw(jij,jk) * (zwsedq(jij,jk+d%NKL) - zwsedq(jij,jk))</div>
+<div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span>            pqs(jij,jk) = pqs(jij,jk) + zqchange</div>
+<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span><span class="keywordflow">         ENDIF</span></div>
+<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span><span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span><span class="keywordflow">   ENDDO</span></div>
+<div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span>   <span class="comment">!   </span></div>
+<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span>   zanyremaint = .false.</div>
+<div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>   <span class="keywordflow">DO</span> jij=d%NIJB,d%NIJE</div>
+<div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span>      <span class="keywordflow">IF</span>(zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span>         zanyremaint = .true.</div>
+<div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span><span class="keywordflow">      END IF</span></div>
+<div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span><span class="keywordflow">   END DO</span></div>
+<div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span>   <span class="comment">!</span></div>
+<div class="line"><a id="l00333" name="l00333"></a><span class="lineno">  333</span><span class="keywordflow">END DO</span></div>
+<div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span><span class="comment">!</span></div>
+<div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span>prs(d%NIJB:d%NIJE,:) = prs(d%NIJB:d%NIJE,:) / ptstep</div>
+<div class="line"><a id="l00336" name="l00336"></a><span class="lineno">  336</span><span class="keywordflow">IF</span> (kmoments==2) pcs(d%NIJB:d%NIJE,:) = pcs(d%NIJB:d%NIJE,:) / ptstep</div>
+<div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span><span class="keywordflow">IF</span> (oelec) pqs(d%NIJB:d%NIJE,:) = pqs(d%NIJB:d%NIJE,:) / ptstep</div>
+<div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span><span class="comment">!</span></div>
+<div class="line"><a id="l00339" name="l00339"></a><span class="lineno">  339</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;LIMA_SEDIMENTATION&#39;</span>, 1, zhook_handle)</div>
+<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__lima__sedimentation.html#ad5d080255221def1b9da5ec90c72ca2e">lima_sedimentation</a></div>
 </div>
-<div class="line"><a id="l00359" name="l00359"></a><span class="lineno">  359</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__lima__sedimentation.html">mode_lima_sedimentation</a></div>
-<div class="line"><a id="l00360" name="l00360"></a><span class="lineno">  360</span> </div>
+<div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__lima__sedimentation.html">mode_lima_sedimentation</a></div>
+<div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span> </div>
 <div class="ttc" id="anamespacemodd__cst_html"><div class="ttname"><a href="namespacemodd__cst.html">modd_cst</a></div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00007">modd_cst.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__dimphyex_html"><div class="ttname"><a href="namespacemodd__dimphyex.html">modd_dimphyex</a></div><div class="ttdef"><b>Definition</b> <a href="modd__dimphyexn_8F90_source.html#l00007">modd_dimphyexn.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__elec__descr_html"><div class="ttname"><a href="namespacemodd__elec__descr.html">modd_elec_descr</a></div><div class="ttdef"><b>Definition</b> <a href="modd__elec__descr_8F90_source.html#l00007">modd_elec_descr.F90:7</a></div></div>

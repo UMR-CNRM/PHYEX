@@ -154,18 +154,19 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>p_th_berfi(:) = 0.0</div>
 <div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>p_rc_berfi(:) = 0.0</div>
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="comment">!</span></div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="keywordflow">WHERE</span>( (prct(:)&gt;limap%XRTMIN(2)) .AND. (prit(:)&gt;limap%XRTMIN(4)) .AND. (pcit(:)&gt;limap%XCTMIN(4)) .AND. odcompute(:))</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>   p_rc_berfi(:) = - ( pssiw(:) / pai(:) ) * pcit(:) *        &amp;</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>        ( limac%X0DEPI/plbdi(:)+limac%X2DEPI*pcj(:)*pcj(:)/plbdi(:)**(limac%XDI+2.0) )</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>   p_th_berfi(:) = - p_rc_berfi(:)*(plsfact(:)-plvfact(:))</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="keywordflow">END WHERE</span></div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="comment">!</span></div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="comment">!</span></div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;LIMA_BERGERON&#39;</span>, 1, zhook_handle)</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="keywordflow">WHERE</span>( pssiw(:)&gt;0. .AND. (prct(:)&gt;limap%XRTMIN(2)) .AND. (prit(:)&gt;limap%XRTMIN(4)) .AND. &amp;</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>     (pcit(:)&gt;limap%XCTMIN(4)) .AND. odcompute(:))</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>   p_rc_berfi(:) = - ( pssiw(:) / pai(:) ) * pcit(:) *        &amp;</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        ( limac%X0DEPI/plbdi(:)+limac%X2DEPI*pcj(:)*pcj(:)/plbdi(:)**(limac%XDI+2.0) )</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>   p_th_berfi(:) = - p_rc_berfi(:)*(plsfact(:)-plvfact(:))</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="keywordflow">END WHERE</span></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="comment">!</span></div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="comment">!</span></div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;LIMA_BERGERON&#39;</span>, 1, zhook_handle)</div>
 </div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__lima__bergeron.html#ae90ef0e9c298a123f26eb5ec3fde2f08">lima_bergeron</a></div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__lima__bergeron.html">mode_lima_bergeron</a></div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__lima__bergeron.html#ae90ef0e9c298a123f26eb5ec3fde2f08">lima_bergeron</a></div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__lima__bergeron.html">mode_lima_bergeron</a></div>
 <div class="ttc" id="anamespacemodd__param__lima__cold_html"><div class="ttname"><a href="namespacemodd__param__lima__cold.html">modd_param_lima_cold</a></div><div class="ttdef"><b>Definition</b> <a href="modd__param__lima__cold_8F90_source.html#l00007">modd_param_lima_cold.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__param__lima_html"><div class="ttname"><a href="namespacemodd__param__lima.html">modd_param_lima</a></div><div class="ttdef"><b>Definition</b> <a href="modd__param__lima_8F90_source.html#l00007">modd_param_lima.F90:7</a></div></div>
 <div class="ttc" id="anamespacemode__lima__bergeron_html"><div class="ttname"><a href="namespacemode__lima__bergeron.html">mode_lima_bergeron</a></div><div class="ttdef"><b>Definition</b> <a href="mode__lima__bergeron_8F90_source.html#l00005">mode_lima_bergeron.F90:5</a></div></div>

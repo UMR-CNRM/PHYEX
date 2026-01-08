@@ -154,7 +154,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="comment">!*       0.2   Declarations of local variables :</span></div>
 <div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="comment">!</span></div>
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keywordtype">REAL</span>(KIND=jphook) :: zhook_handle</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(SIZE(PRRT))</span> :: ZW1, ZW2 <span class="comment">! work arrays</span></div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(SIZE(PRRT))</span> :: ZW0, ZW1, ZW2, ZW3 <span class="comment">! work arrays</span></div>
 <div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="comment">!</span></div>
 <div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
 <div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="comment">!</span></div>
@@ -170,34 +170,44 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>p_ri_cfrz(:)=0.</div>
 <div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>p_ci_cfrz(:)=0.</div>
 <div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="comment">!</span></div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>zw1(:)=0.</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>zw2(:)=0.</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="comment">!</span></div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="keywordflow">WHERE</span>( prit(:)&gt;limap%XRTMIN(4) .AND. prrt(:)&gt;limap%XRTMIN(3) .AND. pt(:)&lt;cst%XTT .AND. &amp;</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>       pcit(:)&gt;limap%XCTMIN(4) .AND. pcrt(:)&gt;limap%XCTMIN(3) .AND. odcompute(:) )</div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="comment">!</span></div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>   zw1(:) = limam%XICFRR * prit(:) * pcrt(:)                    &amp; <span class="comment">! RICFRRG</span></div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>                                     * plbdr(:)**limam%XEXICFRR         &amp;</div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>                                     * prhodref(:)**(-limap%XCEXVT-1.0)</div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="comment">!</span></div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>   zw2(:) = limam%XRCFRI * pcit(:) * pcrt(:)                    &amp; <span class="comment">! RRCFRIG</span></div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>                                     * plbdr(:)**limam%XEXRCFRI         &amp;</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>                                     * prhodref(:)**(-limap%XCEXVT-1.0)</div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="comment">!</span></div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>   p_rr_cfrz(:) = - zw2(:)</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>   p_cr_cfrz(:) = - zw2(:) * (pcrt(:)/prrt(:))</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>   p_ri_cfrz(:) = - zw1(:)</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>   p_ci_cfrz(:) = - zw1(:) * (pcit(:)/prit(:))</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>   p_th_cfrz(:) = - p_rr_cfrz(:) * (plsfact(:)-plvfact(:))</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span><span class="comment">!</span></div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="keywordflow">END WHERE</span></div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="comment">!</span></div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span><span class="comment">!</span></div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;LIMA_RAIN_FREEZING&#39;</span>, 1, zhook_handle)</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>zw0(:)=0.</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>zw1(:)=0.</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>zw2(:)=0.</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>zw3(:)=0.</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="comment">!</span></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="keywordflow">WHERE</span>( prit(:)&gt;limap%XRTMIN(4) .AND. prrt(:)&gt;limap%XRTMIN(3) .AND. pt(:)&lt;cst%XTT .AND. &amp;</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>       pcit(:)&gt;limap%XCTMIN(4) .AND. pcrt(:)&gt;limap%XCTMIN(3) .AND. odcompute(:) )</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="comment">!</span></div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>   zw1(:) = limam%XICFRR * prit(:) * pcrt(:)                    &amp; <span class="comment">! RICFRRG</span></div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>                                     * plbdr(:)**limam%XEXICFRR         &amp;</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>                                     * prhodref(:)**(-limap%XCEXVT+1.0)</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="comment">!</span></div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>   zw2(:) = limam%XRCFRI * pcit(:) * pcrt(:)                    &amp; <span class="comment">! RRCFRIG</span></div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>                                     * plbdr(:)**limam%XEXRCFRI         &amp;</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>                                     * prhodref(:)**(-limap%XCEXVT+1.0)</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="comment">!</span></div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="comment">! Comparison between heat to be released (to freeze rain) and heat sink (rain and ice temperature change)</span></div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="comment">! ZW0 is the proportion of process that can take place</span></div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>   zw0(:) = max(0., min(1., (zw1(:)*cst%XCI+zw2(:)*cst%XCL)*(cst%XTT-pt(:)) / &amp;</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>        max(1.e-20, cst%XLVTT*zw2(:))))</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>   zw2(:) = zw0(:) * zw2(:)       <span class="comment">! Part of rain that can be frozen</span></div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>   zw3(:) = (1.- zw0(:)) * zw1(:) <span class="comment">! Part of collected pristine ice converted to rain</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>   zw1(:) = zw0(:) * zw1(:)       <span class="comment">! Part of collected pristine ice that leads to graupel</span></div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span><span class="comment">!   </span></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>   p_rr_cfrz(:) = - zw2(:) + zw3(:)</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>   p_cr_cfrz(:) =   p_rr_cfrz(:) * (pcrt(:)/prrt(:))</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>   p_ri_cfrz(:) = - zw1(:) - zw3(:)</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>   p_ci_cfrz(:) =   p_ri_cfrz(:) * (pcit(:)/prit(:))</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>   p_th_cfrz(:) = - p_rr_cfrz(:) * (plsfact(:)-plvfact(:))</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><span class="comment">!</span></div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="keywordflow">END WHERE</span></div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span><span class="comment">!</span></div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="comment">!</span></div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;LIMA_RAIN_FREEZING&#39;</span>, 1, zhook_handle)</div>
 </div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__lima__rain__freezing.html#abd245290d4ddc09751129d068c063eba">lima_rain_freezing</a></div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__lima__rain__freezing.html">mode_lima_rain_freezing</a></div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__lima__rain__freezing.html#abd245290d4ddc09751129d068c063eba">lima_rain_freezing</a></div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__lima__rain__freezing.html">mode_lima_rain_freezing</a></div>
 <div class="ttc" id="anamespacemodd__cst_html"><div class="ttname"><a href="namespacemodd__cst.html">modd_cst</a></div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00007">modd_cst.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__param__lima__mixed_html"><div class="ttname"><a href="namespacemodd__param__lima__mixed.html">modd_param_lima_mixed</a></div><div class="ttdef"><b>Definition</b> <a href="modd__param__lima__mixed_8F90_source.html#l00002">modd_param_lima_mixed.F90:2</a></div></div>
 <div class="ttc" id="anamespacemodd__param__lima_html"><div class="ttname"><a href="namespacemodd__param__lima.html">modd_param_lima</a></div><div class="ttdef"><b>Definition</b> <a href="modd__param__lima_8F90_source.html#l00007">modd_param_lima.F90:7</a></div></div>
