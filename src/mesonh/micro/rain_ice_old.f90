@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2026 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -262,6 +262,10 @@ USE MODE_ICE4_RAINFR_VERT
 #if defined(MNH_COMPILER_CCE) && defined(MNH_BITREP_OMP)
 !$mnh_undef(LOOP)
 !$mnh_undef(OPENACC)
+#endif
+
+#if defined(MNH_BITREP) || defined(MNH_BITREP_OMP)
+USE MODI_BITREP
 #endif
 
 IMPLICIT NONE
