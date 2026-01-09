@@ -541,22 +541,18 @@ PWU(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT)
 ! Contribution to the TKE dynamic production of TKE
 ! (computed at mass point)
 !
-PDP(:,:) = - MZF( MXF ( ZFLXZ * GZ_U_UW(PUM,PDZZ) )  )
+PDP(:,:) = - MZF( MXF ( ZFLXZ * GZ_U_UW(TURBN%XIMPL*ZRES + PEXPL*PUM, PDZZ) ) )
 !
 ! Special cases near surface
 IF (GOCEAN) THEN
   ! evaluate the dynamic production at w(IKE) and store in PDP(IKE)
   ! before to be extrapolated in tke_eps routine
-  PDP(:,IKE) = - MXF (                            &
-    ZFLXZ(:,IKE-IKL) * (PUM(:,IKE)-PUM(:,IKE-IKL))  &
-                           / MXM(PDZZ(:,IKE-IKL))   &
-                           ) 
+  PDP(:,IKE) = -MXF(ZFLXZ(:,IKE-IKL) * (TURBN%XIMPL*(ZRES(:,IKE)-ZRES(:,IKE-IKL)) + &
+                                        PEXPL*(PUM(:,IKE)-PUM(:,IKE-IKL)))/ MXM(PDZZ(:,IKE-IKL)))
 ELSE ! Atmosphere
   ! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)
-  PDP(:,IKB) = - MXF (                              &
-    ZFLXZ(:,IKB+IKL) * (PUM(:,IKB+IKL)-PUM(:,IKB))  &
-                         / MXM(PDZZ(:,IKB+IKL))     &
-                         )
+  PDP(:,IKB) = -MXF(ZFLXZ(:,IKB+IKL) * (TURBN%XIMPL*(ZRES(:,IKB+IKL)-ZRES(:,IKB)) + &
+                                        PEXPL*(PUM(:,IKB+IKL)-PUM(:,IKB)))/ MXM(PDZZ(:,IKB+IKL)))
 !
 END IF
 !
@@ -803,24 +799,19 @@ PWV(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT)
 !  Contribution to the TKE dynamical production 
 !    computed at mass point
 !
-ZA(:,:) = - MZF( MYF ( ZFLXZ * GZ_V_VW(PVM, PDZZ) ) )
+ZA(:,:) = - MZF( MYF ( ZFLXZ * GZ_V_VW(TURBN%XIMPL*ZRES + PEXPL*PVM, PDZZ) ) )
 !
 ! Special cases at surface
 IF (GOCEAN) THEN
   ! evaluate the dynamic production at w(IKE) in PDP(IKE)
   ! before extrapolation done in routine tke_eps_source
-  ZA(:,IKE) = - MYF (                                                  &
-   ZFLXZ(:,IKE-IKL) * (PVM(:,IKE)-PVM(:,IKE-IKL))  &
-                          / MYM(PDZZ(:,IKE-IKL))                   &
-                          )
+  ZA(:,IKE) = -MYF(ZFLXZ(:,IKE-IKL) * (TURBN%XIMPL*(ZRES(:,IKE)-ZRES(:,IKE-IKL)) + &
+                                       PEXPL*(PVM(:,IKE)-PVM(:,IKE-IKL)))/ MYM(PDZZ(:,IKE-IKL)))
 !
 ELSE ! Atmosphere
   ! evaluate the dynamic production at w(IKB+IKL) in PDP(IKB)
-ZA(:,IKB)  =                                                 &
-                 - MYF (                                          &
-ZFLXZ(:,IKB+IKL) * (PVM(:,IKB+IKL)-PVM(:,IKB))  &
-                       / MYM(PDZZ(:,IKB+IKL))               &
-                       )
+  ZA(:,IKB) = -MYF(ZFLXZ(:,IKB+IKL) * (TURBN%XIMPL*(ZRES(:,IKB+IKL)-ZRES(:,IKB)) + &
+                                       PEXPL*(PVM(:,IKB+IKL)-PVM(:,IKB)))/ MYM(PDZZ(:,IKB+IKL)))
 END IF
 !
 !$acc kernels
