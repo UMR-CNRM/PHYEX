@@ -122,22 +122,41 @@ IF (.NOT. ASSOCIATED(XRTMIN)) THEN    ! In case of nesting microphysics, constan
 !
 !
 ! Set bounds for mixing ratios and concentrations
-CALL PARAM_LIMA_ALLOCATE('XRTMIN', 7)
-XRTMIN(1) = 1.0E-10   ! rv
-XRTMIN(2) = 1.0E-10   ! rc
-XRTMIN(3) = 1.0E-8   ! rr
-XRTMIN(4) = 1.0E-10   ! ri
-XRTMIN(5) = 1.0E-8   ! rs
-XRTMIN(6) = 1.0E-8   ! rg
-XRTMIN(7) = 1.0E-8   ! rh
-CALL PARAM_LIMA_ALLOCATE('XCTMIN', 7)
-XCTMIN(1) = 1.0       ! Not used
-XCTMIN(2) = 1.0E-3    ! Nc
-XCTMIN(3) = 1.0E-3    ! Nr
-XCTMIN(4) = 1.0E-3    ! Ni
-XCTMIN(5) = 1.0E-3    ! Ns
-XCTMIN(6) = 1.0E-3    ! Ng
-XCTMIN(7) = 1.0E-3    ! Nh
+IF (LICE3) THEN
+   CALL PARAM_LIMA_ALLOCATE('XRTMIN', 7)
+   XRTMIN(1) = 1.0E-20   ! rv
+   XRTMIN(2) = 1.0E-20   ! rc
+   XRTMIN(3) = 1.0E-20   ! rr
+   XRTMIN(4) = 1.0E-20   ! ri
+   XRTMIN(5) = 1.0E-15   ! rs
+   XRTMIN(6) = 1.0E-15   ! rg
+   XRTMIN(7) = 1.0E-15   ! rh
+   CALL PARAM_LIMA_ALLOCATE('XCTMIN', 7)
+   XCTMIN(1) = 1.0E-13   ! Not used
+   XCTMIN(2) = 1.0E-13   ! Nc
+   XCTMIN(3) = 1.0E-13   ! Nr
+   XCTMIN(4) = 1.0E-13   ! Ni
+   XCTMIN(5) = 1.0E-13   ! Ns
+   XCTMIN(6) = 1.0E-13   ! Ng
+   XCTMIN(7) = 1.0E-13   ! Nh
+ELSE
+   CALL PARAM_LIMA_ALLOCATE('XRTMIN', 7)
+   XRTMIN(1) = 1.0E-10   ! rv
+   XRTMIN(2) = 1.0E-10   ! rc
+   XRTMIN(3) = 1.0E-10   ! rr
+   XRTMIN(4) = 1.0E-10   ! ri
+   XRTMIN(5) = 1.0E-10   ! rs
+   XRTMIN(6) = 1.0E-10   ! rg
+   XRTMIN(7) = 1.0E-10   ! rh
+   CALL PARAM_LIMA_ALLOCATE('XCTMIN', 7)
+   XCTMIN(1) = 1.0       ! Not used
+   XCTMIN(2) = 1.0E-3    ! Nc
+   XCTMIN(3) = 1.0E-3    ! Nr
+   XCTMIN(4) = 1.0E-3    ! Ni
+   XCTMIN(5) = 1.0E-3    ! Ns
+   XCTMIN(6) = 1.0E-3    ! Ng
+   XCTMIN(7) = 1.0E-3    ! Nh
+ENDIF
 !
 !
 ! Air density fall speed correction

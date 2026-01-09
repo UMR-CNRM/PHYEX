@@ -11,10 +11,12 @@ SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV, D, CST, NEBN,         &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
                   KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,                &
-                  ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
+                  ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PCIT, PW_NU,         &
                   PAERO,PSOLORG, PMI, PTHS, PRS, PSVS,                    &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
                   PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
+                  PHLC_HCF, PHLC_HRC,                                     &
+                  PHLI_HCF, PHLI_HRI,                                     &
                   PLATHAM_IAGGS, PEFIELDW, PSV_ELEC_T, PSV_ELEC_S         )
 !     #####################################################################
 !
@@ -53,10 +55,10 @@ SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV, D, CST, NEBN,         &
 !
 !*       0.    DECLARATIONS
 !              ------------
-USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
+USE MODD_PARAM_LIMA_MIXED,ONLY:PARAM_LIMA_MIXED_T
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
-USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE MODD_PARAM_LIMA,      ONLY:PARAM_LIMA_T
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
 USE MODD_RAIN_ICE_DESCR_N,ONLY: RAIN_ICE_DESCR_T
 USE MODD_RAIN_ICE_PARAM_N,ONLY: RAIN_ICE_PARAM_T
@@ -69,6 +71,8 @@ USE MODD_NSV,             ONLY: NSV_T
 USE MODD_NEB_N,           ONLY: NEB_T
 USE MODE_TOOLS,           only: COUNTJV
 
+USE MODE_LIMA_COMPUTE_PDF, ONLY: LIMA_COMPUTE_PDF
+USE MODE_LIMA_RAINFR_VERT, ONLY: LIMA_RAINFR_VERT
 USE MODE_LIMA_COMPUTE_CLOUD_FRACTIONS, ONLY: LIMA_COMPUTE_CLOUD_FRACTIONS
 USE MODE_LIMA_SHAPE_COMPUTE_LBDA, ONLY : LIMA_SHAPE_COMPUTE_LBDA_3D
 USE MODE_LIMA_INST_PROCS, ONLY: LIMA_INST_PROCS
@@ -120,6 +124,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,ODTHRAD), &
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
 REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
+REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT)    :: PCIT       ! Theta at time t
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
 REAL, DIMENSION(D%NIJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
 REAL, DIMENSION(D%NIJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
@@ -142,6 +147,11 @@ REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT) :: PICEFR     ! Cloud fraction
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT) :: PPRCFR     ! Cloud fraction
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(OUT) :: PFPR    ! Precipitation fluxes in altitude
+!
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,   INTENT(INOUT) :: PHLC_HCF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,   INTENT(INOUT) :: PHLC_HRC
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,   INTENT(INOUT) :: PHLI_HCF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,   INTENT(INOUT) :: PHLI_HRI
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
 REAL, DIMENSION(D%NIJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PEFIELDW   ! Vertical component of the electric field
@@ -172,7 +182,7 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZCIT_SHAPE  ! Nb concentration for each i
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZRIT_SHAPE  ! Mixing ratio for each ice habit (at t)
 !
 ! Other 3D thermodynamical variables
-REAL, DIMENSION(D%NIJT,D%NKT)      :: ZEXN, ZT
+REAL, DIMENSION(D%NIJT,D%NKT)      :: ZEXN, ZT, ZLSFACT, ZW, ZTMP
 
 !
 ! Packed prognostic & thermo variables
@@ -181,7 +191,10 @@ REAL, DIMENSION(:),   ALLOCATABLE ::                               &
      ZTHT1D,                                                       &
      ZRVT1D, ZRCT1D, ZRRT1D, ZRIT1D, ZRST1D, ZRGT1D, ZRHT1D,       &
      ZCCT1D, ZCRT1D, ZCIT1D, ZCST1D, ZCGT1D, ZCHT1D,               &
-     ZEVAP1D
+     ZEVAP1D,                                                      &
+     ZHLC_LCF1D, ZHLC_LRC1D, ZHLI_LCF1D, ZHLI_LRI1D,               &
+     ZHLC_HCF1D, ZHLC_HRC1D, ZHLI_HCF1D, ZHLI_HRI1D
+
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZIFNN1D
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZCIT1D_SHAPE
 
@@ -336,7 +349,7 @@ REAL, DIMENSION(:), ALLOCATABLE                      :: ZCF1D, ZIF1D, ZPF1D     
 ! Various parameters
 ! domain size and levels (AROME compatibility)
 ! loops and packing
-INTEGER :: II, IPACK, IN
+INTEGER :: II, IPACK, IN, IK
 INTEGER :: IDX
 INTEGER, DIMENSION(:), ALLOCATABLE :: I1, I3
 ! Inverse ov PTSTEP
@@ -373,6 +386,17 @@ REAL, DIMENSION(:,:), ALLOCATABLE :: ZRVT_ELEC, ZRCT_ELEC, ZRRT_ELEC, ZRIT_ELEC,
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZCCT_ELEC, ZCRT_ELEC, ZCIT_ELEC, ZCST_ELEC, ZCGT_ELEC, ZCHT_ELEC
 REAL, DIMENSION(:),     ALLOCATABLE :: ZLATHAM_IAGGS
 !
+! ICE4 COMPUTE PDF
+LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLMICRO
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_LCF
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_LRC
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LCF
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LRI
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_HCF
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_HRC
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_HCF
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_HRI
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZSIGMA_RC
 !-------------------------------------------------------------------------------
 !
 !*       0.     Init
@@ -435,7 +459,7 @@ ZIMMNS(:,:,:) = 0.
 ZHOMFT(:,:)   = 0.
 ZHOMFS(:,:)   = 0.
 
-IF ( BUCONF%LBU_ENABLE .OR. OELEC) then
+IF ( BUCONF%LBU_ENABLE .OR. OELEC) THEN
   Z_RR_CVRC(:,:) = 0.
   Z_CR_CVRC(:,:) = 0.
   ALLOCATE( ZTOT_CR_BRKU (D%NIJT, D%NKT ) ); ZTOT_CR_BRKU(:,:) = 0.
@@ -587,6 +611,9 @@ ALLOCATE (ZTOT_RC_HINC(D%NIJT,D%NKT)) ; ZTOT_RC_HINC(:,:) = 0.
 ALLOCATE (ZTOT_RV_HENU(D%NIJT,D%NKT)) ; ZTOT_RV_HENU(:,:) = 0.
 ALLOCATE (ZTOT_RV_HONH(D%NIJT,D%NKT)) ; ZTOT_RV_HONH(:,:) = 0.
 !
+ZINV_TSTEP  = 1./PTSTEP
+ZEXN(D%NIJB:D%NIJE,:) = (PPABST(D%NIJB:D%NIJE,:)/CST%XP00)**(CST%XRD/CST%XCPD)
+ZT(D%NIJB:D%NIJE,:)   = ZTHT(D%NIJB:D%NIJE,:) * ZEXN(D%NIJB:D%NIJE,:)
 !
 ! Initial values computed as source * PTSTEP
 !
@@ -613,7 +640,11 @@ IF ( LIMAP%NMOM_C.GE.2) THEN
    ZCCT(D%NIJB:D%NIJE,:)   = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NC) * PTSTEP
    ZCCS(D%NIJB:D%NIJE,:)   = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NC)
 ELSE
-   ZCCT(D%NIJB:D%NIJE,:)   = 300.E6 / PRHODREF(D%NIJB:D%NIJE,:)
+   IF (LIMAP%LICE3) THEN
+      ZCCT(D%NIJB:D%NIJE,:)   = 300.E6 / PRHODREF(D%NIJB:D%NIJE,:)   
+   ELSE
+      ZCCT(D%NIJB:D%NIJE,:)   = 100.E6 / PRHODREF(D%NIJB:D%NIJE,:)
+   END IF
    ZCCS(D%NIJB:D%NIJE,:)   = ZCCT(D%NIJB:D%NIJE,:) / PTSTEP
 END IF
 IF ( LIMAP%NMOM_I.GE.2) THEN
@@ -634,6 +665,14 @@ IF ( LIMAP%NMOM_I.GE.2) THEN
       ZCIS_SHAPE(D%NIJB:D%NIJE,:,ISH) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NI+ISH-1)
     END DO
   END IF
+ELSE
+   ! ICE3 uses PCIT in m-3, but LIMA is in kg-1
+   ZCIT(:,:)=PCIT(:,:)/PRHODREF(:,:)
+   ZCIS(:,:)=PCIT(:,:)/PRHODREF(:,:)*ZINV_TSTEP
+   ALLOCATE(ZCIT_SHAPE (0,0,0))
+   ALLOCATE(ZCIS_SHAPE (0,0,0))
+   ALLOCATE(ZRIT_SHAPE (0,0,0))
+   ALLOCATE(ZRIS_SHAPE (0,0,0))
 END IF
 IF ( LIMAP%NMOM_R.GE.2) ZCRT(D%NIJB:D%NIJE,:)   = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NR) * PTSTEP
 IF ( LIMAP%NMOM_R.GE.2) ZCRS(D%NIJB:D%NIJE,:)   = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NR)
@@ -661,10 +700,6 @@ IF ( LIMAP%NMOD_IMM .GE. 1 ) ZIMMNS(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,IS
 !
 IF ( LIMAP%LHHONI ) ZHOMFT(D%NIJB:D%NIJE,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_HOM_HAZE) * PTSTEP
 IF ( LIMAP%LHHONI ) ZHOMFS(D%NIJB:D%NIJE,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_HOM_HAZE)
-!
-ZINV_TSTEP  = 1./PTSTEP
-ZEXN(D%NIJB:D%NIJE,:) = (PPABST(D%NIJB:D%NIJE,:)/CST%XP00)**(CST%XRD/CST%XCPD)
-ZT(D%NIJB:D%NIJE,:)   = ZTHT(D%NIJB:D%NIJE,:) * ZEXN(D%NIJB:D%NIJE,:)
 !
 ! Electric charge density
 !
@@ -1226,6 +1261,82 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
+!*       2.     COMPUTE PRECIPITATION FRACTION
+!               ------------------------------
+!
+LLMICRO(:,:)=.TRUE.
+IF (KRR==7) THEN
+   LLMICRO(:,:)=ZRCT(:,:)>LIMAP%XRTMIN(2) .OR. &
+        ZRRT(:,:)>LIMAP%XRTMIN(3) .OR. &
+        ZRIT(:,:)>LIMAP%XRTMIN(4) .OR. &
+        ZRST(:,:)>LIMAP%XRTMIN(5) .OR. &
+        ZRGT(:,:)>LIMAP%XRTMIN(6) .OR. &
+        ZRHT(:,:)>LIMAP%XRTMIN(7)
+ELSE
+   LLMICRO(:,:)=ZRCT(:,:)>LIMAP%XRTMIN(2) .OR. &
+        ZRRT(:,:)>LIMAP%XRTMIN(3) .OR. &
+        ZRIT(:,:)>LIMAP%XRTMIN(4) .OR. &
+        ZRST(:,:)>LIMAP%XRTMIN(5) .OR. &
+        ZRGT(:,:)>LIMAP%XRTMIN(6)
+ENDIF
+! PHLC_HRC should never be larger than PRCT
+!PCLDFR(:,:)=MAX(PCLDFR(:,:),PHLC_HCF(:,:))
+!PHLC_HRC(:,:)=MIN(PHLC_HRC(:,:),ZRCT(:,:))
+!PICEFR(:,:)=MAX(PICEFR(:,:),PHLI_HCF(:,:))
+!PHLI_HRI(:,:)=MIN(PHLI_HRI(:,:),ZRIT(:,:))
+IF ( NEBN%LSUBG_COND ) THEN
+   IF (PRESENT(PHLC_HRC)) THEN
+      ZHLC_HRC(:,:)=PHLC_HRC(:,:)
+      ZHLC_HCF(:,:)=PHLC_HCF(:,:)
+      ZHLI_HRI(:,:)=PHLI_HRI(:,:)
+      ZHLI_HCF(:,:)=PHLI_HCF(:,:)
+      DO IK = D%NKTB, D%NKTE     
+         DO II=D%NIJB, D%NIJE
+            ZHLC_LRC(II, IK) = ZRCT(II, IK) - ZHLC_HRC(II, IK)
+            ZHLI_LRI(II, IK) = ZRIT(II, IK) - ZHLI_HRI(II, IK)
+            IF(ZRCT(II, IK)>0.) THEN
+               ZHLC_LCF(II, IK) = PCLDFR(II, IK)- ZHLC_HCF(II, IK)
+            ELSE
+               ZHLC_LCF(II, IK)=0.
+            ENDIF
+            IF(ZRIT(II, IK)>0.) THEN
+               ZHLI_LCF(II, IK) = PICEFR(II, IK)- ZHLI_HCF(II, IK)
+            ELSE
+               ZHLI_LCF(II, IK)=0.
+            ENDIF
+         ENDDO
+      ENDDO
+   ELSE
+      ZHLC_LRC(:,:)=0.
+      ZHLI_LRI(:,:)=0.
+      ZHLC_LCF(:,:)=0.
+      ZHLI_LCF(:,:)=0.
+      ZHLC_HRC(:,:)=ZRCT(:,:)
+      ZHLC_HCF(:,:)=PCLDFR(:,:)
+      ZHLI_HRI(:,:)=ZRIT(:,:)
+      ZHLI_HCF(:,:)=PICEFR(:,:)
+   END IF
+  CALL LIMA_COMPUTE_PDF(CST, LIMAP, D%NIJT*(D%NKTE-D%NKTB+1), LIMAP%CSUBG_AUCV_RC, LIMAP%CSUBG_AUCV_RI, LIMAP%CSUBG_PR_PDF,&
+                        LLMICRO(:,D%NKTB:D%NKTE), PRHODREF(:,D%NKTB:D%NKTE), ZRCT(:,D%NKTB:D%NKTE), ZRIT(:,D%NKTB:D%NKTE), &
+                        PCLDFR(:,D%NKTB:D%NKTE), ZT(:,D%NKTB:D%NKTE), ZSIGMA_RC(:,D%NKTB:D%NKTE), &
+                        ZHLC_HCF(:,D%NKTB:D%NKTE), ZHLC_LCF(:,D%NKTB:D%NKTE), ZHLC_HRC(:,D%NKTB:D%NKTE), ZHLC_LRC(:,D%NKTB:D%NKTE), &
+                        ZHLI_HCF(:,D%NKTB:D%NKTE), ZHLI_LCF(:,D%NKTB:D%NKTE), ZHLI_HRI(:,D%NKTB:D%NKTE), ZHLI_LRI(:,D%NKTB:D%NKTE), &
+                        PPRCFR(:,D%NKTB:D%NKTE))
+  CALL LIMA_RAINFR_VERT(D, LIMAP, PPRCFR, ZRRT, ZRST, ZRGT, ZRHT)
+ELSE
+   PPRCFR(:,:)=1.
+   ZHLC_LRC(:,:)=0.
+   ZHLI_LRI(:,:)=0.
+   ZHLC_LCF(:,:)=0.
+   ZHLI_LCF(:,:)=0.
+   ZHLC_HRC(:,:)=ZRCT(:,:)
+   ZHLI_HRI(:,:)=ZRIT(:,:)
+   ZHLC_HCF(:,:)=1.
+   ZHLI_HCF(:,:)=1.
+ENDIF
+
+!-------------------------------------------------------------------------------
+!
 !*       2.     LOOP
 !               ----
 !
@@ -1315,6 +1426,14 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       ALLOCATE(ZCF1D(IPACK))
       ALLOCATE(ZIF1D(IPACK))
       ALLOCATE(ZPF1D(IPACK))
+      ALLOCATE(ZHLC_HRC1D(IPACK))
+      ALLOCATE(ZHLC_HCF1D(IPACK))
+      ALLOCATE(ZHLI_HRI1D(IPACK))
+      ALLOCATE(ZHLI_HCF1D(IPACK))
+      ALLOCATE(ZHLC_LRC1D(IPACK))
+      ALLOCATE(ZHLC_LCF1D(IPACK))
+      ALLOCATE(ZHLI_LRI1D(IPACK))
+      ALLOCATE(ZHLI_LCF1D(IPACK))
       ALLOCATE(ZLATHAM_IAGGS(IPACK))
       IF (LIMAP%LCRYSTAL_SHAPE) THEN
         ALLOCATE(ZCIT1D_SHAPE(IPACK,LIMAP%NNB_CRYSTAL_SHAPE))
@@ -1356,6 +1475,14 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          ZCF1D(II)            = PCLDFR(I1(II),I3(II))
          ZIF1D(II)            = PICEFR(I1(II),I3(II))
          ZPF1D(II)            = PPRCFR(I1(II),I3(II))
+         ZHLC_HRC1D(II)       = ZHLC_HRC(I1(II),I3(II))
+         ZHLC_HCF1D(II)       = ZHLC_HCF(I1(II),I3(II))
+         ZHLI_HRI1D(II)       = ZHLI_HRI(I1(II),I3(II))
+         ZHLI_HCF1D(II)       = ZHLI_HCF(I1(II),I3(II))
+         ZHLC_LRC1D(II)       = ZHLC_LRC(I1(II),I3(II))
+         ZHLC_LCF1D(II)       = ZHLC_LCF(I1(II),I3(II))
+         ZHLI_LRI1D(II)       = ZHLI_LRI(I1(II),I3(II))
+         ZHLI_LCF1D(II)       = ZHLI_LCF(I1(II),I3(II))
          IF (OELEC) THEN
            ZLATHAM_IAGGS(II) = PLATHAM_IAGGS(I1(II),I3(II))
          ELSE
@@ -1632,6 +1759,8 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
                             ZA_RH, ZA_CH,                                           &
                             ZEVAP1D,                                                &
                             ZCF1D, ZIF1D, ZPF1D,                                    &
+                            ZHLC_HCF1D, ZHLC_LCF1D, ZHLC_HRC1D, ZHLC_LRC1D,         &
+                            ZHLI_HCF1D, ZHLI_LCF1D, ZHLI_HRI1D, ZHLI_LRI1D,         &
                             ZLATHAM_IAGGS                                           )
 
       !
@@ -1890,7 +2019,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          ZRHT(I1(II),I3(II))      = ZRHT1D(II)
          IF (LIMAP%NMOM_C.GE.2) ZCCT(I1(II),I3(II))      = ZCCT1D(II)
          IF (LIMAP%NMOM_R.GE.2) ZCRT(I1(II),I3(II))      = ZCRT1D(II)
-         IF (LIMAP%NMOM_I.GE.2) ZCIT(I1(II),I3(II))      = ZCIT1D(II)
+         IF (LIMAP%NMOM_I.GE.1) ZCIT(I1(II),I3(II))      = ZCIT1D(II)
          IF (LIMAP%NMOM_S.GE.2) ZCST(I1(II),I3(II))      = ZCST1D(II)
          IF (LIMAP%NMOM_G.GE.2) ZCGT(I1(II),I3(II))      = ZCGT1D(II)
          IF (LIMAP%NMOM_H.GE.2) ZCHT(I1(II),I3(II))      = ZCHT1D(II)
@@ -2135,6 +2264,14 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       DEALLOCATE(ZIF1D)
       DEALLOCATE(ZPF1D)
       DEALLOCATE(ZLATHAM_IAGGS)
+      DEALLOCATE(ZHLC_HRC1D)
+      DEALLOCATE(ZHLC_HCF1D)
+      DEALLOCATE(ZHLI_HRI1D)
+      DEALLOCATE(ZHLI_HCF1D)
+      DEALLOCATE(ZHLC_LRC1D)
+      DEALLOCATE(ZHLC_LCF1D)
+      DEALLOCATE(ZHLI_LRI1D)
+      DEALLOCATE(ZHLI_LCF1D)
       !
       DEALLOCATE(ZMAXTIME)
       DEALLOCATE(ZTIME_THRESHOLD)
@@ -2535,6 +2672,7 @@ IF ( LIMAP%NMOD_IFN .GE. 1 )   PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_I
 IF ( LIMAP%NMOD_IMM .GE. 1 )   PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+LIMAP%NMOD_IMM-1) = ZIMMNT(D%NIJB:D%NIJE,:,:) *ZINV_TSTEP
 IF ( LIMAP%LHHONI) PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_HOM_HAZE) = ZHOMFT(D%NIJB:D%NIJE,:) *ZINV_TSTEP
 !
+IF ( LIMAP%NMOM_I.EQ.1 ) PCIT(:,:) = ZCIT(:,:)*PRHODREF(:,:)
 !
 !
 ! Call budgets

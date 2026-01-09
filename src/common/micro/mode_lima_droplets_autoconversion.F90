@@ -78,7 +78,7 @@ ZW2(:) = 0.0
 ZW1(:) = 0.0
 !
 IF (LIMAP%NMOM_C.EQ.1 .AND. LIMAP%LKESSLERAC) THEN
-   P_RC_AUTO(:) = - 1.E-3 * MAX ( PRCT(:) - 0.5E-3 / PRHODREF(:), 0. )
+   P_RC_AUTO(:) = - 1.E-3 * MAX ( PRCT(:) - LIMAP%XCRIAUTC / PRHODREF(:), 0. )
 ELSE IF (LIMAP%LKHKO) THEN
 !
 !        1. Autoconversion of cloud droplets

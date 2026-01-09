@@ -103,6 +103,7 @@ INTEGER :: IND                ! Number of interval to integrate the kernels
 REAL :: ZZESR, ZZESS, ZZEII   ! Mean efficiency of rain-aggregate collection, aggregate-aggregate collection
 REAL :: ZZFDINFTY             ! Factor used to define the "infinite" diameter
 !
+REAL :: ZCRI0, ZTCRI0         ! Second point to determine 10**(aT+b) law of ri->rs autoconversion
 !
 !INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
 !LOGICAL  :: GFLAG   ! Logical flag for printing the constatnts on the output
@@ -156,6 +157,34 @@ CALL PARAM_LIMA_MIXED_ASSOCIATE()
 !
 !*       1.2    Ice crystal characteristics
 !
+IF (LICE3) THEN
+   SELECT CASE (CPRISTINE_ICE_LIMA)
+   CASE('PLAT')
+      XAI = 0.82      ! Plates
+      XBI = 2.5       ! Plates
+      XC_I = 800.     ! Plates
+      XDI = 1.0       ! Plates
+      XC1I = 1./XPI   ! Plates
+      XGAMMAI = 0.096
+      XDELTAI = 1.83    
+   CASE('COLU')
+      XAI = 2.14E-3   ! Columns
+      XBI = 1.7       ! Columns
+      XC_I = 2.1E5    ! Columns
+      XDI = 1.585     ! Columns
+      XC1I = 0.8      ! Columns
+      XGAMMAI = 0.659
+      XDELTAI = 2.0
+   CASE('BURO')
+      XAI = 44.0      ! Bullet rosettes
+      XBI = 3.0       ! Bullet rosettes
+      XC_I = 4.3E5    ! Bullet rosettes
+      XDI = 1.663     ! Bullet rosettes
+      XC1I = 0.5      ! Bullet rosettes
+      XGAMMAI = 0.062
+      XDELTAI = 1.81    
+   END SELECT
+ELSE
 SELECT CASE (CPRISTINE_ICE_LIMA)
   CASE('PLAT')
     XAI = 0.82      ! Plates
@@ -236,6 +265,7 @@ SELECT CASE (CPRISTINE_ICE_LIMA)
     XDELTAI = 1.8    
     XC1I = 0.5      ! Hollow_Bullet rosettes_from Yang et al (2013)    
 END SELECT
+END IF
 !
 IF (LCRYSTAL_SHAPE) THEN
   CALL PARAM_LIMA_COLD_ALLOCATE_1D('XAI_SHAPE',  NNB_CRYSTAL_SHAPE)
@@ -379,6 +409,7 @@ XC1S = 1./XPI
 XAG = 19.6  ! Lump graupel case
 XBG = 2.8   ! Lump graupel case
 XCG = 122.  ! Lump graupel case
+IF (LICE3) XCG = 124.  ! Lump graupel case
 XDG = 0.66  ! Lump graupel case
 !
 XCCG = 5.E5
@@ -981,7 +1012,19 @@ XCOLEXII = 0.025   !  Temperature factor of the I+I collection efficiency
 !
 !*       6.3    Constants for pristine ice autoconversion
 !
+XTIMAUTI = 1.E-3  !  Time constant at T=T_t
 XTEXAUTI = 0.025   !  Temperature factor of the I+I collection efficiency
+IF (LICE3) XTEXAUTI = 0.015
+IF(LCRIAUTI) THEN
+  !second point to determine 10**(aT+b) law
+  ZTCRI0=-40.0
+  ZCRI0=1.25E-6
+  XBCRIAUTI=-( LOG10(XCRIAUTI) - LOG10(ZCRI0)*XT0CRIAUTI/ZTCRI0 )&
+                   *ZTCRI0/(XT0CRIAUTI-ZTCRI0)
+  XACRIAUTI=(LOG10(ZCRI0)-XBCRIAUTI)/ZTCRI0
+ELSE
+  XT0CRIAUTI=(LOG10(XCRIAUTI)-XBCRIAUTI)/0.06
+ENDIF
 !
 !!$GFLAG = .TRUE.
 !!$IF (GFLAG) THEN
@@ -999,8 +1042,9 @@ XITAUTS_THRESHOLD = 7.5
 !
 !*       6.4    Constants for snow aggregation
 !
+XCOLIS   = 0.25 ! Collection efficiency of I+S
 XCOLEXIS = 0.05    ! Temperature factor of the I+S collection efficiency
-XFIAGGS  = (XPI/4.0)*0.25*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
+XFIAGGS  = XNS*(XPI/4.0)*XCOLIS*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
 XEXIAGGS = -XDS - 2.0
 XAGGS_CLARGE1 = XKER_ZRNIC_A2*ZGAMI(2)
 XAGGS_CLARGE2 = XKER_ZRNIC_A2*ZGAMS(2)
@@ -1044,7 +1088,7 @@ XEXSRIMCG= -XBS
 !Pour Murakami 1990
 XSRIMCG2 = XAG*MOMG(XALPHAS,XNUS,XBG)
 XSRIMCG3 = 0.1
-XEXSRIMCG2=XBG
+XEXSRIMCG2=-XBG
 !!$GFLAG = .TRUE.
 !!$IF (GFLAG) THEN
 !!$  WRITE(UNIT=ILUOUT0,FMT='("      riming of the aggregates")')
@@ -1218,15 +1262,15 @@ IF( (IACCLBDAS/=NACCLBDAS) .OR. (IACCLBDAR/=NACCLBDAR) .OR. (IKND/=IND) .OR. &
     (ABS(ZACCLBDAS_MAX-XACCLBDAS_MAX).GE.(0.001*ZACCLBDAS_MAX)) .OR. (ZACCLBDAR_MAX/=XACCLBDAR_MAX) .OR. &
     (ABS(ZACCLBDAS_MIN-XACCLBDAS_MIN).GE.(0.001*ZACCLBDAS_MIN)) .OR. (ZACCLBDAR_MIN/=XACCLBDAR_MIN) .OR. &
     (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
-  CALL LIMA_RRCOLSS ( IACCLBDAS, IACCLBDAR, IND, XALPHAS, XNUS, XALPHAR, XNUR, &
+  CALL LIMA_RRCOLSS ( NACCLBDAS, NACCLBDAR, IND, XALPHAS, XNUS, XALPHAR, XNUR, &
                  ZZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
                  ZZFDINFTY, XKER_RACCSS, XAG, XBS, XAS                        )
-  CALL LIMA_RZCOLX  ( IACCLBDAS, IACCLBDAR, IND, XALPHAS, XNUS, XALPHAR, XNUR, &
+  CALL LIMA_RZCOLX  ( NACCLBDAS, NACCLBDAR, IND, XALPHAS, XNUS, XALPHAR, XNUR, &
                  ZZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                 &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
                  ZZFDINFTY, XKER_RACCS                                        )
-  CALL LIMA_RSCOLRG ( IACCLBDAS, IACCLBDAR, IND, XALPHAS, XNUS, XALPHAR, XNUR, &
+  CALL LIMA_RSCOLRG ( NACCLBDAS, NACCLBDAR, IND, XALPHAS, XNUS, XALPHAR, XNUR, &
                  ZZESR, XBS, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
                  ZZFDINFTY, XKER_SACCRG,XAG, XBS, XAS                         )
@@ -1561,11 +1605,9 @@ XCOLIR    = 1.0
 ! values of these coeficients differ from the single-momemt rain_ice case
 !
 XEXRCFRI  = -XDR-5.0
-XRCFRI    = ((XPI**2)/24.0)*XRHOLW*XCOLIR*XCR*(ZRHO00**XCEXVT)     &
-                                                     *MOMG(XALPHAR,XNUR,XDR+5.0)
+XRCFRI    = ((XPI**2)/24.0)*XRHOLW*XCOLIR*XCR*(ZRHO00**XCEXVT)*MOMG(XALPHAR,XNUR,XDR+5.0)
 XEXICFRR  = -XDR-2.0
-XICFRR    = (XPI/4.0)*XCOLIR*XCR*(ZRHO00**XCEXVT)                  &
-                                                     *MOMG(XALPHAR,XNUR,XDR+2.0)
+XICFRR    = (XPI/4.0)*XCOLIR*XCR*(ZRHO00**XCEXVT)*MOMG(XALPHAR,XNUR,XDR+2.0)
 !
 !!$GFLAG = .TRUE.
 !!$IF (GFLAG) THEN
@@ -1585,6 +1627,7 @@ XMAXLBDG = MOMG(XALPHAG,XNUG,XBG)**(1./XBG)/XMVDMIN_G
 !               and for the Hallett-Mossop process
 !
 XCOLCG  = 0.6  !  Estimated from Cober and List (1993)
+IF (NMOM_G.EQ.1) XCOLCG  = 1.
 XFCDRYG = (XPI/4.0)*XCOLCG*XCG*(ZRHO00**XCEXVT)*MOMG(XALPHAG,XNUG,XDG+2.0)
 !
 XHM_COLLCG= 0.9   ! Collision efficiency graupel/droplet (with Dc>25 microns)

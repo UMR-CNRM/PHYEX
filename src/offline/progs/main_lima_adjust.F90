@@ -51,6 +51,21 @@ REAL, ALLOCATABLE   :: PAERO        (:,:,:,:)
 REAL, ALLOCATABLE   :: PSOLORG        (:,:,:,:)
 REAL, ALLOCATABLE   :: PMI        (:,:,:,:)
 
+REAL,    ALLOCATABLE   :: ZICE_CLD_WGT   (:,:)   
+REAL,    ALLOCATABLE   :: PWEIGHT_MF_CLOUD(:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM6          (:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM7          (:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM8          (:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM9          (:,:,:)
+REAL,    ALLOCATABLE   :: PHLC_HRC       (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLC_HCF       (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLI_HRI       (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLI_HCF       (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLC_HRC_OUT   (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLC_HCF_OUT   (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLI_HRI_OUT   (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLI_HCF_OUT   (:,:,:)   
+
 INTEGER :: NPROMA, NGPBLKS, NFLEVG
 INTEGER :: JLON
 INTEGER, TARGET :: IBL
@@ -120,7 +135,21 @@ CALL GETDATA_LIMA_ADJUST (NPROMA, NGPBLKS, NFLEVG, KRR, KSV, NSP, NCARB, NSOA, &
                          &PSRCS, PCLDFR, PICEFR, &
                          &PSRCS_OUT, PCLDFR_OUT, PICEFR_OUT, &
                          &PAERO, PSOLORG, PMI,&                                                          
+                         &ZICE_CLD_WGT, PWEIGHT_MF_CLOUD,&
+                         &ZDUM6, ZDUM7, ZDUM8, ZDUM9, &
+                         &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, &
+                         &PHLC_HRC_OUT, PHLC_HCF_OUT, PHLI_HRI_OUT, PHLI_HCF_OUT, &
                          &LLVERBOSE)
+
+!PWEIGHT_MF_CLOUD(:,:,:)=0.5
+!PHLC_HRC       (:,:,:)=PRT(:,:,:,2) 
+!PHLC_HCF       (:,:,:)=PCLDFR(:,:,:)
+!PHLI_HRI       (:,:,:)=PRT(:,:,:,4)
+!PHLI_HCF       (:,:,:)=1.
+!PHLC_HRC_OUT   (:,:,:)=PRT(:,:,:,2)
+!PHLC_HCF_OUT   (:,:,:)=PCLDFR(:,:,:)
+!PHLI_HRI_OUT   (:,:,:)=PRT(:,:,:,4)
+!PHLI_HCF_OUT   (:,:,:)=1.
 
 KLEV = SIZE (PRS, 2)
 
@@ -245,7 +274,12 @@ DO ITIME = 1, NTIME
                            PRT(:, :, :, IBL), PRS(:, :, :, IBL), PSVT(:, :, :, IBL), PSVS(:, :, :, IBL), &
                            HACTCCN, PAERO(:,:,:, IBL), PSOLORG(:,:,:,IBL), PMI(:,:,:,IBL), &
                            PTHS(:, :, IBL), PHYEX%MISC%OCOMPUTE_SRC, PSRCS(:, :, IBL), PCLDFR(:, :, IBL), PICEFR(:, :, IBL), &
-                           PRC_MF(:, :, IBL), PRI_MF(:, :, IBL), PCF_MF(:, :, IBL) &
+                           PRC_MF(:, :, IBL), PRI_MF(:, :, IBL), PCF_MF(:, :, IBL), &
+                           PICE_CLD_WGT=ZICE_CLD_WGT(:, IBL), PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD (:, :, IBL),                    &
+                           PHLC_HRC=PHLC_HRC(:, :, IBL), PHLC_HCF=PHLC_HCF(:, :, IBL), &
+                           PHLI_HRI=PHLI_HRI(:, :, IBL), PHLI_HCF=PHLI_HCF(:, :, IBL),            &
+                           PHLC_HRC_MF=ZDUM6(:, :, IBL), PHLC_HCF_MF=ZDUM7(:, :, IBL), &
+                           PHLI_HRI_MF=ZDUM8(:, :, IBL), PHLI_HCF_MF=ZDUM9(:, :, IBL) &
 #ifdef USE_STACK
     & , YDSTACK=YLSTACK &
 #endif
@@ -298,6 +332,10 @@ IF (LLCHECK .OR. LLSTAT .OR. LLCHECKDIFF) THEN
     CALL DIFF ("PRS(1)",   PRS_OUT      (:,:,1,IBL), PRS      (:,:,1,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
     CALL DIFF ("PRS(2)",   PRS_OUT      (:,:,2,IBL), PRS      (:,:,2,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
     CALL DIFF ("PRS(3)",   PRS_OUT      (:,:,3,IBL), PRS      (:,:,3,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+!    CALL DIFF ("PHLC_HRC", PHLC_HRC_OUT (:,:,IBL), PHLC_HRC (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+!    CALL DIFF ("PHLC_HCF", PHLC_HCF_OUT (:,:,IBL), PHLC_HCF (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+!    CALL DIFF ("PHLI_HRI", PHLI_HRI_OUT (:,:,IBL), PHLI_HRI (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+!    CALL DIFF ("PHLI_HCF", PHLI_HCF_OUT (:,:,IBL), PHLI_HCF (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
   ENDDO
 ENDIF
 

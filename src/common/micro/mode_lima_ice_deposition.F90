@@ -9,7 +9,7 @@ CONTAINS
 !     ##########################################################################
   SUBROUTINE LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE, &
                                   PRHODREF, PT,  PSSI, PAI, PCJ, PLSFACT,   &
-                                  PRIT, PCIT, PCIT_SHAPE, PLBDI,            &
+                                  PIF, PRIT, PCIT, PCIT_SHAPE, PLBDI,       &
                                   P_TH_DEPI, P_RI_DEPI, P_SHCI_HACH,        &
                                   P_RI_CNVS, P_CI_CNVS, P_SHCI_CNVS         )
 !     ##########################################################################
@@ -71,6 +71,7 @@ REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PAI  ! thermodyn. fct Ai
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ  ! 
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  ! 
 !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PIF     ! Ice cloud fraction 
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIT    ! Cloud ice m.r. at t 
 !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT    ! Ice crystal C. at t
@@ -102,6 +103,8 @@ P_TH_DEPI(:) = 0.
 P_RI_DEPI(:) = 0.
 P_RI_CNVS(:) = 0.
 P_CI_CNVS(:) = 0.
+P_SHCI_HACH(:,:) = 0.
+P_SHCI_CNVS(:,:) = 0.
 !
 ! Physical limitations
 !
@@ -119,8 +122,8 @@ IF (LIMAP%NMOM_I.EQ.1) THEN
 !        -----------------------------------------
 !
    WHERE( GMICRO )
-      ZCRIAUTI(:)=MIN(0.2E-4,10**(0.06*(PT(:)-CST%XTT)-3.5))
-      ZZW(:)   = 1.E-3 * EXP( 0.015*(PT(:)-CST%XTT) ) * MAX( PRIT(:)-ZCRIAUTI(:),0.0 )
+      ZCRIAUTI(:)=MIN(LIMAP%XCRIAUTI,10**(LIMAP%XACRIAUTI*(PT(:)-CST%XTT)+LIMAP%XBCRIAUTI))
+      ZZW(:)   = LIMAC%XTIMAUTI * EXP( LIMAC%XTEXAUTI*(PT(:)-CST%XTT) ) * MAX( PRIT(:)-ZCRIAUTI(:)*PIF(:),0.0 )
       P_RI_CNVS(:) = - ZZW(:)
    END WHERE
 ELSE

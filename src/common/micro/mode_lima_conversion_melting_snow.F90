@@ -92,7 +92,7 @@ WHERE( PRST(:)>LIMAP%XRTMIN(5) .AND. PCST(:)>LIMAP%XCTMIN(5) .AND. PT(:)>CST%XTT
 !
 ! compute RSMLT
 !
-   ZW(:)  = LIMAM%XFSCVMG*MAX( 0.0,( -ZW(:) * PCST(:) *                        &
+   ZW(:)  = LIMAM%XFSCVMG*MAX( 0.0,( -ZW(:) * PCST(:) / CST%XLMTT *                        &
                                ( LIMAC%X0DEPS*PLBDS(:)**LIMAC%XEX0DEPS +             &
                                  LIMAC%X1DEPS*PCJ(:)*PLBDS(:)**LIMAC%XEX1DEPS *      &
                                    (1+0.5*(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEX1DEPS/LIMAP%XALPHAS)) ))

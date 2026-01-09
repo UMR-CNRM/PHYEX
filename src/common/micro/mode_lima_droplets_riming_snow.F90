@@ -84,7 +84,7 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_HMS
 !*       0.2   Declarations of local variables :
 !
 REAL,    DIMENSION(SIZE(PRCT))  :: ZZW1, ZZW2, ZZW3, ZZW4, ZZW5
-REAL,    DIMENSION(SIZE(PRCT))  :: Z_RC_RIM, Z_RS_RIM, Z_RG_RIM
+REAL,    DIMENSION(SIZE(PRCT))  :: Z_RC_RIM
 !
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC2              ! Vector of indices
 REAL,    DIMENSION(SIZE(PRCT))  :: ZVEC1,ZVEC2,ZVEC1W ! Work vectors
@@ -131,18 +131,17 @@ DO II = 1, SIZE(PRCT)
 !        4.     riming
 !
    ! Cloud droplets collected
-! total mass loss of cloud droplets, < 0
+   ! total mass loss of cloud droplets, < 0
     Z_RC_RIM(II) = - LIMAM%XCRIMSS  * PRCT(II) * PCST(II)*(1+(LIMAC%XFVELOS/PLBDS(II))&
          **LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAM%XEXCRIMSS/LIMAP%XALPHAS) &
                                 * PRHODREF(II)**(-LIMAP%XCEXVT+1) * PLBDS(II)**LIMAM%XEXCRIMSS
     P_CC_RIM(II) = Z_RC_RIM(II) * (PCCT(II) / PRCT(II)) ! Lambda_c**3
     !
     ! Cloud droplets collected on small aggregates add to snow
-    Z_RS_RIM(II)   = -Z_RC_RIM(II) * ZZW1(II)
+!      P_RS_RIM(II) = - P_RC_RIM(II) * ZZW1(II)
     P_RC_RIMSS(II) = Z_RC_RIM(II) * ZZW1(II)  ! < 0, loss of mass for rc
     !
     ! Cloud droplets collected on large aggregates add to graupel
-    Z_RG_RIM(II)   = -Z_RC_RIM(II) - Z_RS_RIM(II)
     P_RC_RIMSG(II) = Z_RC_RIM(II) - P_RC_RIMSS(II) ! < 0, loss of mass for rc
     !
     IF (LIMAP%LMURAKAMI) THEN
@@ -151,8 +150,8 @@ DO II = 1, SIZE(PRCT)
                 - LIMAM%XGAMINC_RIM4( IVEC2(II)   )*(ZVEC2(II) - 1.0)
       ZZW5(II) = ZVEC1(II)
       ZZW3(II) = LIMAM%XSRIMCG * PRHODREF(II) * PCST(II) * PLBDS(II)**LIMAM%XEXSRIMCG * (1.0 - ZZW2(II))!/(PTSTEP*PRHODREF(II))
-      ZZW3(II) = Z_RG_RIM(II)*ZZW3(II)/ &
-                    MAX(1.E-10, & !-20
+      ZZW3(II) = - P_RC_RIMSG(II)*ZZW3(II)/ &
+                    MAX(1.E-20, & !-20
                         LIMAM%XSRIMCG3*LIMAM%XSRIMCG2*PCST(II)*PRHODREF(II)*PLBDS(II)**(LIMAM%XEXSRIMCG2)*(1.-ZZW5(II))- &
                         LIMAM%XSRIMCG3*ZZW3(II))
     ELSE
@@ -160,7 +159,7 @@ DO II = 1, SIZE(PRCT)
       ZZW3(II) = PRST(II)*(1.0 - ZZW2(II))/PTSTEP
     END IF
     !
-    P_RS_RIMCG(II) = ZZW3(II)
+    P_RS_RIMCG(II) = ZZW3(II) !!! RSRIMCG is a loss for snow, but must be positive value for electricity !!!
     P_CS_RIM(II) = -ZZW3(II) * PCST(II)/PRST(II)
     !
     P_TH_RIM(II) = - Z_RC_RIM(II)*(PLSFACT(II)-PLVFACT(II))
@@ -171,9 +170,7 @@ DO II = 1, SIZE(PRCT)
     P_RS_RIMCG(II) = 0.
     Z_RC_RIM(II) = 0.
     P_CC_RIM(II) = 0.
-    Z_RS_RIM(II) = 0.
     P_CS_RIM(II) = 0.
-    Z_RG_RIM(II) = 0.
   END IF
 !
 !*       Hallett-Mossop ice production (HMS)  
