@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 find_package(ecbuild 3.11 REQUIRED HINTS ${CMAKE_SOURCE_DIR})
-project(PHYEX VERSION 1.0 LANGUAGES Fortran)
+project(PHYEX VERSION 1.0 LANGUAGES C Fortran)
 
 include(phyex_macros)
 
@@ -29,10 +29,17 @@ if(HAVE_SINGLE_PRECISION)
 endif()
 
 #-----------------------------------------------------------------------
-# Dependencies 
+# Dependencies
 #-----------------------------------------------------------------------
 
-ecbuild_find_package(NAME fiat REQUIRED)
+# Fetch fiat from GitHub
+include(FetchContent)
+FetchContent_Declare(
+  fiat
+  GIT_REPOSITORY https://github.com/ecmwf-ifs/fiat
+  GIT_TAG        main
+)
+FetchContent_MakeAvailable(fiat)
 
 #-----------------------------------------------------------------------
 # Source structure
@@ -159,6 +166,80 @@ foreach(PRECISION ${precision_list})
   endif()
 
 endforeach()
+
+#-----------------------------------------------------------------------
+# Python Bindings (scikit-build-core support)
+#-----------------------------------------------------------------------
+
+# Check if building Python package
+if(DEFINED SKBUILD)
+  message(STATUS "Building Python package with scikit-build-core")
+
+  # Find Python
+  find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
+  find_package(Python REQUIRED COMPONENTS NumPy)
+
+  # Cython configuration
+  set(CYTHON_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/bridge/_phyex_wrapper.pyx")
+  set(CYTHON_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/_phyex_wrapper.c")
+  set(BRIDGE_FORTRAN_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/bridge/phyex_bridge.F90")
+
+  # Check if Cython is available
+  execute_process(
+    COMMAND ${Python_EXECUTABLE} -m cython --version
+    RESULT_VARIABLE CYTHON_CHECK
+    OUTPUT_QUIET
+    ERROR_QUIET
+  )
+
+  if(CYTHON_CHECK EQUAL 0)
+    message(STATUS "Cython found")
+
+    # Generate C code from Cython
+    add_custom_command(
+      OUTPUT ${CYTHON_OUTPUT}
+      COMMAND ${Python_EXECUTABLE} -m cython ${CYTHON_SOURCE} -o ${CYTHON_OUTPUT}
+      DEPENDS ${CYTHON_SOURCE}
+      COMMENT "Generating C code from Cython"
+    )
+
+    # Create Python extension module
+    Python_add_library(_phyex_wrapper MODULE ${CYTHON_OUTPUT} ${BRIDGE_FORTRAN_SOURCE})
+
+    # Link against the PHYEX library (single precision for Python bindings)
+    if(HAVE_SINGLE_PRECISION)
+      target_link_libraries(_phyex_wrapper PRIVATE phyex_sp)
+      target_include_directories(_phyex_wrapper PRIVATE
+        ${CMAKE_CURRENT_BINARY_DIR}/modules_sp
+        ${Python_NumPy_INCLUDE_DIRS}
+      )
+    else()
+      # Fallback to double precision if single is not available
+      target_link_libraries(_phyex_wrapper PRIVATE phyex_dp)
+      target_include_directories(_phyex_wrapper PRIVATE
+        ${CMAKE_CURRENT_BINARY_DIR}/modules_dp
+        ${Python_NumPy_INCLUDE_DIRS}
+      )
+    endif()
+
+    # Set module properties
+    set_target_properties(_phyex_wrapper PROPERTIES
+      PREFIX ""
+      OUTPUT_NAME "_phyex_wrapper"
+      SUFFIX "${Python_SOABI}${CMAKE_SHARED_MODULE_SUFFIX}"
+    )
+
+    # Install Python extension module
+    install(TARGETS _phyex_wrapper
+      LIBRARY DESTINATION ${SKBUILD_PLATLIB_DIR}/phyex
+      RUNTIME DESTINATION ${SKBUILD_PLATLIB_DIR}/phyex
+    )
+
+    message(STATUS "Python bindings will be built and installed to ${SKBUILD_PLATLIB_DIR}/phyex")
+  else()
+    message(WARNING "Cython not found, skipping Python bindings")
+  endif()
+endif()
 
 #-----------------------------------------------------------------------
 # Final packaging

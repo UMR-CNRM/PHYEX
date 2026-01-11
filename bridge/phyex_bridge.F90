@@ -1,0 +1,981 @@
+MODULE phyex_bridge
+    USE ISO_C_BINDING
+    ! Import the original routines and required modules
+    USE MODI_ICE_ADJUST, ONLY : ICE_ADJUST
+    USE MODI_RAIN_ICE, ONLY : RAIN_ICE
+    USE MODI_SHALLOW_CONVECTION, ONLY : SHALLOW_CONVECTION
+    USE MODI_TURB, ONLY : TURB
+    USE PARKIND1, ONLY : JPIM, JPRB
+    USE MODD_DIMPHYEX, ONLY : DIMPHYEX_t
+    USE MODD_CST, ONLY : CST_t, CST
+    USE MODD_RAIN_ICE_PARAM_n
+    USE MODD_RAIN_ICE_DESCR_n
+    USE MODD_PARAM_ICE_n
+    USE MODD_NEB_n, ONLY : NEB_t
+    USE MODD_TURB_n, ONLY : TURB_t
+    USE MODD_BUDGET, ONLY : TBUDGETCONF_t, TBUDGETDATA_PTR
+    USE MODD_CONVPAR, ONLY : CONVPAR_t
+    USE MODD_CONVPAR_SHAL, ONLY : CONVPAR_SHAL
+    USE MODD_NSV, ONLY : NSV_t
+    USE MODD_CTURB, ONLY : CSTURB_t, CSTURB
+    USE MODD_LES, ONLY : TLES_t
+    USE MODD_IO, ONLY : TFILEDATA
+    USE MODD_ELEC_PARAM, ONLY : ELEC_PARAM_t
+    USE MODD_ELEC_DESCR, ONLY : ELEC_DESCR_t
+    USE MODE_INI_CST, ONLY : INI_CST
+    USE MODE_INI_RAIN_ICE, ONLY : INI_RAIN_ICE
+
+    IMPLICIT NONE
+
+    ! Define working precision based on JPRB (adjusts to sp or dp build)
+#ifdef SINGLE_PRECISION
+    INTEGER, PARAMETER :: WP = C_FLOAT
+#else
+    INTEGER, PARAMETER :: WP = C_DOUBLE
+#endif
+
+CONTAINS
+
+    ! C-callable wrapper for ICE_ADJUST
+    SUBROUTINE c_ice_adjust_wrap(                                          &
+        nlon, nlev, krr, timestep,                                         &
+        ptr_sigqsat, ptr_pabs, ptr_sigs, ptr_th, ptr_exn, ptr_exn_ref,    &
+        ptr_rho_dry_ref, ptr_rv, ptr_rc, ptr_ri, ptr_rr, ptr_rs, ptr_rg,  &
+        ptr_cf_mf, ptr_rc_mf, ptr_ri_mf,                                   &
+        ptr_rvs, ptr_rcs, ptr_ris, ptr_ths,                                &
+        ptr_cldfr, ptr_icldfr, ptr_wcldfr                                  &
+    ) BIND(C, name="c_ice_adjust")
+    
+        ! C-compatible arguments (using WP for working precision)
+        INTEGER(C_INT), VALUE, INTENT(IN) :: nlon, nlev, krr
+        REAL(WP), VALUE, INTENT(IN) :: timestep
+        
+        ! C pointers for input arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_sigqsat      ! 1D: (nlon)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_pabs         ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_sigs         ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_th           ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_exn          ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_exn_ref      ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rho_dry_ref  ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rv           ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rc           ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_ri           ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rr           ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rs           ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rg           ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_cf_mf        ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rc_mf        ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_ri_mf        ! 2D: (nlon, nlev)
+        
+        ! C pointers for input/output tendency arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rvs          ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rcs          ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_ris          ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_ths          ! 2D: (nlon, nlev)
+        
+        ! C pointers for output arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_cldfr        ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_icldfr       ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_wcldfr       ! 2D: (nlon, nlev)
+
+        ! Fortran pointers to map C data (using WP for working precision)
+        REAL(KIND=WP), POINTER, DIMENSION(:) :: f_sigqsat
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_pabs, f_sigs, f_th, f_exn, f_exn_ref
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_rho_dry_ref, f_rv, f_rc, f_ri
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_rr, f_rs, f_rg
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_cf_mf, f_rc_mf, f_ri_mf
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_rvs, f_rcs, f_ris, f_ths
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_cldfr, f_icldfr, f_wcldfr
+        
+        ! Local variables for PHYEX structures
+        TYPE(DIMPHYEX_t) :: D
+        TYPE(RAIN_ICE_PARAM_t) :: ICEP
+        TYPE(NEB_t) :: NEBN
+        TYPE(TURB_t) :: TURBN
+        TYPE(PARAM_ICE_t) :: PARAMI
+        TYPE(TBUDGETCONF_t) :: BUCONF
+        TYPE(TBUDGETDATA_PTR), DIMENSION(0) :: TBUDGETS
+        
+        ! Additional required arrays (using WP)
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PRHODJ, PZZ
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PMFCONV
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PWEIGHT_MF_CLOUD
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PSSIO, PSSIU, PIFR
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PSRCS
+        LOGICAL :: LMFCONV, OCOMPUTE_SRC
+        
+        ! Convert C pointers to Fortran arrays
+        CALL C_F_POINTER(ptr_sigqsat, f_sigqsat, [nlon])
+        CALL C_F_POINTER(ptr_pabs, f_pabs, [nlon, nlev])
+        CALL C_F_POINTER(ptr_sigs, f_sigs, [nlon, nlev])
+        CALL C_F_POINTER(ptr_th, f_th, [nlon, nlev])
+        CALL C_F_POINTER(ptr_exn, f_exn, [nlon, nlev])
+        CALL C_F_POINTER(ptr_exn_ref, f_exn_ref, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rho_dry_ref, f_rho_dry_ref, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rv, f_rv, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rc, f_rc, [nlon, nlev])
+        CALL C_F_POINTER(ptr_ri, f_ri, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rr, f_rr, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rs, f_rs, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rg, f_rg, [nlon, nlev])
+        CALL C_F_POINTER(ptr_cf_mf, f_cf_mf, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rc_mf, f_rc_mf, [nlon, nlev])
+        CALL C_F_POINTER(ptr_ri_mf, f_ri_mf, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rvs, f_rvs, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rcs, f_rcs, [nlon, nlev])
+        CALL C_F_POINTER(ptr_ris, f_ris, [nlon, nlev])
+        CALL C_F_POINTER(ptr_ths, f_ths, [nlon, nlev])
+        CALL C_F_POINTER(ptr_cldfr, f_cldfr, [nlon, nlev])
+        CALL C_F_POINTER(ptr_icldfr, f_icldfr, [nlon, nlev])
+        CALL C_F_POINTER(ptr_wcldfr, f_wcldfr, [nlon, nlev])
+        
+        ! Initialize DIMPHYEX structure
+        D%NIT = nlon
+        D%NIB = 1
+        D%NIE = nlon
+        D%NJT = 1
+        D%NJB = 1
+        D%NJE = 1
+        D%NKT = nlev
+        D%NKL = 1        ! Ground to space ordering
+        D%NKA = 1
+        D%NKU = nlev
+        D%NKB = 1
+        D%NKE = nlev
+        D%NKTB = 1
+        D%NKTE = nlev
+        D%NIBC = 1
+        D%NJBC = 1
+        D%NIEC = nlon
+        D%NJEC = 1
+        D%NIJT = nlon
+        D%NIJB = 1
+        D%NIJE = nlon
+        D%NKLES = nlev
+        D%NLESMASK = 0
+        D%NLES_TIMES = 0
+        
+        ! Initialize physical constants (uses global CST module)
+        CALL INI_CST()
+        
+        ! Initialize NEBN (nebulosity/cloud parameters) - AROME defaults
+        NEBN%LSUBG_COND = .FALSE.     ! No subgrid condensation
+        NEBN%LSIGMAS = .TRUE.         ! Use sigma_s
+        NEBN%CFRAC_ICE_ADJUST = 'S'   ! Standard
+        NEBN%CCONDENS = 'CB02'        ! Condensation scheme
+        NEBN%CLAMBDA3 = 'CB'          ! Lambda3 formulation
+        
+        ! Initialize PARAMI (ice parameters)
+        PARAMI%CSUBG_MF_PDF = 'NONE'  ! No mass flux PDF
+        PARAMI%LOCND2 = .FALSE.       ! OCND2 option
+        
+        ! Initialize budget configuration (disable budgets)
+        BUCONF%LBUDGET_TH = .FALSE.
+        BUCONF%LBUDGET_RV = .FALSE.
+        BUCONF%LBUDGET_RC = .FALSE.
+        BUCONF%LBUDGET_RI = .FALSE.
+        
+        ! Allocate and initialize additional required arrays
+        ALLOCATE(PRHODJ(nlon, nlev))
+        ALLOCATE(PZZ(nlon, nlev))
+        ALLOCATE(PMFCONV(nlon, nlev))
+        ALLOCATE(PWEIGHT_MF_CLOUD(nlon, nlev))
+        ALLOCATE(PSSIO(nlon, nlev))
+        ALLOCATE(PSSIU(nlon, nlev))
+        ALLOCATE(PIFR(nlon, nlev))
+        ALLOCATE(PSRCS(nlon, nlev))
+        
+        ! Compute PRHODJ from density and assume unit Jacobian
+        PRHODJ = f_rho_dry_ref
+        
+        ! Set height field (simplified - could be passed as parameter)
+        PZZ = 0.0_WP
+        
+        ! Initialize mass flux arrays
+        PMFCONV = 0.0_WP
+        PWEIGHT_MF_CLOUD = 0.0_WP
+        LMFCONV = .FALSE.
+        
+        ! Initialize output arrays
+        PSSIO = 0.0_WP
+        PSSIU = 0.0_WP
+        PIFR = 0.0_WP
+        PSRCS = 0.0_WP
+        OCOMPUTE_SRC = .FALSE.
+
+        ! OpenACC data region for GPU execution
+        !$acc data create(PRHODJ, PZZ, PMFCONV, PWEIGHT_MF_CLOUD, PSSIO, PSSIU, PIFR, PSRCS) &
+        !$acc&     deviceptr(f_sigqsat, f_pabs, f_sigs, f_th, f_exn, f_exn_ref, f_rho_dry_ref) &
+        !$acc&     deviceptr(f_rv, f_rc, f_ri, f_rr, f_rs, f_rg) &
+        !$acc&     deviceptr(f_cf_mf, f_rc_mf, f_ri_mf) &
+        !$acc&     deviceptr(f_rvs, f_rcs, f_ris, f_ths) &
+        !$acc&     deviceptr(f_cldfr, f_icldfr, f_wcldfr)
+
+        ! Call the actual ICE_ADJUST routine (using global CST module)
+        CALL ICE_ADJUST(                                                   &
+            D, CST, ICEP, NEBN, TURBN, PARAMI, BUCONF, krr,                &
+            'BRID',                                                        &
+            timestep, f_sigqsat,                                           &
+            PRHODJ, f_exn_ref, f_rho_dry_ref, f_sigs, LMFCONV, PMFCONV,   &
+            f_pabs, PZZ,                                                   &
+            f_exn, f_cf_mf, f_rc_mf, f_ri_mf, PWEIGHT_MF_CLOUD,            &
+            f_icldfr, f_wcldfr, PSSIO, PSSIU, PIFR,                        &
+            f_rv, f_rc, f_rvs, f_rcs, f_th, f_ths,                         &
+            OCOMPUTE_SRC, PSRCS, f_cldfr,                                  &
+            f_rr, f_ri, f_ris, f_rs, f_rg, TBUDGETS, 0                     &
+        )
+
+        !$acc end data
+
+        ! Cleanup
+        DEALLOCATE(PRHODJ, PZZ, PMFCONV, PWEIGHT_MF_CLOUD)
+        DEALLOCATE(PSSIO, PSSIU, PIFR, PSRCS)
+
+    END SUBROUTINE c_ice_adjust_wrap
+
+    ! C-callable initialization for RAIN_ICE
+    SUBROUTINE c_ini_rain_ice_wrap(timestep, dzmin, krr, hcloud) BIND(C, name="c_ini_rain_ice")
+        REAL(WP), VALUE, INTENT(IN) :: timestep
+        REAL(WP), VALUE, INTENT(IN) :: dzmin
+        INTEGER(C_INT), VALUE, INTENT(IN) :: krr
+        CHARACTER(KIND=C_CHAR), DIMENSION(4), INTENT(IN) :: hcloud
+
+        CHARACTER(LEN=4) :: f_hcloud
+        INTEGER :: i, ksplitr
+        INTEGER, PARAMETER :: KMODEL = 1  ! Model number (default: 1)
+
+        DO i = 1, 4
+            f_hcloud(i:i) = hcloud(i)
+        END DO
+
+        ! Initialize physical constants
+        CALL INI_CST()
+
+        ! Set up module pointers for model 1
+        CALL PARAM_ICE_GOTO_MODEL(0, KMODEL)
+        CALL RAIN_ICE_PARAM_GOTO_MODEL(0, KMODEL)
+        CALL RAIN_ICE_DESCR_GOTO_MODEL(0, KMODEL)
+
+        ! Initialize RAIN_ICE microphysics scheme
+        CALL INI_RAIN_ICE("AROME ", KMODEL, timestep, dzmin, ksplitr, f_hcloud)
+    END SUBROUTINE c_ini_rain_ice_wrap
+
+    ! C-callable wrapper for RAIN_ICE
+    SUBROUTINE c_rain_ice_wrap(                                            &
+        nlon, nlev, krr, timestep,                                         &
+        ptr_exn, ptr_dzz, ptr_rhodj, ptr_rhodref, ptr_exnref, ptr_pabs,   &
+        ptr_cldfr, ptr_icldfr, ptr_ssio, ptr_ssiu, ptr_ifr,               &
+        ptr_tht, ptr_rvt, ptr_rct, ptr_rrt, ptr_rit, ptr_rst, ptr_rgt,    &
+        ptr_sigs,                                                          &
+        ptr_cit,                                                           &
+        ptr_hlc_hrc, ptr_hlc_hcf, ptr_hli_hri, ptr_hli_hcf,               &
+        ptr_ths, ptr_rvs, ptr_rcs, ptr_rrs, ptr_ris, ptr_rss, ptr_rgs,    &
+        ptr_evap3d, ptr_rainfr,                                            &
+        ptr_inprc, ptr_inprr, ptr_inprs, ptr_inprg, ptr_indep,            &
+        ptr_rain_ice_param, ptr_rain_ice_descr                             &
+    ) BIND(C, name="c_rain_ice")
+    
+        ! C-compatible arguments (using WP for working precision)
+        INTEGER(C_INT), VALUE, INTENT(IN) :: nlon, nlev, krr
+        REAL(WP), VALUE, INTENT(IN) :: timestep
+        
+        ! C pointers for 2D input arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_exn, ptr_dzz, ptr_rhodj
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rhodref, ptr_exnref, ptr_pabs
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_cldfr, ptr_icldfr
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_ssio, ptr_ssiu, ptr_ifr
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_tht, ptr_rvt, ptr_rct
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rrt, ptr_rit, ptr_rst, ptr_rgt
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_sigs
+        
+        ! C pointers for 2D input/output arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_cit
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_hlc_hrc, ptr_hlc_hcf
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_hli_hri, ptr_hli_hcf
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_ths, ptr_rvs, ptr_rcs
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rrs, ptr_ris, ptr_rss, ptr_rgs
+        
+        ! C pointers for 2D output arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_evap3d, ptr_rainfr
+        
+        ! C pointers for 1D output arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_inprc, ptr_inprr
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_inprs, ptr_inprg, ptr_indep
+
+        ! C pointers for parameter structures
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_rain_ice_param, ptr_rain_ice_descr
+
+        ! Fortran pointers to map C data (using WP for working precision)
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_exn, f_dzz, f_rhodj
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_rhodref, f_exnref, f_pabs
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_cldfr, f_icldfr
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_ssio, f_ssiu, f_ifr
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_tht, f_rvt, f_rct
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_rrt, f_rit, f_rst, f_rgt
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_sigs
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_cit
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_hlc_hrc, f_hlc_hcf
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_hli_hri, f_hli_hcf
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_ths, f_rvs, f_rcs
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_rrs, f_ris, f_rss, f_rgs
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_evap3d, f_rainfr
+        REAL(KIND=WP), POINTER, DIMENSION(:) :: f_inprc, f_inprr
+        REAL(KIND=WP), POINTER, DIMENSION(:) :: f_inprs, f_inprg, f_indep
+
+        ! Local variables for PHYEX structures
+        TYPE(DIMPHYEX_t) :: D
+        TYPE(PARAM_ICE_t) :: PARAMI
+        TYPE(ELEC_PARAM_t) :: ELECP
+        TYPE(ELEC_DESCR_t) :: ELECD
+        TYPE(TBUDGETCONF_t) :: BUCONF
+        TYPE(TBUDGETDATA_PTR), DIMENSION(0) :: TBUDGETS
+        LOGICAL :: OELEC, OSEDIM_BEARD
+        REAL(KIND=WP) :: PTHVREFZIKB
+
+        ! Fortran pointers for parameter structures (passed from Python)
+        TYPE(RAIN_ICE_PARAM_t), POINTER :: rain_ice_param_local
+        TYPE(RAIN_ICE_DESCR_t), POINTER :: rain_ice_descr_local
+
+        ! Convert C pointers to Fortran structure pointers
+        CALL C_F_POINTER(ptr_rain_ice_param, rain_ice_param_local)
+        CALL C_F_POINTER(ptr_rain_ice_descr, rain_ice_descr_local)
+
+        ! Convert C pointers to Fortran arrays
+        CALL C_F_POINTER(ptr_exn, f_exn, [nlon, nlev])
+        CALL C_F_POINTER(ptr_dzz, f_dzz, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rhodj, f_rhodj, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rhodref, f_rhodref, [nlon, nlev])
+        CALL C_F_POINTER(ptr_exnref, f_exnref, [nlon, nlev])
+        CALL C_F_POINTER(ptr_pabs, f_pabs, [nlon, nlev])
+        CALL C_F_POINTER(ptr_cldfr, f_cldfr, [nlon, nlev])
+        CALL C_F_POINTER(ptr_icldfr, f_icldfr, [nlon, nlev])
+        CALL C_F_POINTER(ptr_ssio, f_ssio, [nlon, nlev])
+        CALL C_F_POINTER(ptr_ssiu, f_ssiu, [nlon, nlev])
+        CALL C_F_POINTER(ptr_ifr, f_ifr, [nlon, nlev])
+        CALL C_F_POINTER(ptr_tht, f_tht, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rvt, f_rvt, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rct, f_rct, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rrt, f_rrt, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rit, f_rit, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rst, f_rst, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rgt, f_rgt, [nlon, nlev])
+        CALL C_F_POINTER(ptr_sigs, f_sigs, [nlon, nlev])
+        CALL C_F_POINTER(ptr_cit, f_cit, [nlon, nlev])
+        CALL C_F_POINTER(ptr_hlc_hrc, f_hlc_hrc, [nlon, nlev])
+        CALL C_F_POINTER(ptr_hlc_hcf, f_hlc_hcf, [nlon, nlev])
+        CALL C_F_POINTER(ptr_hli_hri, f_hli_hri, [nlon, nlev])
+        CALL C_F_POINTER(ptr_hli_hcf, f_hli_hcf, [nlon, nlev])
+        CALL C_F_POINTER(ptr_ths, f_ths, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rvs, f_rvs, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rcs, f_rcs, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rrs, f_rrs, [nlon, nlev])
+        CALL C_F_POINTER(ptr_ris, f_ris, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rss, f_rss, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rgs, f_rgs, [nlon, nlev])
+        CALL C_F_POINTER(ptr_evap3d, f_evap3d, [nlon, nlev])
+        CALL C_F_POINTER(ptr_rainfr, f_rainfr, [nlon, nlev])
+        CALL C_F_POINTER(ptr_inprc, f_inprc, [nlon])
+        CALL C_F_POINTER(ptr_inprr, f_inprr, [nlon])
+        CALL C_F_POINTER(ptr_inprs, f_inprs, [nlon])
+        CALL C_F_POINTER(ptr_inprg, f_inprg, [nlon])
+        CALL C_F_POINTER(ptr_indep, f_indep, [nlon])
+        
+        ! Initialize DIMPHYEX structure
+        D%NIT = nlon
+        D%NIB = 1
+        D%NIE = nlon
+        D%NJT = 1
+        D%NJB = 1
+        D%NJE = 1
+        D%NKT = nlev
+        D%NKL = 1
+        D%NKA = 1
+        D%NKU = nlev
+        D%NKB = 1
+        D%NKE = nlev
+        D%NKTB = 1
+        D%NKTE = nlev
+        D%NIBC = 1
+        D%NJBC = 1
+        D%NIEC = nlon
+        D%NJEC = 1
+        D%NIJT = nlon
+        D%NIJB = 1
+        D%NIJE = nlon
+        D%NKLES = nlev
+        D%NLESMASK = 0
+        D%NLES_TIMES = 0
+        
+        ! Initialize physical constants (uses global CST module)
+        CALL INI_CST()
+        
+        ! Initialize PARAMI (microphysics parameters) - same as ICE_ADJUST
+        PARAMI%CSUBG_AUCV_RC = 'NONE'
+        PARAMI%CSUBG_AUCV_RI = 'NONE'
+        PARAMI%CSUBG_PR_PDF = 'SIGM'
+        PARAMI%CSUBG_RC_RR_ACCR = 'NONE'
+        PARAMI%CSUBG_RR_EVAP = 'NONE'
+        PARAMI%LOCND2 = .FALSE.
+        PARAMI%LSEDIM_AFTER = .FALSE.
+        PARAMI%LWARM = .TRUE.
+        PARAMI%LPACK_MICRO = .FALSE.
+        PARAMI%NPROMICRO = 0
+        PARAMI%LEXCLDROP = .FALSE.
+        
+        ! Initialize ICEP and ICED (will use default values)
+        ! These structures are complex and would need proper initialization
+        ! For now, we rely on Fortran's default initialization
+
+        ! Initialize electrical parameters (disabled)
+        OELEC = .FALSE.
+        OSEDIM_BEARD = .FALSE.
+        PTHVREFZIKB = 0.0_WP
+
+        ! Initialize budget configuration (disabled)
+        BUCONF%LBU_ENABLE = .FALSE.
+        BUCONF%LBUDGET_TH = .FALSE.
+        BUCONF%LBUDGET_RV = .FALSE.
+        BUCONF%LBUDGET_RC = .FALSE.
+        BUCONF%LBUDGET_RI = .FALSE.
+        BUCONF%LBUDGET_RR = .FALSE.
+        BUCONF%LBUDGET_RS = .FALSE.
+        BUCONF%LBUDGET_RG = .FALSE.
+        BUCONF%LBUDGET_RH = .FALSE.
+
+        ! OpenACC data region for GPU execution
+        !$acc data deviceptr(f_exn, f_dzz, f_rhodj, f_rhodref, f_exnref, f_pabs) &
+        !$acc&     deviceptr(f_cit, f_cldfr, f_icldfr, f_ssio, f_ssiu, f_ifr) &
+        !$acc&     deviceptr(f_hlc_hrc, f_hlc_hcf, f_hli_hri, f_hli_hcf) &
+        !$acc&     deviceptr(f_tht, f_rvt, f_rct, f_rrt, f_rit, f_rst, f_rgt) &
+        !$acc&     deviceptr(f_ths, f_rvs, f_rcs, f_rrs, f_ris, f_rss, f_rgs) &
+        !$acc&     deviceptr(f_inprc, f_inprr, f_evap3d, f_inprs, f_inprg, f_indep) &
+        !$acc&     deviceptr(f_rainfr, f_sigs)
+
+        ! Call the actual RAIN_ICE routine with locally passed structures
+        CALL RAIN_ICE(                                                     &
+            D, CST, PARAMI, rain_ice_param_local, rain_ice_descr_local,    &
+            ELECP, ELECD, BUCONF,                                          &
+            OELEC, OSEDIM_BEARD, PTHVREFZIKB,                              &
+            timestep, krr, f_exn,                                          &
+            f_dzz, f_rhodj, f_rhodref, f_exnref, f_pabs, f_cit, f_cldfr,   &
+            f_icldfr, f_ssio, f_ssiu, f_ifr,                               &
+            f_hlc_hrc, f_hlc_hcf, f_hli_hri, f_hli_hcf,                    &
+            f_tht, f_rvt, f_rct, f_rrt, f_rit, f_rst,                      &
+            f_rgt, f_ths, f_rvs, f_rcs, f_rrs, f_ris, f_rss, f_rgs,        &
+            f_inprc, f_inprr, f_evap3d,                                    &
+            f_inprs, f_inprg, f_indep, f_rainfr, f_sigs,                   &
+            TBUDGETS, 0                                                    &
+        )
+
+        !$acc end data
+
+    END SUBROUTINE c_rain_ice_wrap
+
+    ! C-callable wrapper for SHALLOW_CONVECTION
+    SUBROUTINE c_shallow_convection_wrap(                                     &
+        nlon, nlev, kice, kbdia, ktdia,                                       &
+        osettadj_int, ptadjs, och1conv_int, kch1,                             &
+        ptr_ppabst, ptr_pzz, ptr_ptkecls, ptr_ptt, ptr_prvt, ptr_prct,       &
+        ptr_prit, ptr_pwt, ptr_ptten, ptr_prvten, ptr_prcten, ptr_priten,    &
+        ptr_kcltop, ptr_kclbas, ptr_pumf, ptr_pch1, ptr_pch1ten              &
+    ) BIND(C, name="c_shallow_convection")
+
+        ! C-compatible arguments
+        INTEGER(C_INT), VALUE, INTENT(IN) :: nlon, nlev, kice, kbdia, ktdia
+        INTEGER(C_INT), VALUE, INTENT(IN) :: osettadj_int, och1conv_int, kch1
+        REAL(WP), VALUE, INTENT(IN) :: ptadjs
+
+        ! C pointers for 1D input arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_ptkecls     ! 1D: (nlon)
+
+        ! C pointers for 2D input arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_ppabst      ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_pzz         ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_ptt         ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_prvt        ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_prct        ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_prit        ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_pwt         ! 2D: (nlon, nlev)
+
+        ! C pointers for 2D input/output arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_ptten       ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_prvten      ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_prcten      ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_priten      ! 2D: (nlon, nlev)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_pumf        ! 2D: (nlon, nlev)
+
+        ! C pointers for 1D input/output arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_kcltop      ! 1D: (nlon)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_kclbas      ! 1D: (nlon)
+
+        ! C pointers for 3D chemical tracer arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_pch1        ! 3D: (nlon, nlev, kch1)
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_pch1ten     ! 3D: (nlon, nlev, kch1)
+
+        ! Fortran pointers to map C data
+        REAL(KIND=WP), POINTER, DIMENSION(:) :: f_ptkecls
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_ppabst, f_pzz, f_ptt
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_prvt, f_prct, f_prit, f_pwt
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_ptten, f_prvten, f_prcten, f_priten
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_pumf
+        INTEGER(KIND=C_INT), POINTER, DIMENSION(:) :: f_kcltop, f_kclbas
+        REAL(KIND=WP), POINTER, DIMENSION(:,:,:) :: f_pch1, f_pch1ten
+
+        ! Local variables for PHYEX structures
+        TYPE(DIMPHYEX_t) :: D
+        TYPE(NSV_t) :: NSV
+        TYPE(CONVPAR_t) :: CONVPAR
+        TYPE(CONVPAR_SHAL) :: CVP_SHAL
+        LOGICAL :: LOSETTADJ, LOCH1CONV
+
+        ! Convert C integers to Fortran logicals
+        LOSETTADJ = (osettadj_int /= 0)
+        LOCH1CONV = (och1conv_int /= 0)
+
+        ! Convert C pointers to Fortran arrays
+        CALL C_F_POINTER(ptr_ptkecls, f_ptkecls, [nlon])
+        CALL C_F_POINTER(ptr_ppabst, f_ppabst, [nlon, nlev])
+        CALL C_F_POINTER(ptr_pzz, f_pzz, [nlon, nlev])
+        CALL C_F_POINTER(ptr_ptt, f_ptt, [nlon, nlev])
+        CALL C_F_POINTER(ptr_prvt, f_prvt, [nlon, nlev])
+        CALL C_F_POINTER(ptr_prct, f_prct, [nlon, nlev])
+        CALL C_F_POINTER(ptr_prit, f_prit, [nlon, nlev])
+        CALL C_F_POINTER(ptr_pwt, f_pwt, [nlon, nlev])
+        CALL C_F_POINTER(ptr_ptten, f_ptten, [nlon, nlev])
+        CALL C_F_POINTER(ptr_prvten, f_prvten, [nlon, nlev])
+        CALL C_F_POINTER(ptr_prcten, f_prcten, [nlon, nlev])
+        CALL C_F_POINTER(ptr_priten, f_priten, [nlon, nlev])
+        CALL C_F_POINTER(ptr_kcltop, f_kcltop, [nlon])
+        CALL C_F_POINTER(ptr_kclbas, f_kclbas, [nlon])
+        CALL C_F_POINTER(ptr_pumf, f_pumf, [nlon, nlev])
+        CALL C_F_POINTER(ptr_pch1, f_pch1, [nlon, nlev, kch1])
+        CALL C_F_POINTER(ptr_pch1ten, f_pch1ten, [nlon, nlev, kch1])
+
+        ! Initialize DIMPHYEX structure
+        D%NIT = nlon
+        D%NIB = 1
+        D%NIE = nlon
+        D%NJT = 1
+        D%NJB = 1
+        D%NJE = 1
+        D%NKT = nlev
+        D%NKL = 1
+        D%NKA = 1
+        D%NKU = nlev
+        D%NKB = 1
+        D%NKE = nlev
+        D%NKTB = 1
+        D%NKTE = nlev
+        D%NIBC = 1
+        D%NJBC = 1
+        D%NIEC = nlon
+        D%NJEC = 1
+        D%NIJT = nlon
+        D%NIJB = 1
+        D%NIJE = nlon
+        D%NKLES = nlev
+        D%NLESMASK = 0
+        D%NLES_TIMES = 0
+
+        ! Initialize NSV structure (tracers)
+        NSV%NSV_USER = 0
+        NSV%NSV_C2R2BEG = 0
+        NSV%NSV_C2R2END = 0
+        NSV%NSV_C1R3BEG = 0
+        NSV%NSV_C1R3END = 0
+        NSV%NSV_ELECBEG = 0
+        NSV%NSV_ELECEND = 0
+        NSV%NSV_LNOXBEG = 0
+        NSV%NSV_LNOXEND = 0
+        NSV%NSV_DSTBEG = 0
+        NSV%NSV_DSTEND = 0
+        NSV%NSV_SLTBEG = 0
+        NSV%NSV_SLTEND = 0
+        NSV%NSV_PPBEG = 0
+        NSV%NSV_PPEND = 0
+        NSV%NSV_CSBEG = 0
+        NSV%NSV_CSEND = 0
+        NSV%NSV_AERBEG = 0
+        NSV%NSV_AEREND = 0
+        NSV%NSV_SNWBEG = 0
+        NSV%NSV_SNWEND = 0
+        NSV%NSV_CHEMBEG = 0
+        NSV%NSV_CHEMEND = 0
+
+        ! Initialize CONVPAR structure (deep convection parameters)
+        CONVPAR%XA25 = 625.0E6_WP     ! Reference grid area (25km)^2
+        CONVPAR%XCRAD = 1500.0_WP     ! Cloud radius (m)
+        CONVPAR%XCDEPTH = 3000.0_WP   ! Minimum necessary cloud depth
+        CONVPAR%XENTR = 0.03_WP       ! Entrainment constant
+        CONVPAR%XZLCL = 3500.0_WP     ! Max LCL height
+        CONVPAR%XZPBL = 6000.0_WP     ! Minimum PBL height
+        CONVPAR%XWTRIG = 6.0_WP       ! Trigger vertical velocity
+        CONVPAR%XNHGAM = 1.3333_WP    ! Non-hydrostatic pressure factor
+        CONVPAR%XTFRZ1 = 268.16_WP    ! Freezing interval begin
+        CONVPAR%XTFRZ2 = 248.16_WP    ! Freezing interval end
+        CONVPAR%XRHDBC = 0.9_WP       ! Relative humidity below cloud
+        CONVPAR%XRCONV = 0.015_WP     ! Precipitation conversion constant
+        CONVPAR%XSTABT = 0.75_WP      ! Stability in fractional time integration
+        CONVPAR%XSTABC = 0.95_WP      ! Stability in CAPE adjustment
+        CONVPAR%XUSRDPTH = 16500.0_WP ! Pressure thickness for updraft moisture
+        CONVPAR%XMELDPTH = 10000.0_WP ! Layer for precipitation melt
+        CONVPAR%XUVDP = 0.7_WP        ! Pressure perturbation in momentum transport
+
+        ! Initialize CVP_SHAL structure (shallow convection parameters)
+        CVP_SHAL%XA25 = 625.0E6_WP       ! Reference grid area
+        CVP_SHAL%XCRAD = 1500.0_WP       ! Cloud radius
+        CVP_SHAL%XCTIME_SHAL = 10800.0_WP ! Convective adjustment time
+        CVP_SHAL%XCDEPTH = 2500.0_WP     ! Minimum cloud depth
+        CVP_SHAL%XCDEPTH_D = 3000.0_WP   ! Maximum cloud thickness
+        CVP_SHAL%XDTPERT = 1.0_WP        ! Temperature perturbation at LCL
+        CVP_SHAL%XATPERT = 0.0_WP        ! Parameter for temp perturbation
+        CVP_SHAL%XBTPERT = 0.0_WP        ! Parameter for temp perturbation
+        CVP_SHAL%XENTR = 0.03_WP         ! Entrainment constant
+        CVP_SHAL%XZLCL = 3500.0_WP       ! Max LCL height
+        CVP_SHAL%XZPBL = 6000.0_WP       ! Minimum PBL height
+        CVP_SHAL%XWTRIG = 6.0_WP         ! Trigger vertical velocity
+        CVP_SHAL%XNHGAM = 1.3333_WP      ! Non-hydrostatic pressure factor
+        CVP_SHAL%XTFRZ1 = 268.16_WP      ! Freezing interval begin
+        CVP_SHAL%XTFRZ2 = 248.16_WP      ! Freezing interval end
+        CVP_SHAL%XSTABT = 0.75_WP        ! Stability factor
+        CVP_SHAL%XSTABC = 0.95_WP        ! Stability in CAPE adjustment
+        CVP_SHAL%XAW = 1.0_WP            ! WLCL parameter A
+        CVP_SHAL%XBW = 0.0_WP            ! WLCL parameter B
+        CVP_SHAL%LLSMOOTH = .TRUE.            ! Smoothing flag
+
+        ! Initialize physical constants
+        CALL INI_CST()
+
+        ! OpenACC data region for GPU execution
+        !$acc data deviceptr(f_ppabst, f_pzz, f_ptkecls, f_ptt, f_prvt, f_prct, f_prit, f_pwt) &
+        !$acc&     deviceptr(f_ptten, f_prvten, f_prcten, f_priten, f_pumf) &
+        !$acc&     deviceptr(f_kcltop, f_kclbas, f_pch1, f_pch1ten)
+
+        ! Call the actual SHALLOW_CONVECTION routine
+        CALL SHALLOW_CONVECTION(                                               &
+            CVP_SHAL, CST, D, NSV, CONVPAR, kbdia, ktdia,                      &
+            kice, LOSETTADJ, ptadjs, f_ppabst, f_pzz,                          &
+            f_ptkecls, f_ptt, f_prvt, f_prct, f_prit, f_pwt,                   &
+            f_ptten, f_prvten, f_prcten, f_priten,                             &
+            f_kcltop, f_kclbas, f_pumf, LOCH1CONV, kch1,                       &
+            f_pch1, f_pch1ten                                                  &
+        )
+
+        !$acc end data
+
+    END SUBROUTINE c_shallow_convection_wrap
+
+    ! C-callable wrapper for TURB
+    SUBROUTINE c_turb_wrap(                                                    &
+        nlon, nlev, krr, ptstep,                                               &
+        ptr_pdxx, ptr_pdyy, ptr_pdzz, ptr_pzz,                                 &
+        ptr_prhodj, ptr_pthvref, ptr_psfth, ptr_psfrv,                         &
+        ptr_ppabst, ptr_put, ptr_pvt, ptr_pwt, ptr_ptket,                      &
+        ptr_pthlt, ptr_prt,                                                    &
+        ptr_prus, ptr_prvs, ptr_prws, ptr_prthls, ptr_prrs, ptr_prtkes        &
+    ) BIND(C, name="c_turb")
+
+        ! C-compatible arguments
+        INTEGER(C_INT), VALUE, INTENT(IN) :: nlon, nlev, krr
+        REAL(WP), VALUE, INTENT(IN) :: ptstep
+
+        ! C pointers for 2D input arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_pdxx, ptr_pdyy, ptr_pdzz
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_pzz, ptr_prhodj, ptr_pthvref
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_ppabst
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_put, ptr_pvt, ptr_pwt, ptr_ptket
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_pthlt
+
+        ! C pointers for 1D input arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_psfth, ptr_psfrv
+
+        ! C pointers for 3D input arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_prt
+
+        ! C pointers for 2D input/output arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_prus, ptr_prvs, ptr_prws
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_prthls, ptr_prtkes
+
+        ! C pointers for 3D input/output arrays
+        TYPE(C_PTR), VALUE, INTENT(IN) :: ptr_prrs
+
+        ! Fortran pointers to map C data
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_pdxx, f_pdyy, f_pdzz
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_pzz, f_prhodj, f_pthvref
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_ppabst
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_put, f_pvt, f_pwt, f_ptket
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_pthlt
+        REAL(KIND=WP), POINTER, DIMENSION(:) :: f_psfth, f_psfrv
+        REAL(KIND=WP), POINTER, DIMENSION(:,:,:) :: f_prt
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_prus, f_prvs, f_prws
+        REAL(KIND=WP), POINTER, DIMENSION(:,:) :: f_prthls, f_prtkes
+        REAL(KIND=WP), POINTER, DIMENSION(:,:,:) :: f_prrs
+
+        ! Local variables for PHYEX structures
+        TYPE(DIMPHYEX_t) :: D
+        TYPE(TURB_t) :: TURBN
+        TYPE(TLES_t) :: TLES
+        TYPE(TBUDGETCONF_t) :: BUCONF
+        TYPE(TBUDGETDATA_PTR), DIMENSION(0) :: TBUDGETS
+        TYPE(NEB_t) :: NEBN
+        TYPE(TFILEDATA) :: TPFILE
+
+        ! Additional required arrays
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PDXX_HALO, PDYY_HALO, PDZZ_HALO
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PDZX, PDZY, PZS_1D
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:) :: PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:) :: PCOSSLOPE, PSINSLOPE, PZS
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PLENGTHM, PLENGTHH, MFMOIST
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PBL_DEPTH_2D, PSBL_DEPTH_2D
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:) :: PBL_DEPTH, PSBL_DEPTH
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PSIGS
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PFLXZTHVMF, PFLXZUMF, PFLXZVMF
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PTP, PDP, PTDIFF, PTDISS
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PSFSV, PSRCT
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:,:) :: PSVT, PRSVS
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PHGRADLEO, PHGRADGOG
+        CHARACTER(LEN=4), DIMENSION(2) :: HLBCX, HLBCY
+        CHARACTER(LEN=4) :: HTURBLEN_CL, HCLOUD, HELEC
+        LOGICAL :: O2D, ONOMIXLG, OFLAT, OCOUPLES, OBLOWSNOW, OIBM, OFLYER
+        LOGICAL :: OCOMPUTE_SRC, OOCEAN, ODEEPOC, ODIAG_IN_RUN, OCLOUDMODIFLM
+        INTEGER :: KSPLIT, KSV, KSV_LGBEG, KSV_LGEND, KHALO
+        INTEGER :: KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH
+        INTEGER :: KGRADIENTSLEO, KGRADIENTSGOG, KRRL, KRRI
+        REAL(KIND=WP) :: PRSNOW, PCEI_MIN, PCEI_MAX, PCOEF_AMPL_SAT
+
+        ! Convert C pointers to Fortran arrays
+        CALL C_F_POINTER(ptr_pdxx, f_pdxx, [nlon, nlev])
+        CALL C_F_POINTER(ptr_pdyy, f_pdyy, [nlon, nlev])
+        CALL C_F_POINTER(ptr_pdzz, f_pdzz, [nlon, nlev])
+        CALL C_F_POINTER(ptr_pzz, f_pzz, [nlon, nlev])
+        CALL C_F_POINTER(ptr_prhodj, f_prhodj, [nlon, nlev])
+        CALL C_F_POINTER(ptr_pthvref, f_pthvref, [nlon, nlev])
+        CALL C_F_POINTER(ptr_psfth, f_psfth, [nlon])
+        CALL C_F_POINTER(ptr_psfrv, f_psfrv, [nlon])
+        CALL C_F_POINTER(ptr_ppabst, f_ppabst, [nlon, nlev])
+        CALL C_F_POINTER(ptr_put, f_put, [nlon, nlev])
+        CALL C_F_POINTER(ptr_pvt, f_pvt, [nlon, nlev])
+        CALL C_F_POINTER(ptr_pwt, f_pwt, [nlon, nlev])
+        CALL C_F_POINTER(ptr_ptket, f_ptket, [nlon, nlev])
+        CALL C_F_POINTER(ptr_pthlt, f_pthlt, [nlon, nlev])
+        CALL C_F_POINTER(ptr_prt, f_prt, [nlon, nlev, krr])
+        CALL C_F_POINTER(ptr_prus, f_prus, [nlon, nlev])
+        CALL C_F_POINTER(ptr_prvs, f_prvs, [nlon, nlev])
+        CALL C_F_POINTER(ptr_prws, f_prws, [nlon, nlev])
+        CALL C_F_POINTER(ptr_prthls, f_prthls, [nlon, nlev])
+        CALL C_F_POINTER(ptr_prrs, f_prrs, [nlon, nlev, krr])
+        CALL C_F_POINTER(ptr_prtkes, f_prtkes, [nlon, nlev])
+
+        ! Initialize DIMPHYEX structure
+        D%NIT = nlon
+        D%NIB = 1
+        D%NIE = nlon
+        D%NJT = 1
+        D%NJB = 1
+        D%NJE = 1
+        D%NKT = nlev
+        D%NKL = 1
+        D%NKA = 1
+        D%NKU = nlev
+        D%NKB = 1
+        D%NKE = nlev
+        D%NKTB = 1
+        D%NKTE = nlev
+        D%NIBC = 1
+        D%NJBC = 1
+        D%NIEC = nlon
+        D%NJEC = 1
+        D%NIJT = nlon
+        D%NIJB = 1
+        D%NIJE = nlon
+        D%NKLES = nlev
+        D%NLESMASK = 0
+        D%NLES_TIMES = 0
+
+        ! Initialize physical constants
+        CALL INI_CST()
+
+        ! Initialize TURBN parameters (from MODD_TURB_n)
+        TURBN%CTURBDIM = '1DIM'        ! 1D turbulence
+        TURBN%CTURBLEN = 'BL89'        ! Bougeault-Lacarrere mixing length
+        TURBN%XIMPL = 1.0_WP           ! Implicit scheme
+        TURBN%LTURB_FLX = .FALSE.      ! No turbulent flux output
+        TURBN%LTURB_DIAG = .FALSE.     ! No turbulent diagnostics
+        TURBN%LSIG_CONV = .FALSE.      ! No sigma_s due to convection
+        TURBN%LRMC01 = .FALSE.         ! RMC01 boundary layer scheme
+        TURBN%LHARAT = .TRUE.          ! Use Hara Tani modification
+        TURBN%XTKEMIN = 1.0E-10_WP     ! Minimum TKE
+
+        ! Initialize NEBN parameters
+        NEBN%LSUBG_COND = .FALSE.
+        NEBN%LSIGMAS = .TRUE.
+        NEBN%CFRAC_ICE_ADJUST = 'S'
+        NEBN%CCONDENS = 'CB02'
+        NEBN%CLAMBDA3 = 'CB'
+
+        ! Initialize budget configuration
+        BUCONF%LBU_ENABLE = .FALSE.
+        BUCONF%LBUDGET_TH = .FALSE.
+        BUCONF%LBUDGET_RV = .FALSE.
+        BUCONF%LBUDGET_RC = .FALSE.
+        BUCONF%LBUDGET_RI = .FALSE.
+        BUCONF%LBUDGET_RR = .FALSE.
+        BUCONF%LBUDGET_RS = .FALSE.
+        BUCONF%LBUDGET_RG = .FALSE.
+
+        ! Initialize TLES structure
+        TLES%LLES_CALL = .FALSE.
+
+        ! Initialize TPFILE structure (dummy, no output)
+        TPFILE%LOPENED = .FALSE.
+
+        ! Set control flags
+        O2D = .FALSE.
+        ONOMIXLG = .FALSE.
+        OFLAT = .TRUE.
+        OCOUPLES = .FALSE.
+        OBLOWSNOW = .FALSE.
+        OIBM = .FALSE.
+        OFLYER = .FALSE.
+        OCOMPUTE_SRC = .FALSE.
+        OOCEAN = .FALSE.
+        ODEEPOC = .FALSE.
+        ODIAG_IN_RUN = .FALSE.
+        OCLOUDMODIFLM = .FALSE.
+
+        ! Set parameters
+        KSPLIT = 1
+        KSV = 0
+        KSV_LGBEG = 0
+        KSV_LGEND = 0
+        KSV_LIMA_NR = 0
+        KSV_LIMA_NS = 0
+        KSV_LIMA_NG = 0
+        KSV_LIMA_NH = 0
+        KHALO = 1
+        KGRADIENTSLEO = 0
+        KGRADIENTSGOG = 0
+        KRRL = 1
+        KRRI = 1
+
+        HLBCX = (/'CYCL', 'CYCL'/)
+        HLBCY = (/'CYCL', 'CYCL'/)
+        HTURBLEN_CL = 'NONE'
+        HCLOUD = 'NONE'
+        HELEC = 'NONE'
+
+        PRSNOW = 1.0_WP
+        PCEI_MIN = 0.0_WP
+        PCEI_MAX = 1.0_WP
+        PCOEF_AMPL_SAT = 1.0_WP
+
+        ! Allocate and initialize additional arrays
+        ALLOCATE(PDZX(nlon, nlev))
+        ALLOCATE(PDZY(nlon, nlev))
+        ALLOCATE(PDIRCOSXW(nlon))
+        ALLOCATE(PDIRCOSYW(nlon))
+        ALLOCATE(PDIRCOSZW(nlon))
+        ALLOCATE(PCOSSLOPE(nlon))
+        ALLOCATE(PSINSLOPE(nlon))
+        ALLOCATE(PZS(nlon))
+        ALLOCATE(PLENGTHM(nlon, nlev))
+        ALLOCATE(PLENGTHH(nlon, nlev))
+        ALLOCATE(MFMOIST(nlon, nlev))
+        ALLOCATE(PBL_DEPTH(nlon))
+        ALLOCATE(PSBL_DEPTH(nlon))
+        ALLOCATE(PSIGS(0, 0))
+        ALLOCATE(PFLXZTHVMF(nlon, nlev))
+        ALLOCATE(PFLXZUMF(nlon, nlev))
+        ALLOCATE(PFLXZVMF(nlon, nlev))
+        ALLOCATE(PTP(nlon, nlev))
+        ALLOCATE(PDP(nlon, nlev))
+        ALLOCATE(PTDIFF(nlon, nlev))
+        ALLOCATE(PTDISS(nlon, nlev))
+        ALLOCATE(PSFSV(0, 0))
+        ALLOCATE(PSVT(0, 0, 0))
+        ALLOCATE(PRSVS(0, 0, 0))
+        ALLOCATE(PHGRADLEO(0, 0))
+        ALLOCATE(PHGRADGOG(0, 0))
+        ALLOCATE(PSRCT(0, 0))
+
+        ! Initialize arrays
+        PDZX = 0.0_WP
+        PDZY = 0.0_WP
+        PDIRCOSXW = 0.0_WP
+        PDIRCOSYW = 0.0_WP
+        PDIRCOSZW = 1.0_WP
+        PCOSSLOPE = 1.0_WP
+        PSINSLOPE = 0.0_WP
+        PZS = 0.0_WP
+        PLENGTHM = 100.0_WP
+        PLENGTHH = 100.0_WP
+        MFMOIST = 0.0_WP
+        PBL_DEPTH = 1000.0_WP
+        PSBL_DEPTH = 100.0_WP
+        PFLXZTHVMF = 0.0_WP
+        PFLXZUMF = 0.0_WP
+        PFLXZVMF = 0.0_WP
+
+        ! OpenACC data region for GPU execution
+        !$acc data create(PDZX, PDZY, PDIRCOSXW, PDIRCOSYW, PDIRCOSZW) &
+        !$acc&     create(PCOSSLOPE, PSINSLOPE, PZS, PLENGTHM, PLENGTHH, MFMOIST) &
+        !$acc&     create(PBL_DEPTH, PSBL_DEPTH, PSIGS, PFLXZTHVMF, PFLXZUMF, PFLXZVMF) &
+        !$acc&     create(PTP, PDP, PTDIFF, PTDISS, PSFSV, PSVT, PRSVS) &
+        !$acc&     create(PHGRADLEO, PHGRADGOG, PSRCT) &
+        !$acc&     deviceptr(f_pdxx, f_pdyy, f_pdzz, f_pzz, f_prhodj, f_pthvref) &
+        !$acc&     deviceptr(f_psfth, f_psfrv, f_ppabst, f_put, f_pvt, f_pwt) &
+        !$acc&     deviceptr(f_ptket, f_pthlt, f_prt, f_prus, f_prvs, f_prws) &
+        !$acc&     deviceptr(f_prthls, f_prrs, f_prtkes)
+
+        ! Call the actual TURB routine
+        CALL TURB(                                                             &
+            CST, CSTURB, BUCONF, TURBN, NEBN, D, TLES,                         &
+            krr, KRRL, KRRI, HLBCX, HLBCY, KGRADIENTSLEO,                      &
+            KGRADIENTSGOG, KHALO,                                              &
+            KSPLIT, OCLOUDMODIFLM, KSV, KSV_LGBEG, KSV_LGEND,                  &
+            KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,                &
+            O2D, ONOMIXLG, OFLAT, OCOUPLES, OBLOWSNOW, OIBM, OFLYER,           &
+            OCOMPUTE_SRC, PRSNOW,                                              &
+            OOCEAN, ODEEPOC, ODIAG_IN_RUN,                                     &
+            HTURBLEN_CL, HCLOUD, HELEC,                                        &
+            ptstep, TPFILE,                                                    &
+            PDXX=f_pdxx, PDYY=f_pdyy, PDZZ=f_pdzz, PDZX=PDZX, PDZY=PDZY,       &
+            PZZ=f_pzz,                                                         &
+            PDIRCOSXW=PDIRCOSXW, PDIRCOSYW=PDIRCOSYW, PDIRCOSZW=PDIRCOSZW,    &
+            PCOSSLOPE=PCOSSLOPE, PSINSLOPE=PSINSLOPE,                         &
+            PRHODJ=f_prhodj, PTHVREF=f_pthvref,                                &
+            PHGRADLEO=PHGRADLEO, PHGRADGOG=PHGRADGOG, PZS=PZS,                 &
+            PSFTH=f_psfth, PSFRV=f_psfrv, PSFSV=PSFSV,                         &
+            PSFU=f_psfth, PSFV=f_psfth,                                        &
+            PPABST=f_ppabst, PUT=f_put, PVT=f_pvt, PWT=f_pwt,                  &
+            PTKET=f_ptket, PSVT=PSVT, PSRCT=PSRCT,                             &
+            PLENGTHM=PLENGTHM, PLENGTHH=PLENGTHH, MFMOIST=MFMOIST,             &
+            PBL_DEPTH=PBL_DEPTH, PSBL_DEPTH=PSBL_DEPTH,                        &
+            PCEI=PSRCT, PCEI_MIN=PCEI_MIN, PCEI_MAX=PCEI_MAX,                  &
+            PCOEF_AMPL_SAT=PCOEF_AMPL_SAT,                                     &
+            PTHLT=f_pthlt, PRT=f_prt,                                          &
+            PRUS=f_prus, PRVS=f_prvs, PRWS=f_prws,                             &
+            PRTHLS=f_prthls, PRRS=f_prrs, PRSVS=PRSVS, PRTKES=f_prtkes,        &
+            PSIGS=PSIGS,                                                       &
+            PFLXZTHVMF=PFLXZTHVMF, PFLXZUMF=PFLXZUMF, PFLXZVMF=PFLXZVMF,       &
+            PWTH=PTDIFF, PWRC=PTDIFF, PWSV=PRSVS,                              &
+            PDP=PDP, PTP=PTP, PTDIFF=PTDIFF, PTDISS=PTDISS,                    &
+            TBUDGETS=TBUDGETS, KBUDGETS=0                                      &
+        )
+
+        !$acc end data
+
+        ! Cleanup
+        DEALLOCATE(PDZX, PDZY, PDIRCOSXW, PDIRCOSYW, PDIRCOSZW)
+        DEALLOCATE(PCOSSLOPE, PSINSLOPE, PZS)
+        DEALLOCATE(PLENGTHM, PLENGTHH, MFMOIST)
+        DEALLOCATE(PBL_DEPTH, PSBL_DEPTH, PSIGS)
+        DEALLOCATE(PFLXZTHVMF, PFLXZUMF, PFLXZVMF)
+        DEALLOCATE(PTP, PDP, PTDIFF, PTDISS)
+        DEALLOCATE(PSFSV, PSVT, PRSVS)
+        DEALLOCATE(PHGRADLEO, PHGRADGOG, PSRCT)
+
+    END SUBROUTINE c_turb_wrap
+
+END MODULE phyex_bridge

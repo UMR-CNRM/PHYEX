@@ -961,14 +961,20 @@ END DO
 CALL DXM2D_PHY(D, ZSHUGRADWK2_1D, ZDXM1D_WORK1)
 
 DO JIJ=IIJB, IIJE
-  ZSHUGRADWK1_1D(JIJ) = (PWM(JIJ, IKB+2*IKL)-PWM(JIJ, IKB+IKL))    /(PDZZ(JIJ, IKB+2*IKL)+PDZZ(JIJ, IKB+IKL))   +(PWM(JIJ, IKB+IKL)-PWM(JIJ, IKB))           /(PDZZ(JIJ, IKB+IKL)+PDZZ(JIJ, IKB))
+  ZSHUGRADWK1_1D(JIJ) = (PWM(JIJ, IKB+2*IKL)-PWM(JIJ, IKB+IKL)) / &
+                        (PDZZ(JIJ, IKB+2*IKL)+PDZZ(JIJ, IKB+IKL)) + &
+                        (PWM(JIJ, IKB+IKL)-PWM(JIJ, IKB)) / &
+                        (PDZZ(JIJ, IKB+IKL)+PDZZ(JIJ, IKB))
 END DO
 
 !
 CALL MXM2D_PHY(D, ZSHUGRADWK1_1D, ZMXM1D_WORK1)
 
 DO JIJ=IIJB, IIJE
-  ZSHUGRADWK1_1D(JIJ) = ZFLXZ(JIJ, IKB+IKL) *                                ( ZDXM1D_WORK1(JIJ)                         -ZMXM1D_WORK1(JIJ)                                           * PDZX(JIJ, IKB+IKL)                           )  / (0.5*(PDXX(JIJ, IKB+IKL)+PDXX(JIJ, IKB)))
+  ZSHUGRADWK1_1D(JIJ) = ZFLXZ(JIJ, IKB+IKL) * &
+                        (ZDXM1D_WORK1(JIJ) - &
+                         ZMXM1D_WORK1(JIJ) * PDZX(JIJ, IKB+IKL)) / &
+                        (0.5*(PDXX(JIJ, IKB+IKL)+PDXX(JIJ, IKB)))
 END DO
 
 !
@@ -1592,14 +1598,20 @@ END DO
 CALL DYM2D_PHY(D, ZSHUGRADWK2_1D, ZDYM1D_WORK1)
 
 DO JIJ=IIJB, IIJE
-  ZSHUGRADWK1_1D(JIJ) = (PWM(JIJ, IKB+2*IKL)-PWM(JIJ, IKB+IKL))        /(PDZZ(JIJ, IKB+2*IKL)+PDZZ(JIJ, IKB+IKL))    +(PWM(JIJ, IKB+IKL)-PWM(JIJ, IKB))            /(PDZZ(JIJ, IKB+IKL)+PDZZ(JIJ, IKB))
+  ZSHUGRADWK1_1D(JIJ) = (PWM(JIJ, IKB+2*IKL)-PWM(JIJ, IKB+IKL)) / &
+                        (PDZZ(JIJ, IKB+2*IKL)+PDZZ(JIJ, IKB+IKL)) + &
+                        (PWM(JIJ, IKB+IKL)-PWM(JIJ, IKB)) / &
+                        (PDZZ(JIJ, IKB+IKL)+PDZZ(JIJ, IKB))
 END DO
 
 !
 CALL MYM2D_PHY(D, ZSHUGRADWK1_1D, ZMYM1D_WORK1)
 
 DO JIJ=IIJB, IIJE
-  ZSHUGRADWK1_1D(JIJ) = ZFLXZ(JIJ, IKB+IKL) *                                 ( ZDYM1D_WORK1(JIJ)                          -ZMYM1D_WORK1(JIJ)                                            * PDZY(JIJ, IKB+IKL)                            )  / (0.5*(PDYY(JIJ, IKB+IKL)+PDYY(JIJ, IKB)))
+  ZSHUGRADWK1_1D(JIJ) = ZFLXZ(JIJ, IKB+IKL) * &
+                        (ZDYM1D_WORK1(JIJ) - &
+                         ZMYM1D_WORK1(JIJ) * PDZY(JIJ, IKB+IKL)) / &
+                        (0.5*(PDYY(JIJ, IKB+IKL)+PDYY(JIJ, IKB)))
 END DO
 
 !

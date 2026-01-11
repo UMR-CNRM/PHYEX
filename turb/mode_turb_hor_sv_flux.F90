@@ -250,7 +250,9 @@ CALL DXM2D_PHY(D, PSVM(:,:,IKB,JSV), ZDXM2D_WORK1)
 
 DO JJ=1, IJT
   DO JI=1, IIT
-    ZSHUGRADWK1_2D(JI, JJ) = ZCOEFF(JI, JJ, 2)*PSVM(JI, JJ, 2, JSV)        +ZCOEFF(JI, JJ, IKB+1)*PSVM(JI, JJ, IKB+1, JSV)        +ZCOEFF(JI, JJ, IKB)*PSVM(JI, JJ, IKB, JSV)
+    ZSHUGRADWK1_2D(JI, JJ) = ZCOEFF(JI, JJ, 2)*PSVM(JI, JJ, 2, JSV) + &
+                             ZCOEFF(JI, JJ, IKB+1)*PSVM(JI, JJ, IKB+1, JSV) + &
+                             ZCOEFF(JI, JJ, IKB)*PSVM(JI, JJ, IKB, JSV)
   END DO
 END DO
 
@@ -377,7 +379,9 @@ CALL DYM2D_PHY(D, PSVM(:,:,IKB,JSV), ZDYM2D_WORK1)
 
 DO JJ=1, IJT
   DO JI=1, IIT
-    ZSHUGRADWK1_2D(JI, JJ) = ZCOEFF(JI, JJ, 2)*PSVM(JI, JJ, 2, JSV)        +ZCOEFF(JI, JJ, IKB+1)*PSVM(JI, JJ, IKB+1, JSV)        +ZCOEFF(JI, JJ, IKB)*PSVM(JI, JJ, IKB, JSV)
+    ZSHUGRADWK1_2D(JI, JJ) = ZCOEFF(JI, JJ, 2)*PSVM(JI, JJ, 2, JSV) + &
+                             ZCOEFF(JI, JJ, IKB+1)*PSVM(JI, JJ, IKB+1, JSV) + &
+                             ZCOEFF(JI, JJ, IKB)*PSVM(JI, JJ, IKB, JSV)
   END DO
 END DO
 
@@ -560,7 +564,8 @@ CALL MYF_PHY(D, ZSHUGRADWK1_3D, ZMYF3D_WORK1)
 DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
-      ZSHUGRADWK1_3D(JI, JJ, JK) = PMZM_PRHODJ(JI, JJ, JK) * PINV_PDZZ(JI, JJ, JK) *                                              ( ZMXF3D_WORK1(JI, JJ, JK) + ZMYF3D_WORK1(JI, JJ, JK) )
+      ZSHUGRADWK1_3D(JI, JJ, JK) = PMZM_PRHODJ(JI, JJ, JK) * PINV_PDZZ(JI, JJ, JK) * &
+                                   (ZMXF3D_WORK1(JI, JJ, JK) + ZMYF3D_WORK1(JI, JJ, JK))
     END DO
   END DO
 END DO
@@ -658,7 +663,8 @@ CALL MXF_PHY(D, ZSHUGRADWK2_3D, ZMXF3D_WORK1)
 DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
-      ZSHUGRADWK1_3D(JI, JJ, JK) = PMZM_PRHODJ(JI, JJ, JK) * PINV_PDZZ(JI, JJ, JK) *                                              ( ZMXF3D_WORK1(JI, JJ, JK) )
+      ZSHUGRADWK1_3D(JI, JJ, JK) = PMZM_PRHODJ(JI, JJ, JK) * PINV_PDZZ(JI, JJ, JK) * &
+                                   ZMXF3D_WORK1(JI, JJ, JK)
     END DO
   END DO
 END DO

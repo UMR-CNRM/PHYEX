@@ -436,7 +436,10 @@ CALL DXM2D_PHY(D, ZSHUGRADWK1_2D, ZDXM2D_WORK1)
 
 DO JJ=1, IJT
   DO JI=1, IIT
-    ZSHUGRADWK1_2D(JI, JJ) = (PWM(JI, JJ, IKB+2)-PWM(JI, JJ, IKB+1))                  /(PDZZ(JI, JJ, IKB+2)+PDZZ(JI, JJ, IKB+1))              +(PWM(JI, JJ, IKB+1)-PWM(JI, JJ, IKB))                  /(PDZZ(JI, JJ, IKB+1)+PDZZ(JI, JJ, IKB))
+    ZSHUGRADWK1_2D(JI, JJ) = (PWM(JI, JJ, IKB+2)-PWM(JI, JJ, IKB+1)) / &
+                             (PDZZ(JI, JJ, IKB+2)+PDZZ(JI, JJ, IKB+1)) + &
+                             (PWM(JI, JJ, IKB+1)-PWM(JI, JJ, IKB)) / &
+                             (PDZZ(JI, JJ, IKB+1)+PDZZ(JI, JJ, IKB))
   END DO
 END DO
 
@@ -445,7 +448,11 @@ CALL MXM2D_PHY(D, ZSHUGRADWK1_2D, ZMXM2D_WORK2)
 
 DO JJ=1, IJT
   DO JI=1, IIT
-    ZSHUGRADWK1_2D(JI, JJ) = ZFLX(JI, JJ, IKB+1) *                                                (   (PUM(JI, JJ, IKB+1)-PUM(JI, JJ, IKB)) / ZMXM2D_WORK1(JI, JJ) + ( ZDXM2D_WORK1(JI, JJ)                                        -ZMXM2D_WORK2(JI, JJ)                                                                * PDZX(JI, JJ, IKB+1)                                          )  / (0.5*(PDXX(JI, JJ, IKB+1)+PDXX(JI, JJ, IKB)))                 ) 
+    ZSHUGRADWK1_2D(JI, JJ) = ZFLX(JI, JJ, IKB+1) * &
+                             ((PUM(JI, JJ, IKB+1)-PUM(JI, JJ, IKB)) / ZMXM2D_WORK1(JI, JJ) + &
+                              (ZDXM2D_WORK1(JI, JJ) - &
+                               ZMXM2D_WORK2(JI, JJ) * PDZX(JI, JJ, IKB+1)) / &
+                              (0.5*(PDXX(JI, JJ, IKB+1)+PDXX(JI, JJ, IKB)))) 
   END DO
 END DO
 
