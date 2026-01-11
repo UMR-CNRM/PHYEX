@@ -20,6 +20,8 @@ MODULE phyex_bridge
     USE MODD_CTURB, ONLY : CSTURB_t, CSTURB
     USE MODD_LES, ONLY : TLES_t
     USE MODD_IO, ONLY : TFILEDATA
+    USE MODD_ELEC_PARAM, ONLY : ELEC_PARAM_t
+    USE MODD_ELEC_DESCR, ONLY : ELEC_DESCR_t
     USE MODE_INI_CST, ONLY : INI_CST
     USE MODE_INI_RAIN_ICE, ONLY : INI_RAIN_ICE
 
@@ -324,8 +326,12 @@ CONTAINS
         ! Local variables for PHYEX structures
         TYPE(DIMPHYEX_t) :: D
         TYPE(PARAM_ICE_t) :: PARAMI
+        TYPE(ELEC_PARAM_t) :: ELECP
+        TYPE(ELEC_DESCR_t) :: ELECD
         TYPE(TBUDGETCONF_t) :: BUCONF
         TYPE(TBUDGETDATA_PTR), DIMENSION(0) :: TBUDGETS
+        LOGICAL :: OELEC, OSEDIM_BEARD
+        REAL(KIND=WP) :: PTHVREFZIKB
 
         ! Fortran pointers for parameter structures (passed from Python)
         TYPE(RAIN_ICE_PARAM_t), POINTER :: rain_ice_param_local
@@ -420,7 +426,12 @@ CONTAINS
         ! Initialize ICEP and ICED (will use default values)
         ! These structures are complex and would need proper initialization
         ! For now, we rely on Fortran's default initialization
-        
+
+        ! Initialize electrical parameters (disabled)
+        OELEC = .FALSE.
+        OSEDIM_BEARD = .FALSE.
+        PTHVREFZIKB = 0.0_WP
+
         ! Initialize budget configuration (disabled)
         BUCONF%LBU_ENABLE = .FALSE.
         BUCONF%LBUDGET_TH = .FALSE.
@@ -443,7 +454,9 @@ CONTAINS
 
         ! Call the actual RAIN_ICE routine with locally passed structures
         CALL RAIN_ICE(                                                     &
-            D, CST, PARAMI, rain_ice_param_local, rain_ice_descr_local, BUCONF, &
+            D, CST, PARAMI, rain_ice_param_local, rain_ice_descr_local,    &
+            ELECP, ELECD, BUCONF,                                          &
+            OELEC, OSEDIM_BEARD, PTHVREFZIKB,                              &
             timestep, krr, f_exn,                                          &
             f_dzz, f_rhodj, f_rhodref, f_exnref, f_pabs, f_cit, f_cldfr,   &
             f_icldfr, f_ssio, f_ssiu, f_ifr,                               &
@@ -719,9 +732,9 @@ CONTAINS
         REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PSIGS
         REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PFLXZTHVMF, PFLXZUMF, PFLXZVMF
         REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PTP, PDP, PTDIFF, PTDISS
-        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:,:) :: PSFSV, PSVT, PRSVS
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PSFSV, PSRCT
+        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:,:) :: PSVT, PRSVS
         REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PHGRADLEO, PHGRADGOG
-        REAL(KIND=WP), ALLOCATABLE, DIMENSION(:,:) :: PSRCT
         CHARACTER(LEN=4), DIMENSION(2) :: HLBCX, HLBCY
         CHARACTER(LEN=4) :: HTURBLEN_CL, HCLOUD, HELEC
         LOGICAL :: O2D, ONOMIXLG, OFLAT, OCOUPLES, OBLOWSNOW, OIBM, OFLYER
@@ -789,7 +802,7 @@ CONTAINS
         TURBN%XIMPL = 1.0_WP           ! Implicit scheme
         TURBN%LTURB_FLX = .FALSE.      ! No turbulent flux output
         TURBN%LTURB_DIAG = .FALSE.     ! No turbulent diagnostics
-        TURBN%LSUBG_COND = .FALSE.     ! No subgrid condensation
+        TURBN%LSIG_CONV = .FALSE.      ! No sigma_s due to convection
         TURBN%LRMC01 = .FALSE.         ! RMC01 boundary layer scheme
         TURBN%LHARAT = .TRUE.          ! Use Hara Tani modification
         TURBN%XTKEMIN = 1.0E-10_WP     ! Minimum TKE
@@ -879,11 +892,11 @@ CONTAINS
         ALLOCATE(PDP(nlon, nlev))
         ALLOCATE(PTDIFF(nlon, nlev))
         ALLOCATE(PTDISS(nlon, nlev))
-        ALLOCATE(PSFSV(nlon, 0))
-        ALLOCATE(PSVT(nlon, nlev, 0))
-        ALLOCATE(PRSVS(nlon, nlev, 0))
-        ALLOCATE(PHGRADLEO(nlon, nlev, 0))
-        ALLOCATE(PHGRADGOG(nlon, nlev, 0))
+        ALLOCATE(PSFSV(0, 0))
+        ALLOCATE(PSVT(0, 0, 0))
+        ALLOCATE(PRSVS(0, 0, 0))
+        ALLOCATE(PHGRADLEO(0, 0))
+        ALLOCATE(PHGRADGOG(0, 0))
         ALLOCATE(PSRCT(0, 0))
 
         ! Initialize arrays
