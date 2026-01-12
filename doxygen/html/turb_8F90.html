@@ -84,12 +84,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a808c1b84c0353e66a4b430000939bc16" id="r_a808c1b84c0353e66a4b430000939bc16"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turb_8F90.html#a808c1b84c0353e66a4b430000939bc16">turb</a> (cst, csturb, buconf, turbn, nebn, d, tles, krr, krrl, krri, hlbcx, hlbcy, kgradientsleo, kgradientsgog, khalo, ksplit, ocloudmodiflm, ksv, ksv_lgbeg, ksv_lgend, ksv_lima_nr, ksv_lima_ns, ksv_lima_ng, ksv_lima_nh, o2d, onomixlg, oflat, ocouples, oblowsnow, oibm, oflyer, ocompute_src, prsnow, oocean, odeepoc, odiag_in_run, hturblen_cl, hcloud, helec, ptstep, tpfile, pdxx, pdyy, pdzz, pdzx, pdzy, pzz, pdircosxw, pdircosyw, pdircoszw, pcosslope, psinslope, prhodj, pthvref, phgradleo, phgradgog, pzs, psfth, psfrv, psfsv, psfu, psfv, ppabst, put, pvt, pwt, ptket, psvt, psrct, plengthm, plengthh, mfmoist, pbl_depth, psbl_depth, pcei, pcei_min, pcei_max, pcoef_ampl_sat, pthlt, prt, prus, prvs, prws, prthls, prrs, prsvs, prtkes, psigs, pflxzthvmf, pflxzumf, pflxzvmf, pwth, pwrc, pwsv, pdp, ptp, ptdiff, ptdiss, tbudgets, kbudgets, pedr, plem, prtkems, pdpmf, ptpmf, pdrus_turb, pdrvs_turb, pdrthls_turb, pdrrts_turb, pdrsvs_turb, ptr, pdiss, pibm_ls, pibm_xmut, pcurrent_tke_diss, psstfl, psstfl_c, pssrfl_c, pssufl_c, pssvfl_c, pssufl, pssvfl)</td></tr>
-<tr class="separator:a808c1b84c0353e66a4b430000939bc16"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23227e569d418665dfb37602bf10a2f5" id="r_a23227e569d418665dfb37602bf10a2f5"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="turb_8F90.html#a23227e569d418665dfb37602bf10a2f5">turb</a> (cst, csturb, buconf, turbn, nebn, d, tles, krr, krrl, krri, hlbcx, hlbcy, kgradientsleo, kgradientsgog, khalo, ksplit, ocloudmodiflm, ksv, ksv_lgbeg, ksv_lgend, ksv_lima_nr, ksv_lima_ns, ksv_lima_ng, ksv_lima_nh, o2d, onomixlg, oflat, ocouples, oblowsnow, oibm, oflyer, ocompute_src, prsnow, oocean, odeepoc, odiag_in_run, hturblen_cl, hcloud, helec, ptstep, tpfile, pdxx, pdyy, pdzz, pdzx, pdzy, pzz, pdircosxw, pdircosyw, pdircoszw, pcosslope, psinslope, prhodj, pthvref, phgradleo, phgradgog, pzs, psfth, psfrv, psfsv, psfu, psfv, psea_ucu, psea_vcu, ppabst, put, pvt, pwt, ptket, psvt, psrct, plengthm, plengthh, mfmoist, pbl_depth, psbl_depth, pcei, pcei_min, pcei_max, pcoef_ampl_sat, pthlt, prt, prus, prvs, prws, prthls, prrs, prsvs, prtkes, psigs, pflxzthvmf, pflxzumf, pflxzvmf, pwth, pwrc, pwsv, pdp, ptp, ptdiff, ptdiss, tbudgets, kbudgets, pedr, plem, prtkems, pdpmf, ptpmf, pdrus_turb, pdrvs_turb, pdrthls_turb, pdrrts_turb, pdrsvs_turb, ptr, pdiss, pibm_ls, pibm_xmut, pcurrent_tke_diss, psstfl, psstfl_c, pssrfl_c, pssufl_c, pssvfl_c, pssufl, pssvfl)</td></tr>
+<tr class="separator:a23227e569d418665dfb37602bf10a2f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a808c1b84c0353e66a4b430000939bc16" name="a808c1b84c0353e66a4b430000939bc16"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a808c1b84c0353e66a4b430000939bc16">&#9670;&#160;</a></span>turb()</h2>
+<a id="a23227e569d418665dfb37602bf10a2f5" name="a23227e569d418665dfb37602bf10a2f5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a23227e569d418665dfb37602bf10a2f5">&#9670;&#160;</a></span>turb()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -469,6 +469,18 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
+          <td class="paramname"><em>psea_ucu</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
+          <td class="paramname"><em>psea_vcu</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
           <td class="paramname"><em>ppabst</em>, </td>
         </tr>
@@ -529,13 +541,13 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,turbn%ctom=='tm06')), intent(inout)&#160;</td>
           <td class="paramname"><em>pbl_depth</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,turbn%lrmc01)), intent(inout)&#160;</td>
           <td class="paramname"><em>psbl_depth</em>, </td>
         </tr>
         <tr>
@@ -838,8 +850,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="turb_8F90_a808c1b84c0353e66a4b430000939bc16_cgraph.png" border="0" usemap="#aturb_8F90_a808c1b84c0353e66a4b430000939bc16_cgraph" alt=""/></div>
-<map name="aturb_8F90_a808c1b84c0353e66a4b430000939bc16_cgraph" id="aturb_8F90_a808c1b84c0353e66a4b430000939bc16_cgraph">
+<div class="center"><img src="turb_8F90_a23227e569d418665dfb37602bf10a2f5_cgraph.png" border="0" usemap="#aturb_8F90_a23227e569d418665dfb37602bf10a2f5_cgraph" alt=""/></div>
+<map name="aturb_8F90_a23227e569d418665dfb37602bf10a2f5_cgraph" id="aturb_8F90_a23227e569d418665dfb37602bf10a2f5_cgraph">
 <area shape="rect" title=" " alt="" coords="5,999,53,1024"/>
 <area shape="rect" href="namespacemode__bl89.html#aabf6cc78f3299d00fe3b2b80b5f146b8" title=" " alt="" coords="423,20,553,46"/>
 <area shape="poly" title=" " alt="" coords="28,999,30,818,38,521,47,368,59,231,76,128,87,93,99,71,134,43,173,24,216,11,260,5,305,3,348,5,423,15,422,20,347,10,305,8,261,10,217,16,175,29,137,48,103,75,92,95,81,129,64,232,52,368,43,522,35,818,33,999"/>
@@ -887,7 +899,7 @@ Here is the call graph for this function:</div>
 <area shape="poly" title=" " alt="" coords="34,1024,38,1180,49,1431,58,1561,70,1676,85,1763,94,1793,103,1810,116,1821,132,1829,130,1833,113,1825,99,1813,89,1795,80,1765,65,1677,53,1561,44,1432,32,1180,28,1024"/>
 <area shape="rect" href="namespacemode__turb__hor__splt.html#af567a0992241afa9a2e5ad86eb96f424" title=" " alt="" coords="140,1196,291,1236"/>
 <area shape="poly" title=" " alt="" coords="35,1024,40,1056,52,1099,73,1143,87,1164,103,1182,128,1198,126,1202,100,1186,82,1167,68,1146,47,1101,35,1057,30,1025"/>
-<area shape="rect" href="namespacemode__turb__ver.html#a6a55f740dcd7870f2e64d634483cc1e8" title=" " alt="" coords="124,710,307,735"/>
+<area shape="rect" href="namespacemode__turb__ver.html#ae492dc0352339b75c3d88aab638ab37b" title=" " alt="" coords="124,710,307,735"/>
 <area shape="poly" title=" " alt="" coords="30,998,36,962,48,910,69,854,99,801,135,765,174,740,176,744,138,770,103,804,74,856,53,912,41,963,35,999"/>
 <area shape="rect" href="namespacemode__update__lm.html#a35ee5e49f5c162ca10856e12e124d8ca" title=" " alt="" coords="109,1082,321,1107"/>
 <area shape="poly" title=" " alt="" coords="55,1020,174,1073,172,1078,52,1024"/>

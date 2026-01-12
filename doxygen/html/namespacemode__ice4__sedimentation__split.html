@@ -80,6 +80,8 @@ $(function() {
 Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a5f449b2aa8b370128ca1a136c7037efb" id="r_a5f449b2aa8b370128ca1a136c7037efb"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__ice4__sedimentation__split.html#a5f449b2aa8b370128ca1a136c7037efb">ice4_sedimentation_split</a> (d, cst, icep, iced, parami, elecp, elecd, oelec, osedim_beard, pthvrefzikb, ptstep, krr, pdzz, prhodref, ppabst, ptht, pt, prhodj, prs, prt, pconc3d, pinprc, pinprr, pinpri, pinprs, pinprg, pqct, pqrt, pqit, pqst, pqgt, pqcs, pqrs, pqis, pqss, pqgs, pefieldw, psea, ptown, pinprh, pfpr, pqht, pqhs)</td></tr>
 <tr class="separator:a5f449b2aa8b370128ca1a136c7037efb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa9eb9db0298ea90ee032543ebcf5889" id="r_aaa9eb9db0298ea90ee032543ebcf5889"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__ice4__sedimentation__split.html#aaa9eb9db0298ea90ee032543ebcf5889">internal_sedim_spli</a> (d, cst, icep, iced, parami, elecp, elecd, krr, oelec, osedim_beard, pthvrefzikb, hcloud, prhodref, poorhodz, pdzz, ppabst, ptht, pt, ptstep, kspe, prxt, prxs, pinprx, pprxs, pqxt, pqxs, ppqxs, pefieldw, pray, plbc, pfsedc, pconc3d, pfpr)</td></tr>
+<tr class="separator:aaa9eb9db0298ea90ee032543ebcf5889"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
 <a id="a5f449b2aa8b370128ca1a136c7037efb" name="a5f449b2aa8b370128ca1a136c7037efb"></a>
@@ -361,11 +363,10 @@ Here is the call graph for this function:</div>
 <div class="center"><img src="namespacemode__ice4__sedimentation__split_a5f449b2aa8b370128ca1a136c7037efb_cgraph.png" border="0" usemap="#anamespacemode__ice4__sedimentation__split_a5f449b2aa8b370128ca1a136c7037efb_cgraph" alt=""/></div>
 <map name="anamespacemode__ice4__sedimentation__split_a5f449b2aa8b370128ca1a136c7037efb_cgraph" id="anamespacemode__ice4__sedimentation__split_a5f449b2aa8b370128ca1a136c7037efb_cgraph">
 <area shape="rect" title=" " alt="" coords="5,5,233,45"/>
-<area shape="rect" href="namespacemode__elec__beard__effect.html#a1294ed60c5f7fc904f054eb043ed03a5" title=" " alt="" coords="479,5,660,45"/>
-<area shape="poly" title=" " alt="" coords="234,23,465,23,465,28,234,28"/>
-<area shape="rect" href="mode__ice4__sedimentation__split_8F90.html#a9dcb86dc652bb11123d352485534d7b2" title=" " alt="" coords="281,38,431,63"/>
-<area shape="poly" title=" " alt="" coords="234,35,268,39,267,44,233,40"/>
-<area shape="poly" title=" " alt="" coords="431,39,465,35,465,40,431,44"/>
+<area shape="rect" href="namespacemode__ice4__sedimentation__split.html#aaa9eb9db0298ea90ee032543ebcf5889" title=" " alt="" coords="281,5,476,45"/>
+<area shape="poly" title=" " alt="" coords="234,23,268,23,268,28,234,28"/>
+<area shape="rect" href="namespacemode__elec__beard__effect.html#a1294ed60c5f7fc904f054eb043ed03a5" title=" " alt="" coords="524,5,705,45"/>
+<area shape="poly" title=" " alt="" coords="476,23,510,23,510,28,476,28"/>
 </map>
 </div>
 <div class="dynheader">
@@ -374,6 +375,246 @@ Here is the caller graph for this function:</div>
 <div class="center"><img src="namespacemode__ice4__sedimentation__split_a5f449b2aa8b370128ca1a136c7037efb_icgraph.png" border="0" usemap="#anamespacemode__ice4__sedimentation__split_a5f449b2aa8b370128ca1a136c7037efb_icgraph" alt=""/></div>
 <map name="anamespacemode__ice4__sedimentation__split_a5f449b2aa8b370128ca1a136c7037efb_icgraph" id="anamespacemode__ice4__sedimentation__split_a5f449b2aa8b370128ca1a136c7037efb_icgraph">
 <area shape="rect" title=" " alt="" coords="369,5,597,45"/>
+<area shape="rect" href="namespacemode__ice4__sedimentation.html#a92a079586f3fd69a9b5e9d3161e2548f" title=" " alt="" coords="127,5,321,45"/>
+<area shape="poly" title=" " alt="" coords="356,28,321,28,321,23,356,23"/>
+<area shape="rect" href="rain__ice_8F90.html#a05fba7fce3a802191c84e7f0520e74e6" title=" " alt="" coords="5,13,79,38"/>
+<area shape="poly" title=" " alt="" coords="113,28,79,28,79,23,113,23"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="aaa9eb9db0298ea90ee032543ebcf5889" name="aaa9eb9db0298ea90ee032543ebcf5889"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaa9eb9db0298ea90ee032543ebcf5889">&#9670;&#160;</a></span>internal_sedim_spli()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine mode_ice4_sedimentation_split::internal_sedim_spli </td>
+          <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__cst_1_1cst__t.html">cst_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>cst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__rain__ice__param__n_1_1rain__ice__param__t.html">rain_ice_param_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>icep</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__rain__ice__descr__n_1_1rain__ice__descr__t.html">rain_ice_descr_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>iced</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__ice__n_1_1param__ice__t.html">param_ice_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>parami</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__elec__param_1_1elec__param__t.html">elec_param_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>elecp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__elec__descr_1_1elec__descr__t.html">elec_descr_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>elecd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>krr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in)&#160;</td>
+          <td class="paramname"><em>oelec</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in)&#160;</td>
+          <td class="paramname"><em>osedim_beard</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, intent(in)&#160;</td>
+          <td class="paramname"><em>pthvrefzikb</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">character (len=4), intent(in)&#160;</td>
+          <td class="paramname"><em>hcloud</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>prhodref</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nktb:d%nkte), intent(in)&#160;</td>
+          <td class="paramname"><em>poorhodz</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>pdzz</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>ppabst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>ptht</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>pt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, intent(in)&#160;</td>
+          <td class="paramname"><em>ptstep</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)&#160;</td>
+          <td class="paramname"><em>kspe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
+          <td class="paramname"><em>prxt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)&#160;</td>
+          <td class="paramname"><em>prxs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt), intent(out)&#160;</td>
+          <td class="paramname"><em>pinprx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>pprxs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,oelec),merge(d%nkt,0,oelec)), intent(inout)&#160;</td>
+          <td class="paramname"><em>pqxt</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,oelec),merge(d%nkt,0,oelec)), intent(inout)&#160;</td>
+          <td class="paramname"><em>pqxs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,oelec),merge(d%nkt,0,oelec)), intent(in)&#160;</td>
+          <td class="paramname"><em>ppqxs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,osedim_beard),merge(d%nkt,0,osedim_beard)), intent(in)&#160;</td>
+          <td class="paramname"><em>pefieldw</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>pray</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>plbc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>pfsedc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in), optional&#160;</td>
+          <td class="paramname"><em>pconc3d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,krr), intent(inout), optional&#160;</td>
+          <td class="paramname"><em>pfpr</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="mode__ice4__sedimentation__split_8F90_source.html#l00345">345</a> of file <a class="el" href="mode__ice4__sedimentation__split_8F90_source.html">mode_ice4_sedimentation_split.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacemode__ice4__sedimentation__split_aaa9eb9db0298ea90ee032543ebcf5889_cgraph.png" border="0" usemap="#anamespacemode__ice4__sedimentation__split_aaa9eb9db0298ea90ee032543ebcf5889_cgraph" alt=""/></div>
+<map name="anamespacemode__ice4__sedimentation__split_aaa9eb9db0298ea90ee032543ebcf5889_cgraph" id="anamespacemode__ice4__sedimentation__split_aaa9eb9db0298ea90ee032543ebcf5889_cgraph">
+<area shape="rect" title=" " alt="" coords="5,5,200,45"/>
+<area shape="rect" href="namespacemode__elec__beard__effect.html#a1294ed60c5f7fc904f054eb043ed03a5" title=" " alt="" coords="248,5,429,45"/>
+<area shape="poly" title=" " alt="" coords="200,23,234,23,234,28,200,28"/>
+</map>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacemode__ice4__sedimentation__split_aaa9eb9db0298ea90ee032543ebcf5889_icgraph.png" border="0" usemap="#anamespacemode__ice4__sedimentation__split_aaa9eb9db0298ea90ee032543ebcf5889_icgraph" alt=""/></div>
+<map name="anamespacemode__ice4__sedimentation__split_aaa9eb9db0298ea90ee032543ebcf5889_icgraph" id="anamespacemode__ice4__sedimentation__split_aaa9eb9db0298ea90ee032543ebcf5889_icgraph">
+<area shape="rect" title=" " alt="" coords="645,5,840,45"/>
+<area shape="rect" href="namespacemode__ice4__sedimentation__split.html#a5f449b2aa8b370128ca1a136c7037efb" title=" " alt="" coords="369,5,597,45"/>
+<area shape="poly" title=" " alt="" coords="631,28,598,28,598,23,631,23"/>
 <area shape="rect" href="namespacemode__ice4__sedimentation.html#a92a079586f3fd69a9b5e9d3161e2548f" title=" " alt="" coords="127,5,321,45"/>
 <area shape="poly" title=" " alt="" coords="356,28,321,28,321,23,356,23"/>
 <area shape="rect" href="rain__ice_8F90.html#a05fba7fce3a802191c84e7f0520e74e6" title=" " alt="" coords="5,13,79,38"/>

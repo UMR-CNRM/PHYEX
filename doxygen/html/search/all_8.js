@@ -21,6 +21,6 @@ var searchData=
   ['hybrj1_18',['hybrj1',['../interfacemodi__minpack_1_1hybrj1.html#a8348476373b5d86e72634d9240fda94a',1,'modi_minpack::hybrj1::hybrj1()'],['../minpack_8F90.html#afefee19843910dca7f59c228bf69749d',1,'hybrj1():&#160;minpack.F90'],['../interfacemodi__minpack_1_1hybrj1.html',1,'modi_minpack::hybrj1']]],
   ['hypgeo_19',['hypgeo',['../interfacemodi__hypgeo_1_1hypgeo.html#a928c880dd61ab98ead912fdd3056c020',1,'modi_hypgeo::hypgeo::hypgeo()'],['../hypgeo_8F90.html#a57d459a4a7354ceaeb3681f76f9308db',1,'hypgeo():&#160;hypgeo.F90'],['../interfacemodi__hypgeo_1_1hypgeo.html',1,'modi_hypgeo::hypgeo']]],
   ['hypgeo_2ef90_20',['hypgeo.F90',['../hypgeo_8F90.html',1,'']]],
-  ['hypser_21',['hypser',['../interfacemodi__hypser_1_1hypser.html#a1699686ca1f51b20c93cc610106ac036',1,'modi_hypser::hypser::hypser()'],['../hypser_8f90.html#ab4ae8dafd2a0b270a11de99b9621082f',1,'hypser():&#160;hypser.f90'],['../interfacemodi__hypser_1_1hypser.html',1,'modi_hypser::hypser']]],
-  ['hypser_2ef90_22',['hypser.f90',['../hypser_8f90.html',1,'']]]
+  ['hypser_21',['hypser',['../interfacemodi__hypser_1_1hypser.html#a1699686ca1f51b20c93cc610106ac036',1,'modi_hypser::hypser::hypser()'],['../hypser_8F90.html#ab4ae8dafd2a0b270a11de99b9621082f',1,'hypser():&#160;hypser.F90'],['../interfacemodi__hypser_1_1hypser.html',1,'modi_hypser::hypser']]],
+  ['hypser_2ef90_22',['hypser.F90',['../hypser_8F90.html',1,'']]]
 ];
