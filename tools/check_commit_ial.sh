@@ -744,6 +744,11 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
         fi
         if [ ! -z "$(\ls $EXT)" ]; then
           #$EXT is not empty
+          if [ $cycle == '50t1' ]; then
+          for file in aro_turb_mnh.F90 aro_shallow_mf.F90 arp_shallow_mf.F90; do
+            [ -f $EXT/$file ] && mvdiff $EXT/$file ../arpifs/phys_dmn/
+          done
+          fi
           for file in $EXT/*; do
             extname=`basename $file`
             loc=`find ../../$reftree/mpa/ -name $extname | sed "s/\/$reftree\//\/local\//g"`
