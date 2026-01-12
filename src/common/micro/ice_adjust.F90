@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1996-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1996-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -309,7 +309,7 @@ ENDDO
 !$acc end kernels
 !
 !$acc kernels
-!$acc loop independent collapse(2)
+!$mnh_do_concurrent(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
 DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
     !
@@ -343,6 +343,7 @@ DO JK=IKTB,IKTE
                   ZW2 * ZLS(JIJ,JK) / (ZCPH(JIJ,JK) * PEXNREF(JIJ,JK))
   ENDDO
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
   !
   !*       5.2    compute the cloud fraction PCLDFR

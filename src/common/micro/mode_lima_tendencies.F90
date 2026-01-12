@@ -72,6 +72,9 @@ CONTAINS
 !       B. Vie          03/2022: Add option for 1-moment pristine ice
 !       C. Barthe       06/2022: change some mass transfer rates to be consistent with ICE3, for cloud electrification
 !       C. Barthe       06/2023: add Latham effet for IAGGS
+!       C. Barthe       01/2024: add several shapes for ice crystals
+!       M. Taufour      03/2024: add ice crystal self-collection
+!       I. Vongpaseut   01/2024: add dependence on temperature for RDSF
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -109,6 +112,8 @@ USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 USE MODD_CST, ONLY:CST_T
 USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
+!
+USE MODE_LIMA_SHAPE_COMPUTE_LBDA, ONLY: LIMA_SHAPE_COMPUTE_LBDA
 !
 IMPLICIT NONE
 !
@@ -1171,7 +1176,6 @@ IF (LIMAP%NMOM_S.GE.1 .AND. LIMAP%NMOM_G.GE.1 .AND. LIMAP%LCIBU) THEN
         PA_CI_SHAPE(:,2) = PA_CI_SHAPE(:,2) + P_SHCI_CIBU(:,2)
       END WHERE
    END IF
-
 END IF
 !
 IF (LIMAP%NMOM_R.GE.1 .AND. LIMAP%NMOM_I.GE.1 .AND. LIMAP%LRDSF) THEN
@@ -1242,7 +1246,7 @@ IF (LIMAP%NMOM_G.GE.1) THEN
      ! Hallett-Mossop
      ! ice crystals produced during HM are assumed to be columns (jsh=2) due to the temperature regime
      P_SHCI_HMG(:,2)  = P_CI_HMG(:)
-     PA_CI_SHAPE(:,2) = PA_CI_SHAPE(:,2) + P_SHCI_HMG(:,2) !P_CI_HMG(:)
+     PA_CI_SHAPE(:,2) = PA_CI_SHAPE(:,2) + P_SHCI_HMG(:,2)
    END IF
 END IF
 !

@@ -35,6 +35,8 @@ CONTAINS
 !!      Original             15/03/2018
 !!      B. Vié               30/08/2021      Disable CNVS if LSNOW=F  
 !!      B. Vie                  03/2022   Add option for 1-moment pristine ice
+!!      C. Barthe               01/2024   Add different ice crystal shapes
+!
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -48,6 +50,9 @@ USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 USE MODE_LIMA_SHAPE_COMPUTE_LBDA, ONLY : LIMA_SHAPE_COMPUTE_LBDA
 USE MODE_LIMA_CHANGE_SHAPE, ONLY : LIMA_CHANGE_SHAPE
 !
+USE MODE_LIMA_SHAPE_COMPUTE_LBDA, ONLY : LIMA_SHAPE_COMPUTE_LBDA
+USE MODE_LIMA_CHANGE_SHAPE,       ONLY : LIMA_CHANGE_SHAPE 
+!
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
@@ -60,11 +65,11 @@ REAL,                 INTENT(IN)    :: PTSTEP
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT  ! abs. pressure at time t
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PSSI  ! abs. pressure at time t
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PAI  ! abs. pressure at time t
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ  ! abs. pressure at time t
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT   ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PSSI ! sursat. / ice at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PAI  ! thermodyn. fct Ai
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ  ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  ! 
 !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PIF     ! Ice cloud fraction 
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIT    ! Cloud ice m.r. at t 
@@ -72,7 +77,7 @@ REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIT    ! Cloud ice m.r. at t
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT    ! Ice crystal C. at t
 REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(IN) :: PCIT_SHAPE ! Ice crystal C. at t for each shape
 !
-REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDI    ! Graupel m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDI    ! Ice crystal slope param.
 !
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_DEPI
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RI_DEPI

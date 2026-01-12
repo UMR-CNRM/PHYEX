@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -98,11 +98,14 @@ IF(PARAMI%LOCND2) THEN
     ZREDSN  = ICEP%XFRMIN(40)  ! Tuning factor, may be /= 1.
   ENDIF
 ENDIF
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+#endif
 !
 !*       3.2     compute the homogeneous nucleation source: RCHONI
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PT(JL)<CST%XTT-35.0 .AND. PRCT(JL)>ICED%XRTMIN(2) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -113,6 +116,7 @@ DO JL=1, KSIZE
     PRCHONI(JL) = 0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       3.4    compute the deposition, aggregation and autoconversion sources
@@ -132,7 +136,7 @@ ENDDO
 !*       3.4.3  compute the deposition on r_s: RVDEPS
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PRVT(JL)>ICED%XRTMIN(1) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -151,12 +155,13 @@ DO JL=1, KSIZE
     PRVDEPS(JL) = 0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       3.4.4  compute the aggregation on r_s: RIAGGS
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PRIT(JL)>ICED%XRTMIN(4) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -179,12 +184,13 @@ DO JL=1, KSIZE
     PRIAGGS(JL) = 0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       3.4.5  compute the autoconversion of r_i for r_s production: RIAUTS
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PHLI_HRI(JL)>ICED%XRTMIN(4) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -197,13 +203,14 @@ DO JL=1, KSIZE
     PRIAUTS(JL) = 0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       3.4.6  compute the deposition on r_g: RVDEPG
 !
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PRVT(JL)>ICED%XRTMIN(1) .AND. PRGT(JL)>ICED%XRTMIN(6) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -215,6 +222,7 @@ DO JL=1, KSIZE
     PRVDEPG(JL) = 0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SLOW', 1, ZHOOK_HANDLE)

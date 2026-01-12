@@ -84,7 +84,7 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-!$acc kernels present(PA,PMXM)
+!$acc kernels present_crm(PA,PMXM)
 !$acc loop independent collapse(3)
 DO JK = 1, IKU
   DO JJ = 1, IJU
@@ -187,7 +187,7 @@ INTEGER :: IJU
 IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 !
-!$acc kernels present(PA,PMXM)
+!$acc kernels present_crm(PA,PMXM)
 !$acc loop independent collapse(2)
   DO JJ = 1, IJU
     DO JI = 1 + 1, IIU
@@ -282,7 +282,7 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-!$acc kernels present(PA,PMZM)
+!$acc kernels present_crm(PA,PMZM)
 DO JK=2,IKU !TODO: remplacer le 2 par JPHEXT+1 ?
 !$mnh_expand_array(JI=1:IIU,JJ=1:IJU)
   PMZM(:,:,JK) = 0.5* ( PA(:,:,JK) + PA(:,:,JK-1) )
@@ -376,7 +376,7 @@ INTEGER :: IIU
 IIU=SIZE(PA,1)
 IJU=SIZE(PA,2)
 !
-!$acc kernels present(PA,PMYM)
+!$acc kernels present_crm(PA,PMYM)
 !$acc loop independent collapse(2)
   DO JJ = 2, IJU
     DO JI = 1, IIU
@@ -476,7 +476,7 @@ IIU=SIZE(PA,1)
 IJU=SIZE(PA,2)
 IKU=SIZE(PA,3)
 !
-!$acc kernels present(PA,PMYM)
+!$acc kernels present_crm(PA,PMYM)
 !$acc loop independent collapse(3)
 DO JK = 1, IKU
   DO JJ = 2, IJU
@@ -575,7 +575,7 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-!$acc kernels present(PA,PDZM)
+!$acc kernels present_crm(PA,PDZM)
 !$acc loop independent collapse(3)
 DO JK=2,IKU !TODO: remplacer le 1+1 par 1+JPHEXT ?
   DO JJ=1,IJU
@@ -670,7 +670,7 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-!$acc kernels present(PA,PMZF)
+!$acc kernels present_crm(PA,PMZF)
 PMZF(:,:,1:IKU-1) = 0.5*( PA(:,:,1:IKU-1)+PA(:,:,2:) )
 !
 !$mnh_expand_array(JI=1:IIU,JJ=1:IJU)
@@ -764,7 +764,7 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-!$acc kernels present(PMXF,PA)
+!$acc kernels present_crm(PMXF,PA)
 !$acc loop independent collapse(3)
 DO JK = 1, IKU
   DO JJ = 1, IJU
@@ -863,7 +863,7 @@ INTEGER :: JJ,IJU
 IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 !
-!$acc kernels present(PMXF,PA)
+!$acc kernels present_crm(PMXF,PA)
 !$acc loop independent collapse(2)
   DO JJ = 1, IJU
     DO JI = 1 + 1, IIU
@@ -959,7 +959,7 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-!$acc kernels present(PA,PMYF)
+!$acc kernels present_crm(PA,PMYF)
 !$acc loop collapse(3) independent 
 DO JK = 1, IKU
   DO JJ = 1, IJU-1
@@ -1066,7 +1066,7 @@ INTEGER :: IIU
 IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 !
-!$acc kernels present(PA,PMYF)
+!$acc kernels present_crm(PA,PMYF)
 !$acc loop collapse(2) independent 
 DO JJ = 1, IJU-1
   DO JI = 1, IIU
@@ -1160,7 +1160,7 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-!$acc kernels present(PA,PDZF)
+!$acc kernels present_crm(PA,PDZF)
 !$acc loop independent collapse(3)
 DO JK=1,IKU-1 !TODO: remplacer le 1 par JPVEXT ?
   DO JJ=1,IJU
@@ -1261,7 +1261,7 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-!$acc kernels present(PA,PDXF)
+!$acc kernels present_crm(PA,PDXF)
 !$acc loop independent collapse(3)
 DO JK=1,IKU
   DO JJ=1,IJU
@@ -1366,7 +1366,7 @@ INTEGER :: JJ,IJU
 IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 !
-!$acc kernels present(PA,PDXF)
+!$acc kernels present_crm(PA,PDXF)
 !$acc loop independent collapse(2)
   DO JJ=1,IJU
     DO JI=1+1,IIU
@@ -1465,7 +1465,7 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-!$acc kernels present(PA,PDXM)
+!$acc kernels present_crm(PA,PDXM)
 !$acc loop independent collapse(3)
 DO JK=1,IKU
   DO JJ=1,IJU
@@ -1566,7 +1566,7 @@ INTEGER :: JJ,IJU
 IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 !
-!$acc kernels present(PA,PDXM)
+!$acc kernels present_crm(PA,PDXM)
 !$acc loop independent collapse(2)
   DO JJ=1,IJU
     DO JI=1+1,IIU !TODO: remplacer le 1 par JPHEXT ?
@@ -1668,7 +1668,7 @@ IIU=SIZE(PA,1)
 IJU=SIZE(PA,2)
 IKU=SIZE(PA,3)
 !
-!$acc kernels present(PA,PDYM)
+!$acc kernels present_crm(PA,PDYM)
 !$acc loop independent collapse(3)
 DO JK=1,IKU
   DO JJ=2,IJU !TODO: remplacer le 2 par JPHEXT+1 ?
@@ -1776,7 +1776,7 @@ INTEGER :: IIU
 IIU=SIZE(PA,1)
 IJU=SIZE(PA,2)
 !
-!$acc kernels present(PA,PDYM)
+!$acc kernels present_crm(PA,PDYM)
 !$acc loop independent collapse(2)
   DO JJ=2,IJU !TODO: remplacer le 2 par JPHEXT+1 ?
     DO JI=1,IIU

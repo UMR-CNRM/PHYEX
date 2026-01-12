@@ -228,21 +228,22 @@ IMPLICIT NONE
 !
 !*       0.1 declarations of arguments and result
 !
-REAL,    INTENT(INOUT)  :: PX1, PX2, PXACC
+REAL(KIND=MNHREAL64),    INTENT(INOUT)  :: PX1, PX2
+REAL,    INTENT(INOUT)  :: PXACC
 REAL,    INTENT(IN)     :: PDDRY, PKAPPA, PT
-REAL                    :: PZRIDDR
+REAL(KIND=MNHREAL64)                    :: PZRIDDR
 !
 !*       0.2 declarations of local variables
 !
 !
 INTEGER, PARAMETER      :: IMAXIT=60
-REAL                    :: ZFH,ZFL, ZFM,ZFNEW
-REAL                    :: ZS,ZXH,ZXL,ZXM,ZXNEW
+REAL(KIND=MNHREAL64)    :: ZFH,ZFL, ZFM,ZFNEW
+REAL(KIND=MNHREAL64)    :: ZS,ZXH,ZXL,ZXM,ZXNEW
 INTEGER                 :: IJ
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 IF (LHOOK) CALL DR_HOOK('ZRIDDR', 0, ZHOOK_HANDLE)
-PZRIDDR= 999999.
+PZRIDDR= 999999._MNHREAL64
 ZFL     = DSDD(PX1,PDDRY,PKAPPA,PT)
 ZFH     = DSDD(PX2,PDDRY,PKAPPA,PT)
 !
@@ -250,13 +251,13 @@ ZFH     = DSDD(PX2,PDDRY,PKAPPA,PT)
       ZXL         = PX1
       ZXH         = PX2
       DO IJ=1,IMAXIT
-         ZXM     = 0.5*(ZXL+ZXH)
+         ZXM     = 0.5_MNHREAL64*(ZXL+ZXH)
          ZFM = DSDD(ZXM,PDDRY,PKAPPA,PT)
          ZS      = SQRT(ZFM**2-ZFL*ZFH)
          IF (ZS == 0.0) then
             GO TO 101
          ENDIF
-         ZXNEW  = ZXM+(ZXM-ZXL)*(SIGN(1.0,ZFL-ZFH)*ZFM/ZS)
+         ZXNEW  = ZXM+(ZXM-ZXL)*(SIGN(1.0_MNHREAL64,ZFL-ZFH)*ZFM/ZS)
          IF (ABS(ZXNEW - PZRIDDR) <= PXACC) then
             GO TO 101 
          ENDIF
@@ -277,7 +278,7 @@ ZFH     = DSDD(PX2,PDDRY,PKAPPA,PT)
             ZXL    =PZRIDDR
             ZFL=ZFNEW
          ELSE IF (PX2 .LT. 0.05) then
-            PX2 = PX2 + 1.0E-2
+            PX2 = PX2 + 1.0E-2_MNHREAL64
 !            PRINT*, 'PX2 ALWAYS too small, we put a greater one : PX2 =',PX2
             ZFH   = DSDD(PX2,PDDRY,PKAPPA,PT)
             GO TO 100
@@ -298,7 +299,7 @@ ZFH     = DSDD(PX2,PDDRY,PKAPPA,PT)
       ZFH   = DSDD(PX2,PDDRY,PKAPPA,PT)
       GO TO 100
    ELSE
-      PZRIDDR=0.0
+      PZRIDDR=0.0_MNHREAL64
       GO TO 101
    END IF
 !
@@ -348,12 +349,12 @@ USE MODD_PRECISION, ONLY: MNHREAL64
 !
 !*       0.1 declarations of arguments and result
 !
-    REAL, INTENT(IN)  :: PD     ! supersaturation is already in no units
+    REAL(KIND=MNHREAL64), INTENT(IN)  :: PD     ! supersaturation is already in no units
     REAL, INTENT(IN)  :: PDDRY  ! supersaturation is already in no units
     REAL, INTENT(IN)  :: PKAPPA ! supersaturation is already in no units
     REAL, INTENT(IN)  :: PT     ! supersaturation is already in no units
 !
-    REAL              :: ZDS     ! result
+    REAL(KIND=MNHREAL64)   :: ZDS     ! result
 !
 !*       0.2 declarations of local variables
 !
@@ -422,20 +423,20 @@ USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !*       0.2 declarations of local variables
 !
     INTEGER II
-    REAL    ZC
-    REAL    ZW
+    REAL(KIND=MNHREAL64)    ZC
+    REAL(KIND=MNHREAL64)    ZW
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !    
     ! print *, "X = ", X
     IF (LHOOK) CALL DR_HOOK('DISTANCE', 0, ZHOOK_HANDLE)
     IF ( ANY(PX .LT.0.) .OR. PX(1).GT.2*PX(2)) THEN
-       PFVEC(:) = 999999.
+       PFVEC(:) = 999999._MNHREAL64
     ELSE
        ZC=GAMMA(PX(2))*PX(3)**(PX(1)/2)/GAMMA(1+PX(1)/2)/GAMMA(PX(2)-PX(1)/2)
        DO II=1, KM
           ! ZS in "no units", ie ZS=0.01 for a 1% suersaturation
           !       ZW= C * (ZS(I)/100)**X(1) * HYPGEO(X(2),X(1)/2,X(1)/2+1,X(3),ZS(I)/100)
-          ZW= ZC * (ZS(II))**PX(1) * HYPGEO(REAL(PX(2)),REAL(PX(1)/2),REAL(PX(1)/2+1),REAL(PX(3)),REAL(ZS(II)))
+          ZW= REAL(ZC * (ZS(II))**PX(1) * HYPGEO(REAL(PX(2)),REAL(PX(1)/2),REAL(PX(1)/2+1),REAL(PX(3)),REAL(ZS(II))))
 !!$       IF (X(3)*(ZS(I)/100)**2 .LT. 0.98) THEN
 !!$          CALL HYPSER(X(2),X(1)/2,X(1)/2+1,-X(3)*(ZS(I)/100)**2,ZW2)
 !!$          print *, "args= ", X(2), X(1)/2, X(1)/2+1, -X(3)*(ZS(I)/100)**2, " hypser = ", ZW2
@@ -446,7 +447,7 @@ USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
           IF ( ZW.GT.0. .AND. ZNCCN(II).GT.0.) THEN
              PFVEC(II) = LOG(ZW) - LOG(ZNCCN(II))
           ELSE
-             PFVEC(II) = 0.
+             PFVEC(II) = 0._MNHREAL64
           END IF
           !FVEC(I) = LOG(MAX(ZW,1.E-24)) - LOG(MAX(ZNCCN(I),1.E-24))
           !FVEC(I) = ZW - ZNCCN(I)

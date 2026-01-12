@@ -10,8 +10,6 @@ CONTAINS
   SUBROUTINE LIMA_DROPLETS_RIMING_SNOW (CST, LIMAP, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                               &
                                         PRHODREF, PT,                                           &
                                         PRCT, PCCT, PRST, PCST, PLBDC, PLBDS, PLVFACT, PLSFACT, &
-!++cb++
-!                                        P_TH_RIM, P_RC_RIM, P_CC_RIM, P_RS_RIM, P_CS_RIM, P_RG_RIM,       &
                                         P_TH_RIM, P_CC_RIM, P_CS_RIM,                           &
                                         P_RC_RIMSS, P_RC_RIMSG, P_RS_RIMCG,                     &
                                         P_RI_HMS, P_CI_HMS, P_RS_HMS                            )

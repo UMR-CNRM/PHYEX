@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -77,7 +77,7 @@ USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
 USE MODD_CST
-USE MODD_CTURB
+USE MODD_CTURB,          ONLY: CTURB_XCMFS => XCMFS
 use modd_field,          only: tfieldmetadata, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
@@ -122,7 +122,7 @@ INTEGER,                  INTENT(IN)    ::  KRR          ! number of moist var.
 INTEGER,                  INTENT(IN)    ::  KSV          ! number of sv var.
 LOGICAL,                  INTENT(IN)    ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                  INTENT(IN)    ::  O2D          ! Logical for 2D model version (modd_conf)
-TYPE(TFILEDATA),          INTENT(INOUT)    ::  TPFILE       ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT) ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
                                                         ! PK = PLM * SQRT(PTKEM)
@@ -201,10 +201,16 @@ REAL, DIMENSION(D%NIT,D%NJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF , ZDZZ
                                     ! coefficients for the uncentred gradient 
                                     ! computation near the ground
 TYPE(TFIELDMETADATA) :: TZFIELD
+!
+REAL :: XCMFS
+!
 ! --------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
 !             ------------------------
+!
+XCMFS = CTURB_XCMFS
+!
 NULLIFY(TZFIELDS_ll)
 !
 IKB = 1+JPVEXT               

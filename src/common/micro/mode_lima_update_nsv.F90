@@ -41,6 +41,7 @@ SUBROUTINE LIMA_UPDATE_NSV(LIMAP, TNSV, ODINIT, KMI, KSV, HDCLOUD, ODUPDATE)
 !!    MODIFICATIONS
 !!    -------------
 !!      Original    April 2023
+!!      C. Barthe   Jan. 2024  add several shapes for ice crystals
 !-------------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS

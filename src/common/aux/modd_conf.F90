@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -99,12 +99,10 @@ CHARACTER (LEN=3),SAVE :: CEQNSYS! EQuatioN SYStem resolved by the MESONH model
                                  ! momentum equation
                                  ! 'FCE' fully compressible equations ( not
                                  ! yet developped )
-LOGICAL,SAVE      :: LPACK       ! Logical to compress 1D or 2D FM files
+LOGICAL,SAVE      :: LPACK       ! Logical to compact 1D or 2D fields
 !
 !
 INTEGER,DIMENSION(3),SAVE :: NMNHVERSION ! Version of MesoNH
-INTEGER,SAVE :: NMASDEV           ! NMASDEV=XY corresponds to the masdevX_Y
-INTEGER,SAVE :: NBUGFIX           ! NBUGFIX=n corresponds to the BUGn of masdevX_Y
 CHARACTER(LEN=10),SAVE :: CBIBUSER! CBIBUSER is the name of the user binary library
 !
 CHARACTER(LEN=6),SAVE :: CPROGRAM ! CPROGRAM is the program currently running:
@@ -117,7 +115,7 @@ CHARACTER (LEN=10),SAVE :: CSPLIT ! kind of domain splitting for parallel distri
                                   !  "BSPLITTING","XSPLITTING","YSPLITTING"
 LOGICAL,SAVE      :: LLG         ! Logical to use lagrangian variables
 LOGICAL,SAVE      :: LINIT_LG    ! to reinitialize lagrangian variables
-CHARACTER (LEN=5),SAVE :: CINIT_LG ! to reinitialize LG variables at every output
+CHARACTER (LEN=6),SAVE :: CINIT_LG ! to reinitialize LG variables at every backup
 LOGICAL,SAVE      :: LNOMIXLG    ! to use turbulence for lagrangian variables
 !
 LOGICAL,SAVE      :: LNEUTRAL ! True if ref. theta field is uniform

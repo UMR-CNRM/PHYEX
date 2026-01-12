@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -111,7 +111,7 @@ REAL,    DIMENSION(:,:), pointer, contiguous :: ZZW1              ! Work arrays
 !
 ! IN variables
 !
-!$acc data present( OMICRO, PRHODREF, PRVT, PRCT, PRIT, PRST, PRGT, PRHT, &
+!$acc data present_crm( OMICRO, PRHODREF, PRVT, PRCT, PRIT, PRST, PRGT, PRHT, &
 !$acc &             PRHODJ, PPRES, PZT, PLBDAS, PLBDAG, PLSFACT, PLVFACT, &
 !$acc &             PCJ, PKA, PDV,                                        &
 !
@@ -187,6 +187,7 @@ CALL MNH_MEM_GET( ZZW1,  SIZE(PRHODREF), 7 )
   CALL COUNTJV_DEVICE( GWORK(:), I1H(:), IHAIL )
 #endif
 !
+
 !PW:used init/end instead of add because zzw1 is produced and used with different conditions
 ! => can not use directly zzw1 in Budget_store_add
 if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'WETH', Unpack ( pths(:) * prhodj(:), &
@@ -526,7 +527,6 @@ if ( lbudget_rh ) call Budget_store_init( tbudgets(NBUDGET_RH), 'HMLT', Unpack (
                                           mask = omicro(:,:,:), field = 0. ) )
 !
 IF( IHAIL>0 ) THEN
-!
 !$acc kernels
 !$acc loop independent
     DO JJ = 1, IHAIL

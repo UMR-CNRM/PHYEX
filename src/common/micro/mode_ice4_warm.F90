@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -90,13 +90,16 @@ LOGICAL :: LMASK, LMASK1, LMASK2
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_WARM', 0, ZHOOK_HANDLE)
 !
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+#endif
 !
 !-------------------------------------------------------------------------------
 !
 !*       4.2    compute the autoconversion of r_c for r_r production: RCAUTR
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0. .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -113,6 +116,7 @@ DO JL=1, KSIZE
     PRCAUTR(JL) = 0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !
@@ -121,7 +125,7 @@ ENDDO
 IF (HSUBG_RC_RR_ACCR=='NONE') THEN
   !CLoud water and rain are diluted over the grid box
 !$acc kernels
-!$acc loop independent
+  !$mnh_do_concurrent( JL=1:KSIZE )
   DO JL=1, KSIZE
     IF(PRCT(JL)>ICED%XRTMIN(2) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)) THEN
       IF(.NOT. LDSOFT) THEN
@@ -133,6 +137,7 @@ IF (HSUBG_RC_RR_ACCR=='NONE') THEN
       PRCACCR(JL) = 0.
     ENDIF
   ENDDO
+  !$mnh_end_do()
 !$acc end kernels
 ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
   !Cloud water is concentrated over its fraction with possibly to parts with high and low content as set for autoconversion
@@ -143,7 +148,7 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
   ! if PRF>PCF (rain is falling in cloud and in clear sky): PCF-PHLC_HCF
   ! => min(PCF, PRF)-PHLC_HCF
 !$acc kernels
-!$acc loop independent
+  !$mnh_do_concurrent( JL=1:KSIZE )
   DO JL=1, KSIZE
     LMASK = PRCT(JL)>ICED%XRTMIN(2) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)
     LMASK1 = LMASK .AND. PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0.
@@ -171,6 +176,7 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
       PRCACCR(JL)=0.
     ENDIF
   ENDDO
+  !$mnh_end_do()
 !$acc end kernels
 ELSE
   CALL PRINT_MSG(NVERB_FATAL,'GEN','ICE4_WARM','wrong HSUBG_RC_RR_ACCR case')
@@ -180,7 +186,7 @@ ENDIF
 !
 IF (HSUBG_RR_EVAP=='NONE') THEN
 !$acc kernels
-!$acc loop independent
+  !$mnh_do_concurrent( JL=1:KSIZE )
   DO JL=1, KSIZE
     IF(PRRT(JL)>ICED%XRTMIN(3) .AND. PRCT(JL)<=ICED%XRTMIN(2) .AND. LDCOMPUTE(JL)) THEN
       IF(.NOT. LDSOFT) THEN
@@ -195,6 +201,7 @@ IF (HSUBG_RR_EVAP=='NONE') THEN
       PRREVAV(JL)=0.
     ENDIF
   ENDDO
+  !$mnh_end_do()
 !$acc end kernels
 
 ELSEIF (HSUBG_RR_EVAP=='CLFR' .OR. HSUBG_RR_EVAP=='PRFR') THEN
@@ -205,7 +212,7 @@ ELSEIF (HSUBG_RR_EVAP=='CLFR' .OR. HSUBG_RR_EVAP=='PRFR') THEN
   !On utiliserait la bonne version suivant l'option NONE, CLFR... dans l'évaporation et ailleurs
 
 !$acc kernels
-!$acc loop independent
+  !$mnh_do_concurrent( JL=1:KSIZE )
   DO JL=1, KSIZE
     !Evaporation in clear sky part
     !With CLFR, rain is diluted over the grid box
@@ -248,6 +255,7 @@ ELSEIF (HSUBG_RR_EVAP=='CLFR' .OR. HSUBG_RR_EVAP=='PRFR') THEN
       PRREVAV(JL)=0.
     ENDIF
   ENDDO
+  !$mnh_end_do()
 !$acc end kernels
 ELSE
   CALL PRINT_MSG(NVERB_FATAL,'GEN','ICE4_WARM','wrong HSUBG_RR_EVAP case')

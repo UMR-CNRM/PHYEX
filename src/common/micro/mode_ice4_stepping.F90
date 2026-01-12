@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -54,8 +54,9 @@ USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & IBUNUM_MR,    & ! Number of tendency terms expressed as mixing ratio changes
       & IBUNUM_EXTRA, & ! Number of extra tendency terms
       & IRREVAV,      & ! Index for the evaporation tendency
-      & IBUEXTRAIND     ! Index indirection
-
+      & IBUEXTRAIND
+! Index indirection
+!
 USE MODE_ICE4_TENDENCIES, ONLY: ICE4_TENDENCIES
 !
 IMPLICIT NONE
@@ -161,6 +162,10 @@ LOGICAL :: LL_ANY_ITER
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_STEPPING', 0, ZHOOK_HANDLE)
+!
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+#endif
 !
 !*       1.     GENERALITIES
 !               ------------
@@ -341,9 +346,9 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     !We need to adjust tendencies when temperature reaches 0
     IF(PARAMI%LFEEDBACKT) THEN
 !$acc kernels
-!$acc loop independent
+      !$mnh_do_concurrent( JL=1:KMICRO )
       DO JL=1, KMICRO
-        !Is ZBTH(:) enough to change temperature sign?
+        !Is ZB(:, ITH) enough to change temperature sign?
         ZX=CST%XTT/PEXN(JL)
         IF ((PTHT(JL) - ZX) * (PTHT(JL) + ZBTH(JL) - ZX) < 0.) THEN
           ZMAXTIME(JL)=0.
@@ -356,6 +361,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
           ENDIF
         ENDIF
       ENDDO
+      !$mnh_end_do()  
 !$acc end kernels
     ENDIF
 

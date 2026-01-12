@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -10,6 +10,7 @@ SUBROUTINE TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,TLES,KSV,O2D,OFLAT, &
                       PEXPL,PTSTEP,TPFILE,                          &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
+                      PSEA_UCU,PSEA_VCU,                            &
                       PRHODJ,                                       &
                       PSFUM,PSFVM,                                  &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
@@ -272,6 +273,9 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes link
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
 !
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSEA_UCU      ! ocean current along X
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSEA_VCU      ! ocean current along Y
+!
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PUM,PVM,PWM, PTHLM
   ! Wind at t-Delta t
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM
@@ -429,7 +433,7 @@ ZCOEFS(:)=MXM(ZCOEFS(:) / PDZZ(:,IKB) )
 !
 !$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB+1:IKTE-1)
-ZSOURCE(:,IKTB+1:IKTE-1) = 0.
+ZSOURCE(IIJB:IIJE,IKTB+1:IKTE-1) = 0.
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB+1:IKTE-1)
 !$acc end kernels
 ! ZSOURCE= sfc FLUX /DZ
@@ -442,7 +446,7 @@ IF (GOCEAN) THEN  ! Ocean model
   ! Zero flux at the ocean domain bottom
 !$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZSOURCE(:,IKB) = 0.
+  ZSOURCE(IIJB:IIJE,IKB) = 0.
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
   !
@@ -450,10 +454,10 @@ ELSE ! Atmosphere
   ! Compute the explicit tangential flux at the W point    
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)               
-  ZSOURCE(:,IKB)     =                                              &
-   PTAU11M(:) * PCOSSLOPE(:) * PDIRCOSZW(:) * ZDIRSINZW(:) &
-   -PTAU12M(:) * PSINSLOPE(:) * ZDIRSINZW(:)                  &
-   -PTAU33M(:) * PCOSSLOPE(:) * ZDIRSINZW(:) * PDIRCOSZW(:)  
+  ZSOURCE(IIJB:IIJE,IKB)     =                                              &
+   PTAU11M(IIJB:IIJE) * PCOSSLOPE(IIJB:IIJE) * PDIRCOSZW(IIJB:IIJE) * ZDIRSINZW(IIJB:IIJE) &
+   -PTAU12M(IIJB:IIJE) * PSINSLOPE(IIJB:IIJE) * ZDIRSINZW(IIJB:IIJE)                  &
+   -PTAU33M(IIJB:IIJE) * PCOSSLOPE(IIJB:IIJE) * ZDIRSINZW(IIJB:IIJE) * PDIRCOSZW(IIJB:IIJE)  
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
 !
@@ -470,14 +474,14 @@ ELSE ! Atmosphere
 !
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZSOURCE(:,IKE) = 0.
+  ZSOURCE(IIJB:IIJE,IKE) = 0.
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
 ENDIF
 !
 ! Obtention of the split U at t+ deltat
 !
-CALL TRIDIAG_WIND(D,PUM,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,   &
+CALL TRIDIAG_WIND(D,PUM,PSEA_UCU,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,   &
                   MXM(PRHODJ),ZSOURCE,ZRES)
 !
 !  Compute the equivalent tendency for the U wind component
@@ -494,7 +498,7 @@ ZFLXZ(:,:)     = -ZCMFS * MXM(ZKEFF(:,:)) * &
 IF (GOCEAN) THEN
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZFLXZ(:,IKE+1) = ZFLUXSFCU(:)
+  ZFLXZ(IIJB:IIJE,IKE+1) = ZFLUXSFCU(IIJB:IIJE)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
 ELSE
@@ -506,7 +510,7 @@ ELSE
   !
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZFLXZ(:,IKA) = ZFLXZ(:,IKB)
+  ZFLXZ(IIJB:IIJE,IKA) = ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
 END IF
@@ -537,22 +541,18 @@ PWU(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT)
 ! Contribution to the TKE dynamic production of TKE
 ! (computed at mass point)
 !
-PDP(:,:) = - MZF( MXF ( ZFLXZ * GZ_U_UW(PUM,PDZZ) )  )
+PDP(:,:) = - MZF( MXF ( ZFLXZ * GZ_U_UW(TURBN%XIMPL*ZRES + PEXPL*PUM, PDZZ) ) )
 !
 ! Special cases near surface
 IF (GOCEAN) THEN
   ! evaluate the dynamic production at w(IKE) and store in PDP(IKE)
   ! before to be extrapolated in tke_eps routine
-  PDP(:,IKE) = - MXF (                            &
-    ZFLXZ(:,IKE-IKL) * (PUM(:,IKE)-PUM(:,IKE-IKL))  &
-                           / MXM(PDZZ(:,IKE-IKL))   &
-                           ) 
+  PDP(:,IKE) = -MXF(ZFLXZ(:,IKE-IKL) * (TURBN%XIMPL*(ZRES(:,IKE)-ZRES(:,IKE-IKL)) + &
+                                        PEXPL*(PUM(:,IKE)-PUM(:,IKE-IKL)))/ MXM(PDZZ(:,IKE-IKL)))
 ELSE ! Atmosphere
   ! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)
-  PDP(:,IKB) = - MXF (                              &
-    ZFLXZ(:,IKB+IKL) * (PUM(:,IKB+IKL)-PUM(:,IKB))  &
-                         / MXM(PDZZ(:,IKB+IKL))     &
-                         )
+  PDP(:,IKB) = -MXF(ZFLXZ(:,IKB+IKL) * (TURBN%XIMPL*(ZRES(:,IKB+IKL)-ZRES(:,IKB)) + &
+                                        PEXPL*(PUM(:,IKB+IKL)-PUM(:,IKB)))/ MXM(PDZZ(:,IKB+IKL)))
 !
 END IF
 !
@@ -684,7 +684,7 @@ ZCOEFS(:)=MYM(ZCOEFS(:) / PDZZ(:,IKB) )
 ! No flux in SOURCE TERM NULL OUTSIDE BC
 !$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKB+1:IKE-1)
-ZSOURCE(:,IKB+1:IKE-1) = 0.
+ZSOURCE(IIJB:IIJE,IKB+1:IKE-1) = 0.
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKB+1:IKE-1)
 !$acc end kernels
 !
@@ -692,9 +692,9 @@ ZSOURCE(:,IKB+1:IKE-1) = 0.
 IF (GOCEAN) THEN ! Ocean case
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZCOEFFLXU(:) = PCDUEFF(:)
-  ZCOEFFLXV(:) = PCDUEFF(:)
-  ZCOEFS(:)=ZCOEFFLXU(:)
+  ZCOEFFLXU(IIJB:IIJE) = PCDUEFF(IIJB:IIJE)
+  ZCOEFFLXV(IIJB:IIJE) = PCDUEFF(IIJB:IIJE)
+  ZCOEFS(IIJB:IIJE)=ZCOEFFLXU(IIJB:IIJE)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
   ! average this flux to be located at the U,W vorticity point
@@ -703,7 +703,7 @@ IF (GOCEAN) THEN ! Ocean case
   !No flux at the ocean domain bottom
 !$acc kernels present_cr(ZSOURCE)
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZSOURCE(:,IKB) = 0.
+  ZSOURCE(IIJB:IIJE,IKB) = 0.
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
 !
@@ -712,10 +712,10 @@ ELSE ! Atmos case
  ! compute the explicit tangential flux at the W point
 !$acc kernels present_cr(ZSOURCE)
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZSOURCE(:,IKB) =                                                                    &
-    PTAU11M(:) * PSINSLOPE(:) * PDIRCOSZW(:) * ZDIRSINZW(:)   &
-   +PTAU12M(:) * PCOSSLOPE(:) * ZDIRSINZW(:)                          &
-   -PTAU33M(:) * PSINSLOPE(:) * ZDIRSINZW(:) * PDIRCOSZW(:)
+  ZSOURCE(IIJB:IIJE,IKB) =                                                                    &
+    PTAU11M(IIJB:IIJE) * PSINSLOPE(IIJB:IIJE) * PDIRCOSZW(IIJB:IIJE) * ZDIRSINZW(IIJB:IIJE)   &
+   +PTAU12M(IIJB:IIJE) * PCOSSLOPE(IIJB:IIJE) * ZDIRSINZW(IIJB:IIJE)                          &
+   -PTAU33M(IIJB:IIJE) * PSINSLOPE(IIJB:IIJE) * ZDIRSINZW(IIJB:IIJE) * PDIRCOSZW(IIJB:IIJE)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
 !
@@ -731,13 +731,13 @@ ELSE ! Atmos case
   !No flux at the atmosphere top
 !$acc kernels present_cr(ZSOURCE)
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZSOURCE(:,IKE) = 0.
+  ZSOURCE(IIJB:IIJE,IKE) = 0.
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
 ENDIF ! End of Ocean or Atmospher Cases
 ! 
 !  Obtention of the split V at t+ deltat 
-CALL TRIDIAG_WIND(D,PVM,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,  &
+CALL TRIDIAG_WIND(D,PVM,PSEA_VCU,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,  &
                   MYM(PRHODJ),ZSOURCE,ZRES)
 !
 ! Compute the equivalent tendency for the V wind component
@@ -755,7 +755,7 @@ ZFLXZ(:,:)   = -ZCMFS * MYM(ZKEFF) * &
 IF (GOCEAN) THEN
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZFLXZ(:,IKE+1)  = ZFLUXSFCV(:)
+  ZFLXZ(IIJB:IIJE,IKE+1)  = ZFLUXSFCV(IIJB:IIJE)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
 ELSE
@@ -766,7 +766,7 @@ ZFLXZ(:,IKB)   =   MYM(PDZZ(:,IKB))  *                       &
   !
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZFLXZ(:,IKA) = ZFLXZ(:,IKB)
+  ZFLXZ(IIJB:IIJE,IKA) = ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels 
 END IF
@@ -799,24 +799,19 @@ PWV(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT)
 !  Contribution to the TKE dynamical production 
 !    computed at mass point
 !
-ZA(:,:) = - MZF( MYF ( ZFLXZ * GZ_V_VW(PVM, PDZZ) ) )
+ZA(:,:) = - MZF( MYF ( ZFLXZ * GZ_V_VW(TURBN%XIMPL*ZRES + PEXPL*PVM, PDZZ) ) )
 !
 ! Special cases at surface
 IF (GOCEAN) THEN
   ! evaluate the dynamic production at w(IKE) in PDP(IKE)
   ! before extrapolation done in routine tke_eps_source
-  ZA(:,IKE) = - MYF (                                                  &
-   ZFLXZ(:,IKE-IKL) * (PVM(:,IKE)-PVM(:,IKE-IKL))  &
-                          / MYM(PDZZ(:,IKE-IKL))                   &
-                          )
+  ZA(:,IKE) = -MYF(ZFLXZ(:,IKE-IKL) * (TURBN%XIMPL*(ZRES(:,IKE)-ZRES(:,IKE-IKL)) + &
+                                       PEXPL*(PVM(:,IKE)-PVM(:,IKE-IKL)))/ MYM(PDZZ(:,IKE-IKL)))
 !
 ELSE ! Atmosphere
   ! evaluate the dynamic production at w(IKB+IKL) in PDP(IKB)
-ZA(:,IKB)  =                                                 &
-                 - MYF (                                          &
-ZFLXZ(:,IKB+IKL) * (PVM(:,IKB+IKL)-PVM(:,IKB))  &
-                       / MYM(PDZZ(:,IKB+IKL))               &
-                       )
+  ZA(:,IKB) = -MYF(ZFLXZ(:,IKB+IKL) * (TURBN%XIMPL*(ZRES(:,IKB+IKL)-ZRES(:,IKB)) + &
+                                       PEXPL*(PVM(:,IKB+IKL)-PVM(:,IKB)))/ MYM(PDZZ(:,IKB+IKL)))
 END IF
 !
 !$acc kernels

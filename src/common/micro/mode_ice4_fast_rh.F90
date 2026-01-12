@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -104,11 +104,14 @@ LOGICAL, DIMENSION(KPROMA) :: LLWETH, LLDRYH
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RH',0,ZHOOK_HANDLE)
 !
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+#endif
 !
 !*       7.2    compute the Wet and Dry growth of hail
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PRHT(JL)>ICED%XRTMIN(7) .AND. PRCT(JL)>ICED%XRTMIN(2) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -130,13 +133,14 @@ DO JL=1, KSIZE
     PRH_TEND(JL, IRIDRYH)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 
 !
 !*       7.2.1  accretion of aggregates on the hailstones
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL = 1, KSIZE
   IF (PRHT(JL)>ICED%XRTMIN(7) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     GWET(JL) = .TRUE.
@@ -146,6 +150,7 @@ DO JL = 1, KSIZE
     PRH_TEND(JL, IRSDRYH)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 IF(.NOT. LDSOFT) THEN
    CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH, PLBDAS, ICEP%NWETLBDAH, ICEP%NWETLBDAS, &
@@ -186,7 +191,7 @@ ENDIF
 !*       7.2.6  accretion of graupeln on the hailstones
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL = 1, KSIZE
   IF (PRHT(JL)>ICED%XRTMIN(7) .AND. PRGT(JL)>ICED%XRTMIN(6) .AND. LDCOMPUTE(JL)) THEN
     GWET(JL) = .TRUE.
@@ -196,6 +201,7 @@ DO JL = 1, KSIZE
     PRH_TEND(JL, IRGDRYH)=0.
   END IF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 IF(.NOT. LDSOFT) THEN
   CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH, PLBDAG, ICEP%NWETLBDAH, ICEP%NWETLBDAG, &
@@ -227,7 +233,7 @@ ENDIF
 !*       7.2.11  accretion of raindrops on the hailstones
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL = 1, KSIZE
   IF (PRHT(JL)>ICED%XRTMIN(7) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)) THEN
     GWET(JL) = .TRUE.
@@ -236,6 +242,7 @@ DO JL = 1, KSIZE
     PRH_TEND(JL, IRRWETH)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 IF(.NOT. LDSOFT) THEN
   CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH, PLBDAR, ICEP%NWETLBDAH, ICEP%NWETLBDAR, &
@@ -260,11 +267,12 @@ IF(.NOT. LDSOFT) THEN
 ENDIF
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   ZRDRYH_INIT(JL)=PRH_TEND(JL, IRCWETH)+PRH_TEND(JL, IRIDRYH)+ &
                  &PRH_TEND(JL, IRSDRYH)+PRH_TEND(JL, IRRWETH)+PRH_TEND(JL, IRGDRYH)
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       7.3    compute the Wet growth of hail
@@ -272,7 +280,7 @@ ENDDO
 !*       7.4    Select Wet or Dry case
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PRHT(JL)>ICED%XRTMIN(7) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -320,6 +328,7 @@ DO JL=1, KSIZE
     LLDRYH(JL)=.FALSE.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 
 IF(PARAMI%LCONVHG)THEN
@@ -339,7 +348,7 @@ ELSE
 ENDIF
 
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(LLWETH(JL)) THEN
     PRCWETH(JL) = PRH_TEND(JL, IRCWETH)
@@ -374,12 +383,13 @@ DO JL=1, KSIZE
     PRDRYHG(JL) = 0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !*       7.5    Melting of the hailstones
 !
 !$acc kernels
-!$acc loop independent
+!$mnh_do_concurrent( JL=1:KSIZE )
 DO JL=1, KSIZE
   IF(PRHT(JL)>ICED%XRTMIN(7) .AND. PT(JL)>CST%XTT .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -400,6 +410,7 @@ DO JL=1, KSIZE
     PRHMLTR(JL)=0.
   ENDIF
 ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RH', 1, ZHOOK_HANDLE)

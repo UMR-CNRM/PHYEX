@@ -33,7 +33,8 @@ CONTAINS
 !  J. Wurtz       03/2022: new snow characteristics
 !  B. Vie         03/2022: Add option for 1-moment pristine ice
 !  M. Taufour     07/2022: add concentration for snow, graupel, hail        
-!  C. Barthe       06/2023: add Latham effect (Efield) for IAGGS
+!  C. Barthe      06/2023: add Latham effect (Efield) for IAGGS
+!  C. Barthe      01/2024: add several shapes for ice crystals
 !
 !-------------------------------------------------------------------------------
 !

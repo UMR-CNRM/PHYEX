@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -71,15 +71,15 @@ TYPE(DIMPHYEX_t),         INTENT(IN)  :: D
 TYPE(CST_t),              INTENT(IN)  :: CST
 TYPE(CSTURB_t),           INTENT(IN)  :: CSTURB
 TYPE(TURB_t),             INTENT(IN)  :: TURBN
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN),TARGET  :: PZZ
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN),TARGET  :: PDZZ
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN),TARGET  :: PTHVREF
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN),TARGET  :: PTHLM       ! conservative pot. temp.
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)  :: PZZ
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)  :: PDZZ
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)  :: PTHVREF
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)  :: PTHLM       ! conservative pot. temp.
 INTEGER,                  INTENT(IN)  :: KRR
-REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN),TARGET :: PRM       ! water var.
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN),TARGET  :: PTKEM     ! TKE
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN),TARGET  :: PSHEAR
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT),TARGET :: PLM       ! Mixing length
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) :: PRM       ! water var.
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)  :: PTKEM     ! TKE
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)  :: PSHEAR
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) :: PLM       ! Mixing length
 LOGICAL,                  INTENT(IN)  ::  OOCEAN       ! switch for Ocean model version
 !   thermodynamical variables PTHLM=Theta at the begining
 !
@@ -160,7 +160,6 @@ END IF
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ZSQRT_TKE(IIJB:IIJE,1:IKT) = SQRT(PTKEM(IIJB:IIJE,1:IKT))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!
 !$acc end kernels
 !-------------------------------------------------------------------------------
 !

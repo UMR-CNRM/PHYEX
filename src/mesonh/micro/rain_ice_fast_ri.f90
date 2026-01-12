@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -27,9 +27,9 @@ SUBROUTINE RAIN_ICE_FAST_RI(OMICRO, PRHODREF, PRIT, PRHODJ, PZT, PSSI, PLSFACT, 
 use modd_budget,         only: lbudget_th, lbudget_rc, lbudget_ri, &
                                NBUDGET_TH, NBUDGET_RC, NBUDGET_RI, &
                                tbudgets
-USE MODD_CST,            only: XTT
-USE MODD_RAIN_ICE_DESCR_n, only: XDI, XLBEXI, XLBI, XRTMIN
-USE MODD_RAIN_ICE_PARAM_n, only: X0DEPI, X2DEPI
+USE MODD_CST,            only: CST_XTT => XTT
+USE MODD_RAIN_ICE_DESCR_n, only: DESCR_XDI => XDI, DESCR_XLBEXI => XLBEXI, DESCR_XLBI => XLBI, XRTMIN
+USE MODD_RAIN_ICE_PARAM_n, only: PARAM_X0DEPI => X0DEPI, PARAM_X2DEPI => X2DEPI
 
 use mode_budget,         only: Budget_store_add, Budget_store_end, Budget_store_init
 #ifdef MNH_OPENACC
@@ -77,11 +77,24 @@ REAL,    DIMENSION(:), pointer, contiguous :: ZLBEXI
 #endif
 !
 INTEGER :: JL,JLU
+!
+REAL :: XTT
+REAL :: XDI, XLBEXI, XLBI
+REAL :: X0DEPI, X2DEPI
 !-------------------------------------------------------------------------------
+!
+XTT = CST_XTT
+!
+XDI = DESCR_XDI
+XLBEXI = DESCR_XLBEXI
+XLBI = DESCR_XLBI
+!
+X0DEPI = PARAM_X0DEPI
+X2DEPI = PARAM_X2DEPI
 !
 ! IN variables
 !
-!$acc data present( OMICRO, PRHODREF, PRIT,              &
+!$acc data present_crm( OMICRO, PRHODREF, PRIT,              &
 !$acc &             PRHODJ, PZT, PSSI, PLSFACT, PLVFACT, &
 !$acc &             PAI, PCJ,                            &
 !

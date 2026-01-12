@@ -48,6 +48,8 @@ SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV, D, CST, NEBN,         &
 !  B. Vie         06/2021: add subgrid condensation with LIMA
 !  C. Barthe      04/2022: add cloud electrification
 !  C. Barthe      03/2023: add CIBU, RDSF and 2 moments for s, g and h in cloud electrification
+!  C. Barthe      02/2024: add several shapes for ice crystals
+!  C. Barthe      03/2024: add HONR for Ng
 !
 !-----------------------------------------------------------------
 !
@@ -240,7 +242,6 @@ REAL, DIMENSION(:), ALLOCATABLE ::                          &
      Z_TH_HMLT, Z_RR_HMLT, Z_CR_HMLT, Z_CH_HMLT,            & ! hail melting (HMLT) : rr, Nr, rh=-rr, th
      Z_RV_CORR2, Z_RC_CORR2, Z_RR_CORR2, Z_RI_CORR2,        &
      Z_CC_CORR2, Z_CR_CORR2, Z_CI_CORR2
-!--cb--
 !
 ! for the conversion from rain to cloud, we need a 3D variable instead of a 1D packed variable
 REAL, DIMENSION(D%NIJT,D%NKT) ::  Z_RR_CVRC, Z_CR_CVRC        ! conversion of rain into cloud droplets (CVRC)
@@ -372,7 +373,7 @@ INTEGER :: ISV_LIMA_IFN_FREE
 INTEGER :: ISV_LIMA_IFN_NUCL
 INTEGER :: ISV_LIMA_IMM_NUCL
 INTEGER :: ISV_LIMA_HOM_HAZE
-INTEGER :: ISH !++cb--
+INTEGER :: ISH
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
@@ -480,8 +481,6 @@ IF ( BUCONF%LBU_ENABLE .OR. OELEC) THEN
   ALLOCATE( ZTOT_CC_ACCR (D%NIJT, D%NKT ) ); ZTOT_CC_ACCR(:,:) = 0.
   ALLOCATE( ZTOT_CR_SCBU (D%NIJT, D%NKT ) ); ZTOT_CR_SCBU(:,:) = 0.
   ALLOCATE( ZTOT_TH_EVAP (D%NIJT, D%NKT ) ); ZTOT_TH_EVAP(:,:) = 0.
-!   allocate( ZTOT_RC_EVAP (D%NIJT, D%NKT ) ); ZTOT_RC_EVAP(:,:) = 0.
-!   allocate( ZTOT_CC_EVAP (D%NIJT, D%NKT ) ); ZTOT_CC_EVAP(:,:) = 0.
   ALLOCATE( ZTOT_RR_EVAP (D%NIJT, D%NKT ) ); ZTOT_RR_EVAP(:,:) = 0.
   ALLOCATE( ZTOT_CR_EVAP (D%NIJT, D%NKT ) ); ZTOT_CR_EVAP(:,:) = 0.
   ALLOCATE( ZTOT_RI_CNVI (D%NIJT, D%NKT ) ); ZTOT_RI_CNVI(:,:) = 0.
@@ -500,31 +499,21 @@ IF ( BUCONF%LBU_ENABLE .OR. OELEC) THEN
   ALLOCATE( ZTOT_RG_DEPG (D%NIJT, D%NKT ) ); ZTOT_RG_DEPG(:,:) = 0.
   ALLOCATE( ZTOT_TH_BERFI(D%NIJT, D%NKT ) ); ZTOT_TH_BERFI(:,:) = 0.
   ALLOCATE( ZTOT_RC_BERFI(D%NIJT, D%NKT ) ); ZTOT_RC_BERFI(:,:) = 0.
-!++cb++ need rcrimss, rcrimsg and rsrimcg to be consistent with ice3
   ALLOCATE( ZTOT_TH_RIM  (D%NIJT, D%NKT ) ); ZTOT_TH_RIM(:,:) = 0.
-!  allocate( ZTOT_RC_RIM  (D%NIJT, D%NKT ) ); ZTOT_RC_RIM(:,:) = 0.
   ALLOCATE( ZTOT_CC_RIM  (D%NIJT, D%NKT ) ); ZTOT_CC_RIM(:,:) = 0.
-!  allocate( ZTOT_RS_RIM  (D%NIJT, D%NKT ) ); ZTOT_RS_RIM(:,:) = 0.
   ALLOCATE( ZTOT_CS_RIM  (D%NIJT, D%NKT ) ); ZTOT_CS_RIM(:,:) = 0.
-!  allocate( ZTOT_RG_RIM  (D%NIJT, D%NKT ) ); ZTOT_RG_RIM(:,:) = 0.
   ALLOCATE( ZTOT_RC_RIMSS (D%NIJT, D%NKT ) ); ZTOT_RC_RIMSS(:,:) = 0.
   ALLOCATE( ZTOT_RC_RIMSG (D%NIJT, D%NKT ) ); ZTOT_RC_RIMSG(:,:) = 0.
   ALLOCATE( ZTOT_RS_RIMCG (D%NIJT, D%NKT ) ); ZTOT_RS_RIMCG(:,:) = 0.
-!--cb--
   ALLOCATE( ZTOT_RI_HMS  (D%NIJT, D%NKT ) ); ZTOT_RI_HMS(:,:) = 0.
   ALLOCATE( ZTOT_CI_HMS  (D%NIJT, D%NKT ) ); ZTOT_CI_HMS(:,:) = 0.
   ALLOCATE( ZTOT_RS_HMS  (D%NIJT, D%NKT ) ); ZTOT_RS_HMS(:,:) = 0.
-!++cb++ need rraccss, rraccsg and rsaccrg to be consistent with ice3
   ALLOCATE( ZTOT_TH_ACC  (D%NIJT, D%NKT ) ); ZTOT_TH_ACC(:,:) = 0.
-!  allocate( ZTOT_RR_ACC  (D%NIJT, D%NKT ) ); ZTOT_RR_ACC(:,:) = 0.
   ALLOCATE( ZTOT_CR_ACC  (D%NIJT, D%NKT ) ); ZTOT_CR_ACC(:,:) = 0.
-!  allocate( ZTOT_RS_ACC  (D%NIJT, D%NKT ) ); ZTOT_RS_ACC(:,:) = 0.
   ALLOCATE( ZTOT_CS_ACC  (D%NIJT, D%NKT ) ); ZTOT_CS_ACC(:,:) = 0.
-!  allocate( ZTOT_RG_ACC  (D%NIJT, D%NKT ) ); ZTOT_RG_ACC(:,:) = 0.
   ALLOCATE( ZTOT_RR_ACCSS(D%NIJT, D%NKT ) ); ZTOT_RR_ACCSS(:,:) = 0.
   ALLOCATE( ZTOT_RR_ACCSG(D%NIJT, D%NKT ) ); ZTOT_RR_ACCSG(:,:) = 0.
   ALLOCATE( ZTOT_RS_ACCRG(D%NIJT, D%NKT ) ); ZTOT_RS_ACCRG(:,:) = 0.
-!--cb--
   ALLOCATE( ZTOT_RS_CMEL (D%NIJT, D%NKT ) ); ZTOT_RS_CMEL(:,:) = 0.
   ALLOCATE( ZTOT_CS_CMEL (D%NIJT, D%NKT ) ); ZTOT_CS_CMEL(:,:) = 0.
   ALLOCATE( ZTOT_TH_CFRZ (D%NIJT, D%NKT ) ); ZTOT_TH_CFRZ(:,:) = 0.
@@ -747,7 +736,6 @@ IF (OELEC) THEN
   ALLOCATE(ZCGT_ELEC(D%NIJT,D%NKT))
   IF (KRR == 7) ALLOCATE(ZCHT_ELEC(D%NIJT,D%NKT))
 !
-!++cb++ 21/04/23 source * ptstep
   ZQPIT(D%NIJB:D%NIJE,:) = PSV_ELEC_S(D%NIJB:D%NIJE,:,1) * PTSTEP
   ZQCT(D%NIJB:D%NIJE,:)  = PSV_ELEC_S(D%NIJB:D%NIJE,:,2) * PTSTEP
   ZQRT(D%NIJB:D%NIJE,:)  = PSV_ELEC_S(D%NIJB:D%NIJE,:,3) * PTSTEP
@@ -2002,7 +1990,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
             ZCIT1D_SHAPE(:,ISH) = 0.
           END WHERE
         END DO
-        ZCIT1D(:) = SUM(ZCIT1D_SHAPE,DIM=2) !++cb-- 08/03/24
+        ZCIT1D(:) = SUM(ZCIT1D_SHAPE,DIM=2)
       END IF
       WHERE (ZRIT1D .LE. LIMAP%XRTMIN(4))
          Z_RV_CORR2(:) = Z_RV_CORR2(:) + ZRIT1D(:)

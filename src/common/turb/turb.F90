@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -17,6 +17,7 @@
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
               & PRHODJ,PTHVREF,PHGRADLEO,PHGRADGOG,PZS,               &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
+              & PSEA_UCU,PSEA_VCU,                                    &
               & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
               & PBL_DEPTH,PSBL_DEPTH,                                 &
@@ -94,12 +95,11 @@
 !!      the turbulence parameterization is 2D or 3D( TURBN%CTURBDIM='3DIM' ).
 !!      7- The sources for TKE are computed, along with the dissipation of TKE
 !!      if TURBN%CTURBLEN='KEPS'.
-!!      8- Some turbulence-related quantities are stored in the synchronous
-!!      FM-file.
+!!      8- Some turbulence-related quantities are stored in the synchronous file.
 !!      9- The non-conservative variables are retrieved.
 !!
 !!
-!!      The saving of the fields in the synchronous FM-file is controlled by:
+!!      The saving of the fields in the synchronous file is controlled by:
 !!        * TURBN%LTURB_FLX => saves all the turbulent fluxes and correlations
 !!        * TURBN%LTURB_DIAG=> saves the turbulent Prandtl and Schmidt numbers, the
 !!                       source terms of TKE and dissipation of TKE
@@ -357,6 +357,8 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 REAL, DIMENSION(D%NIJT,KSV), INTENT(IN)      ::  PSFSV
 ! normal surface fluxes of Scalar var.
 !
+REAL, DIMENSION(D%NIJT), INTENT(IN)      ::  PSEA_UCU,PSEA_VCU !Sea surface currents
+!
 !    prognostic variables at t- deltat
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABST      ! Pressure at time t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PUT,PVT,PWT ! wind components
@@ -365,8 +367,8 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVT        ! passive scal. va
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)),   INTENT(IN) ::  PSRCT       ! Second-order flux
                       ! s'rc'/2Sigma_s2 at time t-1 multiplied by Lambda_3
-REAL, DIMENSION(D%NIJT),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
-REAL, DIMENSION(D%NIJT),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%CTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LRMC01))      ,INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
 !
 !    variables for cloud mixing length
 REAL, DIMENSION(MERGE(D%NIJT,0,OCLOUDMODIFLM),&
@@ -582,14 +584,14 @@ IF (KRR > 0) ZCP(IIJB:IIJE,1:IKT) = ZCP(IIJB:IIJE,1:IKT) + CST%XCPV * PRT(IIJB:I
 ! PGI20.5 BUG or reproductibility problem , with pointer this loop on JRR parallelize whitout reduction 
 !$acc loop seq
 DO JRR = 2,1+KRRL                          ! loop on the liquid components
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)  
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT,OPENACC='gang')  
   ZCP(IIJB:IIJE,1:IKT)  = ZCP(IIJB:IIJE,1:IKT) + CST%XCL * PRT(IIJB:IIJE,1:IKT,JRR)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END DO
 !
 !$acc loop seq
 DO JRR = 2+KRRL,1+KRRL+KRRI                ! loop on the solid components   
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT,OPENACC='gang')
   ZCP(IIJB:IIJE,1:IKT)  = ZCP(IIJB:IIJE,1:IKT)  + CST%XCI * PRT(IIJB:IIJE,1:IKT,JRR)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END DO
@@ -610,8 +612,6 @@ END IF
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ZCOEF_DISS(IIJB:IIJE,1:IKT) = 1/(ZCP(IIJB:IIJE,1:IKT) * ZEXN(IIJB:IIJE,1:IKT))
-!
-!
 ZFRAC_ICE(IIJB:IIJE,1:IKT) = 0.0
 ZATHETA(IIJB:IIJE,1:IKT) = 0.0
 ZAMOIST(IIJB:IIJE,1:IKT) = 0.0
@@ -772,7 +772,6 @@ SELECT CASE (TURBN%CTURBLEN)
   !
   !*      3.2 RM17 mixing length
   !           ------------------
-
   CASE ('RM17')
     CALL GZ_U_UW_PHY(D,PUT,PDZZ,ZWORK1)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
@@ -867,8 +866,6 @@ SELECT CASE (TURBN%CTURBLEN)
    ZLM(IIJB:IIJE,IKTE+1) = ZLM(IIJB:IIJE,IKTE)
    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
    !$acc end kernels
-   !
-   !
    !
 END SELECT
 !
@@ -979,6 +976,12 @@ IF (GOCEAN) THEN
 !$acc end kernels
 END IF
 !
+! relative wind over ocean
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+ZUSLOPE(:)=ZUSLOPE(:)-PSEA_UCU(:)
+ZVSLOPE(:)=ZVSLOPE(:)-PSEA_VCU(:)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
+
 !
 !*      4.2 compute the proportionality coefficient between wind and stress
 !
@@ -1108,7 +1111,6 @@ IF( BUCONF%LBUDGET_SV ) THEN
 END IF
 !$acc update device(PRHODJ)
 !$acc update_crm device(PRUS,PRVS,PRWS,PRSVS)
-
 CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
           KRR,KRRL,KRRI,KGRADIENTSLEO,                   &
           GOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
@@ -1121,6 +1123,7 @@ CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
           PRHODJ,PTHVREF,PSFU,PSFV,                      &
           PSFTH,PSFRV,ZWORKSFSV,PSFTH,PSFRV,ZWORKSFSV,   &
           ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU33M,               &
+          PSEA_UCU,PSEA_VCU,                             &
           PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,ZWORKT,  &
           PTKET,ZLM,PLENGTHM,PLENGTHH,ZLEPS,MFMOIST,     &
           ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,     &
@@ -1608,7 +1611,7 @@ IF(PRESENT(PDRUS_TURB)) THEN
   PDRTHLS_TURB(IIJB:IIJE,1:IKT) = PRTHLS(IIJB:IIJE,1:IKT) - PDRTHLS_TURB(IIJB:IIJE,1:IKT)
   PDRRTS_TURB(IIJB:IIJE,1:IKT)  = PRRS(IIJB:IIJE,1:IKT,1) - PDRRTS_TURB(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT,JSV=1:KSV)  
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT,JSV=1:KSV)
   PDRSVS_TURB(IIJB:IIJE,1:IKT,:)  = PRSVS(IIJB:IIJE,1:IKT,:) - PDRSVS_TURB(IIJB:IIJE,1:IKT,:)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT,JSV=1:KSV)
 END IF
@@ -1634,7 +1637,7 @@ IF ( KRRL >= 1 ) THEN
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
 !$acc update self(PRT(:,:,1))
-    !
+  !
   ELSE
 !$acc kernels present_cr(PRT,PRRS,PTHLT,PRTHLS, zlocpexnm )
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -1678,11 +1681,11 @@ IF (TLES%LLES_CALL) THEN
   !$acc end kernels
   CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2D,TLES%X_LES_USTAR)
 !$acc end data
-  !----------------------------------------------------------------------------
-  !
-  !*     10. LES for 3rd order moments
-  !          -------------------------
-  !
+!----------------------------------------------------------------------------
+!
+!*     10. LES for 3rd order moments
+!          -------------------------
+!
 !$acc data copy(TLES%X_LES_SUBGRID_W2Thl,TLES%X_LES_SUBGRID_WThl2)
   CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMWTH,TLES%X_LES_SUBGRID_W2Thl)
   CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMTH2,TLES%X_LES_SUBGRID_WThl2)

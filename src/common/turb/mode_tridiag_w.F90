@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2011-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2011-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -131,8 +131,10 @@ CONTAINS
 !
 !*       0. DECLARATIONS
 !
+USE MODD_DIMPHYEX,   ONLY : DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY : JPVEXT
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+USE MODE_SHUMAN_PHY, ONLY : MZM_PHY
 
 #ifdef MNH_COMPILER_CCE
 !$mnh_undef(LOOP)
@@ -162,15 +164,13 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZA, ZB, ZC
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZY ,ZGAM ! RHS of the equation, 3D work array
 REAL, DIMENSION(D%NIT,D%NJT)       :: ZBET     ! 2D work array
 !
-INTEGER                              :: JK            ! loop counter
+INTEGER                              :: JK,JI,JJ      ! loop counter
 INTEGER                              :: IKB,IKE       ! inner vertical limits
 !
 INTEGER  :: IIT, IJT, IKT
-INTEGER  :: JI,JJ
 ! ---------------------------------------------------------------------------
 
 !$acc data present_crm( PVARM, PF, PDFDDWDZ, PMZF_DZZ, PRHODJ, PVARP )
-
 !$acc data present( ZRHODJ_DFDDWDZ_O_DZ2, ZMZM_RHODJ, ZA, ZB, ZC, ZY, ZGAM, ZBET )
 
 !
@@ -183,7 +183,7 @@ IIT=D%NIT
 IJT=D%NJT
 IKT=D%NKT
 !
-ZMZM_RHODJ  = MZM(PRHODJ)
+CALL MZM_PHY(D,PRHODJ,ZMZM_RHODJ)
 
 !$acc kernels ! async 
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
@@ -221,34 +221,48 @@ ZY=0.
 !
 !$acc kernels ! async
 !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
+DO JJ=1,IJT
+  DO JI=1,IIT
    ZY(JI,JJ,IKB) = ZMZM_RHODJ(JI,JJ,IKB)*PVARM(JI,JJ,IKB)/PTSTEP              &
         - PRHODJ(JI,JJ,IKB  ) * PF(JI,JJ,IKB  )/PMZF_DZZ(JI,JJ,IKB  )           &
         + PRHODJ(JI,JJ,IKB-1) * PF(JI,JJ,IKB-1)/PMZF_DZZ(JI,JJ,IKB-1)           &
         + ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKB) * PVARM(JI,JJ,IKB+1)&
         - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKB) * PVARM(JI,JJ,IKB  )
+  END DO
+END DO
 !$mnh_end_do()
 !$acc end kernels
 !
 !$acc kernels ! async
 !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT,JK=IKB+1:IKE-1)
-  ZY(JI,JJ,JK) = ZMZM_RHODJ(JI,JJ,JK)*PVARM(JI,JJ,JK)/PTSTEP               &
+DO JK=IKB+1,IKE-1
+ DO JJ=1,IJT
+  DO JI=1,IIT
+    ZY(JI,JJ,JK) = ZMZM_RHODJ(JI,JJ,JK)*PVARM(JI,JJ,JK)/PTSTEP               &
        - PRHODJ(JI,JJ,JK  ) * PF(JI,JJ,JK  )/PMZF_DZZ(JI,JJ,JK  )          &
        + PRHODJ(JI,JJ,JK-1) * PF(JI,JJ,JK-1)/PMZF_DZZ(JI,JJ,JK-1)              &
        + ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK  ) * PVARM(JI,JJ,JK+1)  &
        - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK  ) * PVARM(JI,JJ,JK  )  &
        - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK-1) * PVARM(JI,JJ,JK  )  &
        + ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK-1) * PVARM(JI,JJ,JK-1)
+  END DO
+ END DO
+END DO
 !$mnh_end_do()  
 !$acc end kernels
 ! 
 !$acc kernels ! async
 !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
+DO JJ=1,IJT
+  DO JI=1,IIT
    ZY(JI,JJ,IKE) = ZMZM_RHODJ(JI,JJ,IKE)*PVARM(JI,JJ,IKE)/PTSTEP              &
         - PRHODJ(JI,JJ,IKE  ) * PF(JI,JJ,IKE  )/PMZF_DZZ(JI,JJ,IKE  )           &
         + PRHODJ(JI,JJ,IKE-1) * PF(JI,JJ,IKE-1)/PMZF_DZZ(JI,JJ,IKE-1)           &
         - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKE  ) * PVARM(JI,JJ,IKE )  &
         - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKE-1) * PVARM(JI,JJ,IKE  ) &
         + ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKE-1) * PVARM(JI,JJ,IKE-1)
+  END DO
+END DO
 !$mnh_end_do()
 !$acc end kernels
 !
@@ -267,36 +281,58 @@ ZY=0.
 !
 !$acc kernels ! async
 !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
+DO JJ=1,IJT
+  DO JI=1,IIT
   ZB(JI,JJ,IKB) =   ZMZM_RHODJ(JI,JJ,IKB)/PTSTEP      &
        - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKB)
+  END DO
+END DO
 !$mnh_end_do()  
 !$acc end kernels
 !$acc kernels ! async
 !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
+DO JJ=1,IJT
+  DO JI=1,IIT
    ZC(JI,JJ,IKB) =   ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKB)
+  END DO
+END DO
 !$mnh_end_do()   
 !$acc end kernels
 
 !$acc kernels ! async
 !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT,JK=IKB+1:IKE-1)
+DO JK=IKB+1,IKE-1
+ DO JJ=1,IJT
+  DO JI=1,IIT
     ZA(JI,JJ,JK) =   ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK-1)
     ZB(JI,JJ,JK) =   ZMZM_RHODJ(JI,JJ,JK)/PTSTEP      &
                  - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK  ) &
                  - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK-1)
     ZC(JI,JJ,JK) =   ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK  )
+  END DO
+ END DO
+END DO
 !$mnh_end_do()    
 !$acc end kernels
 
 !$acc kernels ! async
 !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
+DO JJ=1,IJT
+  DO JI=1,IIT
    ZA(JI,JJ,IKE) =   ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKE-1)
+  END DO
+END DO
 !$mnh_end_do()   
 !$acc end kernels
 !$acc kernels ! async
 !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
+DO JJ=1,IJT
+  DO JI=1,IIT
   ZB(JI,JJ,IKE) =   ZMZM_RHODJ(JI,JJ,IKE)/PTSTEP      &
                 - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKE  ) &
                 - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKE-1)
+  END DO
+END DO
 !$mnh_end_do()  
 !$acc end kernels
 !
@@ -308,8 +344,12 @@ ZY=0.
 !
 !$acc kernels
 !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
+DO JJ=1,IJT
+  DO JI=1,IIT
   ZBET(JI,JJ) = ZB(JI,JJ,IKB)  ! bet = b(ikb)
   PVARP(JI,JJ,IKB) = ZY(JI,JJ,IKB) / ZBET(JI,JJ)
+  END DO
+END DO
 !$mnh_end_do()
 !$acc end kernels
 !
@@ -320,24 +360,32 @@ DO JK = IKB+1,IKE-1
    !$acc loop independent
 #endif
    !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
+DO JJ=1,IJT
+  DO JI=1,IIT
       ZGAM(JI,JJ,JK) = ZC(JI,JJ,JK-1) / ZBET(JI,JJ)  
       ! gam(k) = c(k-1) / bet
       ZBET(JI,JJ)    = ZB(JI,JJ,JK) - ZA(JI,JJ,JK) * ZGAM(JI,JJ,JK)
       ! bet = b(k) - a(k)* gam(k)  
       PVARP(JI,JJ,JK)= ( ZY(JI,JJ,JK) - ZA(JI,JJ,JK) * PVARP(JI,JJ,JK-1) ) / ZBET(JI,JJ)
       ! res(k) = (y(k) -a(k)*res(k-1))/ bet
+  END DO
+END DO
    !$mnh_end_do()
 END DO
 !$acc end parallel
 ! special treatment for the last level
 !$acc kernels
 !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
+DO JJ=1,IJT
+  DO JI=1,IIT
    ZGAM(JI,JJ,IKE) = ZC(JI,JJ,IKE-1) / ZBET(JI,JJ) 
    ! gam(k) = c(k-1) / bet
    ZBET(JI,JJ)     = ZB(JI,JJ,IKE) - ZA(JI,JJ,IKE) * ZGAM(JI,JJ,IKE)
    ! bet = b(k) - a(k)* gam(k)  
    PVARP(JI,JJ,IKE)= ( ZY(JI,JJ,IKE) - ZA(JI,JJ,IKE) * PVARP(JI,JJ,IKE-1) ) / ZBET(JI,JJ)
    ! res(k) = (y(k) -a(k)*res(k-1))/ bet
+  END DO
+END DO
 !$mnh_end_do()  
 !$acc end kernels
 !
@@ -351,7 +399,11 @@ DO JK = IKE-1,IKB,-1
    !$acc loop independent
 #endif
    !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
+DO JJ=1,IJT
+  DO JI=1,IIT
       PVARP(JI,JJ,JK) = PVARP(JI,JJ,JK) - ZGAM(JI,JJ,JK+1) * PVARP(JI,JJ,JK+1)
+  END DO
+END DO
    !$mnh_end_do()   
 END DO
 !$acc end parallel
@@ -362,11 +414,14 @@ END DO
 !
 !$acc kernels
 !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
+DO JJ=1,IJT
+  DO JI=1,IIT
    PVARP(JI,JJ,IKB-1)=PVARP(JI,JJ,IKB)
    PVARP(JI,JJ,IKE+1)=0.
+  END DO
+END DO
 !$mnh_end_do()
 !$acc end kernels
-
 !$acc end data
 !-------------------------------------------------------------------------------
 !

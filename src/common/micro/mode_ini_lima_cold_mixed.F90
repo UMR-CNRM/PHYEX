@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -37,6 +37,10 @@ CONTAINS
 !  C. Barthe   14/03/2022: add CIBU and RDSF
 !  J. Wurtz       03/2022: new snow characteristics
 !  M. Taufour     07/2022: add concentration for snow, graupel, hail
+!  C. Barthe   24/01/2024: add several shapes for ice crystals
+!  M. Taufour  19/03/2024: add ice self collection ISC
+!  I. Vongapseut  01/2024: add dependence on temperature for RDSF
+!  C. Barthe   22/07/2024: change c and d parameters for Yang's shapes
 !
 !-------------------------------------------------------------------------------
 !
@@ -215,30 +219,30 @@ SELECT CASE (CPRISTINE_ICE_LIMA)
   CASE('YPLA')
     XAI = 0.744      ! Plates_from Yang et al (2013)
     XBI = 2.47       ! Plates_from Yang et al (2013)
-    XC_I = 48.9     ! Plates_from Yang et al (2013)
-    XDI = 0.66       ! Plates_from Yang et al (2013)
-    XGAMMAI = 0.106
-    XDELTAI = 1.84    
+    XC_I = 340.14 !48.9     ! Plates_from Yang et al (2013)
+    XDI = 0.87    !0.66       ! Plates_from Yang et al (2013)
+    XGAMMAI = 0.23 !0.106
+    XDELTAI = 1.94 !1.84    
     XC1I = 1./XPI   ! Plates_from Yang et al (2013)
   CASE('YCOL')
-    XAI = 6.72   ! Columns_from Yang et al (2013)
-    XBI = 2.6       ! Columns_from Yang et al (2013)
-    XC_I = 99.3   ! Columns_from Yang et al (2013)
-    XDI = 0.62     ! Columns_from Yang et al (2013)
-    XGAMMAI = 0.154
-    XDELTAI = 1.84    
+    XAI = 0.03 !6.72   ! Columns_from Yang et al (2013)
+    XBI = 2.0  !2.6       ! Columns_from Yang et al (2013)
+    XC_I = 401.65 !99.3   ! Columns_from Yang et al (2013)
+    XDI = 0.83    !0.62     ! Columns_from Yang et al (2013)
+    XGAMMAI = 0.004 !0.154
+    XDELTAI = 1.45  !1.84    
     XC1I = 0.8      ! Columns_from Yang et al (2013)
   CASE('YBUR')
-    XAI = 1.059      ! Bullet rosettes_from Yang et al (2013)
-    XBI = 2.57       ! Bullet rosettes_from Yang et al (2013)
-    XC_I = 99.1     ! Bullet rosettes_from Yang et al (2013)
-    XDI = 0.7     ! Bullet rosettes_from Yang et al (2013)
-    XGAMMAI = 0.057
-    XDELTAI = 1.8    
+    XAI = 0.29 ! 1.059      ! Bullet rosettes_from Yang et al (2013)
+    XBI = 2.41 !2.57       ! Bullet rosettes_from Yang et al (2013)
+    XC_I = 677.43 !99.1     ! Bullet rosettes_from Yang et al (2013)
+    XDI = 0.96 !0.7     ! Bullet rosettes_from Yang et al (2013)
+    XGAMMAI = 0.03 !0.057
+    XDELTAI = 1.72 !1.8    
     XC1I = 0.5      ! Bullet rosettes_from Yang et al (2013)
   CASE('YDRO')
-    XAI = 346.906      ! Droxtals_from Yang et al (2013)
-    XBI = 3       ! Droxtals_from Yang et al (2013)
+    XAI = 346.3      ! Droxtals_from Yang et al (2013)
+    XBI = 3.0       ! Droxtals_from Yang et al (2013)
     XC_I = 695.83     ! Droxtals_from Yang et al (2013)
     XDI = 0.61     ! Droxtals_from Yang et al (2013)
     XGAMMAI = 0.673
@@ -309,26 +313,26 @@ IF (LCRYSTAL_SHAPE) THEN
     CASE('YPLA')
       XAI_SHAPE(ISH)  = 0.744      ! Plates_from Yang et al (2013)
       XBI_SHAPE(ISH)  = 2.47 
-      XC_I_SHAPE(ISH) = 48.9    
-      XDI_SHAPE(ISH)  = 0.66     
-      XGAMMAI_SHAPE(ISH) = 0.106
-      XDELTAI_SHAPE(ISH) = 1.84    
+      XC_I_SHAPE(ISH) = 340.14    
+      XDI_SHAPE(ISH)  = 0.87   
+      XGAMMAI_SHAPE(ISH) = 0.23
+      XDELTAI_SHAPE(ISH) = 1.94    
       XC1I_SHAPE(ISH) = 1./XPI   ! values from LIMA
     CASE('YCOL')
-      XAI_SHAPE(ISH)  = 6.72   ! Columns_from Yang et al (2013)
-      XBI_SHAPE(ISH)  = 2.6  
-      XC_I_SHAPE(ISH) = 99.3
-      XDI_SHAPE(ISH)  = 0.62 
-      XGAMMAI_SHAPE(ISH) = 0.154
-      XDELTAI_SHAPE(ISH) = 1.84    
+      XAI_SHAPE(ISH)  = 0.03   ! Columns_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 2.0  
+      XC_I_SHAPE(ISH) = 401.65
+      XDI_SHAPE(ISH)  = 0.83
+      XGAMMAI_SHAPE(ISH) = 0.004
+      XDELTAI_SHAPE(ISH) = 1.45    
       XC1I_SHAPE(ISH) = 0.8      ! values from LIMA
     CASE('YBUR')
-      XAI_SHAPE(ISH)  = 1.059      ! Bullet rosettes_from Yang et al (2013)
-      XBI_SHAPE(ISH)  = 2.57 
-      XC_I_SHAPE(ISH) = 99.1
-      XDI_SHAPE(ISH)  = 0.7  
-      XGAMMAI_SHAPE(ISH) = 0.057
-      XDELTAI_SHAPE(ISH) = 1.8    
+      XAI_SHAPE(ISH)  = 0.29      ! Bullet rosettes_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 2.41 
+      XC_I_SHAPE(ISH) = 677.43
+      XDI_SHAPE(ISH)  = 0.96
+      XGAMMAI_SHAPE(ISH) = 0.03
+      XDELTAI_SHAPE(ISH) = 1.72   
       XC1I_SHAPE(ISH) = 0.5      !  values from LIMA      
     CASE('YDRO')
       XAI_SHAPE(ISH)  = 346.906      ! Droxtals_from Yang et al (2013)

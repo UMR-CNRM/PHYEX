@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -318,7 +318,7 @@ CALL GET_HALO_PHY(D,ZRES)
 !
 IF (ODIAG_IN_RUN) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  PCURRENT_TKE_DISS(IIJB:IIJE,1:IKT) = ZFLX(IIJB:IIJE,1:IKT) * PTKEM(IIJB:IIJE,1:IKT) &
+  PCURRENT_TKE_DISS(IIJB:IIJE,1:IKT) = ZFLX(IIJB:IIJE,1:IKT) &
                                   *(PEXPL*PTKEM(IIJB:IIJE,1:IKT) + TURBN%XIMPL*ZRES(IIJB:IIJE,1:IKT))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
@@ -354,8 +354,8 @@ IF ( TLES%LLES_CALL .OR.                         &
                   DZM(TURBN%XIMPL * ZRES(:,:) + PEXPL * PTKEM(:,:) ) / PDZZ(:,:)
 !
 !$acc kernels
-  ZFLX(:,IKB) = 0.
-  ZFLX(:,IKA) = 0.
+  ZFLX(IIJB:IIJE,IKB) = 0.
+  ZFLX(IIJB:IIJE,IKA) = 0.
 !$acc end kernels
 !
 ! Compute the whole turbulent TRansport of TKE:
