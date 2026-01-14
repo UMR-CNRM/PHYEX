@@ -167,6 +167,7 @@ REAL, DIMENSION(0,0)          ::  PLENGTHM, PLENGTHH ! length scale from vdfexcu
 REAL :: ZTHVREFZIKB ! for electricity scheme interface
 REAL, DIMENSION(klon,klev+2)  ::  ZDXX,ZDYY,ZDZX,ZDZY,ZZZ
 REAL, DIMENSION(klon)         ::  ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE
+REAL, DIMENSION(klon)         ::  ZSEA_UCU, ZSEA_VCU ! oceanic surface current
 ! Shallow variables 
 REAL, DIMENSION(klon,klev+2) ::  PDUDT_MF     ! tendency of U   by massflux scheme
 REAL, DIMENSION(klon,klev+2) ::  PDVDT_MF     ! tendency of V   by massflux scheme
@@ -294,6 +295,8 @@ ZCOSSLOPE(:) = 0.
 ZSINSLOPE(:) = 1.
 PHGRADLEO(:,:,:) = 0.
 PHGRADGOG(:,:,:) = 0.
+ZSEA_UCU(:) = 0.
+ZSEA_VCU(:) = 0.
 ZBL_DEPTH(:) = 0. ! needed only with LRMC01 key (correction in the surface boundary layer)
 ZSBL_DEPTH(:) = 0.
 ZCEI(:,:) = 0.  ! needed only if HTURBLEN_CL /= 'NONE' modification of mixing lengh inside clouds
@@ -507,7 +510,8 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, 
    & ZDXX(:,:),ZDYY(:,:),zdzm(:,:),                                                             &
    & ZDZX(:,:),ZDZY(:,:),zz_flux(:,:),                                                          &
    & ZDIRCOSXW(:),ZDIRCOSYW(:),ZDIRCOSZW(:),ZCOSSLOPE(:),ZSINSLOPE(:),                          &
-   & PRHODJ(:,:),PTHVREF(:,:), PHGRADLEO(:,:,:), PHGRADGOG(:,:,:), zs(:), &
+   & PRHODJ(:,:),PTHVREF(:,:), PHGRADLEO(:,:,:), PHGRADGOG(:,:,:), zs(:),                       &
+   & ZSEA_UCU(:),ZSEA_VCU(:),                                                                   &
    & PSFTH(:),PSFRV(:),PSFSV(:,:),PSFU(:),PSFV(:),                                              &
    & ZPABST(:,:),ZUT(:,:),ZVT(:,:),PWT(:,:),PTKEM(:,:),ZSVT(:,:,:),ZSRC(:,:),                   &
    & PLENGTHM(:,:),PLENGTHH(:,:),MFMOIST(:,:),                                                  &
