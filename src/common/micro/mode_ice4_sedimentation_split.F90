@@ -56,7 +56,6 @@ USE MODI_GAMMA
 USE MODI_GAMMA
 #endif
 !
-USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
 !USE MODI_GAMMA, ONLY: GAMMA
 #ifndef MNH_COMPILER_CCE
@@ -408,7 +407,7 @@ REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electr
 !
 !*       0.2  declaration of local variables
 !
-INTEGER                         :: JI, JIJ, JK
+INTEGER                         :: JIJ, JK
 LOGICAL                         :: GPRESENT_PFPR
 REAL                            :: ZINVTSTEP
 REAL                            :: ZZWLBDC, ZZRAY, ZZT, ZZWLBDA, ZZCC

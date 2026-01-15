@@ -38,16 +38,19 @@ private
 public :: Countjv
 interface Countjv
    function Countjv1d(ltab,i1) result(ic)
+  implicit none
      logical, dimension(:), intent(in)  :: ltab ! Mask
      integer, dimension(:), intent(out) :: i1   ! Positions of elements with 'true' value
      integer                            :: ic   ! Total number of 'true' values
    end function Countjv1d
    function Countjv2d(ltab,i1,i2) result(ic)
+  implicit none
      logical, dimension(:,:), intent(in)  :: ltab   ! Mask
      integer, dimension(:),   intent(out) :: i1, i2 ! Positions of elements with 'true' value
      integer                              :: ic     ! Total number of 'true' values
    end function Countjv2d
    function Countjv3d(ltab,i1,i2,i3) result(ic)
+  implicit none
      logical, dimension(:,:,:), intent(in)  :: ltab       ! Mask
      integer, dimension(:),     intent(out) :: i1, i2, i3 ! Positions of elements with 'true' value
      integer                                :: ic         ! Total number of 'true' values
@@ -57,6 +60,7 @@ end interface Countjv
 end module mode_tools
 
 function Countjv1d(ltab,i1) result(ic)
+  implicit none
   logical, dimension(:), intent(in)  :: ltab ! Mask
   integer, dimension(:), intent(out) :: i1   ! Positions of elements with 'true' value
   integer                            :: ic   ! Total number of 'true' values

@@ -53,6 +53,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGZ_U_UW ! result UW point
 END FUNCTION GZ_U_UW
 !
 SUBROUTINE GY_U_UV_DEVICE(PA,PDYY,PDZZ,PDZY,PGY_U_UV_DEVICE)
+IMPLICIT NONE
 REAL, DIMENSION(:,:,:), INTENT(IN) :: PA       ! variable at the U point
 REAL, DIMENSION(:,:,:), INTENT(IN) :: PDYY     ! metric coefficient dyy
 REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZZ     ! metric coefficient dzz

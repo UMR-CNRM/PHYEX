@@ -46,7 +46,7 @@ INTEGER :: IKB, IKE, IKL, IIJB, IIJE
 !*       0.2  declaration of local variables
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER :: JIJ, JK, JJ
+INTEGER :: JIJ, JK
 LOGICAL :: MASK
 !
 !-------------------------------------------------------------------------------

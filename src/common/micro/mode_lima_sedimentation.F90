@@ -55,10 +55,8 @@ USE MODD_CST,              ONLY: CST_T
 USE MODD_ELEC_DESCR,       ONLY: ELEC_DESCR_t
 USE MODD_ELEC_PARAM,       ONLY: ELEC_PARAM_t
 
-USE MODE_TOOLS,            only: COUNTJV
-
-USE MODE_ELEC_COMPUTE_EX,   ONLY: ELEC_COMPUTE_EX
-USE MODE_ELEC_BEARD_EFFECT, ONLY: ELEC_BEARD_EFFECT
+!USE MODE_ELEC_COMPUTE_EX,   ONLY: ELEC_COMPUTE_EX
+!USE MODE_ELEC_BEARD_EFFECT, ONLY: ELEC_BEARD_EFFECT
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
@@ -97,8 +95,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN), OPTIONAL :: PLBDAI_SHAPE ! lambda for
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: IK, IL, IN, JK, JIJ            ! Loop index
-INTEGER :: ISEDIM                         ! Case number of sedimentation
+INTEGER :: IK, JK, JIJ            ! Loop index
+!INTEGER :: ISEDIM                         ! Case number of sedimentation
 !
 LOGICAL :: GSEDIM      ! Test where to compute the SED processes
 REAL,    DIMENSION(D%NIJT, D%NKT) :: ZW,       & ! Work array
@@ -113,7 +111,6 @@ REAL                       :: ZZW,      & ! Work array
                               ZLBDA,    & ! Slope parameter
                               ZCC         ! Cunningham corrective term for droplets fall speed
 !
-INTEGER , DIMENSION(D%NIJT*D%NKT) :: I1,I3 ! Indexes for PACK replacement
 !
 REAL    :: ZC                             ! Cpl or Cpi
 INTEGER :: IMOMENTS
@@ -129,7 +126,7 @@ TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
 TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
 TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
 TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
-REAL, DIMENSION(D%NIJT, D%NKT):: ZBEARDCOEFF ! effect of electrical forces on terminal fall speed
+!REAL, DIMENSION(D%NIJT, D%NKT):: ZBEARDCOEFF ! effect of electrical forces on terminal fall speed
 !
 REAL, DIMENSION(D%NIJT)       :: ZMAX_TSTEP1D ! Maximum CFL in column
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZMAX_TSTEP2D ! Maximum CFL in column

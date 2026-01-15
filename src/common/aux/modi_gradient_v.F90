@@ -53,6 +53,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGZ_V_VW ! result VW point
 END FUNCTION GZ_V_VW
 !
 SUBROUTINE GX_V_UV_DEVICE(PA,PDXX,PDZZ,PDZX,PGX_V_UV_DEVICE)
+IMPLICIT NONE
 !
 REAL, DIMENSION(:,:,:), INTENT(IN) :: PA       ! variable at the V point
 REAL, DIMENSION(:,:,:), INTENT(IN) :: PDXX     ! metric coefficient dxx

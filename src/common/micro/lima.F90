@@ -182,7 +182,7 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZCIT_SHAPE  ! Nb concentration for each i
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZRIT_SHAPE  ! Mixing ratio for each ice habit (at t)
 !
 ! Other 3D thermodynamical variables
-REAL, DIMENSION(D%NIJT,D%NKT)      :: ZEXN, ZT, ZLSFACT, ZW, ZTMP
+REAL, DIMENSION(D%NIJT,D%NKT)      :: ZEXN, ZT
 
 !
 ! Packed prognostic & thermo variables

@@ -61,8 +61,6 @@ USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
 !
-USE MODE_SHUMAN_PHY, ONLY:  MZF_PHY
-USE MODE_GRADIENT_M_PHY, ONLY : GZ_M_W_PHY
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
 USE MODI_LES_MEAN_SUBGRID_PHY
@@ -116,12 +114,11 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.fo
 !*       0.2  declaration of local variables
 !
 !
-REAL, DIMENSION(D%NIJT,D%NKT)  :: ZA, ZFLXZ, &
-              ZWORK1,ZWORK2,ZWORK3! working var. for shuman operators (array syntax)
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZA, ZFLXZ
 !
 REAL :: ZCSV          !constant for the scalar flux
 !
-INTEGER             :: JIJ,JK,JSV          ! loop counters
+INTEGER             :: JSV          ! loop counters
 INTEGER             :: IIJB, IIJE, IKT
 !
 REAL :: ZTIME1, ZTIME2
