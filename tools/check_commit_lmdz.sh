@@ -356,7 +356,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       mvdiff ${name}n.F90 ${name}_n.F90
     done
     mvdiff hypgeo.F90 modi_hypgeo.F90
-    mvdiff hypser.f90 modi_hypser.F90
+    mvdiff hypser.F90 modi_hypser.F90
     mvdiff momg.F90 modi_momg.F90
     mvdiff tools.F90 mode_tools.F90
     [ -f shuman_mf.F90 ] && mvdiff shuman_mf.F90 modi_shuman_mf.F90
