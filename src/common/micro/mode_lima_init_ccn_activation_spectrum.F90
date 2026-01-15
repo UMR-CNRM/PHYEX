@@ -70,9 +70,9 @@ INTEGER                       :: II, IJ         ! Loop indices
 !
 REAL                          :: ZW             ! 
 REAL                          :: ZDDRY = 0.1E-6 ! Dry diameter for which to compute Scrit
-REAL                          :: ZSCRIT         ! Scrit for dry diameter ZDDRY
-REAL                          :: ZMIN  = 0.1E-6 ! minimum diameter for root search (m)
-REAL                          :: ZMAX  = 10.E-6 ! maximum diameter for root search (m)
+REAL(KIND=MNHREAL64)          :: ZSCRIT         ! Scrit for dry diameter ZDDRY
+REAL(KIND=MNHREAL64)          :: ZMIN  = 0.1E-6_MNHREAL64 ! minimum diameter for root search (m)
+REAL(KIND=MNHREAL64)          :: ZMAX  = 10.E-6_MNHREAL64 ! maximum diameter for root search (m)
 REAL                          :: ZPREC = 1.E-8  ! precision wanted for root (m)
 !
 REAL, DIMENSION(IM)           :: ZS             ! saturation ratio (S=1.01 for a 1% supersaturation)
