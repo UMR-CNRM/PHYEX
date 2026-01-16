@@ -551,7 +551,7 @@ if [ $check -eq 1 ]; then
         file2=$path_ref/16JAN.1.12B18.001.nc
         file3=$path_user/16JAN.1.12B18.000.nc 
         file4=$path_ref/16JAN.1.12B18.000.nc
-        bit_diff=57100
+        bit_diff=40500
       elif [ $case1 == COLD_BUBBLE ]; then
         file1=$path_user/BUBBL.1.CEN4T.001.nc
         file2=$path_ref/BUBBL.1.CEN4T.001.nc
@@ -571,7 +571,7 @@ if [ $check -eq 1 ]; then
         file2=$path_ref/ARM__.1.CEN4T.001.nc
         file3=$path_user/ARM__.1.CEN4T.000.nc
         file4=$path_ref/ARM__.1.CEN4T.000.nc
-        bit_diff=76300
+        bit_diff=71100
       elif [ $case1 == 014_LIMA ]; then
         file1=$path_user/XPREF.1.SEG01.002.nc
         file2=$path_ref/XPREF.1.SEG01.002.nc

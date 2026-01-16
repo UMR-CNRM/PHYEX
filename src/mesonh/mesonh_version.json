@@ -1,13 +1,13 @@
 {
 "refversion":"MNH-600-dev-473daaa2f",
 "testing": {
-            "007_16janvier/008_run2":"d56f9a9",
-            "007_16janvier/008_run2_turb3D":"d56f9a9",
-            "007_16janvier/008_run2_lredf":"d56f9a9",
-            "COLD_BUBBLE/002_mesonh":"d56f9a9",
-            "ARMLES/RUN":"d56f9a9",
-            "COLD_BUBBLE_3D/002_mesonh":"d56f9a9",
-            "OCEAN_LES/004_run2":"d56f9a9",
-            "014_LIMA/002_mesonh":"d56f9a9"
+            "007_16janvier/008_run2":"7589c65",
+            "007_16janvier/008_run2_turb3D":"7589c65",
+            "007_16janvier/008_run2_lredf":"7589c65",
+            "COLD_BUBBLE/002_mesonh":"7589c65",
+            "ARMLES/RUN":"7589c65",
+            "COLD_BUBBLE_3D/002_mesonh":"7589c65",
+            "OCEAN_LES/004_run2":"7589c65",
+            "014_LIMA/002_mesonh":"7589c65"
            }
 }
