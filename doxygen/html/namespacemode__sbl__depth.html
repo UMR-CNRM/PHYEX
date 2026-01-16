@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a5b30e11da360876e769b99247944adf3" id="r_a5b30e11da360876e769b99247944adf3"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__sbl__depth.html#a5b30e11da360876e769b99247944adf3">sbl_depth</a> (d, csturb, pzz, pflxu, pflxv, pwthv, plmo, psbl_depth)</td></tr>
-<tr class="separator:a5b30e11da360876e769b99247944adf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8595e0256e0629209199ac3cdcce436a" id="r_a8595e0256e0629209199ac3cdcce436a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__sbl__depth.html#a8595e0256e0629209199ac3cdcce436a">sbl_depth</a> (d, turbn, csturb, pzz, pflxu, pflxv, pwthv, plmo, psbl_depth)</td></tr>
+<tr class="separator:a8595e0256e0629209199ac3cdcce436a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a5b30e11da360876e769b99247944adf3" name="a5b30e11da360876e769b99247944adf3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5b30e11da360876e769b99247944adf3">&#9670;&#160;</a></span>sbl_depth()</h2>
+<a id="a8595e0256e0629209199ac3cdcce436a" name="a8595e0256e0629209199ac3cdcce436a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8595e0256e0629209199ac3cdcce436a">&#9670;&#160;</a></span>sbl_depth()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -93,6 +93,12 @@ Functions/Subroutines</h2></td></tr>
           <td>(</td>
           <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__turb__n_1_1turb__t.html">turb_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>turbn</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -133,7 +139,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,turbn%lrmc01)), intent(inout)&#160;</td>
           <td class="paramname"><em>psbl_depth</em>&#160;</td>
         </tr>
         <tr>
@@ -148,8 +154,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__sbl__depth_a5b30e11da360876e769b99247944adf3_icgraph.png" border="0" usemap="#anamespacemode__sbl__depth_a5b30e11da360876e769b99247944adf3_icgraph" alt=""/></div>
-<map name="anamespacemode__sbl__depth_a5b30e11da360876e769b99247944adf3_icgraph" id="anamespacemode__sbl__depth_a5b30e11da360876e769b99247944adf3_icgraph">
+<div class="center"><img src="namespacemode__sbl__depth_a8595e0256e0629209199ac3cdcce436a_icgraph.png" border="0" usemap="#anamespacemode__sbl__depth_a8595e0256e0629209199ac3cdcce436a_icgraph" alt=""/></div>
+<map name="anamespacemode__sbl__depth_a8595e0256e0629209199ac3cdcce436a_icgraph" id="anamespacemode__sbl__depth_a8595e0256e0629209199ac3cdcce436a_icgraph">
 <area shape="rect" title=" " alt="" coords="332,5,488,45"/>
 <area shape="rect" href="namespacemode__turb__ver.html#ae492dc0352339b75c3d88aab638ab37b" title=" " alt="" coords="101,13,284,38"/>
 <area shape="poly" title=" " alt="" coords="318,28,284,28,284,23,318,23"/>
