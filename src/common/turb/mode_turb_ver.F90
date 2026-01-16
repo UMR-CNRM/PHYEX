@@ -617,7 +617,7 @@ CALL  TURB_VER_SV_CORR(D,CST,CSTURB,TURBN,TLES,KRR,KRRL,KRRI,OOCEAN,&
 !*       9.   DIAGNOSTIC OF Surface Boundary Layer Depth
 !             ------------------------------------------
 !
-IF (TURBN%LRMC01) CALL SBL_DEPTH(D,CSTURB,PZZ,ZWU,ZWV,ZWTHV,PLMO,PSBL_DEPTH)
+IF (TURBN%LRMC01) CALL SBL_DEPTH(D,TURBN,CSTURB,PZZ,ZWU,ZWV,ZWTHV,PLMO,PSBL_DEPTH)
 !
 !----------------------------------------------------------------------------
 !

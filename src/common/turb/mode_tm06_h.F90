@@ -5,7 +5,7 @@
 MODULE MODE_TM06_H
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TM06_H(D,PTSTEP,PZZ,PFLXZ,PBL_DEPTH)
+SUBROUTINE TM06_H(D,TURBN,PTSTEP,PZZ,PFLXZ,PBL_DEPTH)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #################################################################
 !
@@ -46,6 +46,7 @@ SUBROUTINE TM06_H(D,PTSTEP,PZZ,PFLXZ,PBL_DEPTH)
 !
 USE MODD_PARAMETERS, ONLY : XUNDEF
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+USE MODD_TURB_n,     ONLY: TURB_t
 !
 !
 IMPLICIT NONE
@@ -53,11 +54,12 @@ IMPLICIT NONE
 !
 !*      0.1  declarations of arguments
 !
-TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
+TYPE(TURB_t),           INTENT(IN)    :: TURBN
 REAL,                   INTENT(IN)    :: PTSTEP    ! Double time step
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PZZ       ! altitude of flux levels
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PFLXZ     ! heat flux
-REAL, DIMENSION(D%NIJT),   INTENT(INOUT) :: PBL_DEPTH ! boundary layer height
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%CTOM=='TM06')),   INTENT(INOUT) :: PBL_DEPTH ! boundary layer height
 !
 !-------------------------------------------------------------------------------
 !

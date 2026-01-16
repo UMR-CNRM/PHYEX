@@ -6,7 +6,7 @@ MODULE MODE_SBL_DEPTH
 IMPLICIT NONE
 CONTAINS
 !     ######spl
-      SUBROUTINE SBL_DEPTH(D,CSTURB,PZZ,PFLXU,PFLXV,PWTHV,PLMO,PSBL_DEPTH)
+      SUBROUTINE SBL_DEPTH(D,TURBN,CSTURB,PZZ,PFLXU,PFLXV,PWTHV,PLMO,PSBL_DEPTH)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #################################################################
 !
@@ -47,6 +47,7 @@ CONTAINS
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY : XUNDEF
+USE MODD_TURB_n,         ONLY: TURB_t
 !
 USE MODE_BL_DEPTH_DIAG, ONLY : BL_DEPTH_DIAG
 !
@@ -57,12 +58,13 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
 TYPE(CSTURB_t),         INTENT(IN)    :: CSTURB
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PZZ       ! altitude of flux levels
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PFLXU     ! u'w'
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PFLXV     ! v'w'
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PWTHV     ! buoyancy flux
 REAL, DIMENSION(D%NIJT),   INTENT(IN)    :: PLMO      ! Monin-Obukhov length
-REAL, DIMENSION(D%NIJT),   INTENT(INOUT) :: PSBL_DEPTH! boundary layer height
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LRMC01)),   INTENT(INOUT) :: PSBL_DEPTH! boundary layer height
 !
 !-------------------------------------------------------------------------------
 !

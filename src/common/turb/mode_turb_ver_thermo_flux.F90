@@ -326,8 +326,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz (at
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz (at mass point)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz (at mass point)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
-REAL, DIMENSION(MERGE(D%NIT,0,TURBN%CTOM=='TM06'), &
-                MERGE(D%NJT,0,TURBN%CTOM=='TM06')),  INTENT(INOUT)::  PBL_DEPTH    ! BL depth
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%CTOM=='TM06')), INTENT(INOUT)::  PBL_DEPTH    ! BL depth
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PWTHV         ! buoyancy flux
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRTHLS     ! cumulated source for theta
@@ -861,7 +860,7 @@ END IF
 !
 !*       2.5  New boundary layer depth for TOMs
 !
-IF (TURBN%CTOM=='TM06') CALL TM06_H(D,PTSTEP,PZZ,ZFLXZ,PBL_DEPTH)
+IF (TURBN%CTOM=='TM06') CALL TM06_H(D,TURBN,PTSTEP,PZZ,ZFLXZ,PBL_DEPTH)
 !
 !----------------------------------------------------------------------------
 !
