@@ -532,7 +532,9 @@ if [ $check -eq 1 ]; then
         else
           #We must call it in another shell because of the potentially loaded MesoNH profile
           #because we cannot load two MesoNH profiles in the same shell
-          env -i $SHELL -l -c "MNHPACK=${MNHPACK} TARGZDIR=${TARGZDIR} \
+          
+          env -i $SHELL -l -c "[ '$VIRTUAL_ENV' != '' ] && source $VIRTUAL_ENV/bin/activate; \
+                               MNHPACK=${MNHPACK} TARGZDIR=${TARGZDIR} \
                                PHYEXREPOuser=${PHYEXREPOuser} PHYEXREPOprotocol=${PHYEXREPOprotocol} \
                                $0 -p -c -r -t $t --onlyIfNeeded ${refByTest[$t]}"
         fi
