@@ -14,12 +14,13 @@
 IMPLICIT NONE
 INTERFACE
 !
-SUBROUTINE GET_HALO_PHY(D,PSRC)
+SUBROUTINE GET_HALO_PHY(D,PSRC,OONGPU)
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),        INTENT(IN)   :: D
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PSRC    ! variable at t
+LOGICAL , OPTIONAL :: OONGPU
 !
 END SUBROUTINE GET_HALO_PHY
 !
@@ -284,7 +285,7 @@ END SUBROUTINE GET_HALO
 !-------------------------------------------------------------------------------
 !-------------------------------------------------------------------------------
 !     #########################
-      SUBROUTINE GET_HALO_PHY(D,PSRC)
+      SUBROUTINE GET_HALO_PHY(D,PSRC,OONGPU)
 !     #########################
 !
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
@@ -295,6 +296,7 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),        INTENT(IN)   :: D
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PSRC    ! variable at t
+LOGICAL , OPTIONAL :: OONGPU
 !
 TYPE(LIST_ll)     , POINTER      :: TZ_PSRC_ll               ! halo
 INTEGER                          :: IERROR                 ! error return code 
@@ -302,7 +304,7 @@ INTEGER                          :: IERROR                 ! error return code
 NULLIFY( TZ_PSRC_ll)
 !
 CALL ADD3DFIELD_ll( TZ_PSRC_ll, PSRC, 'GET_HALO::PSRC' )
-CALL UPDATE_HALO_ll(TZ_PSRC_ll,IERROR)
+CALL UPDATE_HALO_ll(TZ_PSRC_ll,IERROR, OONGPU=OONGPU )
 CALL CLEANLIST_ll(TZ_PSRC_ll)
 !
 END SUBROUTINE GET_HALO_PHY
@@ -331,6 +333,7 @@ MODULE MODD_HALO_D
 
   REAL, SAVE , ALLOCATABLE, DIMENSION(:,:,:)  :: ZNORTH2F_IN, ZSOUTH2F_IN, ZWEST2F_IN, ZEAST2F_IN
   REAL, SAVE , ALLOCATABLE, DIMENSION(:,:,:)  :: ZNORTH2F_OUT, ZSOUTH2F_OUT, ZWEST2F_OUT, ZEAST2F_OUT  
+     
   LOGICAL, SAVE                               :: GFIRST_GET_HALO_D = .TRUE.
   
   LOGICAL, SAVE     :: GFIRST_INIT_HALO_D = .TRUE.
@@ -476,6 +479,7 @@ CONTAINS
   END SUBROUTINE INIT_HALO_D
 
 END MODULE MODD_HALO_D
+
 !     #########################
       SUBROUTINE GET_HALO_D(PSRC,HDIR,HNAME)
 !     #########################
@@ -530,7 +534,7 @@ USE MODD_HALO_D
 USE MODE_MNH_ZWORK, ONLY : GWEST , GEAST, GSOUTH , GNORTH
 !
 USE MODD_VAR_ll, ONLY : NMNH_COMM_WORLD
-USE MODD_MPIF,    ONLY : MPI_STATUSES_IGNORE
+USE MODD_VAR_ll,    ONLY : MNH_STATUSES_IGNORE
 USE MODD_PRECISION,  ONLY : MNHREAL_MPI
 !
 USE MODE_MPPDB
@@ -768,7 +772,7 @@ USE MODE_MNH_ZWORK, ONLY : GWEST , GEAST, GSOUTH , GNORTH
 !!$USE MODE_MNH_ZWORK, ONLY : IIB,IJB ,IIE,IJE 
 !
 USE MODD_VAR_ll, ONLY : NMNH_COMM_WORLD
-USE MODD_MPIF,    ONLY : MPI_STATUSES_IGNORE
+USE MODD_VAR_ll,    ONLY : MNH_STATUSES_IGNORE
 USE MODD_PRECISION,  ONLY : MNHREAL_MPI
 !
 USE MODE_MPPDB
@@ -819,7 +823,7 @@ END IF
 
 NB_REQ = KNB_REQ
 
-CALL MPI_WAITALL(NB_REQ,KREQ,MPI_STATUSES_IGNORE,IERR)
+CALL MPI_WAITALL(NB_REQ,KREQ,MNH_STATUSES_IGNORE,IERR)
 
 !
 !   Copy back the Zxxx_OUT buffer recv via MPI(gpu_direct) to PSRC halo
@@ -893,7 +897,7 @@ USE MODE_MPPDB
 
 USE MODD_VAR_ll, ONLY    : IP,NPROC,NP1,NP2
 USE MODD_VAR_ll, ONLY : NMNH_COMM_WORLD
-USE MODD_MPIF,    ONLY : MPI_STATUSES_IGNORE
+USE MODD_VAR_ll,    ONLY : MNH_STATUSES_IGNORE
 USE MODD_PRECISION,  ONLY : MNHREAL_MPI
 !
 USE MODE_MNH_ZWORK, ONLY : IIU,IJU,IKU
@@ -1105,7 +1109,7 @@ ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 IF ( INB_REQ > 0 ) THEN
-   CALL MPI_WAITALL(INB_REQ,IREQ,MPI_STATUSES_IGNORE,IERR)
+   CALL MPI_WAITALL(INB_REQ,IREQ,MNH_STATUSES_IGNORE,IERR)
 END IF
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1176,7 +1180,7 @@ USE MODE_MPPDB
 
 USE MODD_VAR_ll, ONLY    : IP,NPROC,NP1,NP2
 USE MODD_VAR_ll, ONLY : NMNH_COMM_WORLD
-USE MODD_MPIF,    ONLY : MPI_STATUSES_IGNORE
+USE MODD_VAR_ll,    ONLY : MNH_STATUSES_IGNORE
 USE MODD_PRECISION,  ONLY : MNHREAL_MPI
 !
 USE MODE_MNH_ZWORK, ONLY : IIU,IJU,IKU
@@ -1388,7 +1392,7 @@ ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 IF ( INB_REQ > 0 ) THEN
-   CALL MPI_WAITALL(INB_REQ,IREQ,MPI_STATUSES_IGNORE,IERR)
+   CALL MPI_WAITALL(INB_REQ,IREQ,MNH_STATUSES_IGNORE,IERR)
 END IF
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1460,7 +1464,7 @@ USE MODE_MPPDB
 
 USE MODD_VAR_ll, ONLY    : IP,NPROC,NP1,NP2
 USE MODD_VAR_ll, ONLY : NMNH_COMM_WORLD
-USE MODD_MPIF,    ONLY : MPI_STATUSES_IGNORE
+USE MODD_VAR_ll,    ONLY : MNH_STATUSES_IGNORE
 USE MODD_PRECISION,  ONLY : MNHREAL_MPI
 !
 USE MODE_MNH_ZWORK, ONLY : IIU,IJU,IKU
@@ -1607,7 +1611,7 @@ END IF
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 IF ( INB_REQEW > 0 ) THEN
-   CALL MPI_WAITALL(INB_REQEW,IREQEW,MPI_STATUSES_IGNORE,IERR)
+   CALL MPI_WAITALL(INB_REQEW,IREQEW,MNH_STATUSES_IGNORE,IERR)
 END IF
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1720,7 +1724,7 @@ ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 IF ( INB_REQNS > 0 ) THEN
-   CALL MPI_WAITALL(INB_REQNS,IREQNS,MPI_STATUSES_IGNORE,IERR)
+   CALL MPI_WAITALL(INB_REQNS,IREQNS,MNH_STATUSES_IGNORE,IERR)
 END IF
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1776,7 +1780,7 @@ USE MODE_MPPDB
 
 USE MODD_VAR_ll, ONLY    : IP,NPROC,NP1,NP2
 USE MODD_VAR_ll, ONLY : NMNH_COMM_WORLD
-USE MODD_MPIF,    ONLY : MPI_STATUSES_IGNORE
+USE MODD_VAR_ll,    ONLY : MNH_STATUSES_IGNORE
 USE MODD_PRECISION,  ONLY : MNHREAL_MPI
 !
 USE MODE_MNH_ZWORK, ONLY : IIU,IJU,IKU
@@ -1923,7 +1927,7 @@ END IF
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 IF ( INB_REQEW > 0 ) THEN
-   CALL MPI_WAITALL(INB_REQEW,IREQEW,MPI_STATUSES_IGNORE,IERR)
+   CALL MPI_WAITALL(INB_REQEW,IREQEW,MNH_STATUSES_IGNORE,IERR)
 END IF
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -2036,7 +2040,7 @@ ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 IF ( INB_REQNS > 0 ) THEN
-   CALL MPI_WAITALL(INB_REQNS,IREQNS,MPI_STATUSES_IGNORE,IERR)
+   CALL MPI_WAITALL(INB_REQNS,IREQNS,MNH_STATUSES_IGNORE,IERR)
 END IF
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -2094,7 +2098,7 @@ USE MODE_MPPDB
 !
 USE MODD_VAR_ll,     ONLY : IP,NPROC,NP1,NP2
 USE MODD_VAR_ll,     ONLY : NMNH_COMM_WORLD
-USE MODD_MPIF,       ONLY : MPI_STATUSES_IGNORE
+USE MODD_VAR_ll,     ONLY : MNH_STATUSES_IGNORE
 USE MODD_PRECISION,  ONLY : MNHREAL_MPI
 !
 IMPLICIT NONE
@@ -2290,7 +2294,7 @@ ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 IF ( INB_REQ > 0 ) THEN
-   CALL MPI_WAITALL(INB_REQ,IREQ,MPI_STATUSES_IGNORE,IERR)
+   CALL MPI_WAITALL(INB_REQ,IREQ,MNH_STATUSES_IGNORE,IERR)
 END IF
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -2402,7 +2406,7 @@ USE MODE_MPPDB
 !
 USE MODD_VAR_ll,     ONLY : NPROC
 USE MODD_VAR_ll,     ONLY : NMNH_COMM_WORLD
-USE MODD_MPIF,       ONLY : MPI_STATUSES_IGNORE
+USE MODD_VAR_ll,     ONLY : MNH_STATUSES_IGNORE
 USE MODD_PRECISION,  ONLY : MNHREAL_MPI
 !
 IMPLICIT NONE
@@ -2615,7 +2619,7 @@ ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 IF ( INB_REQ > 0 ) THEN
-   CALL MPI_WAITALL(INB_REQ,IREQ,MPI_STATUSES_IGNORE,IERR)
+   CALL MPI_WAITALL(INB_REQ,IREQ,MNH_STATUSES_IGNORE,IERR)
 END IF
 
 !PW:disabled car KO si on compare avec 1 run 1 prc
