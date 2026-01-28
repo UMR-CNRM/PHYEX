@@ -103,7 +103,7 @@ GNORTH = ( HLBCY(2) /= 'CYCL' .AND. LNORTH_ll() )
 !$acc update_crm self(PLM,PLEPS)
   CALL ADD3DFIELD_ll( TZLM_ll, PLM,   'UPDATE_LM::PLM'   )
   CALL ADD3DFIELD_ll( TZLM_ll, PLEPS, 'UPDATE_LM::PLEPS' )
-  CALL UPDATE_HALO_ll(TZLM_ll,IINFO_ll)
+  CALL UPDATE_HALO_ll(TZLM_ll,IINFO_ll, OONGPU=.TRUE.)
   CALL CLEANLIST_ll(TZLM_ll)
 !$acc update_crm device(PLM,PLEPS)
 !!$END IF
@@ -131,20 +131,20 @@ IF ( GEAST ) THEN
   !$acc end kernels
 END IF
 IF ( GSOUTH ) THEN
-  !$acc kernels async 
-  !$mnh_expand_array(JI=1:JIU,JK=1:JKU)
-  PLM(:,IJB-1,:) = PLM(:,IJB,:)
-  PLEPS(:,IJB-1,:) = PLEPS(:,IJB,:)
-  !$mnh_end_expand_array(JI=1:JIU,JK=1:JKU)
+  !$acc kernels async
+  !$mnh_expand_array(JI=1:JIU,,JK=1:JKU)
+    PLM  (:,IJB-1,:) = PLM  (:,IJB,:)
+    PLEPS(:,IJB-1,:) = PLEPS(:,IJB,:)
+  !$mnh_end_expand_array(JI=1:JIU,,JK=1:JKU)
   !$acc end kernels
 END IF
 IF ( GNORTH ) THEN
   !$acc kernels async
-  !$mnh_expand_array(JI=1:JIU,JK=1:JKU)
-  PLM(:,IJE+1,:) = PLM(:,IJE,:)
-  PLEPS(:,IJE+1,:) = PLEPS(:,IJE,:)
-  !$mnh_end_expand_array(JI=1:JIU,JK=1:JKU)
- !$acc end kernels
+  !$mnh_expand_array(JI=1:JIU,,JK=1:JKU)
+    PLM  (:,IJE+1,:) = PLM  (:,IJE,:)
+    PLEPS(:,IJE+1,:) = PLEPS(:,IJE,:)
+  !$mnh_end_expand_array(JI=1:JIU,,JK=1:JKU)
+  !$acc end kernels
 END IF
 !$acc wait
 
