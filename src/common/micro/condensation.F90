@@ -401,9 +401,11 @@ END IF
 !$mnh_undef(LOOP)
 !$mnh_undef(OPENACC)
 #endif
-!$acc kernels
-!$acc_cr loop independent gang vector
-!$mnh_do_concurrent( JIJ=IIJB:IIJE , JK=IKTB:IKTE )      
+!$acc parallel
+!$acc_cr loop independent gang
+!$mnh_do_concurrent( JK=IKTB:IKTE )
+!$acc_cr loop independent vector
+!$mnh_do_concurrent( JIJ=IIJB:IIJE )
 DO JK=IKTB,IKTE
   DO JIJ = IIJB, IIJE
   IF (.NOT. OCND2) THEN
@@ -651,7 +653,8 @@ DO JK=IKTB,IKTE
  END DO
 END DO
 !$mnh_end_do()
-!$acc end kernels
+!$mnh_end_do()  
+!$acc end parallel
 !
 IF (LHOOK) CALL DR_HOOK('CONDENSATION',1,ZHOOK_HANDLE)
 !
