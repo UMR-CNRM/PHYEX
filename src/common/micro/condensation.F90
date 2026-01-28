@@ -367,9 +367,11 @@ END DO
 !$mnh_undef(LOOP)
 !$mnh_undef(OPENACC)
 #endif
-!$acc kernels
-!$acc_cr loop independent gang vector
-!$mnh_do_concurrent( JIJ=IIJB:IIJE , JK=IKTB:IKTE )      
+!$acc parallel
+!$acc_cr loop independent gang
+!$mnh_do_concurrent( JK=IKTB:IKTE )
+!$acc_cr loop independent vector
+!$mnh_do_concurrent( JIJ=IIJB:IIJE )
   IF (OCND2) THEN
      !  ZDZ(JIJ,JK) = PZZ(JIJ,JKP) - PZZ(JIJ,JKP-IKL)
      !CALL ICECLOUD(D,PPABS(:,JK),PZZ(:,JK),ZDZ(:), &
@@ -602,7 +604,8 @@ END DO
       PSIGRC(JIJ,JK) = PSIGRC(JIJ,JK)* MIN( 3. , MAX(1.,1.-ZQ1(JIJ,JK)) )
   END IF
 !$mnh_end_do()
-!$acc end kernels
+!$mnh_end_do()  
+!$acc end parallel
 !
 IF (LHOOK) CALL DR_HOOK('CONDENSATION',1,ZHOOK_HANDLE)
 !
