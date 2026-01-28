@@ -1763,7 +1763,11 @@ IF (TLES%LLES_CALL) THEN
   TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
-IF(PRESENT(PLEM)) PLEM(IIJB:IIJE,IKTB:IKTE) = ZLM(IIJB:IIJE,IKTB:IKTE)
+IF(PRESENT(PLEM)) THEN
+   !$acc kernels
+   PLEM(IIJB:IIJE,IKTB:IKTE) = ZLM(IIJB:IIJE,IKTB:IKTE)
+   !$acc end kernels
+END IF
 !----------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('TURB',1,ZHOOK_HANDLE)
