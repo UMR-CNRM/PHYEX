@@ -103,7 +103,7 @@ GNORTH = ( HLBCY(2) /= 'CYCL' .AND. LNORTH_ll() )
 !$acc update_crm self(PLM,PLEPS)
   CALL ADD3DFIELD_ll( TZLM_ll, PLM,   'UPDATE_LM::PLM'   )
   CALL ADD3DFIELD_ll( TZLM_ll, PLEPS, 'UPDATE_LM::PLEPS' )
-  CALL UPDATE_HALO_ll(TZLM_ll,IINFO_ll)
+  CALL UPDATE_HALO_ll(TZLM_ll,IINFO_ll, OONGPU=.TRUE.)
   CALL CLEANLIST_ll(TZLM_ll)
 !$acc update_crm device(PLM,PLEPS)
 !!$END IF
