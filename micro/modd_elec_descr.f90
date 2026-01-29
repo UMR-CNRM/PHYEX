@@ -165,7 +165,7 @@ TYPE ELEC_DESCR_t
 !                                  ! particule sedimentation rate
 END TYPE ELEC_DESCR_t
 !
-TYPE(ELEC_DESCR_t), TARGET :: ELEC_DESCR
+TYPE(ELEC_DESCR_t), TARGET, SAVE :: ELEC_DESCR
 !
 REAL, POINTER :: XFC => NULL(), &
                  XFR => NULL(), &
