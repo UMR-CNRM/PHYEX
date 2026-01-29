@@ -83,15 +83,15 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a9672f01e1be30e13b2a0fe2a575a77e9" id="r_a9672f01e1be30e13b2a0fe2a575a77e9"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__get__halo_1_1get__halo__phy.html#a9672f01e1be30e13b2a0fe2a575a77e9">get_halo_phy</a> (d, psrc)</td></tr>
-<tr class="separator:a9672f01e1be30e13b2a0fe2a575a77e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48af2d7f1b9361e1d51fef6c4bf9442c" id="r_a48af2d7f1b9361e1d51fef6c4bf9442c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__get__halo_1_1get__halo__phy.html#a48af2d7f1b9361e1d51fef6c4bf9442c">get_halo_phy</a> (d, psrc, oongpu)</td></tr>
+<tr class="separator:a48af2d7f1b9361e1d51fef6c4bf9442c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
 <p class="definition">Definition at line <a class="el" href="get__halo_8F90_source.html#l00016">16</a> of file <a class="el" href="get__halo_8F90_source.html">get_halo.F90</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a9672f01e1be30e13b2a0fe2a575a77e9" name="a9672f01e1be30e13b2a0fe2a575a77e9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9672f01e1be30e13b2a0fe2a575a77e9">&#9670;&#160;</a></span>get_halo_phy()</h2>
+<a id="a48af2d7f1b9361e1d51fef6c4bf9442c" name="a48af2d7f1b9361e1d51fef6c4bf9442c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a48af2d7f1b9361e1d51fef6c4bf9442c">&#9670;&#160;</a></span>get_halo_phy()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -106,7 +106,13 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>psrc</em>&#160;</td>
+          <td class="paramname"><em>psrc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, optional&#160;</td>
+          <td class="paramname"><em>oongpu</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

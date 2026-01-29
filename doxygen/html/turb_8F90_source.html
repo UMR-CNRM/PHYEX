@@ -1848,12 +1848,16 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01760" name="l01760"></a><span class="lineno"> 1760</span>  tles%XTIME_LES = tles%XTIME_LES + ztime2 - ztime1</div>
 <div class="line"><a id="l01761" name="l01761"></a><span class="lineno"> 1761</span><span class="keywordflow">END IF</span></div>
 <div class="line"><a id="l01762" name="l01762"></a><span class="lineno"> 1762</span><span class="comment">!</span></div>
-<div class="line"><a id="l01763" name="l01763"></a><span class="lineno"> 1763</span><span class="keywordflow">IF</span>(<span class="keyword">PRESENT</span>(plem)) plem(iijb:iije,iktb:ikte) = zlm(iijb:iije,iktb:ikte)</div>
-<div class="line"><a id="l01764" name="l01764"></a><span class="lineno"> 1764</span><span class="comment">!----------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l01765" name="l01765"></a><span class="lineno"> 1765</span><span class="comment">!</span></div>
-<div class="line"><a id="l01766" name="l01766"></a><span class="lineno"> 1766</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;TURB&#39;</span>,1,zhook_handle)</div>
-<div class="line"><a id="l01767" name="l01767"></a><span class="lineno"> 1767</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="turb_8F90.html#a23227e569d418665dfb37602bf10a2f5">turb</a></div>
-<div class="line"><a id="l01768" name="l01768"></a><span class="lineno"> 1768</span> </div>
+<div class="line"><a id="l01763" name="l01763"></a><span class="lineno"> 1763</span><span class="keywordflow">IF</span>(<span class="keyword">PRESENT</span>(plem)) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l01764" name="l01764"></a><span class="lineno"> 1764</span>   <span class="comment">!$acc kernels</span></div>
+<div class="line"><a id="l01765" name="l01765"></a><span class="lineno"> 1765</span>   plem(iijb:iije,iktb:ikte) = zlm(iijb:iije,iktb:ikte)</div>
+<div class="line"><a id="l01766" name="l01766"></a><span class="lineno"> 1766</span>   <span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l01767" name="l01767"></a><span class="lineno"> 1767</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l01768" name="l01768"></a><span class="lineno"> 1768</span><span class="comment">!----------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l01769" name="l01769"></a><span class="lineno"> 1769</span><span class="comment">!</span></div>
+<div class="line"><a id="l01770" name="l01770"></a><span class="lineno"> 1770</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;TURB&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a id="l01771" name="l01771"></a><span class="lineno"> 1771</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="turb_8F90.html#a23227e569d418665dfb37602bf10a2f5">turb</a></div>
+<div class="line"><a id="l01772" name="l01772"></a><span class="lineno"> 1772</span> </div>
 </div>
 <div class="ttc" id="ainterfacemode__msg_1_1print__msg_html"><div class="ttname"><a href="interfacemode__msg_1_1print__msg.html">mode_msg::print_msg</a></div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00018">mode_msg.F90:18</a></div></div>
 <div class="ttc" id="ainterfacemodi__second__mnh_1_1second__mnh_html"><div class="ttname"><a href="interfacemodi__second__mnh_1_1second__mnh.html">modi_second_mnh::second_mnh</a></div><div class="ttdef"><b>Definition</b> <a href="modi__second__mnh_8F90_source.html#l00004">modi_second_mnh.F90:4</a></div></div>

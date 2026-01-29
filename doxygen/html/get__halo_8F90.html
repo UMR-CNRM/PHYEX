@@ -100,8 +100,8 @@ Modules</h2></td></tr>
 Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a547675f4817b353f386f01e5d5223720" id="r_a547675f4817b353f386f01e5d5223720"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="get__halo_8F90.html#a547675f4817b353f386f01e5d5223720">get_halo</a> (psrc)</td></tr>
 <tr class="separator:a547675f4817b353f386f01e5d5223720"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1284d5f30e6865784f40a4a6d2dc513d" id="r_a1284d5f30e6865784f40a4a6d2dc513d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="get__halo_8F90.html#a1284d5f30e6865784f40a4a6d2dc513d">get_halo_phy</a> (d, psrc)</td></tr>
-<tr class="separator:a1284d5f30e6865784f40a4a6d2dc513d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec2a673523f323db49a96f41dc6895cd" id="r_aec2a673523f323db49a96f41dc6895cd"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="get__halo_8F90.html#aec2a673523f323db49a96f41dc6895cd">get_halo_phy</a> (d, psrc, oongpu)</td></tr>
+<tr class="separator:aec2a673523f323db49a96f41dc6895cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
 <a id="a547675f4817b353f386f01e5d5223720" name="a547675f4817b353f386f01e5d5223720"></a>
@@ -120,12 +120,12 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="get__halo_8F90_source.html#l00038">38</a> of file <a class="el" href="get__halo_8F90_source.html">get_halo.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="get__halo_8F90_source.html#l00039">39</a> of file <a class="el" href="get__halo_8F90_source.html">get_halo.F90</a>.</p>
 
 </div>
 </div>
-<a id="a1284d5f30e6865784f40a4a6d2dc513d" name="a1284d5f30e6865784f40a4a6d2dc513d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1284d5f30e6865784f40a4a6d2dc513d">&#9670;&#160;</a></span>get_halo_phy()</h2>
+<a id="aec2a673523f323db49a96f41dc6895cd" name="aec2a673523f323db49a96f41dc6895cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec2a673523f323db49a96f41dc6895cd">&#9670;&#160;</a></span>get_halo_phy()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -140,7 +140,13 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
-          <td class="paramname"><em>psrc</em>&#160;</td>
+          <td class="paramname"><em>psrc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, optional&#160;</td>
+          <td class="paramname"><em>oongpu</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -150,7 +156,7 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="get__halo_8F90_source.html#l00047">47</a> of file <a class="el" href="get__halo_8F90_source.html">get_halo.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="get__halo_8F90_source.html#l00048">48</a> of file <a class="el" href="get__halo_8F90_source.html">get_halo.F90</a>.</p>
 
 </div>
 </div>
