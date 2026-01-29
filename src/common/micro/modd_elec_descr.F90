@@ -175,6 +175,7 @@ REAL, POINTER :: XFC => NULL(), &
                  XFH => NULL(), &
                  XCXR => NULL(), &
                  XECHARGE => NULL()
+LOGICAL, POINTER :: LSEDIM_BEARD => NULL()
 !
 CONTAINS
 !
