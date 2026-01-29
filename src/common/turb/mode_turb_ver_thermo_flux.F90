@@ -1151,6 +1151,7 @@ IF (KRR /= 0) THEN
     ZA(:,:)=  -CST%XG * CST%XBETAOC * MZF(ZFLXZ )
   ELSE
     ZA(:,:)   =  PBETA(:,:) * MZF( MZM(PEMOIST) * ZFLXZ )
+!$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZA(IIJB:IIJE,IKB) =  PBETA(IIJB:IIJE,IKB) * PEMOIST(IIJB:IIJE,IKB) *   &
                    0.5 * ( ZFLXZ(IIJB:IIJE,IKB) + ZFLXZ(IIJB:IIJE,IKB+IKL) )
@@ -1158,6 +1159,7 @@ IF (KRR /= 0) THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     PTP(IIJB:IIJE,1:IKT) = PTP(IIJB:IIJE,1:IKT) + ZA(IIJB:IIJE,1:IKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
   END IF
   !
   ! Buoyancy flux at flux points

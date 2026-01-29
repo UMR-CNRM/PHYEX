@@ -205,7 +205,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::         &
                    ! lence is the only source of evolution added to the ones
                    ! considered in ZSOURCE. This variable is also used to
                    ! temporarily store some diagnostics stored in FM file
-       ZFLX,     & ! horizontal or vertical flux of the treated variable
+       ZFLX,ZFLX_PTSTEP, & ! horizontal or vertical flux of the treated variable
        ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
        ZTR,      & ! Transport term
@@ -307,11 +307,13 @@ ZA(:,:) = - PTSTEP * CSTURB%XCET * MZM(ZKEFF) * MZM(PRHODJ) / PDZZ(:,:)**2
 !
 ! Compute TKE at time t+deltat: ( stored in ZRES )
 !
+!$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZW(:,:)=PTSTEP*ZFLX(:,:)
+ZFLX_PTSTEP(:,:) = PTSTEP*ZFLX(:,:)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-CALL TRIDIAG_TKE(D,PTKEM,ZA,PTSTEP,PEXPL,TURBN%XIMPL,PRHODJ,ZSOURCE,ZW,ZRES)
-CALL GET_HALO_PHY(D,ZRES)
+!$acc end kernels
+CALL TRIDIAG_TKE(D,PTKEM,ZA,PTSTEP,PEXPL,TURBN%XIMPL,PRHODJ,ZSOURCE,ZFLX_PTSTEP ,ZRES)
+CALL GET_HALO_PHY(D,ZRES, OONGPU = .TRUE. )
 !$acc update device(ZRES)
 !
 !* diagnose the dissipation

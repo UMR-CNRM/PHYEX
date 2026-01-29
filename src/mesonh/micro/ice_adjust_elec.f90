@@ -293,6 +293,7 @@ INTEGER             :: JITER,ITERMAX ! iterative loop for first order adjustment
 LOGICAL             :: LPRETREATMENT, LNEW_ADJUST
 !
 TYPE(DIMPHYEX_t)    :: D
+CHARACTER(LEN=4)    :: CLAMBDA3      !< lambda3 choice for subgrid cloud scheme
 !
 !-------------------------------------------------------------------------------
 !
@@ -315,6 +316,8 @@ LPRETREATMENT=.TRUE.     ! FALSE to retreive the previous MASDEV4_1 version
 LNEW_ADJUST  =.TRUE.     ! FALSE to retreive the previous MASDEV4_1 version
 ZT0  = XTT               ! Usefull if LPRETREATMENT=T or LNEW_ADJUST=T
 ZT00 = XTT-40.           ! Usefull if LPRETREATMENT=T or LNEW_ADJUST=T
+!
+CLAMBDA3='CB  '
 !
 !-------------------------------------------------------------------------------
 if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'DEPI', pths(:, :, :) * prhodj(:, :, :) )
@@ -388,7 +391,7 @@ DO JITER = 1, ITERMAX
     ZW4 = 1. ! PRODREF is not used if HL variables are not present
 !
     CALL CONDENSATION(D, CST, RAIN_ICE_PARAMN, NEBN, TURBN, &
-                     &'T', 'CB02', 'CB',                                                  &
+                     &'T', 'CB02', CLAMBDA3,                                                  &
                      &PPABST, PZZ, ZW4, ZT, ZW3_IN, ZW3, ZW1_IN, ZW1, ZW2_IN, ZW2,    &
                      &PRRS*PTSTEP, PRSS*PTSTEP, PRGS*PTSTEP, PSIGS, .FALSE., PMFCONV, PCLDFR, PSRCS, .FALSE.,                 &
                      &OSIGMAS, .FALSE.,                                                                 &

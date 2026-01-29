@@ -353,21 +353,23 @@ deallocate( zt )
 CLOUD: select case ( hcloud )
   case ( 'KESS' )
     jrmax = Size( prrs, 4 )
+    !$acc parallel present_cr(zexn,zcph,zlv)
+    !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+    !dir$ nextscalar
+    !$acc loop seq
     do jr = 2, jrmax
 !PW: kernels directive inside do loop on jr because compiler bug... (NVHPC 21.7)
-!$acc kernels present_cr(zexn,zcph,zlv)
-      !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
       WHERE ( prrs(:, :, :, jr) < 0. )
         prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jr)
         prths(:, :, :) = prths(:, :, :) - prrs(:, :, :, jr) * zlv(:, :, :) /  &
            ( zcph(:, :, :) * zexn(:, :, :) )
         prrs(:, :, :, jr) = 0.
       END WHERE
-      !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
-!$acc end kernels
     end do
+    !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+    !$acc end parallel
 
-!$acc kernels present_cr(zexn,zcph,zlv)
+    !$acc parallel present_cr(zexn,zcph,zlv)
     !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
     WHERE ( prrs(:, :, :, 1) < 0. .and. prrs(:, :, :, 2) > 0. )
       prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, 2)
@@ -376,7 +378,7 @@ CLOUD: select case ( hcloud )
       prrs(:, :, :, 2) = 0.
     END WHERE
     !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
-!$acc end kernels
+    !$acc end parallel
 
 
   case( 'ICE3', 'ICE4' )
@@ -385,10 +387,12 @@ CLOUD: select case ( hcloud )
     else
       jrmax = Size( prrs, 4 )
     end if
-!$acc kernels
+if ( GELEC_ELE ) then
+    !$acc parallel
+    !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+    !dir$ nextscalar
+    !$acc loop seq
     do jr = 4, jrmax
-      if ( GELEC_ELE ) then
-      !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
         WHERE ( prrs(:, :, :, jr) < 0.)
           prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jr)
           prths(:, :, :) = prths(:, :, :) - prrs(:, :, :, jr) * zls(:, :, :) /  &
@@ -403,19 +407,25 @@ CLOUD: select case ( hcloud )
                                     (1. - zadd(:,:,:)) * zion_number(:,:,:)
           prsvs(:,:,:,nsv_elecbeg+jr-1) = 0.0
         END WHERE
-      !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
-      else
-      !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+    end do
+    !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+    !$acc end parallel
+else
+    !$acc parallel
+    !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+    !dir$ nextscalar
+    !$acc loop seq
+    do jr = 4, jrmax
         WHERE ( prrs(:, :, :, jr) < 0.)
           prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jr)
           prths(:, :, :) = prths(:, :, :) - prrs(:, :, :, jr) * zls(:, :, :) /  &
              ( zcph(:, :, :) * zexn(:, :, :) )
           prrs(:, :, :, jr) = 0.
         END WHERE
-      !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
-      end if
     end do
-!$acc end kernels
+    !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+    !$acc end parallel
+end if
 !
 !   cloud
     if ( hbudname == 'NETUR' ) then
@@ -423,10 +433,12 @@ CLOUD: select case ( hcloud )
     else
       jrmax = 3
     end if
-!$acc kernels
+if ( GELEC_ELE ) then
+    !$acc parallel
+    !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+    !dir$ nextscalar
+    !$acc loop seq
     do jr = 2, jrmax
-      if ( GELEC_ELE ) then
-        !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
         WHERE ( prrs(:, :, :, jr) < 0.)
           prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jr)
           prths(:, :, :) = prths(:, :, :) - prrs(:, :, :, jr) * zlv(:, :, :) /  &
@@ -441,19 +453,25 @@ CLOUD: select case ( hcloud )
                                     (1. - zadd(:,:,:)) * zion_number(:,:,:)
           prsvs(:,:,:,nsv_elecbeg+jr-1) = 0.0
         END WHERE
-        !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
-      else
-        !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+    end do
+    !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+    !$acc end parallel
+else
+    !$acc parallel
+    !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+    !dir$ nextscalar
+    !$acc loop seq
+    do jr = 2, jrmax
         WHERE ( prrs(:, :, :, jr) < 0.)
           prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jr)
           prths(:, :, :) = prths(:, :, :) - prrs(:, :, :, jr) * zlv(:, :, :) /  &
              ( zcph(:, :, :) * zexn(:, :, :) )
           prrs(:, :, :, jr) = 0.
         END WHERE
-        !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
-      end if
     end do
-!$acc end kernels
+    !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+    !$acc end parallel
+end if
 !
 ! if rc or ri are positive, we can correct negative rv
     if ( GELEC_ELE ) then
@@ -531,10 +549,12 @@ CLOUD: select case ( hcloud )
     END WHERE
     !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
 !$acc end kernels
+!$acc parallel present_cr(zexn,zcph,zlv)
+    !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+    !dir$ nextscalar
+    !$acc loop seq
     do jsv = 2, 3
-!$acc kernels present_cr(zexn,zcph,zlv)
 !PW: kernels directive inside do loop on jr because compiler bug... (NVHPC 21.7)
-      !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
       WHERE ( prrs(:, :, :, jsv) < 0. .or. prsvs(:, :, :, nsv_c2r2beg - 1 + jsv) < 0. )
         prrs(:, :, :, 1) = prrs(:, :, :, 1) + prrs(:, :, :, jsv)
         prths(:, :, :) = prths(:, :, :) - prrs(:, :, :, jsv) * zlv(:, :, :) /  &
@@ -542,9 +562,9 @@ CLOUD: select case ( hcloud )
         prrs(:, :, :, jsv)  = 0.
         prsvs(:, :, :, nsv_c2r2beg - 1 + jsv) = 0.
       END WHERE
-      !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
-!$acc end kernels
     end do
+    !$mnh_end_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
+!$acc end parallel
 !$acc kernels present_cr(zexn,zcph,zlv)
     !$mnh_expand_where(ji = 1 : jiu, jj = 1 : jju, jk = 1 : jku)
     WHERE ( prrs(:, :, :, 1) < 0. .and. prrs(:, :, :, 2) > 0. )
