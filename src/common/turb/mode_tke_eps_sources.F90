@@ -209,8 +209,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::         &
        ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
        ZTR,      & ! Transport term
-       ZMWORK1,  & ! working var. for MZM/MZF operators (array syntax)
-       ZW          ! working array
+       ZMWORK1     ! working var. for MZM/MZF operators (array syntax)
 
 LOGICAL,DIMENSION(D%NIJT,D%NKT) :: GTKENEG
                    ! 3D mask .T. if TKE < CSTURB%XTKEMIN
