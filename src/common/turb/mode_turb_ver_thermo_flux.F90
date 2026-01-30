@@ -734,12 +734,12 @@ IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
 !$acc update self(ZFLXZ)
   ! stores the conservative potential temperature vertical flux
   TZFIELD = TFIELDMETADATA(                                         &
-   CMNHNAME   = 'THW_FLX',                                          &
+   CMNHNAME   = 'THLW_FLX',                                         &
    CSTDNAME   = '',                                                 &
-   CLONGNAME  = 'THW_FLX',                                          &
+   CLONGNAME  = 'THLW_FLX',                                         &
    CUNITS     = 'K m s-1',                                          &
    CDIR       = 'XY',                                               &
-   CCOMMENT   = 'Conservative potential temperature vertical flux', &
+   CCOMMENT   = 'Conservative (or ice-liquid) potential temperature vertical flux', &
    NGRID      = 4,                                                  &
    NTYPE      = TYPEREAL,                                           &
    NDIMS      = 3,                                                  &

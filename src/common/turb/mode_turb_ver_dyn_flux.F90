@@ -519,9 +519,9 @@ IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
 !$acc update self(ZFLXZ)
   ! stores the U wind component vertical flux
   TZFIELD = TFIELDMETADATA(                        &
-    CMNHNAME   = 'UW_VFLX',                        &
+    CMNHNAME   = 'UW_FLX',                         &
     CSTDNAME   = '',                               &
-    CLONGNAME  = 'UW_VFLX',                        &
+    CLONGNAME  = 'UW_FLX',                         &
     CUNITS     = 'm2 s-2',                         &
     CDIR       = 'XY',                             &
     CCOMMENT   = 'U wind component vertical flux', &
@@ -775,9 +775,9 @@ IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the V wind component vertical flux
 !$acc update self(ZFLXZ)
   TZFIELD = TFIELDMETADATA(                        &
-    CMNHNAME   = 'VW_VFLX',                        &
+    CMNHNAME   = 'VW_FLX',                         &
     CSTDNAME   = '',                               &
-    CLONGNAME  = 'VW_VFLX',                        &
+    CLONGNAME  = 'VW_FLX',                         &
     CUNITS     = 'm2 s-2',                         &
     CDIR       = 'XY',                             &
     CCOMMENT   = 'V wind component vertical flux', &
