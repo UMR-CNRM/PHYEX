@@ -104,7 +104,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment">!</span></div>
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),        <span class="keywordtype">INTENT(IN)</span>   :: D</div>
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>  :: PSRC    <span class="comment">! variable at t</span></div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="keywordtype">LOGICAL</span> , <span class="keywordtype">OPTIONAL</span> :: OONGPU</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="keywordtype">LOGICAL</span>, <span class="keywordtype">INTENT(IN)</span>, <span class="keywordtype">OPTIONAL</span> :: OONGPU</div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment">!</span></div>
 </div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="keyword">END SUBROUTINE </span><a class="code hl_interface" href="interfacemodi__get__halo_1_1get__halo__phy.html">get_halo_phy</a></div>
@@ -144,7 +144,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="comment">!</span></div>
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),        <span class="keywordtype">INTENT(IN)</span>   :: D</div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>  :: PSRC    <span class="comment">! variable at t</span></div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="keywordtype">LOGICAL</span> , <span class="keywordtype">OPTIONAL</span> :: OONGPU</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="keywordtype">LOGICAL</span>, <span class="keywordtype">INTENT(IN)</span>, <span class="keywordtype">OPTIONAL</span> :: OONGPU</div>
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="comment">!</span></div>
 </div>
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="get__halo_8F90.html#aec2a673523f323db49a96f41dc6895cd">get_halo_phy</a></div>
