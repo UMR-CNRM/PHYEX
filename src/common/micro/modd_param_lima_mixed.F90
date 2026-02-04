@@ -204,28 +204,37 @@ REAL      :: X0DEPH,X1DEPH,XEX0DEPH,XEX1DEPH     ! Constants for deposition
 REAL      :: XFWETH,XFSWETH,XFNSWETH,          & ! Constants for the wet growth
              XLBSWETH1,XLBSWETH2,XLBSWETH3,    & ! of the hailstones : WET
              XLBNSWETH1,XLBNSWETH2,XLBNSWETH3, & ! of the hailstones : WET
+             XFRWETH, XFNRWETH,                & !   processes RSWETH
+             XLBRWETH1,XLBRWETH2,XLBRWETH3,    & !             RGWETH
+             XLBNRWETH1,XLBNRWETH2,XLBNRWETH3, & !             RGWETH
              XFGWETH, XFNGWETH,                & !   processes RSWETH
              XLBGWETH1,XLBGWETH2,XLBGWETH3,    & !             RGWETH
              XLBNGWETH1,XLBNGWETH2,XLBNGWETH3, & !             RGWETH
              XWETLBDAS_MIN,                    & ! Min val. of Lbda_s for WET
              XWETLBDAS_MAX,                    & ! Max val. of Lbda_s for WET
+             XWETLBDAR_MIN,                    & ! Min val. of Lbda_g for WET
+             XWETLBDAR_MAX,                    & ! Max val. of Lbda_g for WET
              XWETLBDAG_MIN,                    & ! Min val. of Lbda_g for WET
              XWETLBDAG_MAX,                    & ! Max val. of Lbda_g for WET
              XWETLBDAH_MIN,                    & ! Min val. of Lbda_h for WET
              XWETLBDAH_MAX,                    & ! Max val. of Lbda_h for WET
              XWETINTP1S,XWETINTP2S,            & ! Csts for bilin. interpol. of
+             XWETINTP1R,XWETINTP2R,            & ! Lbda_r, Lbda_s and Lbda_g in
              XWETINTP1G,XWETINTP2G,            & ! Lbda_r, Lbda_s and Lbda_g in
              XWETINTP1H,XWETINTP2H               ! the XKER_SWETH and XKER_GWETH
                                                  !            tables
 INTEGER      :: NWETLBDAS,                     & ! Number of Lbda_s,
+                NWETLBDAR,                     & !        of Lbda_g and
                 NWETLBDAG,                     & !        of Lbda_g and
                 NWETLBDAH                        !        of Lbda_h values in
                                                  ! the XKER_SWETH and XKER_GWETH
                                                  !            tables
 REAL,DIMENSION(:,:), ALLOCATABLE               &
                          :: XKER_SWETH,        & ! Normalized kernel for SWETH
+                            XKER_RWETH,        & ! Normalized kernel for GWETH
                             XKER_GWETH,        & ! Normalized kernel for GWETH
                             XKER_N_SWETH,      & ! Normalized kernel for GWETH
+                            XKER_N_RWETH,      & ! Normalized kernel for GWETH
                             XKER_N_GWETH         ! Normalized kernel for GWETH
 END TYPE PARAM_LIMA_MIXED_T
 !
@@ -415,16 +424,28 @@ REAL, POINTER :: XAG => NULL(), &
                  XLBNGWETH1 => NULL(), &
                  XLBNGWETH2 => NULL(), &
                  XLBNGWETH3 => NULL(), &
+                 XFRWETH => NULL(), &
+                 XFNRWETH => NULL(), &
+                 XLBRWETH1 => NULL(), &
+                 XLBRWETH2 => NULL(), &
+                 XLBRWETH3 => NULL(), &
+                 XLBNRWETH1 => NULL(), &
+                 XLBNRWETH2 => NULL(), &
+                 XLBNRWETH3 => NULL(), &
                  XWETLBDAS_MIN => NULL(), &
                  XWETLBDAS_MAX => NULL(), &
                  XWETLBDAG_MIN => NULL(), &
                  XWETLBDAG_MAX => NULL(), &
+                 XWETLBDAR_MIN => NULL(), &
+                 XWETLBDAR_MAX => NULL(), &
                  XWETLBDAH_MIN => NULL(), &
                  XWETLBDAH_MAX => NULL(), &
                  XWETINTP1S => NULL(), &
                  XWETINTP2S => NULL(), &
                  XWETINTP1G => NULL(), &
                  XWETINTP2G => NULL(), &
+                 XWETINTP1R => NULL(), &
+                 XWETINTP2R => NULL(), &
                  XWETINTP1H => NULL(), &
                  XWETINTP2H => NULL(), &
                  XMINDG => NULL(),     &
@@ -437,6 +458,7 @@ INTEGER, POINTER :: NGAMINC => NULL(), &
                     NDRYLBDAS => NULL(), &
                     NDRYLBDAG => NULL(), &
                     NWETLBDAS => NULL(), &
+                    NWETLBDAR => NULL(), &
                     NWETLBDAG => NULL(), &
                     NWETLBDAH => NULL()
 
@@ -458,8 +480,10 @@ REAL, DIMENSION(:,:), POINTER :: XGAMINC_CIBU_S => NULL(), &
                                  XKER_N_SDRYG => NULL(), &
                                  XKER_N_RDRYG => NULL(), &
                                  XKER_SWETH => NULL(), &
+                                 XKER_RWETH => NULL(), &
                                  XKER_GWETH => NULL(), &
                                  XKER_N_SWETH => NULL(), &
+                                 XKER_N_RWETH => NULL(), &
                                  XKER_N_GWETH => NULL()
 CONTAINS
 SUBROUTINE PARAM_LIMA_MIXED_ASSOCIATE()
@@ -651,14 +675,26 @@ IF(.NOT. ASSOCIATED(XAG)) THEN
   XLBNGWETH1               => PARAM_LIMA_MIXED%XLBNGWETH1
   XLBNGWETH2               => PARAM_LIMA_MIXED%XLBNGWETH2
   XLBNGWETH3               => PARAM_LIMA_MIXED%XLBNGWETH3
+  XFRWETH                  => PARAM_LIMA_MIXED%XFRWETH
+  XFNRWETH                 => PARAM_LIMA_MIXED%XFNRWETH
+  XLBRWETH1                => PARAM_LIMA_MIXED%XLBRWETH1
+  XLBRWETH2                => PARAM_LIMA_MIXED%XLBRWETH2
+  XLBRWETH3                => PARAM_LIMA_MIXED%XLBRWETH3
+  XLBNRWETH1               => PARAM_LIMA_MIXED%XLBNRWETH1
+  XLBNRWETH2               => PARAM_LIMA_MIXED%XLBNRWETH2
+  XLBNRWETH3               => PARAM_LIMA_MIXED%XLBNRWETH3
   XWETLBDAS_MIN            => PARAM_LIMA_MIXED%XWETLBDAS_MIN
   XWETLBDAS_MAX            => PARAM_LIMA_MIXED%XWETLBDAS_MAX
   XWETLBDAG_MIN            => PARAM_LIMA_MIXED%XWETLBDAG_MIN
   XWETLBDAG_MAX            => PARAM_LIMA_MIXED%XWETLBDAG_MAX
+  XWETLBDAR_MIN            => PARAM_LIMA_MIXED%XWETLBDAR_MIN
+  XWETLBDAR_MAX            => PARAM_LIMA_MIXED%XWETLBDAR_MAX
   XWETLBDAH_MIN            => PARAM_LIMA_MIXED%XWETLBDAH_MIN
   XWETLBDAH_MAX            => PARAM_LIMA_MIXED%XWETLBDAH_MAX
   XWETINTP1S               => PARAM_LIMA_MIXED%XWETINTP1S
   XWETINTP2S               => PARAM_LIMA_MIXED%XWETINTP2S
+  XWETINTP1R               => PARAM_LIMA_MIXED%XWETINTP1R
+  XWETINTP2R               => PARAM_LIMA_MIXED%XWETINTP2R
   XWETINTP1G               => PARAM_LIMA_MIXED%XWETINTP1G
   XWETINTP2G               => PARAM_LIMA_MIXED%XWETINTP2G
   XWETINTP1H               => PARAM_LIMA_MIXED%XWETINTP1H
@@ -673,6 +709,7 @@ IF(.NOT. ASSOCIATED(XAG)) THEN
   NDRYLBDAS                => PARAM_LIMA_MIXED%NDRYLBDAS
   NDRYLBDAG                => PARAM_LIMA_MIXED%NDRYLBDAG
   NWETLBDAS                => PARAM_LIMA_MIXED%NWETLBDAS
+  NWETLBDAR                => PARAM_LIMA_MIXED%NWETLBDAR
   NWETLBDAG                => PARAM_LIMA_MIXED%NWETLBDAG
   NWETLBDAH                => PARAM_LIMA_MIXED%NWETLBDAH
 ENDIF
@@ -748,12 +785,18 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
   CASE('XKER_GWETH')
       ALLOCATE(PARAM_LIMA_MIXED%XKER_GWETH(KDIM1, KDIM2))
       XKER_GWETH => PARAM_LIMA_MIXED%XKER_GWETH
+  CASE('XKER_RWETH')
+      ALLOCATE(PARAM_LIMA_MIXED%XKER_RWETH(KDIM1, KDIM2))
+      XKER_RWETH => PARAM_LIMA_MIXED%XKER_RWETH
   CASE('XKER_N_SWETH')
       ALLOCATE(PARAM_LIMA_MIXED%XKER_N_SWETH(KDIM1, KDIM2))
       XKER_N_SWETH => PARAM_LIMA_MIXED%XKER_N_SWETH
   CASE('XKER_N_GWETH')
       ALLOCATE(PARAM_LIMA_MIXED%XKER_N_GWETH(KDIM1, KDIM2))
       XKER_N_GWETH => PARAM_LIMA_MIXED%XKER_N_GWETH
+  CASE('XKER_N_RWETH')
+      ALLOCATE(PARAM_LIMA_MIXED%XKER_N_RWETH(KDIM1, KDIM2))
+      XKER_N_RWETH => PARAM_LIMA_MIXED%XKER_N_RWETH
   END SELECT
 IF (LHOOK) CALL DR_HOOK('PARAM_LIMA_MIXED_ALLOCATE', 1, ZHOOK_HANDLE)
 END SUBROUTINE PARAM_LIMA_MIXED_ALLOCATE

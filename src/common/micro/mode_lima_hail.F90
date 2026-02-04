@@ -132,8 +132,8 @@ REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PA_CH
 LOGICAL, DIMENSION(SIZE(PRCT))  :: GWET
 !
 REAL,    DIMENSION(SIZE(PRCT))  :: Z1, Z2, Z3, Z4
-REAL,    DIMENSION(SIZE(PRCT))  :: ZZW, ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6
-REAL,    DIMENSION(SIZE(PRCT))  :: ZZW3N, ZZW4N
+REAL,    DIMENSION(SIZE(PRCT))  :: ZZW, ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6, ZZW7
+REAL,    DIMENSION(SIZE(PRCT))  :: ZZW3N, ZZW4N, ZZW5N
 REAL,    DIMENSION(SIZE(PRCT))  :: ZRWETH
 !
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC1,IVEC2        ! Vectors of indices
@@ -174,7 +174,9 @@ ZZW3N(:) = 0.! NSWETH
 ZZW4(:) = 0. ! RGWETH
 ZZW4N(:) = 0.! NGWETH
 ZZW5(:) = 0. ! RRWETH
+ZZW5N(:) = 0.! NRWETH
 ZZW6(:) = 0. ! RSWETH
+ZZW7(:) = 0. ! 
 !
 ZRWETH(:) = 0.
 !
@@ -191,7 +193,75 @@ WHERE( PRHT(:)>LIMAP%XRTMIN(7) .AND. PCHT(:)>LIMAP%XCTMIN(7) .AND. ODCOMPUTE(:) 
    ZZW2(:) = LIMAM%XFWETH * PRIT(:) * ZZW(:) ! RIWETH
 END WHERE
 !
-!*           1.b Collection of rs
+!*           1.b Collection of rr
+!            --------------------
+!
+GWET(:) = PRRT(:)>LIMAP%XRTMIN(3) .AND. PRHT(:)>LIMAP%XRTMIN(7) .AND. ODCOMPUTE(:) .AND. &
+          PCRT(:)>LIMAP%XCTMIN(3) .AND. PCHT(:)>LIMAP%XCTMIN(7)
+!
+WHERE( GWET )
+!
+!*       Select the (ZLBDAG,ZLBDAR) couplet
+!
+   ZVEC1(:) = PLBDH(:)
+   ZVEC2(:) = PLBDR(:)
+!
+!*       Find the next lower indice for the ZLBDAG and for the ZLBDAR
+!        in the geometrical set of (Lbda_g,Lbda_r) couplet use to
+!        tabulate the RDRYG-kernel
+!
+   ZVEC1(:) = MAX( 1.0001, MIN( REAL(LIMAM%NWETLBDAH)-0.0001,           &
+                         LIMAM%XWETINTP1H * LOG( ZVEC1(:) ) + LIMAM%XWETINTP2H ) )
+   IVEC1(:) = INT( ZVEC1(:) )
+   ZVEC1(:) = ZVEC1(:) - REAL( IVEC1(:) )
+!
+   ZVEC2(:) = MAX( 1.0001, MIN( REAL(LIMAM%NWETLBDAR)-0.0001,           &
+                         LIMAM%XWETINTP1R * LOG( ZVEC2(:) ) + LIMAM%XWETINTP2R ) )
+   IVEC2(:) = INT( ZVEC2(:) )
+   ZVEC2(:) = ZVEC2(:) - REAL( IVEC2(:) )
+!
+!*       Perform the bilinear interpolation of the normalized
+!        RDRYG-kernel
+!
+   Z1(:) = GET_XKER_RWETH(KSIZE,IVEC1(:)+1,IVEC2(:)+1)
+   Z2(:) = GET_XKER_RWETH(KSIZE,IVEC1(:)+1,IVEC2(:)  )
+   Z3(:) = GET_XKER_RWETH(KSIZE,IVEC1(:)  ,IVEC2(:)+1)
+   Z4(:) = GET_XKER_RWETH(KSIZE,IVEC1(:)  ,IVEC2(:)  )
+      ZVEC3(:) =  (   Z1(:)* ZVEC2(:)          &
+                    - Z2(:)*(ZVEC2(:) - 1.0) ) &
+                                               *  ZVEC1(:)   &
+                 - (  Z3(:)* ZVEC2(:)          &
+                    - Z4(:)*(ZVEC2(:) - 1.0) ) &
+                                               * (ZVEC1(:) - 1.0)
+   ZZW(:) = ZVEC3(:)
+   ZZW5(:) = LIMAM%XFRWETH * ZZW(:)                                     & ! RRWETH
+                     * PRRT(:) * PCHT(:)                          &
+                     * PRHODREF(:)**(1-LIMAP%XCEXVT)                    &
+                     *( LIMAM%XLBRWETH1/( PLBDH(:)**2               ) + &
+                        LIMAM%XLBRWETH2/( PLBDH(:)   * PLBDR(:)     ) + &
+                        LIMAM%XLBRWETH3/(              PLBDR(:)**2) )
+!
+   Z1(:) = GET_XKER_N_RWETH(KSIZE,IVEC1(:)+1,IVEC2(:)+1)
+   Z2(:) = GET_XKER_N_RWETH(KSIZE,IVEC1(:)+1,IVEC2(:)  )
+   Z3(:) = GET_XKER_N_RWETH(KSIZE,IVEC1(:)  ,IVEC2(:)+1)
+   Z4(:) = GET_XKER_N_RWETH(KSIZE,IVEC1(:)  ,IVEC2(:)  )
+      ZVEC3(:) =  (   Z1(:)* ZVEC2(:)          &
+                    - Z2(:)*(ZVEC2(:) - 1.0) ) &
+                                               *  ZVEC1(:)   &
+                 - (  Z3(:)* ZVEC2(:)          &
+                    - Z4(:)*(ZVEC2(:) - 1.0) ) &
+                                               * (ZVEC1(:) - 1.0)
+   ZZW(:) = ZVEC3(:)
+   ZZW5N(:) = LIMAM%XFNRWETH * ZZW(:)                                      & ! NRWETH
+                       * PCRT(:) * PCHT(:)                           &
+                       * PRHODREF(:)**(1-LIMAP%XCEXVT)                     &
+                       *( LIMAM%XLBNRWETH1/( PLBDH(:)**2               ) + &
+                          LIMAM%XLBNRWETH2/( PLBDH(:)   * PLBDR(:)     ) + &
+                          LIMAM%XLBNRWETH3/(              PLBDR(:)**2) )
+   
+END WHERE
+!
+!*           1.c Collection of rs
 !            --------------------
 !
 GWET(:) = PRST(:)>LIMAP%XRTMIN(5) .AND. PRHT(:)>LIMAP%XRTMIN(7) .AND. ODCOMPUTE(:) .AND. &
@@ -258,8 +328,8 @@ WHERE( GWET )
                          LIMAM%XLBNSWETH3/(               PLBDS(:)**2) )
 END WHERE
 !
-!*           1.c  Collection of rg
-!            ---------------------
+!*           1.d Collection of rg
+!            --------------------
 !
 GWET(:) = PRGT(:)>LIMAP%XRTMIN(6) .AND. PRHT(:)>LIMAP%XRTMIN(7) .AND. ODCOMPUTE(:) .AND. &
           PCGT(:)>LIMAP%XCTMIN(6) .AND. PCHT(:)>LIMAP%XCTMIN(7)
@@ -345,18 +415,23 @@ WHERE( PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:) >LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:)
    ! We must agregate, at least, the cold species
    ZRWETH(:)=MAX(ZRWETH(:), ZZW2(:)+ZZW3(:)+ZZW4(:))
 END WHERE
-WHERE( PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:) >LIMAP%XCTMIN(6) .AND. PRRT(:)>LIMAP%XRTMIN(3) &
-     .AND. PCRT(:) >LIMAP%XCTMIN(3) .AND. ODCOMPUTE(:) )
-   ! Mass of rain frozen by hail or shedded after droplet collection RRWETH
-   ZZW5(:) = ZRWETH(:) - ZZW2(:) - ZZW3(:) - ZZW4(:) - ZZW1(:)
+!
+WHERE( PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:) >LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:) )
+   ! Mass of liquid water frozen by hail
+   ZZW7(:) = ZRWETH(:) - ZZW2(:) - ZZW3(:) - ZZW4(:)
 END WHERE
 !
 ZZW(:) = 0.0
-WHERE( ODCOMPUTE(:) .AND. PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:) >LIMAP%XCTMIN(6) .AND. ZZW1(:)+ZZW5(:)>0.) 
+P_RC_WETH(:) = - ZZW1(:)
+P_CC_WETH(:) = P_RC_WETH(:) * PCCT(:)/MAX(PRCT(:),LIMAP%XRTMIN(2))
+P_RR_WETH(:) = - ZZW5(:)
+P_CR_WETH(:) = -ZZW5N(:)
+P_TH_WETH(:) = (ZZW5(:)+ZZW1(:)) * (PLSFACT(:)-PLVFACT(:))
+WHERE( ODCOMPUTE(:) .AND. PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:) >LIMAP%XCTMIN(6) .AND. ZZW1(:)+ZZW5(:)>ZZW7(:) ) 
    P_RC_WETH(:) = - ZZW1(:)
    P_CC_WETH(:) = P_RC_WETH(:) * PCCT(:)/MAX(PRCT(:),LIMAP%XRTMIN(2))
-   P_RR_WETH(:) = - ZZW5(:)
-   P_CR_WETH(:) = P_RR_WETH(:) * PCRT(:)/MAX(PRRT(:),LIMAP%XRTMIN(3))
+   P_RR_WETH(:) = ZZW1(:) - ZZW7(:)
+   P_CR_WETH(:) = P_RR_WETH(:) / 5.E-7
    P_RI_WETH(:) = - ZZW2(:)
    P_CI_WETH(:) = P_RI_WETH(:) * PCIT(:)/MAX(PRIT(:),LIMAP%XRTMIN(4))
    P_RS_WETH(:) = - ZZW3(:)
@@ -365,7 +440,7 @@ WHERE( ODCOMPUTE(:) .AND. PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:) >LIMAP%XCTMIN(6)
    P_CG_WETH(:) = - ZZW4N(:)
    P_RH_WETH(:) =   ZRWETH(:)
    !
-   P_TH_WETH(:) = (ZZW5(:)+ZZW1(:)) * (PLSFACT(:)-PLVFACT(:))
+   P_TH_WETH(:) = ZZW7(:) * (PLSFACT(:)-PLVFACT(:))
 END WHERE
 !
 !
@@ -464,6 +539,46 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
     END DO
   IF (LHOOK) CALL DR_HOOK('GET_XKER_N_SWETH', 1, ZHOOK_HANDLE)
   END FUNCTION GET_XKER_N_SWETH
+!
+!-------------------------------------------------------------------------------
+!
+  FUNCTION GET_XKER_RWETH(KSIZE,KH,KR) RESULT(RET)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
+    INTEGER, INTENT(IN) :: KSIZE
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: KH
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: KR
+    REAL, DIMENSION(KSIZE) :: RET
+    !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+    INTEGER I
+    !
+    IF (LHOOK) CALL DR_HOOK('GET_XKER_RWETH', 0, ZHOOK_HANDLE)
+    DO I=1,SIZE(KH)
+       RET(I) = LIMAM%XKER_RWETH(MAX(MIN(KH(I),SIZE(LIMAM%XKER_RWETH,1)),1),&
+            MAX(MIN(KR(I),SIZE(LIMAM%XKER_RWETH,2)),1))
+    END DO
+  IF (LHOOK) CALL DR_HOOK('GET_XKER_RWETH', 1, ZHOOK_HANDLE)
+END FUNCTION GET_XKER_RWETH
+!
+!-------------------------------------------------------------------------------
+!
+  FUNCTION GET_XKER_N_RWETH(KSIZE,KH,KR) RESULT(RET)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
+    INTEGER, INTENT(IN) :: KSIZE
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: KH
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: KR
+    REAL, DIMENSION(KSIZE) :: RET
+    !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+    INTEGER I
+    !
+    IF (LHOOK) CALL DR_HOOK('GET_XKER_N_RWETH', 0, ZHOOK_HANDLE)
+    DO I=1,SIZE(KH)
+       RET(I) = LIMAM%XKER_N_RWETH(MAX(MIN(KH(I),SIZE(LIMAM%XKER_N_RWETH,1)),1),&
+            MAX(MIN(KR(I),SIZE(LIMAM%XKER_N_RWETH,2)),1))
+    END DO
+  IF (LHOOK) CALL DR_HOOK('GET_XKER_N_RWETH', 1, ZHOOK_HANDLE)
+END FUNCTION GET_XKER_N_RWETH
 !
 !-------------------------------------------------------------------------------
 !
