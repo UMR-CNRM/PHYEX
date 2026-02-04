@@ -1748,7 +1748,7 @@ IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAS/=NDRYLBDAS) .OR. (IKND/=IND) .OR. &
     (ZDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (ABS(ZDRYLBDAS_MAX-XDRYLBDAS_MAX).GE.(0.001*ZDRYLBDAS_MAX)) .OR. &
     (ZDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (ABS(ZDRYLBDAS_MIN-XDRYLBDAS_MIN).GE.(0.001*ZDRYLBDAS_MIN)) .OR. &
     (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
-  CALL LIMA_RZCOLX ( IDRYLBDAG, IDRYLBDAS, IND, XALPHAG, XNUG, XALPHAS, XNUS, &
+  CALL LIMA_RZCOLX ( NDRYLBDAG, NDRYLBDAS, IND, XALPHAG, XNUG, XALPHAS, XNUS, &
                 ZZEGS, XBS, XCG, XDG, 0., XCS, XDS, XFVELOS,                 &
                 XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
                 ZZFDINFTY, XKER_SDRYG                                        )
@@ -1835,7 +1835,7 @@ IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAR/=NDRYLBDAR) .OR. (IKND/=IND) .OR. &
     (ZDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (ZDRYLBDAR_MAX/=XDRYLBDAR_MAX) .OR. &
     (ZDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (ZDRYLBDAR_MIN/=XDRYLBDAR_MIN) .OR. &
     (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
-  CALL LIMA_RZCOLX ( IDRYLBDAG, IDRYLBDAR, IND, XALPHAG, XNUG, XALPHAR, XNUR, &
+  CALL LIMA_RZCOLX ( NDRYLBDAG, NDRYLBDAR, IND, XALPHAG, XNUG, XALPHAR, XNUR, &
                 ZZEGR, XBR, XCG, XDG, 0., XCR, XDR, 0.,                      &
                 XDRYLBDAG_MAX, XDRYLBDAR_MAX, XDRYLBDAG_MIN, XDRYLBDAR_MIN, &
                 ZZFDINFTY, XKER_RDRYG                                        )
@@ -1919,6 +1919,18 @@ XLBNGWETH1  =    MOMG(XALPHAH,XNUH,2.)
 XLBNGWETH2  = 2.*MOMG(XALPHAH,XNUH,1.)*MOMG(XALPHAG,XNUG,1.)
 XLBNGWETH3  =                          MOMG(XALPHAG,XNUG,2.)
 !
+!*       9.2.3 bis  Constants for the rain collection by the hailstones
+!
+XFRWETH = XNR*(XPI/4.0)*XAR*(ZRHO00**XCEXVT)
+XFNRWETH= (XPI/4.0)*(ZRHO00**XCEXVT)
+!
+XLBRWETH1   =    MOMG(XALPHAH,XNUH,2.)*MOMG(XALPHAR,XNUR,XBR)
+XLBRWETH2   = 2.*MOMG(XALPHAH,XNUH,1.)*MOMG(XALPHAR,XNUR,XBR+1.)
+XLBRWETH3   =                          MOMG(XALPHAR,XNUR,XBR+2.)
+XLBNRWETH1  =    MOMG(XALPHAH,XNUH,2.)                      
+XLBNRWETH2  = 2.*MOMG(XALPHAH,XNUH,1.)*MOMG(XALPHAR,XNUR,1.)
+XLBNRWETH3  =                          MOMG(XALPHAR,XNUR,2.)
+!
 ! Notice: One magnitude of lambda discretized over 10 points
 !
 PARAM_LIMA_MIXED%NWETLBDAS = 80
@@ -1933,6 +1945,12 @@ PARAM_LIMA_MIXED%XWETLBDAG_MAX = 1.0E7 ! Max value of Lbda_g to tabulate XKER_GW
 ZRATE = LOG(PARAM_LIMA_MIXED%XWETLBDAG_MAX/PARAM_LIMA_MIXED%XWETLBDAG_MIN)/REAL(PARAM_LIMA_MIXED%NWETLBDAG-1)
 XWETINTP1G = 1.0 / ZRATE
 XWETINTP2G = 1.0 - LOG( XWETLBDAG_MIN ) / ZRATE
+PARAM_LIMA_MIXED%NWETLBDAR = 40
+PARAM_LIMA_MIXED%XWETLBDAR_MIN = 1.0E3 ! Min value of Lbda_g to tabulate XKER_GWETH
+PARAM_LIMA_MIXED%XWETLBDAR_MAX = 1.0E7 ! Max value of Lbda_g to tabulate XKER_GWETH
+ZRATE = LOG(PARAM_LIMA_MIXED%XWETLBDAR_MAX/PARAM_LIMA_MIXED%XWETLBDAR_MIN)/REAL(PARAM_LIMA_MIXED%NWETLBDAR-1)
+XWETINTP1R = 1.0 / ZRATE
+XWETINTP2R = 1.0 - LOG( XWETLBDAR_MIN ) / ZRATE
 PARAM_LIMA_MIXED%NWETLBDAH = 40
 PARAM_LIMA_MIXED%XWETLBDAH_MIN = 1.0E3 ! Min value of Lbda_h to tabulate XKER_SWETH,XKER_GWETH
 PARAM_LIMA_MIXED%XWETLBDAH_MAX = 1.0E7 ! Max value of Lbda_h to tabulate XKER_SWETH,XKER_GWETH
@@ -1980,7 +1998,7 @@ IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAS/=NWETLBDAS) .OR. (IKND/=IND) .OR. &
     (ZWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (ABS(ZWETLBDAS_MAX-XWETLBDAS_MAX).GE.(0.001*ZWETLBDAS_MAX)) .OR. &
     (ZWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (ABS(ZWETLBDAS_MIN-XWETLBDAS_MIN).GE.(0.001*ZWETLBDAS_MIN)) .OR. &
     (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
-  CALL LIMA_RZCOLX ( IWETLBDAH, IWETLBDAS, IND, XALPHAH, XNUH, XALPHAS, XNUS, &
+  CALL LIMA_RZCOLX ( NWETLBDAH, NWETLBDAS, IND, XALPHAH, XNUH, XALPHAS, XNUS, &
                 ZZEHS, XBS, XCH, XDH, 0., XCS, XDS, XFVELOS,                 &
                 XWETLBDAH_MAX, XWETLBDAS_MAX, XWETLBDAH_MIN, XWETLBDAS_MIN, &
                 ZZFDINFTY, XKER_SWETH                                        )
@@ -2034,6 +2052,93 @@ ZZEHG     = 1.0   ! distributions when computing the kernel XKER_GWETH
 ZZFDINFTY = 20.0
 !
 !if ( NMOM_G.GE.2 ) then
+  IF( .NOT.ASSOCIATED(XKER_N_RWETH) ) CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_RWETH', NWETLBDAH,NWETLBDAR)
+IF (NMOM_R.GE.2) THEN
+  CALL NZCOLX ( NWETLBDAH,NWETLBDAR,IND, XALPHAH, XNUH, XALPHAR, XNUR,   & 
+              ZZEHG, XCH, XDH, 0., XCR, XDR, 0.,                            & 
+              XWETLBDAH_MAX, XWETLBDAR_MAX, XWETLBDAH_MIN, XWETLBDAR_MIN, & 
+              ZZFDINFTY, XKER_N_RWETH                                      )
+ELSE
+   XKER_N_RWETH(:,:)=0.
+END IF
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_GWETH) ) THEN")')          
+!!$  DO I1 = 1 , NWETLBDAH                                                    
+!!$    DO J2 = 1 , NWETLBDAG                                                  
+!!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_GWETH(",I3,",",I3,") = ",E13.6)') &
+!!$                      I1,J2,XKER_N_GWETH(I1,J2)                          
+!!$    END DO                                                                
+!!$  END DO                                                                   
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")') 
+!end if
+IF( .NOT.ASSOCIATED(XKER_RWETH) ) CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_RWETH', NWETLBDAH,NWETLBDAR)
+!
+!CALL LIMA_READ_XKER_RWETH (IWETLBDAH,IWETLBDAR,IKND,                                 &
+!                           ZALPHAH,ZNUH,ZALPHAR,ZNUR,ZEHG,ZBR,ZCH,ZDH,ZCR,ZDR,      &
+!                           ZWETLBDAH_MAX,ZWETLBDAR_MAX,ZWETLBDAH_MIN,ZWETLBDAR_MIN, &
+!                           ZFDINFTY                                                 )
+!IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAR/=NWETLBDAR) .OR. (IKND/=IND) .OR. &
+!    (ZALPHAH/=XALPHAH) .OR. (ZNUH/=XNUH)                               .OR. &
+!    (ZALPHAR/=XALPHAR) .OR. (ZNUR/=XNUR)                               .OR. &
+!    (ZEHG/=ZZEHG) .OR. (ZBR/=XBR)                                       .OR. &
+!    (ZCH/=XCH) .OR. (ZDH/=XDH) .OR. (ZCR/=XCR) .OR. (ZDR/=XDR)         .OR. &
+!    (ZWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (ZWETLBDAR_MAX/=XWETLBDAR_MAX) .OR. &
+!    (ZWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (ZWETLBDAR_MIN/=XWETLBDAR_MIN) .OR. &
+!    (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
+  CALL LIMA_RZCOLX ( NWETLBDAH, NWETLBDAR, IND, XALPHAH, XNUH, XALPHAR, XNUR, &
+                ZZEHG, XBR, XCH, XDH, 0., XCR, XDR, 0.,                      &
+                XWETLBDAH_MAX, XWETLBDAR_MAX, XWETLBDAH_MIN, XWETLBDAR_MIN, &
+                ZZFDINFTY, XKER_RWETH                                        )
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF GWETH KERNELS ****")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IKND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IWETLBDAH=",I3)') NWETLBDAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IWETLBDAG=",I3)') NWETLBDAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAH=",E13.6)') XALPHAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUH=",E13.6)') XNUH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAG=",E13.6)') XALPHAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUG=",E13.6)') XNUG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEHG=",E13.6)') ZZEHG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBG=",E13.6)') XBG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCH=",E13.6)') XCH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDH=",E13.6)') XDH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCG=",E13.6)') XCG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDG=",E13.6)') XDG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAH_MAX=",E13.6)') &
+!!$                                                    XWETLBDAH_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAG_MAX=",E13.6)') &
+!!$                                                    XWETLBDAG_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAH_MIN=",E13.6)') &
+!!$                                                    XWETLBDAH_MIN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAG_MIN=",E13.6)') &
+!!$                                                    XWETLBDAG_MIN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_GWETH) ) THEN")')
+!!$  DO I1 = 1 , NWETLBDAH
+!!$    DO J2 = 1 , NWETLBDAG
+!!$    WRITE(UNIT=ILUOUT0,FMT='("PKER_GWETH(",I3,",",I3,") = ",E13.6)') &
+!!$                        I1,J2,XKER_GWETH(I1,J2)
+!!$    END DO
+!!$  END DO
+!!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
+!  ELSE
+!  CALL LIMA_READ_XKER_GWETH (IWETLBDAH,IWETLBDAR,IKND,                                 &
+!                             ZALPHAH,ZNUH,ZALPHAR,ZNUR,ZEHG,ZBR,ZCH,ZDH,ZCR,ZDR,      &
+!                             ZWETLBDAH_MAX,ZWETLBDAR_MAX,ZWETLBDAH_MIN,ZWETLBDAR_MIN, &
+!                             ZFDINFTY,XKER_RWETH                                      )
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_RWETH")')
+!END IF
+!
+!
+!
+IND      = 50    ! Number of interval used to integrate the dimensional
+ZZEHG     = 1.0   ! distributions when computing the kernel XKER_GWETH
+ZZFDINFTY = 20.0
+!
+!if ( NMOM_G.GE.2 ) then
   IF( .NOT.ASSOCIATED(XKER_N_GWETH) ) CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_GWETH', NWETLBDAH,NWETLBDAG)
 IF (NMOM_G.GE.2) THEN
   CALL NZCOLX ( NWETLBDAH,NWETLBDAG,IND, XALPHAH, XNUH, XALPHAG, XNUG,   & 
@@ -2067,7 +2172,7 @@ IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAG/=NWETLBDAG) .OR. (IKND/=IND) .OR. &
     (ZWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (ZWETLBDAG_MAX/=XWETLBDAG_MAX) .OR. &
     (ZWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (ZWETLBDAG_MIN/=XWETLBDAG_MIN) .OR. &
     (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
-  CALL LIMA_RZCOLX ( IWETLBDAH, IWETLBDAG, IND, XALPHAH, XNUH, XALPHAG, XNUG, &
+  CALL LIMA_RZCOLX ( NWETLBDAH, NWETLBDAG, IND, XALPHAH, XNUH, XALPHAG, XNUG, &
                 ZZEHG, XBG, XCH, XDH, 0., XCG, XDG, 0.,                      &
                 XWETLBDAH_MAX, XWETLBDAG_MAX, XWETLBDAH_MIN, XWETLBDAG_MIN, &
                 ZZFDINFTY, XKER_GWETH                                        )
