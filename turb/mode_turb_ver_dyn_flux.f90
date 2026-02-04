@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2026 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -518,18 +518,7 @@ END IF
 IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
 !$acc update self(ZFLXZ)
   ! stores the U wind component vertical flux
-  TZFIELD = TFIELDMETADATA(                        &
-    CMNHNAME   = 'UW_FLX',                         &
-    CSTDNAME   = '',                               &
-    CLONGNAME  = 'UW_FLX',                         &
-    CUNITS     = 'm2 s-2',                         &
-    CDIR       = 'XY',                             &
-    CCOMMENT   = 'U wind component vertical flux', &
-    NGRID      = 4,                                &
-    NTYPE      = TYPEREAL,                         &
-    NDIMS      = 3,                                &
-    LTIMEDEP   = .TRUE.                            )
-  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
+  CALL IO_FIELD_WRITE_PHY(D,TPFILE,'UW_FLX',ZFLXZ)
 END IF
 !
 ! first part of total momentum flux
@@ -774,18 +763,7 @@ END IF
 IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the V wind component vertical flux
 !$acc update self(ZFLXZ)
-  TZFIELD = TFIELDMETADATA(                        &
-    CMNHNAME   = 'VW_FLX',                         &
-    CSTDNAME   = '',                               &
-    CLONGNAME  = 'VW_FLX',                         &
-    CUNITS     = 'm2 s-2',                         &
-    CDIR       = 'XY',                             &
-    CCOMMENT   = 'V wind component vertical flux', &
-    NGRID      = 4,                                &
-    NTYPE      = TYPEREAL,                         &
-    NDIMS      = 3,                                &
-    LTIMEDEP   = .TRUE.                            )
-  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
+  CALL IO_FIELD_WRITE_PHY(D,TPFILE,'VW_FLX',ZFLXZ)
 END IF
 !
 ! second part of total momentum flux
