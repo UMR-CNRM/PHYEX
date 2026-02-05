@@ -4,6 +4,9 @@
 !MNH_LIC for details. version 1.
 !     ######spl
       MODULE MODD_NEB_n
+
+!$ACDC methods 
+
 !     #############################
 !> @file
 !!****  *MODD_NEB_n* - Declaration of nebulosity constants

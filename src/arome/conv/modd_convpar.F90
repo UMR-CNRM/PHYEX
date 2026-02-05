@@ -1,5 +1,8 @@
 !     ######spl
       MODULE MODD_CONVPAR
+
+!$ACDC methods 
+
 !     ###################
 !
 !!****  *MODD_CONVPAR* - Declaration of convection constants
