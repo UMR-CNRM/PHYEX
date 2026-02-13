@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 find_package(ecbuild 3.11 REQUIRED HINTS ${CMAKE_SOURCE_DIR})
-project(PHYEX VERSION 1.0 LANGUAGES Fortran)
+project(phyex VERSION 1.0 LANGUAGES Fortran)
 
 include(phyex_macros)
 
@@ -104,7 +104,6 @@ foreach(PRECISION ${precision_list})
     SOURCES ${PHYEX_SOURCES}
     PUBLIC_LIBS
       fiat
-      mpi_serial
       parkind_${PRECISION}
     PUBLIC_INCLUDES ${PHYEX_HEADERS}
     INSTALL_HEADERS ALL
