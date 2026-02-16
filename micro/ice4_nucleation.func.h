@@ -33,6 +33,8 @@ USE MODE_TIWMX,            ONLY: AM3, REDIN
 !
 IMPLICIT NONE
 !
+!$acc routine seq		      
+!
 !*       0.1   Declarations of dummy arguments :
 !
 TYPE(CST_t),              INTENT(IN)    :: CST
