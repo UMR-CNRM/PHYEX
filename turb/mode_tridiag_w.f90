@@ -395,6 +395,7 @@ PVARP(JI,JJ,IKB-1)=PVARP(JI,JJ,IKB)
 !$mnh_end_do()
 !$acc end kernels
 !$acc end data
+!$acc end data   
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE TRIDIAG_W
