@@ -334,54 +334,52 @@ END IF
 ZMINVAL = (1.-1./CSTURB%XPHI_LIM)
 !
 !$acc kernels present(ZW1,ZW2)
-DO JK=1, IKT
-   DO JIJ=IIJB, IIJE
-       ZW1(JIJ, JK) = 1.
-       ZW2(JIJ, JK) = 1.
-       !
-       IF (PREDTH1(JIJ, JK)+PREDR1(JIJ, JK)<-ZMINVAL)THEN
-        ZW1(JIJ, JK) = (-ZMINVAL) / (PREDTH1(JIJ, JK)+PREDR1(JIJ, JK))
-       ENDIF
-       !
-       IF (PREDTH1(JIJ, JK)<-ZMINVAL)THEN
-        ZW2(JIJ, JK) = (-ZMINVAL) / (PREDTH1(JIJ, JK))
-       ENDIF
-       ZW2(JIJ, JK) = MIN(ZW1(JIJ, JK),ZW2(JIJ, JK))
-       !
-       ZW1(JIJ, JK) = 1.
-       IF (PREDR1(JIJ, JK)<-ZMINVAL)THEN
-        ZW1(JIJ, JK) = (-ZMINVAL) / (PREDR1(JIJ, JK))
-       ENDIF
-       ZW1(JIJ, JK) = MIN(ZW2(JIJ, JK),ZW1(JIJ, JK))
-       !
-       !
-       !       3. Modification of Mixing length and dissipative length
-       !          ----------------------------------------------------
-       !
-       PBLL_O_E(JIJ, JK) = PBLL_O_E(JIJ, JK) * ZW1(JIJ, JK)
-       PREDTH1(JIJ, JK)  = PREDTH1(JIJ, JK)  * ZW1(JIJ, JK)
-       PREDR1(JIJ, JK)   = PREDR1(JIJ, JK)   * ZW1(JIJ, JK)
-       !
-       !       4. Threshold for very small (in absolute value) Redelperger numbers
-       !          ----------------------------------------------------------------
-       !
-       IF(PREDTH1(JIJ, JK) < 0.) THEN
-        ZW2(JIJ, JK)=-1.
-       ELSE
-        ZW2(JIJ, JK)=1.
-       END IF
-       PREDTH1(JIJ, JK)= ZW2(JIJ, JK) * MAX(CST%XMNH_TINY_12, ZW2(JIJ, JK)*PREDTH1(JIJ, JK))
-       !
-       IF (KRR /= 0) THEN                ! moist case
-        IF(PREDR1(JIJ, JK) < 0.) THEN
-         ZW2(JIJ, JK)=-1.
-        ELSE
-         ZW2(JIJ, JK)=1.
-        END IF
-        PREDR1(JIJ, JK)= ZW2(JIJ, JK) * MAX(CST%XMNH_TINY_12, ZW2(JIJ, JK)*PREDR1(JIJ, JK))
-       END IF
-  END DO
-END DO
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+   ZW1(:,:) = 1.
+   ZW2(:,:) = 1.
+   !
+   IF (PREDTH1(:,:)+PREDR1(:,:)<-ZMINVAL)THEN
+    ZW1(:,:) = (-ZMINVAL) / (PREDTH1(:,:)+PREDR1(:,:))
+   ENDIF
+   !
+   IF (PREDTH1(:,:)<-ZMINVAL)THEN
+    ZW2(:,:) = (-ZMINVAL) / (PREDTH1(:,:))
+   ENDIF
+   ZW2(:,:) = MIN(ZW1(:,:),ZW2(:,:))
+   !
+   ZW1(:,:) = 1.
+   IF (PREDR1(:,:)<-ZMINVAL)THEN
+    ZW1(:,:) = (-ZMINVAL) / (PREDR1(:,:))
+   ENDIF
+   ZW1(:,:) = MIN(ZW2(:,:),ZW1(:,:))
+   !
+   !
+   !       3. Modification of Mixing length and dissipative length
+   !          ----------------------------------------------------
+   !
+   PBLL_O_E(:,:) = PBLL_O_E(:,:) * ZW1(:,:)
+   PREDTH1(:,:)  = PREDTH1(:,:)  * ZW1(:,:)
+   PREDR1(:,:)   = PREDR1(:,:)   * ZW1(:,:)
+   !
+   !       4. Threshold for very small (in absolute value) Redelperger numbers
+   !          ----------------------------------------------------------------
+   !
+   IF(PREDTH1(:,:) < 0.) THEN
+    ZW2(:,:)=-1.
+   ELSE
+    ZW2(:,:)=1.
+   END IF
+   PREDTH1(:,:)= ZW2(:,:) * MAX(CST%XMNH_TINY_12, ZW2(:,:)*PREDTH1(:,:))
+   !
+   IF (KRR /= 0) THEN                ! moist case
+    IF(PREDR1(:,:) < 0.) THEN
+     ZW2(:,:)=-1.
+    ELSE
+     ZW2(:,:)=1.
+    END IF
+    PREDR1(:,:)= ZW2(:,:) * MAX(CST%XMNH_TINY_12, ZW2(:,:)*PREDR1(:,:))
+   END IF
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
 !
 !
@@ -579,15 +577,15 @@ DO JSV=1,KSV
   ELSE  IF (O2D) THEN ! 3D case in a 2D model
 !
     IF (OOCEAN) THEN
-      !!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      !ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG *CST%XALPHAOC * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) &
-      !                                 / PTKEM(IIJB:IIJE,1:IKT))**2
-      !!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !! mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !ZWORK1(:,:) = (CST%XG *CST%XALPHAOC * PLM(:,:) * PLEPS(:,:) &
+      !                                 / PTKEM(:,:))**2
+      !! mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !CALL MZM_PHY(D,ZWORK1,ZWORK2)
       !IF (KRR /= 0) THEN
-      !  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      !  ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
-      !  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !! mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !  ZW1(:,:) = ZWORK2(:,:) * PETHETA(:,:)
+      !! mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !ELSE
       !  ZW1 = ZWORK2
       !END IF
@@ -652,15 +650,15 @@ DO JSV=1,KSV
   ELSE ! 3D case in a 3D model
 !
     IF (OOCEAN) THEN
-      !!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      !ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG *CST%XALPHAOC * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) &
-      !                                 / PTKEM(IIJB:IIJE,1:IKT))**2
-      !!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !! mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !ZWORK1(:,:) = (CST%XG *CST%XALPHAOC * PLM(:,:) * PLEPS(:,:) &
+      !                                 / PTKEM(:,:))**2
+      !! mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !CALL MZM_PHY(D,ZWORK1,ZWORK2)
       !IF (KRR /= 0) THEN
-      !  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      !  ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
-      !  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !  ! mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !  ZW1(:,:) = ZWORK2(:,:) * PETHETA(:,:)
+      !  ! mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !ELSE
       !  ZW1 = ZWORK2
       !END IF
