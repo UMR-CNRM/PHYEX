@@ -234,9 +234,9 @@ ZTMP(:)=0.
 !*       3.  loop on model levels
 !            --------------------
 !
+!$acc kernels create(ZTESTM)
 DO JK=IKTB,IKTE
 !Remark create(ZTESTM) to force the NVIDIA compiler 23.5 to manage correctly ZTESTM (implicit reduction)
-!$acc kernels create(ZTESTM)
 !
 !-------------------------------------------------------------------------------
 !
