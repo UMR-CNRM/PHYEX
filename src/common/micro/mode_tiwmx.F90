@@ -32,24 +32,28 @@ IMPLICIT NONE
 CONTAINS
 
   PURE REAL FUNCTION ESATW(TIWMX, TT)
+    !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
     ESATW = TIWMX%ESTABW(NINT(XNDEGR*TT))
   END FUNCTION ESATW
 
   REAL FUNCTION DESDTW(TIWMX, TT)
+    !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
     DESDTW = TIWMX%DESTABW(NINT(XNDEGR*TT))
   END FUNCTION
 
   PURE REAL FUNCTION ESATI(TIWMX, TT)
+    !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
     ESATI = TIWMX%ESTABI(NINT(XNDEGR*TT))
   END FUNCTION
 
   REAL FUNCTION DESDTI(TIWMX, TT)
+    !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
     DESDTI = TIWMX%DESTABI(NINT(XNDEGR*TT))
@@ -57,6 +61,7 @@ CONTAINS
 
 ! Water droplet function:
   REAL FUNCTION AA2W(TIWMX, TT)
+    !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
     AA2W = TIWMX%A2WTAB(NINT(XNDEGR*TT))
@@ -64,6 +69,7 @@ CONTAINS
 
 ! Ice crystal function
   PURE REAL FUNCTION AA2(TIWMX, TT)
+    !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
     AA2 = TIWMX%A2TAB(NINT(XNDEGR*TT))
@@ -71,6 +77,7 @@ CONTAINS
 
 ! Meyers IN concentration function:
   PURE REAL FUNCTION AM3(TIWMX, TT)
+    !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
     AM3 = TIWMX%AM3TAB(NINT(XNDEGR*TT))
@@ -78,6 +85,7 @@ CONTAINS
 
 ! Fletchers IN concentration function:
   PURE REAL FUNCTION AF3(TIWMX, TT)
+    !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
     AF3 = TIWMX%AF3TAB(NINT(XNDEGR*TT))
@@ -85,6 +93,7 @@ CONTAINS
 
 ! Ice crystal function
   PURE REAL FUNCTION BB3(TIWMX, TT)
+    !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
     BB3 = TIWMX%BB3TAB(NINT(XNDEGR*TT))
@@ -92,6 +101,7 @@ CONTAINS
 
 ! Water droplet function:
   REAL FUNCTION BB3W(TIWMX, TT)
+    !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
     BB3W = TIWMX%BB3WTAB(NINT(XNDEGR*TT))
@@ -99,8 +109,10 @@ CONTAINS
 
 ! Function for IN concentration reduction between 0 and -25 C:
   PURE REAL FUNCTION REDIN(TIWMX, TT)
+    !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
     REDIN = TIWMX%REDINTAB(NINT(XNDEGR*TT))
-  END FUNCTION
+  END FUNCTION REDIN
+  
 END MODULE MODE_TIWMX
