@@ -725,7 +725,7 @@ DO WHILE (GANYREMAINT)
 !$acc end kernels
 !$acc kernels
     !$acc_cr loop independent
-    !$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE,OPENACC='private(ZEXT)' )
+    !$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE,OPENACC=' private(ZEXTT)' )
     IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
           ZWSED(JIJ, JK) = ZFSED  * PRXT(JIJ, JK)**ZEXSED            &
                          &        * PRHODREF(JIJ, JK)**(ZEXSED-ICED%XCEXVT)
@@ -799,8 +799,7 @@ DO WHILE (GANYREMAINT)
   ENDDO
 !$acc end kernels
 !$acc kernels
-!$acc loop independent private(ZMRCHANGE,ZQCHANGE)
-!$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE, OPENACC='private(ZMRCHANGE,ZQCHANGE)' )
+!$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE, OPENACC=' private(ZMRCHANGE,ZQCHANGE)' )
    ZMRCHANGE = ZMAX_TSTEP1D(JIJ) * POORHODZ(JIJ,JK)*(ZWSED(JIJ,JK+IKL)-ZWSED(JIJ,JK))
       PRXT(JIJ,JK) = PRXT(JIJ,JK) + ZMRCHANGE + PPRXS(JIJ,JK) * ZMAX_TSTEP1D(JIJ)
       PRXS(JIJ,JK) = PRXS(JIJ,JK) + ZMRCHANGE * ZINVTSTEP
