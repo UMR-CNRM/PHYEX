@@ -729,7 +729,7 @@ DO WHILE (GANYREMAINT)
 !$acc end kernels
 !$acc kernels
     !$acc_cr loop independent
-    !$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE,OPENACC='private(ZEXT)' )
+    !$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE,OPENACC=' private(ZEXT)' )
     DO JK = IKTB,IKTE
       DO JIJ = IIJB,IIJE
         IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
@@ -805,8 +805,7 @@ DO WHILE (GANYREMAINT)
   ENDDO
 !$acc end kernels
 !$acc kernels
-!$acc loop independent private(ZMRCHANGE,ZQCHANGE)
-!$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE, OPENACC='private(ZMRCHANGE,ZQCHANGE)' )
+!$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE, OPENACC=' private(ZMRCHANGE,ZQCHANGE)' )
    DO JK = IKTB , IKTE
     DO JIJ = IIJB, IIJE
       ZMRCHANGE = ZMAX_TSTEP1D(JIJ) * POORHODZ(JIJ,JK)*(ZWSED(JIJ,JK+IKL)-ZWSED(JIJ,JK))
