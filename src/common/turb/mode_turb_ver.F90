@@ -283,7 +283,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  MFMOIST       ! moist mass flux 
 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
                                                       ! Potential Temperature 
-REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),INTENT(IN) :: PHGRAD  ! horizontal gradients
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LLEONARD),MERGE(D%NKT,0,TURBN%LLEONARD), &
+                MERGE(KGRADIENTS,0,TURBN%LLEONARD)),   INTENT(IN) ::  PHGRAD  ! horizontal gradients in Moeng
 !
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFUM,PSFVM ! surface fluxes
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time
