@@ -347,8 +347,10 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PRHODJ    ! dry density * Gri
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
-REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTSLEO),   INTENT(IN) ::  PHGRADLEO  ! horizontal gradients in Moeng
-REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTSGOG),   INTENT(IN) ::  PHGRADGOG  ! horizontal gradients in Goger
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LLEONARD),MERGE(D%NKT,0,TURBN%LLEONARD), &
+                MERGE(KGRADIENTSLEO,0,TURBN%LLEONARD)),   INTENT(IN) ::  PHGRADLEO  ! horizontal gradients in Moeng
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LGOGER),MERGE(D%NKT,0,TURBN%LGOGER),     &
+                MERGE(KGRADIENTSGOG,0,TURBN%LGOGER)),     INTENT(IN) ::  PHGRADGOG  ! horizontal gradients in Goger
 !
 REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of theta and Rv

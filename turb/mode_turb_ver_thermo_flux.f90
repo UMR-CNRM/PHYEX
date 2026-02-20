@@ -283,7 +283,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PZZ          ! altitudes
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual Potential Temperature
 !
-REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),INTENT(IN) :: PHGRAD  ! horizontal gradients
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LLEONARD),MERGE(D%NKT,0,TURBN%LLEONARD), &
+                MERGE(KGRADIENTS,0,TURBN%LLEONARD)),   INTENT(IN) ::  PHGRAD  ! horizontal gradients in Moeng
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PZS ! orography (for LEONARD terms)
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time t - deltat
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHP,PSFRP ! surface fluxes at time t + deltat
