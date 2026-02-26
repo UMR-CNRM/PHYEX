@@ -125,6 +125,12 @@ USE MODD_RAIN_ICE_PARAM_n, ONLY : RAIN_ICE_PARAM_t
 !
 USE MODI_CONDENSATION
 !
+! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+!$mnh_undef(OPENACC)
+#endif
+!    
 IMPLICIT NONE
 !
 !
@@ -289,9 +295,7 @@ ENDDO         ! end of the iterative loop
 LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
 LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
 !$acc kernels
-!$acc loop independent collapse(2)
-DO JK=IKTB,IKTE
-  DO JIJ=IIJB,IIJE
+!$mnh_do_concurrent( JIJ=IIJB:IIJE , JK=IKTB:IKTE )
     ZRC(JIJ,JK)=ZRC(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
     ZRI(JIJ,JK)=ZRI(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
     PCLDFR(JIJ,JK)=PCLDFR(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
@@ -304,8 +308,7 @@ DO JK=IKTB,IKTE
       PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
       PHLI_HCF(JIJ,JK)=PHLI_HCF(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
     ENDIF
-  ENDDO
-ENDDO
+!$mnh_end_do()
 !$acc end kernels
 !
 !$acc kernels
@@ -339,8 +342,6 @@ ENDDO
     PRIS(JIJ,JK) = PRIS(JIJ,JK) + ZW2
     PTHS(JIJ,JK) = PTHS(JIJ,JK) +        &
                   ZW2 * ZLS(JIJ,JK) / (ZCPH(JIJ,JK) * PEXNREF(JIJ,JK))
-  
-
 !$mnh_end_do()
 !$acc end kernels
   !
@@ -348,29 +349,24 @@ ENDDO
   !
 IF ( .NOT. NEBN%LSUBG_COND ) THEN
   !$acc kernels
-  !$acc loop independent collapse(2)
-  DO JK=IKTB,IKTE
-    DO JIJ=IIJB,IIJE
+  !$mnh_do_concurrent(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
       IF (PRCS(JIJ,JK) + PRIS(JIJ,JK) > 1.E-12 / PTSTEP) THEN
         PCLDFR(JIJ,JK)  = 1.
       ELSE
         PCLDFR(JIJ,JK)  = 0.
       ENDIF
       ZSRCS(JIJ,JK) = PCLDFR(JIJ,JK)
-    ENDDO
-  ENDDO
+  !$mnh_end_do()
   !$acc end kernels
 ELSE !NEBN%LSUBG_COND case
-  !$acc kernels
     ! Tests on characters strings can break the vectorization, or at least they would
     ! slow down considerably the performance of a vector loop. One should use tests on
     ! reals, integers or booleans only. REK.
     LLNONE=PARAMI%CSUBG_MF_PDF=='NONE'
     LLTRIANGLE=PARAMI%CSUBG_MF_PDF=='TRIANGLE'
     LLBIGA=PARAMI%CSUBG_MF_PDF=='BIGA'
-  !$acc loop independent collapse(2)
-  DO JK=IKTB,IKTE
-    DO JIJ=IIJB,IIJE
+  !$acc kernels
+  !$mnh_do_concurrent(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
       !We limit PRC_MF+PRI_MF to PRVS*PTSTEP to avoid negative humidity
       ZW1=PRC_MF(JIJ,JK)/PTSTEP
       ZW2=PRI_MF(JIJ,JK)/PTSTEP
@@ -459,8 +455,7 @@ ELSE !NEBN%LSUBG_COND case
         ZT(JIJ,JK) = ZT(JIJ,JK) + &
                     (ZW1 * ZLV(JIJ,JK) + ZW2 * ZLS(JIJ,JK)) / ZCPH(JIJ,JK)
       ENDIF
-    END DO
-  ENDDO
+!$mnh_end_do()
 !$acc end kernels
 ENDIF !NEBN%LSUBG_COND
 !
