@@ -29,7 +29,12 @@ SUBROUTINE COMPUTE_FUNCTION_THERMO (D, CST, PALP, PBETA, PGAM, PLTT, PC, PT, PEX
     USE YOMHOOK, ONLY: LHOOK, DR_HOOK, JPHOOK
     USE MODD_CST, ONLY: CST_t
     USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-
+    ! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
+#ifdef MNH_COMPILER_CCE
+    !$mnh_undef(LOOP)
+    !$mnh_undef(OPENACC)
+#endif
+    !    
     IMPLICIT NONE
     !
     !*       0.1   Declarations of dummy arguments
