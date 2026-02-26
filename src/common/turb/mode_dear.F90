@@ -36,7 +36,12 @@ CONTAINS
     USE MODE_SHUMAN_PHY, ONLY: MXF_PHY,MYF_PHY
     USE MODE_ETHETA,     ONLY: ETHETA
     USE MODE_EMOIST,     ONLY: EMOIST
-
+    ! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
+#ifdef MNH_COMPILER_CCE
+    !$mnh_undef(LOOP)
+    !$mnh_undef(OPENACC)
+#endif
+    !    
     IMPLICIT NONE
     !
     !*       0.1   Declarations of dummy arguments
