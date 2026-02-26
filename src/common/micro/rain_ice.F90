@@ -414,17 +414,21 @@ ENDDO
 
 !$acc kernels
 ZCONC3D(:,:) = ICED%XCONC_LAND
+!$acc end kernels
 IF( LLCONC .AND. PARAMI%LEXCLDROP) THEN
+!$acc kernels
 !$acc loop independent collapse(2)
   DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       ZCONC3D(JIJ,JK)=PCONC3D(JIJ,JK)
     ENDDO
   ENDDO
+!$acc end kernels
 ELSE
   IF (PARAMI%LEXCLDROP) THEN
    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'WITH LEXCLDROP=TRUE CLOUD DROPLET FIELDS MUST BE PRESENT IN RAIN_ICE')
   END IF
+!$acc kernels
   IF(LLSEA_AND_TOWN .AND. ICEP%XFRMIN(26)<0.001) THEN
 !$acc loop independent collapse(2)
     DO JK=IKTB,IKTE
@@ -448,8 +452,8 @@ ELSE
       ENDDO
     ENDDO
   ENDIF
-ENDIF
 !$acc end kernels
+ENDIF
 !
 !
 !-------------------------------------------------------------------------------
