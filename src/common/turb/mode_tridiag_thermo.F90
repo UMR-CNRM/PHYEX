@@ -121,6 +121,12 @@ USE MODD_DIMPHYEX, ONLY : DIMPHYEX_t
 !
 USE MODE_SHUMAN_PHY, ONLY: MZM_PHY
 !
+! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+!$mnh_undef(OPENACC)
+#endif
+!    
 IMPLICIT NONE
 !
 !
