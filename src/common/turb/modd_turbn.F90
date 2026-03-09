@@ -130,6 +130,7 @@ REAL, DIMENSION(:,:,:), POINTER  :: XCEI !< Cloud Entrainment instability index 
   LOGICAL            :: LTURB_PRECIP ! switch to apply turbulence to precipitating hydrometeor mixing ratios
   LOGICAL            :: LDYNMF       ! true to take into account a dynamical TKE production from EDMF
   LOGICAL            :: LTHERMMF     ! true to take into account a buoyancy TKE production from EDMF
+  LOGICAL            :: LLEMARIE21   ! true to use Lemarie et al. 2021 constant in DELT/DEAR mixing length
 
 !  
 END TYPE TURB_t
@@ -197,6 +198,7 @@ REAL, DIMENSION(:,:,:), POINTER  :: XCEI=>NULL()
 LOGICAL, POINTER :: LTURB_PRECIP=>NULL()
 LOGICAL, POINTER :: LDYNMF=>NULL()
 LOGICAL, POINTER :: LTHERMMF=>NULL()
+LOGICAL, POINTER :: LLEMARIE21=>NULL()
 !
 NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
                    LSIG_CONV,LRMC01,CTOM,&
@@ -206,7 +208,7 @@ NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
                    LPROJQITURB, LSMOOTH_PRANDTL, XMINSIGS, NTURBSPLIT, &
                    LCLOUDMODIFLM, CTURBLEN_CLOUD, &
                    XCOEF_AMPL_SAT, XCEI_MIN, XCEI_MAX, LTURB_PRECIP, &
-                   LDYNMF, LTHERMMF, LBL89TOP, LBL89EXP
+                   LDYNMF, LTHERMMF, LBL89TOP, LBL89EXP, LLEMARIE21
 !
 !-------------------------------------------------------------------------------
 !
@@ -301,6 +303,7 @@ XCEI=>TURB_MODEL(KTO)%XCEI
 LTURB_PRECIP=>TURB_MODEL(KTO)%LTURB_PRECIP
 LDYNMF=>TURB_MODEL(KTO)%LDYNMF
 LTHERMMF=>TURB_MODEL(KTO)%LTHERMMF
+LLEMARIE21=>TURB_MODEL(KTO)%LLEMARIE21
 !
 ENDIF
 !
@@ -418,6 +421,7 @@ IF(LLDEFAULTVAL) THEN
   LTURB_PRECIP =.FALSE.
   LDYNMF = .FALSE.
   LTHERMMF = .TRUE.
+  LLEMARIE21 = .TRUE.
   !
   IF(HPROGRAM=='AROME') THEN
     XTKEMIN=1.E-6
@@ -426,6 +430,7 @@ IF(LLDEFAULTVAL) THEN
     LSMOOTH_PRANDTL=.FALSE.
     LBL89EXP=.FALSE.
   ELSEIF(HPROGRAM=='MESONH') THEN
+    XTKEMIN=1.E-6
     LROTATE_WIND=.TRUE.
     LTKEMINTURB=.FALSE.
     XMINSIGS=1.E-12

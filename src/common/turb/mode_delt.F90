@@ -130,7 +130,11 @@ CONTAINS
     !  (with the same factor as for BL89)
     !
     IF (.NOT. TURBN%LRMC01) THEN
-      ZALPHA = 0.5**(-1.5)
+      IF (TURBN%LLEMARIE21) THEN
+        ZALPHA = 0.5**(-6./7.)
+      ELSE
+        ZALPHA = 0.5**(-1.5)
+      END IF
       !
 !$acc kernels
       DO JIJ=IIJB,IIJE

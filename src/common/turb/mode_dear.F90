@@ -41,7 +41,7 @@ CONTAINS
     !$mnh_undef(LOOP)
     !$mnh_undef(OPENACC)
 #endif
-    !    
+    !
     IMPLICIT NONE
     !
     !*       0.1   Declarations of dummy arguments
@@ -218,7 +218,11 @@ CONTAINS
     !  mixing length limited by the distance normal to the surface (with the same factor as for BL89)
     !
     IF (.NOT. TURBN%LRMC01) THEN
-      ZALPHA = 0.5**(-1.5)
+      IF (TURBN%LLEMARIE21) THEN
+        ZALPHA = 0.5**(-6./7.)
+      ELSE
+        ZALPHA = 0.5**(-1.5)
+      END IF
       !
 !$acc loop independent private( GZD,ZD )
       DO JIJ=IIJB,IIJE
