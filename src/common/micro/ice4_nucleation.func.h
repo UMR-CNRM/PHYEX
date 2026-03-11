@@ -7,7 +7,6 @@ ELEMENTAL SUBROUTINE ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, ODCOMPUTE, &
                            PTHT, PPABST, PRHODREF, PEXN, PLSFACT, PT, &
                            PRVT, PICLDFR, PZZZ, &
                            PCIT, PRVHENI_MR)
-!$acc_nv routine seq		      
 !!
 !!**  PURPOSE
 !!    -------
@@ -34,7 +33,7 @@ USE MODE_TIWMX,            ONLY: AM3, REDIN
 !
 IMPLICIT NONE
 !
-		      
+!$acc routine seq		      
 !
 !*       0.1   Declarations of dummy arguments :
 !
