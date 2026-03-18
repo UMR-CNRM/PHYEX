@@ -69,16 +69,20 @@ REAL, DIMENSION(MERGE(D%NIJT,0,ODTHRAD), &
                 MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! dT/dt due to radiation
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
-REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_LIMA), INTENT(IN) :: PSVT       ! Concentrations at time t
 REAL, DIMENSION(D%NIJT, D%NKT), INTENT(INOUT) :: PCIT    ! 
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
 REAL, DIMENSION(D%NIJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
-REAL, DIMENSION(D%NIJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
-REAL, DIMENSION(D%NIJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
+REAL, DIMENSION(MERGE(D%NIJT,0,OORILAM), &
+                MERGE(D%NKT ,0,OORILAM), &
+                MERGE(10    ,0,OORILAM)),   INTENT(IN) :: PSOLORG   ! [%] solubility fraction of soa
+REAL, DIMENSION(MERGE(D%NIJT         ,0,OORILAM), &
+                MERGE(D%NKT          ,0,OORILAM), &
+                MERGE(KSP+KCARB+KSOA ,0,OORILAM)), INTENT(IN) :: PMI
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT)    :: PTHS       ! Theta source
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(INOUT) :: PRS        ! Mixing ratios sources
-REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(INOUT) :: PSVS       ! Concentration sources
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_LIMA), INTENT(INOUT) :: PSVS       ! Concentration sources
 !
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)        :: PINPRC     ! Cloud instant precip
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)        :: PINDEP     ! Cloud droplets deposition
@@ -99,10 +103,11 @@ REAL, DIMENSION(D%NIJT, D%NKT), OPTIONAL,  INTENT(INOUT) :: PHLC_HRC
 REAL, DIMENSION(D%NIJT, D%NKT), OPTIONAL,  INTENT(INOUT) :: PHLI_HCF
 REAL, DIMENSION(D%NIJT, D%NKT), OPTIONAL,  INTENT(INOUT) :: PHLI_HRI
 !
-REAL, DIMENSION(D%NIJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC), &
+                MERGE(D%NKT,0,OELEC)),   INTENT(IN) :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
 REAL, DIMENSION(D%NIJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PEFIELDW   ! Vertical component of the electric field
-REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), OPTIONAL, INTENT(IN)    :: PSV_ELEC_T ! Charge density at time t
-REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), OPTIONAL, INTENT(INOUT) :: PSV_ELEC_S ! Charge density sources
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_ELEC), OPTIONAL, INTENT(IN)    :: PSV_ELEC_T ! Charge density at time t
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_ELEC), OPTIONAL, INTENT(INOUT) :: PSV_ELEC_S ! Charge density sources
 !
 REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity
 END SUBROUTINE LIMA

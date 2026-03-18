@@ -55,8 +55,8 @@ USE MODD_CST,              ONLY: CST_T
 USE MODD_ELEC_DESCR,       ONLY: ELEC_DESCR_t
 USE MODD_ELEC_PARAM,       ONLY: ELEC_PARAM_t
 
-!USE MODE_ELEC_COMPUTE_EX,   ONLY: ELEC_COMPUTE_EX
-!USE MODE_ELEC_BEARD_EFFECT, ONLY: ELEC_BEARD_EFFECT
+USE MODE_ELEC_COMPUTE_EX,   ONLY: ELEC_COMPUTE_EX
+USE MODE_ELEC_BEARD_EFFECT, ONLY: ELEC_BEARD_EFFECT
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
@@ -67,6 +67,10 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 TYPE(DIMPHYEX_T),              INTENT(IN)    :: D
 TYPE(CST_T),                   INTENT(IN)    :: CST
 CHARACTER(1),                  INTENT(IN)    :: HPHASE    ! Liquid or solid hydrometeors
@@ -99,6 +103,7 @@ INTEGER :: IK, JK, JIJ            ! Loop index
 !INTEGER :: ISEDIM                         ! Case number of sedimentation
 !
 LOGICAL :: GSEDIM      ! Test where to compute the SED processes
+LOGICAL, DIMENSION(D%NIJT, D%NKT) :: GSEDIM2D      ! Test where to compute the SED processes
 REAL,    DIMENSION(D%NIJT, D%NKT) :: ZW,       & ! Work array
                                      ZWDT        ! Temperature change
 REAL,    DIMENSION(D%NIJT,0:D%NKT+1) &
@@ -122,11 +127,8 @@ REAL                                :: ZZQ, &    ! Work array
 REAL, DIMENSION(MERGE(D%NIJT, 0, OELEC), &
                &MERGE(D%NKT, 0, OELEC)) :: ZWSEDQ, &   ! Sedimentation of electric charge density
                                          & ZLBDA3
-TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
-TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
-TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
-TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
-!REAL, DIMENSION(D%NIJT, D%NKT):: ZBEARDCOEFF ! effect of electrical forces on terminal fall speed
+!
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZBEARDCOEFF ! effect of electrical forces on terminal fall speed
 !
 REAL, DIMENSION(D%NIJT)       :: ZMAX_TSTEP1D ! Maximum CFL in column
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZMAX_TSTEP2D ! Maximum CFL in column
@@ -136,6 +138,7 @@ REAL                            :: ZINVTSTEP
 REAL                            :: ZMRCHANGE
 REAL                            :: ZCCHANGE
 REAL                            :: ZQCHANGE
+REAL, DIMENSION(1) :: ZES1,ZLBDA1
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('LIMA_SEDIMENTATION', 0, ZHOOK_HANDLE)
@@ -235,48 +238,56 @@ DO WHILE (ZANYREMAINT)
             END IF
             !
             !
-!            IF (OELEC) THEN
-!               ! compute e of the q-D relationship
-!               IF (IMOMENTS == 2) THEN  ! 2-moment species
-!                  CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, 'LIMA', PTSTEP, ZRHODREF, LIMAP%XRTMIN(KID), &
-!                       PRS(JIJ,JK), PQS(JIJ,JK), ZES, PLBDX=ZLBDA, PCX=PCS(JIJ,JK))
-!               ELSE                     ! 1-moment species
-!                  CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, 'LIMA', PTSTEP, ZRHODREF, LIMAP%XRTMIN(KID), &
-!                       PRS(JIJ,JK), PQS(JIJ,JK), ZES, PLBDX=ZLBDA)
-!               END IF
-!               !
-!               IF (ELECD%LSEDIM_BEARD) ZLBDA3(JIJ,JK) = ZLBDA
-!               !
-!               IF (IMOMENTS == 1) THEN
-!                  IF (KID == 5) THEN
-!                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAC%XCCS*ZLBDA**LIMAC%XCXS * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
-!                  ELSE IF (KID == 6) THEN
-!                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAC%XCCG*ZLBDA**LIMAC%XCXG * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
-!                  ELSE IF (KID == 7) THEN
-!                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAC%XCCH*ZLBDA**LIMAC%XCXH * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
-!                  ELSE
-!                     ZWSEDQ(JIJ,JK) = 0.
-!                  END IF
-!               ELSE
-!                  ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * PCS(JIJ,JK) * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
-!               END IF
-!               IF (KID == 2) ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZCC
-!            END IF
+            IF (OELEC) THEN
+               ! compute e of the q-D relationship
+               ZLBDA1(:)=ZLBDA
+               IF (IMOMENTS == 2) THEN  ! 2-moment species
+                  CALL ELEC_COMPUTE_EX (KID, IMOMENTS, 1, 'LIMA', PTSTEP, PRHODREF(JIJ,JK), LIMAP%XRTMIN(KID), &
+                       PRS(JIJ,JK), PQS(JIJ,JK), ZES1, PLBDX=ZLBDA1, PCX=PCS(JIJ,JK))
+               ELSE                     ! 1-moment species
+                  CALL ELEC_COMPUTE_EX (KID, IMOMENTS, 1, 'LIMA', PTSTEP, PRHODREF(JIJ,JK), LIMAP%XRTMIN(KID), &
+                       PRS(JIJ,JK), PQS(JIJ,JK), ZES1, PLBDX=ZLBDA1)
+               END IF
+               ZES=ZES1(1)
+               !
+               IF (ELECD%LSEDIM_BEARD) ZLBDA3(JIJ,JK) = ZLBDA
+               !
+               IF (IMOMENTS == 1) THEN
+                  IF (KID == 5) THEN
+                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAC%XCCS*ZLBDA**LIMAC%XCXS * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
+                  ELSE IF (KID == 6) THEN
+                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAM%XCCG*ZLBDA**LIMAM%XCXG * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
+                  ELSE IF (KID == 7) THEN
+                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAM%XCCH*ZLBDA**LIMAM%XCXH * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
+                  ELSE
+                     ZWSEDQ(JIJ,JK) = 0.
+                  END IF
+               ELSE
+                  ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * PCS(JIJ,JK) * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
+               END IF
+               IF (KID == 2) ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZCC
+            END IF
             !
          END IF
       END DO
    END DO
 !
 ! If the electrical scheme is activated, the electric field can impact the sedimentation
-!   ZBEARDCOEFF = 1.0
-!   IF (OELEC .AND. ELECD%LSEDIM_BEARD) THEN
-!      CALL ELEC_BEARD_EFFECT(D, CST, 'LIMA', KID, GSEDIM, PT, PRHODREF, PTHVREFZIKB, &
-!           PRS, PQS, PEFIELDW, ZLBDA3, ZBEARDCOEFF, &
-!           LIMAP=LIMAP, LIMAPC=LIMAC, LIMAPW=LIMAW, LIMAPM=LIMAM)
-!      ZWSEDR(:,:)=ZWSEDR(:,:)*ZBEARDCOEFF(:,:)
-!      ZWSEDC(:,:)=ZWSEDC(:,:)*ZBEARDCOEFF(:,:)
-!      ZWSEDQ(:,:)=ZWSEDQ(:,:)*ZBEARDCOEFF(:,:)
-!   END IF
+   IF (OELEC .AND. ELECD%LSEDIM_BEARD) THEN
+      ZBEARDCOEFF(:,:) = 1.0
+      DO JK = D%NKTB,D%NKTE
+         DO JIJ = D%NIJB,D%NIJE
+            GSEDIM2D(JIJ,JK)=PRS(JIJ,JK)>LIMAP%XRTMIN(KID) .AND. ZREMAINT(JIJ)>0.
+            IF (IMOMENTS==2)  GSEDIM2D(JIJ,JK) = GSEDIM2D(JIJ,JK) .AND. PCS(JIJ,JK)>LIMAP%XCTMIN(KID)
+         END DO
+      END DO
+      CALL ELEC_BEARD_EFFECT(D, CST, 'LIMA', KID, GSEDIM2D, PT, PRHODREF, PTHVREFZIKB, &
+           PRS, PQS, PEFIELDW, ZLBDA3, ZBEARDCOEFF, &
+           LIMAP=LIMAP, LIMAPC=LIMAC, LIMAPW=LIMAW, LIMAPM=LIMAM)
+      ZWSEDR(:,:)=ZWSEDR(:,:)*ZBEARDCOEFF(:,:)
+      ZWSEDC(:,:)=ZWSEDC(:,:)*ZBEARDCOEFF(:,:)
+      ZWSEDQ(:,:)=ZWSEDQ(:,:)*ZBEARDCOEFF(:,:)
+   END IF
    !
    ZMAX_TSTEP1D(:) = ZREMAINT(:)
    DO JK = D%NKTB,D%NKTE

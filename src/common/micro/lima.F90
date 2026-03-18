@@ -123,16 +123,20 @@ REAL, DIMENSION(MERGE(D%NIJT,0,ODTHRAD), &
                 MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! dT/dt due to radiation
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
-REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_LIMA), INTENT(IN) :: PSVT       ! Concentrations at time t
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT)    :: PCIT       ! Theta at time t
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
 REAL, DIMENSION(D%NIJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
-REAL, DIMENSION(D%NIJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
-REAL, DIMENSION(D%NIJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
+REAL, DIMENSION(MERGE(D%NIJT,0,OORILAM), &
+                MERGE(D%NKT ,0,OORILAM), &
+                MERGE(10    ,0,OORILAM)),   INTENT(IN) :: PSOLORG   ! [%] solubility fraction of soa
+REAL, DIMENSION(MERGE(D%NIJT         ,0,OORILAM), &
+                MERGE(D%NKT          ,0,OORILAM), &
+                MERGE(KSP+KCARB+KSOA ,0,OORILAM)), INTENT(IN) :: PMI
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT)    :: PTHS       ! Theta source
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(INOUT) :: PRS        ! Mixing ratios sources
-REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(INOUT) :: PSVS       ! Concentration sources
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_LIMA), INTENT(INOUT) :: PSVS       ! Concentration sources
 !
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)        :: PINPRC     ! Cloud instant precip
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)        :: PINDEP     ! Cloud droplets deposition
@@ -153,10 +157,11 @@ REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,   INTENT(INOUT) :: PHLC_HRC
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,   INTENT(INOUT) :: PHLI_HCF
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,   INTENT(INOUT) :: PHLI_HRI
 !
-REAL, DIMENSION(D%NIJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC), &
+                MERGE(D%NKT,0,OELEC)),   INTENT(IN) :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
 REAL, DIMENSION(D%NIJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PEFIELDW   ! Vertical component of the electric field
-REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), OPTIONAL, INTENT(IN)    :: PSV_ELEC_T ! Charge density at time t
-REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), OPTIONAL, INTENT(INOUT) :: PSV_ELEC_S ! Charge density sources
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_ELEC), OPTIONAL, INTENT(IN)    :: PSV_ELEC_T ! Charge density at time t
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_ELEC), OPTIONAL, INTENT(INOUT) :: PSV_ELEC_S ! Charge density sources
 !
 REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity
 !*       0.2   Declarations of local variables :
@@ -1285,20 +1290,36 @@ ENDIF
 !PICEFR(:,:)=MAX(PICEFR(:,:),PHLI_HCF(:,:))
 !PHLI_HRI(:,:)=MIN(PHLI_HRI(:,:),ZRIT(:,:))
 IF ( NEBN%LSUBG_COND ) THEN
-   IF (PRESENT(PHLC_HRC)) THEN
+   IF (LIMAP%CSUBG_AUCV_RC=="NONE") THEN
+      ZHLC_LRC(:,:)=0.
+      ZHLC_LCF(:,:)=0.
+      ZHLC_HRC(:,:)=ZRCT(:,:)
+      ZHLC_HCF(:,:)=PCLDFR(:,:)
+   ELSE
       ZHLC_HRC(:,:)=PHLC_HRC(:,:)
       ZHLC_HCF(:,:)=PHLC_HCF(:,:)
-      ZHLI_HRI(:,:)=PHLI_HRI(:,:)
-      ZHLI_HCF(:,:)=PHLI_HCF(:,:)
       DO IK = D%NKTB, D%NKTE     
          DO II=D%NIJB, D%NIJE
             ZHLC_LRC(II, IK) = ZRCT(II, IK) - ZHLC_HRC(II, IK)
-            ZHLI_LRI(II, IK) = ZRIT(II, IK) - ZHLI_HRI(II, IK)
             IF(ZRCT(II, IK)>0.) THEN
                ZHLC_LCF(II, IK) = PCLDFR(II, IK)- ZHLC_HCF(II, IK)
             ELSE
                ZHLC_LCF(II, IK)=0.
             ENDIF
+         ENDDO
+      ENDDO
+   END IF
+   IF (LIMAP%CSUBG_AUCV_RI=="NONE") THEN
+      ZHLI_LRI(:,:)=0.
+      ZHLI_LCF(:,:)=0.
+      ZHLI_HRI(:,:)=ZRIT(:,:)
+      ZHLI_HCF(:,:)=PICEFR(:,:)
+   ELSE
+      ZHLI_HRI(:,:)=PHLI_HRI(:,:)
+      ZHLI_HCF(:,:)=PHLI_HCF(:,:)
+      DO IK = D%NKTB, D%NKTE     
+         DO II=D%NIJB, D%NIJE
+            ZHLI_LRI(II, IK) = ZRIT(II, IK) - ZHLI_HRI(II, IK)
             IF(ZRIT(II, IK)>0.) THEN
                ZHLI_LCF(II, IK) = PICEFR(II, IK)- ZHLI_HCF(II, IK)
             ELSE
@@ -1306,23 +1327,14 @@ IF ( NEBN%LSUBG_COND ) THEN
             ENDIF
          ENDDO
       ENDDO
-   ELSE
-      ZHLC_LRC(:,:)=0.
-      ZHLI_LRI(:,:)=0.
-      ZHLC_LCF(:,:)=0.
-      ZHLI_LCF(:,:)=0.
-      ZHLC_HRC(:,:)=ZRCT(:,:)
-      ZHLC_HCF(:,:)=PCLDFR(:,:)
-      ZHLI_HRI(:,:)=ZRIT(:,:)
-      ZHLI_HCF(:,:)=PICEFR(:,:)
    END IF
-  CALL LIMA_COMPUTE_PDF(CST, LIMAP, D%NIJT*(D%NKTE-D%NKTB+1), LIMAP%CSUBG_AUCV_RC, LIMAP%CSUBG_AUCV_RI, LIMAP%CSUBG_PR_PDF,&
-                        LLMICRO(:,D%NKTB:D%NKTE), PRHODREF(:,D%NKTB:D%NKTE), ZRCT(:,D%NKTB:D%NKTE), ZRIT(:,D%NKTB:D%NKTE), &
-                        PCLDFR(:,D%NKTB:D%NKTE), ZT(:,D%NKTB:D%NKTE), ZSIGMA_RC(:,D%NKTB:D%NKTE), &
-                        ZHLC_HCF(:,D%NKTB:D%NKTE), ZHLC_LCF(:,D%NKTB:D%NKTE), ZHLC_HRC(:,D%NKTB:D%NKTE), ZHLC_LRC(:,D%NKTB:D%NKTE), &
-                        ZHLI_HCF(:,D%NKTB:D%NKTE), ZHLI_LCF(:,D%NKTB:D%NKTE), ZHLI_HRI(:,D%NKTB:D%NKTE), ZHLI_LRI(:,D%NKTB:D%NKTE), &
-                        PPRCFR(:,D%NKTB:D%NKTE))
-  CALL LIMA_RAINFR_VERT(D, LIMAP, PPRCFR, ZRRT, ZRST, ZRGT, ZRHT)
+   CALL LIMA_COMPUTE_PDF(CST, LIMAP, D%NIJT*(D%NKTE-D%NKTB+1), LIMAP%CSUBG_AUCV_RC, LIMAP%CSUBG_AUCV_RI, LIMAP%CSUBG_PR_PDF,&
+                         LLMICRO(:,D%NKTB:D%NKTE), PRHODREF(:,D%NKTB:D%NKTE), ZRCT(:,D%NKTB:D%NKTE), ZRIT(:,D%NKTB:D%NKTE), &
+                         PCLDFR(:,D%NKTB:D%NKTE), ZT(:,D%NKTB:D%NKTE), ZSIGMA_RC(:,D%NKTB:D%NKTE), &
+                         ZHLC_HCF(:,D%NKTB:D%NKTE), ZHLC_LCF(:,D%NKTB:D%NKTE), ZHLC_HRC(:,D%NKTB:D%NKTE), ZHLC_LRC(:,D%NKTB:D%NKTE), &
+                         ZHLI_HCF(:,D%NKTB:D%NKTE), ZHLI_LCF(:,D%NKTB:D%NKTE), ZHLI_HRI(:,D%NKTB:D%NKTE), ZHLI_LRI(:,D%NKTB:D%NKTE), &
+                         PPRCFR(:,D%NKTB:D%NKTE))
+   CALL LIMA_RAINFR_VERT(D, LIMAP, PPRCFR, ZRRT, ZRST, ZRGT, ZRHT)
 ELSE
    PPRCFR(:,:)=1.
    ZHLC_LRC(:,:)=0.
@@ -1334,7 +1346,6 @@ ELSE
    ZHLC_HCF(:,:)=1.
    ZHLI_HCF(:,:)=1.
 ENDIF
-
 !-------------------------------------------------------------------------------
 !
 !*       2.     LOOP
@@ -2504,6 +2515,7 @@ IF (OELEC) THEN
 ! On se cale sur la facon de faire dans ice3 => on fait en sorte que les tendances soient positives
   IF (LIMAP%NMOM_H .GE. 1) THEN
     CALL ELEC_TENDENCIES(D, CST, ICED, ICEP, ELECD, ELECP,                                              &
+                         LIMAP, LIMAC, LIMAM,                                                           &
                          KRR, IELEC, PTSTEP, GMASK_ELEC,                                                &
                          BUCONF, TBUDGETS, KBUDGETS,                                                    &
                          'LIMA', PTHVREFZIKB,                                                           &
@@ -2542,6 +2554,7 @@ IF (OELEC) THEN
                          PRICORR2=-ZTOT_RI_CORR2*ZINV_TSTEP)
   ELSE
     CALL ELEC_TENDENCIES(D, CST, ICED, ICEP, ELECD, ELECP,                                              &
+                         LIMAP, LIMAC, LIMAM,                                                           &
                          KRR, IELEC, PTSTEP, GMASK_ELEC,                                                &
                          BUCONF, TBUDGETS, KBUDGETS,                                                    &
                          'LIMA', PTHVREFZIKB,                                                           &
@@ -2716,7 +2729,7 @@ IF ( BUCONF%LBU_ENABLE ) then
     CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'HONC',  ZTOT_RC_HONC (:,:) * ZRHODJONTSTEP(:,:) )
     CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'IMLT',  ZTOT_RC_IMLT (:,:) * ZRHODJONTSTEP(:,:) )
     CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'BERFI', ZTOT_RC_BERFI(:,:) * ZRHODJONTSTEP(:,:) )
-    CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'RIM',  (-ZTOT_RR_ACCSS(:,:) - ZTOT_RR_ACCSG(:,:)) * ZRHODJONTSTEP(:,:) )
+    CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'RIM',   (ZTOT_RC_RIMSS(:,:) + ZTOT_RC_RIMSG(:,:))* ZRHODJONTSTEP(:,:) )
     CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'WETG',  ZTOT_RC_WETG (:,:) * ZRHODJONTSTEP(:,:) )
     CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'DRYG',  ZTOT_RC_DRYG (:,:) * ZRHODJONTSTEP(:,:) )
     CALL TBUDGETS(NBUDGET_RC)%PTR%ADD_PHY(D, 'CVRC', -ZTOT_RR_CVRC (:,:) * ZRHODJONTSTEP(:,:) )
@@ -2729,7 +2742,7 @@ IF ( BUCONF%LBU_ENABLE ) then
     CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'ACCR', -ZTOT_RC_ACCR(:,:) * ZRHODJONTSTEP(:,:) )
     CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'REVA',  ZTOT_RR_EVAP(:,:) * ZRHODJONTSTEP(:,:) )
     CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'HONR',  ZTOT_RR_HONR(:,:) * ZRHODJONTSTEP(:,:) )
-    CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'ACC',  (ZTOT_RC_RIMSS(:,:) + ZTOT_RC_RIMSG(:,:)) * ZRHODJONTSTEP(:,:) )
+    CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'ACC',   (-ZTOT_RR_ACCSS(:,:) - ZTOT_RR_ACCSG(:,:)) * ZRHODJONTSTEP(:,:) )
     CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'CFRZ',  ZTOT_RR_CFRZ(:,:) * ZRHODJONTSTEP(:,:) )
     CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'WETG',  ZTOT_RR_WETG(:,:) * ZRHODJONTSTEP(:,:) )
     CALL TBUDGETS(NBUDGET_RR)%PTR%ADD_PHY(D, 'DRYG',  ZTOT_RR_DRYG(:,:) * ZRHODJONTSTEP(:,:) )

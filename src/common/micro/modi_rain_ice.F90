@@ -5,6 +5,7 @@
 IMPLICIT NONE
 INTERFACE
       SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
+                            LIMAP, LIMAC, LIMAM,                                  &
                             OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
                             PTSTEP, KRR, PEXN,                                    &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
@@ -29,6 +30,10 @@ USE MODD_ELEC_DESCR,     ONLY: ELEC_DESCR_t
 USE MODD_ELEC_PARAM,     ONLY: ELEC_PARAM_t
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
+USE MODD_PARAM_LIMA_MIXED,ONLY:PARAM_LIMA_MIXED_T
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
+USE MODD_PARAM_LIMA,      ONLY:PARAM_LIMA_T
+!
 IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
@@ -39,6 +44,9 @@ TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(ELEC_PARAM_t),       INTENT(IN)    :: ELECP   ! electrical parameters
 TYPE(ELEC_DESCR_t),       INTENT(IN)    :: ELECD   ! electrical descriptive csts
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
 LOGICAL,                  INTENT(IN)    :: OELEC  ! Switch for cloud electricity
 LOGICAL,                  INTENT(IN)    :: OSEDIM_BEARD  ! Switch for effect of electrical forces on sedim.
 REAL,                     INTENT(IN)    :: PTHVREFZIKB ! Reference thv at IKB for electricity

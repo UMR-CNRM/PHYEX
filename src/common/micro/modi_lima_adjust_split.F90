@@ -70,17 +70,21 @@ REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PW_NU     ! updraft velocity 
 INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
 LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 REAL, DIMENSION(D%NIJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
-REAL, DIMENSION(D%NIJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
-REAL, DIMENSION(D%NIJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
+REAL, DIMENSION(MERGE(D%NIJT,0,OORILAM), &
+                MERGE(D%NKT ,0,OORILAM), &
+                MERGE(10    ,0,OORILAM)),   INTENT(IN) :: PSOLORG   ! [%] solubility fraction of soa
+REAL, DIMENSION(MERGE(D%NIJT         ,0,OORILAM), &
+                MERGE(D%NKT          ,0,OORILAM), &
+                MERGE(KSP+KCARB+KSOA ,0,OORILAM)), INTENT(IN) :: PMI
 CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 !
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(IN)    :: PRT       ! m.r. at t
 !
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(INOUT) :: PRS       ! m.r. source
 !
-REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(IN)    :: PSVT ! Concentrations at time t
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_LIMA), INTENT(IN)    :: PSVT ! Concentrations at time t
 !
-REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(INOUT) :: PSVS ! Concentration sources
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_LIMA), INTENT(INOUT) :: PSVS ! Concentration sources
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT) :: PTHS      ! Theta source
 !
