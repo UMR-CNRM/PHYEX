@@ -158,17 +158,21 @@ REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PW_NU     ! updraft velocity 
 INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
 LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 REAL, DIMENSION(D%NIJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
-REAL, DIMENSION(D%NIJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
-REAL, DIMENSION(D%NIJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
+REAL, DIMENSION(MERGE(D%NIJT,0,OORILAM), &
+                MERGE(D%NKT ,0,OORILAM), &
+                MERGE(10    ,0,OORILAM)),   INTENT(IN) :: PSOLORG   ! [%] solubility fraction of soa
+REAL, DIMENSION(MERGE(D%NIJT         ,0,OORILAM), &
+                MERGE(D%NKT          ,0,OORILAM), &
+                MERGE(KSP+KCARB+KSOA ,0,OORILAM)), INTENT(IN) :: PMI
 CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 !
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(IN)    :: PRT       ! m.r. at t
 !
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(INOUT) :: PRS       ! m.r. source
 !
-REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(IN)    :: PSVT ! Concentrations at time t
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_LIMA), INTENT(IN)    :: PSVT ! Concentrations at time t
 !
-REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(INOUT) :: PSVS ! Concentration sources
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_LIMA), INTENT(INOUT) :: PSVS ! Concentration sources
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT) :: PTHS      ! Theta source
 !
@@ -215,13 +219,17 @@ REAL, DIMENSION(D%NIJT,D%NKT) &
                             ZCCT,        & ! Cloud water conc. at t
 !
                             ZCCS,        & ! Cloud water C. source
+                            ZCIS,        & ! Cloud water C. source
                             ZMAS           ! Mass of scavenged AP
 !
 REAL, DIMENSION(:,:,:), ALLOCATABLE &
                          :: ZNFS,        & ! Free      CCN C. source
                             ZNAS,        & ! Activated CCN C. source
                             ZNFT,        & ! Free      CCN C.
-                            ZNAT           ! Activated CCN C.
+                            ZNAT,        & ! Activated CCN C.
+                            ZIFS,        &
+                            ZINS,        &
+                            ZNIS
 !
 REAL, DIMENSION(D%NIJT,D%NKT) &
                          :: ZEXNS,&      ! guess of the Exner function at t+1
@@ -240,6 +248,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) &
                             ZW_MF, &
                             ZCND, ZS, ZVEC1, ZDUM
 !
+REAL, DIMENSION(D%NIJT) :: ZSIGQSAT
 INTEGER, DIMENSION(D%NIJT,D%NKT) :: IVEC1
 INTEGER                           :: ISIZE
 LOGICAL                           :: G_SIGMAS, GUSERI
@@ -249,11 +258,15 @@ REAL :: ZW1, ZW2, ZCRIAUT
 !
 INTEGER :: IDX
 INTEGER :: II, IK, IL
-INTEGER                           :: IMOD
+INTEGER                           :: IMOD, IMOD_IMM
 !
 INTEGER :: ISV_LIMA_NC
 INTEGER :: ISV_LIMA_CCN_FREE
 INTEGER :: ISV_LIMA_CCN_ACTI
+INTEGER :: ISV_LIMA_NI
+INTEGER :: ISV_LIMA_IFN_FREE
+INTEGER :: ISV_LIMA_IFN_NUCL
+INTEGER :: ISV_LIMA_IMM_NUCL
 INTEGER :: ISV_LIMA_SCAVMASS
 !
 LOGICAL :: LLHLC_H, LLHLI_H
@@ -270,6 +283,10 @@ IF (LHOOK) CALL DR_HOOK('LIMA_ADJUST_SPLIT', 0, ZHOOK_HANDLE)
 ISV_LIMA_NC       = TNSV%NSV_LIMA_NC       - TNSV%NSV_LIMA_BEG + 1
 ISV_LIMA_CCN_FREE = TNSV%NSV_LIMA_CCN_FREE - TNSV%NSV_LIMA_BEG + 1
 ISV_LIMA_CCN_ACTI = TNSV%NSV_LIMA_CCN_ACTI - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NI       = TNSV%NSV_LIMA_NI       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_IFN_FREE = TNSV%NSV_LIMA_IFN_FREE - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_IFN_NUCL = TNSV%NSV_LIMA_IFN_NUCL - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_IMM_NUCL = TNSV%NSV_LIMA_IMM_NUCL - TNSV%NSV_LIMA_BEG + 1
 ISV_LIMA_SCAVMASS = TNSV%NSV_LIMA_SCAVMASS - TNSV%NSV_LIMA_BEG + 1
 !
 ISIZE = SIZE(LIMAP%XRTMIN)
@@ -312,9 +329,11 @@ IF ( KRR .GE. 7 ) ZRHS(D%NIJB:D%NIJE,:) = PRS(D%NIJB:D%NIJE,:,7)
 ! Prepare 3D number concentrations
 ZCCT(:,:) = 0.
 ZCCS(:,:) = 0.
+ZCIS(:,:) = 0.
 !
 IF ( LIMAP%NMOM_C.GE.2 ) ZCCT(D%NIJB:D%NIJE,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NC)*PTSTEP
 IF ( LIMAP%NMOM_C.GE.2 ) ZCCS(D%NIJB:D%NIJE,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NC)
+IF ( LIMAP%NMOM_I.GE.2 ) ZCIS(D%NIJB:D%NIJE,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_NI)
 !
 IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) ZMAS(D%NIJB:D%NIJE,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_SCAVMASS)
 ! 
@@ -327,6 +346,16 @@ IF ( LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOD_CCN.GE.1 ) THEN
    ZNAS(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1)
    ZNFT(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1)*PTSTEP
    ZNAT(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1)*PTSTEP
+END IF
+IF ( LIMAP%NMOM_I.GE.1 .AND. LIMAP%NMOD_IFN.GE.1 ) THEN
+   ALLOCATE( ZIFS(D%NIJT,D%NKT,LIMAP%NMOD_IFN) )
+   ALLOCATE( ZINS(D%NIJT,D%NKT,LIMAP%NMOD_IFN) )
+   ZIFS(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+LIMAP%NMOD_IFN-1)
+   ZINS(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+LIMAP%NMOD_IFN-1)
+END IF
+IF ( LIMAP%NMOM_I.GE.1 .AND. LIMAP%NMOD_IFN.GE.1 .AND. LIMAP%NMOD_IMM.GE.1) THEN
+   ALLOCATE( ZNIS(D%NIJT,D%NKT,LIMAP%NMOD_IMM) )
+   ZNIS(D%NIJB:D%NIJE,:,:) = PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+LIMAP%NMOD_IMM-1)
 END IF
 !
 ! Initialize budgets
@@ -387,7 +416,9 @@ IF (LIMAP%LADJ) THEN
    IF (OSUBG_COND) THEN
       Z_SIGS=PSIGS
       G_SIGMAS=OSIGMAS
+      ZSIGQSAT=PSIGQSAT
    ELSE
+      ZSIGQSAT=0.
       Z_SIGS=0.
       G_SIGMAS=.TRUE.
    END IF
@@ -398,7 +429,7 @@ IF (LIMAP%LADJ) THEN
         ZRRS*PTSTEP,ZRSS*PTSTEP, ZRGS*PTSTEP,                                &
         Z_SIGS, .FALSE., PMFCONV, PCLDFR, Z_SRCS, GUSERI, G_SIGMAS, .FALSE., &
         ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                                        &
-        PSIGQSAT, PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                               &
+        ZSIGQSAT, PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                               &
         PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,&
         PICE_CLD_WGT=PICE_CLD_WGT )
    !
@@ -586,7 +617,58 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-!*       5.     SAVE CHANGES & CLEANING
+!*       5.     REMOVE SMALL NUMBERS OF CRYSTALS
+!               --------------------------------
+!
+IF (LIMAP%NMOM_I .GE. 2) THEN
+   ZMASK(D%NIJB:D%NIJE,:) = 0.0
+   ZW(D%NIJB:D%NIJE,:) = 0.
+   WHERE (ZRIS(D%NIJB:D%NIJE,:) <= ZRTMIN(4) .OR. ZCIS(D%NIJB:D%NIJE,:) <= ZCTMIN(4)) 
+      ZRVS(D%NIJB:D%NIJE,:) = ZRVS(D%NIJB:D%NIJE,:) + ZRIS(D%NIJB:D%NIJE,:) 
+      PTHS(D%NIJB:D%NIJE,:) = PTHS(D%NIJB:D%NIJE,:) - ZRIS(D%NIJB:D%NIJE,:)*ZLS(D%NIJB:D%NIJE,:)/(ZCPH(D%NIJB:D%NIJE,:)*ZEXNS(D%NIJB:D%NIJE,:))
+      ZRIS(D%NIJB:D%NIJE,:) = 0.0
+      ZW(D%NIJB:D%NIJE,:)   = MAX(ZCIS(D%NIJB:D%NIJE,:),0.)
+      ZCIS(D%NIJB:D%NIJE,:) = 0.0
+   END WHERE
+   !
+   ZZW1(D%NIJB:D%NIJE,:) = 0.
+   IF (LIMAP%NMOD_IFN .GE. 1) ZZW1(D%NIJB:D%NIJE,:) = ZZW1(D%NIJB:D%NIJE,:) + SUM(ZINS,DIM=3)
+   IF (LIMAP%NMOD_IMM .GE. 1) ZZW1(D%NIJB:D%NIJE,:) = ZZW1(D%NIJB:D%NIJE,:) + SUM(ZNIS,DIM=3)
+   ZW (D%NIJB:D%NIJE,:) = MIN( ZW(D%NIJB:D%NIJE,:), ZZW1(D%NIJB:D%NIJE,:) )
+   ZZW2(D%NIJB:D%NIJE,:) = 0.
+   WHERE ( ZW(D%NIJB:D%NIJE,:) > 0. )
+      ZMASK(D%NIJB:D%NIJE,:) = 1.0
+      ZZW2(D%NIJB:D%NIJE,:) = ZW(D%NIJB:D%NIJE,:) / ZZW1(D%NIJB:D%NIJE,:)
+   ENDWHERE
+   !
+   IF (LIMAP%NMOD_IFN.GE.1) THEN
+      DO IMOD = 1, LIMAP%NMOD_IFN
+         ZIFS(D%NIJB:D%NIJE,:,IMOD) = ZIFS(D%NIJB:D%NIJE,:,IMOD) +                    &
+              ZMASK(D%NIJB:D%NIJE,:) * ZINS(D%NIJB:D%NIJE,:,IMOD) * ZZW2(D%NIJB:D%NIJE,:)
+         ZINS(D%NIJB:D%NIJE,:,IMOD) = ZINS(D%NIJB:D%NIJE,:,IMOD) -                    &
+              ZMASK(D%NIJB:D%NIJE,:) * ZINS(D%NIJB:D%NIJE,:,IMOD) * ZZW2(D%NIJB:D%NIJE,:)
+         ZINS(D%NIJB:D%NIJE,:,IMOD) = MAX( 0.0 , ZINS(D%NIJB:D%NIJE,:,IMOD) )
+      ENDDO
+   END IF
+   !
+   IF (LIMAP%NMOD_IMM.GE.1) THEN
+      IMOD_IMM = 0
+      DO IMOD = 1, LIMAP%NMOD_CCN
+         IF (LIMAP%NIMM(IMOD) == 1) THEN 
+            IMOD_IMM = IMOD_IMM + 1 
+            ZNAS(D%NIJB:D%NIJE,:,IMOD)     = ZNAS(D%NIJB:D%NIJE,:,IMOD) +                     &
+                 ZMASK(D%NIJB:D%NIJE,:) * ZNIS(D%NIJB:D%NIJE,:,IMOD_IMM) * ZZW2(D%NIJB:D%NIJE,:)
+            ZNIS(D%NIJB:D%NIJE,:,IMOD_IMM) = ZNIS(D%NIJB:D%NIJE,:,IMOD_IMM) -                 &
+                 ZMASK(D%NIJB:D%NIJE,:) * ZNIS(D%NIJB:D%NIJE,:,IMOD_IMM) * ZZW2(D%NIJB:D%NIJE,:)
+            ZNIS(D%NIJB:D%NIJE,:,IMOD_IMM) = MAX( 0.0 , ZNIS(D%NIJB:D%NIJE,:,IMOD_IMM) )
+         END IF
+      ENDDO
+   END IF
+END IF
+!
+!-------------------------------------------------------------------------------
+!
+!*       6.     SAVE CHANGES & CLEANING
 !               -----------------------
 !
 ! 3D water mixing ratios
@@ -605,6 +687,13 @@ IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_SCAVMASS
 IF ( LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOD_CCN.GE.1 ) THEN
    PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1) = ZNFS(D%NIJB:D%NIJE,:,:)
    PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1) = ZNAS(D%NIJB:D%NIJE,:,:)
+END IF
+IF ( LIMAP%NMOM_I.GE.1 .AND. LIMAP%NMOD_IFN.GE.1 ) THEN
+   PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+LIMAP%NMOD_IFN-1) = ZIFS(D%NIJB:D%NIJE,:,:)
+   PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+LIMAP%NMOD_IFN-1) = ZINS(D%NIJB:D%NIJE,:,:)
+END IF
+IF ( LIMAP%NMOM_I.GE.1 .AND. LIMAP%NMOD_IMM.GE.1 ) THEN
+   PSVS(D%NIJB:D%NIJE,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+LIMAP%NMOD_IMM-1) = ZNIS(D%NIJB:D%NIJE,:,:)
 END IF
 !
 ! Initialize budgets
@@ -636,6 +725,9 @@ IF (ALLOCATED(ZNFS)) DEALLOCATE(ZNFS)
 IF (ALLOCATED(ZNAS)) DEALLOCATE(ZNAS)
 IF (ALLOCATED(ZNFT)) DEALLOCATE(ZNFT)
 IF (ALLOCATED(ZNAT)) DEALLOCATE(ZNAT)
+IF (ALLOCATED(ZIFS)) DEALLOCATE(ZIFS)
+IF (ALLOCATED(ZINS)) DEALLOCATE(ZINS)
+IF (ALLOCATED(ZNIS)) DEALLOCATE(ZNIS)
 !
 !------------------------------------------------------------------------------
 !
