@@ -94,7 +94,8 @@ TYPE(NSV_T),              INTENT(IN)    :: TNSV
 TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
 TYPE(CST_T),              INTENT(IN)    :: CST
 TYPE(NEB_T),              INTENT(IN)    :: NEBN
-!TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
+INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
+LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF   ! Reference density
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
@@ -105,11 +106,13 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDTHRAD    ! Radiative tempera
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
                                                       ! the nucleation param.
 REAL, DIMENSION(D%NIJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO   ! Aerosol concentration
-REAL, DIMENSION(D%NIJT, D%NKT, 10), INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
-REAL, DIMENSION(D%NIJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
+REAL, DIMENSION(MERGE(D%NIJT,0,OORILAM), &
+                MERGE(D%NKT ,0,OORILAM), &
+                MERGE(KSOA,0,OORILAM)),   INTENT(IN) :: PSOLORG   ! [%] solubility fraction of soa
+REAL, DIMENSION(MERGE(D%NIJT         ,0,OORILAM), &
+                MERGE(D%NKT          ,0,OORILAM), &
+                MERGE(KSP+KCARB+KSOA ,0,OORILAM)), INTENT(IN) :: PMI
 CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
-INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
-LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 
 !   
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHT       ! Theta at t 

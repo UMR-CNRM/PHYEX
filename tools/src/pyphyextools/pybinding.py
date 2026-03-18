@@ -274,6 +274,8 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                     d[1] = 'KGRADIENTSGOG'
                 elif 'KGRADIENTSLEO' in d[1]:
                     d[1] = 'KGRADIENTSLEO'
+                elif 'KSOA' in d[1]:
+                    d[1] = 'KSOA'
             declList.append(pftin.varSpec2stmt(replvar))
             if vartype.startswith('LOGICAL'):
                 declList.append(pftin.varSpec2stmt(localvar))
@@ -447,7 +449,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                             pass
                         elif elem in argList1name:
                             pass  # This dimension is a dummy argument
-                        elif elem in ('JPSVMAX', 'NSV', 'NSP', 'NCARB', 'NSOA', 'KGRADIENTSLEO', 'KGRADIENTSGOG'):
+                        elif elem in ('JPSVMAX', 'NSV', 'NSP', 'NCARB', 'NSOA', 'KGRADIENTSLEO', 'KGRADIENTSGOG', 'KSOA'):
                             strdimpart = re.sub(rf'\b{elem}\b', f'_{elem}', strdimpart)
                         else:
                             try:
