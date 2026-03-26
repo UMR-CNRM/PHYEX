@@ -126,7 +126,6 @@ foreach(PRECISION ${precision_list})
   target_compile_options(phyex_${PRECISION} PUBLIC
     $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
 
-  message("AA ${IFS_Fortran_FLAGS} ${ECBUILD_IFS_Fortran_FLAGS}")
   if(HAVE_IFS_FLAGS)
     target_compile_options(phyex_${PRECISION} PUBLIC
     ${ECBUILD_IFS_Fortran_FLAGS})
