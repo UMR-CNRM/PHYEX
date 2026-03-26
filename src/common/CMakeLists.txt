@@ -16,6 +16,10 @@ ecbuild_add_option(FEATURE SINGLE_PRECISION
                    DESCRIPTION "Compile on single precision"
                    DEFAULT OFF)
 
+ecbuild_add_option(FEATURE IFS_FLAGS
+                   DESCRIPTION "Compile with IFS flags"
+                   DEFAULT OFF)
+
 ecbuild_add_option(FEATURE PHYEX_BUILD_PROGS
                    DESCRIPTION "Build PHYEX program executables"
                    DEFAULT OFF)
@@ -122,7 +126,14 @@ foreach(PRECISION ${precision_list})
   target_compile_options(phyex_${PRECISION} PUBLIC
     $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
 
-  # Install Library 
+  message("AA ${IFS_Fortran_FLAGS} ${ECBUILD_IFS_Fortran_FLAGS}")
+  if(HAVE_IFS_FLAGS)
+    target_compile_options(phyex_${PRECISION} PUBLIC
+    ${ECBUILD_IFS_Fortran_FLAGS})
+  endif()
+
+  
+    # Install Library 
   install(
     TARGETS phyex_${PRECISION}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
