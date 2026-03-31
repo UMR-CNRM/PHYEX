@@ -83,15 +83,15 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a3aec51b969b160fed11f076913bfd41b" id="r_a3aec51b969b160fed11f076913bfd41b"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__ini__phyex_1_1ini__phyex.html#a3aec51b969b160fed11f076913bfd41b">ini_phyex</a> (hprogram, tpfile, ldneednam, kluout, kfrom, kto, ptstep, pdzmin, cmicro, csconv, cturb, ldchangemodel, lddefaultval, ldreadnam, ldcheck, kprint, ldinit, phyex_in, phyex_out)</td></tr>
-<tr class="separator:a3aec51b969b160fed11f076913bfd41b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa89d8ed24ed8e3a6bce1384010c7b4f" id="r_afa89d8ed24ed8e3a6bce1384010c7b4f"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__ini__phyex_1_1ini__phyex.html#afa89d8ed24ed8e3a6bce1384010c7b4f">ini_phyex</a> (hprogram, tpfile, ldneednam, kluout, kfrom, kto, ptstep, pdzmin, cmicro, csconv, cturb, phyaero, ldchangemodel, lddefaultval, ldreadnam, ldcheck, kprint, ldinit, phyex_in, phyex_out)</td></tr>
+<tr class="separator:afa89d8ed24ed8e3a6bce1384010c7b4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
 <p class="definition">Definition at line <a class="el" href="modi__ini__phyex_8F90_source.html#l00004">4</a> of file <a class="el" href="modi__ini__phyex_8F90_source.html">modi_ini_phyex.F90</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a3aec51b969b160fed11f076913bfd41b" name="a3aec51b969b160fed11f076913bfd41b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3aec51b969b160fed11f076913bfd41b">&#9670;&#160;</a></span>ini_phyex()</h2>
+<a id="afa89d8ed24ed8e3a6bce1384010c7b4f" name="afa89d8ed24ed8e3a6bce1384010c7b4f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa89d8ed24ed8e3a6bce1384010c7b4f">&#9670;&#160;</a></span>ini_phyex()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -161,6 +161,12 @@ Public Member Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">character(len=4), intent(in)&#160;</td>
           <td class="paramname"><em>cturb</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__phyex__aero_1_1phyex__aero__t.html">phyex_aero_t</a>), intent(inout), optional&#160;</td>
+          <td class="paramname"><em>phyaero</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -237,7 +243,8 @@ Public Member Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">kprint</td><td>Print level (defaults to 0): 0 for no print, 1 to safely print namelist, 2 to print informative messages</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">ldinit</td><td>Must we call the init routines</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">phyex_in</td><td>Structure for constants (IN)</td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">phyex_out</td><td>Structure for constants (OUT) </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">phyex_out</td><td>Structure for constants (OUT)</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">phyaero</td><td>Aerosol properties </td></tr>
   </table>
   </dd>
 </dl>

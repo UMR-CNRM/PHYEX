@@ -84,12 +84,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a59831747ac1dcbd264164bfa16ab136a" id="r_a59831747ac1dcbd264164bfa16ab136a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ini__phyex_8F90.html#a59831747ac1dcbd264164bfa16ab136a">ini_phyex</a> (hprogram, tpfile, ldneednam, kluout, kfrom, kto, ptstep, pdzmin, cmicro, csconv, cturb, ldchangemodel, lddefaultval, ldreadnam, ldcheck, kprint, ldinit, phyex_in, phyex_out)</td></tr>
-<tr class="separator:a59831747ac1dcbd264164bfa16ab136a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff35facf9fd95bd3b71f6d390a9a2218" id="r_aff35facf9fd95bd3b71f6d390a9a2218"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ini__phyex_8F90.html#aff35facf9fd95bd3b71f6d390a9a2218">ini_phyex</a> (hprogram, tpfile, ldneednam, kluout, kfrom, kto, ptstep, pdzmin, cmicro, csconv, cturb, phyaero, ldchangemodel, lddefaultval, ldreadnam, ldcheck, kprint, ldinit, phyex_in, phyex_out)</td></tr>
+<tr class="separator:aff35facf9fd95bd3b71f6d390a9a2218"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a59831747ac1dcbd264164bfa16ab136a" name="a59831747ac1dcbd264164bfa16ab136a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a59831747ac1dcbd264164bfa16ab136a">&#9670;&#160;</a></span>ini_phyex()</h2>
+<a id="aff35facf9fd95bd3b71f6d390a9a2218" name="aff35facf9fd95bd3b71f6d390a9a2218"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff35facf9fd95bd3b71f6d390a9a2218">&#9670;&#160;</a></span>ini_phyex()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -159,6 +159,12 @@ Functions/Subroutines</h2></td></tr>
           <td></td>
           <td class="paramtype">character(len=4), intent(in)&#160;</td>
           <td class="paramname"><em>cturb</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__phyex__aero_1_1phyex__aero__t.html">phyex_aero_t</a>), intent(inout), optional&#160;</td>
+          <td class="paramname"><em>phyaero</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -235,7 +241,8 @@ Functions/Subroutines</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">kprint</td><td>Print level (defaults to 0): 0 for no print, 1 to safely print namelist, 2 to print informative messages</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">ldinit</td><td>Must we call the init routines</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">phyex_in</td><td>Structure for constants (IN)</td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">phyex_out</td><td>Structure for constants (OUT) </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">phyex_out</td><td>Structure for constants (OUT)</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">phyaero</td><td>Aerosol properties </td></tr>
   </table>
   </dd>
 </dl>
@@ -244,8 +251,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="ini__phyex_8F90_a59831747ac1dcbd264164bfa16ab136a_cgraph.png" border="0" usemap="#aini__phyex_8F90_a59831747ac1dcbd264164bfa16ab136a_cgraph" alt=""/></div>
-<map name="aini__phyex_8F90_a59831747ac1dcbd264164bfa16ab136a_cgraph" id="aini__phyex_8F90_a59831747ac1dcbd264164bfa16ab136a_cgraph">
+<div class="center"><img src="ini__phyex_8F90_aff35facf9fd95bd3b71f6d390a9a2218_cgraph.png" border="0" usemap="#aini__phyex_8F90_aff35facf9fd95bd3b71f6d390a9a2218_cgraph" alt=""/></div>
+<map name="aini__phyex_8F90_aff35facf9fd95bd3b71f6d390a9a2218_cgraph" id="aini__phyex_8F90_aff35facf9fd95bd3b71f6d390a9a2218_cgraph">
 <area shape="rect" title=" " alt="" coords="5,1360,91,1385"/>
 <area shape="rect" href="namespacemodd__cloudpar__n.html#a41a78edb2aea2fbfb280b5efb4e94f10" title=" " alt="" coords="153,70,354,110"/>
 <area shape="poly" title=" " alt="" coords="47,1360,50,1129,62,736,73,530,89,347,109,205,122,157,136,127,147,116,151,120,141,130,127,159,115,207,94,347,78,531,67,736,55,1129,52,1360"/>
@@ -263,7 +270,7 @@ Here is the call graph for this function:</div>
 <area shape="poly" title=" " alt="" coords="49,1359,59,1325,75,1280,101,1233,118,1211,137,1192,161,1177,164,1182,140,1196,122,1215,105,1236,80,1283,64,1327,55,1360"/>
 <area shape="rect" href="namespacemode__ini__turb.html#a88d8741189f63184ab397b0f8074f5ff" title=" " alt="" coords="167,185,339,211"/>
 <area shape="poly" title=" " alt="" coords="47,1360,50,1144,62,779,73,590,89,420,110,291,122,247,137,220,153,207,157,211,141,224,127,249,115,292,94,421,79,590,67,779,55,1144,52,1360"/>
-<area shape="rect" href="namespacemode__init__aerosol__properties.html#abb43b2a57c990c646920299492b5eb40" title=" " alt="" coords="416,995,631,1035"/>
+<area shape="rect" href="namespacemode__init__aerosol__properties.html#a596fad47c749e85287f2c03f92d53f52" title=" " alt="" coords="416,995,631,1035"/>
 <area shape="poly" title=" " alt="" coords="46,1360,46,1304,56,1224,67,1180,83,1137,106,1098,137,1064,166,1043,197,1027,266,1005,336,997,402,997,402,1002,336,1002,267,1011,199,1032,169,1048,140,1068,111,1101,88,1140,72,1182,61,1225,52,1305,51,1360"/>
 <area shape="rect" href="namespacemode__lima__update__nsv.html#a305b773235435e7ba299272dedfe7a54" title=" " alt="" coords="165,1206,342,1246"/>
 <area shape="poly" title=" " alt="" coords="53,1358,85,1309,109,1280,137,1256,150,1248,153,1253,140,1260,112,1284,89,1312,58,1361"/>

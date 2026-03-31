@@ -488,12 +488,12 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00399" name="l00399"></a><span class="lineno">  399</span>        pice_cld_wgt=pice_cld_wgt )</div>
 <div class="line"><a id="l00400" name="l00400"></a><span class="lineno">  400</span>   <span class="comment">!</span></div>
 <div class="line"><a id="l00401" name="l00401"></a><span class="lineno">  401</span>   <span class="keywordflow">IF</span> (nebn%LSUBG_COND) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span>      psrcs=z_srcs</div>
+<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span>      psrcs(d%NIJB:d%NIJE,:)=z_srcs(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00403" name="l00403"></a><span class="lineno">  403</span><span class="keywordflow">   ENDIF</span></div>
 <div class="line"><a id="l00404" name="l00404"></a><span class="lineno">  404</span>   <span class="keywordflow">IF</span> (nebn%LSUBG_COND .AND. limap%NMOM_C.GE.2 .AND. limap%LACTI) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span>      zw_mf=0.</div>
-<div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span>      zrv2=zrvt</div>
-<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span>      zrc2=zrct</div>
+<div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span>      zrv2(d%NIJB:d%NIJE,:)=zrvt(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span>      zrc2(d%NIJB:d%NIJE,:)=zrct(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span>      <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__lima__ccn__activation.html#abc1c855d76ed81dd65e912638061e76a">lima_ccn_activation</a> (limap, limaw, tnsv, d, cst, nebn,&amp;</div>
 <div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span>           kcarb, ksoa, ksp, odust, osalt, oorilam,              &amp;</div>
 <div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span>           prhodref, pexnref, ppabst, zt2, pdthrad, pw_nu+zw_mf, &amp;</div>
