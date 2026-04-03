@@ -5,6 +5,9 @@
 !-----------------------------------------------------------------
 !     ###############
       MODULE MODD_CST
+
+!$ACDC methods 
+
 !     ###############
 !
 !!****  *MODD_CST* - declaration of Physic constants 

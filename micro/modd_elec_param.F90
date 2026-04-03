@@ -5,6 +5,9 @@
 !-----------------------------------------------------------------
 !      #######################
        MODULE  MODD_ELEC_PARAM
+
+!$ACDC methods
+
 !      #######################
 !
 !!****  *MODD_ELEC_PARAM* - declaration of some electrical factors
