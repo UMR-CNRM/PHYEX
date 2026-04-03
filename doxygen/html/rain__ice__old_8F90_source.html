@@ -545,7 +545,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00460" name="l00460"></a><span class="lineno">  460</span> </div>
 <div class="line"><a id="l00461" name="l00461"></a><span class="lineno">  461</span><span class="keywordflow">IF</span> (osedic) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00462" name="l00462"></a><span class="lineno">  462</span>  zray(:,:)   = 0.</div>
-<div class="line"><a id="l00463" name="l00463"></a><span class="lineno">  463</span>  <span class="keywordflow">IF</span> (icep%XFRMIN(26)&gt;0.001 .OR. oaeronrt) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00463" name="l00463"></a><span class="lineno">  463</span>  <span class="keywordflow">IF</span> (icep%XFRMIN(26)&gt;0.001 .OR. (oaeronrt.AND.parami%LEXCLDROP)) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00464" name="l00464"></a><span class="lineno">  464</span>    <span class="comment">! Assume &quot;average&quot; distr. func for simplicity</span></div>
 <div class="line"><a id="l00465" name="l00465"></a><span class="lineno">  465</span>    <span class="keywordflow">DO</span> jk = d%NKTB,d%NKTE</div>
 <div class="line"><a id="l00466" name="l00466"></a><span class="lineno">  466</span>      <span class="keywordflow">DO</span> jij = d%NIJB,d%NIJE</div>
@@ -589,8 +589,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00504" name="l00504"></a><span class="lineno">  504</span>      zzzz(jij,jk) = zzzt(jij,jk) - 0.5*pdzz(jij,jk)</div>
 <div class="line"><a id="l00505" name="l00505"></a><span class="lineno">  505</span><span class="keywordflow">    ENDDO</span></div>
 <div class="line"><a id="l00506" name="l00506"></a><span class="lineno">  506</span><span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a id="l00507" name="l00507"></a><span class="lineno">  507</span>  <span class="keywordflow">IF</span> (oaeronrt) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00508" name="l00508"></a><span class="lineno">  508</span>  <span class="comment">!Consider Cloud droplets obtained from CAMS aerosol mixing ratio fields</span></div>
+<div class="line"><a id="l00507" name="l00507"></a><span class="lineno">  507</span>  <span class="keywordflow">IF</span> (parami%LEXCLDROP) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00508" name="l00508"></a><span class="lineno">  508</span>  <span class="comment">!Consider external cloud droplet number concentration.</span></div>
 <div class="line"><a id="l00509" name="l00509"></a><span class="lineno">  509</span>    <span class="keywordflow">DO</span> jk = d%NKTB, d%NKTE</div>
 <div class="line"><a id="l00510" name="l00510"></a><span class="lineno">  510</span>      <span class="keywordflow">DO</span> jij = d%NIJB, d%NIJE</div>
 <div class="line"><a id="l00511" name="l00511"></a><span class="lineno">  511</span>        zconc3d(jij,jk) = pcldrop(jij,jk)</div>
