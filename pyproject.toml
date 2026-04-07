@@ -1,0 +1,88 @@
+[build-system]
+requires = ["scikit-build-core>=0.10.0", "cython", "numpy<2.0"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "phyex"
+version = "0.1.0"
+description = "Python bindings for PHYEX physics package"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Apache-2.0"}
+dependencies = [
+    "numpy<2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "black",
+    "ruff",
+]
+
+[tool.scikit-build]
+minimum-version = "0.10.0"
+cmake.version = ">=3.15"
+cmake.build-type = "Release"
+build-dir = "build/{wheel_tag}"
+wheel.packages = ["phyex"]
+
+# Install Cython-generated extension modules
+[[tool.scikit-build.generate]]
+path = "phyex/__init__.py"
+template = """
+# PHYEX Python Package
+\"\"\"
+Python bindings for the PHYEX physics parameterization package.
+\"\"\"
+
+__version__ = "${version}"
+
+# Import compiled extensions
+try:
+    from ._phyex_wrapper import ice_adjust, rain_ice, init_rain_ice, shallow_convection
+    __all__ = ['ice_adjust', 'rain_ice', 'init_rain_ice', 'shallow_convection', '__version__']
+except ImportError as e:
+    import warnings
+    warnings.warn(f"Failed to import PHYEX extensions: {e}")
+    __all__ = ['__version__']
+"""
+
+[[tool.scikit-build.generate]]
+path = "phyex/version.py"
+template = """
+__version__ = "${version}"
+"""
+
+[tool.scikit-build.cmake.define]
+CMAKE_Fortran_COMPILER = "gfortran"
+BUILD_SHARED_LIBS = "ON"
+
+[tool.scikit-build.sdist]
+# Include Fortran sources and Cython files
+include = [
+    "aux/*.F90",
+    "turb/*.F90",
+    "micro/*.F90",
+    "conv/*.F90",
+    "bridge/*.F90",
+    "bridge/*.pyx",
+    "CMakeLists.txt",
+    "phyex_macros.cmake",
+]
+exclude = [
+    "build",
+    "dist",
+    "*.egg-info",
+    ".git",
+    "__pycache__",
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

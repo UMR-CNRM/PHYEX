@@ -416,7 +416,10 @@ DO JJ=1, IJT
 
 DO JJ=1, IJT
   DO JI=1, IIT
-    ZSHUGRADWK1_2D(JI, JJ) = (ZCOEFF(JI, JJ, IKB+2)*PUM(JI, JJ, IKB+2)        +ZCOEFF(JI, JJ, IKB+1)*PUM(JI, JJ, IKB+1)        +ZCOEFF(JI, JJ, IKB)*PUM(JI, JJ, IKB)       ) * 0.5 * ( PDZX(JI, JJ, IKB+1)+PDZX(JI, JJ, IKB))
+    ZSHUGRADWK1_2D(JI, JJ) = (ZCOEFF(JI, JJ, IKB+2)*PUM(JI, JJ, IKB+2) + &
+                              ZCOEFF(JI, JJ, IKB+1)*PUM(JI, JJ, IKB+1) + &
+                              ZCOEFF(JI, JJ, IKB)*PUM(JI, JJ, IKB)) * &
+                             0.5 * (PDZX(JI, JJ, IKB+1)+PDZX(JI, JJ, IKB))
   END DO
 END DO
 
@@ -492,7 +495,10 @@ DO JJ=1, IJT
 
 DO JJ=1, IJT
   DO JI=1, IIT
-    ZSHUGRADWK1_2D(JI, JJ) = (ZCOEFF(JI, JJ, IKB+2)*PVM(JI, JJ, IKB+2)        +ZCOEFF(JI, JJ, IKB+1)*PVM(JI, JJ, IKB+1)        +ZCOEFF(JI, JJ, IKB)*PVM(JI, JJ, IKB)       ) * 0.5 * ( PDZY(JI, JJ, IKB+1)+PDZY(JI, JJ, IKB))
+    ZSHUGRADWK1_2D(JI, JJ) = (ZCOEFF(JI, JJ, IKB+2)*PVM(JI, JJ, IKB+2) + &
+                              ZCOEFF(JI, JJ, IKB+1)*PVM(JI, JJ, IKB+1) + &
+                              ZCOEFF(JI, JJ, IKB)*PVM(JI, JJ, IKB)) * &
+                             0.5 * (PDZY(JI, JJ, IKB+1)+PDZY(JI, JJ, IKB))
   END DO
 END DO
 

@@ -286,7 +286,8 @@ IF( INUCT >= 1 ) THEN
       ENDDO
    ENDDO
 !
-IF ((HACTCCN == 'ABRK').AND.((OORILAM).OR.(ODUST).OR.(OSALT))) THEN  ! CCN activation from Abdul-Razack (only if prognostic aerosols)
+IF ((HACTCCN == 'ABRK').AND.((OORILAM).OR.(ODUST).OR.(OSALT))) THEN  ! CCN activation from Abdul-Razack &
+                                                                      ! (only if prognostic aerosols)
 !
      ALLOCATE(ZMCN(INUCT))
      ALLOCATE(ZNATOLD(INUCT))
@@ -498,8 +499,10 @@ END IF ! AER_ACTIVATION
    IF (.NOT.NEBN%LSUBG_COND) THEN
       ZW(:,:) = MIN( UNPACK( ZZW1(:),MASK=GNUCT(:,:),FIELD=0.0 ),PRVT(:,:) )
       IF(PRESENT(PTOT_RV_HENU)) PTOT_RV_HENU(D%NIJB:D%NIJE,:) = ZW(D%NIJB:D%NIJE,:)
-      PTHT(D%NIJB:D%NIJE,:) = PTHT(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:) * (CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(D%NIJB:D%NIJE,:)-CST%XTT))/ &
-            (PEXNREF(D%NIJB:D%NIJE,:)*(CST%XCPD+CST%XCPV*PRVT(D%NIJB:D%NIJE,:)+CST%XCL*(PRCT(D%NIJB:D%NIJE,:)+PRRT(D%NIJB:D%NIJE,:))))
+      PTHT(D%NIJB:D%NIJE,:) = PTHT(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:) * &
+            (CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(D%NIJB:D%NIJE,:)-CST%XTT))/ &
+            (PEXNREF(D%NIJB:D%NIJE,:)*(CST%XCPD+CST%XCPV*PRVT(D%NIJB:D%NIJE,:)+ &
+             CST%XCL*(PRCT(D%NIJB:D%NIJE,:)+PRRT(D%NIJB:D%NIJE,:))))
       PRVT(D%NIJB:D%NIJE,:) = PRVT(D%NIJB:D%NIJE,:) - ZW(D%NIJB:D%NIJE,:) 
       PRCT(D%NIJB:D%NIJE,:) = PRCT(D%NIJB:D%NIJE,:) + ZW(D%NIJB:D%NIJE,:) 
       ZW2D(:,:) = UNPACK( ZZW6(:),MASK=GNUCT(:,:),FIELD=0. )

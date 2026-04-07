@@ -268,9 +268,10 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
                                                                 ZW(D%NIJB:D%NIJE,D%NKTB:D%NKTE) )
       IF (KMOMENTS==2) THEN
          ZWSEDC(:,1:D%NKT) = UNPACK( ZZX(:),MASK=GSEDIM(:,:),FIELD=0.0 )
-         ZWSEDC(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = MIN( ZWSEDC(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ZBEARDCOEFF(D%NIJB:D%NIJE,D%NKTB:D%NKTE), &
-                                          PCS(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * PRHODREF(D%NIJB:D%NIJE,D%NKTB:D%NKTE) /      &
-                                                                   ZW(D%NIJB:D%NIJE,D%NKTB:D%NKTE) )
+         ZWSEDC(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = MIN( ZWSEDC(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * &
+                                          ZBEARDCOEFF(D%NIJB:D%NIJE,D%NKTB:D%NKTE), &
+                                          PCS(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * PRHODREF(D%NIJB:D%NIJE,D%NKTB:D%NKTE) / &
+                                          ZW(D%NIJB:D%NIJE,D%NKTB:D%NKTE) )
       END IF
 !
 ! Sedimentation of electric charges
@@ -307,8 +308,9 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
         !
         ZWSEDQ(:,1:D%NKT) = UNPACK( ZZQ(:),MASK=GSEDIM(:,:),FIELD=0.0 )
         ZWSEDQ(D%NIJB:D%NIJE,1:D%NKT) = ZWSEDQ(D%NIJB:D%NIJE,1:D%NKT) * ZBEARDCOEFF(D%NIJB:D%NIJE,1:D%NKT)
-        ZWSEDQ(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = SIGN(MIN(ABS(ZWSEDQ(D%NIJB:D%NIJE,D%NKTB:D%NKTE)),                                                 &
-                                             ABS(PQS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)*PRHODREF(D%NIJB:D%NIJE,D%NKTB:D%NKTE)/ZW(D%NIJB:D%NIJE,D%NKTB:D%NKTE))), &
+        ZWSEDQ(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = SIGN(MIN(ABS(ZWSEDQ(D%NIJB:D%NIJE,D%NKTB:D%NKTE)), &
+                                             ABS(PQS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)*PRHODREF(D%NIJB:D%NIJE,D%NKTB:D%NKTE)/ &
+                                             ZW(D%NIJB:D%NIJE,D%NKTB:D%NKTE))), &
                                          ZWSEDQ(D%NIJB:D%NIJE,D%NKTB:D%NKTE))
       END IF      
       
@@ -346,7 +348,8 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
       IF (ALLOCATED(ZZQ))    DEALLOCATE(ZZQ)
       IF (ALLOCATED(ZES))    DEALLOCATE(ZES)      
       !      
-      PINPR(D%NIJB:D%NIJE) = PINPR(D%NIJB:D%NIJE) + ZWSEDR(D%NIJB:D%NIJE,D%NKB)/CST%XRHOLW/LIMAP%NSPLITSED(KID)                          ! in m/s
+      PINPR(D%NIJB:D%NIJE) = PINPR(D%NIJB:D%NIJE) + &
+                             ZWSEDR(D%NIJB:D%NIJE,D%NKB)/CST%XRHOLW/LIMAP%NSPLITSED(KID) ! in m/s
       !PT(:,:) = PT(:,:) + ZWDT(:,:)
       
    END IF

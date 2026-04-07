@@ -198,7 +198,8 @@ ZT(D%NIJB:D%NIJE,:)  = PTHT(D%NIJB:D%NIJE,:) * ( PPABST(D%NIJB:D%NIJE,:)/CST%XP0
 ! Saturation over ice
 !
 ZW(D%NIJB:D%NIJE,:) = EXP( CST%XALPI - CST%XBETAI/ZT(D%NIJB:D%NIJE,:) - CST%XGAMI*ALOG(ZT(D%NIJB:D%NIJE,:) ) )
-ZW(D%NIJB:D%NIJE,:) = PRVT(D%NIJB:D%NIJE,:)*( PPABST(D%NIJB:D%NIJE,:)-ZW(D%NIJB:D%NIJE,:) ) / ( (CST%XMV/CST%XMD) * ZW(D%NIJB:D%NIJE,:) )
+ZW(D%NIJB:D%NIJE,:) = PRVT(D%NIJB:D%NIJE,:)*( PPABST(D%NIJB:D%NIJE,:)-ZW(D%NIJB:D%NIJE,:) ) / &
+                      ( (CST%XMV/CST%XMD) * ZW(D%NIJB:D%NIJE,:) )
 !
 !
 !-------------------------------------------------------------------------------
