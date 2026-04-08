@@ -12,7 +12,7 @@ CONTAINS
       SUBROUTINE LIMA_RZCOLX( KSIZE1, KSIZE2, KND, PALPHAX, PNUX, PALPHAZ, PNUZ, &
                          PEXZ, PEXMASSZ, PFALLX, PEXFALLX, PFALLEXPX,        &
                          PFALLZ, PEXFALLZ, PFALLEXPZ,                        &
-		         PLBDAXMAX, PLBDAZMAX, PLBDAXMIN, PLBDAZMIN,         &
+                         PLBDAXMAX, PLBDAZMAX, PLBDAXMIN, PLBDAZMIN,         &
                          PDINFTY, PRZCOLX                                    )
 !     ########################################################################
 !

@@ -927,7 +927,7 @@ END SUBROUTINE MZF_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -1097,7 +1097,7 @@ END SUBROUTINE DZF_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -1522,7 +1522,7 @@ END SUBROUTINE DYF_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------

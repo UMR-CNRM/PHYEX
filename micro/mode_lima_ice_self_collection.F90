@@ -77,7 +77,7 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 !*       1.     ICE CRYSTALS SELF-COLLECTION
-!	        ----------------------------
+!               ----------------------------
 !
 IF (LHOOK) CALL DR_HOOK('LIMA_ICE_SELF_COLLECTION', 0, ZHOOK_HANDLE)
 ZONE(:) = 1.
@@ -239,7 +239,7 @@ P_SHCI_ISCS(:,:) = 0.
 !
 !
 !*       2.     ICE CRYSTALS SELF-COLLECTION AND CONVERSION TO AGGREGATES
-!	        ---------------------------------------------------------
+!               ---------------------------------------------------------
 !  
   ISH2 = 3
   DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
@@ -339,7 +339,7 @@ ELSE
 !
 !
 !*       3.     ICE CRYSTALS SELF-COLLECTION WHEN ICE SHAPES NOT CONSIDERED
-!	        -----------------------------------------------------------
+!               -----------------------------------------------------------
 !
   ZW1(:) = 0.
   ZW2(:) = 0.

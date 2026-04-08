@@ -456,7 +456,7 @@ IF (NINT(ICEP%XFRMIN(18)) == 1) LTIW=.TRUE.
 
 !
 !*       1.3    COMPUTE VARIABLES FOR SEDIMENTATION
-!   	        -----------------------------------
+!               -----------------------------------
 
 IF (OSEDIC) THEN
   ZRAY(:,:)   = 0.
@@ -492,7 +492,7 @@ ENDIF !OSEDIC
 
 !
 !*       1.4    COMPUTE THE DROPLET NUMBER CONCENTRATION
-!   	        ----------------------------------------
+!               ----------------------------------------
 !         (Do it already here, since also used with OCND2=T )
 
 IF (OSEDIC.OR.OCND2.OR.LKOGAN) THEN

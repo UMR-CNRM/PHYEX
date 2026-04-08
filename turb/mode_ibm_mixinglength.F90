@@ -32,7 +32,7 @@ SUBROUTINE IBM_MIXINGLENGTH(D,PLM,PLEPS,PMU,PHI,PTKE)
   !
   !    AUTHOR
   !    ------
-  !	
+  !
   !      Franck Auguste       * CERFACS(AE) *
   !
   !    MODIFICATIONS
