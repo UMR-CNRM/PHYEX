@@ -177,7 +177,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
 <div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__tools.html">mode_tools</a>,           <span class="keywordtype">only</span>: <a class="code hl_interface" href="interfacemode__tools_1_1countjv.html">countjv</a></div>
 <div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span> </div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodi__gamma.html">modi_gamma</a></div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodi__gamma.html">modi_gamma</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_function" href="gamma_8F90.html#a8e8146418bd5e0b749c1a73538f360df">gamma_x0d</a></div>
 <div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__lima__functions.html">mode_lima_functions</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_function" href="namespacemode__lima__functions.html#a6dfe035d47af5616553309414a825656">gauher</a>, <a class="code hl_function" href="namespacemode__lima__functions.html#a0e8957535956d85ee8df370b493c7a48">gaulag</a></div>
 <div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="keywordtype">USE </span>yomhook, <span class="keywordtype">ONLY</span>:lhook, dr_hook, jphook</div>
 <div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span> </div>
@@ -695,227 +695,226 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span><span class="comment">!              ------------</span></div>
 <div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span><span class="comment">!</span></div>
 <div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>,        <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
-<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__parameters.html">modd_parameters</a></div>
-<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span><span class="comment">!</span></div>
-<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__param__lima.html">modd_param_lima</a>,      <span class="keywordtype">ONLY</span> : <a class="code hl_variable" href="namespacemodd__param__lima.html#a4955079ea55edd09a8f87a947bf29ce2">xcexvt</a>, <a class="code hl_variable" href="namespacemodd__param__lima.html#aefc493a9b25fa3023153181d64911a68">xrtmin</a></div>
-<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__param__lima__warm.html">modd_param_lima_warm</a>, <span class="keywordtype">ONLY</span> : <a class="code hl_variable" href="namespacemodd__param__lima__warm.html#ab01e87fbb9eef83b6efb26b229e3a427">xbr</a>, <a class="code hl_variable" href="namespacemodd__param__lima__warm.html#afa5c398583cc27dea87d5abffeca0710">xdr</a>, <a class="code hl_variable" href="namespacemodd__param__lima__warm.html#a76250fa15caa389f726a39c1320307e9">xfsedrr</a></div>
-<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span><span class="keywordtype">USE </span>yomhook, <span class="keywordtype">ONLY</span>:lhook, dr_hook, jphook</div>
-<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span><span class="comment">!</span></div>
-<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span><span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span><span class="comment">!</span></div>
-<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span><span class="comment">!*       0.1   Declarations of dummy arguments :</span></div>
+<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span><span class="comment">!</span></div>
+<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__param__lima.html">modd_param_lima</a>,      <span class="keywordtype">ONLY</span> : <a class="code hl_variable" href="namespacemodd__param__lima.html#a4955079ea55edd09a8f87a947bf29ce2">xcexvt</a>, <a class="code hl_variable" href="namespacemodd__param__lima.html#aefc493a9b25fa3023153181d64911a68">xrtmin</a></div>
+<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__param__lima__warm.html">modd_param_lima_warm</a>, <span class="keywordtype">ONLY</span> : <a class="code hl_variable" href="namespacemodd__param__lima__warm.html#ab01e87fbb9eef83b6efb26b229e3a427">xbr</a>, <a class="code hl_variable" href="namespacemodd__param__lima__warm.html#afa5c398583cc27dea87d5abffeca0710">xdr</a>, <a class="code hl_variable" href="namespacemodd__param__lima__warm.html#a76250fa15caa389f726a39c1320307e9">xfsedrr</a></div>
+<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span><span class="keywordtype">USE </span>yomhook, <span class="keywordtype">ONLY</span>:lhook, dr_hook, jphook</div>
+<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span><span class="comment">!</span></div>
+<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span><span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span><span class="comment">!</span></div>
+<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span><span class="comment">!*       0.1   Declarations of dummy arguments :</span></div>
+<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span><span class="comment">!</span></div>
 <div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span><span class="comment">!</span></div>
-<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span><span class="comment">!</span></div>
-<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),         <span class="keywordtype">INTENT(IN)</span>    :: d</div>
-<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span><span class="keywordtype">CHARACTER (LEN=4)</span>,        <span class="keywordtype">INTENT(IN)</span>    :: hcloud  <span class="comment">! Cloud parameterization</span></div>
-<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span><span class="keywordtype">CHARACTER(LEN=5)</span>,         <span class="keywordtype">INTENT(IN)</span>    :: hdconf</div>
-<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span><span class="keywordtype">REAL</span>,                     <span class="keywordtype">INTENT(IN)</span>    :: ptstep  <span class="comment">! Time step  </span></div>
-<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span><span class="keywordtype">INTEGER</span>,                  <span class="keywordtype">INTENT(IN)</span>    :: ktcount <span class="comment">! Current time step number</span></div>
-<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span><span class="comment">!</span></div>
-<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,   <span class="keywordtype">INTENT(IN)</span>    :: pzz     <span class="comment">! Height (z)</span></div>
-<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,   <span class="keywordtype">INTENT(IN)</span>    :: prhodj  <span class="comment">! Dry Density [kg]</span></div>
-<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,   <span class="keywordtype">INTENT(IN)</span>    :: prhodref<span class="comment">! Reference density</span></div>
-<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,   <span class="keywordtype">INTENT(IN)</span>    :: prain   <span class="comment">! Rain water m.r. source</span></div>
-<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,   <span class="keywordtype">INTENT(IN)</span>    :: psvt_mass  <span class="comment">! Precip. aerosols at t</span></div>
-<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,   <span class="keywordtype">INTENT(INOUT)</span> :: prsvs_mass <span class="comment">! Precip. aerosols source</span></div>
-<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span><span class="comment">!</span></div>
-<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>,     <span class="keywordtype">INTENT(INOUT)</span> :: pinpap</div>
-<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span><span class="comment">!</span></div>
-<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span><span class="comment">!*       0.2   Declarations of local variables :</span></div>
-<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span><span class="comment">!</span></div>
-<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span><span class="keywordtype">INTEGER</span> :: ik, in                         <span class="comment">! Loop indexes </span></div>
-<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span><span class="keywordtype">INTEGER</span> :: ikb, ike   <span class="comment">! Physical domain</span></div>
-<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span><span class="comment">!</span></div>
-<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span><span class="keywordtype">REAL</span>    :: ztsplitr      <span class="comment">! Small time step for rain sedimentation</span></div>
-<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span><span class="keywordtype">REAL</span>    :: ztstep        <span class="comment">! Large time step for rain sedimentation</span></div>
+<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),         <span class="keywordtype">INTENT(IN)</span>    :: d</div>
+<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span><span class="keywordtype">CHARACTER (LEN=4)</span>,        <span class="keywordtype">INTENT(IN)</span>    :: hcloud  <span class="comment">! Cloud parameterization</span></div>
+<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span><span class="keywordtype">CHARACTER(LEN=5)</span>,         <span class="keywordtype">INTENT(IN)</span>    :: hdconf</div>
+<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span><span class="keywordtype">REAL</span>,                     <span class="keywordtype">INTENT(IN)</span>    :: ptstep  <span class="comment">! Time step  </span></div>
+<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span><span class="keywordtype">INTEGER</span>,                  <span class="keywordtype">INTENT(IN)</span>    :: ktcount <span class="comment">! Current time step number</span></div>
+<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span><span class="comment">!</span></div>
+<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,   <span class="keywordtype">INTENT(IN)</span>    :: pzz     <span class="comment">! Height (z)</span></div>
+<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,   <span class="keywordtype">INTENT(IN)</span>    :: prhodj  <span class="comment">! Dry Density [kg]</span></div>
+<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,   <span class="keywordtype">INTENT(IN)</span>    :: prhodref<span class="comment">! Reference density</span></div>
+<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,   <span class="keywordtype">INTENT(IN)</span>    :: prain   <span class="comment">! Rain water m.r. source</span></div>
+<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,   <span class="keywordtype">INTENT(IN)</span>    :: psvt_mass  <span class="comment">! Precip. aerosols at t</span></div>
+<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,   <span class="keywordtype">INTENT(INOUT)</span> :: prsvs_mass <span class="comment">! Precip. aerosols source</span></div>
+<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span><span class="comment">!</span></div>
+<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>,     <span class="keywordtype">INTENT(INOUT)</span> :: pinpap</div>
+<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span><span class="comment">!</span></div>
+<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span><span class="comment">!*       0.2   Declarations of local variables :</span></div>
+<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span><span class="comment">!</span></div>
+<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span><span class="keywordtype">INTEGER</span> :: ik, in                         <span class="comment">! Loop indexes </span></div>
+<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span><span class="keywordtype">INTEGER</span> :: ikb, ike   <span class="comment">! Physical domain</span></div>
+<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span><span class="comment">!</span></div>
+<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span><span class="keywordtype">REAL</span>    :: ztsplitr      <span class="comment">! Small time step for rain sedimentation</span></div>
+<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span><span class="keywordtype">REAL</span>    :: ztstep        <span class="comment">! Large time step for rain sedimentation</span></div>
+<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span><span class="comment">!</span></div>
 <div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span><span class="comment">!</span></div>
-<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span><span class="comment">!</span></div>
-<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span><span class="keywordtype">LOGICAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span> &amp;</div>
-<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span>                                :: gsedim   <span class="comment">! where to compute the SED processes</span></div>
-<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span><span class="keywordtype">INTEGER</span> :: isedim </div>
-<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span><span class="keywordtype">INTEGER</span> , <span class="keywordtype">DIMENSION(SIZE(GSEDIM))</span> :: i1,i3    <span class="comment">! Used to replace the COUNT</span></div>
-<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span><span class="keywordtype">INTEGER</span>                           :: il       <span class="comment">! and PACK intrinsics</span></div>
+<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span><span class="keywordtype">LOGICAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span> &amp;</div>
+<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span>                                :: gsedim   <span class="comment">! where to compute the SED processes</span></div>
+<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span><span class="keywordtype">INTEGER</span> :: isedim </div>
+<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span><span class="keywordtype">INTEGER</span> , <span class="keywordtype">DIMENSION(SIZE(GSEDIM))</span> :: i1,i3    <span class="comment">! Used to replace the COUNT</span></div>
+<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span><span class="keywordtype">INTEGER</span>                           :: il       <span class="comment">! and PACK intrinsics</span></div>
+<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span><span class="comment">!</span></div>
 <div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span><span class="comment">!</span></div>
-<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span><span class="comment">!</span></div>
-<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>   &amp;</div>
-<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span>                                :: zw,    &amp; <span class="comment">! work array</span></div>
-<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span>                                   zwsed, &amp; <span class="comment">! sedimentation fluxes</span></div>
-<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span>                                   zzs      <span class="comment">! Rain water m.r. source</span></div>
-<div class="line"><a id="l00658" name="l00658"></a><span class="lineno">  658</span><span class="comment">!</span></div>
-<div class="line"><a id="l00659" name="l00659"></a><span class="lineno">  659</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(:)</span>, <span class="keywordtype">ALLOCATABLE</span> :: zrrs,     &amp; <span class="comment">! Rain water m.r. source</span></div>
-<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span>                                   zrhodref, &amp; <span class="comment">! RHO Dry REFerence</span></div>
-<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span>                                   zzw         <span class="comment">! Work array</span></div>
-<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span><span class="comment">!</span></div>
-<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span><span class="keywordtype">REAL</span>                            :: zrtmin3</div>
+<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>   &amp;</div>
+<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span>                                :: zw,    &amp; <span class="comment">! work array</span></div>
+<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span>                                   zwsed, &amp; <span class="comment">! sedimentation fluxes</span></div>
+<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span>                                   zzs      <span class="comment">! Rain water m.r. source</span></div>
+<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span><span class="comment">!</span></div>
+<div class="line"><a id="l00658" name="l00658"></a><span class="lineno">  658</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(:)</span>, <span class="keywordtype">ALLOCATABLE</span> :: zrrs,     &amp; <span class="comment">! Rain water m.r. source</span></div>
+<div class="line"><a id="l00659" name="l00659"></a><span class="lineno">  659</span>                                   zrhodref, &amp; <span class="comment">! RHO Dry REFerence</span></div>
+<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span>                                   zzw         <span class="comment">! Work array</span></div>
+<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span><span class="comment">!</span></div>
+<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span><span class="keywordtype">REAL</span>                            :: zrtmin3</div>
+<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span><span class="comment">!</span></div>
 <div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span><span class="comment">!</span></div>
-<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span><span class="comment">!</span></div>
-<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span><span class="keywordtype">REAL</span>                            :: zvtrmax, zdzmin, zt</div>
-<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">SAVE</span>                   :: zexsedr</div>
-<div class="line"><a id="l00668" name="l00668"></a><span class="lineno">  668</span><span class="keywordtype">LOGICAL</span>, <span class="keywordtype">SAVE</span>                   :: gsfirstcall = .true.</div>
-<div class="line"><a id="l00669" name="l00669"></a><span class="lineno">  669</span><span class="keywordtype">INTEGER</span>, <span class="keywordtype">SAVE</span>                   :: isplitr</div>
-<div class="line"><a id="l00670" name="l00670"></a><span class="lineno">  670</span><span class="keywordtype">REAL</span>(kind=jphook) :: zhook_handle</div>
-<div class="line"><a id="l00671" name="l00671"></a><span class="lineno">  671</span><span class="comment">!</span></div>
-<div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00673" name="l00673"></a><span class="lineno">  673</span><span class="comment">!</span></div>
-<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span><span class="comment">!*       1.     COMPUTE THE LOOP BOUNDS</span></div>
-<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span><span class="comment">!               -----------------------</span></div>
-<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span><span class="comment">!</span></div>
-<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;SCAV_MASS_SEDIMENTATION&#39;</span>, 0, zhook_handle)</div>
-<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span><span class="comment">!</span></div>
-<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span><span class="comment">!</span></div>
-<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span><span class="comment">!*       2.     COMPUTE THE SEDIMENTATION (RS) SOURCE</span></div>
-<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span><span class="comment">!            -------------------------------------</span></div>
-<div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span><span class="comment">!</span></div>
-<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span><span class="comment">!*       2.1    splitting factor for high Courant number C=v_fall*(del_Z/del_T)</span></div>
-<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span><span class="comment">!  </span></div>
-<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span>firstcall : <span class="keywordflow">IF</span> (gsfirstcall) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span>   gsfirstcall = .false.</div>
-<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span>   zvtrmax = 10.                          </div>
-<div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span>   zdzmin = minval(pzz(d%NIJB:d%NIJE,d%NKB+1:d%NKE+1)-pzz(d%NIJB:d%NIJE,d%NKB:d%NKE))</div>
-<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span>   isplitr = 1</div>
-<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span>   split : <span class="keywordflow">DO</span></div>
-<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span>      zt = 2.* ptstep / real(isplitr)</div>
-<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span>      <span class="keywordflow">IF</span> ( zt * zvtrmax / zdzmin .LT. 1.) <span class="keywordflow">EXIT</span> split</div>
-<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span>      isplitr = isplitr + 1</div>
-<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span><span class="keywordflow">   END DO</span> split</div>
-<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span><span class="comment">!</span></div>
-<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span>   zexsedr = (<a class="code hl_variable" href="namespacemodd__param__lima__warm.html#ab01e87fbb9eef83b6efb26b229e3a427">xbr</a>+<a class="code hl_variable" href="namespacemodd__param__lima__warm.html#afa5c398583cc27dea87d5abffeca0710">xdr</a>+1.0)/(<a class="code hl_variable" href="namespacemodd__param__lima__warm.html#ab01e87fbb9eef83b6efb26b229e3a427">xbr</a>+1.0) </div>
-<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span><span class="comment">!</span></div>
-<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span><span class="keywordflow">END IF</span> firstcall</div>
-<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span><span class="comment">!</span></div>
-<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span><span class="comment">!*       2.2    time splitting loop initialization        </span></div>
-<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span><span class="comment">!</span></div>
-<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span><span class="keywordflow">IF</span>( (ktcount==1) .AND. (hdconf==<span class="stringliteral">&#39;START&#39;</span>) ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>  ztsplitr = ptstep / real(isplitr)       <span class="comment">! Small time step</span></div>
-<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>  ztstep   = ptstep                        <span class="comment">! Large time step</span></div>
-<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span>  <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>  ztsplitr= 2. * ptstep / real(isplitr)</div>
-<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span>  ztstep  = 2. * ptstep</div>
-<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span><span class="comment">!</span></div>
-<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span><span class="comment">!*       2.3    compute the fluxes</span></div>
-<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span><span class="comment">! </span></div>
-<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span><span class="comment">!  optimization by looking for locations where</span></div>
-<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span><span class="comment">!  the precipitating fields are larger than a minimal value only !!!</span></div>
-<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span><span class="comment">!</span></div>
-<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span>zrtmin3 = <a class="code hl_variable" href="namespacemodd__param__lima.html#aefc493a9b25fa3023153181d64911a68">xrtmin</a>(3) / ztstep</div>
-<div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span>zzs(:,:) = prain(:,:)</div>
-<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span><span class="keywordflow">DO</span> in = 1 , isplitr</div>
-<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span>   gsedim(:,:) = .false.</div>
-<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span>   gsedim(d%NIJB:d%NIJE,d%NKB:d%NKE) = zzs(d%NIJB:d%NIJE,d%NKB:d%NKE) &gt; zrtmin3</div>
-<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span><span class="comment">! </span></div>
-<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span>   isedim = <a class="code hl_interface" href="interfacemode__tools_1_1countjv.html">countjv</a>( gsedim(:,:),i1(:),i3(:))</div>
-<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span>   <span class="keywordflow">IF</span>( isedim &gt;= 1 ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span>      <span class="keywordflow">IF</span>( in==1 ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00725" name="l00725"></a><span class="lineno">  725</span>         zzs(:,:) = zzs(:,:) * ztstep</div>
-<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span>         <span class="keywordflow">DO</span> ik = ikb , ike-1</div>
-<div class="line"><a id="l00727" name="l00727"></a><span class="lineno">  727</span>            zw(:,ik) =ztsplitr*2./(prhodref(:,ik)*(pzz(:,ik+2)-pzz(:,ik)))</div>
-<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span><span class="keywordflow">         END DO</span></div>
-<div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span>         zw(:,ike)  =ztsplitr/(prhodref(:,ike)*(pzz(:,ike+1)-pzz(:,ike)))</div>
-<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span><span class="keywordflow">      END IF</span></div>
-<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span>      <span class="keyword">ALLOCATE</span>(zrrs(isedim)) </div>
-<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span>      <span class="keyword">ALLOCATE</span>(zrhodref(isedim))</div>
-<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span>      <span class="keywordflow">DO</span> il=1,isedim</div>
-<div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span>         zrrs(il) = zzs(i1(il),i3(il))</div>
-<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span>         zrhodref(il) =  prhodref(i1(il),i3(il))</div>
-<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span><span class="keywordflow">      ENDDO</span></div>
-<div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span>      <span class="keyword">ALLOCATE</span>(zzw(isedim)) ; zzw(:) = 0.0</div>
-<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span><span class="comment">!</span></div>
-<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span><span class="comment">!*       2.2.1   for rain</span></div>
-<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span><span class="comment">!</span></div>
-<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span>      zzw(:) = <a class="code hl_variable" href="namespacemodd__param__lima__warm.html#a76250fa15caa389f726a39c1320307e9">xfsedrr</a> * zrrs(:)**(zexsedr) * zrhodref(:)**(zexsedr-<a class="code hl_variable" href="namespacemodd__param__lima.html#a4955079ea55edd09a8f87a947bf29ce2">xcexvt</a>)</div>
-<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span>      zwsed(:,:) = unpack( zzw(:),mask=gsedim(:,:),field=0.0 )</div>
-<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span>      <span class="keywordflow">DO</span> ik = ikb , ike</div>
-<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span>         zzs(:,ik) = zzs(:,ik) + zw(:,ik)*(zwsed(:,ik+1)-zwsed(:,ik))</div>
-<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span><span class="keywordflow">      END DO</span></div>
-<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span>      <span class="keywordflow">IF</span>( in==1 ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span>         pinpap(:) = zwsed(:,ikb)*                                            &amp;</div>
-<div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span>                             ( psvt_mass(:,ikb)/max(zrtmin3,prrt(:,ikb)) )</div>
-<div class="line"><a id="l00749" name="l00749"></a><span class="lineno">  749</span><span class="keywordflow">      END IF</span></div>
-<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span>      <span class="keyword">DEALLOCATE</span>(zrhodref)</div>
-<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span>      <span class="keyword">DEALLOCATE</span>(zrrs)</div>
-<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span>      <span class="keyword">DEALLOCATE</span>(zzw)</div>
-<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span>      <span class="keywordflow">IF</span>( in==isplitr ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span>         gsedim(:,:) = .false.</div>
-<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span>         gsedim(d%NIJB:d%NIJE,d%NKB:d%NKE) = zzs(d%NIJB:d%NIJE,d%NKB:d%NKE) &gt; zrtmin3</div>
-<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span>         zwsed(:,:) = 0.0</div>
-<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span>         <span class="keywordflow">WHERE</span>( gsedim(:,:) ) </div>
-<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span>            zwsed(:,:) = 1.0/ztstep - prain(:,:)/zzs(:,:)</div>
-<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span><span class="keywordflow">         END WHERE</span></div>
-<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span><span class="keywordflow">      END IF</span></div>
-<div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span><span class="keywordflow">   END IF</span></div>
-<div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span><span class="keywordflow">END DO</span></div>
-<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span><span class="comment">!</span></div>
-<div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span><span class="comment">! Apply the rain sedimentation rate to the WR_xxx aqueous species</span></div>
-<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span><span class="comment">!</span></div>
-<div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span>prsvs_mass(:,:) = prsvs_mass(:,:) + zwsed(:,:)*psvt_mass(:,:)</div>
-<div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span><span class="comment">!</span></div>
-<div class="line"><a id="l00768" name="l00768"></a><span class="lineno">  768</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;SCAV_MASS_SEDIMENTATION&#39;</span>, 1, zhook_handle)</div>
+<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span><span class="keywordtype">REAL</span>                            :: zvtrmax, zdzmin, zt</div>
+<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">SAVE</span>                   :: zexsedr</div>
+<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span><span class="keywordtype">LOGICAL</span>, <span class="keywordtype">SAVE</span>                   :: gsfirstcall = .true.</div>
+<div class="line"><a id="l00668" name="l00668"></a><span class="lineno">  668</span><span class="keywordtype">INTEGER</span>, <span class="keywordtype">SAVE</span>                   :: isplitr</div>
+<div class="line"><a id="l00669" name="l00669"></a><span class="lineno">  669</span><span class="keywordtype">REAL</span>(kind=jphook) :: zhook_handle</div>
+<div class="line"><a id="l00670" name="l00670"></a><span class="lineno">  670</span><span class="comment">!</span></div>
+<div class="line"><a id="l00671" name="l00671"></a><span class="lineno">  671</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span><span class="comment">!</span></div>
+<div class="line"><a id="l00673" name="l00673"></a><span class="lineno">  673</span><span class="comment">!*       1.     COMPUTE THE LOOP BOUNDS</span></div>
+<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span><span class="comment">!               -----------------------</span></div>
+<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span><span class="comment">!</span></div>
+<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;SCAV_MASS_SEDIMENTATION&#39;</span>, 0, zhook_handle)</div>
+<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span><span class="comment">!</span></div>
+<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span><span class="comment">!</span></div>
+<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span><span class="comment">!*       2.     COMPUTE THE SEDIMENTATION (RS) SOURCE</span></div>
+<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span><span class="comment">!            -------------------------------------</span></div>
+<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span><span class="comment">!</span></div>
+<div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span><span class="comment">!*       2.1    splitting factor for high Courant number C=v_fall*(del_Z/del_T)</span></div>
+<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span><span class="comment">!  </span></div>
+<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span>firstcall : <span class="keywordflow">IF</span> (gsfirstcall) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span>   gsfirstcall = .false.</div>
+<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span>   zvtrmax = 10.                          </div>
+<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span>   zdzmin = minval(pzz(d%NIJB:d%NIJE,d%NKB+1:d%NKE+1)-pzz(d%NIJB:d%NIJE,d%NKB:d%NKE))</div>
+<div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span>   isplitr = 1</div>
+<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span>   split : <span class="keywordflow">DO</span></div>
+<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span>      zt = 2.* ptstep / real(isplitr)</div>
+<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span>      <span class="keywordflow">IF</span> ( zt * zvtrmax / zdzmin .LT. 1.) <span class="keywordflow">EXIT</span> split</div>
+<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span>      isplitr = isplitr + 1</div>
+<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span><span class="keywordflow">   END DO</span> split</div>
+<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span><span class="comment">!</span></div>
+<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span>   zexsedr = (<a class="code hl_variable" href="namespacemodd__param__lima__warm.html#ab01e87fbb9eef83b6efb26b229e3a427">xbr</a>+<a class="code hl_variable" href="namespacemodd__param__lima__warm.html#afa5c398583cc27dea87d5abffeca0710">xdr</a>+1.0)/(<a class="code hl_variable" href="namespacemodd__param__lima__warm.html#ab01e87fbb9eef83b6efb26b229e3a427">xbr</a>+1.0) </div>
+<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span><span class="comment">!</span></div>
+<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span><span class="keywordflow">END IF</span> firstcall</div>
+<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span><span class="comment">!</span></div>
+<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span><span class="comment">!*       2.2    time splitting loop initialization        </span></div>
+<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span><span class="comment">!</span></div>
+<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span><span class="keywordflow">IF</span>( (ktcount==1) .AND. (hdconf==<span class="stringliteral">&#39;START&#39;</span>) ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>  ztsplitr = ptstep / real(isplitr)       <span class="comment">! Small time step</span></div>
+<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>  ztstep   = ptstep                        <span class="comment">! Large time step</span></div>
+<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>  <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span>  ztsplitr= 2. * ptstep / real(isplitr)</div>
+<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>  ztstep  = 2. * ptstep</div>
+<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span><span class="comment">!</span></div>
+<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span><span class="comment">!*       2.3    compute the fluxes</span></div>
+<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span><span class="comment">! </span></div>
+<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span><span class="comment">!  optimization by looking for locations where</span></div>
+<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span><span class="comment">!  the precipitating fields are larger than a minimal value only !!!</span></div>
+<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span><span class="comment">!</span></div>
+<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span>zrtmin3 = <a class="code hl_variable" href="namespacemodd__param__lima.html#aefc493a9b25fa3023153181d64911a68">xrtmin</a>(3) / ztstep</div>
+<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span>zzs(:,:) = prain(:,:)</div>
+<div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span><span class="keywordflow">DO</span> in = 1 , isplitr</div>
+<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span>   gsedim(:,:) = .false.</div>
+<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span>   gsedim(d%NIJB:d%NIJE,d%NKB:d%NKE) = zzs(d%NIJB:d%NIJE,d%NKB:d%NKE) &gt; zrtmin3</div>
+<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span><span class="comment">! </span></div>
+<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span>   isedim = <a class="code hl_interface" href="interfacemode__tools_1_1countjv.html">countjv</a>( gsedim(:,:),i1(:),i3(:))</div>
+<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span>   <span class="keywordflow">IF</span>( isedim &gt;= 1 ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span>      <span class="keywordflow">IF</span>( in==1 ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span>         zzs(:,:) = zzs(:,:) * ztstep</div>
+<div class="line"><a id="l00725" name="l00725"></a><span class="lineno">  725</span>         <span class="keywordflow">DO</span> ik = ikb , ike-1</div>
+<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span>            zw(:,ik) =ztsplitr*2./(prhodref(:,ik)*(pzz(:,ik+2)-pzz(:,ik)))</div>
+<div class="line"><a id="l00727" name="l00727"></a><span class="lineno">  727</span><span class="keywordflow">         END DO</span></div>
+<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span>         zw(:,ike)  =ztsplitr/(prhodref(:,ike)*(pzz(:,ike+1)-pzz(:,ike)))</div>
+<div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span><span class="keywordflow">      END IF</span></div>
+<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span>      <span class="keyword">ALLOCATE</span>(zrrs(isedim)) </div>
+<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span>      <span class="keyword">ALLOCATE</span>(zrhodref(isedim))</div>
+<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span>      <span class="keywordflow">DO</span> il=1,isedim</div>
+<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span>         zrrs(il) = zzs(i1(il),i3(il))</div>
+<div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span>         zrhodref(il) =  prhodref(i1(il),i3(il))</div>
+<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span><span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span>      <span class="keyword">ALLOCATE</span>(zzw(isedim)) ; zzw(:) = 0.0</div>
+<div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span><span class="comment">!</span></div>
+<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span><span class="comment">!*       2.2.1   for rain</span></div>
+<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span><span class="comment">!</span></div>
+<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span>      zzw(:) = <a class="code hl_variable" href="namespacemodd__param__lima__warm.html#a76250fa15caa389f726a39c1320307e9">xfsedrr</a> * zrrs(:)**(zexsedr) * zrhodref(:)**(zexsedr-<a class="code hl_variable" href="namespacemodd__param__lima.html#a4955079ea55edd09a8f87a947bf29ce2">xcexvt</a>)</div>
+<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span>      zwsed(:,:) = unpack( zzw(:),mask=gsedim(:,:),field=0.0 )</div>
+<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span>      <span class="keywordflow">DO</span> ik = ikb , ike</div>
+<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span>         zzs(:,ik) = zzs(:,ik) + zw(:,ik)*(zwsed(:,ik+1)-zwsed(:,ik))</div>
+<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span><span class="keywordflow">      END DO</span></div>
+<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span>      <span class="keywordflow">IF</span>( in==1 ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span>         pinpap(:) = zwsed(:,ikb)*                                            &amp;</div>
+<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span>                             ( psvt_mass(:,ikb)/max(zrtmin3,prrt(:,ikb)) )</div>
+<div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span><span class="keywordflow">      END IF</span></div>
+<div class="line"><a id="l00749" name="l00749"></a><span class="lineno">  749</span>      <span class="keyword">DEALLOCATE</span>(zrhodref)</div>
+<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span>      <span class="keyword">DEALLOCATE</span>(zrrs)</div>
+<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span>      <span class="keyword">DEALLOCATE</span>(zzw)</div>
+<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span>      <span class="keywordflow">IF</span>( in==isplitr ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span>         gsedim(:,:) = .false.</div>
+<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span>         gsedim(d%NIJB:d%NIJE,d%NKB:d%NKE) = zzs(d%NIJB:d%NIJE,d%NKB:d%NKE) &gt; zrtmin3</div>
+<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span>         zwsed(:,:) = 0.0</div>
+<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span>         <span class="keywordflow">WHERE</span>( gsedim(:,:) ) </div>
+<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span>            zwsed(:,:) = 1.0/ztstep - prain(:,:)/zzs(:,:)</div>
+<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span><span class="keywordflow">         END WHERE</span></div>
+<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span><span class="keywordflow">      END IF</span></div>
+<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span><span class="keywordflow">   END IF</span></div>
+<div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span><span class="keywordflow">END DO</span></div>
+<div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span><span class="comment">!</span></div>
+<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span><span class="comment">! Apply the rain sedimentation rate to the WR_xxx aqueous species</span></div>
+<div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span><span class="comment">!</span></div>
+<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span>prsvs_mass(:,:) = prsvs_mass(:,:) + zwsed(:,:)*psvt_mass(:,:)</div>
+<div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span><span class="comment">!</span></div>
+<div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;SCAV_MASS_SEDIMENTATION&#39;</span>, 1, zhook_handle)</div>
 </div>
-<div class="line"><a id="l00769" name="l00769"></a><span class="lineno">  769</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="lima__precip__scavenging_8F90.html#a95150e6bd739a994aae5327a09ae1d7a">scav_mass_sedimentation</a></div>
-<div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span><span class="comment">!</span></div>
-<div class="line"><a id="l00771" name="l00771"></a><span class="lineno">  771</span><span class="comment">!------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00772" name="l00772"></a><span class="lineno">  772</span><span class="comment">!</span></div>
-<div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span><span class="comment">!###################################################################</span></div>
-<div class="line"><a id="l00774" name="l00774"></a><span class="lineno">  774</span><span class="keyword">FUNCTION </span>coll_effi (KSCAV,KDIAMP,KDIAMR, &amp;</div>
-<div class="line"><a id="l00775" name="l00775"></a><span class="lineno">  775</span>                    PRE, PRE_INV, PRE_SQRT, PSC, PSC_INV, PSC_SQRT, &amp;</div>
-<div class="line"><a id="l00776" name="l00776"></a><span class="lineno">  776</span>                    PSC_3SQRT, PST, PST_STAR, PSIZE_RATIO,          &amp;</div>
-<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span>                    PVISC_RATIO, PDENS_RATIO_SQRT) <span class="keyword">RESULT</span>(PCOL_EF)</div>
-<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span><span class="comment">!###################################################################</span></div>
-<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span><span class="comment">!</span></div>
-<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span><span class="comment">!Compute the Raindrop-Aerosol Collision Efficiency</span></div>
-<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span><span class="comment">!</span></div>
-<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span><span class="comment">!*             0. DECLARATIONS  </span></div>
-<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span><span class="comment">!              ---------------</span></div>
-<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span><span class="comment">!</span></div>
-<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span>  <span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l00786" name="l00786"></a><span class="lineno">  786</span><span class="comment">!</span></div>
-<div class="line"><a id="l00787" name="l00787"></a><span class="lineno">  787</span>  <span class="keywordtype">INTEGER</span> :: i</div>
-<div class="line"><a id="l00788" name="l00788"></a><span class="lineno">  788</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00789" name="l00789"></a><span class="lineno">  789</span>  <span class="keywordtype">INTEGER</span>,              <span class="keywordtype">INTENT(IN)</span>    :: kscav</div>
-<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span>  <span class="keywordtype">INTEGER</span>,              <span class="keywordtype">INTENT(IN)</span>    :: kdiamp</div>
-<div class="line"><a id="l00791" name="l00791"></a><span class="lineno">  791</span>  <span class="keywordtype">INTEGER</span>,              <span class="keywordtype">INTENT(IN)</span>    :: kdiamr</div>
-<div class="line"><a id="l00792" name="l00792"></a><span class="lineno">  792</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMR)</span>, <span class="keywordtype">INTENT(IN)</span>    :: pre         </div>
-<div class="line"><a id="l00793" name="l00793"></a><span class="lineno">  793</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMR)</span>, <span class="keywordtype">INTENT(IN)</span>    :: pre_inv         </div>
-<div class="line"><a id="l00794" name="l00794"></a><span class="lineno">  794</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMR)</span>, <span class="keywordtype">INTENT(IN)</span>    :: pre_sqrt         </div>
-<div class="line"><a id="l00795" name="l00795"></a><span class="lineno">  795</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMP)</span>, <span class="keywordtype">INTENT(IN)</span>    :: psc     </div>
-<div class="line"><a id="l00796" name="l00796"></a><span class="lineno">  796</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMP)</span>, <span class="keywordtype">INTENT(IN)</span>    :: psc_inv    </div>
-<div class="line"><a id="l00797" name="l00797"></a><span class="lineno">  797</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMP)</span>, <span class="keywordtype">INTENT(IN)</span>    :: psc_sqrt     </div>
-<div class="line"><a id="l00798" name="l00798"></a><span class="lineno">  798</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMP)</span>, <span class="keywordtype">INTENT(IN)</span>    :: psc_3sqrt     </div>
-<div class="line"><a id="l00799" name="l00799"></a><span class="lineno">  799</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMR)</span>, <span class="keywordtype">INTENT(IN)</span>    :: pst_star   </div>
-<div class="line"><a id="l00800" name="l00800"></a><span class="lineno">  800</span><span class="comment">!</span></div>
-<div class="line"><a id="l00801" name="l00801"></a><span class="lineno">  801</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMP,KDIAMR)</span>, <span class="keywordtype">INTENT(IN)</span>  :: pst         </div>
-<div class="line"><a id="l00802" name="l00802"></a><span class="lineno">  802</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMP,KDIAMR)</span>, <span class="keywordtype">INTENT(IN)</span>  :: psize_ratio </div>
-<div class="line"><a id="l00803" name="l00803"></a><span class="lineno">  803</span><span class="comment">!</span></div>
-<div class="line"><a id="l00804" name="l00804"></a><span class="lineno">  804</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV)</span>, <span class="keywordtype">INTENT(IN)</span>    :: pvisc_ratio </div>
-<div class="line"><a id="l00805" name="l00805"></a><span class="lineno">  805</span><span class="keywordtype">  REAL</span>,               <span class="keywordtype">INTENT(IN)</span>    :: pdens_ratio_sqrt </div>
-<div class="line"><a id="l00806" name="l00806"></a><span class="lineno">  806</span><span class="comment">!</span></div>
-<div class="line"><a id="l00807" name="l00807"></a><span class="lineno">  807</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV)</span>      :: pcol_ef   <span class="comment">!result : collision efficiency</span></div>
-<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span><span class="comment">!</span></div>
-<div class="line"><a id="l00809" name="l00809"></a><span class="lineno">  809</span><span class="keywordtype">  REAL</span>(kind=jphook) :: zhook_handle</div>
-<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span><span class="comment">!</span></div>
-<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span><span class="comment">!</span></div>
-<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span>  <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;COLL_EFFI&#39;</span>, 0, zhook_handle)</div>
-<div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span>  pcol_ef(:) = (4.*psc_inv(:,j1)*pre_inv(:,j2)*(1.+0.4*pre_sqrt(:,j2)              &amp;</div>
-<div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span>                  *psc_3sqrt(:,j1)+0.16*pre_sqrt(:,j2)*psc_sqrt(:,j1)))      &amp;</div>
-<div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span>              +(4.*psize_ratio(:,j1,j2)*(pvisc_ratio(:)                    &amp; </div>
-<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span>              +(1.+2.*pre_sqrt(:,j2))*psize_ratio(:,j1,j2)))  </div>
-<div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span>  <span class="keywordflow">DO</span> i=1,kscav</div>
-<div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span>    <span class="keywordflow">IF</span> (pst(i,j1,j2)&gt;pst_star(i,j2)) <span class="keywordflow">THEN</span>            </div>
-<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span>            pcol_ef(i) = pcol_ef(i)                                           &amp;</div>
-<div class="line"><a id="l00821" name="l00821"></a><span class="lineno">  821</span>                    +(pdens_ratio_sqrt*((pst(i,j1,j2)-pst_star(i,j2))        &amp;</div>
-<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span>                    /(pst(i,j1,j2)-pst_star(i,j2)+2./3.))**(3./2.))</div>
-<div class="line"><a id="l00823" name="l00823"></a><span class="lineno">  823</span><span class="keywordflow">    ENDIF</span></div>
-<div class="line"><a id="l00824" name="l00824"></a><span class="lineno">  824</span><span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span>  <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;COLL_EFFI&#39;</span>, 1, zhook_handle)</div>
-<div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span>  <span class="keyword">END FUNCTION </span>coll_effi</div>
-<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span><span class="comment">!</span></div>
-<div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span><span class="comment">!------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span><span class="comment">!</span></div>
+<div class="line"><a id="l00768" name="l00768"></a><span class="lineno">  768</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="lima__precip__scavenging_8F90.html#a95150e6bd739a994aae5327a09ae1d7a">scav_mass_sedimentation</a></div>
+<div class="line"><a id="l00769" name="l00769"></a><span class="lineno">  769</span><span class="comment">!</span></div>
+<div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span><span class="comment">!------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00771" name="l00771"></a><span class="lineno">  771</span><span class="comment">!</span></div>
+<div class="line"><a id="l00772" name="l00772"></a><span class="lineno">  772</span><span class="comment">!###################################################################</span></div>
+<div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span><span class="keyword">FUNCTION </span>coll_effi (KSCAV,KDIAMP,KDIAMR, &amp;</div>
+<div class="line"><a id="l00774" name="l00774"></a><span class="lineno">  774</span>                    PRE, PRE_INV, PRE_SQRT, PSC, PSC_INV, PSC_SQRT, &amp;</div>
+<div class="line"><a id="l00775" name="l00775"></a><span class="lineno">  775</span>                    PSC_3SQRT, PST, PST_STAR, PSIZE_RATIO,          &amp;</div>
+<div class="line"><a id="l00776" name="l00776"></a><span class="lineno">  776</span>                    PVISC_RATIO, PDENS_RATIO_SQRT) <span class="keyword">RESULT</span>(PCOL_EF)</div>
+<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span><span class="comment">!###################################################################</span></div>
+<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span><span class="comment">!</span></div>
+<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span><span class="comment">!Compute the Raindrop-Aerosol Collision Efficiency</span></div>
+<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span><span class="comment">!</span></div>
+<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span><span class="comment">!*             0. DECLARATIONS  </span></div>
+<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span><span class="comment">!              ---------------</span></div>
+<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span><span class="comment">!</span></div>
+<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span>  <span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span><span class="comment">!</span></div>
+<div class="line"><a id="l00786" name="l00786"></a><span class="lineno">  786</span>  <span class="keywordtype">INTEGER</span> :: i</div>
+<div class="line"><a id="l00787" name="l00787"></a><span class="lineno">  787</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00788" name="l00788"></a><span class="lineno">  788</span>  <span class="keywordtype">INTEGER</span>,              <span class="keywordtype">INTENT(IN)</span>    :: kscav</div>
+<div class="line"><a id="l00789" name="l00789"></a><span class="lineno">  789</span>  <span class="keywordtype">INTEGER</span>,              <span class="keywordtype">INTENT(IN)</span>    :: kdiamp</div>
+<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span>  <span class="keywordtype">INTEGER</span>,              <span class="keywordtype">INTENT(IN)</span>    :: kdiamr</div>
+<div class="line"><a id="l00791" name="l00791"></a><span class="lineno">  791</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMR)</span>, <span class="keywordtype">INTENT(IN)</span>    :: pre         </div>
+<div class="line"><a id="l00792" name="l00792"></a><span class="lineno">  792</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMR)</span>, <span class="keywordtype">INTENT(IN)</span>    :: pre_inv         </div>
+<div class="line"><a id="l00793" name="l00793"></a><span class="lineno">  793</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMR)</span>, <span class="keywordtype">INTENT(IN)</span>    :: pre_sqrt         </div>
+<div class="line"><a id="l00794" name="l00794"></a><span class="lineno">  794</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMP)</span>, <span class="keywordtype">INTENT(IN)</span>    :: psc     </div>
+<div class="line"><a id="l00795" name="l00795"></a><span class="lineno">  795</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMP)</span>, <span class="keywordtype">INTENT(IN)</span>    :: psc_inv    </div>
+<div class="line"><a id="l00796" name="l00796"></a><span class="lineno">  796</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMP)</span>, <span class="keywordtype">INTENT(IN)</span>    :: psc_sqrt     </div>
+<div class="line"><a id="l00797" name="l00797"></a><span class="lineno">  797</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMP)</span>, <span class="keywordtype">INTENT(IN)</span>    :: psc_3sqrt     </div>
+<div class="line"><a id="l00798" name="l00798"></a><span class="lineno">  798</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMR)</span>, <span class="keywordtype">INTENT(IN)</span>    :: pst_star   </div>
+<div class="line"><a id="l00799" name="l00799"></a><span class="lineno">  799</span><span class="comment">!</span></div>
+<div class="line"><a id="l00800" name="l00800"></a><span class="lineno">  800</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMP,KDIAMR)</span>, <span class="keywordtype">INTENT(IN)</span>  :: pst         </div>
+<div class="line"><a id="l00801" name="l00801"></a><span class="lineno">  801</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV,KDIAMP,KDIAMR)</span>, <span class="keywordtype">INTENT(IN)</span>  :: psize_ratio </div>
+<div class="line"><a id="l00802" name="l00802"></a><span class="lineno">  802</span><span class="comment">!</span></div>
+<div class="line"><a id="l00803" name="l00803"></a><span class="lineno">  803</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV)</span>, <span class="keywordtype">INTENT(IN)</span>    :: pvisc_ratio </div>
+<div class="line"><a id="l00804" name="l00804"></a><span class="lineno">  804</span><span class="keywordtype">  REAL</span>,               <span class="keywordtype">INTENT(IN)</span>    :: pdens_ratio_sqrt </div>
+<div class="line"><a id="l00805" name="l00805"></a><span class="lineno">  805</span><span class="comment">!</span></div>
+<div class="line"><a id="l00806" name="l00806"></a><span class="lineno">  806</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">DIMENSION(KSCAV)</span>      :: pcol_ef   <span class="comment">!result : collision efficiency</span></div>
+<div class="line"><a id="l00807" name="l00807"></a><span class="lineno">  807</span><span class="comment">!</span></div>
+<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span><span class="keywordtype">  REAL</span>(kind=jphook) :: zhook_handle</div>
+<div class="line"><a id="l00809" name="l00809"></a><span class="lineno">  809</span><span class="comment">!</span></div>
+<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span><span class="comment">!</span></div>
+<div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span>  <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;COLL_EFFI&#39;</span>, 0, zhook_handle)</div>
+<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span>  pcol_ef(:) = (4.*psc_inv(:,j1)*pre_inv(:,j2)*(1.+0.4*pre_sqrt(:,j2)              &amp;</div>
+<div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span>                  *psc_3sqrt(:,j1)+0.16*pre_sqrt(:,j2)*psc_sqrt(:,j1)))      &amp;</div>
+<div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span>              +(4.*psize_ratio(:,j1,j2)*(pvisc_ratio(:)                    &amp; </div>
+<div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span>              +(1.+2.*pre_sqrt(:,j2))*psize_ratio(:,j1,j2)))  </div>
+<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span>  <span class="keywordflow">DO</span> i=1,kscav</div>
+<div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span>    <span class="keywordflow">IF</span> (pst(i,j1,j2)&gt;pst_star(i,j2)) <span class="keywordflow">THEN</span>            </div>
+<div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span>            pcol_ef(i) = pcol_ef(i)                                           &amp;</div>
+<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span>                    +(pdens_ratio_sqrt*((pst(i,j1,j2)-pst_star(i,j2))        &amp;</div>
+<div class="line"><a id="l00821" name="l00821"></a><span class="lineno">  821</span>                    /(pst(i,j1,j2)-pst_star(i,j2)+2./3.))**(3./2.))</div>
+<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span><span class="keywordflow">    ENDIF</span></div>
+<div class="line"><a id="l00823" name="l00823"></a><span class="lineno">  823</span><span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a id="l00824" name="l00824"></a><span class="lineno">  824</span>  <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;COLL_EFFI&#39;</span>, 1, zhook_handle)</div>
+<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span>  <span class="keyword">END FUNCTION </span>coll_effi</div>
+<div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span><span class="comment">!</span></div>
+<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span><span class="comment">!------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span><span class="comment">!</span></div>
 </div>
-<div class="line"><a id="l00830" name="l00830"></a><span class="lineno">  830</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="lima__precip__scavenging_8F90.html#a5605851b01ea0b9c9cdd3f35198a5962">lima_precip_scavenging</a></div>
+<div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="lima__precip__scavenging_8F90.html#a5605851b01ea0b9c9cdd3f35198a5962">lima_precip_scavenging</a></div>
 <div class="ttc" id="agamma_8F90_html_a8e8146418bd5e0b749c1a73538f360df"><div class="ttname"><a href="gamma_8F90.html#a8e8146418bd5e0b749c1a73538f360df">gamma_x0d</a></div><div class="ttdeci">pure real function gamma_x0d(px)</div><div class="ttdef"><b>Definition</b> <a href="gamma_8F90_source.html#l00012">gamma.F90:13</a></div></div>
 <div class="ttc" id="ainterfacemode__tools_1_1countjv_html"><div class="ttname"><a href="interfacemode__tools_1_1countjv.html">mode_tools::countjv</a></div><div class="ttdef"><b>Definition</b> <a href="tools_8F90_source.html#l00039">tools.F90:39</a></div></div>
 <div class="ttc" id="alima__precip__scavenging_8F90_html_a5605851b01ea0b9c9cdd3f35198a5962"><div class="ttname"><a href="lima__precip__scavenging_8F90.html#a5605851b01ea0b9c9cdd3f35198a5962">lima_precip_scavenging</a></div><div class="ttdeci">subroutine lima_precip_scavenging(tnsv, d, cst, buconf, tbudgets, kbudgets, hcloud, hdconf, kluout, ktcount, ptstep, prrt, prhodref, prhodj, pzz, ppabst, ptht, psvt, prsvs, pinpap)</div><div class="ttdef"><b>Definition</b> <a href="lima__precip__scavenging_8F90_source.html#l00007">lima_precip_scavenging.F90:11</a></div></div>
@@ -956,7 +955,6 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="anamespacemodd__param__lima_html_ae42ebd7d78330aaadd5fdb5dc36c337e"><div class="ttname"><a href="namespacemodd__param__lima.html#ae42ebd7d78330aaadd5fdb5dc36c337e">modd_param_lima::xr_mean_ccn</a></div><div class="ttdeci">real, dimension(:), pointer xr_mean_ccn</div><div class="ttdef"><b>Definition</b> <a href="modd__param__lima_8F90_source.html#l00361">modd_param_lima.F90:361</a></div></div>
 <div class="ttc" id="anamespacemodd__param__lima_html_aeac964d3b89158f3f89887cda11588db"><div class="ttname"><a href="namespacemodd__param__lima.html#aeac964d3b89158f3f89887cda11588db">modd_param_lima::xfrac</a></div><div class="ttdeci">real, dimension(:,:), pointer xfrac</div><div class="ttdef"><b>Definition</b> <a href="modd__param__lima_8F90_source.html#l00393">modd_param_lima.F90:393</a></div></div>
 <div class="ttc" id="anamespacemodd__param__lima_html_aefc493a9b25fa3023153181d64911a68"><div class="ttname"><a href="namespacemodd__param__lima.html#aefc493a9b25fa3023153181d64911a68">modd_param_lima::xrtmin</a></div><div class="ttdeci">real, dimension(:), pointer xrtmin</div><div class="ttdef"><b>Definition</b> <a href="modd__param__lima_8F90_source.html#l00361">modd_param_lima.F90:361</a></div></div>
-<div class="ttc" id="anamespacemodd__parameters_html"><div class="ttname"><a href="namespacemodd__parameters.html">modd_parameters</a></div><div class="ttdef"><b>Definition</b> <a href="modd__parameters_8F90_source.html#l00007">modd_parameters.F90:7</a></div></div>
 <div class="ttc" id="anamespacemode__lima__functions_html"><div class="ttname"><a href="namespacemode__lima__functions.html">mode_lima_functions</a></div><div class="ttdef"><b>Definition</b> <a href="mode__lima__functions_8F90_source.html#l00012">mode_lima_functions.F90:12</a></div></div>
 <div class="ttc" id="anamespacemode__lima__functions_html_a0e8957535956d85ee8df370b493c7a48"><div class="ttname"><a href="namespacemode__lima__functions.html#a0e8957535956d85ee8df370b493c7a48">mode_lima_functions::gaulag</a></div><div class="ttdeci">subroutine gaulag(x, w, n, alf)</div><div class="ttdef"><b>Definition</b> <a href="mode__lima__functions_8F90_source.html#l00120">mode_lima_functions.F90:121</a></div></div>
 <div class="ttc" id="anamespacemode__lima__functions_html_a6dfe035d47af5616553309414a825656"><div class="ttname"><a href="namespacemode__lima__functions.html#a6dfe035d47af5616553309414a825656">mode_lima_functions::gauher</a></div><div class="ttdeci">subroutine gauher(x, w, n)</div><div class="ttdef"><b>Definition</b> <a href="mode__lima__functions_8F90_source.html#l00178">mode_lima_functions.F90:179</a></div></div>
