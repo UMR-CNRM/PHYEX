@@ -85,7 +85,7 @@ END FUNCTION MOMG_X0D
       FUNCTION MOMG_X1D(PALPHA, PNU, PP)  RESULT(PMOMG)
 !     ##############################################
 !
-USE MODI_GAMMA
+USE MODI_GAMMA, ONLY: GAMMA
 !
 IMPLICIT NONE
 !

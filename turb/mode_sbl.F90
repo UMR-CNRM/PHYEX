@@ -213,7 +213,7 @@ END SUBROUTINE BUSINGER_PHIH_0D
 !-------------------------------------------------------------------------------
 !
 SUBROUTINE BUSINGER_PHIE_3D(PZ_O_LMO,BUSINGER_PHIE3D)
-  USE MODD_CTURB
+  USE MODD_CTURB, ONLY: XALPSBL
   REAL, DIMENSION(:,:,:), INTENT(IN)                 :: PZ_O_LMO
   REAL, DIMENSION(SIZE(PZ_O_LMO,1), &
                   SIZE(PZ_O_LMO,2),SIZE(PZ_O_LMO,3)),INTENT(OUT) :: BUSINGER_PHIE3D
@@ -233,7 +233,7 @@ END SUBROUTINE BUSINGER_PHIE_3D
 !-------------------------------------------------------------------------------
 !
 SUBROUTINE PAULSON_PSIM_2D(PZ_O_LMO,PAULSON_PSIM2D)
-  USE MODD_CST
+  USE MODD_CST, ONLY: XPI
   REAL, DIMENSION(:,:), INTENT(IN)                   :: PZ_O_LMO
   REAL, DIMENSION(SIZE(PZ_O_LMO,1),SIZE(PZ_O_LMO,2)),INTENT(OUT) :: PAULSON_PSIM2D
 !
@@ -254,7 +254,7 @@ END SUBROUTINE PAULSON_PSIM_2D
 !-------------------------------------------------------------------------------
 !
 SUBROUTINE PAULSON_PSIM_1D(PZ_O_LMO,PAULSON_PSIM1D)
-  USE MODD_CST
+  USE MODD_CST, ONLY: XPI
   REAL, DIMENSION(:), INTENT(IN)    :: PZ_O_LMO
   REAL, DIMENSION(SIZE(PZ_O_LMO,1)),INTENT(OUT) :: PAULSON_PSIM1D
 !
@@ -275,7 +275,7 @@ END SUBROUTINE PAULSON_PSIM_1D
 !-------------------------------------------------------------------------------
 !
 SUBROUTINE PAULSON_PSIM_0D(PZ_O_LMO,PAULSON_PSIM0D)
-  USE MODD_CST
+  USE MODD_CST, ONLY: XPI
   REAL, INTENT(IN)    :: PZ_O_LMO
   REAL,INTENT(OUT)    :: PAULSON_PSIM0D
 !
@@ -297,7 +297,7 @@ END SUBROUTINE PAULSON_PSIM_0D
 !-------------------------------------------------------------------------------
 !
 SUBROUTINE LMO_2D(PUSTAR,PTHETA,PRV,PSFTH,PSFRV,LMO2D)
-  USE MODD_CST
+  USE MODD_CST, ONLY: XG, XKARMAN, XRD, XRV
   USE MODD_PARAMETERS, ONLY: XUNDEF
   REAL, DIMENSION(:,:), INTENT(IN)               :: PUSTAR
   REAL, DIMENSION(:,:), INTENT(IN)               :: PTHETA
@@ -328,7 +328,7 @@ END SUBROUTINE LMO_2D
 !-------------------------------------------------------------------------------
 !
 SUBROUTINE LMO_1D(PUSTAR,PTHETA,PRV,PSFTH,PSFRV,LMO1D)
-  USE MODD_CST
+  USE MODD_CST, ONLY: XG, XKARMAN, XRD, XRV
   USE MODD_PARAMETERS, ONLY: XUNDEF
   REAL, DIMENSION(:), INTENT(IN)  :: PUSTAR
   REAL, DIMENSION(:), INTENT(IN)  :: PTHETA
@@ -358,7 +358,7 @@ END SUBROUTINE LMO_1D
 !-------------------------------------------------------------------------------
 !
 SUBROUTINE LMO_0D(PUSTAR,PTHETA,PRV,PSFTH,PSFRV,LMO0D)
-  USE MODD_CST
+  USE MODD_CST, ONLY: XG, XKARMAN, XRD, XRV
   USE MODD_PARAMETERS, ONLY: XUNDEF
   REAL, INTENT(IN)  :: PUSTAR
   REAL, INTENT(IN)  :: PTHETA
@@ -390,7 +390,7 @@ END SUBROUTINE LMO_0D
 !-------------------------------------------------------------------------------
 !
 SUBROUTINE USTAR_2D(PU,PV,PZ,PZ0,PLMO,USTAR2D)
-  USE MODD_CST
+  USE MODD_CST, ONLY: XKARMAN
   USE MODD_PARAMETERS, ONLY: XUNDEF
   REAL, DIMENSION(:,:), INTENT(IN)               :: PU
   REAL, DIMENSION(:,:), INTENT(IN)               :: PV
@@ -434,7 +434,7 @@ END SUBROUTINE USTAR_2D
 !-------------------------------------------------------------------------------
 !
 SUBROUTINE USTAR_1D(PU,PV,PZ,PZ0,PLMO,USTAR1D)
-  USE MODD_CST
+  USE MODD_CST, ONLY: XKARMAN
   USE MODD_PARAMETERS, ONLY: XUNDEF
   REAL, DIMENSION(:), INTENT(IN)               :: PU
   REAL, DIMENSION(:), INTENT(IN)               :: PV
@@ -478,7 +478,7 @@ END SUBROUTINE USTAR_1D
 !-------------------------------------------------------------------------------
 !
 SUBROUTINE USTAR_0D(PU,PV,PZ,PZ0,PLMO,USTAR0D)
-  USE MODD_CST
+  USE MODD_CST, ONLY: XKARMAN
   USE MODD_PARAMETERS, ONLY: XUNDEF
   REAL, INTENT(IN)               :: PU
   REAL, INTENT(IN)               :: PV

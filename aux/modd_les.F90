@@ -49,7 +49,7 @@
 !*       0.   DECLARATIONS
 !             ------------
 !
-USE MODD_PARAMETERS
+USE MODD_PARAMETERS, ONLY: JPMODELMAX
 !
 IMPLICIT NONE
 !

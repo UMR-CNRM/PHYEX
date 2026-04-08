@@ -50,7 +50,6 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS
 !
 IMPLICIT NONE
 !
@@ -143,7 +142,6 @@ END FUNCTION MXF
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS
 !
 IMPLICIT NONE
 !
@@ -234,7 +232,6 @@ END FUNCTION MXM
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS
 !
 IMPLICIT NONE
 !
@@ -326,7 +323,6 @@ END FUNCTION MYF
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS
 !
 IMPLICIT NONE
 !
@@ -578,7 +574,6 @@ END FUNCTION MZM
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS
 !
 IMPLICIT NONE
 !
@@ -667,7 +662,7 @@ END FUNCTION DXF
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS
+USE MODD_PARAMETERS, ONLY: JPHEXT
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
 IMPLICIT NONE
@@ -758,7 +753,6 @@ END FUNCTION DXM
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
 IMPLICIT NONE
@@ -850,7 +844,7 @@ END FUNCTION DYF
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS
+USE MODD_PARAMETERS, ONLY: JPHEXT
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
 IMPLICIT NONE

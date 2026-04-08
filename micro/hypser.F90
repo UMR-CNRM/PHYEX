@@ -72,7 +72,7 @@ END MODULE MODI_HYPSER
 !*       0. DECLARATIONS
 !
 !
-use mode_msg
+use mode_msg, ONLY: NVERB_FATAL, PRINT_MSG
 !
 IMPLICIT NONE
 !

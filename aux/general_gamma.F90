@@ -43,7 +43,7 @@
 !*       0. DECLARATIONS
 !           ------------
 !
-USE MODI_GAMMA
+USE MODI_GAMMA, ONLY: GAMMA
 !
 IMPLICIT NONE
 !
