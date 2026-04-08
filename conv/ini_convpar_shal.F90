@@ -42,7 +42,10 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CONVPAR_SHAL
+USE MODD_CONVPAR_SHAL, ONLY: LLSMOOTH, XA25, XATPERT, XAW, XBTPERT, XBW, &
+                             XCDEPTH, XCDEPTH_D, XCRAD, XCTIME_SHAL, XDTPERT, &
+                             XENTR, XNHGAM, XSTABC, XSTABT, XTFRZ1, XTFRZ2, &
+                             XZLCL, XZPBL
 !
 IMPLICIT NONE
 !  

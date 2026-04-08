@@ -103,7 +103,7 @@ INTEGER :: JITER, JI      ! iteration index
 !
 REAL :: ZEI           ! ice saturation mixing ratio
 REAL, DIMENSION(D%NIT)    :: ZWORK1 ! work arrays
-REAL :: ZWORK2, ZWORK3, ZTMP, ZXTFRDZ, ZCPVMCL, ZCPVMCI
+REAL :: ZWORK2, ZTMP, ZXTFRDZ, ZCPVMCL, ZCPVMCI
 !
 !
 !-------------------------------------------------------------------------------

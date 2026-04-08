@@ -55,7 +55,7 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CONVPAREXT
+USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT
 !
 IMPLICIT NONE
 !
