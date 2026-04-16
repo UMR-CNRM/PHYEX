@@ -84,7 +84,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="contents">
 <a href="arrays__manip_8F90.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno"><a class="line" href="namespacearrays__manip.html">    1</a></span><span class="keyword">MODULE</span> <a class="code hl_namespace" href="namespacearrays__manip.html">arrays_manip</a></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="keywordtype">USE </span>omp_lib</div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="keywordtype">USE </span>omp_lib, <span class="keywordtype">ONLY</span>: omp_get_max_threads, omp_get_thread_num</div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="keywordtype">USE </span>ieee_arithmetic, <span class="keywordtype">ONLY</span> : ieee_signaling_nan, ieee_value</div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="keywordtype">USE </span>parkind1, <span class="keywordtype">ONLY</span>: jprd</div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>

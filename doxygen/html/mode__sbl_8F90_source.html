@@ -618,34 +618,38 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00484" name="l00484"></a><span class="lineno">  484</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">INTENT(IN)</span>               :: PLMO</div>
 <div class="line"><a id="l00485" name="l00485"></a><span class="lineno">  485</span><span class="keywordtype">  REAL</span>, <span class="keywordtype">INTENT(OUT)</span>              :: USTAR0D</div>
 <div class="line"><a id="l00486" name="l00486"></a><span class="lineno">  486</span><span class="keywordtype">  REAL</span> :: ZWORK1, ZWORK2</div>
-<div class="line"><a id="l00487" name="l00487"></a><span class="lineno">  487</span><span class="comment">!</span></div>
-<div class="line"><a id="l00488" name="l00488"></a><span class="lineno">  488</span><span class="comment">!* purely unstable case</span></div>
-<div class="line"><a id="l00489" name="l00489"></a><span class="lineno">  489</span><span class="keywordtype">  REAL</span>(KIND=jphook) :: zhook_handle</div>
-<div class="line"><a id="l00490" name="l00490"></a><span class="lineno">  490</span>  <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;MODE_SBL:USTAR_0D&#39;</span>,0,zhook_handle)</div>
-<div class="line"><a id="l00491" name="l00491"></a><span class="lineno">  491</span>  ustar0d = 0.</div>
-<div class="line"><a id="l00492" name="l00492"></a><span class="lineno">  492</span><span class="comment">!</span></div>
-<div class="line"><a id="l00493" name="l00493"></a><span class="lineno">  493</span><span class="comment">!* general case</span></div>
-<div class="line"><a id="l00494" name="l00494"></a><span class="lineno">  494</span>  <span class="keywordflow">IF</span> ( abs(plmo) &gt;= 1.e-20 .AND. plmo/=<a class="code hl_variable" href="namespacemodd__parameters.html#a9823d3f349d55a2aa6599eddabe6f16f">xundef</a>) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00495" name="l00495"></a><span class="lineno">  495</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__sbl_1_1paulson__psim.html">paulson_psim</a>(pz/plmo,zwork1)</div>
-<div class="line"><a id="l00496" name="l00496"></a><span class="lineno">  496</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__sbl_1_1paulson__psim.html">paulson_psim</a>(pz0/plmo,zwork2)</div>
-<div class="line"><a id="l00497" name="l00497"></a><span class="lineno">  497</span>    ustar0d = sqrt( pu**2+pv**2 )                  &amp;</div>
-<div class="line"><a id="l00498" name="l00498"></a><span class="lineno">  498</span>             * <a class="code hl_variable" href="namespacemodd__cst.html#ad00fbf1b97b806bba9ab9de412c5031e">xkarman</a> / ( log(pz/pz0)            &amp;</div>
-<div class="line"><a id="l00499" name="l00499"></a><span class="lineno">  499</span>                          - zwork1 + zwork2)</div>
-<div class="line"><a id="l00500" name="l00500"></a><span class="lineno">  500</span><span class="keywordflow">  END IF</span></div>
-<div class="line"><a id="l00501" name="l00501"></a><span class="lineno">  501</span><span class="comment">!</span></div>
-<div class="line"><a id="l00502" name="l00502"></a><span class="lineno">  502</span><span class="comment">!* purely neutral case</span></div>
-<div class="line"><a id="l00503" name="l00503"></a><span class="lineno">  503</span>  <span class="keywordflow">IF</span> (plmo==<a class="code hl_variable" href="namespacemodd__parameters.html#a9823d3f349d55a2aa6599eddabe6f16f">xundef</a>)                  &amp;</div>
-<div class="line"><a id="l00504" name="l00504"></a><span class="lineno">  504</span>  ustar0d = sqrt( pu**2+pv**2 )     &amp;</div>
-<div class="line"><a id="l00505" name="l00505"></a><span class="lineno">  505</span>             * <a class="code hl_variable" href="namespacemodd__cst.html#ad00fbf1b97b806bba9ab9de412c5031e">xkarman</a> / log(pz/pz0)</div>
-<div class="line"><a id="l00506" name="l00506"></a><span class="lineno">  506</span> </div>
-<div class="line"><a id="l00507" name="l00507"></a><span class="lineno">  507</span>  <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;MODE_SBL:USTAR_0D&#39;</span>,1,zhook_handle)</div>
-<div class="line"><a id="l00508" name="l00508"></a><span class="lineno">  508</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__sbl.html#abeccab167804135c0d4296affc665ac9">ustar_0d</a></div>
-<div class="line"><a id="l00509" name="l00509"></a><span class="lineno">  509</span><span class="comment">!</span></div>
-<div class="line"><a id="l00510" name="l00510"></a><span class="lineno">  510</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00487" name="l00487"></a><span class="lineno">  487</span><span class="keywordtype">  REAL</span>                           :: ZZ_O_LMO</div>
+<div class="line"><a id="l00488" name="l00488"></a><span class="lineno">  488</span><span class="keywordtype">  REAL</span>                           :: ZZ0_O_LMO</div>
+<div class="line"><a id="l00489" name="l00489"></a><span class="lineno">  489</span><span class="comment">!</span></div>
+<div class="line"><a id="l00490" name="l00490"></a><span class="lineno">  490</span><span class="comment">!* purely unstable case</span></div>
+<div class="line"><a id="l00491" name="l00491"></a><span class="lineno">  491</span><span class="keywordtype">  REAL</span>(KIND=jphook) :: zhook_handle</div>
+<div class="line"><a id="l00492" name="l00492"></a><span class="lineno">  492</span>  <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;MODE_SBL:USTAR_0D&#39;</span>,0,zhook_handle)</div>
+<div class="line"><a id="l00493" name="l00493"></a><span class="lineno">  493</span>  ustar0d = 0.</div>
+<div class="line"><a id="l00494" name="l00494"></a><span class="lineno">  494</span><span class="comment">!</span></div>
+<div class="line"><a id="l00495" name="l00495"></a><span class="lineno">  495</span><span class="comment">!* general case</span></div>
+<div class="line"><a id="l00496" name="l00496"></a><span class="lineno">  496</span>  <span class="keywordflow">IF</span> ( abs(plmo) &gt;= 1.e-20 .AND. plmo/=<a class="code hl_variable" href="namespacemodd__parameters.html#a9823d3f349d55a2aa6599eddabe6f16f">xundef</a>) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00497" name="l00497"></a><span class="lineno">  497</span>    zz_o_lmo=pz/plmo</div>
+<div class="line"><a id="l00498" name="l00498"></a><span class="lineno">  498</span>    zz0_o_lmo=pz0/plmo</div>
+<div class="line"><a id="l00499" name="l00499"></a><span class="lineno">  499</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__sbl_1_1paulson__psim.html">paulson_psim</a>(zz_o_lmo,zwork1)</div>
+<div class="line"><a id="l00500" name="l00500"></a><span class="lineno">  500</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__sbl_1_1paulson__psim.html">paulson_psim</a>(zz0_o_lmo,zwork2)</div>
+<div class="line"><a id="l00501" name="l00501"></a><span class="lineno">  501</span>    ustar0d = sqrt( pu**2+pv**2 )                  &amp;</div>
+<div class="line"><a id="l00502" name="l00502"></a><span class="lineno">  502</span>             * <a class="code hl_variable" href="namespacemodd__cst.html#ad00fbf1b97b806bba9ab9de412c5031e">xkarman</a> / ( log(pz/pz0)            &amp;</div>
+<div class="line"><a id="l00503" name="l00503"></a><span class="lineno">  503</span>                          - zwork1 + zwork2)</div>
+<div class="line"><a id="l00504" name="l00504"></a><span class="lineno">  504</span><span class="keywordflow">  END IF</span></div>
+<div class="line"><a id="l00505" name="l00505"></a><span class="lineno">  505</span><span class="comment">!</span></div>
+<div class="line"><a id="l00506" name="l00506"></a><span class="lineno">  506</span><span class="comment">!* purely neutral case</span></div>
+<div class="line"><a id="l00507" name="l00507"></a><span class="lineno">  507</span>  <span class="keywordflow">IF</span> (plmo==<a class="code hl_variable" href="namespacemodd__parameters.html#a9823d3f349d55a2aa6599eddabe6f16f">xundef</a>)                  &amp;</div>
+<div class="line"><a id="l00508" name="l00508"></a><span class="lineno">  508</span>  ustar0d = sqrt( pu**2+pv**2 )     &amp;</div>
+<div class="line"><a id="l00509" name="l00509"></a><span class="lineno">  509</span>             * <a class="code hl_variable" href="namespacemodd__cst.html#ad00fbf1b97b806bba9ab9de412c5031e">xkarman</a> / log(pz/pz0)</div>
+<div class="line"><a id="l00510" name="l00510"></a><span class="lineno">  510</span> </div>
+<div class="line"><a id="l00511" name="l00511"></a><span class="lineno">  511</span>  <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;MODE_SBL:USTAR_0D&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a id="l00512" name="l00512"></a><span class="lineno">  512</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__sbl.html#abeccab167804135c0d4296affc665ac9">ustar_0d</a></div>
+<div class="line"><a id="l00513" name="l00513"></a><span class="lineno">  513</span><span class="comment">!</span></div>
+<div class="line"><a id="l00514" name="l00514"></a><span class="lineno">  514</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
 </div>
-<div class="line"><a id="l00511" name="l00511"></a><span class="lineno">  511</span><span class="comment">!</span></div>
-<div class="line"><a id="l00512" name="l00512"></a><span class="lineno">  512</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__sbl.html">mode_sbl</a></div>
-<div class="line"><a id="l00513" name="l00513"></a><span class="lineno">  513</span> </div>
+<div class="line"><a id="l00515" name="l00515"></a><span class="lineno">  515</span><span class="comment">!</span></div>
+<div class="line"><a id="l00516" name="l00516"></a><span class="lineno">  516</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__sbl.html">mode_sbl</a></div>
+<div class="line"><a id="l00517" name="l00517"></a><span class="lineno">  517</span> </div>
 <div class="ttc" id="ainterfacemode__sbl_1_1businger__phie_html"><div class="ttname"><a href="interfacemode__sbl_1_1businger__phie.html">mode_sbl::businger_phie</a></div><div class="ttdef"><b>Definition</b> <a href="mode__sbl_8F90_source.html#l00060">mode_sbl.F90:60</a></div></div>
 <div class="ttc" id="ainterfacemode__sbl_1_1businger__phih_html"><div class="ttname"><a href="interfacemode__sbl_1_1businger__phih.html">mode_sbl::businger_phih</a></div><div class="ttdef"><b>Definition</b> <a href="mode__sbl_8F90_source.html#l00054">mode_sbl.F90:54</a></div></div>
 <div class="ttc" id="ainterfacemode__sbl_1_1businger__phim_html"><div class="ttname"><a href="interfacemode__sbl_1_1businger__phim.html">mode_sbl::businger_phim</a></div><div class="ttdef"><b>Definition</b> <a href="mode__sbl_8F90_source.html#l00048">mode_sbl.F90:48</a></div></div>
