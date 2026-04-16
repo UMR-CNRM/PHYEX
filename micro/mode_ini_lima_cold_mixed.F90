@@ -216,6 +216,7 @@ REAL :: ZKHI_LWM            ! Coefficient of Lawson et al. (2015)
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 REAL :: ZRHOIW ! ice density
+CHARACTER(LEN=100) :: CTEMP
 !
 !-------------------------------------------------------------------------------
 !
@@ -947,8 +948,8 @@ IF (XALPHAC == 3.0) THEN
   XR_HONC   = XPI/6.0
 ELSE
   WRITE ( YVAL, '( E13.6 )' ) XALPHAC
-  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'INI_LIMA_COLD_MIXED', 'HOMOGENEOUS NUCLEATION: XALPHAC='//TRIM(YVAL)// &
-                  '/= 3. NO ALGORITHM DEVELOPED FOR THIS CASE' )
+  CTEMP='HOMOGENEOUS NUCLEATION: XALPHAC='//TRIM(YVAL)//'/= 3. NO ALGORITHM DEVELOPED FOR THIS CASE'
+  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'INI_LIMA_COLD_MIXED', CTEMP)
 END IF
 !
 !!$GFLAG = .TRUE.

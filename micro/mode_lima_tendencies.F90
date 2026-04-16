@@ -416,6 +416,12 @@ REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZRIT_SHAPE
 REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZRIT_SHAPE_IF
 REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZCIT_SHAPE_IF
 REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE) :: ZLBDAI_SHAPE
+REAL, DIMENSION(SIZE(PRCT)) :: ZWK1
+REAL, DIMENSION(SIZE(PRCT)) :: ZWK2
+REAL, DIMENSION(SIZE(PRCT)) :: ZWK3
+REAL, DIMENSION(SIZE(PRCT)) :: ZWK4
+REAL, DIMENSION(SIZE(PRCT)) :: ZWK5
+REAL, DIMENSION(SIZE(PRCT)) :: ZWK6
 !
 REAL, DIMENSION(KSIZE) :: ZHLC_HCF
 REAL, DIMENSION(KSIZE) :: ZHLC_LCF
@@ -733,9 +739,10 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_I.GE.1) THEN
 END IF
 !
 IF ((.NOT. LIMAP%LKHKO) .AND. LIMAP%NMOM_C.GE.2) THEN
+   ZWK1(:) = ZCCT(:)/ZCF1D(:)
    CALL LIMA_DROPLETS_SELF_COLLECTION (LIMAP, LIMAW, KSIZE, ODCOMPUTE, & ! depends on CF
                                        PRHODREF,           &
-                                       ZCCT/ZCF1D, ZLBDC3, &
+                                       ZWK1, ZLBDC3, &
                                        P_CC_SELF           )
    P_CC_SELF(:) = P_CC_SELF(:) * ZCF1D(:)
    PA_CC(:) = PA_CC(:) + P_CC_SELF(:)
@@ -747,18 +754,22 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
    P_CR_AUTO(:) = 0.
 IF (.NOT. LIMAP%LICE3) THEN
    ! In low content cloud
+   ZWK1(:) = PHLC_LRC(:)/ZHLC_LCF(:)
+   ZWK2(:) = ZCCT(:)/ZCF1D(:)
    CALL LIMA_DROPLETS_AUTOCONVERSION (CST, LIMAP, LIMAW, KSIZE, ODCOMPUTE,   & ! depends on CF
                                       PRHODREF,                              &
-                                      PHLC_LRC/ZHLC_LCF, ZCCT/ZCF1D, ZLBDC_LRC, ZLBDR,  &
+                                      ZWK1, ZWK2, ZLBDC_LRC, ZLBDR,  &
                                       Z_RC_AUTO_2, Z_CC_AUTO_2, Z_CR_AUTO_2        )
    P_RC_AUTO(:) = Z_RC_AUTO_2(:) * PHLC_LCF(:)
    P_CC_AUTO(:) = Z_CC_AUTO_2(:) * PHLC_LCF(:)
    P_CR_AUTO(:) = Z_CR_AUTO_2(:) * PHLC_LCF(:)
 END IF
    ! In high content cloud
+   ZWK1(:) = PHLC_HRC(:)/ZHLC_HCF(:)
+   ZWK2(:) = ZCCT(:)/ZCF1D(:)
    CALL LIMA_DROPLETS_AUTOCONVERSION (CST, LIMAP, LIMAW, KSIZE, ODCOMPUTE,   & ! depends on CF
                                       PRHODREF,                              &
-                                      PHLC_HRC/ZHLC_HCF, ZCCT/ZCF1D, ZLBDC_HRC, ZLBDR,  &
+                                      ZWK1, ZWK2, ZLBDC_HRC, ZLBDR,  &
                                       Z_RC_AUTO_2, Z_CC_AUTO_2, Z_CR_AUTO_2        )
    P_RC_AUTO(:) = P_RC_AUTO(:) + Z_RC_AUTO_2(:) * PHLC_HCF(:)
    P_CC_AUTO(:) = P_CC_AUTO(:) + Z_CC_AUTO_2(:) * PHLC_HCF(:)
@@ -774,18 +785,26 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
    P_CC_ACCR(:) = 0.
    P_RC_ACCR(:) = 0.
    ! In high content cloud
+   ZWK1(:) = PHLC_HRC(:)/ZHLC_HCF(:)
+   ZWK2(:) = ZRRT(:)/ZPF1D(:)
+   ZWK3(:) = ZCCT(:)/ZCF1D(:)
+   ZWK4(:) = ZCRT(:)/ZPF1D(:)
    CALL LIMA_DROPLETS_ACCRETION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,                & ! depends on CF, PF
                                  PRHODREF,                                      &
-                                 PHLC_HRC/ZHLC_HCF, ZRRT/ZPF1D, ZCCT/ZCF1D, ZCRT/ZPF1D,&
+                                 ZWK1, ZWK2, ZWK3, ZWK4,&
                                  ZLBDC_HRC, ZLBDC3_HRC, ZLBDR, ZLBDR3,                 &
                                  Z_RC_ACCR_2, Z_CC_ACCR_2                           )
    !
    P_CC_ACCR(:) = Z_CC_ACCR_2(:) * MIN(PHLC_HCF(:),ZPF1D(:))
    P_RC_ACCR(:) = Z_RC_ACCR_2(:) * MIN(PHLC_HCF(:),ZPF1D(:))
    ! In low content cloud
+   ZWK1(:) = PHLC_LRC(:)/ZHLC_LCF(:)
+   ZWK2(:) = ZRRT(:)/ZPF1D(:)
+   ZWK3(:) = ZCCT(:)/ZCF1D(:)
+   ZWK4(:) = ZCRT(:)/ZPF1D(:)
    CALL LIMA_DROPLETS_ACCRETION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,                & ! depends on CF, PF
                                  PRHODREF,                                      &
-                                 PHLC_LRC/ZHLC_LCF, ZRRT/ZPF1D, ZCCT/ZCF1D, ZCRT/ZPF1D,&
+                                 ZWK1, ZWK2, ZWK3, ZWK4,&
                                  ZLBDC_LRC, ZLBDC3_LRC, ZLBDR, ZLBDR3,                  &
                                  Z_RC_ACCR_2, Z_CC_ACCR_2                           )
    !
@@ -798,9 +817,10 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
 END IF
 !
 IF ((.NOT. LIMAP%LKHKO) .AND. LIMAP%NMOM_R.GE.2) THEN 
+   ZWK1(:) = ZCRT(:)/ZPF1D(:)
    CALL LIMA_DROPS_SELF_COLLECTION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,    & ! depends on PF
                                     PRHODREF,            &
-                                    ZCRT/ZPF1D(:), ZLBDR, ZLBDR3, &
+                                    ZWK1, ZLBDR, ZLBDR3, &
                                     P_CR_SCBU            )
    !
    P_CR_SCBU(:) = P_CR_SCBU(:) * ZPF1D(:)
@@ -809,10 +829,13 @@ IF ((.NOT. LIMAP%LKHKO) .AND. LIMAP%NMOM_R.GE.2) THEN
 END IF
 !
 IF (LIMAP%NMOM_R.GE.1) THEN
+   ZWK1(:) = ZRCT(:)/ZPF1D(:)
+   ZWK2(:) = ZRRT(:)/ZPF1D(:)
+   ZWK3(:) = ZCRT(:)/ZPF1D(:)
    CALL LIMA_RAIN_EVAPORATION (CST, LIMAP, LIMAW, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on PF > CF 
                                PRHODREF, ZT_CS, ZLV_CS, ZLVFACT, ZEVSAT_CS, ZRVSAT_CS,      &
                                ZKA_CS, ZDV_CS, ZCJ_CS,                                   &
-                               PRVT, ZRCT/ZPF1D, ZRRT/ZPF1D, ZCRT/ZPF1D, ZLBDR, &
+                               PRVT, ZWK1, ZWK2, ZWK3, ZLBDR, &
                                P_TH_EVAP, P_RR_EVAP, P_CR_EVAP,                 &
                                PEVAP3D                                          )
    P_RR_EVAP(:) = P_RR_EVAP(:) * MAX((ZPF1D(:) - ZCF1D(:)),0.)
@@ -847,9 +870,11 @@ IF (LIMAP%NMOM_I.GE.1) THEN
    IF (.NOT. LIMAP%LICE3) THEN
    !
    ! In low content part
+      ZWK1(:) = PHLI_LRI(:)/ZHLI_LCF(:)
+      ZWK2(:) = ZCIT(:)/ZIF1D(:)
       CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF
                                 PRHODREF, ZT, ZSSI, ZAI, ZCJ, ZLSFACT,           &
-                                ZHLI_LCF, PHLI_LRI/ZHLI_LCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_LRI,    &
+                                ZHLI_LCF, ZWK1, ZWK2, ZCIT_SHAPE_IF, ZLBDI_LRI,    &
                                 Z_TH_DEPI_2, Z_RI_DEPI_2, Z_SHCI_HACH_2,         &
                                 Z_RI_CNVS_2, Z_CI_CNVS_2, Z_SHCI_CNVS_2          )
    !
@@ -866,9 +891,11 @@ IF (LIMAP%NMOM_I.GE.1) THEN
    END IF
    !
    ! In high content part
+   ZWK1(:) = PHLI_HRI(:)/ZHLI_HCF(:)
+   ZWK2(:) = ZCIT(:)/ZIF1D(:)
    CALL LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,     & ! depends on IF, PF
                              PRHODREF, ZT, ZSSI, ZAI, ZCJ, ZLSFACT,           &
-                             ZHLI_HCF, PHLI_HRI/ZHLI_HCF, ZCIT/ZIF1D, ZCIT_SHAPE_IF, ZLBDI_HRI,    &
+                             ZHLI_HCF, ZWK1, ZWK2, ZCIT_SHAPE_IF, ZLBDI_HRI,    &
                              Z_TH_DEPI_2, Z_RI_DEPI_2, Z_SHCI_HACH_2,         &
                              Z_RI_CNVS_2, Z_CI_CNVS_2, Z_SHCI_CNVS_2          )
    !
@@ -898,9 +925,11 @@ IF (LIMAP%NMOM_I.GE.1) THEN
 END IF
 !
 IF(LIMAP%LICE_ISC .AND. LIMAP%NMOM_I.GE.2) THEN
+  ZWK1(:) = ZRIT(:)/ZIF1D(:)
+  ZWK2(:) = PCIT(:)/ZIF1D(:)
   CALL LIMA_ICE_SELF_COLLECTION (CST, LIMAP, LIMAC, KSIZE, ODCOMPUTE,          & 
                                  PRHODREF, ZT,                                 &
-                                 ZRIT/ZIF1D, PCIT/ZIF1D, ZLBDI,       &
+                                 ZWK1, ZWK2, ZLBDI,       &
                                  ZRIT_SHAPE_IF, ZCIT_SHAPE_IF, ZLBDAI_SHAPE,         &                                  
                                  P_CI_ISC, P_SHCI_ISC, P_SHRI_ISCS, P_SHCI_ISCS)
   !
@@ -925,9 +954,11 @@ IF (LIMAP%NMOM_S.GE.1) THEN
    !
    ! Includes vapour deposition on snow, snow -> ice conversion
    !
+   ZWK1(:) = ZRST(:)/ZPF1D(:)
+   ZWK2(:) = ZCST(:)/ZPF1D(:)
    CALL LIMA_SNOW_DEPOSITION (LIMAP, LIMAC, KSIZE, ODCOMPUTE,                  & ! depends on IF, PF
                               PRHODREF, ZSSI, ZAI, ZCJ, ZLSFACT, &
-                              ZRST/ZPF1D, ZCST/ZPF1D, ZLBDS,     &
+                              ZWK1, ZWK2, ZLBDS,     &
                               P_RI_CNVI, P_CI_CNVI,              &
                               P_TH_DEPS, P_RS_DEPS               )
    !
@@ -957,9 +988,11 @@ IF (LIMAP%NMOM_S.GE.1) THEN
 END IF
 !
 IF (LIMAP%NMOM_S.GE.2) THEN 
+   ZWK1(:) = ZRST(:)/ZPF1D(:)
+   ZWK2(:) = ZCST(:)/ZPF1D(:)
    CALL LIMA_SNOW_SELF_COLLECTION (CST, LIMAP, LIMAC, KSIZE, ODCOMPUTE,    & ! depends on PF
                                    PRHODREF,            &
-                                   ZRST(:)/ZPF1D(:), ZCST/ZPF1D(:), ZLBDS, ZLBDS3, &
+                                   ZWK1, ZWK2, ZLBDS, ZLBDS3, &
                                    P_CS_SSC             )
    !
    P_CS_SSC(:) = P_CS_SSC(:) * ZPF1D(:)
@@ -974,9 +1007,13 @@ END IF
 !
 !
 IF (LIMAP%NMOM_I.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
+   ZWK1(:) = ZRIT(:)/ZIF1D(:)
+   ZWK2(:) = ZRST(:)/ZPF1D(:)
+   ZWK3(:) = ZCIT(:)/ZIF1D(:)
+   ZWK4(:) = ZCST(:)/ZPF1D(:)
    CALL LIMA_ICE_AGGREGATION_SNOW (CST, LIMAP, LIMAC, KSIZE, ODCOMPUTE,                                             & ! depends on IF, PF
                                    ZT, PRHODREF,                                                 &
-                                   ZRIT/ZIF1D, ZRST/ZPF1D, ZCIT/ZIF1D, ZCST/ZPF1D, ZLBDI, ZLBDS, &
+                                   ZWK1, ZWK2, ZWK3, ZWK4, ZLBDI, ZLBDS, &
                                    ZCIT_SHAPE_IF, ZRIT_SHAPE_IF, ZLBDAI_SHAPE,                   &
                                    PLATHAM_IAGGS,                                                &
                                    P_RI_AGGS, P_CI_AGGS, P_SHCI_AGGS                             )
@@ -995,8 +1032,10 @@ IF (LIMAP%NMOM_I.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
 END IF
 !
 IF (LIMAP%NMOM_G.GE.1) THEN
+   ZWK1(:) = ZRGT(:)/ZPF1D(:)
+   ZWK2(:) = ZCGT(:)/ZPF1D(:)
    CALL LIMA_GRAUPEL_DEPOSITION (LIMAP, LIMAM, KSIZE, ODCOMPUTE, PRHODREF,                             & ! depends on PF ?
-                                 ZRGT/ZPF1D, ZCGT/ZPF1D, ZSSI, ZLBDG, ZAI, ZCJ, ZLSFACT, &
+                                 ZWK1, ZWK2, ZSSI, ZLBDG, ZAI, ZCJ, ZLSFACT, &
                                  P_TH_DEPG, P_RG_DEPG                                    )
    P_RG_DEPG(:) = P_RG_DEPG(:) * ZPF1D(:)
    P_TH_DEPG(:) = P_RG_DEPG(:) * ZLSFACT(:)
@@ -1007,8 +1046,11 @@ IF (LIMAP%NMOM_G.GE.1) THEN
 END IF
 !
 IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_I.EQ.1) THEN
+   ZWK1(:) = ZRCT(:)/ZCF1D(:)
+   ZWK2(:) = ZRIT(:)/ZIF1D(:)
+   ZWK3(:) = ZCIT(:)/ZIF1D(:)
    CALL LIMA_BERGERON (LIMAP, LIMAC, KSIZE, ODCOMPUTE,                          & ! depends on CF, IF
-                       ZRCT/ZCF1D, ZRIT/ZIF1D, ZCIT/ZIF1D, ZLBDI, &
+                       ZWK1, ZWK2, ZWK3, ZLBDI, &
                        ZSSI, ZAI, ZCJ, ZLVFACT, ZLSFACT,          &
                        P_TH_BERFI, P_RC_BERFI                     )
    P_TH_BERFI(:) = P_TH_BERFI(:) * MIN(ZCF1D,ZIF1D)
@@ -1024,9 +1066,13 @@ IF (.FALSE. .AND. LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
      ! Graupel production as tendency (or should be tendency + instant to stick to the previous version ?)
      ! Includes the Hallett Mossop process for riming of droplets by snow (HMS)
      !
-   CALL LIMA_DROPLETS_RIMING_SNOW (CST, LIMAP, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                         & ! depends on CF
-                                   PRHODREF, ZT,                                     &
-                                   ZRCT/ZCF1D, ZCCT/ZCF1D, ZRST/ZPF1D, ZCST/ZPF1D, ZLBDC, ZLBDS, ZLVFACT, ZLSFACT, &
+    ZWK1(:) = ZRCT(:)/ZCF1D(:)
+    ZWK2(:) = ZCCT(:)/ZCF1D(:)
+    ZWK3(:) = ZRST(:)/ZPF1D(:)
+    ZWK4(:) = ZCST(:)/ZPF1D(:)
+    CALL LIMA_DROPLETS_RIMING_SNOW (CST, LIMAP, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                         & ! depends on CF
+                                    PRHODREF, ZT,                                     &
+                                    ZWK1, ZWK2, ZWK3, ZWK4, ZLBDC, ZLBDS, ZLVFACT, ZLSFACT, &
 !                                   P_TH_RIM, P_RC_RIM, P_CC_RIM, P_RS_RIM, P_CS_RIM, P_RG_RIM, &
                                    P_TH_RIM, P_CC_RIM, P_CS_RIM, P_RC_RIMSS, P_RC_RIMSG, P_RS_RIMCG, &
                                    P_RI_HMS, P_CI_HMS, P_RS_HMS                      )
@@ -1102,9 +1148,11 @@ IF (LIMAP%NMOM_S.GE.1) THEN
    ! Conversion melting of snow should account for collected droplets and drops where T>0C, but does not !
    ! Some thermodynamical computations inside, to externalize ?
    !
+   ZWK1(:) = ZRST(:)/ZPF1D(:)
+   ZWK2(:) = ZCST(:)/ZPF1D(:)
    CALL LIMA_CONVERSION_MELTING_SNOW (CST, LIMAP, LIMAC, LIMAM, KSIZE, ODCOMPUTE,                    & ! depends on PF
                                       PRHODREF, PPABST, ZT, ZKA, ZDV, ZCJ, &
-                                      PRVT, ZRST/ZPF1D, ZCST/ZPF1D, ZLBDS, &
+                                      PRVT, ZWK1, ZWK2, ZLBDS, &
                                       P_RS_CMEL, P_CS_CMEL                 )
    P_RS_CMEL(:) = P_RS_CMEL(:) * ZPF1D(:)
    P_CS_CMEL(:) = P_CS_CMEL(:) * ZPF1D(:)
@@ -1117,9 +1165,13 @@ IF (LIMAP%NMOM_S.GE.1) THEN
 END IF
 !
 IF (LIMAP%NMOM_R.GE.1) THEN
+   ZWK1(:) = ZRRT(:)/ZPF1D(:)
+   ZWK2(:) = ZCRT(:)/ZPF1D(:)
+   ZWK3(:) = ZRIT(:)/ZIF1D(:)
+   ZWK4(:) = ZCIT(:)/ZIF1D(:)
    CALL LIMA_RAIN_FREEZING (CST, LIMAP, LIMAM, KSIZE, ODCOMPUTE,                                      & ! depends on PF, IF
                             PRHODREF, ZT, ZLVFACT, ZLSFACT,                        &
-                            ZRRT/ZPF1D, ZCRT/ZPF1D, ZRIT/ZIF1D, ZCIT/ZIF1D, ZLBDR, &
+                            ZWK1, ZWK2, ZWK3, ZWK4, ZLBDR, &
                             P_TH_CFRZ, P_RR_CFRZ, P_CR_CFRZ, P_RI_CFRZ, P_CI_CFRZ  )
    P_RR_CFRZ(:) = P_RR_CFRZ(:) * MIN(ZIF1D(:),ZPF1D(:))
    P_CR_CFRZ(:) = P_CR_CFRZ(:) * MIN(ZIF1D(:),ZPF1D(:))
@@ -1150,9 +1202,15 @@ IF (LIMAP%NMOM_S.GE.1 .AND. LIMAP%NMOM_G.GE.1 .AND. LIMAP%LCIBU) THEN
    ! Conversion melting of snow should account for collected droplets and drops where T>0C, but does not !
    ! Some thermodynamical computations inside, to externalize ?
    !
+   ZWK1(:) = ZRIT(:)/ZIF1D(:)
+   ZWK2(:) = ZRST(:)/ZPF1D(:)
+   ZWK3(:) = ZRGT(:)/ZPF1D(:)
+   ZWK4(:) = ZCIT(:)/ZIF1D(:)
+   ZWK5(:) = ZCST(:)/ZPF1D(:)
+   ZWK6(:) = ZCGT(:)/ZPF1D(:)
    CALL LIMA_COLLISIONAL_ICE_BREAKUP (LIMAP, LIMAC, LIMAM, KSIZE, ODCOMPUTE,                               & ! depends on PF (IF for fragments size)
                                       PRHODREF,                                       &
-                                      ZRIT/ZIF1D, ZRST/ZPF1D, ZRGT/ZPF1D, ZCIT/ZIF1D, ZCST/ZPF1D, ZCGT/ZPF1D, &
+                                      ZWK1, ZWK2, ZWK3, ZWK4, ZWK5, ZWK6, &
                                       ZLBDS, ZLBDG,                                   &
                                       P_RI_CIBU, P_CI_CIBU                            )
    P_RI_CIBU(:) = P_RI_CIBU(:) * ZPF1D(:)
@@ -1183,9 +1241,14 @@ IF (LIMAP%NMOM_R.GE.1 .AND. LIMAP%NMOM_I.GE.1 .AND. LIMAP%LRDSF) THEN
    ! Conversion melting of snow should account for collected droplets and drops where T>0C, but does not !
    ! Some thermodynamical computations inside, to externalize ?
    !
+   ZWK1(:) = ZRRT(:)/ZPF1D(:)
+   ZWK2(:) = ZCRT(:)/ZPF1D(:)
+   ZWK3(:) = ZRIT(:)/ZIF1D(:)
+   ZWK4(:) = ZCIT(:)/ZIF1D(:)
+   ZWK5(:) = ZRGT(:)/ZPF1D(:)
    CALL LIMA_RAINDROP_SHATTERING_FREEZING (LIMAP, LIMAW, LIMAC, LIMAM, KSIZE, ODCOMPUTE,                               & ! depends on PF, IF
                                            PRHODREF, ZT,                                   &
-                                           ZRRT/ZPF1D, ZCRT/ZPF1D, ZRIT/ZIF1D, ZCIT/ZIF1D, ZRGT/ZPF1D, &
+                                           ZWK1, ZWK2, ZWK3, ZWK4, ZWK5, &
                                            ZLBDR,                                          &
                                            P_RI_RDSF, P_CI_RDSF                            )
    P_RI_RDSF(:) = P_RI_RDSF(:) * ZIF1D(:)
@@ -1251,8 +1314,10 @@ IF (LIMAP%NMOM_G.GE.1) THEN
 END IF
 !
 IF (LIMAP%NMOM_H.GE.1) THEN
+   ZWK1(:) = ZRHT(:)/ZPF1D(:)
+   ZWK2(:) = ZCHT(:)/ZPF1D(:)
    CALL LIMA_HAIL_DEPOSITION (LIMAP, LIMAM, KSIZE, ODCOMPUTE, PRHODREF,               & ! depends on PF ?
-                              ZRHT/ZPF1D, ZCHT/ZPF1D, ZSSI, ZLBDH, ZAI, ZCJ, ZLSFACT, &
+                              ZWK1, ZWK2, ZSSI, ZLBDH, ZAI, ZCJ, ZLSFACT, &
                               P_TH_DEPH, P_RH_DEPH                                    )
    P_RH_DEPH(:) = P_RH_DEPH(:) * ZPF1D(:)
    P_TH_DEPH(:) = P_RH_DEPH(:) * ZLSFACT(:)

@@ -85,6 +85,7 @@ REAL :: X1, X2, X3, X4, X5
 
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+REAL :: ZW1, ZW2
 !-------------------------------------------------------------------------------
 !
 !
@@ -149,8 +150,8 @@ IF ( NMOD_CCN .GE. 1 ) THEN
       LOGSIGCCN(:) = (/ 0.645 , 0.253 , 0.425 /)
       RHOCCN(:) = (/ 1000. , 1000. , 1000. /)
    CASE DEFAULT
-      CALL PRINT_MSG(NVERB_FATAL,'GEN','INIT_AEROSOL_PROPERTIES','CCN_MODES must be JUNGFRAU, COPT, CAMS, CAMS_JPP,'// &
-                                                                 'CAMS_ACC, CAMS_AIT, SIRTA, CPS00, MOCAGE or FREETROP')
+      CALL PRINT_MSG(NVERB_FATAL,'GEN','INIT_AEROSOL_PROPERTIES', &
+                     'CCN_MODES must be JUNGFRAU, COPT, CAMS, CAMS_JPP, CAMS_ACC, CAMS_AIT, SIRTA, CPS00, MOCAGE or FREETROP')
    ENDSELECT
 !
   DO I=1, MIN(NMOD_CCN,3)
@@ -266,7 +267,9 @@ IF ( NMOD_CCN .GE. 1 ) THEN
 !!$           *GAMMA_X0D(XMUHEN_MULTI(JMOD)) )
 !!$
 !!$
-       CALL LIMA_INIT_CCN_ACTIVATION_SPECTRUM (CST,HTYPE_CCN(JMOD),XR_MEAN_CCN(JMOD)*2.,EXP(XLOGSIG_CCN(JMOD)),X1,X2,X3,X4,X5)
+       ZW1=XR_MEAN_CCN(JMOD)*2.
+       ZW2=EXP(XLOGSIG_CCN(JMOD))
+       CALL LIMA_INIT_CCN_ACTIVATION_SPECTRUM (CST,HTYPE_CCN(JMOD),ZW1,ZW2,X1,X2,X3,X4,X5)
        !
        ! LIMA_INIT_CCN_ACTIVATION_SPECTRUM returns X1=C/Nccn (instead of XLIMIT_FACTOR), X2=k, X3=mu, X4=beta, X5=kappa
        ! So XLIMIT_FACTOR = 1/X1

@@ -90,9 +90,9 @@ IF( (PX.LT.PA+1.0) ) THEN
     IF( ABS(ZDEL).LT.ABS(ZSUM)*ZEPS ) EXIT LOOP_SERIES
     JN = JN + 1
     IF( JN.GT.ITMAX ) THEN
-      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'GAMMA_INC', 'PA argument is too large or ITMAX is too small,'// &
-                     ' the incomplete GAMMA_INC function cannot be evaluated correctly'// &
-                     ' by the series method')
+      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'GAMMA_INC', 'PA argument is too large or ITMAX is too small, &
+                     &the incomplete GAMMA_INC function cannot be evaluated correctly &
+                     &by the series method')
     END IF
   END DO LOOP_SERIES
   PGAMMA_INC = ZSUM * EXP( -PX+PA*LOG(PX)-LOG(GAMMA(PA)) )
@@ -122,9 +122,9 @@ IF( (PX.LT.PA+1.0) ) THEN
     IF( ABS(ZDEL-1.0).LT.ZEPS ) EXIT LOOP_FRACTION
     JN = JN + 1
     IF( JN.GT.ITMAX ) THEN
-      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'GAMMA_INC', 'PA argument is too large or ITMAX is too small,'// &
-                     ' the incomplete GAMMA_INC function cannot be evaluated correctly'// &
-                     ' by the continuous fraction method')
+      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'GAMMA_INC', 'PA argument is too large or ITMAX is too small, &
+                     &the incomplete GAMMA_INC function cannot be evaluated correctly &
+                     &by the continuous fraction method')
     END IF
   END DO LOOP_FRACTION
   PGAMMA_INC = 1.0 - ZH*EXP( -PX+PA*LOG(PX)-LOG(GAMMA(PA)) )

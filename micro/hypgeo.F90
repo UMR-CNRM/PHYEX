@@ -87,6 +87,7 @@ REAL                                 :: PHYPGEO
 REAL                                 :: ZEPS,ZTEMP
 REAL                                 :: ZXH
 REAL                                 :: ZX0,ZX1
+REAL                                 :: ZW1, ZW2, ZW3
 !
 !------------------------------------------------------------------------------
 !
@@ -94,25 +95,39 @@ REAL                                 :: ZX0,ZX1
 ZEPS = 4.E-2
 ZXH = PF * PX**2.0
 IF (ZXH.LT.(1-ZEPS)) THEN
-  CALL HYPSER(PA,PB,PC,-ZXH,PHYPGEO)
+  ZW1=-ZXH
+  CALL HYPSER(PA,PB,PC,ZW1,PHYPGEO)
 ELSE IF (ZXH.GT.(1.+ZEPS)) THEN
   ZXH = 1./ZXH
-  CALL HYPSER(PA,PA-PC+1.,PA-PB+1.,-ZXH,PHYPGEO)
+  ZW1=PA-PC+1.
+  ZW2=PA-PB+1.
+  ZW3=-ZXH
+  CALL HYPSER(PA,ZW1,ZW2,ZW3,PHYPGEO)
   PHYPGEO = PHYPGEO*ZXH**(PA)*                         &
            (GAMMA(PC)*GAMMA(PB-PA)/(GAMMA(PB)*GAMMA(PC-PA)))
-  CALL HYPSER(PB,PB-PC+1.,PB-PA+1.,-ZXH,ZTEMP)
+  ZW1=PB-PC+1.
+  ZW2=PB-PA+1.
+  ZW3=-ZXH
+  CALL HYPSER(PB,ZW1,ZW2,ZW3,ZTEMP)
   PHYPGEO = PHYPGEO+ZTEMP*ZXH**(PB)*                         &
            (GAMMA(PC)*GAMMA(PA-PB)/(GAMMA(PA)*GAMMA(PC-PB)))
 ELSE
   ZX0 = (1.-ZEPS)
   ZX1 = 1./(1.+ZEPS)
-  CALL HYPSER(PA,PA-PC+1.,PA-PB+1.,-ZX1,PHYPGEO)
+  ZW1=PA-PC+1.
+  ZW2=PA-PB+1.
+  ZW3=-ZX1
+  CALL HYPSER(PA,ZW1,ZW2,ZW3,PHYPGEO)
   PHYPGEO = PHYPGEO*ZX1**(PA)*                         &
            (GAMMA(PC)*GAMMA(PB-PA)/(GAMMA(PB)*GAMMA(PC-PA)))
-  CALL HYPSER(PB,PB-PC+1.,PB-PA+1.,-ZX1,ZTEMP)
+  ZW1=PB-PC+1.
+  ZW2=PB-PA+1.
+  ZW3=-ZX1
+  CALL HYPSER(PB,ZW1,ZW2,ZW3,ZTEMP)
   PHYPGEO = PHYPGEO+ZTEMP*ZX1**(PB)*                         &
            (GAMMA(PC)*GAMMA(PA-PB)/(GAMMA(PA)*GAMMA(PC-PB)))
-  CALL HYPSER(PA,PB,PC,-ZX0,ZTEMP)
+  ZW1=-ZX0
+  CALL HYPSER(PA,PB,PC,ZW1,ZTEMP)
   PHYPGEO = ZTEMP + (ZXH-ZX0)*(PHYPGEO-ZTEMP)/(2.*ZEPS)
 ENDIF
 END

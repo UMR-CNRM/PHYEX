@@ -72,8 +72,7 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST, ONLY: CST, XBETAW, XCI, XCL, XCPD, XCPV, XG, XGAMW, XLSTT, XLVTT, XP00, &
-                    XPI, XRD, XRV, XTT
+USE MODD_CST, ONLY: CST
 USE MODD_CONVPAR, ONLY: XCRAD, XENTR, XRHDBC
 USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT
 !
@@ -157,8 +156,8 @@ IKE = KLEV - JCVEXT
 !*       1.     Initialize downdraft properties
 !               -------------------------------
 !
-ZRDOCP     = XRD / XCPD
-ZEPS       = XRD / XRV
+ZRDOCP     = CST%XRD / CST%XCPD
+ZEPS       = CST%XRD / CST%XRV
 PDMF(:,:)  = 0.
 PDER(:,:)  = 0.
 PDDR(:,:)  = 0.
@@ -195,24 +194,24 @@ END DO
 !
 DO JI = 1, IIE
     JK = KLFS(JI)
-    ZPI(JI)    = ( XP00 / PPRES(JI,JK) ) ** ZRDOCP
+    ZPI(JI)    = ( CST%XP00 / PPRES(JI,JK) ) ** ZRDOCP
       ! compute updraft theta_e
     ZWORK3(JI) = PURW(JI,JK) - PURC(JI,JK) - PURI(JI,JK)
     ZDT(JI)    = PTH(JI,JK) / ZPI(JI)
-    ZLV(JI)    = XLVTT + ( XCPV - XCL ) * ( ZDT(JI) - XTT )
-    ZLS(JI)    = XLSTT + ( XCPV - XCI ) * ( ZDT(JI) - XTT )
-    ZCPH(JI)   = XCPD + XCPV * PURW(JI,JK)
-    ZDT(JI)    = ( PUTHL(JI,JK) - ( 1. + PURW(JI,JK) ) * XG * PZ(JI,JK)       &
+    ZLV(JI)    = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZDT(JI) - CST%XTT )
+    ZLS(JI)    = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( ZDT(JI) - CST%XTT )
+    ZCPH(JI)   = CST%XCPD + CST%XCPV * PURW(JI,JK)
+    ZDT(JI)    = ( PUTHL(JI,JK) - ( 1. + PURW(JI,JK) ) * CST%XG * PZ(JI,JK)       &
                  + ZLV(JI) * PURC(JI,JK) + ZLS(JI) * PURI(JI,JK) ) / ZCPH(JI)
     ZWORK1(JI) = ZDT(JI) * ZPI(JI) ** ( 1. - 0.28 * ZWORK3(JI) )              &
                                   * EXP( ( 3374.6525 / ZDT(JI) - 2.5403 )     &
                                   * ZWORK3(JI) * ( 1. + 0.81 * ZWORK3(JI) ) )
       ! compute environmental theta_e
     ZDT(JI)    = PTH(JI,JK) / ZPI(JI)
-    ZLV(JI)    = XLVTT + ( XCPV - XCL ) * ( ZDT(JI) - XTT )
-    ZLS(JI)    = XLSTT + ( XCPV - XCI ) * ( ZDT(JI) - XTT )
+    ZLV(JI)    = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZDT(JI) - CST%XTT )
+    ZLS(JI)    = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( ZDT(JI) - CST%XTT )
     ZWORK3(JI) = PRW(JI,JK) - PRC(JI,JK) - PRI(JI,JK)
-    ZCPH(JI)   = XCPD + XCPV * PRW(JI,JK)
+    ZCPH(JI)   = CST%XCPD + CST%XCPV * PRW(JI,JK)
     ZWORK2(JI) = ZDT(JI) * ZPI(JI) ** ( 1. - 0.28 * ZWORK3(JI) )              &
                                   * EXP( ( 3374.6525 / ZDT(JI) - 2.5403 )     &
                                   * ZWORK3(JI) * ( 1. + 0.81 * ZWORK3(JI) ) )
@@ -276,8 +275,8 @@ END DO
               ! dewp point temperature
     ZWORK3(:) = ( 4780.8 - 32.19 * ZWORK3(:) ) / ( 17.502 - ZWORK3(:) )
               ! adiabatic saturation temperature
-    ZWORK3(:) = ZWORK3(:) - ( .212 + 1.571E-3 * ( ZWORK3(:) - XTT )          &
-                  - 4.36E-4 * ( ZDT(:) - XTT ) ) * ( ZDT(:) - ZWORK3(:) )
+    ZWORK3(:) = ZWORK3(:) - ( .212 + 1.571E-3 * ( ZWORK3(:) - CST%XTT )          &
+                  - 4.36E-4 * ( ZDT(:) - CST%XTT ) ) * ( ZDT(:) - ZWORK3(:) )
     ZWORK4(:) = SIGN(0.5, ZWORK2(:) - ZWORK3(:) )
     ZDT(:)    = ZDT(:) * ( .5 + ZWORK4(:) ) + ( .5 - ZWORK4(:) ) * ZWORK3(:)
     ZWORK2(:) = ZDT(:) * ZPI(:) ** ( 1. - 0.28 * ZWORK2(:) )                 &
@@ -302,8 +301,8 @@ END DO
 DO JI = 1, IIE
      JK = KLFS(JI)
      ZWORK1(JI)  = PPRES(JI,JK) /                                            &
-                   ( XRD * ZDT(JI) * ( 1. + ZEPS * ZWORK1(JI) ) ) ! density
-     PDMF(JI,JK) = - ( 1. - PPREF(JI) ) * ZWORK1(JI) * XPI * XCRAD * XCRAD
+                   ( CST%XRD * ZDT(JI) * ( 1. + ZEPS * ZWORK1(JI) ) ) ! density
+     PDMF(JI,JK) = - ( 1. - PPREF(JI) ) * ZWORK1(JI) * CST%XPI * XCRAD * XCRAD
      PDTHL(JI,JK)= ZWORK2(JI)   ! theta_l is here actually theta_e
      ZWORK2(JI)  = PDMF(JI,JK)
      PDDR(JI,JK) = 0.
@@ -344,7 +343,7 @@ DO JK =  JKM - 1, IKB + 1, -1
       PDER(JI,JK)  = - ZWORK2(JI) * XENTR * PDPRES(JI,JKP) / XCRAD
                                                ! DER and DPRES are positive
       PDMF(JI,JK)  = PDMF(JI,JKP) - PDER(JI,JK)
-      ZPI(JI)      = ( XP00 / PPRES(JI,JK) ) ** ZRDOCP
+      ZPI(JI)      = ( CST%XP00 / PPRES(JI,JK) ) ** ZRDOCP
       ZDT(JI)      = PTH(JI,JK) / ZPI(JI)
       ZWORK1(JI)   = PRW(JI,JK) - PRC(JI,JK) - PRI(JI,JK)
       ZTHE(JI)     = ZDT(JI) * ZPI(JI) ** ( 1. - 0.28 * ZWORK1(JI) )           &
@@ -377,7 +376,7 @@ PDTEVRF(:,:) = 0.
 JKT = MAXVAL( IDDT(:) )
 DO JK = IKB + 1, JKT
 !
-       ZPI(:) = ( XP00 / PPRES(:,JK) ) ** ZRDOCP
+       ZPI(:) = ( CST%XP00 / PPRES(:,JK) ) ** ZRDOCP
        ZDT(:) = PTH(:,JK) / ZPI(:)
 !
 !*       9.1    Determine wet bulb temperature at DBL from theta_e.
@@ -400,7 +399,7 @@ DO JK = IKB + 1, JKT
 !               if actual humidity is larger than specified one.
 !               -----------------------------------------------------
 !
-   ZWORK2(:) = ZWORK1(:) / ZDT(:) * ( XBETAW / ZDT(:) - XGAMW ) ! dr_sat/dT
+   ZWORK2(:) = ZWORK1(:) / ZDT(:) * ( CST%XBETAW / ZDT(:) - CST%XGAMW ) ! dr_sat/dT
    ZWORK2(:) = ZLV(:) / ZCPH(:) * ZWORK1(:) * ( 1. - XRHDBC ) /              &
                     ( 1. + ZLV(:) / ZCPH(:) * ZWORK2(:) ) ! temperature perturb                                                           ! due to evaporation
    ZDT(:)    = ZDT(:) + ZWORK2(:)
@@ -415,8 +414,8 @@ DO JK = IKB + 1, JKT
    PDTEVRF(:,JK)= PDTEVRF(:,JK) + ZWORK1(:) * PDDR(:,JK)
       ! compute enthalpie and humidity in the detrainment layer
    PDRW(:,JK)   = MAX( PDRW(:,JK), ZWORK3(:) )
-   PDTHL(:,JK)  = ( ( XCPD + PDRW(:,JK) * XCPV ) * ZDT(:)                    &
-                    + ( 1. + PDRW(:,JK) ) * XG * PZ(:,JK) )
+   PDTHL(:,JK)  = ( ( CST%XCPD + PDRW(:,JK) * CST%XCPV ) * ZDT(:)                    &
+                    + ( 1. + PDRW(:,JK) ) * CST%XG * PZ(:,JK) )
 !
 END DO
 !

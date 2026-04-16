@@ -112,6 +112,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PWEIGHT_MF_CLOUD ! weight coef
 !                       1.2  Declaration of local variables
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+CHARACTER(LEN=100) :: CTEMP
 !------------------------------------------------------------------------
 
 !                     1. INITIALISATION
@@ -158,8 +159,8 @@ ELSEIF  (PARAMMF%CMF_CLOUD == 'NONE') THEN
   ! No CONVECTIVE CLOUD SCHEME
   ! Nothing to do: PRC_MF, PRI_MF, PCF_MF, PSIGMF are already filled with zero
 ELSE
-  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'COMPUTE_MF_CLOUD', &
-                 'Shallow convection cloud scheme not valid: PARAMMF%CMF_CLOUD='//PARAMMF%CMF_CLOUD)
+  CTEMP='Shallow convection cloud scheme not valid: PARAMMF%CMF_CLOUD='//PARAMMF%CMF_CLOUD
+  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'COMPUTE_MF_CLOUD', CTEMP)
 ENDIF
 
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD',1,ZHOOK_HANDLE)

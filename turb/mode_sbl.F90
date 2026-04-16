@@ -487,6 +487,8 @@ SUBROUTINE USTAR_0D(PU,PV,PZ,PZ0,PLMO,USTAR0D)
   REAL, INTENT(IN)               :: PLMO
   REAL, INTENT(OUT)              :: USTAR0D
   REAL :: ZWORK1, ZWORK2
+  REAL                           :: ZZ_O_LMO
+  REAL                           :: ZZ0_O_LMO
 !
 !* purely unstable case
   REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -495,8 +497,10 @@ SUBROUTINE USTAR_0D(PU,PV,PZ,PZ0,PLMO,USTAR0D)
 !
 !* general case
   IF ( ABS(PLMO) >= 1.E-20 .AND. PLMO/=XUNDEF) THEN
-    CALL PAULSON_PSIM(PZ/PLMO,ZWORK1)
-    CALL PAULSON_PSIM(PZ0/PLMO,ZWORK2)
+    ZZ_O_LMO=PZ/PLMO
+    ZZ0_O_LMO=PZ0/PLMO
+    CALL PAULSON_PSIM(ZZ_O_LMO,ZWORK1)
+    CALL PAULSON_PSIM(ZZ0_O_LMO,ZWORK2)
     USTAR0D = SQRT( PU**2+PV**2 )                  &
              * XKARMAN / ( LOG(PZ/PZ0)            &
                           - ZWORK1 + ZWORK2)

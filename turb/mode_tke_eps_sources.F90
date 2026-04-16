@@ -212,7 +212,8 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::         &
        ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
        ZTR,      & ! Transport term
-       ZMWORK1     ! working var. for MZM/MZF operators (array syntax)
+       ZMWORK1,  & ! working var. for MZM/MZF operators (array syntax)
+       ZWKLES      ! working var. for LES calls
 
 LOGICAL,DIMENSION(D%NIJT,D%NKT) :: GTKENEG
                    ! 3D mask .T. if TKE < CSTURB%XTKEMIN
@@ -431,7 +432,8 @@ END DO
   IF (TLES%LLES_CALL) THEN
     CALL MZF_PHY(D,ZFLX,ZMWORK1)
     CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMWORK1, TLES%X_LES_SUBGRID_WTke )
-    CALL LES_MEAN_SUBGRID_PHY(D,TLES, -ZTR, TLES%X_LES_SUBGRID_ddz_WTke )
+    ZWKLES = -ZTR
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES, ZWKLES, TLES%X_LES_SUBGRID_ddz_WTke )
   END IF
 !
 END IF

@@ -192,6 +192,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZDZFACT,ZDZREF
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER, DIMENSION(D%NKT) :: JKPK, JKMK
+REAL :: ZBLH
 !
 !
 !*       0.3  Definition of constants :
@@ -379,8 +380,9 @@ IF (OCND2) THEN
     END DO
   END DO
 
+  ZBLH=-1.
   CALL ICECLOUD(D, CST, ICEP, PPABS,PZZ,ZDZ, &
-       & PT,PRV_IN,1.,-1., &
+       & PT,PRV_IN,1.,ZBLH, &
        & ZCLDINI,PIFR(IIJB,1),PICLDFR, &
        & PSSIO,PSSIU,ZARDUM2,ZARDUM)
   ! latent heats

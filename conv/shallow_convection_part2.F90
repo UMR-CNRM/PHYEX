@@ -123,7 +123,7 @@ REAL, DIMENSION(D%NIT,KCH1)     :: ZWORK3  ! conv. adjust. chemical specy 1
 REAL, DIMENSION(D%NIT,D%NKT,KCH1):: ZCH1    ! grid scale chemical specy (kg/kg)
 REAL, DIMENSION(D%NIT,D%NKT,KCH1):: ZCH1C   ! conv. adjust. chemical specy 1
 INTEGER                          :: IFTSTEPS ! only used for chemical tracers
-
+REAL :: ZWK
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
@@ -173,10 +173,11 @@ END DO
 !                   -------------------------------------------------------------
 !
 
+ZWK=CVP_SHAL%XA25 * 1.E-3
 CALL CONVECT_UPDRAFT_SHAL(CVP_SHAL, CVPEXT, CST, D, CONVPAR, KICE, PPABST,      &
                           ZDPRES, PZZ, ZTHL, PSTHV, PSTHES, ZRW,       &
                           PSTHLCL, PSTLCL, PSRVLCL, PSWLCL, PSZLCL,    &
-                          PSTHVELCL, CVP_SHAL%XA25 * 1.E-3, GTRIG2,    &
+                          PSTHVELCL, ZWK, GTRIG2,    &
                           ISLCL, ISDPL, ISPBL, PUMF, ZUER, ZUDR, ZUTHL,&
                           ZUTHV, ZURW, ZURC, ZURI, ZCAPE, ICTL, IETL,  &
                           GTRIG1)

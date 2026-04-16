@@ -74,7 +74,7 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST, ONLY: CST, XBETAW, XCPD, XG, XGAMW, XP00, XRD, XRV, XTT
+USE MODD_CST, ONLY: CST
 USE MODD_CONVPAR, ONLY: XA25, XCDEPTH, XNHGAM, XWTRIG, XZLCL, XZPBL
 USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT
 !
@@ -149,10 +149,10 @@ IKE = KLEV - JCVEXT
 !*       1.     Initialize local variables
 !               --------------------------
 !
-ZEPS       = XRD / XRV
-ZEPSA      = XRV / XRD
-ZCPORD     = XCPD / XRD
-ZRDOCP     = XRD / XCPD
+ZEPS       = CST%XRD / CST%XRV
+ZEPSA      = CST%XRV / CST%XRD
+ZCPORD     = CST%XCPD / CST%XRD
+ZRDOCP     = CST%XRD / CST%XCPD
 OTRIG(:)   = .FALSE.
 IDPL(:)    = KDPL(:)
 IPBL(:)    = KPBL(:)
@@ -234,17 +234,17 @@ DO JKK = JKP, JKT
 !               ----------------------------------------------------
 !
 !
-        ZTMIX(:)  = ZTHLCL(:) * ( ZPRESMIX(:) / XP00 ) ** ZRDOCP
+        ZTMIX(:)  = ZTHLCL(:) * ( ZPRESMIX(:) / CST%XP00 ) ** ZRDOCP
         ZEVMIX(:) = ZRVLCL(:) * ZPRESMIX(:) / ( ZRVLCL(:) + ZEPS )
         ZEVMIX(:) = MAX( 1.E-8, ZEVMIX(:) )
         ZWORK1(:) = LOG( ZEVMIX(:) / 613.3 )
               ! dewpoint temperature
         ZWORK1(:) = ( 4780.8 - 32.19 * ZWORK1(:) ) / ( 17.502 - ZWORK1(:) )
               ! adiabatic saturation temperature
-        ZTLCL(:)  = ZWORK1(:) - ( .212 + 1.571E-3 * ( ZWORK1(:) - XTT )      &
-                   - 4.36E-4 * ( ZTMIX(:) - XTT ) ) * ( ZTMIX(:) - ZWORK1(:) )
+        ZTLCL(:)  = ZWORK1(:) - ( .212 + 1.571E-3 * ( ZWORK1(:) - CST%XTT )      &
+                   - 4.36E-4 * ( ZTMIX(:) - CST%XTT ) ) * ( ZTMIX(:) - ZWORK1(:) )
         ZTLCL(:)  = MIN( ZTLCL(:), ZTMIX(:) )
-        ZPLCL(:)  = XP00 * ( ZTLCL(:) / ZTHLCL(:) ) ** ZCPORD
+        ZPLCL(:)  = CST%XP00 * ( ZTLCL(:) / ZTHLCL(:) ) ** ZCPORD
 !
      END WHERE
 !
@@ -257,7 +257,7 @@ DO JKK = JKP, JKT
        CALL CONVECT_SATMIXRATIO( ZPLCL(JI), ZTLCL(JI), ZEPS, ZWORK1(JI), ZLV(JI), ZWORK2(JI), ZCPH(JI) )
      END DO
      WHERE( GWORK1(:) )
-        ZWORK2(:) = ZWORK1(:) / ZTLCL(:) * ( XBETAW / ZTLCL(:) - XGAMW ) ! dr_sat/dT
+        ZWORK2(:) = ZWORK1(:) / ZTLCL(:) * ( CST%XBETAW / ZTLCL(:) - CST%XGAMW ) ! dr_sat/dT
         ZWORK2(:) = ( ZWORK1(:) - ZRVLCL(:) ) /                              &
                         ( 1. + ZLV(:) / ZCPH(:) * ZWORK2(:) )
         ZTLCL(:)  = ZTLCL(:) - ZLV(:) / ZCPH(:) * ZWORK2(:)
@@ -273,13 +273,13 @@ DO JKK = JKP, JKT
        CALL CONVECT_SATMIXRATIO( ZPRESMIX(JI), ZTMIX(JI), ZEPS, ZWORK1(JI), ZLV(JI), ZWORK2(JI), ZCPH(JI) )
      END DO
      WHERE( GWORK1(:) .AND. ZRVLCL(:) > ZWORK1(:) )
-        ZWORK2(:) = ZWORK1(:) / ZTMIX(:) * ( XBETAW / ZTMIX(:) - XGAMW ) ! dr_sat/dT
+        ZWORK2(:) = ZWORK1(:) / ZTMIX(:) * ( CST%XBETAW / ZTMIX(:) - CST%XGAMW ) ! dr_sat/dT
         ZWORK2(:) = ( ZWORK1(:) - ZRVLCL(:) ) /                              &
                        ( 1. + ZLV(:) / ZCPH(:) * ZWORK2(:) )
         ZTLCL(:)  = ZTMIX(:) - ZLV(:) / ZCPH(:) * ZWORK2(:)
         ZRVLCL(:) = ZRVLCL(:) - ZWORK2(:)
         ZPLCL(:)  = ZPRESMIX(:)
-        ZTHLCL(:) = ZTLCL(:) * ( XP00 / ZPLCL(:) ) ** ZRDOCP
+        ZTHLCL(:) = ZTLCL(:) * ( CST%XP00 / ZPLCL(:) ) ** ZRDOCP
         ZTHVLCL(:)= ZTHLCL(:) * ( 1. + ZEPSA * ZRVLCL(:) )                   &
                               / ( 1. + ZRVLCL(:) )
      END WHERE
@@ -333,14 +333,14 @@ DO JKK = JKP, JKT
              ! compute sign of normalized grid scale w
         ZWORK2(:) = SIGN( 1., ZWORK1(:) )
         ZWORK1(:) = XWTRIG * ZWORK2(:) * ABS( ZWORK1(:) ) ** 0.333       &
-                           * ( XP00 / ZPLCL(:) ) ** ZRDOCP
+                           * ( CST%XP00 / ZPLCL(:) ) ** ZRDOCP
 !
 !*       6.2    Compute parcel vertical velocity at LCL
 !               ---------------------------------------
 !
      DO JI = 1, IIE
         JKDL = IDPL(JI)
-        ZWORK3(JI) = XG * ZWORK1(JI) * ( ZZLCL(JI) - PZ(JI,JKDL) )       &
+        ZWORK3(JI) = CST%XG * ZWORK1(JI) * ( ZZLCL(JI) - PZ(JI,JKDL) )       &
                        / ( PTHV(JI,JKDL) + ZTHVELCL(JI) )
      END DO
      WHERE( GWORK1(:) )
@@ -372,8 +372,8 @@ DO JKK = JKP, JKT
            IF ( JL < ILCL(JI) ) ZWORK1(JI) = 0.
         !  IF ( JL <= ILCL(JI) ) ZWORK1(JI) = 0.
            ZCAPE(JI)  = ZCAPE(JI) + ZWORK1(JI)
-           ZCAP(JI,JKK) = ZCAP(JI,JKK) + XG * MAX( 0., ZWORK1(JI) ) ! actual CAPE
-           ZWORK2(JI) = XNHGAM * XG * ZCAPE(JI) + 1.05 * ZWLCL(JI) * ZWLCL(JI)
+           ZCAP(JI,JKK) = ZCAP(JI,JKK) + CST%XG * MAX( 0., ZWORK1(JI) ) ! actual CAPE
+           ZWORK2(JI) = XNHGAM * CST%XG * ZCAPE(JI) + 1.05 * ZWLCL(JI) * ZWLCL(JI)
                ! the factor 1.05 takes entrainment into account
            ZWORK2(JI) = SIGN( 1., ZWORK2(JI) )
            ZWORK3(JI) = ZWORK3(JI) + MIN(0., ZWORK2(JI) )
