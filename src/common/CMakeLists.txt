@@ -127,12 +127,11 @@ foreach(PRECISION ${precision_list})
     $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
 
   if(HAVE_IFS_FLAGS)
-    target_compile_options(phyex_${PRECISION} PUBLIC
+    target_compile_options(phyex_${PRECISION} PRIVATE
     ${ECBUILD_IFS_Fortran_FLAGS})
   endif()
 
-  
-    # Install Library 
+  # Install Library 
   install(
     TARGETS phyex_${PRECISION}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
