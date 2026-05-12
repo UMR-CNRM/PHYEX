@@ -4,10 +4,6 @@
 set -e
 set -o pipefail #abort if left command on a pipe fails
 
-#Notes for v5.5.0
-#For the OCEAN_LES/004_run2 case, results obtained are different from those obtained with the original version
-#of Meso-NH because of new developments and bug correction. The reference version is given by commit e053c59.
-#In this commit two modifications must be done in turb/mode_tke_eps_sources.f90 to change twice LOCEAN into OOCEAN.
 
 #######################
 #### CONFIGURATION ####
@@ -18,21 +14,18 @@ set -o pipefail #abort if left command on a pipe fails
 # MNHPACK: directory where tests are build
 
 #About the tests:
-# - ALLTests is a list of tests to be done when '-t ALL' is used. This list is filled here
-#   in case there is no mesonh_version.json file containig a 'testing' section. If this 'testing'
-#   section exists, this list is overridden.
 # - allowedTests is the list of allowed tests which can depend on platform, if we ask to perform an action
 #   with a test not in the allowedTests list, the action is ignored
 # - defaultTest is the list of tests to perform when no '-t' option is provided on the command line.
-ALLTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, 007_16janvier/008_run2_lredf, 
-          COLD_BUBBLE/002_mesonh, ARMLES/RUN, COLD_BUBBLE_3D/002_mesonh,OCEAN_LES/004_run2,014_LIMA/002_mesonh"
+allowedTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, 007_16janvier/008_run2_lredf, 
+              COLD_BUBBLE/002_mesonh, ARMLES/RUN, COLD_BUBBLE_3D/002_mesonh, OCEAN_LES/004_run2,
+              014_LIMA/002_mesonh"
 defaultTest="007_16janvier/008_run2"
-allowedTests=$ALLTests
 
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
 
-PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PHYEXTOOLSDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 MNHPACK=${MNHPACK:=$HOME/MesoNH/PHYEX}
 TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
@@ -42,7 +35,7 @@ TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-u] [-c] [-r] [-C] [-s] [--expand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--prep_code-opts 'OPTS'] [--per FILE] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-u] [-c] [-r] [-C] [-s] [--expand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--prep_code-opts 'OPTS'] [--perf FILE] [--name NAME] commit [reference]"
   echo "commit          commit hash (or a directory) to test"
   echo "reference       commit hash or a directory or nothing for ref"
   echo "-s              suppress compilation pack"
@@ -71,6 +64,7 @@ function usage {
   echo "                to transfor all source codes in lower case). Help on prep_code.sh options"
   echo "                can be found with 'prep_code.sh -h'. Note: don't forget to enclose OPTS in ' or \""
   echo "--perf FILE     add performance statistics in file FILE"
+  echo "--name NAME     to give a name to the compilation directory"
   echo ""
   echo "If nothing is asked (pack creation, compilation, running, check, removing) everything"
   echo "except the removing is done"
@@ -100,25 +94,29 @@ onlyIfNeeded=0
 computeRefIfNeeded=0
 prepCodeOpts=""
 perffile=""
+tag=""
 
+commitcmd="" # To execute again check_commit with the same options (except commit and ref)
 while [ -n "$1" ]; do
+  toadd="$1"
   case "$1" in
     '-h') usage; exit;;
     '-s') suppress=1;;
     '-p') packcreation=1;;
     '-u') packupdate=1;;
     '-c') compilation=1;;
-    '-r') run=$(($run+1));;
+    '-r') run=1;;
     '-C') check=1;;
-    '-t') tests="$2"; shift;;
+    '-t') tests="$2"; toadd="$toadd $2"; shift;;
     '--expand') useexpand=1;;
-    '--repo-user') export PHYEXREPOuser=$2; shift;;
-    '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
+    '--repo-user') export PHYEXREPOuser=$2; toadd="$toadd $2"; shift;;
+    '--repo-protocol') export PHYEXREPOprotocol=$2; toadd="$toadd $2"; shift;;
     '--remove') remove=1;;
     '--onlyIfNeeded') onlyIfNeeded=1;;
     '--computeRefIfNeeded') computeRefIfNeeded=1;;
-    '--prep_code-opts') prepCodeOpts=$2; shift;;
-    '--perf') perffile="$(realpath $2)"; shift;;
+    '--prep_code-opts') prepCodeOpts=$2; toadd="$toadd $2"; shift;;
+    '--perf') perffile="$(realpath $2)"; toadd="$toadd $2"; shift;;
+    '--name') tag=$2; toadd="$toadd $2"; toadd="$toadd $2"; shift;;
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
           commit=$1
@@ -129,8 +127,10 @@ while [ -n "$1" ]; do
             echo "Only two commit hash allowed on command line"
             exit 1
           fi
-        fi;;
+        fi
+        toadd="";;
   esac
+  commitcmd="$commitcmd $toadd"
   shift
 done
 
@@ -185,83 +185,85 @@ function mvdiff {
   fi
 }
 
-###################################
-#### VERSION/COMMIT ADAPTATION ####
-###################################
+#######################
+#### FROM A COMMIT ####
+#######################
 
-#Name and directory for compiling and executing user pack
-declare -A refByTest
-if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
-  fromdir=$commit
+# In this case, we clone the commit and run the check_commit script
+# of this commit using the cloned directory.
+
+if ! echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
+  # We must run check_commit on a commit
+  # We use a sub-shell for isolation
+  (
+    # Temporary directory
+    export TMP_LOC=$(mktemp -d) # Workind directory
+    trap "\rm -rf $TMP_LOC" EXIT # Automatic removing
+    cd $TMP_LOC
+
+    # Clone
+    if [ $PHYEXREPOprotocol == 'https' ]; then
+      repository=https://github.com/$PHYEXREPOuser/PHYEX.git
+    elif [ $PHYEXREPOprotocol == 'ssh' ]; then
+      repository=git@github.com:$PHYEXREPOuser/PHYEX.git
+    fi
+    git clone $repository
+    cd PHYEX
+    git checkout $commit
+    if [ ! -d docs ]; then
+      # MESONH adapted commit, we must fill the repository with
+      # the last version (in history) of tools and requirements
+      toolscommit=$(git log --all --full-history -- tools | head -1 | cut -d\  -f2) # deleted in this commit
+      for parent in $(git rev-parse ${toolscommit}^@); do
+        if [ $(git ls-tree -r $parent -- tools | wc -l) -ne 0 ]; then
+          toolscommit=$parent # last commit with tools
+          break
+        fi
+      done
+      git checkout $toolscommit -- "tools"
+      git checkout $toolscommit -- "requirements.txt"
+    fi
+
+    # Requirements
+    python3 -m venv venv
+    . venv/bin/activate
+    python3 -m pip install -r requirements.txt
+
+    # Running commit
+    . tools/env.sh
+    if [ "$packBranch" == "" ]; then
+      mypackname="--name $commit"
+    else
+      mypackname=""
+    fi
+    check_commit_mesonh.sh $commitcmd $TMP_LOC/PHYEX $reference $mypackname
+  )
+  exit $?
+fi
+
+###########################
+#### COMMIT PROPERTIES ####
+###########################
+
+if [ -d $commit/src ]; then
+  mesonh_ready=false                                                                               
   content_mesonh_version=$(scp $commit/src/mesonh/mesonh_version.json /dev/stdout 2>/dev/null || echo "")
-else
-  fromdir=''
-  if [[ $commit == mesonh${separator}* ]]; then
-    mesonh_version_file="mesonh_version.json"
-  else
-    mesonh_version_file="src/mesonh/mesonh_version.json"
-  fi
-  if echo $commit | grep '^tags/' > /dev/null; then
-    urlcommit=$(echo $commit | cut -d / -f 2-)
-  else
-    urlcommit=$commit
-  fi
-  content_mesonh_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$mesonh_version_file -O - 2>/dev/null || echo "")
-fi
-if [ ! "${content_mesonh_version}" == "" ]; then
-  testing=$(json_dictkey2value "$content_mesonh_version" 'testing' '')
-  if [ ! "$testing" == "" ]; then
-    ALLTests='' #We reset the list of tests
-    for t in $(echo $allowedTests | sed 's/,/ /g'); do
-      ref=$(json_dictkey2value "$testing" "$t" '')
-      if [ ! "$ref" == "" ]; then
-        ALLTests="${ALLTests},$t"
-        refByTest[$t]=$ref
-      fi
-    done
-    ALLTests="${ALLTests:1}" #Remove first character (',')
-  fi
-fi
-[ "${content_mesonh_version}" == "" ] && content_mesonh_version='{}'
-refversion=$(json_dictkey2value "$content_mesonh_version" 'refversion' 'MNH-V5-5-0')
-if [ $refversion == "MNH-V5-5-0" ]; then
-  targzsuffix="_PHYEX"
-else
-  targzsuffix=""
-fi
-tag=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-name=${refversion}-$tag
-[ $suppress -eq 1 -a -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
+else                                                                                              
+  mesonh_ready=true                                                                                
+  content_mesonh_version=$(scp $commit/mesonh_version.json /dev/stdout 2>/dev/null || echo "")          
+fi                     
 
-#Name and directory for the reference version
-declare -A refnameByTest
-#Reference to use for each test
-for t in $(echo $ALLTests | sed 's/,/ /g'); do
-  #Name of the reference
-  if [ "$reference" == "" -o "$reference" == "REF" ]; then
-    if [[ ! -z "${refByTest[$t]+unset}" ]]; then #the -v test is valid only with bash > 4.3
-      #The json file contained the references to use on a per test case basis
-      reftag=${refByTest[$t]}
-    else
-      reftag=""
-    fi
-    refByTest[$t]=$reftag
-  else
-    if echo $reference | grep '/' > /dev/null; then
-      reftag=$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-    else
-      reftag=$reference
-    fi
-    refByTest[$t]=$reference
+declare -A refByTest
+testing=$(json_dictkey2value "$content_mesonh_version" 'testing' '')
+ALLTests='' #We reset the list of tests
+for t in $(echo $allowedTests | sed 's/,/ /g'); do
+  ref=$(json_dictkey2value "$testing" "$t" '')
+  if [ ! "$ref" == "" ]; then
+    ALLTests="${ALLTests},$t"
+    refByTest[$t]=$ref
   fi
-  #Conversion into directory name
-  if [ "$reftag" == "" ]; then
-    refname=${refversion}
-  else
-    refname=${refversion}-$reftag
-  fi
-  refnameByTest[$t]=$refname
 done
+ALLTests="${ALLTests:1}" #Remove first character (',')
 
 if [ -z "${tests-}" ]; then
   tests=$defaultTest
@@ -269,10 +271,50 @@ elif echo "$tests" | grep -w 'ALL' > /dev/null; then
   tests=$(echo "$tests" | sed "s:\bALL\b:$ALLTests:g")
 fi
 
+
+refversion=$(json_dictkey2value "$content_mesonh_version" 'refversion' '')
+if [ "$tag" == "" ]; then
+  tag=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
+fi
+name=${refversion}-$tag
+
+if [ ! -z "${reference-}" ]; then
+  declare -A refnameByTest
+  #Reference to use for each test
+  for t in $(echo $ALLTests | sed 's/,/ /g'); do
+    #Name of the reference
+    if [ "$reference" == "REF" ]; then
+      if [[ ! -z "${refByTest[$t]+unset}" ]]; then
+        #The json file contained the references to use on a per test case basis
+        reftag=${refByTest[$t]}
+      else
+        reftag=""
+      fi
+      refByTest[$t]=$reftag
+    else
+      if echo $reference | grep '/' > /dev/null; then
+        reftag=$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
+      else
+        reftag=$reference
+      fi
+      refByTest[$t]=$reference
+    fi
+    #Conversion into directory name
+    if [ "$reftag" == "" ]; then
+      refname=${refversion}
+    else
+      refname=${refversion}-$reftag
+    fi
+    refnameByTest[$t]=$refname
+  done
+fi
+
 #######################
 #### PACK CREATION ####
 #######################
 
+
+[ $suppress -eq 1 -a -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
 if [ $packcreation -eq 1 -a -d $MNHPACK/$name -a $onlyIfNeeded -eq 1 ]; then
   packcreation=0
 fi
@@ -287,16 +329,12 @@ if [ $packcreation -eq 1 ]; then
     cd $MNHPACK
     mkdir ${name}_$$
     cd ${name}_$$
-    cp $TARGZDIR/${refversion}${targzsuffix}.tar.gz .
-    tar xfz ${refversion}${targzsuffix}.tar.gz 
-    rm ${refversion}${targzsuffix}.tar.gz
+    cp $TARGZDIR/${refversion}.tar.gz .
+    tar xfz ${refversion}.tar.gz 
+    rm ${refversion}.tar.gz
     mv ${refversion} ../$name
     cd ..
     rmdir ${name}_$$
-    cd $name/src
-
-    # Routine that changed names
-    [ -f PHYEX/turb/modd_diag_in_run.f90 ] && mv -f PHYEX/turb/modd_diag_in_run.f90 MNH/. #To be removed once, this is done in MNH-git-lfs repo before inclusion of last version of PHYEX
   fi
 fi
 if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
@@ -316,31 +354,23 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     else
       expand_options=""
     fi
-    subs="-s turb -s micro -s aux -s ext -s conv"
     prep_code=$PHYEXTOOLSDIR/prep_code.sh
-    if [ "$fromdir" == '' ]; then
-      echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
-      if [[ $commit == mesonh${separator}* ]]; then
-        $prep_code $prepCodeOpts --renameFf --ilooprm --noRaiseOnCodingNorms -c $commit PHYEX #This commit is ready for inclusion
-      else
-        $prep_code $prepCodeOpts --renameFf --ilooprm --noRaiseOnCodingNorms $expand_options -c $commit $subs -m mesonh PHYEX -- --removeExtraDOinMnhDoConcurrent
-      fi
-    else
-      echo "Copy $fromdir"
-      mkdir PHYEX
-      scp -q -r $fromdir/src PHYEX/
+    echo "Copy $commit"
+    mkdir PHYEX
+    if [ $mesonh_ready == false ]; then
+      scp -q -r $commit/src PHYEX/
+      subs="-s turb -s micro -s aux -s ext -s conv"
       $prep_code $prepCodeOpts --renameFf --ilooprm --noRaiseOnCodingNorms $expand_options $subs -m mesonh PHYEX -- --removeExtraDOinMnhDoConcurrent
+    else
+      $prep_code $prepCodeOpts PHYEX #Ready for inclusion
+      rm -rf PHYEX/.git
     fi
-    rm -rf PHYEX/.git
     find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs
 
     # Move manually ext/ files in src/MNH
-    [ -f PHYEX/ext/yomhook.f90 ] && mv PHYEX/ext/yomhook.f90 PHYEX/ext/yomhook.F90
     if [ -d PHYEX/ext ]; then
       for file in PHYEX/ext/*; do
-        if [ -d ACLIB ]; then
-          [ $file = PHYEX/ext/modd_salt.f90 ] && mvdiff $file ACLIB/aux/
-        fi
+        [ $file = PHYEX/ext/modd_salt.f90 ] && mvdiff $file ACLIB/aux/
         [ -f $file ] && mvdiff $file MNH/ # Not an ACLIB file
       done
       if [ $packupdate -eq 1 ]; then
@@ -356,16 +386,12 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       #Update only modified files
       cd PHYEX
       for file in $(find turb micro conv aux -type f); do
-        if ! cmp $file ../PHYEXori/$file > /dev/null; then
-          mv $file ../PHYEXori/$file
-        fi
+        mvdiff $file ../PHYEXori/$file
       done
       cd ..
       rm -rf PHYEX
       mv PHYEXori PHYEX
-    fi
-
-    if [ $packupdate -eq 0 ]; then
+    else
       cd $MNHPACK/$name/src/PHYEX/turb
       # Delete files of ${refversion}/src/MNH and MNH/src/LIB/SURCOUCHE/src with same name
       for rep in turb micro conv aux ; do
@@ -387,14 +413,6 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       mv remove_non_mode.sh ../.
       cd ../
       ./remove_non_mode.sh
-      # Supress some files if they are not used anymore
-      ! grep -i MODI_COMPUTE_ENTR_DETR $(ls MNH/*compute_updraft* PHYEX/turb/*compute_updraft* 2>/dev/null) && rm -f MNH/compute_entr_detr.f90
-      ! grep -i MODI_TH_R_FROM_THL_RT_ $(ls MNH/compute_entr_detr.f90 MNH/compute_entr_detr.f90 PHYEX/turb/mode_compute_updraft*.f90 MNH/ice_adjust_bis.f90 MNH/prep_ideal_case.f90 MNH/set_rsou.f90 2>/dev/null)  > /dev/null && rm -f MNH/th_r_from_thl_rt_1d.f90 MNH/th_r_from_thl_rt_2d.f90 MNH/th_r_from_thl_rt_3d.f90
- 
-      # Routine that changed names
-      #To be removed once, this is done in MNH-git-lfs repo before inclusion of last version of PHYEX
-      rm -f PHYEX/micro/ini_rain_ice.f90
-      rm -f PHYEX/micro/lima_nucleation_procs.f90
     fi
 
     # Remove binaries
@@ -437,7 +455,7 @@ fi
 #### EXECUTION ####
 ###################
 
-if [ $run -ge 1 ]; then
+if [ $run -eq 1 ]; then
   #Cleaning to suppress old results that may be confusing in case of a crash during the run
   if [ $onlyIfNeeded -eq 0 ]; then
     for t in $(echo $tests | sed 's/,/ /g'); do
@@ -527,22 +545,6 @@ if [ $check -eq 1 ]; then
   allt=0
   for t in $(echo $tests | sed 's/,/ /g'); do
     if echo $allowedTests | grep -w $t > /dev/null; then
-      #Run the reference if needed
-      if [ $computeRefIfNeeded -eq 1 ]; then
-        if [ "${refByTest[$t]}" == "" ]; then
-          echo "Don't know how to compile/run $refversion"
-          exit 3
-        else
-          #We must call it in another shell because of the potentially loaded MesoNH profile
-          #because we cannot load two MesoNH profiles in the same shell
-          
-          env -i $SHELL -l -c "[ '$VIRTUAL_ENV' != '' ] && source $VIRTUAL_ENV/bin/activate; \
-                               MNHPACK=${MNHPACK} TARGZDIR=${TARGZDIR} \
-                               PHYEXREPOuser=${PHYEXREPOuser} PHYEXREPOprotocol=${PHYEXREPOprotocol} \
-                               $0 -p -c -r -t $t --onlyIfNeeded ${refByTest[$t]}"
-        fi
-      fi
-
       #Files to compare
       refname=${refnameByTest[$t]}
       case1=$(echo $t | cut -d / -f 1)
@@ -591,6 +593,16 @@ if [ $check -eq 1 ]; then
         echo "$path_user is missing, please run the simulation"
         exit 7
       fi
+
+      #Run the reference if needed
+      if [ ! -f $file2 -a $computeRefIfNeeded -eq 1 ]; then
+          #We must call it in another shell because of the potentially loaded MesoNH profile
+          #because we cannot load two MesoNH profiles in the same shell
+          env -i $SHELL -l -c "MNHPACK=${MNHPACK} TARGZDIR=${TARGZDIR} \
+                               PHYEXREPOuser=${PHYEXREPOuser} PHYEXREPOprotocol=${PHYEXREPOprotocol} \
+                               $0 -p -c -r -t $t --onlyIfNeeded ${refByTest[$t]}"
+      fi
+
       if [ ! -d $path_ref ]; then
         echo "$path_ref is missing, please run the reference simulation"
         exit 8

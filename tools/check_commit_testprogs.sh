@@ -8,18 +8,6 @@ set -o pipefail #abort if left command on a pipe fails
 # - compiles the PHYEX package using a specific commit
 # - runs the different test progs and checks if results are identical to a given version
 
-#ice_adjust: the ice adjust test case
-
-#ref is commit 855b8f8 for ice_adjust, rain_ice
-#ref is commit ??????? for turb
-#ref is commit 7e44ab1 for shallow
-#ref is commit e070d16 for rain_ice_old
-
-#Commit e070d16 can be used for rain_ice_old (ref commit for this testprogs), and for
-#turb, shallow, rain_ice and ice_adjust (as it gives the same results for these test cases).
-
-#Some modifications have been introduced and new reference commit is 00148b1
-
 #Data generation:
 # - The last commit of the testprogs_data branch (based on 46t1) is able to produce the data
 #   for the turb, shallow, rain_ice and ice_adjust testprogs. The code is present but must be
@@ -32,25 +20,16 @@ set -o pipefail #abort if left command on a pipe fails
 #### CONFIGURATION ####
 #######################
 
-#Special pack names:
-# - ref: symbolic name to the commit to use as a reference
-#        useless for the commits containing a json file
-specialName="ref"
-
 #About the tests:
-# - ALLTests is a list of tests to be done when '-t ALL' is used. This list is filled here
-#   in case there is no testprogs_version.json file containig a 'testing' section. If this 'testing'
-#   section exists, this list is overridden.
 # - allowedTests is the list of allowed tests which can depend on platform, if we ask to perform an action
 #   with a test not in the allowedTests list, the action is ignored
 # - defaultTest is the list of tests to perform when no '-t' option is provided on the command line.
-ALLTests="ice_adjust,rain_ice,rain_ice_old,turb,shallow,lima_adjust,lima"
-defaultTest=${ALLTests}
-allowedTests=${ALLTests}
+allowedTests="ice_adjust,rain_ice,rain_ice_old,turb,shallow,lima_adjust,lima"
+defaultTest=${allowedTests}
 
 separator='_' #- seprator must be in sync with prep_code.sh separator
 
-PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PHYEXTOOLSDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 TESTDIR=${TESTPROGSDIR:=$HOME/TESTPROGS}
 
@@ -65,7 +44,6 @@ else
   defaultarchfile=gnu
   submit_method=''
 fi
-defaultRef=ref
 
 #Comma separated list of variables that must be set if job is executed on other node
 varToExport="NPROMA,NBLOCKS,OMP_NUM_THREADS,DR_HOOK_OPT,DR_HOOK,DR_HOOK_IGNORE_SIGNALS,NVCOMPILER_ACC_GANGLIMIT"
@@ -94,9 +72,9 @@ defaultBuildSystem='fcm'
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-u] [-c] [-r] [-C] [-s] [--noexpand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [-a ARCH] [-A ARCH] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--no-perf] [--no-check] [-e EXTRAPOLATION] [--perf FILE] commit [reference]"
-  echo "commit          commit hash (or a directory, or among $specialName) to test"
-  echo "reference       commit hash (or a directory, or among $specialName) REF to use as a reference"
+  echo "Usage: $0 [-h] [-p] [-u] [-c] [-r] [-C] [-s] [--noexpand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [-a ARCH] [-A ARCH] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--no-perf] [--no-check] [-e EXTRAPOLATION] [--perf FILE] [--name NAME] commit [reference]"
+  echo "commit          commit hash (or a directory) to test"
+  echo "reference       commit hash (or a directory) REF to use as a reference"
   echo "-s              suppress compilation directory"
   echo "-p              creates pack"
   echo "-u              updates pack"
@@ -125,6 +103,7 @@ function usage {
   echo "--buildSys      build system to use (=$defaultBuildSystem)"
   echo "                fcm and ecbuild are available"
   echo "--perf FILE     add performance statistics in file FILE"
+  echo "--name NAME     to give a name to the pack"
   echo "-e EXTRAPOLATION"
   echo "                extrapolate data. EXTRAPOLATION corresponds to a configuration:"
   for i in $(seq 1 $((${#conf_extra_tag[@]}-1))); do
@@ -164,30 +143,34 @@ extrapolation=0
 checkOpt="--check"
 perffile=""
 buildSys="$defaultBuildSystem"
+name=""
 
+commitcmd="" # To execute again check_commit with the same options (except commit and ref)
 while [ -n "$1" ]; do
+  toadd="$1"
   case "$1" in
     '-h') usage; exit;;
     '-s') suppress=1;;
     '-p') packcreation=1;;
     '-u') packupdate=1;;
     '-c') compilation=1;;
-    '-r') run=$(($run+1));;
+    '-r') run=1;;
     '-C') check=1;;
-    '-t') tests="$2"; shift;;
+    '-t') tests="$2"; toadd="$toadd $2"; shift;;
     '--noexpand') useexpand=$1;;
-    '--repo-user') export PHYEXREPOuser=$2; shift;;
-    '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
+    '--repo-user') export PHYEXREPOuser=$2; toadd="$toadd $2"; shift;;
+    '--repo-protocol') export PHYEXREPOprotocol=$2; toadd="$toadd $2"; shift;;
     '--remove') remove=1;;
-    '-a') archfile="$2"; shift;;
-    '-A') refarchfile="$2"; shift;;
-    '--buildSys') buildSys="$2"; shift;;
+    '-a') archfile="$2"; toadd="$toadd $2"; shift;;
+    '-A') refarchfile="$2"; toadd="$toadd $2"; shift;;
+    '--buildSys') buildSys="$2"; toadd="$toadd $2"; shift;;
     '--onlyIfNeeded') onlyIfNeeded=1;;
     '--computeRefIfNeeded') computeRefIfNeeded=1;;
     '--no-perf') perf=0;;
     '--no-check') checkOpt="";;
-    '--perf') perffile="$(realpath $2)"; shift;;
-    '-e') extrapolation=$2; shift;;
+    '--perf') perffile="$(realpath $2)"; toadd="$toadd $2"; shift;;
+    '--name') name=$2; toadd="$toadd $2"; shift;;
+    '-e') extrapolation=$2; toadd="$toadd $2"; shift;;
 
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
@@ -199,8 +182,10 @@ while [ -n "$1" ]; do
             echo "Only two commit hash allowed on command line"
             exit 1
           fi
-        fi;;
+        fi
+        toadd="";;
   esac
+  commitcmd="$commitcmd $toadd"
   shift
 done
 
@@ -291,78 +276,106 @@ EOF
   fi
 }
 
+#######################
+#### FROM A COMMIT ####
+#######################
+
+# In this case, we clone the commit and run the check_commit script
+# of this commit using the cloned directory.
+
+if ! echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
+  # We must run check_commit on a commit
+  # We use a sub-shell for isolation
+  (
+    # Temporary directory
+    export TMP_LOC=$(mktemp -d) # Workind directory
+    trap "\rm -rf $TMP_LOC" EXIT # Automatic removing
+    cd $TMP_LOC
+
+    # Clone
+    if [ $PHYEXREPOprotocol == 'https' ]; then
+      repository=https://github.com/$PHYEXREPOuser/PHYEX.git
+    elif [ $PHYEXREPOprotocol == 'ssh' ]; then
+      repository=git@github.com:$PHYEXREPOuser/PHYEX.git
+    fi
+    git clone $repository
+    cd PHYEX
+    git checkout $commit
+    if [ ! -d docs ]; then
+      # TESTPROGS adapted commit, we must fill the repository with
+      # the last version (in history) of tools and requirements
+      toolscommit=$(git log --all --full-history -- tools | head -1 | cut -d\  -f2) # deleted in this commit
+      for parent in $(git rev-parse ${toolscommit}^@); do
+        if [ $(git ls-tree -r $parent -- tools | wc -l) -ne 0 ]; then
+          toolscommit=$parent # last commit with tools
+          break
+        fi
+      done
+      git checkout $toolscommit -- "tools"
+      git checkout $toolscommit -- "requirements.txt"
+    fi
+
+    # Requirements
+    python3 -m venv venv
+    . venv/bin/activate
+    python3 -m pip install -r requirements.txt
+
+    # Running commit
+    . tools/env.sh
+    tools/INSTALL.sh --dataset
+    if [ "$name" == "" ]; then
+      mypackname="--name COMMIT$commit"
+    else
+      mypackname=""
+    fi
+    check_commit_testprogs.sh $commitcmd $TMP_LOC/PHYEX $reference $mypackname
+  )
+  exit $?
+fi
+
 ###########################
-#### COMMIT ADAPTATION ####
+#### COMMIT PROPERTIES ####
 ###########################
 
-#Name and directory for compiling and executing user pack
-declare -A refByTest
-if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
-  #The git repository is a directory
-  name=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-  content_testprogs_version=$(scp $commit/src/testprogs/testprogs_version.json /dev/stdout 2>/dev/null || echo "")
-  if [ "${content_testprogs_version}" == "" ]; then
-    content_testprogs_version=$(scp $commit/src/offline/testprogs_version.json /dev/stdout 2>/dev/null || echo "")
-  fi
-  [ $suppress -eq 1 -a -d $TESTDIR/$name ] && rm -rf $TESTDIR/$name
-elif echo $specialName | grep -w $commit > /dev/null; then
-  name="$commit"
+if [ -d $commit/src ]; then
+  testprogs_ready=false
+  content_testprogs_version=$(scp $commit/src/offline/testprogs_version.json /dev/stdout 2>/dev/null || echo "")
 else
-  #The git repository is on github
-  if [[ $commit == testprogs${separator}*  || $commit == offline${separator}* ]]; then
-    testprogs_version_file="testprogs_version.json"
-    testprogs_version_file_alt=""
-  else
-    testprogs_version_file="src/offline/testprogs_version.json"
-    testprogs_version_file_alt="src/testprogs/testprogs_version.json"
-  fi
-  if echo $commit | grep '^tags/' > /dev/null; then
-    urlcommit=$(echo $commit | cut -d / -f 2-)
-  else
-    urlcommit=$commit
-  fi
-  content_testprogs_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$testprogs_version_file -O - 2>/dev/null || echo "")
-  if [ "${content_testprogs_version}" == "" -a "${testprogs_version_file_alt}" != "" ]; then
-    content_testprogs_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$testprogs_version_file_alt -O - 2>/dev/null || echo "")
-  fi
-  name="COMMIT$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')"
-  [ $suppress -eq 1 -a -d $TESTDIR/$name ] && rm -rf $TESTDIR/$name
-fi
-if [ ! "${content_testprogs_version}" == "" ]; then
-  testing=$(json_dictkey2value "$content_testprogs_version" 'testing' '')
-  refALL=$(json_dictkey2value "$testing" "ALL" '')
-  if [ ! "$testing" == "" ]; then
-    ALLTests='' #We reset the list of tests
-    for t in $(echo $allowedTests | sed 's/,/ /g'); do
-      ref=$(json_dictkey2value "$testing" "$t" "$refALL")
-      if [ ! "$ref" == "" ]; then
-        ALLTests="${ALLTests},$t"
-        refByTest[$t]=$ref
-      fi
-    done
-    ALLTests="${ALLTests:1}" #Remove first character (',')
-  fi
+  testprogs_ready=true
+  content_testprogs_version=$(scp $commit/testprogs_version.json /dev/stdout 2>/dev/null || echo "")
 fi
 
-#Effective tests
+declare -A refByTest
+testing=$(json_dictkey2value "$content_testprogs_version" 'testing' '')
+ALLTests='' #We reset the list of tests
+for t in $(echo $allowedTests | sed 's/,/ /g'); do
+  ref=$(json_dictkey2value "$testing" "$t" "")
+  if [ ! "$ref" == "" ]; then
+    ALLTests="${ALLTests},$t"
+    refByTest[$t]=$ref
+  fi
+done
+ALLTests="${ALLTests:1}" #Remove first character (',')
+
 if [ -z "${tests-}" ]; then
   tests=$defaultTest
 elif echo "$tests" | grep -w 'ALL' > /dev/null; then
   tests=$(echo "$tests" | sed "s/\bALL\b/$ALLTests/g")
 fi
 
-#Name and directory for the reference version
+if [ "$name" == "" ]; then
+  name=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
+fi
+
 if [ ! -z "${reference-}" ]; then
   declare -A refnameByTest
   #Reference to use for each test
   for t in $(echo $tests | sed 's/,/ /g'); do
     #Name of the reference
     if [ "$reference" == "REF" ]; then
-      if [[ ! -z "${refByTest[$t]+unset}" ]]; then #the -v test is valid only with bash > 4.3
+      if [[ ! -z "${refByTest[$t]+unset}" ]]; then
         #The json file contained the references to use on a per test case basis
         caseref=${refByTest[$t]}
-      else
-        caseref=$defaultRef
       fi
       refByTest[$t]=$caseref
     else
@@ -374,8 +387,6 @@ if [ ! -z "${reference-}" ]; then
     #Conversion into directory name
     if echo $caseref | grep '/' > /dev/null; then
       refname=$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-    elif echo $specialName | grep -w $caseref > /dev/null; then
-      refname="$caseref"
     else
       refname="COMMIT${caseref}"
     fi
@@ -387,6 +398,7 @@ fi
 #### PACK CREATION ####
 #######################
 
+[ $suppress -eq 1 -a -d $TESTDIR/$name ] && rm -rf $TESTDIR/$name
 if [ $packcreation -eq 1 -a -d $TESTDIR/$name/build/with_${buildSys}/arch_${archfile} -a $onlyIfNeeded -eq 1 ]; then
   packcreation=0
 fi
@@ -397,11 +409,6 @@ if [ $packcreation -eq 1 ]; then
     exit 5
   else
     echo "### Pack creation for commit $commit"
-
-    if echo $specialName | grep -w $commit > /dev/null; then
-      echo "Special commit '$commit' cannot be compiled with this script"
-      exit 4
-    fi
 
     mkdir -p $TESTDIR/$name
     cd $TESTDIR/$name/
@@ -603,19 +610,13 @@ if [ $check -eq 1 ]; then
   message=""
   for t in $(echo $tests | sed 's/,/ /g'); do
     if echo $allowedTests | grep -w $t > /dev/null; then
-      #Run the reference if needed
-      if [ $computeRefIfNeeded -eq 1 ]; then
-        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${refByTest[$t]} --buildSys ${buildSys}
-      fi
 
       #File comparison
       file1=$TESTDIR/$name/tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag}/Output_run
       file2=$TESTDIR/${refnameByTest[$t]}/tests/with_${buildSys}/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run
-      if [ ! -f $file2 ]; then
-        # If the reference has not been run with this buildSystem, pick a result from another one
-        if ls $TESTDIR/${refnameByTest[$t]}/tests/with_*/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run > /dev/null 2>&1; then
-          file2=$(ls $TESTDIR/${refnameByTest[$t]}/tests/with_*/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run | head -1)
-        fi
+      if [ ! -f $file2 -a $computeRefIfNeeded -eq 1 ]; then
+        # The reference has not been run yet, we run it
+        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${refByTest[$t]} --buildSys ${buildSys}
       fi
       mess=""
       te=0
