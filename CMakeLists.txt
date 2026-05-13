@@ -16,6 +16,10 @@ ecbuild_add_option(FEATURE SINGLE_PRECISION
                    DESCRIPTION "Compile on single precision"
                    DEFAULT OFF)
 
+ecbuild_add_option(FEATURE IFS_FLAGS
+                   DESCRIPTION "Compile with IFS flags"
+                   DEFAULT OFF)
+
 ecbuild_add_option(FEATURE PHYEX_BUILD_PROGS
                    DESCRIPTION "Build PHYEX program executables"
                    DEFAULT OFF)
@@ -121,6 +125,11 @@ foreach(PRECISION ${precision_list})
   # Compilation option to use for unqualified REALs
   target_compile_options(phyex_${PRECISION} PUBLIC
     $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
+
+  if(HAVE_IFS_FLAGS)
+    target_compile_options(phyex_${PRECISION} PRIVATE
+    ${ECBUILD_IFS_Fortran_FLAGS})
+  endif()
 
   # Install Library 
   install(
