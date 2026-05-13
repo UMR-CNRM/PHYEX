@@ -307,7 +307,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative lengt
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
-REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC)*MERGE(D%NJT,0,OCOMPUTE_SRC),&
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(IN)   ::  PSRCM        ! normalized
 ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFRAC_ICE    ! ri fraction of rc+ri

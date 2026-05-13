@@ -62,15 +62,15 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PDZZ                   !d*zz
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PDZZ                   !d*zz
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)                :: PY       ! variable at mass
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)                :: PY       ! variable at mass
                                                               ! localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux
                                                               ! side
 !
 INTEGER :: IKT,IKTB,IKTE,IIB,IJB,IIE,IJE,IKA,IKU,IKL
-INTEGER :: JI,JJ,JK
+INTEGER :: JIJ,JK
 !-------------------------------------------------------------------------------
 !
 !*       1.    COMPUTE THE GRADIENT ALONG Z
@@ -79,25 +79,23 @@ INTEGER :: JI,JJ,JK
 IKT=D%NKT
 IKTB=D%NKTB              
 IKTE=D%NKTE
-IIE=D%NIEC
-IIB=D%NIBC
-IJE=D%NJEC
-IJB=D%NJBC
+IIJE=D%NIJE
+IIJB=D%NIJB
 IKT=D%NKT
 IKA=D%NKA
 IKU=D%NKU
 IKL=D%NKL
 !
 !$acc kernels
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=IKTB:IKTE)
-PGZ_M_W(IIB:IIE,IJB:IJE,IKTB:IKTE) =  (PY(IIB:IIE,IJB:IJE,IKTB:IKTE)-PY(IIB:IIE,IJB:IJE,IKTB-IKL:IKTE-IKL)) &
-                           / PDZZ(IIB:IIE,IJB:IJE,IKTB:IKTE)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=IKTB:IKTE)
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-PGZ_M_W(IIB:IIE,IJB:IJE,IKU)=  (PY(IIB:IIE,IJB:IJE,IKU)-PY(IIB:IIE,IJB:IJE,IKU-IKL))  &
-                           / PDZZ(IIB:IIE,IJB:IJE,IKU)
-PGZ_M_W(IIB:IIE,IJB:IJE,IKA)= PGZ_M_W(IIB:IIE,IJB:IJE,IKU) ! -999.
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
+PGZ_M_W(IIJB:IIJE,IKTB:IKTE) =  (PY(IIJB:IIJE,IKTB:IKTE)-PY(IIJB:IIJE,IKTB-IKL:IKTE-IKL)) &
+                           / PDZZ(IIJB:IIJE,IKTB:IKTE)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PGZ_M_W(IIJB:IIJE,IKU)=  (PY(IIJB:IIJE,IKU)-PY(IIJB:IIJE,IKU-IKL))  &
+                           / PDZZ(IIJB:IIJE,IKU)
+PGZ_M_W(IIJB:IIJE,IKA)= PGZ_M_W(IIJB:IIJE,IKU) ! -999.
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
 !
 !-------------------------------------------------------------------------------

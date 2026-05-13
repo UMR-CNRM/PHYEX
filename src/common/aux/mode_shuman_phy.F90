@@ -60,8 +60,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMYF   ! result at flux localization 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMYF   ! result at flux localization 
 !
 ! 1.    DEFINITION OF MYF
 !              ------------------
@@ -135,8 +135,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMYF   ! result at flux localization 
+REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PMYF   ! result at flux localization 
 !
 ! 1.    DEFINITION OF MYF
 !              ------------------
@@ -209,8 +209,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMYM   ! result at flux localization 
+REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PMYM   ! result at flux localization 
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MYM',0,ZHOOK_HANDLE)
@@ -281,8 +281,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMYM   ! result at flux localization 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMYM   ! result at flux localization 
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
@@ -544,8 +544,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMXM   ! result at flux localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMXM   ! result at flux localization
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
@@ -632,8 +632,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMXM   ! result at flux localization
+REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PMXM   ! result at flux localization
 !
 !-------------------------------------------------------------------------------
 !
@@ -708,8 +708,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMXF   ! result at flux localization 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMXF   ! result at flux localization 
 !
 !*       1.    DEFINITION OF MXF
 !              ------------------
@@ -779,8 +779,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMXF   ! result at flux localization 
+REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PMXF   ! result at flux localization 
 !
 !*       1.    DEFINITION OF MXF
 !              ------------------
@@ -945,9 +945,9 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)                :: PA     ! variable at flux
+REAL, DIMENSION(D%NIJT), INTENT(IN)                :: PA     ! variable at flux
                                                             !  side
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDXF   ! result at mass
+REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PDXF   ! result at mass
                                                             ! localization 
 !
 !*       0.2   Declarations of local variables
@@ -1112,9 +1112,9 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT),  INTENT(IN)                :: PA     ! variable at mass
+REAL, DIMENSION(D%NIJT),  INTENT(IN)                :: PA     ! variable at mass
                                                             ! localization
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDXM   ! result at flux
+REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PDXM   ! result at flux
                                                             ! side
 !
 !*       0.2   Declarations of local variables
@@ -1190,9 +1190,9 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)                :: PA     ! variable at mass
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)                :: PA     ! variable at mass
                                                             ! localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDYM     ! result at flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDYM     ! result at flux
                                                             ! side
 !
 !
@@ -1226,9 +1226,9 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT),  INTENT(IN)                :: PA     ! variable at mass
+REAL, DIMENSION(D%NIJT),  INTENT(IN)                :: PA     ! variable at mass
                                                             ! localization
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDYM   ! result at flux
+REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PDYM   ! result at flux
 
 CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'DYM2D_PHY', 'AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE')
 
@@ -1294,31 +1294,13 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)                :: PA     ! variable at mass
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)                :: PA     ! variable at mass
                                                             ! localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDXM   ! result at flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDXM   ! result at flux
                                                             ! side
-!
-!*       0.2   Declarations of local variables
-!              -------------------------------
-!
-INTEGER :: JI             ! Loop index in x direction
-INTEGER :: IIU            ! Size of the array in the x direction
-!
-!-------------------------------------------------------------------------------
-!
-!*       1.    DEFINITION OF DXM
-!              ------------------
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DXM',0,ZHOOK_HANDLE)
-IIU = SIZE(PA,1)
-!
-DO JI=2,IIU
-  PDXM(JI,:,:)          = PA(JI,:,:) -  PA(JI-1,:,:)
-END DO
-!
-PDXM(1,:,:)    =  PDXM(IIU-2*JPHEXT+1,:,:)
 !
 CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'DXM_PHY', 'AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE')
 !-------------------------------------------------------------------------------
@@ -1384,9 +1366,9 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux
                                                           !  side
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDXF   ! result at mass
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDXF   ! result at mass
                                                           ! localization
 !
 !
@@ -1459,9 +1441,9 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux
                                                           !  side
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDYF   ! result at mass
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDYF   ! result at mass
                                                           ! localization
 !-------------------------------------------------------------------------------
 !
@@ -1539,9 +1521,9 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)                :: PA     ! variable at flux
+REAL, DIMENSION(D%NIJT), INTENT(IN)                :: PA     ! variable at flux
                                                             !  side
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDYF   ! result at mass
+REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PDYF   ! result at mass
                                                             ! localization 
 !
 !*       0.2   Declarations of local variables
