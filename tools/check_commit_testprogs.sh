@@ -570,7 +570,8 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
         fi
       fi
 
-      NPROMA=$NPROMA NBLOCKS=$NBLOCKS NTIMES=$NTIMES OMP_NUM_THREADS=${OMP_NUM_THREADS} $0 -r -t $t -a ${archfile} --no-check --no-perf -e 4 ${commit}
+      NPROMA=$NPROMA NBLOCKS=$NBLOCKS NTIMES=$NTIMES OMP_NUM_THREADS=${OMP_NUM_THREADS} \
+              $0 -r -t $t -a ${archfile} --no-check --no-perf -e 4 --name $name ${commit}
       file=$TESTDIR/$name/tests/with_${buildSys}/arch_${archfile}/${t}${perf_extrapolation_tag}/Output_run
       if [ -f $file ]; then
         ZTD=$(grep -m 1 "ZTD =" $file | awk '{print $4}')

@@ -27,8 +27,8 @@ separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allerg
 
 PHYEXTOOLSDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-MNHPACK=${MNHPACK:=$HOME/MesoNH/PHYEX}
-TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
+export MNHPACK=${MNHPACK:=$HOME/MesoNH/PHYEX}
+export TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
 
 ################################
 #### COMMAND LINE ARGUMENTS ####
