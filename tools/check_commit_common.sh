@@ -296,7 +296,7 @@ function clone_and_run {
       git checkout $commit
       if [ ! -d docs ]; then
         # model adapted commit, we must fill the repository with
-        # the last version (in history) of tools and requirements
+        # the last version (in history) of tools
         toolscommit=$(git log --all --full-history -- tools | head -1 | cut -d\  -f2) # deleted in this commit
         for parent in $(git rev-parse ${toolscommit}^@); do
           if [ $(git ls-tree -r $parent -- tools | wc -l) -ne 0 ]; then
@@ -305,13 +305,14 @@ function clone_and_run {
           fi
         done
         git checkout $toolscommit -- "tools"
-        git checkout $toolscommit -- "requirements.txt"
+        git checkout $toolscommit -- "pyproject.toml"
+        git checkout $toolscommit -- "src/pyphyex"
       fi
   
       # Requirements
       python3 -m venv venv
       . venv/bin/activate
-      python3 -m pip install -r requirements.txt
+      python3 -m pip install -e .
   
       # Running commit
       . tools/env.sh

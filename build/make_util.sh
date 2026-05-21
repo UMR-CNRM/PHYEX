@@ -208,23 +208,22 @@ function main() {
     descTree=${TMPDIR:-/tmp}/descTree_$$
     trap "\rm -f $descTree" EXIT
   
-    which prep_code.sh > /dev/null || export UPDATEDPATH=$PHYEXTOOLSDIR:$PATH
     subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s conv -s support -s progs $EXTRASUBS"
     if [ "$fromdir" == '' ]; then
-      echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
+      echo "Clone repository, and checkout commit $commit (using prep_code)"
       if [[ $commit == testprogs${separator}* || $commit == offline${separator}* ]]; then
         #This commit is ready for inclusion
-        PATH=$UPDATEDPATH prep_code.sh -c $commit src
+        PATH=$UPDATEDPATH phyex-prep_code -c $commit src
       else
-        PATH=$UPDATEDPATH prep_code.sh --pyfortool_opts_env PYFT_OPTS -c $commit $expand_options $subs \
-                                       -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
+        PATH=$UPDATEDPATH phyex-prep_code --pyfortool_opts_env PYFT_OPTS -c $commit $expand_options $subs \
+                                          -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
       fi
     else
       echo "Copy $fromdir"
       mkdir src
       scp -q -r $fromdir/src src/
-      PATH=$UPDATEDPATH prep_code.sh --pyfortool_opts_env PYFT_OPTS $expand_options $subs \
-                                     -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
+      PATH=$UPDATEDPATH phyex-prep_code --pyfortool_opts_env PYFT_OPTS $expand_options $subs \
+                                        -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
     fi
     
     # Add some code

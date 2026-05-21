@@ -290,7 +290,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
   fi
   . "${WORKDIR}/PHYEX/tools/env.sh"
 
-  #Install requirements in a virtual env
+  #Install pyphyex in a virtual env
   log 1 "Installing requirements"
   TEMPDIR=$(mktemp -d)
   trap "\rm -rf $TEMPDIR; exit_error $?" EXIT
@@ -299,7 +299,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
   . phyex.env/bin/activate
   cd ${WORKDIR}/PHYEX
   set +e
-  pip install -r requirements.txt
+  pip install -e .
   result=$?
   set -e
   log 0 "virtual env installation"
