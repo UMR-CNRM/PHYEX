@@ -4,6 +4,8 @@
 fiat_version=5eef5552c3002aa962caef56c6bdc88932739e77 #this specific version is needed for NEC
 fiat_gh_user=ACCORD-NWP #for official repo, use ecmwf-ifs
 
+export PHYEXCONF=${PHYEXCONF:-${HOME}/.phyex}
+
 function parse_args() {
   # default values
   ARCH_PATH=$PWD/arch
@@ -27,7 +29,8 @@ function parse_args() {
 $0 [options]
 --help -h   help
 --arch-path ARCH_PATH directory for architecture specific files (see below) [./arch]
-                      note that arch files are first looked for in ${HOME}/.phyex/<bs>_arch where <bs> is the build system
+                      note that arch files are first looked for in \${PHYEXCONF}/<bs>_arch where <bs> is the build system
+                      In your case PHYEXCONF=${PHYEXCONF}
 --arch ARCH  	        build using arch file [gnu]
 --noexpand            do not use mnh_expand (code will be in array-syntax)"
 --commit              commit hash (or a directory) to test; do not use this option from within a repository

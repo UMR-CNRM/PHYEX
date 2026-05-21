@@ -43,9 +43,9 @@ function setuparch() {
   ARCH=$1
   ARCHFILE=$2/arch.ecbuild
   ENVFILE=$2/arch.env
-  if [ -f ${HOME}/.phyex/ecbuild_arch/arch-${ARCH}.ecbuild ]; then
-    cp ${HOME}/.phyex/ecbuild_arch/arch-${ARCH}.env $ENVFILE
-    cp ${HOME}/.phyex/ecbuild_arch/arch-${ARCH}.ecbuild $ARCHFILE
+  if [ -f ${PHYEXCONF}/ecbuild_arch/arch-${ARCH}.ecbuild ]; then
+    cp ${PHYEXCONF}/ecbuild_arch/arch-${ARCH}.env $ENVFILE
+    cp ${PHYEXCONF}/ecbuild_arch/arch-${ARCH}.ecbuild $ARCHFILE
   else 
     cp ${ARCH_PATH}/arch-${ARCH}.env $ENVFILE
     cp ${ARCH_PATH}/arch-${ARCH}.ecbuild $ARCHFILE

@@ -64,6 +64,7 @@ PHYEXREPOrepo=${PHYEXREPOrepo:=PHYEX}
 PHYEXREPOprotocol=${PHYEXREPOprotocol:=ssh}
 REF="refs/heads/master"
 WORKDIR=${PHYEXWORKDIR:=${HOME}/PHYEXTESTING}
+export PHYEXCONF=${WORKDIR}/PHYEXCONF
 update=1
 compil=1
 execute=1
@@ -286,7 +287,6 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
       fi
     fi
     log 1 "Installing/updating PHYEX"
-    ${WORKDIR}/PHYEX/tools/INSTALL.sh --ALL $INSTALLopt
   fi
   . "${WORKDIR}/PHYEX/tools/env.sh"
 

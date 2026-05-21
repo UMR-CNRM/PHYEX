@@ -43,9 +43,9 @@ function setuparch() {
   ARCH=$1
   ARCHFILE=$2/arch.fcm
   ENVFILE=$2/arch.env
-  if [ -f ${HOME}/.phyex/fcm_arch/arch-${ARCH}.fcm ]; then
-    cp ${HOME}/.phyex/fcm_arch/arch-${ARCH}.env $ENVFILE
-    cp ${HOME}/.phyex/fcm_arch/arch-${ARCH}.fcm $ARCHFILE
+  if [ -f ${PHYEXCONF}/fcm_arch/arch-${ARCH}.fcm ]; then
+    cp ${PHYEXCONF}/fcm_arch/arch-${ARCH}.env $ENVFILE
+    cp ${PHYEXCONF}/fcm_arch/arch-${ARCH}.fcm $ARCHFILE
   else 
     cp ${ARCH_PATH}/arch-${ARCH}.env $ENVFILE
     cp ${ARCH_PATH}/arch-${ARCH}.fcm $ARCHFILE

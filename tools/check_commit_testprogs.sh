@@ -31,7 +31,7 @@ defaultTest=${allowedTests}
 
 TESTDIR=${TESTPROGSDIR:=$HOME/TESTPROGS}
 
-dirdata=$PHYEXTOOLSDIR/testprogs_data
+dirdata=$PHYEXCONF/testprogs_data
 if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taranis' ]; then
   defaultarchfile=MIMPIIFC1805.EPONA
   submit_method=slurm_belenos
@@ -137,6 +137,27 @@ EOF
   else
     $@ > $output 2> $error
   fi
+}
+
+function fill_dirdata {
+  [ ! -d $dirdata ] && mkdir -p $dirdata
+  CWD=$PWD
+  cd $dirdata
+  for file in https://github.com/UMR-CNRM/PHYEX/files/12783926/ice_adjust.tar.gz \
+              https://github.com/UMR-CNRM/PHYEX/files/12783935/rain_ice.tar.gz \
+              https://github.com/UMR-CNRM/PHYEX/files/12783942/rain_ice_old.tar.gz \
+              https://github.com/UMR-CNRM/PHYEX/files/12783945/shallow.tar.gz \
+              https://github.com/UMR-CNRM/PHYEX/files/12783952/turb.tar.gz \
+              https://github.com/user-attachments/files/17030876/lima_adjust.tar.gz \
+              https://github.com/user-attachments/files/17330177/lima.tar.gz; do
+    basefile=$(basename $file)
+    if [ ! -f $(basename $basefile .tar.gz)/00000000.dat ]; then
+      wget --no-check-certificate $file -O $basefile
+      tar xf $basefile
+      rm -f $basefile
+    fi
+  done
+  cd $CWD
 }
 
 #######################
@@ -255,6 +276,7 @@ if [ $run == true ]; then
         cd $TESTDIR/$name
         mkdir -p tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag}
         cd tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag}
+        fill_dirdata
         ln -s $dirdata/$t data
         if [ $perf == true ]; then
             export DR_HOOK_OPT=prof
@@ -385,14 +407,19 @@ if [ $check == true ]; then
       if echo $caseref | grep '/' > /dev/null; then
         refname=$(escape_commit $reference)
       else
-        refname="COMMIT${caseref}"
+        refname="${caseref}"
       fi
       #File comparison
       file1=$TESTDIR/$name/tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag}/Output_run
       file2=$TESTDIR/${refname}/tests/with_${buildSys}/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run
       if [ ! -f $file2 -a $computeRefIfNeeded == true ]; then
         # The reference has not been run yet, we run it
-        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${caseref} --buildSys ${buildSys}
+        if [ $default_buildSystem == ${buildSys} ]; then
+          buildSysArg=""
+        else
+          buildSysArg="--no${default_buildSystem}"
+        fi
+        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${caseref} ${buildSysArg}
       fi
       mess=""
       te=0

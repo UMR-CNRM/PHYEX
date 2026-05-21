@@ -11,6 +11,6 @@ This document is written using the markdown language. With pandoc, it can be con
 
 There are two options.
 
-On one hand, the data can be generated (please, refer to the [Offline](../docs/Offline.md) documentation) and, once produced, be put in the corresponding directories under tools/testprogs\_data.
+On one hand, the data can be generated (please, refer to the [Offline](../docs/Offline.md) documentation) and, once produced, be put in the corresponding directories under ${PHYEXCONF}/testprogs\_data.
 
-On the other hand, a reduced dataset can be automatically dowloaded and installed using the INSTALL.sh script.
+On the other hand, if {PHYEXCONF}/testprogs\_data is empty, a reduced dataset will be automatically dowloaded and installed in ${PHYEXCONF}/testprogs\_data when check\_commit\_testprogs.sh is used.

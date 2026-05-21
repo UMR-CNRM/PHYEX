@@ -11,6 +11,8 @@ set -o pipefail #abort if left command on a pipe fails
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- separator must be in sync with prep_code.sh separator
 
+export PHYEXCONF=${PHYEXCONF:-${HOME}/.phyex}
+
 ########################
 #### MISC FUNCTIONS ####
 ########################
@@ -167,6 +169,8 @@ function command_line {
     echo ""
     echo "If using a directory (for commit or reference) it must contain at least one '/'."
     echo ""
+    echo "Architecture and/or data can be added in the \${PHYEXCONF} (=${PHYEXCONF}) directory."
+    echo ""
     echo "The commit can be a tag, written with syntagx tags/<TAG>"
     if [ $enable_full == true ]; then
       echo ""
@@ -269,7 +273,6 @@ function clone_and_run {
   # the version found inside
   # Variables used:
   #   - commit
-  #   - tools_install: if set, INSTALL.sh will be run using the variable content as argument
   #   - PHYEXREPOprotocol, PHYEXREPOuser
   #   - reference (if set)
   #   - commitcmd: list of arguments to use with the check_commit script
@@ -312,7 +315,6 @@ function clone_and_run {
   
       # Running commit
       . tools/env.sh
-      [ "$tools_install" != "" ] && tools/INSTALL.sh $tools_install
       if [ "$name" == "" ]; then
         mypackname="--name $commit"
       else
