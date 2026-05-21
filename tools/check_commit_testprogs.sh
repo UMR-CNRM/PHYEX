@@ -324,7 +324,7 @@ if ! echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
     . tools/env.sh
     tools/INSTALL.sh --dataset
     if [ "$name" == "" ]; then
-      mypackname="--name COMMIT$commit"
+      mypackname="--name $commit"
     else
       mypackname=""
     fi
@@ -388,7 +388,7 @@ if [ ! -z "${reference-}" ]; then
     if echo $caseref | grep '/' > /dev/null; then
       refname=$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
     else
-      refname="COMMIT${caseref}"
+      refname="${caseref}"
     fi
     refnameByTest[$t]=$refname
   done

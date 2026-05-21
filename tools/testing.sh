@@ -327,6 +327,15 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
     fi
   done
 
+  # Clone and checkout
+  CWD=$PWD
+  cd "${TEMPDIR}"
+  git clone "${PHYEXREPOgiturl}" PHYEX
+  cd PHYEX
+  git checkout ${SHA}
+  PHYEXDIR=$PWD
+  cd "${CWD}"
+
   for model in $models; do
     retmodel=0
     log 0 "Tests for model ${model}"
@@ -359,7 +368,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
     fi
 
     #Commande
-    cmd="check_commit_${model}.sh --repo-user ${PHYEXREPOuser} --repo-protocol ${PHYEXREPOprotocol} ${additionalOptions} ${SHA}"
+    cmd="check_commit_${model}.sh --repo-user ${PHYEXREPOuser} --repo-protocol ${PHYEXREPOprotocol} ${additionalOptions} --name ${SHA} ${PHYEXDIR}"
 
     #Compilation
     result=0

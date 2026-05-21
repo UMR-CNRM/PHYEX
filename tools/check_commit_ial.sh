@@ -284,7 +284,7 @@ if ! echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
     # Running commit
     . tools/env.sh
     if [ "$packBranch" == "" ]; then
-      mypackname="--name COMMIT$commit"
+      mypackname="--name $commit"
     else
       mypackname=""
     fi
@@ -348,7 +348,7 @@ if [ ! -z "${reference-}" ]; then
     if echo $caseref | grep '/' > /dev/null; then
       refname="PHYEX/*_$(echo $caseref | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g').01.${gmkpack_l}.${gmkpack_o}"
     else
-      refname="PHYEX/*_COMMIT${caseref}.01.${gmkpack_l}.${gmkpack_o}"
+      refname="PHYEX/*_${caseref}.01.${gmkpack_l}.${gmkpack_o}"
     fi
     refnameByTest[$t]=$refname
   done
