@@ -1,9 +1,5 @@
 #!/bin/bash
 
-#set -x
-set -e
-set -o pipefail #abort if left command on a pipe fails
-
 #This script:
 # - compiles the PHYEX package using a specific commit
 # - runs the different test progs and checks if results are identical to a given version
@@ -16,6 +12,12 @@ set -o pipefail #abort if left command on a pipe fails
 # - The last commit of the testprogs_data2 branch (based on 48t3) is able to produce the data
 #   for the rain_ice_old testprog.
 
+
+PHYEXTOOLSDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Mutualised functions and definitions
+. ${PHYEXTOOLSDIR}/check_commit_common.sh
+
 #######################
 #### CONFIGURATION ####
 #######################
@@ -26,10 +28,6 @@ set -o pipefail #abort if left command on a pipe fails
 # - defaultTest is the list of tests to perform when no '-t' option is provided on the command line.
 allowedTests="ice_adjust,rain_ice,rain_ice_old,turb,shallow,lima_adjust,lima"
 defaultTest=${allowedTests}
-
-separator='_' #- seprator must be in sync with prep_code.sh separator
-
-PHYEXTOOLSDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 TESTDIR=${TESTPROGSDIR:=$HOME/TESTPROGS}
 
@@ -65,151 +63,17 @@ i=$((i+1)); conf_extra_tag[$i]='_Z120_NPRO${NPROMA}_BLK${NBLOCKS}_TIMES${NTIMES}
             conf_extra_opts[$i]='--nflevg 120 --nproma ${NPROMA} --blocks ${NBLOCKS} --times ${NTIMES}'
 
 #Build system
-defaultBuildSystem='fcm'
+default_buildSystem='fcm'
+alternative_buildSystem='ecbuild'
 
 ################################
 #### COMMAND LINE ARGUMENTS ####
 ################################
 
-function usage {
-  echo "Usage: $0 [-h] [-p] [-u] [-c] [-r] [-C] [-s] [--noexpand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [-a ARCH] [-A ARCH] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--no-perf] [--no-check] [-e EXTRAPOLATION] [--perf FILE] [--name NAME] commit [reference]"
-  echo "commit          commit hash (or a directory) to test"
-  echo "reference       commit hash (or a directory) REF to use as a reference"
-  echo "-s              suppress compilation directory"
-  echo "-p              creates pack"
-  echo "-u              updates pack"
-  echo "-c              performs compilation"
-  echo "-r              runs the tests"
-  echo "-C              checks the result against the reference"
-  echo "-t TEST         comma separated list of tests to execute"
-  echo "                or ALL to execute all tests"
-  echo "--noexpand      do not expand mnh_expand blocks (code will be in array-syntax)"
-  echo "--repo-user USER"
-  echo "                user hosting the PHYEX repository on github,"
-  echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
-  echo "--repo-protocol PROTOCOL"
-  echo "                protocol (https or ssh) to reach the PHYEX repository on github,"
-  echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
-  echo "--remove        removes the pack"
-  echo "--onlyIfNeeded  do not rerun already run steps"
-  echo "--computeRefIfNeeded"
-  echo "                compute the reference if not already present"
-  echo "--no-perf       deactivate DR_HOOK"
-  echo "--no-check      suppress value printing (comparison will be impossible)"
-  echo "                this option can reduce drastically the running time but only allow"
-  echo "                to access performance statistics."
-  echo "-a arch ARCH    architecture name to use to build and run the commit (=$defaultarchfile)"
-  echo "-A arch ARCH    architecture name to use for the reference simulation (=$defaultarchfile)"
-  echo "--buildSys      build system to use (=$defaultBuildSystem)"
-  echo "                fcm and ecbuild are available"
-  echo "--perf FILE     add performance statistics in file FILE"
-  echo "--name NAME     to give a name to the pack"
-  echo "-e EXTRAPOLATION"
-  echo "                extrapolate data. EXTRAPOLATION corresponds to a configuration:"
-  for i in $(seq 1 $((${#conf_extra_tag[@]}-1))); do
-    echo "                  - '$i': ${conf_extra_opts[$i]} (${conf_extra_tag[$i]})"
-  done
-  echo ""
-  echo "If nothing is asked (pack creation compilation, running, check, removing) everything"
-  echo "except the removing is done"
-  echo
-  echo "If no test is aked for, the default one ($defaultTest) is executed"
-  echo
-  echo "With the special reference REF commit, a suitable reference is guessed"
-  echo
-  echo "The directory (for commit only, not ref) can take the form server:directory"
-  echo
-  echo "If using a directory (for commit or reference) it must contain at least one '/'"
-  echo "The commit can be a tag, written with syntagx tags/<TAG>"
-}
-
-packcreation=0
-packupdate=0
-compilation=0
-run=0
-check=0
-commit=""
-reference=""
-tests=""
-suppress=0
-useexpand=""
-archfile=$defaultarchfile
-refarchfile=$defaultarchfile
-remove=0
-onlyIfNeeded=0
-computeRefIfNeeded=0
-perf=1
-extrapolation=0
-checkOpt="--check"
-perffile=""
-buildSys="$defaultBuildSystem"
-name=""
-
-commitcmd="" # To execute again check_commit with the same options (except commit and ref)
-while [ -n "$1" ]; do
-  toadd="$1"
-  case "$1" in
-    '-h') usage; exit;;
-    '-s') suppress=1;;
-    '-p') packcreation=1;;
-    '-u') packupdate=1;;
-    '-c') compilation=1;;
-    '-r') run=1;;
-    '-C') check=1;;
-    '-t') tests="$2"; toadd="$toadd $2"; shift;;
-    '--noexpand') useexpand=$1;;
-    '--repo-user') export PHYEXREPOuser=$2; toadd="$toadd $2"; shift;;
-    '--repo-protocol') export PHYEXREPOprotocol=$2; toadd="$toadd $2"; shift;;
-    '--remove') remove=1;;
-    '-a') archfile="$2"; toadd="$toadd $2"; shift;;
-    '-A') refarchfile="$2"; toadd="$toadd $2"; shift;;
-    '--buildSys') buildSys="$2"; toadd="$toadd $2"; shift;;
-    '--onlyIfNeeded') onlyIfNeeded=1;;
-    '--computeRefIfNeeded') computeRefIfNeeded=1;;
-    '--no-perf') perf=0;;
-    '--no-check') checkOpt="";;
-    '--perf') perffile="$(realpath $2)"; toadd="$toadd $2"; shift;;
-    '--name') name=$2; toadd="$toadd $2"; shift;;
-    '-e') extrapolation=$2; toadd="$toadd $2"; shift;;
-
-    #--) shift; break ;;
-     *) if [ -z "${commit-}" ]; then
-          commit=$1
-        else
-          if [ -z "${reference-}" ]; then
-            reference=$1
-          else
-            echo "Only two commit hash allowed on command line"
-            exit 1
-          fi
-        fi
-        toadd="";;
-  esac
-  commitcmd="$commitcmd $toadd"
-  shift
-done
-
-if [ $packcreation -eq 0 -a \
-     $packupdate -eq 0 -a \
-     $compilation -eq 0 -a \
-     $run -eq 0 -a \
-     $check -eq 0 -a \
-     $remove -eq 0 ]; then
-  packcreation=1
-  compilation=1
-  run=1
-  check=1
-fi
-
-if [ -z "${commit-}" ]; then
-  echo "At least one commit hash must be provided on command line"
-  exit 2
-fi
-
-if [ $check -eq 1 -a -z "${reference-}" ]; then
-  echo "To perform a comparison two commit hashes are mandatory on the command line"
-  exit 3
-fi
+enable_testprogs_opt=true
+enable_buildSystem=true
+default_expand=true
+command_line $@
 
 if [[ ! -z "${conf_extra_tag[$extrapolation]+unset}" ]]; then
   extrapolation_tag=$(eval echo ${conf_extra_tag[$extrapolation]})
@@ -222,16 +86,15 @@ else
   echo "The extrapolation option ($extrapolation) doesn't have associated options"
 fi
 
+if [ $useexpand == true ]; then
+  expand_options=""
+else
+  expand_options="--noexpand"
+fi
+
 ##############################
 #### FUNCTION DEFINITIONS ####
 ##############################
-
-function json_dictkey2value {
-  # $1 must contain the json string
-  # $2 must be the key name
-  # $3 is the default value
-  json_content="$1" python3 -c "import json; import os; result=json.loads(os.environ['json_content']).get('$2', '$3'); print(json.dumps(result) if isinstance(result, dict) else result)"
-}
 
 function submit {
   #usage: submit <output file> <error file> <command> [arg [arg ...]]
@@ -282,127 +145,33 @@ EOF
 
 # In this case, we clone the commit and run the check_commit script
 # of this commit using the cloned directory.
-
-if ! echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
-  # We must run check_commit on a commit
-  # We use a sub-shell for isolation
-  (
-    # Temporary directory
-    export TMP_LOC=$(mktemp -d) # Workind directory
-    trap "\rm -rf $TMP_LOC" EXIT # Automatic removing
-    cd $TMP_LOC
-
-    # Clone
-    if [ $PHYEXREPOprotocol == 'https' ]; then
-      repository=https://github.com/$PHYEXREPOuser/PHYEX.git
-    elif [ $PHYEXREPOprotocol == 'ssh' ]; then
-      repository=git@github.com:$PHYEXREPOuser/PHYEX.git
-    fi
-    git clone $repository
-    cd PHYEX
-    git checkout $commit
-    if [ ! -d docs ]; then
-      # TESTPROGS adapted commit, we must fill the repository with
-      # the last version (in history) of tools and requirements
-      toolscommit=$(git log --all --full-history -- tools | head -1 | cut -d\  -f2) # deleted in this commit
-      for parent in $(git rev-parse ${toolscommit}^@); do
-        if [ $(git ls-tree -r $parent -- tools | wc -l) -ne 0 ]; then
-          toolscommit=$parent # last commit with tools
-          break
-        fi
-      done
-      git checkout $toolscommit -- "tools"
-      git checkout $toolscommit -- "requirements.txt"
-    fi
-
-    # Requirements
-    python3 -m venv venv
-    . venv/bin/activate
-    python3 -m pip install -r requirements.txt
-
-    # Running commit
-    . tools/env.sh
-    tools/INSTALL.sh --dataset
-    if [ "$name" == "" ]; then
-      mypackname="--name $commit"
-    else
-      mypackname=""
-    fi
-    check_commit_testprogs.sh $commitcmd $TMP_LOC/PHYEX $reference $mypackname
-  )
-  exit $?
-fi
+tools_install='--dataset'
+clone_and_run
 
 ###########################
 #### COMMIT PROPERTIES ####
 ###########################
 
 if [ -d $commit/src ]; then
-  testprogs_ready=false
-  content_testprogs_version=$(scp $commit/src/offline/testprogs_version.json /dev/stdout 2>/dev/null || echo "")
+  model_ready=false
+  json_content=$(scp $commit/src/offline/testprogs_version.json /dev/stdout 2>/dev/null || echo "")
 else
-  testprogs_ready=true
-  content_testprogs_version=$(scp $commit/testprogs_version.json /dev/stdout 2>/dev/null || echo "")
+  model_ready=true
+  json_content=$(scp $commit/testprogs_version.json /dev/stdout 2>/dev/null || echo "")
 fi
 
 declare -A refByTest
-testing=$(json_dictkey2value "$content_testprogs_version" 'testing' '')
-ALLTests='' #We reset the list of tests
-for t in $(echo $allowedTests | sed 's/,/ /g'); do
-  ref=$(json_dictkey2value "$testing" "$t" "")
-  if [ ! "$ref" == "" ]; then
-    ALLTests="${ALLTests},$t"
-    refByTest[$t]=$ref
-  fi
-done
-ALLTests="${ALLTests:1}" #Remove first character (',')
-
-if [ -z "${tests-}" ]; then
-  tests=$defaultTest
-elif echo "$tests" | grep -w 'ALL' > /dev/null; then
-  tests=$(echo "$tests" | sed "s/\bALL\b/$ALLTests/g")
-fi
-
-if [ "$name" == "" ]; then
-  name=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-fi
-
-if [ ! -z "${reference-}" ]; then
-  declare -A refnameByTest
-  #Reference to use for each test
-  for t in $(echo $tests | sed 's/,/ /g'); do
-    #Name of the reference
-    if [ "$reference" == "REF" ]; then
-      if [[ ! -z "${refByTest[$t]+unset}" ]]; then
-        #The json file contained the references to use on a per test case basis
-        caseref=${refByTest[$t]}
-      fi
-      refByTest[$t]=$caseref
-    else
-      #The exact reference to use was given on the command line
-      caseref=$reference
-    fi
-    refByTest[$t]=$caseref
-  
-    #Conversion into directory name
-    if echo $caseref | grep '/' > /dev/null; then
-      refname=$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-    else
-      refname="${caseref}"
-    fi
-    refnameByTest[$t]=$refname
-  done
-fi
+get_properties
 
 #######################
 #### PACK CREATION ####
 #######################
 
-[ $suppress -eq 1 -a -d $TESTDIR/$name ] && rm -rf $TESTDIR/$name
-if [ $packcreation -eq 1 -a -d $TESTDIR/$name/build/with_${buildSys}/arch_${archfile} -a $onlyIfNeeded -eq 1 ]; then
-  packcreation=0
+[ $suppress == true -a -d $TESTDIR/$name ] && rm -rf $TESTDIR/$name
+if [ $packcreation == true -a -d $TESTDIR/$name/build/with_${buildSys}/arch_${archfile} -a $onlyIfNeeded == true ]; then
+  packcreation=false
 fi
-if [ $packcreation -eq 1 ]; then
+if [ $packcreation == true ]; then
   if [ -d $TESTDIR/$name/build/with_${buildSys}/arch_${archfile} ]; then
     echo "Directory already exists ($TESTDIR/$name/build/with_${buildSys}/arch_${archfile}),"
     echo "suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
@@ -420,16 +189,16 @@ if [ $packcreation -eq 1 ]; then
     fi
   fi
 fi
-if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
+if [ $packupdate == true -o $packcreation == true ]; then
   if [ ! -d $TESTDIR/$name/build/with_${buildSys}/ ]; then
     echo "Compilation directory must exist ($TESTDIR/$name/build/with_${buildSys})"
     exit 9
   else
     cd $TESTDIR/$name/build/with_${buildSys}/
     packbuild=""
-    [ $packupdate -eq 1 ] && packbuild='-u'
-    [ $packcreation -eq 1 ] && packbuild="$packbuild -p"
-    ./make_${buildSys}.sh $packbuild $useexpand --commit $commit --arch $archfile 2>&1 | tee Output_compilation_step1
+    [ $packupdate == true ] && packbuild='-u'
+    [ $packcreation == true ] && packbuild="$packbuild -p"
+    ./make_${buildSys}.sh $packbuild $expand_options --commit $commit --arch $archfile 2>&1 | tee Output_compilation_step1
   fi
 fi
 
@@ -437,23 +206,23 @@ fi
 #### COMPILATION ####
 #####################
 
-if [ $compilation -eq 1 ]; then
-  if [ $onlyIfNeeded -eq 0 -o ! -f $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/build/lib/libphyex.so ]; then
+if [ $compilation == true ]; then
+  if [ $onlyIfNeeded == false -o ! -f $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/build/lib/libphyex.so ]; then
     echo "### Compilation of commit $commit"
 
     cd $TESTDIR/$name/build/with_${buildSys}/
-    ./make_${buildSys}.sh -c --jobs=10 $useexpand --commit $commit --arch $archfile 2>&1 | tee Output_compilation_step2
+    ./make_${buildSys}.sh -c --jobs=10 $expand_options --commit $commit --arch $archfile 2>&1 | tee Output_compilation_step2
   fi
 fi
 
 ###################
 #### EXECUTION ####
 ###################
-if [ $run -ge 1 ]; then
+if [ $run == true ]; then
   cd $TESTDIR/$name
 
   #Cleaning to suppress old results that may be confusing in case of a crash during the run
-  if [ $onlyIfNeeded -eq 0 ]; then
+  if [ $onlyIfNeeded == false ]; then
     for t in $(echo $tests | sed 's/,/ /g'); do
       if [ -d tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag} ]; then
         rm -rf tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag}
@@ -465,7 +234,7 @@ if [ $run -ge 1 ]; then
   firstrun=1
   for t in $(echo $tests | sed 's/,/ /g'); do
     if echo $allowedTests | grep -w $t > /dev/null; then #test is allowed on this plateform
-      if  [ ! -d tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag} ]; then #We do not enter systematically this part if onlyIfNeeded=1
+      if  [ ! -d tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag} ]; then #We do not enter systematically this part if onlyIfNeeded=true
         if [ $firstrun -eq 1 ]; then
           echo "### Running of commit $commit"
           firstrun=0
@@ -487,7 +256,7 @@ if [ $run -ge 1 ]; then
         mkdir -p tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag}
         cd tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag}
         ln -s $dirdata/$t data
-        if [ $perf -eq 1 ]; then
+        if [ $perf == true ]; then
             export DR_HOOK_OPT=prof
             export DR_HOOK=1
             export DR_HOOK_IGNORE_SIGNALS=-1
@@ -501,7 +270,7 @@ if [ $run -ge 1 ]; then
           cat Stderr_run
           exit $stat
         fi
-        if [ $perf -eq 1 ]; then
+        if [ $perf == true ]; then
             firstLine=$(grep -m 1 -n "^ *1" drhook.prof.0 | cut -d: -f1)
             python3 -c "import numpy, pandas
 d = {'time': ('<f4', ('mean', )), 'self': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
@@ -527,7 +296,7 @@ fi
 #### PERFORMANCE ####
 #####################
 
-if [ $run -ge 1 -a "$perffile" != "" ]; then
+if [ $run == true -a "$perffile" != "" ]; then
   echo "### Evaluate performance for commit $commit"
 
   ZTD_sum=0
@@ -561,7 +330,7 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
         perf_extrapolation_tag=$(NPROMA=$NPROMA; NBLOCKS=$NBLOCKS; NTIMES=$NTIMES; eval echo ${conf_extra_tag[4]})
 
         #Cleaning to suppress old results that may be confusing in case of a crash during the run
-        if [ $onlyIfNeeded -eq 0 ]; then
+        if [ $onlyIfNeeded == false ]; then
           for t2 in $(echo $tests | sed 's/,/ /g'); do
             if [ -d tests/with_${buildSys}/arch_${archfile}/${t2}${perf_extrapolation_tag} ]; then
               rm -rf tests/with_${buildSys}/arch_${archfile}/${t2}${perf_extrapolation_tag}
@@ -604,20 +373,26 @@ fi
 #### COMPARISON ####
 ####################
 
-if [ $check -eq 1 ]; then
+if [ $check == true ]; then
   echo "### Check commit $commit against commit $reference"
 
   alltests=0
   message=""
   for t in $(echo $tests | sed 's/,/ /g'); do
     if echo $allowedTests | grep -w $t > /dev/null; then
-
+      caseref=${refByTest[$t]}
+      #Conversion into directory name
+      if echo $caseref | grep '/' > /dev/null; then
+        refname=$(escape_commit $reference)
+      else
+        refname="COMMIT${caseref}"
+      fi
       #File comparison
       file1=$TESTDIR/$name/tests/with_${buildSys}/arch_${archfile}/${t}${extrapolation_tag}/Output_run
-      file2=$TESTDIR/${refnameByTest[$t]}/tests/with_${buildSys}/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run
-      if [ ! -f $file2 -a $computeRefIfNeeded -eq 1 ]; then
+      file2=$TESTDIR/${refname}/tests/with_${buildSys}/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run
+      if [ ! -f $file2 -a $computeRefIfNeeded == true ]; then
         # The reference has not been run yet, we run it
-        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${refByTest[$t]} --buildSys ${buildSys}
+        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${caseref} --buildSys ${buildSys}
       fi
       mess=""
       te=0
@@ -626,7 +401,7 @@ if [ $check -eq 1 ]; then
         te=1
       fi
       if [ ! -f "$file2" ]; then
-        mess2="Result ($file2) for commit ${refByTest[$t]} does not exist, please run the simulation"
+        mess2="Result ($file2) for commit ${caseref} does not exist, please run the simulation"
         te=1
         if [ "$mess" = "" ]; then
           mess=$mess2
@@ -657,7 +432,7 @@ fi
 #### CLEANING ####
 ##################
 
-if [ $remove -eq 1 ]; then
+if [ $remove == true ]; then
   echo "### Remove model directory for commit $commit"
   [ -d $TESTDIR/$name ] && rm -rf $TESTDIR/$name
 fi

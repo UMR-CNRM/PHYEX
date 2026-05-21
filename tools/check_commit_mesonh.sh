@@ -1,17 +1,22 @@
 #!/bin/bash
 
-#set -x
-set -e
-set -o pipefail #abort if left command on a pipe fails
-
-
-#######################
-#### CONFIGURATION ####
-#######################
+#This script:
+# - compiles the MESONH model using a specific commit for the externalised physics
+# - runs tests and checks if results are identical to a given version
 
 #The folowing environment variables can be defined:
 # TARGZDIR: directory where tar.gz files are searched for
 # MNHPACK: directory where tests are build
+
+
+PHYEXTOOLSDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Mutualised functions and definitions
+. ${PHYEXTOOLSDIR}/check_commit_common.sh
+
+#######################
+#### CONFIGURATION ####
+#######################
 
 #About the tests:
 # - allowedTests is the list of allowed tests which can depend on platform, if we ask to perform an action
@@ -22,11 +27,6 @@ allowedTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, 007_16janvi
               014_LIMA/002_mesonh"
 defaultTest="007_16janvier/008_run2"
 
-separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
-              #- seprator must be in sync with prep_code.sh separator
-
-PHYEXTOOLSDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 export MNHPACK=${MNHPACK:=$HOME/MesoNH/PHYEX}
 export TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
 
@@ -34,156 +34,9 @@ export TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
 #### COMMAND LINE ARGUMENTS ####
 ################################
 
-function usage {
-  echo "Usage: $0 [-h] [-p] [-u] [-c] [-r] [-C] [-s] [--expand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--prep_code-opts 'OPTS'] [--perf FILE] [--name NAME] commit [reference]"
-  echo "commit          commit hash (or a directory) to test"
-  echo "reference       commit hash or a directory or nothing for ref"
-  echo "-s              suppress compilation pack"
-  echo "-p              creates pack"
-  echo "-u              updates pack (experimental, only for 'small' updates where"
-  echo "                              the list of files does not change)"
-  echo "-c              performs compilation"
-  echo "-r              runs the tests"
-  echo "-C              checks the result against the reference"
-  echo "-t TEST         comma separated list of tests to execute"
-  echo "                or ALL to execute all tests"
-  echo "--expand        expand mnh_expand blocks (code will use do loops)"
-  echo "--repo-user USER"
-  echo "                user hosting the PHYEX repository on github,"
-  echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
-  echo "--repo-protocol PROTOCOL"
-  echo "                protocol (https or ssh) to reach the PHYEX repository on github,"
-  echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
-  echo "--remove        removes the pack"
-  echo "--onlyIfNeeded  performs the pack creation and/or the compilation and/or the execution"
-  echo "                only if the step has not already been done"
-  echo "--computeRefIfNeeded"
-  echo "                computes the missing references"
-  echo "--prep_code-opts 'OPTS'"
-  echo "                OPTS is added to the call to prep_code (e.g. --prep_code_opts '--lowerCase'"
-  echo "                to transfor all source codes in lower case). Help on prep_code.sh options"
-  echo "                can be found with 'prep_code.sh -h'. Note: don't forget to enclose OPTS in ' or \""
-  echo "--perf FILE     add performance statistics in file FILE"
-  echo "--name NAME     to give a name to the compilation directory"
-  echo ""
-  echo "If nothing is asked (pack creation, compilation, running, check, removing) everything"
-  echo "except the removing is done"
-  echo
-  echo "If no test is aked for, the default one ($defaultTest) is executed"
-  echo
-  echo "With the special reference REF commit, a suitable reference is guessed"
-  echo
-  echo "The directory (for commit only, not ref) can take the form server:directory"
-  echo
-  echo "If using a directory (for commit or reference) it must contain at least one '/'"
-  echo "The commit can be a tag, written with syntagx tags/<TAG>"
-}
-
-packcreation=0
-packupdate=0
-compilation=0
-run=0
-check=0
-commit=""
-reference=""
-tests=""
-suppress=0
-useexpand=0
-remove=0
-onlyIfNeeded=0
-computeRefIfNeeded=0
-prepCodeOpts=""
-perffile=""
-tag=""
-
-commitcmd="" # To execute again check_commit with the same options (except commit and ref)
-while [ -n "$1" ]; do
-  toadd="$1"
-  case "$1" in
-    '-h') usage; exit;;
-    '-s') suppress=1;;
-    '-p') packcreation=1;;
-    '-u') packupdate=1;;
-    '-c') compilation=1;;
-    '-r') run=1;;
-    '-C') check=1;;
-    '-t') tests="$2"; toadd="$toadd $2"; shift;;
-    '--expand') useexpand=1;;
-    '--repo-user') export PHYEXREPOuser=$2; toadd="$toadd $2"; shift;;
-    '--repo-protocol') export PHYEXREPOprotocol=$2; toadd="$toadd $2"; shift;;
-    '--remove') remove=1;;
-    '--onlyIfNeeded') onlyIfNeeded=1;;
-    '--computeRefIfNeeded') computeRefIfNeeded=1;;
-    '--prep_code-opts') prepCodeOpts=$2; toadd="$toadd $2"; shift;;
-    '--perf') perffile="$(realpath $2)"; toadd="$toadd $2"; shift;;
-    '--name') tag=$2; toadd="$toadd $2"; toadd="$toadd $2"; shift;;
-    #--) shift; break ;;
-     *) if [ -z "${commit-}" ]; then
-          commit=$1
-        else
-          if [ -z "${reference-}" ]; then
-            reference=$1
-          else
-            echo "Only two commit hash allowed on command line"
-            exit 1
-          fi
-        fi
-        toadd="";;
-  esac
-  commitcmd="$commitcmd $toadd"
-  shift
-done
-
-if [ $packcreation -eq 0 -a \
-     $packupdate -eq 0 -a \
-     $compilation -eq 0 -a \
-     $run -eq 0 -a \
-     $check -eq 0 -a \
-     $remove -eq 0 ]; then
-  packcreation=1
-  compilation=1
-  run=1
-  check=1
-fi
-
-if [ -z "${commit-}" ]; then
-  echo "At least one commit hash must be provided on command line"
-  exit 2
-fi
-
-##############################
-#### FUNCTION DEFINITIONS ####
-##############################
-
-function json_dictkey2value {
-  # $1 must contain the json string
-  # $2 must be the key name
-  # $3 is the default value
-  json_content="$1" python3 -c "import json; import os; result=json.loads(os.environ['json_content']).get('$2', '$3'); print(json.dumps(result) if isinstance(result, dict) else result)"
-}
-
-function mvdiff {
-  # $1 is the file to move
-  # $2 is the destination
-  if [ -d $2 ]; then
-    #$2 is a directory and file must be moved in this directory, keeping its name
-    dest=$2/$(basename $1)
-  else
-    dest=$2
-  fi
-  if [ $packupdate -eq 0 -o ! -f $dest ]; then
-    #When creating the pack or if destination file doesn't exist
-    mv $1 $2
-  else
-    #Destination file exists and we are in the update mode
-    #File is moved only if different
-    if ! cmp $1 $dest > /dev/null; then
-      mv $1 $2
-    else
-      rm $1
-    fi
-  fi
-}
+default_expand=false
+enable_prepCodeOpts=true
+command_line $@
 
 #######################
 #### FROM A COMMIT ####
@@ -191,165 +44,69 @@ function mvdiff {
 
 # In this case, we clone the commit and run the check_commit script
 # of this commit using the cloned directory.
-
-if ! echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
-  # We must run check_commit on a commit
-  # We use a sub-shell for isolation
-  (
-    # Temporary directory
-    export TMP_LOC=$(mktemp -d) # Workind directory
-    trap "\rm -rf $TMP_LOC" EXIT # Automatic removing
-    cd $TMP_LOC
-
-    # Clone
-    if [ $PHYEXREPOprotocol == 'https' ]; then
-      repository=https://github.com/$PHYEXREPOuser/PHYEX.git
-    elif [ $PHYEXREPOprotocol == 'ssh' ]; then
-      repository=git@github.com:$PHYEXREPOuser/PHYEX.git
-    fi
-    git clone $repository
-    cd PHYEX
-    git checkout $commit
-    if [ ! -d docs ]; then
-      # MESONH adapted commit, we must fill the repository with
-      # the last version (in history) of tools and requirements
-      toolscommit=$(git log --all --full-history -- tools | head -1 | cut -d\  -f2) # deleted in this commit
-      for parent in $(git rev-parse ${toolscommit}^@); do
-        if [ $(git ls-tree -r $parent -- tools | wc -l) -ne 0 ]; then
-          toolscommit=$parent # last commit with tools
-          break
-        fi
-      done
-      git checkout $toolscommit -- "tools"
-      git checkout $toolscommit -- "requirements.txt"
-    fi
-
-    # Requirements
-    python3 -m venv venv
-    . venv/bin/activate
-    python3 -m pip install -r requirements.txt
-
-    # Running commit
-    . tools/env.sh
-    if [ "$packBranch" == "" ]; then
-      mypackname="--name $commit"
-    else
-      mypackname=""
-    fi
-    check_commit_mesonh.sh $commitcmd $TMP_LOC/PHYEX $reference $mypackname
-  )
-  exit $?
-fi
+hash_prefix=''
+tools_install=''
+clone_and_run
 
 ###########################
 #### COMMIT PROPERTIES ####
 ###########################
 
 if [ -d $commit/src ]; then
-  mesonh_ready=false                                                                               
-  content_mesonh_version=$(scp $commit/src/mesonh/mesonh_version.json /dev/stdout 2>/dev/null || echo "")
-else                                                                                              
-  mesonh_ready=true                                                                                
-  content_mesonh_version=$(scp $commit/mesonh_version.json /dev/stdout 2>/dev/null || echo "")          
-fi                     
+  model_ready=false
+  json_content=$(scp $commit/src/mesonh/mesonh_version.json /dev/stdout 2>/dev/null || echo "")
+else
+  model_ready=true
+  json_content=$(scp $commit/mesonh_version.json /dev/stdout 2>/dev/null || echo "")          
+fi
 
 declare -A refByTest
-testing=$(json_dictkey2value "$content_mesonh_version" 'testing' '')
-ALLTests='' #We reset the list of tests
-for t in $(echo $allowedTests | sed 's/,/ /g'); do
-  ref=$(json_dictkey2value "$testing" "$t" '')
-  if [ ! "$ref" == "" ]; then
-    ALLTests="${ALLTests},$t"
-    refByTest[$t]=$ref
-  fi
-done
-ALLTests="${ALLTests:1}" #Remove first character (',')
+get_properties
 
-if [ -z "${tests-}" ]; then
-  tests=$defaultTest
-elif echo "$tests" | grep -w 'ALL' > /dev/null; then
-  tests=$(echo "$tests" | sed "s:\bALL\b:$ALLTests:g")
-fi
-
-
-refversion=$(json_dictkey2value "$content_mesonh_version" 'refversion' '')
-if [ "$tag" == "" ]; then
-  tag=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-fi
-name=${refversion}-$tag
-
-if [ ! -z "${reference-}" ]; then
-  declare -A refnameByTest
-  #Reference to use for each test
-  for t in $(echo $ALLTests | sed 's/,/ /g'); do
-    #Name of the reference
-    if [ "$reference" == "REF" ]; then
-      if [[ ! -z "${refByTest[$t]+unset}" ]]; then
-        #The json file contained the references to use on a per test case basis
-        reftag=${refByTest[$t]}
-      else
-        reftag=""
-      fi
-      refByTest[$t]=$reftag
-    else
-      if echo $reference | grep '/' > /dev/null; then
-        reftag=$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-      else
-        reftag=$reference
-      fi
-      refByTest[$t]=$reference
-    fi
-    #Conversion into directory name
-    if [ "$reftag" == "" ]; then
-      refname=${refversion}
-    else
-      refname=${refversion}-$reftag
-    fi
-    refnameByTest[$t]=$refname
-  done
-fi
+refversion=$(json_dictkey2value "$json_content" 'refversion' '')
+mnhdir=${refversion}-$name
 
 #######################
 #### PACK CREATION ####
 #######################
 
-
-[ $suppress -eq 1 -a -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
-if [ $packcreation -eq 1 -a -d $MNHPACK/$name -a $onlyIfNeeded -eq 1 ]; then
-  packcreation=0
+[ $suppress == true -a -d $MNHPACK/$mnhdir ] && rm -rf $MNHPACK/$mnhdir
+if [ $packcreation == true -a -d $MNHPACK/$mnhdir -a $onlyIfNeeded == true ]; then
+  packcreation=false
 fi
-if [ $packcreation -eq 1 ]; then
-  if [ -d $MNHPACK/$name ]; then
-    echo "Pack already exists ($MNHPACK/$name), suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
+if [ $packcreation == true ]; then
+  if [ -d $MNHPACK/$mnhdir ]; then
+    echo "Pack already exists ($MNHPACK/$mnhdir),"
+    echo "suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
     exit 5
   else
     echo "### Pack creation for commit $commit"
 
     # Prepare the pack
     cd $MNHPACK
-    mkdir ${name}_$$
-    cd ${name}_$$
+    mkdir ${mnhdir}_$$
+    cd ${mnhdir}_$$
     cp $TARGZDIR/${refversion}.tar.gz .
     tar xfz ${refversion}.tar.gz 
     rm ${refversion}.tar.gz
-    mv ${refversion} ../$name
+    mv ${refversion} ../$mnhdir
     cd ..
-    rmdir ${name}_$$
+    rmdir ${mnhdir}_$$
   fi
 fi
-if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
-  if [ !  -d $MNHPACK/$name/src/PHYEX ]; then
-      echo "PHYEX directory doesn't exist in pack ($MNHPACK/$name)"
+if [ $packupdate == true -o $packcreation == true ]; then
+  if [ !  -d $MNHPACK/$mnhdir/src/PHYEX ]; then
+      echo "PHYEX directory doesn't exist in pack ($MNHPACK/$mnhdir)"
       exit 9
   else
-    cd $MNHPACK/$name/src
-    if [ $packupdate -eq 1 ]; then
+    cd $MNHPACK/$mnhdir/src
+    if [ $packupdate == true ]; then
       mv PHYEX PHYEXori
     else
       rm -rf PHYEX
     fi
 
-    if [ $useexpand == 1 ]; then
+    if [ $useexpand == true ]; then
       expand_options="--mnhExpand"
     else
       expand_options=""
@@ -357,7 +114,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     prep_code=$PHYEXTOOLSDIR/prep_code.sh
     echo "Copy $commit"
     mkdir PHYEX
-    if [ $mesonh_ready == false ]; then
+    if [ $model_ready == false ]; then
       scp -q -r $commit/src PHYEX/
       subs="-s turb -s micro -s aux -s ext -s conv"
       $prep_code $prepCodeOpts --renameFf --ilooprm --noRaiseOnCodingNorms $expand_options $subs -m mesonh PHYEX -- --removeExtraDOinMnhDoConcurrent
@@ -373,7 +130,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
         [ $file = PHYEX/ext/modd_salt.f90 ] && mvdiff $file ACLIB/aux/
         [ -f $file ] && mvdiff $file MNH/ # Not an ACLIB file
       done
-      if [ $packupdate -eq 1 ]; then
+      if [ $packupdate == true ]; then
         #Only modified files are moved
         rm -rf PHYEX/ext
       else
@@ -382,7 +139,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       fi
     fi
 
-    if [ $packupdate -eq 1 ]; then
+    if [ $packupdate == true ]; then
       #Update only modified files
       cd PHYEX
       for file in $(find turb micro conv aux -type f); do
@@ -392,7 +149,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       rm -rf PHYEX
       mv PHYEXori PHYEX
     else
-      cd $MNHPACK/$name/src/PHYEX/turb
+      cd $MNHPACK/$mnhdir/src/PHYEX/turb
       # Delete files of ${refversion}/src/MNH and MNH/src/LIB/SURCOUCHE/src with same name
       for rep in turb micro conv aux ; do
         cd ../$rep
@@ -416,13 +173,13 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     fi
 
     # Remove binaries
-    rm -f $MNHPACK/$name/exe/*
+    rm -f $MNHPACK/$mnhdir/exe/*
 
     # Remove execution results
-    for t in $(echo $ALLTests | sed 's/,/ /g'); do
+    for t in $(echo $allowedTests | sed 's/,/ /g'); do
       case1=$(echo $t | cut -d / -f 1)
       case2=$(echo $t | cut -d / -f 2)
-      casedir=$MNHPACK/$name/MY_RUN/KTEST/$case1
+      casedir=$MNHPACK/$mnhdir/MY_RUN/KTEST/$case1
       [ -d $casedir/$case2 ] && rm -rf $casedir/$case2
     done
   fi
@@ -433,10 +190,10 @@ fi
 #####################
 
 profile_sourced=0
-if [ $compilation -eq 1 ]; then
-  if [ $onlyIfNeeded -eq 0 -o ! -f $MNHPACK/$name/exe/MESONH* ]; then
+if [ $compilation == true ]; then
+  if [ $onlyIfNeeded == false -o ! -f $MNHPACK/$mnhdir/exe/MESONH* ]; then
     echo "### Compilation of commit $commit"
-    cd $MNHPACK/$name/src
+    cd $MNHPACK/$mnhdir/src
     #Configure and compilation
     command -v module && modulelist=$(module -t list 2>&1 | tail -n +2) #save loaded modules
     ./configure
@@ -455,13 +212,13 @@ fi
 #### EXECUTION ####
 ###################
 
-if [ $run -eq 1 ]; then
+if [ $run == true ]; then
   #Cleaning to suppress old results that may be confusing in case of a crash during the run
-  if [ $onlyIfNeeded -eq 0 ]; then
+  if [ $onlyIfNeeded == false ]; then
     for t in $(echo $tests | sed 's/,/ /g'); do
       case1=$(echo $t | cut -d / -f 1)
       case2=$(echo $t | cut -d / -f 2)
-      casedir=$MNHPACK/$name/MY_RUN/KTEST/$case1
+      casedir=$MNHPACK/$mnhdir/MY_RUN/KTEST/$case1
       [ -d $casedir/$case2 ] && rm -rf $casedir/$case2
     done
   fi
@@ -472,15 +229,15 @@ if [ $run -eq 1 ]; then
     if echo $allowedTests | grep -w $t > /dev/null; then #test is allowed on this plateform
       case1=$(echo $t | cut -d / -f 1)
       case2=$(echo $t | cut -d / -f 2)
-      casedir=$MNHPACK/$name/MY_RUN/KTEST/$case1
-      if [ ! -d $casedir/$case2 ]; then #We do not enter systematically this part if onlyIfNeeded=1
+      casedir=$MNHPACK/$mnhdir/MY_RUN/KTEST/$case1
+      if [ ! -d $casedir/$case2 ]; then #We do not enter systematically this part if onlyIfNeeded=true
         if [ $firstrun -eq 1 ]; then
           echo "### Running of commit $commit"
           firstrun=0
         fi
 
-        if [ ! -f $MNHPACK/$name/exe/MESONH* ]; then
-          echo "Pack does not exist ($MNHPACK/$name) or compilation has failed, please check"
+        if [ ! -f $MNHPACK/$mnhdir/exe/MESONH* ]; then
+          echo "Pack does not exist ($MNHPACK/$mnhdir) or compilation has failed, please check"
           exit 6
         fi
 
@@ -488,7 +245,7 @@ if [ $run -eq 1 ]; then
         #and we suppress all the test directories for this case
         if [ ! -d $casedir ]; then
           cp -r $MNHPACK/${refversion}/MY_RUN/KTEST/$case1 $casedir/
-          for newt in $(echo $ALLTests | sed 's/,/ /g'); do
+          for newt in $(echo $allowedTests | sed 's/,/ /g'); do
             newcase1=$(echo $newt | cut -d / -f 1)
             newcase2=$(echo $newt | cut -d / -f 2)
             if [ $case1 == $newcase1 ]; then
@@ -501,7 +258,7 @@ if [ $run -eq 1 ]; then
         cd $casedir
         for d in *; do
           if [[ -d "$d" || ( -L "$d" && ! -e "$d" ) ]]; then #directory (or a link to a directory) or a broken link
-            if ! echo $ALLTests | grep ${case1}/$d > /dev/null; then
+            if ! echo $allowedTests | grep ${case1}/$d > /dev/null; then
               #This directory is not a test case but might be needed to run the test case,
               #we take the reference version
               rm -rf $d
@@ -517,7 +274,7 @@ if [ $run -eq 1 ]; then
         cd ${case2}
         if [ $profile_sourced -eq 0 ]; then
           set +e #file ends with a test that can return false
-          . $MNHPACK/$name/conf/profile_mesonh-*
+          . $MNHPACK/$mnhdir/conf/profile_mesonh-*
           set -e
           profile_sourced=1
         fi
@@ -539,17 +296,22 @@ fi
 #### COMPARISON ####
 ####################
 
-if [ $check -eq 1 ]; then
+if [ $check == true ]; then
   echo "### Check commit $commit against commit $reference"
 
   allt=0
   for t in $(echo $tests | sed 's/,/ /g'); do
     if echo $allowedTests | grep -w $t > /dev/null; then
       #Files to compare
-      refname=${refnameByTest[$t]}
+      caseref=${refByTest[$t]}
+      if echo $caseref | grep '/' > /dev/null; then
+        refname=${refversion}-$(escape_commit $caseref)
+      else
+        refname=${refversion}-$caseref
+      fi
       case1=$(echo $t | cut -d / -f 1)
       case2=$(echo $t | cut -d / -f 2)
-      path_user=$MNHPACK/$name/MY_RUN/KTEST/$case1/$case2
+      path_user=$MNHPACK/$mnhdir/MY_RUN/KTEST/$case1/$case2
       path_ref=$MNHPACK/$refname/MY_RUN/KTEST/$case1/$case2
       file3=""
       file4=""
@@ -595,12 +357,12 @@ if [ $check -eq 1 ]; then
       fi
 
       #Run the reference if needed
-      if [ ! -f $file2 -a $computeRefIfNeeded -eq 1 ]; then
+      if [ ! -f $file2 -a $computeRefIfNeeded == true ]; then
           #We must call it in another shell because of the potentially loaded MesoNH profile
           #because we cannot load two MesoNH profiles in the same shell
           env -i $SHELL -l -c "MNHPACK=${MNHPACK} TARGZDIR=${TARGZDIR} \
                                PHYEXREPOuser=${PHYEXREPOuser} PHYEXREPOprotocol=${PHYEXREPOprotocol} \
-                               $0 -p -c -r -t $t --onlyIfNeeded ${refByTest[$t]}"
+                               $0 -p -c -r -t $t --onlyIfNeeded ${caseref}"
       fi
 
       if [ ! -d $path_ref ]; then
@@ -651,9 +413,9 @@ fi
 #### CLEANING ####
 ##################
 
-if [ $remove -eq 1 ]; then
+if [ $remove == true ]; then
   echo "### Remove model directory for commit $commit"
-  [ -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
+  [ -d $MNHPACK/$mnhdir ] && rm -rf $MNHPACK/$mnhdir
 fi
 
 exit $cmpstatus

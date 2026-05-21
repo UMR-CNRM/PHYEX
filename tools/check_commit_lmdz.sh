@@ -1,12 +1,13 @@
 #!/bin/bash
 
-#set -x
-set -e
-set -o pipefail #abort if left command on a pipe fails
-
 #This script:
 # - compiles the LMDZ model using a specific commit for the externalised physics
 # - runs RICO and ARM-CU 1D cases
+
+PHYEXTOOLSDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Mutualised functions and definitions
+. ${PHYEXTOOLSDIR}/check_commit_common.sh
 
 #######################
 #### CONFIGURATION ####
@@ -19,173 +20,23 @@ set -o pipefail #abort if left command on a pipe fails
 allowedTests="rico arm_cu"
 defaultTest="rico"
 
-separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
-              #- seprator must be in sync with prep_code.sh separator
-
-PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 LMDZPACK=${LMDZPACK:=$HOME/LMDZ/PHYEX}
 
 L=79
+
+#Build system
+default_buildSystem='fcm'
+alternative_buildSystem='make'
+
+link=0 #Not yet put in command line argument because this option has not been tested here
 
 ################################
 #### COMMAND LINE ARGUMENTS ####
 ################################
 
-function usage {
-  echo "Usage: $0 [-h] [-p] [-u] [-c] [-C] [-r] [-s] [--expand] [-t test] [--version VERSION] [--repo-user] [--repo-protocol] [--remove] [--perf FILE] [--name NAME] commit [reference]"
-  echo "commit          commit hash (or a directory) to test"
-  echo "reference       commit hash (or a directory) REF to use as a reference"
-  echo "-s              suppress compilation pack"
-  echo "-p              creates pack"
-  echo "-u              updates pack (experimental, only for 'small' updates where"
-  echo "                              the list of files does not change)"
-  echo "-c              performs compilation"
-  echo "-r              runs the tests"
-  echo "-C              checks the result against the reference"
-  echo "-t              comma separated list of tests to execute"
-  echo "                or ALL to execute all tests"
-  echo "--nofcm         don't use fcm (be carreful, with fcm compilation exits with a (false) error"
-  echo "--expand        expand mnh_expand blocks (code will be in do loops)"
-  echo "--version VERSION   to force using lmdz VERSION"
-  echo "--repo-user     user hosting the PHYEX repository on github,"
-  echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
-  echo "--repo-protocol protocol (https or ssh) to reach the PHYEX repository on github,"
-  echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
-  echo "--remove        removes the pack"
-  echo "--onlyIfNeeded  performs the pack creation and/or the compilation and/or the execution"
-  echo "                only if the step has not already been done"
-  echo "--computeRefIfNeeded"
-  echo "                computes the missing references"
-  echo "--perf FILE     add performance statistics in file FILE"
-  echo "--name NAME     to give a name to the pack"
-  echo ""
-  echo "If nothing is asked (pack creation, compilation, running, check, removing) everything"
-  echo "except the removing is done"
-  echo
-  echo "If no test is aked for, the default one ($defaultTest) is executed"
-  echo
-  echo "With the special reference REF commit, a suitable reference is guessed"
-  echo
-  echo "The directory (for commit only, not ref) can take the form server:directory"
-  echo
-  echo "If using a directory (for commit or reference) it must contain at least one '/'"
-  echo "The commit can be a tag, written with syntagx tags/<TAG>"
-}
-
-fcm=1
-packcreation=0
-packupdate=0
-compilation=0
-run=0
-check=0
-commit=""
-reference=""
-tests=""
-suppress=0
-useexpand=0
-version=""
-link=0 #Not yet put in command line argument because this option has not been tested here
-remove=0
-onlyIfNeeded=0
-computeRefIfNeeded=0
-perffile=""
-name=""
-
-commitcmd="" # To execute again check_commit with the same options (except commit and ref)
-while [ -n "$1" ]; do
-  toadd="$1"
-  case "$1" in
-    '-h') usage; exit;;
-    '-s') suppress=1;;
-    '-p') packcreation=1;;
-    '-u') packupdate=1;;
-    '-c') compilation=1;;
-    '-r') run=$(($run+1));;
-    '-C') check=1;;
-    '-t') tests="$2"; toadd="$toadd $2"; shift;;
-    '--nofcm') fcm=0;;
-    '--expand') useexpand=1;;
-    '--version') version="$2"; toadd="$toadd $2"; shift;;
-    '--repo-user') export PHYEXREPOuser=$2; toadd="$toadd $2"; shift;;
-    '--repo-protocol') export PHYEXREPOprotocol=$2; toadd="$toadd $2"; shift;;
-    '--remove') remove=1;;
-    '--onlyIfNeeded') onlyIfNeeded=1;;
-    '--computeRefIfNeeded') computeRefIfNeeded=1;;
-    '--perf') perffile="$(realpath $2)"; toadd="$toadd $2"; shift;;
-    '--name') name=$2; toadd="$toadd $2"; shift;;
-    #--) shift; break ;;
-     *) if [ -z "${commit-}" ]; then
-          commit=$1
-        else
-          if [ -z "${reference-}" ]; then
-            reference=$1
-          else
-            echo "Only two commit hash allowed on command line"
-            exit 1
-          fi
-        fi
-        toadd="";;
-  esac
-  commitcmd="$commitcmd $toadd"
-  shift
-done
-
-if [ $packcreation -eq 0 -a \
-     $compilation -eq 0 -a \
-     $packupdate -eq 0 -a \
-     $run -eq 0 -a \
-     $check -eq 0 -a \
-     $remove -eq 0 ]; then
-  packcreation=1
-  compilation=1
-  run=1
-  check=1
-fi
-
-if [ -z "${commit-}" ]; then
-  echo "At least one commit hash must be provided on command line"
-  exit 2
-fi
-
-if [ $check -eq 1 -a -z "${reference-}" ]; then
-  echo "To perform a comparison two commit hashes are mandatory on the command line"
-  exit 3
-fi
-
-##############################
-#### FUNCTION DEFINITIONS ####
-##############################
-
-function json_dictkey2value {
-  # $1 must contain the json string
-  # $2 must be the key name
-  # $3 is the default value
-  json_content="$1" python3 -c "import json; import os; result=json.loads(os.environ['json_content']).get('$2', '$3'); print(json.dumps(result) if isinstance(result, dict) else result)"
-}
-
-function mvdiff {
-  # $1 is the file to move
-  # $2 is the destination
-  if [ -d $2 ]; then
-    #$2 is a directory and file must be moved in this directory, keeping its name
-    dest=$2/$(basename $1)
-  else
-    dest=$2
-  fi
-  if [ $packupdate -eq 0 -o ! -f $dest ]; then
-    #When creating the pack or if destination file doesn't exist
-    mv $1 $2
-  else
-    #Destination file exists and we are in the update mode
-    #File is moved only if different
-    if ! cmp $1 $dest > /dev/null; then
-      mv $1 $2
-    else
-      rm $1
-    fi
-  fi
-}
+default_expand=false
+enable_prepCodeOpts=true
+command_line $@
 
 #######################
 #### FROM A COMMIT ####
@@ -193,81 +44,27 @@ function mvdiff {
 
 # In this case, we clone the commit and run the check_commit script
 # of this commit using the cloned directory.
-#
-if ! echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
-  # We must run check_commit on a commit
-  # We use a sub-shell for isolation
-  (
-    # Temporary directory
-    export TMP_LOC=$(mktemp -d) # Workind directory
-    trap "\rm -rf $TMP_LOC" EXIT # Automatic removing
-    cd $TMP_LOC
-
-    # Clone
-    if [ $PHYEXREPOprotocol == 'https' ]; then
-      repository=https://github.com/$PHYEXREPOuser/PHYEX.git
-    elif [ $PHYEXREPOprotocol == 'ssh' ]; then
-      repository=git@github.com:$PHYEXREPOuser/PHYEX.git
-    fi
-    git clone $repository
-    cd PHYEX
-    git checkout $commit
-    if [ ! -d docs ]; then
-      # LMDZ adapted commit, we must fill the repository with
-      # the last version (in history) of tools and requirements
-      toolscommit=$(git log --all --full-history -- tools | head -1 | cut -d\  -f2) # deleted in this commit
-      for parent in $(git rev-parse ${toolscommit}^@); do
-        if [ $(git ls-tree -r $parent -- tools | wc -l) -ne 0 ]; then
-          toolscommit=$parent # last commit with tools
-          break
-        fi
-      done
-      git checkout $toolscommit -- "tools"
-      git checkout $toolscommit -- "requirements.txt"
-    fi
-
-    # Requirements
-    python3 -m venv venv
-    . venv/bin/activate
-    python3 -m pip install -r requirements.txt
-
-    # Running commit
-    . tools/env.sh
-    if [ "$packBranch" == "" ]; then
-      mypackname="--name $commit"
-    else
-      mypackname=""
-    fi
-    check_commit_lmdz.sh $commitcmd $TMP_LOC/PHYEX $reference $mypackname
-  )
-  exit $?
-fi
+tools_install=''
+clone_and_run
 
 ###########################
 #### COMMIT PROPERTIES ####
 ###########################
 
 if [ -d $commit/src ]; then
-  lmdz_ready=false
-  content_lmdz_version=$(scp $commit/src/lmdz/lmdz_version.json /dev/stdout 2>/dev/null || echo "")
+  model_ready=false
+  json_content=$(scp $commit/src/lmdz/lmdz_version.json /dev/stdout 2>/dev/null || echo "")
 else
-  lmdz_ready=true
-  content_lmdz_version=$(scp $commit/lmdz_version.json /dev/stdout 2>/dev/null || echo "")
+  model_ready=true
+  json_content=$(scp $commit/lmdz_version.json /dev/stdout 2>/dev/null || echo "")
 fi
 
-[ "$version" == "" ] && version=$(json_dictkey2value "$content_lmdz_version" version '')
-rad=$(json_dictkey2value "$content_lmdz_version" rad '')
-install_arg=$(json_dictkey2value "$content_lmdz_version" install_arg '')
+declare -A refByTest
+get_properties
 
-if [ -z "${tests-}" ]; then
-  tests=$defaultTest
-elif echo "$tests" | grep -w 'ALL' > /dev/null; then
-  tests=$allowedTests
-fi
-
-if [ "$name" == "" ]; then
-  name=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-fi
+version=$(json_dictkey2value "$json_content" version '')
+rad=$(json_dictkey2value "$json_content" rad '')
+install_arg=$(json_dictkey2value "$json_content" install_arg '')
 lmdzdir=$LMDZPACK/$name/LMDZ
 phyexdir=$LMDZPACK/$name/PHYEX/
 main=lmdz1d
@@ -275,54 +72,29 @@ main=lmdz1d
 ##compilecmd="./compile -L $L -rad $rad -cosp 0 -opt \"-debug \" -main $main"
 compilecmd="./compile -L $L -rad $rad -cosp 0 -main $main"
 
-if [ ! -z "${reference-}" ]; then
-  declare -A refnameByTest
-  #Reference to use for each test
-  for t in $(echo $allowedTests | sed 's/,/ /g'); do
-    #Name of the reference
-    if [ "$reference" == 'REF' ]; then
-      if [[ ! -z "${refByTest[$t]+unset}" ]]; then
-        #The json file contained the references to use on a per test case basis
-        caseref=${refByTest[$t]}
-      fi
-    else
-      #The exact reference to use was given on the command line
-      caseref=$reference
-    fi
-    refByTest[$t]=$caseref
-    #Conversion into directory name
-    if echo $caseref | grep '/' > /dev/null; then
-      refname="PHYEX/*_$(echo $caseref | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g').01.${gmkpack_l}.${gmkpack_o}"
-    else
-      refname="PHYEX/*_${caseref}.01.${gmkpack_l}.${gmkpack_o}"
-    fi
-    refnameByTest[$t]=$refname
-  done
-fi
-
 #######################
 #### PACK CREATION ####
 #######################
 
-[ $suppress -eq 1 -a -d $LMDZPACK/$name ] && rm -rf $LMDZPACK/$name
-if [ $packcreation -eq 1 -a -d $LMDZPACK/$name -a $onlyIfNeeded -eq 1 ]; then
-  packcreation=0
+[ $suppress == true -a -d $LMDZPACK/$name ] && rm -rf $LMDZPACK/$name
+if [ $packcreation == true -a -d $LMDZPACK/$name -a $onlyIfNeeded == true ]; then
+  packcreation=false
 fi
-if [ $packcreation -eq 1 ]; then
-  echo "### Compilation of commit $commit"
-
+if [ $packcreation == true ]; then
   if [ -d $LMDZPACK/$name ]; then
-    echo "Pack already exists ($LMDZPACK/$name), suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
+    echo "Pack already exists ($LMDZPACK/$name),"
+    echo "suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
     exit 5
-  fi
+  else
+    echo "### Compilation of commit $commit"
 
-  #Create directory
-  mkdir -p $LMDZPACK/$name
-  cd $LMDZPACK/$name
+    #Create directory
+    mkdir -p $LMDZPACK/$name
+    cd $LMDZPACK/$name
 
-  #Populate with arch files
-  touch arch-mylocal.env
-  cat - <<EOF > arch-mylocal.fcm
+    #Populate with arch files
+    touch arch-mylocal.env
+    cat - <<EOF > arch-mylocal.fcm
 %COMPILER            gfortran
 %LINK                gfortran
 %FPP                 cpp
@@ -342,7 +114,7 @@ if [ $packcreation -eq 1 ]; then
 %OMP_LD   
 EOF
 
-  cat - <<EOF > arch-mylocal.path
+    cat - <<EOF > arch-mylocal.path
 NETCDF_INCDIR="-I/usr/include"
 NETCDF_LIBDIR=""
 NETCDF_LIB="-lnetcdff -lnetcdf"
@@ -371,19 +143,20 @@ INCA_LIBDIR="-L\$LMDGCM/../INCA/build/lib"
 INCA_LIB="-lchimie"
 EOF
 
-  #Compilation
-  wget https://lmdz.lmd.jussieu.fr/pub/install_lmdz.sh -O install_lmdz.sh
-  bash install_lmdz.sh -v $version $install_arg -bench 0 -rad $rad -name LMDZ -arch_dir $PWD -arch mylocal 2>&1 | tee Install.log
+    #Compilation
+    wget https://lmdz.lmd.jussieu.fr/pub/install_lmdz.sh -O install_lmdz.sh
+    bash install_lmdz.sh -v $version $install_arg -bench 0 -rad $rad -name LMDZ -arch_dir $PWD -arch mylocal 2>&1 | tee Install.log
 
-  #Populate with test cases (1D directory needed for compilation)
-  cd $lmdzdir
-  wget https://lmdz.lmd.jussieu.fr/pub/1D/1D.tar.gz
-  tar xf 1D.tar.gz
+    #Populate with test cases (1D directory needed for compilation)
+    cd $lmdzdir
+    wget https://lmdz.lmd.jussieu.fr/pub/1D/1D.tar.gz
+    tar xf 1D.tar.gz
+  fi
 fi
-if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
+if [ $packupdate == true -o $packcreation == true ]; then
   #PHYEX code
   if [ $link -eq 1 ]; then
-    if [ $packupdate -eq 1 ]; then
+    if [ $packupdate == true ]; then
       echo "link option not compatible with the update option"
       exit 10
     fi
@@ -400,11 +173,11 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       exit 9
     fi
     cd $LMDZPACK/$name
-    if [ $packupdate -eq 1 ]; then
+    if [ $packupdate == true ]; then
       mv PHYEX PHYEXori
     fi
   
-    if [ $useexpand == 1 ]; then
+    if [ $useexpand == true ]; then
       expand_options="--mnhExpand"
     else
       expand_options=""
@@ -414,8 +187,8 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     echo "Copy $commit"
     mkdir PHYEX
     scp -q -r $commit/src PHYEX/
-    $prep_code $expand_options $subs -m lmdz PHYEX -- --shumanFUNCtoCALL --removeACC
-    if [ $packupdate -eq 1 ]; then
+    $prep_code $prepCodeOpts $expand_options $subs -m lmdz PHYEX -- --shumanFUNCtoCALL --removeACC
+    if [ $packupdate == true ]; then
       #Update only modified files
       cd PHYEX
       for file in $(find turb micro aux ext -type f); do
@@ -433,8 +206,8 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
 
   #Update code
   cd $lmdzdir/modipsl/modeles/LMDZ/libf/phylmd/
-  [ $packupdate -eq 0 ] && cp -r . ../phylmdorig
-  if [ $fcm -eq 0 ]; then
+  [ $packupdate == false ] && cp -r . ../phylmdorig
+  if [ $buildSys == 'make' ]; then
     mvdiff modd_dimphyexn.F90 modd_dimphyex.F90
     for name in `grep -i 'END MODULE' modd*n.F90 | cut -d: -f1 | sed -e 's/n.F90//'` ; do
       mvdiff ${name}n.F90 ${name}_n.F90
@@ -448,7 +221,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
   fi
 
   #Missing files in case ecrad is not used
-  if [ $packupdate -eq 0 ]; then
+  if [ $packupdate == false ]; then
     if [ "$rad" != "ecrad" ] ; then
       for file in ecrad/yom* ecrad/abor1.F90 ecrad/abor1.intfb.h ecrad/parkind1.F90 \
                   ecrad/*/yom* ecrad/*/abor1.F90 ecrad/*/abor1.intfb.h ecrad/*/parkind1.F90; do
@@ -462,17 +235,17 @@ fi
 #### COMPILATION ####
 #####################
 
-if [ $compilation -eq 1 ]; then
-  if [ $onlyIfNeeded -eq 0 -o ! -f $HOMEPACK/$name/bin/MASTERODB ]; then
+if [ $compilation == true ]; then
+  if [ $onlyIfNeeded == false -o ! -f $HOMEPACK/$name/bin/MASTERODB ]; then
     echo "### Compilation of commit $commit"
     cd $lmdzdir/1D/bin
     rm -f $lmdzdir/1D/bin/${main}.e
     rm -f $lmdzdir/modipsl/modeles/LMDZ/bin/lmdz1d_${L}_phylmd_${rad}_seq.e
-    if [ $fcm -eq 1 ]; then
+    if [ $buildSys == 'fcm' ]; then
       sed -i "s/fcm=0/fcm=1/g" compile
     fi
     $compilecmd 2>&1 | tee $lmdzdir/compilation.log
-    if [ $fcm -eq 1 ]; then
+    if [ $buildSys == 'fcm' ]; then
       echo "Using fcm, compilation exits with error even if everything is OK"
     fi
   fi
@@ -482,7 +255,7 @@ fi
 #### EXECUTION ####
 ###################
 
-if [ $run -eq 1 ]; then
+if [ $run == true ]; then
   echo "### Execution of commit $commit"
   cd $lmdzdir/1D/INPUT/PHYS
   sed '1 i\iflag_physiq=1\n' physiq.def_6A > physiq.def_PHYLMD
@@ -515,7 +288,7 @@ if [ $run -eq 1 ]; then
 ......eod
       chmod +x compile.sh
   
-      if [ $fcm -eq 0 ]; then
+      if [ $buildSys == 'make' ]; then
         ln -sf $lmdzdir/1D/bin/${main}.e ${main}.e
       else
         execname=$lmdzdir/modipsl/modeles/LMDZ/bin/lmdz1d_${L}_phylmd_${rad}_seq.e
@@ -539,7 +312,7 @@ if [ $run -eq 1 ]; then
   done
 fi
 
-if [ $check -eq 1 ]; then
+if [ $check == true ]; then
   echo "### Check commit $commit against commit $reference"
   echo "This functionnality is not yet implemented because:"
   echo "  1) the PHYEX interface will evolve and bit-reproducibility is not guaranted"
@@ -548,7 +321,7 @@ if [ $check -eq 1 ]; then
   exit 6
 fi
 
-if [ $remove -eq 1 ]; then
+if [ $remove == true ]; then
   echo "### Remove model directory for commit $commit"
   [ -d $LMDZPACK/$name ] && rm -rf $LMDZPACK/$name
 fi

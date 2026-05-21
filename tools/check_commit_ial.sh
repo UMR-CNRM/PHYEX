@@ -1,9 +1,5 @@
 #!/bin/bash
 
-#set -x
-set -e
-set -o pipefail #abort if left command on a pipe fails
-
 #This script:
 # - compiles the AROME model using a specific commit for the externalised physics
 # - runs a small 3D case and checks if results are identical to a given version
@@ -25,11 +21,14 @@ set -o pipefail #abort if left command on a pipe fails
 #small_3D_xfrmin: same as small_3D_alt2 but with specified values for XFRMIN(16:17)
 #arp_t31: Ph. Marguinaud's ARPEGE toy
 
+PHYEXTOOLSDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Mutualised functions and definitions
+. ${PHYEXTOOLSDIR}/check_commit_common.sh
+
 #######################
 #### CONFIGURATION ####
 #######################
-
-cycle='50t2' # Used to buil pack names
 
 #About the tests:
 # - allowedTests is the list of allowed tests which can depend on platform, if we ask to perform an action
@@ -37,11 +36,6 @@ cycle='50t2' # Used to buil pack names
 # - defaultTest is the list of tests to perform when no '-t' option is provided on the command line.
 defaultTest="small_3D"
 allowedTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7,small_3D_alt8,small_3D_alt9,small_3D_alt10,small_3D_alt11,small_3D_alt12,small_3D_lima,small_3D_xfrmin,arp_t31"
-
-separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
-              #- seprator must be in sync with prep_code.sh separator
-
-PHYEXTOOLSDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 HOMEPACK=${HOMEPACK:=$HOME/pack}
 
@@ -61,142 +55,18 @@ fi
 #### COMMAND LINE ARGUMENTS ####
 ################################
 
-function usage {
-  echo "Usage: $0 [-h] [-p] [-u] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--prep_code-opts 'OPTS'] [--perf FILE] [--name NAME] commit [reference]"
-  echo "commit          commit hash (or a directory) to test"
-  echo "reference       commit hash (or a directory) REF to use as a reference"
-  echo "-s              suppress compilation pack"
-  echo "-p              creates pack"
-  echo "-u              updates pack (experimental, only for 'small' updates where"
-  echo "                              the list of files does not change)"
-  echo "-c              performs compilation"
-  echo "-r              runs the tests"
-  echo "-C              checks the result against the reference"
-  echo "-t TEST         comma separated list of tests to execute"
-  echo "                or ALL to execute all tests"
-  echo "--noexpand      do not expand mnh_expand blocks (code will be in array-syntax)"
-  echo "-f              full compilation (do not use pre-compiled pack)"
-  echo "--repo-user USER"
-  echo "                user hosting the PHYEX repository on github,"
-  echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
-  echo "--repo-protocol PROTOCOL"
-  echo "                protocol (https or ssh) to reach the PHYEX repository on github,"
-  echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
-  echo "--remove        removes the pack"
-  echo "--onlyIfNeeded  performs the pack creation and/or the compilation and/or the execution"
-  echo "                only if the step has not already been done"
-  echo "--computeRefIfNeeded"
-  echo "                computes the missing references"
-  echo "--prep_code-opts 'OPTS'"
-  echo "                OPTS is added to the call to prep_code (e.g. --prep_code_opts '--lowerCase'"
-  echo "                to transfor all source codes in lower case). Help on prep_code.sh options"
-  echo "                can be found with 'prep_code.sh -h'. Note: don't forget to enclose OPTS in ' or \""
-  echo "--perf FILE     add performance statistics in file FILE"
-  echo "--name NAME     to give a name to the pack"
-  echo ""
-  echo "If nothing is asked (pack creation, compilation, running, check, removing) everything"
-  echo "except the removing is done"
-  echo
-  echo "If no test is aked for, the default one ($defaultTest) is executed"
-  echo
-  echo "With the special reference REF commit, a suitable reference is guessed"
-  echo
-  echo "The directory (for commit only, not ref) can take the form server:directory"
-  echo
-  echo "If using a directory (for commit or reference) it must contain at least one '/'"
-  echo "The commit can be a tag, written with syntagx tags/<TAG>"
-  echo
-  echo "The -f flag (full recompilation) is active only at pack creation"
-  echo
-  echo "The PHYEXROOTPACK environment variable, if set, is used as the argument"
-  echo "of the --rootpack option of ial-git2pack/ial-to_pack, for incremental packs."
-}
-
-packcreation=0
-packupdate=0
-compilation=0
-run=0
-check=0
-commit=""
-reference=""
-tests=""
-suppress=0
-useexpand=1
-fullcompilation=0
-remove=0
-onlyIfNeeded=0
-computeRefIfNeeded=0
-prepCodeOpts=""
-perffile=""
-packBranch=""
-
-commitcmd="" # To execute again check_commit with the same options (except commit and ref)
-while [ -n "$1" ]; do
-  toadd="$1"
-  case "$1" in
-    '-h') usage; exit;;
-    '-s') suppress=1;;
-    '-p') packcreation=1;;
-    '-u') packupdate=1;;
-    '-c') compilation=1;;
-    '-r') run=1;;
-    '-C') check=1;;
-    '-t') tests="$2"; toadd="$toadd $2"; shift;;
-    '--noexpand') useexpand=0;;
-    '-f') fullcompilation=1;;
-    '--repo-user') export PHYEXREPOuser=$2; toadd="$toadd $2"; shift;;
-    '--repo-protocol') export PHYEXREPOprotocol=$2; toadd="$toadd $2"; shift;;
-    '--remove') remove=1;;
-    '--onlyIfNeeded') onlyIfNeeded=1;;
-    '--computeRefIfNeeded') computeRefIfNeeded=1;;
-    '--prep_code-opts') prepCodeOpts=$2; toadd="$toadd $2"; shift;;
-    '--perf') perffile="$(realpath $2)"; toadd="$toadd $2"; shift;;
-    '--name') packBranch=$2; toadd="$toadd $2"; shift;;
-    #--) shift; break ;;
-     *) if [ -z "${commit-}" ]; then
-          commit=$1
-        else
-          if [ -z "${reference-}" ]; then
-            reference=$1
-          else
-            echo "Only two commit hash allowed on command line"
-            exit 1
-          fi
-        fi
-        toadd="";;
-  esac
-  commitcmd="$commitcmd $toadd"
-  shift
-done
-
-if [ $packcreation -eq 0 -a \
-     $packupdate -eq 0 -a \
-     $compilation -eq 0 -a \
-     $run -eq 0 -a \
-     $check -eq 0 -a \
-     $remove -eq 0 ]; then
-  packcreation=1
-  compilation=1
-  run=1
-  check=1
-fi
-
-if [ -z "${commit-}" ]; then
-  echo "At least one commit hash must be provided on command line"
-  exit 2
-fi
-
-if [ $check -eq 1 -a -z "${reference-}" ]; then
-  echo "To perform a comparison two commit hashes are mandatory on the command line"
-  exit 3
-fi
+default_expand=true
+extra_doc="The PHYEXROOTPACK environment variable, if set, is used as the argument
+of the --rootpack option of ial-git2pack/ial-to_pack, for incremental packs."
+enable_prepCodeOpts=true
+command_line $@
 
 ##############################
 #### FUNCTION DEFINITIONS ####
 ##############################
 
-function exescript () {
-  #usage: exescript <output file> <script> [arg [arg ...]]
+function submit () {
+  #usage: submit <output file> <script> [arg [arg ...]]
   output=$1
   shift
   if [ $HPC -eq 1 ]; then
@@ -207,164 +77,45 @@ function exescript () {
   fi
 }
 
-function json_dictkey2value {
-  # $1 must contain the json string
-  # $2 must be the key name
-  # $3 is the default value
-  json_content="$1" python3 -c "import json; import os; result=json.loads(os.environ['json_content']).get('$2', '$3'); print(json.dumps(result) if isinstance(result, dict) else result)"
-}
-
-function mvdiff {
-  # $1 is the file to move
-  # $2 is the destination
-  if [ -d $2 ]; then
-    #$2 is a directory and file must be moved in this directory, keeping its name
-    dest=$2/$(basename $1)
-  else
-    dest=$2
-  fi
-  if [ $packupdate -eq 0 -o ! -f $dest ]; then
-    #When creating the pack or if destination file doesn't exist
-    mv $1 $2
-  else
-    #Destination file exists and we are in the update mode
-    #File is moved only if different
-    if ! cmp $1 $dest > /dev/null; then
-      mv $1 $2
-    else
-      rm $1
-    fi
-  fi
-}
-
 #######################
 #### FROM A COMMIT ####
 #######################
 
 # In this case, we clone the commit and run the check_commit script
 # of this commit using the cloned directory.
-
-if ! echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
-  # We must run check_commit on a commit
-  # We use a sub-shell for isolation
-  (
-    # Temporary directory
-    export TMP_LOC=$(mktemp -d) # Workind directory
-    trap "\rm -rf $TMP_LOC" EXIT # Automatic removing
-    cd $TMP_LOC
-
-    # Clone
-    if [ $PHYEXREPOprotocol == 'https' ]; then
-      repository=https://github.com/$PHYEXREPOuser/PHYEX.git
-    elif [ $PHYEXREPOprotocol == 'ssh' ]; then
-      repository=git@github.com:$PHYEXREPOuser/PHYEX.git
-    fi
-    git clone $repository
-    cd PHYEX
-    git checkout $commit
-    if [ ! -d docs ]; then
-      # AROME adapted commit, we must fill the repository with
-      # the last version (in history) of tools and requirements
-      toolscommit=$(git log --all --full-history -- tools | head -1 | cut -d\  -f2) # deleted in this commit
-      for parent in $(git rev-parse ${toolscommit}^@); do
-        if [ $(git ls-tree -r $parent -- tools | wc -l) -ne 0 ]; then
-          toolscommit=$parent # last commit with tools
-          break
-        fi
-      done
-      git checkout $toolscommit -- "tools"
-      git checkout $toolscommit -- "requirements.txt"
-    fi
-
-    # Requirements
-    python3 -m venv venv
-    . venv/bin/activate
-    python3 -m pip install -r requirements.txt
-
-    # Running commit
-    . tools/env.sh
-    if [ "$packBranch" == "" ]; then
-      mypackname="--name $commit"
-    else
-      mypackname=""
-    fi
-    check_commit_ial.sh $commitcmd $TMP_LOC/PHYEX $reference $mypackname
-  )
-  exit $?
-fi
+tools_install=''
+clone_and_run
 
 ###########################
 #### COMMIT PROPERTIES ####
 ###########################
 
 if [ -d $commit/src ]; then
-  arome_ready=false
-  content_ial_version=$(scp $commit/src/arome/ial_version.json /dev/stdout 2>/dev/null || echo "")
+  model_ready=false
+  json_content=$(scp $commit/src/arome/ial_version.json /dev/stdout 2>/dev/null || echo "")
 else
-  arome_ready=true
-  content_ial_version=$(scp $commit/ial_version.json /dev/stdout 2>/dev/null || echo "")
+  model_ready=true
+  json_content=$(scp $commit/ial_version.json /dev/stdout 2>/dev/null || echo "")
 fi
 
 declare -A refByTest
-testing=$(json_dictkey2value "$content_ial_version" 'testing' '')
-ALLTests=''
-for t in $(echo $allowedTests | sed 's/,/ /g'); do
-  ref=$(json_dictkey2value "$testing" "$t" '')
-  if [ ! "$ref" == "" ]; then
-    ALLTests="${ALLTests},$t"
-    refByTest[$t]=$ref
-  fi
-done
-ALLTests="${ALLTests:1}" #Remove first character (',')
+get_properties
 
-if [ -z "${tests-}" ]; then
-  tests=$defaultTest
-elif echo "$tests" | grep -w 'ALL' > /dev/null; then
-  tests=$(echo "$tests" | sed "s/\bALL\b/$ALLTests/g")
-fi
-
-#Name is choosen such as it can be produced with a main pack: PHYEX/${cycle}_XXXXXXXXX.01.${gmkpack_l}.${gmkpack_o}
-if [ "$packBranch" == "" ]; then
-  packBranch=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-fi
-name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
-
-if [ ! -z "${reference-}" ]; then
-  declare -A refnameByTest
-  #Reference to use for each test
-  for t in $(echo $allowedTests | sed 's/,/ /g'); do
-    #Name of the reference
-    if [ "$reference" == 'REF' ]; then
-      if [[ ! -z "${refByTest[$t]+unset}" ]]; then
-        #The json file contained the references to use on a per test case basis
-        caseref=${refByTest[$t]}
-      fi
-    else
-      #The exact reference to use was given on the command line
-      caseref=$reference
-    fi
-    refByTest[$t]=$caseref
-    #Conversion into directory name
-    if echo $caseref | grep '/' > /dev/null; then
-      refname="PHYEX/*_$(echo $caseref | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g').01.${gmkpack_l}.${gmkpack_o}"
-    else
-      refname="PHYEX/*_${caseref}.01.${gmkpack_l}.${gmkpack_o}"
-    fi
-    refnameByTest[$t]=$refname
-  done
-fi
+cycle=$(json_dictkey2value "$json_content" 'cycle' '')
+ialdir="PHYEX/${cycle}_${name}.01.${gmkpack_l}.${gmkpack_o}"
 
 #######################
 #### PACK CREATION ####
 #######################
 
-[ $suppress -eq 1 -a -d $HOMEPACK/$name ] && rm -rf $HOMEPACK/$name
-if [ $packcreation -eq 1 -a -d $HOMEPACK/$name -a $onlyIfNeeded -eq 1 ]; then
-  packcreation=0
+[ $suppress == true -a -d $HOMEPACK/$ialdir ] && rm -rf $HOMEPACK/$ialdir
+if [ $packcreation == true -a -d $HOMEPACK/$ialdir -a $onlyIfNeeded == true ]; then
+  packcreation=false
 fi
-if [ $packcreation -eq 1 ]; then
-  if [ -d $HOMEPACK/$name ]; then
-    echo "Pack already exists ($HOMEPACK/$name), suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
+if [ $packcreation == true ]; then
+  if [ -d $HOMEPACK/$ialdir ]; then
+    echo "Pack already exists ($HOMEPACK/$ialdir),"
+    echo "suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
     exit 5
   else
     echo "### Pack creation for commit $commit"
@@ -380,13 +131,13 @@ if [ $packcreation -eq 1 ]; then
     tmpbuilddir=$(mktemp -d)
     trap "\rm -rf $tmpbuilddir" EXIT
     cd $tmpbuilddir
-    git clone $(json_dictkey2value "$content_ial_version" 'IALrepo' 'git@github.com:ACCORD-NWP/IAL.git')
+    git clone $(json_dictkey2value "$json_content" 'IALrepo' 'git@github.com:ACCORD-NWP/IAL.git')
     cd IAL
-    git checkout $(json_dictkey2value "$content_ial_version" 'IALcommit' 'XXXXXXX')
-    IALbundle_tag=$(json_dictkey2value "$content_ial_version" 'IALbundle_tag' '')
+    git checkout $(json_dictkey2value "$json_content" 'IALcommit' 'XXXXXXX')
+    IALbundle_tag=$(json_dictkey2value "$json_content" 'IALbundle_tag' '')
     [ "$IALbundle_tag" != "" ] && IALbundle_tag="--hub_bundle_tag $IALbundle_tag"
     ROOTPACKopt=""
-    if [ $fullcompilation == 0 ]; then
+    if [ $fullcompilation == false ]; then
       kind=incr
       if [ "$PHYEXROOTPACK" != "" ]; then
         ROOTPACKopt="--rootpack $PHYEXROOTPACK"
@@ -401,19 +152,19 @@ if [ $packcreation -eq 1 ]; then
 
     #Moving
     oldname=$(echo $tmpbuilddir/pack/*)
-    mv $oldname $HOMEPACK/$name
-    for file in $HOMEPACK/$name/ics_*; do
-      sed -i "s*$oldname*$HOMEPACK/$name*g" $file
+    mv $oldname $HOMEPACK/$ialdir
+    for file in $HOMEPACK/$ialdir/ics_*; do
+      sed -i "s*$oldname*$HOMEPACK/$ialdir*g" $file
     done
     rm -rf $tmpbuilddir
 
-    cd $HOMEPACK/$name
+    cd $HOMEPACK/$ialdir
     if [ "$kind" == 'main' ]; then
       #Workarounds for 50t2 compilation: update falfilfa to relax eccodes version check
       #Only needed on SIRES computer, latest eccode version is available on HPC
       cd hub/local/src/FALFILFA/falfilfa
       git cherry-pick 15359c1
-      cd $HOMEPACK/$name
+      cd $HOMEPACK/$ialdir
     fi
 
     #Prepare PHYEX inclusion
@@ -421,10 +172,10 @@ if [ $packcreation -eq 1 ]; then
     mkdir -p hub/local/src/PHYEX/phyex
   fi
 fi
-if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
-  cd $HOMEPACK/$name/hub/local/src/PHYEX/phyex
+if [ $packupdate == true -o $packcreation == true ]; then
+  cd $HOMEPACK/$ialdir/hub/local/src/PHYEX/phyex
 
-  if [ $useexpand == 1 ]; then
+  if [ $useexpand == true ]; then
     expand_options="--mnhExpand"
   else
     expand_options=""
@@ -432,7 +183,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
   prep_code=$PHYEXTOOLSDIR/prep_code.sh
   echo "Copy $commit"
   mkdir PHYEX
-  if [ $arome_ready == false ]; then
+  if [ $model_ready == false ]; then
     scp -q -r $commit/src PHYEX/
     subs="-s gmkpack_ignored_files -s turb -s micro -s aux -s conv  -s CMakeLists.txt -s cmake"
     $prep_code $prepCodeOpts $subs -m arome PHYEX -- --shumanFUNCtoCALL --removeACC $expand_options
@@ -441,7 +192,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     $prep_code $prepCodeOpts PHYEX #Ready for inclusion
   fi
   find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs
-  if [ $packupdate -eq 1 ]; then
+  if [ $packupdate == true ]; then
     #Update only modified files
     cd PHYEX
     for file in $(find turb micro conv aux cmake -type f); do
@@ -461,30 +212,30 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     #gmkpack_ignored_files contains a list of file, present in the reference pack, that is not used anymore
     #and must be excluded from compilation (in case of a full comilation) or from re-compilation (in case of a non-full
     #compilation).
-    if [ $fullcompilation == 0 ]; then
+    if [ $fullcompilation == false ]; then
       #Content is added in the ics_masterodb script
-      if [ $packupdate -eq 0 ]; then
+      if [ $packupdate == false ]; then
         if [ $(cat PHYEX/gmkpack_ignored_files | wc -l) != 0 ]; then
-          sed -i "/^end_of_ignored_files/i $(first=1; for line in $(cat PHYEX/gmkpack_ignored_files); do echo -n $(test $first -ne 1 && echo \\n)${line}; first=0; done)" $HOMEPACK/$name/ics_masterodb
+          sed -i "/^end_of_ignored_files/i $(first=1; for line in $(cat PHYEX/gmkpack_ignored_files); do echo -n $(test $first -ne 1 && echo \\n)${line}; first=0; done)" $HOMEPACK/$ialdir/ics_masterodb
         fi
       fi
     else
       #Files must be suppressed (non phyex files)
       for file in $(cat PHYEX/gmkpack_ignored_files); do
-        [ -f $HOMEPACK/$name/src/local/$file ] && rm -f $HOMEPACK/$name/src/local/$file
+        [ -f $HOMEPACK/$ialdir/src/local/$file ] && rm -f $HOMEPACK/$ialdir/src/local/$file
       done
-      if [ -d $HOMEPACK/$name/src/local/mpa/dummy ]; then
-        [ ! "$(ls -A $HOMEPACK/$name/src/local/mpa/dummy)" ] && rmdir $HOMEPACK/$name/src/local/mpa/dummy
+      if [ -d $HOMEPACK/$ialdir/src/local/mpa/dummy ]; then
+        [ ! "$(ls -A $HOMEPACK/$ialdir/src/local/mpa/dummy)" ] && rmdir $HOMEPACK/$ialdir/src/local/mpa/dummy
       fi
     fi
   fi
 
   rm -rf PHYEX
 
-  if [ -d $HOMEPACK/$name/hub/local/src/PHYEX/phyex -a -d $HOMEPACK/$name/src/main ]; then
+  if [ -d $HOMEPACK/$ialdir/hub/local/src/PHYEX/phyex -a -d $HOMEPACK/$ialdir/src/main ]; then
     # Incremental pack with updated Hub, we must put, in src/local, the files using
     # PHYEX to force a re-compilation
-    cd $HOMEPACK/$name/src
+    cd $HOMEPACK/$ialdir/src
 
     for file in main/mpa/conv/externals/aro_conv_mnh.F90 \
                 main/arpifs/phys_dmn/suphmpa.F90 \
@@ -501,15 +252,15 @@ fi
 #### COMPILATION ####
 #####################
 
-if [ $compilation -eq 1 ]; then
-  if [ $onlyIfNeeded -eq 0 -o ! -f $HOMEPACK/$name/bin/MASTERODB ]; then
+if [ $compilation == true ]; then
+  if [ $onlyIfNeeded == false -o ! -f $HOMEPACK/$ialdir/bin/MASTERODB ]; then
     echo "### Compilation of commit $commit"
 
-    cd $HOMEPACK/$name
+    cd $HOMEPACK/$ialdir
     sed -i 's/GMK_THREADS=1$/GMK_THREADS=10/' ics_masterodb
   
-    [ -f ics_packages ] && exescript Output_compilation_hub ics_packages
-    exescript Output_compilation ics_masterodb
+    [ -f ics_packages ] && submit Output_compilation_hub ics_packages
+    submit Output_compilation ics_masterodb
     if [ -f bin/MASTERODB \
          -a $(grep Error Output_compilation | \
               grep -v ErrorCovariance3D | \
@@ -541,11 +292,11 @@ fi
 #### EXECUTION ####
 ###################
 
-if [ $run -eq 1 ]; then
+if [ $run == true ]; then
   #Cleaning to suppress old results that may be confusing in case of a crash during the run
-  if [ $onlyIfNeeded -eq 0 ]; then
+  if [ $onlyIfNeeded == false ]; then
     for t in $(echo $tests | sed 's/,/ /g'); do
-      cd $HOMEPACK/$name
+      cd $HOMEPACK/$ialdir
       if [ -d conf_tests/$t ]; then
         rm -rf conf_tests/$t
       fi
@@ -556,22 +307,22 @@ if [ $run -eq 1 ]; then
   firstrun=1
   for t in $(echo $tests | sed 's/,/ /g'); do #loop on tests
     if echo $allowedTests | grep -w $t > /dev/null; then #test is allowed on this plateform
-      cd $HOMEPACK/$name
-      if [ ! -d conf_tests/$t ]; then #We do not enter systematically this part if onlyIfNeeded=1
+      cd $HOMEPACK/$ialdir
+      if [ ! -d conf_tests/$t ]; then #We do not enter systematically this part if onlyIfNeeded=true
         if [ $firstrun -eq 1 ]; then
           echo "### Running of commit $commit"
           firstrun=0
         fi
 
-        if [ ! -f $HOMEPACK/$name/bin/MASTERODB ]; then
-          echo "Pack does not exist ($HOMEPACK/$name) or compilation has failed, please check"
+        if [ ! -f $HOMEPACK/$ialdir/bin/MASTERODB ]; then
+          echo "Pack does not exist ($HOMEPACK/$ialdir) or compilation has failed, please check"
           exit 6
         fi
 
         mkdir -p conf_tests/$t
         cd conf_tests/$t
         t1=$(($(date +%s%N)/1000)) #current time in milliseconds
-        MYLIB=$name TESTDIR=$dirconf/$t exescript Output_run $dirconf/$t/ar?.sh
+        MYLIB=$ialdir TESTDIR=$dirconf/$t submit Output_run $dirconf/$t/ar?.sh
         t2=$(($(date +%s%N)/1000))
         if [ "$perffile" != "" ]; then
           #The elapsed time is not relevant when the model runs with a queuing system (HPC)
@@ -616,7 +367,7 @@ fi
 ####################
 #### COMPARISON ####
 ####################
-if [ $check -eq 1 ]; then
+if [ $check == true ]; then
   echo "### Check commit $commit against commit $reference"
 
   allt=0
@@ -639,12 +390,19 @@ if [ $check -eq 1 ]; then
   for tag_file in $filestocheck; do
       tag=$(echo $tag_file | cut -d, -f1)
       file=$(echo $tag_file | cut -d, -f2)
-      refname=${refnameByTest[$tag]}
       ref=${refByTest[$tag]}
-      file1=$HOMEPACK/$name/$file
+
+      #Conversion into directory name
+      if echo $ref | grep '/' > /dev/null; then
+        refname="PHYEX/*_$(escape_commit $ref).01.${gmkpack_l}.${gmkpack_o}"
+      else
+        refname="PHYEX/*_${ref}.01.${gmkpack_l}.${gmkpack_o}"
+      fi
+
+      file1=$HOMEPACK/$ialdir/$file
       file2=$(echo $HOMEPACK/$refname/$file) #echo to enable shell substitution
 
-      if [ ! -f $file2 -a $computeRefIfNeeded -eq 1 ]; then
+      if [ ! -f $file2 -a $computeRefIfNeeded == true ]; then
         # The reference has not been run yet, we run it
         $0 -p -c -r -t $t --onlyIfNeeded ${ref}
         file2=$(echo $HOMEPACK/$refname/$file) # reperform shell substitution
@@ -676,7 +434,7 @@ if [ $check -eq 1 ]; then
           cmd="$cmd --binary $file1 $file2 256"
         elif [ $(basename $file) == DHFDLFPOS+0002 ]; then
           #DDH files
-          ddh_images="$HOMEPACK/$name/ddh_diff_${tag}.png"
+          ddh_images="$HOMEPACK/$ialdir/ddh_diff_${tag}.png"
           if [ `hostname` == 'sxphynh' ]; then
             [ ! -d /d0/images/$USER ] && mkdir /d0/images/$USER
             ddh_images="$ddh_images /d0/images/$USER/ddh_diff_${tag}.png"
@@ -709,9 +467,9 @@ fi
 #### CLEANING ####
 ##################
 
-if [ $remove -eq 1 ]; then
+if [ $remove == true ]; then
   echo "### Remove model directory for commit $commit"
-  [ -d $HOMEPACK/$name ] && rm -rf $HOMEPACK/$name
+  [ -d $HOMEPACK/$ialdir ] && rm -rf $HOMEPACK/$ialdir
 fi
 
 exit $cmpstatus
