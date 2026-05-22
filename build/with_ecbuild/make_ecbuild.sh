@@ -102,6 +102,7 @@ cd build_PHYEX
 cmake ../../src -DCMAKE_INSTALL_PREFIX=\$BUILDDIR \\
                 -DCMAKE_BUILD_TYPE=\$level \\
                 -DCMAKE_TOOLCHAIN_FILE=\$BUILDDIR/../arch.ecbuild \\
+                -DENABLE_OMP=OFF \\
                 -DENABLE_PHYEX_BUILD_PROGS=ON \\
                 -DENABLE_SINGLE_PRECISION=ON
 make -j

@@ -120,7 +120,7 @@ INTEGER :: JLON
 INTEGER, TARGET :: IBL
 
 TYPE(DIMPHYEX_t)         :: D, D0
-TYPE(PHYEX_t)            :: PHYEX
+TYPE(PHYEX_t), TARGET    :: PHYEX
 LOGICAL                  :: LLCHECK
 LOGICAL                  :: LLCHECKDIFF
 LOGICAL                  :: LLDIFF
@@ -442,7 +442,7 @@ IMPLICIT NONE
 ! -----------------------------------------------------------------------
 !     DUMMY VARIABLES
 INTEGER,          INTENT(IN)  :: KRR, KRRL, KRRI, KSV, KSIZE_PSIGS
-TYPE(PHYEX_t),    INTENT(OUT) :: PHYEX
+TYPE(PHYEX_t), TARGET, INTENT(OUT) :: PHYEX
 
 !-----------------------------------------------------------------------
 !    LOCAL VARIABLES

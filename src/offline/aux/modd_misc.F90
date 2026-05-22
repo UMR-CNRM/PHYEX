@@ -39,5 +39,11 @@ TYPE MISC_t
   CHARACTER(LEN=4)         :: CELEC='NONE'         !< Name of the electricity scheme
   LOGICAL                  :: OSEDIM_BEARD=.FALSE. !< Switch for effect of electrical forces on sedim.
   TYPE(TFILEDATA)          :: TPFILE
+  REAL,DIMENSION(8)        :: XINIRADIUS_SLT=(/0.009, 0.021, 0.045, 0.115,0.415, 2.5, 7.0, 25.0/)
+  REAL,DIMENSION(8)        :: XINISIG_SLT =(/ 1.37, 1.5, 1.42, 1.53, 1.85, 1.55, 1.8, 2.1 /)
+  LOGICAL                  :: LSALT=.FALSE.
+  INTEGER                  :: NMODE_SLT=8
+  CHARACTER(LEN=4)         :: CRGUNITS='NUMB'
+  REAL                     :: XDENSITY_SALT=1.173e3
 END TYPE MISC_t
 END MODULE MODD_MISC
