@@ -1,0 +1,16 @@
+name: tests
+
+on: [push, pull_request]
+
+jobs:
+  check-norms:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install tools
+      run: pip install -e tools/
+
+    - name: Check norms
+      run: phyex-check_norms -v src/common/
