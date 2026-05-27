@@ -357,7 +357,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
       compilation='-p -c'
       execution="-r $perfopt"
       comparison='-C --computeRefIfNeeded'
-      jsonfile="src/offline/${model}_version.json"
+      jsonfile="src/common/${model}_version.json"
       docmp=1
     else
       compilation='-p -c'

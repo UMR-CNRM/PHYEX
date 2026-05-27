@@ -175,7 +175,7 @@ clone_and_run
 
 if [ -d $commit/src ]; then
   model_ready=false
-  json_content=$(scp $commit/src/offline/testprogs_version.json /dev/stdout 2>/dev/null || echo "")
+  json_content=$(scp $commit/src/common/testprogs_version.json /dev/stdout 2>/dev/null || echo "")
 else
   model_ready=true
   json_content=$(scp $commit/testprogs_version.json /dev/stdout 2>/dev/null || echo "")

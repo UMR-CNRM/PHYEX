@@ -194,14 +194,6 @@ fi
 ###### MERGE
 if [ -n "${model-}" ]; then
   SRC=src/$model
-  if [ "$model" == "offline" -a ! -d src/$model ]; then
-    echo "src/$model directory does not exist, trying src/testprogs"
-    SRC=src/testprogs
-  fi
-  if [ ! -d $SRC ]; then
-    echo "$SRC directory does not exist"
-    exit 5
-  fi
   if [ -z "${subs-}" ]; then
     echo "It is not possible to merge common and model specific codes if no subs are provided"
     exit 6
