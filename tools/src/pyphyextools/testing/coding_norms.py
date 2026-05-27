@@ -65,9 +65,9 @@ def coding_norms(sourcedir, verbose=False):
             "--checkEmptyParensInCall", "Warn",
         ]
 
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = proc.communicate()
-        captured = (out + err).decode()
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
+            out, err = proc.communicate()
+            captured = (out + err).decode()
         if captured.strip():
             results.append(captured.rstrip())
             check = False
@@ -82,19 +82,12 @@ def coding_norms(sourcedir, verbose=False):
 
 def main():
     """Parse command-line arguments and delegate to :func:`coding_norms`."""
-    tools_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    sourcedir = os.path.join(tools_dir, "..", "common")
-
     parser = argparse.ArgumentParser(description="Check PHYEX Fortran coding norms")
     parser.add_argument("-v", action="store_true", help="print non-conforming messages")
-    parser.add_argument("--source", default=None,
-                        help=f"source directory to check (defaults to {sourcedir})")
+    parser.add_argument("source", help="source directory to check")
     args = parser.parse_args()
 
-    if args.source is not None:
-        sourcedir = args.source
-
-    if not coding_norms(sourcedir, verbose=args.v):
+    if not coding_norms(args.source, verbose=args.v):
         sys.exit(2)
 
 

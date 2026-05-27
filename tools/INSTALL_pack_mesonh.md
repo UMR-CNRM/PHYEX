@@ -51,7 +51,3 @@ scp sxphynh.cnrm.meteo.fr:/home/rodierq/MNH-V5-5-0_PHYEX.tar.gz .
 
 To compile MESONH using the PHYEX package, some manipulation is needed.
 The easiest way is to use the check\_commit\_mesonh.sh script.
-
-## COMPARISON OF SOME COMMITS
-Some commits doesn't reproduce the reference commit but are comparable to the b1e20 commit.
-If someone is interested in compiling this commit, the argument order of the functions DZM\_MF, MZM\_MF, GZ\_M\_W\_MF must be reversed in compute\_bl89\_ml, tridiag\_massflux.f90 and shuman\_mf.f90

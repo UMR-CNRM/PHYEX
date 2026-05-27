@@ -14,7 +14,7 @@ import sys
 import glob
 
 import pyfortool.scripting
-from pyphyex.testing.coding_norms import coding_norms
+from pyphyextools.testing.coding_norms import coding_norms
 
 try:
     from pyphyex import __version__

@@ -8,7 +8,7 @@
 
 # Python
 *.egg-info
-/build/lib/pyphyex
+/tools/build/lib/pyphyextools
 *.whl
 __pycache__
 venv
