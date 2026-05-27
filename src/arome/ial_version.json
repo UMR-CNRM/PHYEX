@@ -1,8 +1,7 @@
 {
 "IALrepo":"https://github.com/SebastienRietteMTO/IAL.git",
-"IALcommit":"4f050a43841307693c28616d59a033c2600151c1",
+"IALcommit":"d4124f18255f9f6756cb60d22f671428b5aed909",
 "cycle":"50t2",
-"scripttag":"",
 "testing": {
             "small_3D":"cd501cd",
             "small_3D_alt1":"cd501cd",

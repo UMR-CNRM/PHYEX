@@ -47,6 +47,7 @@ CONTAINS
       USE MODE_INIT_PHYEX, ONLY: INIT_PHYEX, FILL_DIMPHYEX
       USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
       USE MODD_PHYEX,      ONLY: PHYEX_t
+      USE MODD_MISC_LMDZ,  ONLY: MISC_LMDZ_t
       USE MODI_INI_PHYEX,  ONLY: INI_PHYEX
       USE MODI_ICE_ADJUST, ONLY: ICE_ADJUST
       USE MODI_RAIN_ICE, ONLY: RAIN_ICE
@@ -98,6 +99,7 @@ REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: ZQR, ZQS, ZQG !rain, snow, graupel sp
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE ::  PTKEM       ! TKE
 TYPE(DIMPHYEX_t),SAVE    :: D
 TYPE(PHYEX_t), SAVE      :: PHYEX
+TYPE(MISC_LMDZ_t), TARGET, SAVE :: MISC_LMDZ
 !
 INTEGER, PARAMETER       :: KRR=6, KRRL=2, KRRI=3, KSV=0
 INTEGER                  :: JRR
@@ -232,7 +234,7 @@ if (debut) then ! Things to do only for the first call to physics
     call ymds2ju(1979, 1, 1, 0.0, zjulian)
   
   ZDZMIN=MINVAL((pphi(:,2:) - pphi(:,1:klev-1))/9.81)
-  CALL INIT_PHYEX(pdtphys, ZDZMIN, PHYEX)
+  CALL INIT_PHYEX(pdtphys, ZDZMIN, PHYEX, MISC_LMDZ)
   CALL FILL_DIMPHYEX(KLON, KLEV, D)
 
   !  
@@ -388,7 +390,7 @@ ZTKES0(:,:)=ZTKES(:,:)
 ZSRC(:,:) = 0.
 ZSIGQSAT=PHYEX%NEBN%VSIGQSAT
 CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, PHYEX%PARAM_ICEN,    &
-                &PHYEX%MISC%TBUCONF, KRR,                                                           &
+                &MISC_LMDZ%TBUCONF, KRR,                                                           &
                 &'ADJU',                                                                            &
                 &pdtphys, ZSIGQSAT,                                                                 &
                 &PRHODJ, ZEXN, ZRHOD, PSIGS, .FALSE., zmfconv,                                      &
@@ -396,9 +398,9 @@ CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, P
                 &ZEXN, PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD,                                    &
                 &ZICLDFR, ZWCLDFR, ZSSIO, ZSSIU, ZIFR,                                              &
                 &ZRX(:,:,1), ZRX(:,:,2), ZRXS(:,:,1), ZRXS(:,:,2), ZTHETA, ZTHETAS,                 &
-                &PHYEX%MISC%COMPUTE_SRC, ZSRC, ZCLDFR,                                              &
+                &MISC_LMDZ%COMPUTE_SRC, ZSRC, ZCLDFR,                                              &
                 &ZRX(:,:,3), ZRX(:,:,4), ZRXS(:,:,4), ZRX(:,:,5), ZRX(:,:,6),                       &
-                &PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET,                                           &
+                &MISC_LMDZ%YLBUDGET, MISC_LMDZ%NBUDGET,                                           &
                 &ZICE_CLD_WGT,                                                                      &
                 &PHLC_HRC=ZHLC_HRC, PHLC_HCF=ZHLC_HCF, PHLI_HRI=ZHLI_HRI, PHLI_HCF=ZHLI_HCF,        &
                 &PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF, PHLI_HRI_MF=PHLI_HRI_MF, PHLI_HCF_MF=PHLI_HCF_MF)
@@ -454,7 +456,7 @@ PSFV(:) = 0.
 !
 CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB, PHYEX%RAIN_ICE_PARAMN, &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                                        &
-     &ONOMIXLG=PHYEX%MISC%ONOMIXLG,KSV_LGBEG=PHYEX%MISC%KSV_LGBEG,KSV_LGEND=PHYEX%MISC%KSV_LGEND,    &
+     &ONOMIXLG=MISC_LMDZ%ONOMIXLG,KSV_LGBEG=MISC_LMDZ%KSV_LGBEG,KSV_LGEND=MISC_LMDZ%KSV_LGEND,    &
      &PTSTEP=pdtphys,                                                                                &
      &PDZZ=zdzm(:,:),PZZ=zz_mass(:,:),                                                               &
      &PRHODJ=PRHODJ(:,:),PRHODREF=ZRHOD(:,:),                                                        &
@@ -473,7 +475,7 @@ CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHY
      &PRC_UP=PRC_UP(:,:),PRI_UP=PRI_UP(:,:),                                                         &
      &PU_UP=PU_UP(:,:), PV_UP=PV_UP(:,:), PTKE_UP=PTKE_UP(:,:), PTHV_UP=PTHV_UP(:,:), PW_UP=PW_UP(:,:),&
      &PFRAC_UP=PFRAC_UP(:,:),PEMF=PEMF(:,:),PDETR=PDETR(:,:),PENTR=PENTR(:,:),                       &
-     &KKLCL=IKLCL(:),KKETL=IKETL(:),KKCTL=IKCTL(:),PDX=1000.0,PDY=1000.0,KBUDGETS=PHYEX%MISC%NBUDGET )
+     &KKLCL=IKLCL(:),KKETL=IKETL(:),KKCTL=IKCTL(:),PDX=1000.0,PDY=1000.0,KBUDGETS=MISC_LMDZ%NBUDGET )
 
 ! Add tendencies of shallow to total physics tendency
 d_u(:,1:klev) = d_u(:,1:klev) + PDUDT_MF(:,2:klev+1)
@@ -496,17 +498,17 @@ DO JRR=1, KRR
   ZRRS(:,:,JRR) = ZRXS(:,:,JRR) * PRHODJ(:,:)
 ENDDO
 ZRTHS(:,:) = ZTHETAS(:,:) * PRHODJ(:,:)
-CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, D, PHYEX%MISC%TLES,               &
-   & KRR, KRRL, KRRI, PHYEX%MISC%HLBCX, PHYEX%MISC%HLBCY, PHYEX%MISC%KGRADIENTSLEO, &
-   & PHYEX%MISC%KGRADIENTSGOG, PHYEX%MISC%KHALO, &
-   & PHYEX%TURBN%NTURBSPLIT, PHYEX%TURBN%LCLOUDMODIFLM, KSV, PHYEX%MISC%KSV_LGBEG, PHYEX%MISC%KSV_LGEND,          &
-   & PHYEX%MISC%KSV_LIMA_NR, PHYEX%MISC%KSV_LIMA_NS, PHYEX%MISC%KSV_LIMA_NG, PHYEX%MISC%KSV_LIMA_NH,              &
-   & PHYEX%MISC%O2D, PHYEX%MISC%ONOMIXLG, PHYEX%MISC%OFLAT, PHYEX%MISC%OCOUPLES,                                  &
-   & PHYEX%MISC%OBLOWSNOW,PHYEX%MISC%OIBM,                                                                        &
-   & PHYEX%MISC%OFLYER, PHYEX%MISC%COMPUTE_SRC, PHYEX%MISC%PRSNOW,                                                &
-   & PHYEX%MISC%OOCEAN, PHYEX%MISC%ODEEPOC, PHYEX%MISC%ODIAG_IN_RUN,                                              &
-   & PHYEX%TURBN%CTURBLEN_CLOUD, PHYEX%MISC%CMICRO, PHYEX%MISC%CELEC,                                             &
-   & pdtphys,PHYEX%MISC%ZTFILE,                                                                 &
+CALL TURB(PHYEX%CST, PHYEX%CSTURB, MISC_LMDZ%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, D, MISC_LMDZ%TLES,               &
+   & KRR, KRRL, KRRI, MISC_LMDZ%HLBCX, MISC_LMDZ%HLBCY, MISC_LMDZ%KGRADIENTSLEO, &
+   & MISC_LMDZ%KGRADIENTSGOG, MISC_LMDZ%KHALO, &
+   & PHYEX%TURBN%NTURBSPLIT, PHYEX%TURBN%LCLOUDMODIFLM, KSV, MISC_LMDZ%KSV_LGBEG, MISC_LMDZ%KSV_LGEND,          &
+   & MISC_LMDZ%KSV_LIMA_NR, MISC_LMDZ%KSV_LIMA_NS, MISC_LMDZ%KSV_LIMA_NG, MISC_LMDZ%KSV_LIMA_NH,              &
+   & MISC_LMDZ%O2D, MISC_LMDZ%ONOMIXLG, MISC_LMDZ%OFLAT, MISC_LMDZ%OCOUPLES,                                  &
+   & MISC_LMDZ%OBLOWSNOW,MISC_LMDZ%OIBM,                                                                        &
+   & MISC_LMDZ%OFLYER, MISC_LMDZ%COMPUTE_SRC, MISC_LMDZ%PRSNOW,                                                &
+   & MISC_LMDZ%OOCEAN, MISC_LMDZ%ODEEPOC, MISC_LMDZ%ODIAG_IN_RUN,                                              &
+   & PHYEX%TURBN%CTURBLEN_CLOUD, MISC_LMDZ%CMICRO, MISC_LMDZ%CELEC,                                             &
+   & pdtphys,MISC_LMDZ%ZTFILE,                                                                 &
    & ZDXX(:,:),ZDYY(:,:),zdzm(:,:),                                                             &
    & ZDZX(:,:),ZDZY(:,:),zz_flux(:,:),                                                          &
    & ZDIRCOSXW(:),ZDIRCOSYW(:),ZDIRCOSZW(:),ZCOSSLOPE(:),ZSINSLOPE(:),                          &
@@ -522,7 +524,7 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, 
    & PSIGS(:,:),                                                                                &
    & ZFLXZTHVMF(:,:),ZFLXZUMF(:,:), ZFLXZVMF,                                                   &
    & ZWTH(:,:),ZWRC(:,:),ZWSV(:,:,:),ZDP(:,:),ZTP(:,:),ZTDIFF(:,:),ZTDISS(:,:),                 &
-   & PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET                                                    )
+   & MISC_LMDZ%YLBUDGET, MISC_LMDZ%NBUDGET                                                    )
 DO JRR=1, KRR
   ZRXS(:,:,JRR) = ZRRS(:,:,JRR) / PRHODJ(:,:)
 ENDDO
@@ -542,8 +544,8 @@ ZTOWN=0.
 ZCIT=0.
 ZTHVREFZIKB=0
 CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, PHYEX%RAIN_ICE_DESCRN,                      &
-               PHYEX%ELEC_PARAM, PHYEX%ELEC_DESCR, PHYEX%MISC%TBUCONF,                                            &
-               PHYEX%MISC%OELEC, PHYEX%MISC%OSEDIM_BEARD,                                                         &
+               PHYEX%ELEC_PARAM, PHYEX%ELEC_DESCR, MISC_LMDZ%TBUCONF,                                            &
+               MISC_LMDZ%OELEC, MISC_LMDZ%OSEDIM_BEARD,                                                         &
                ZTHVREFZIKB,                                                                                       &
                pdtphys, KRR, ZEXN,                                                                                &
                zdzf, PRHODJ, ZRHOD, ZEXN, ZPABST, ZCIT, ZCLDFR,                                                   &
@@ -552,7 +554,7 @@ CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, PHYEX%RAIN
                ztheta, ZRX, zthetas, ZRXS, &
                ZINPRC, ZINPRR, ZEVAP3D,                                                                           &
                ZINPRS, ZINPRG, ZINDEP, ZRAINFR, PSIGS,                                                            &
-               PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET,                                                           &
+               MISC_LMDZ%YLBUDGET, MISC_LMDZ%NBUDGET,                                                           &
                ZSEA, ZTOWN                                                                                        )
 
 !------------------------------------------------------------

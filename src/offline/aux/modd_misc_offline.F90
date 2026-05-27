@@ -1,11 +1,11 @@
-MODULE MODD_MISC
+MODULE MODD_MISC_OFFLINE
 !
-USE MODD_BUDGET, ONLY: NBUDGET_RH, TBUDGETDATA_PTR, TBUDGETCONF_t
+USE MODD_BUDGET,     ONLY: NBUDGET_RH, TBUDGETDATA_PTR, TBUDGETCONF_t
 USE MODD_IO,         ONLY: TFILEDATA
 IMPLICIT NONE
-! 
+!
 !> @file  
-!!    MODD_MISC - definition of a structure containing all the control parameters for the testprogs
+!!    MODD_MISC_OFFLINE - definition of a structure containing all the control parameters for the testprogs
 !!
 !!    This is a structure specifically built for the available testprogs.
 !!    This would certainly be a bad idea to take this structure for an example on how to plug PHYEX
@@ -13,7 +13,7 @@ IMPLICIT NONE
 !!
 !!    The idea is to put here all the constants needed to call the parametrisations in order to reduce
 !!    the number of objects to deal with in the calling loop.
-TYPE MISC_t
+TYPE :: MISC_OFFLINE_t
   REAL :: PTSTEP
   CHARACTER(LEN=4)         :: HBUNAME
   LOGICAL                  :: LMFCONV
@@ -45,5 +45,5 @@ TYPE MISC_t
   INTEGER                  :: NMODE_SLT=8
   CHARACTER(LEN=4)         :: CRGUNITS='NUMB'
   REAL                     :: XDENSITY_SALT=1.173e3
-END TYPE MISC_t
-END MODULE MODD_MISC
+END TYPE MISC_OFFLINE_t
+END MODULE MODD_MISC_OFFLINE

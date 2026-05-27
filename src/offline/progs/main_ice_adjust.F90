@@ -6,6 +6,7 @@ USE COMPUTE_DIFF,    ONLY: DIFF
 USE MODI_ICE_ADJUST, ONLY: ICE_ADJUST
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PHYEX,      ONLY: PHYEX_t
+USE MODD_MISC_OFFLINE, ONLY: MISC_OFFLINE_t
 USE STACK_MOD,       ONLY: STACK
 USE MODE_MNH_ZWORK,  ONLY: ZMNH_STACK, IMNH_BLOCK, YMNH_STACK, INUMPIN
 USE OMP_LIB,         ONLY: OMP_GET_WTIME, OMP_GET_MAX_THREADS, OMP_GET_THREAD_NUM
@@ -66,6 +67,7 @@ INTEGER, TARGET :: IBL
 
 TYPE(DIMPHYEX_t)         :: D, D0
 TYPE(PHYEX_t), TARGET    :: PHYEX
+TYPE(MISC_OFFLINE_t)       :: MISC
 LOGICAL                  :: LLCHECK
 LOGICAL                  :: LLCHECKDIFF
 LOGICAL                  :: LLDIFF
@@ -126,7 +128,7 @@ IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
 
 PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
-CALL INIT_PHYEX(KRR, PHYEX)
+CALL INIT_PHYEX(KRR, PHYEX, MISC)
 
 D0%NIT  = NPROMA
 D0%NIB  = 1
@@ -227,20 +229,20 @@ DO ITIME = 1, NTIME
     !Workaround for NEC: PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF must be provided to prevent
     !                    crash during execution, even if they are unused
     CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, PHYEX%PARAM_ICEN, &
-    & PHYEX%MISC%TBUCONF, PHYEX%MISC%KRR, PHYEX%MISC%HBUNAME,     &
-    & PHYEX%MISC%PTSTEP, ZSIGQSAT (:, IBL), PRHODJ=PRHODJ (:, :, IBL), &
+    & MISC%TBUCONF, MISC%KRR, MISC%HBUNAME,     &
+    & MISC%PTSTEP, ZSIGQSAT (:, IBL), PRHODJ=PRHODJ (:, :, IBL), &
     & PEXNREF=PEXNREF (:, :, IBL),                                                                                           &
-    & PRHODREF=PRHODREF (:, :, IBL), PSIGS=PSIGS (:, :, IBL), LMFCONV=PHYEX%MISC%LMFCONV, PMFCONV=PMFCONV (:, :, IBL), &
+    & PRHODREF=PRHODREF (:, :, IBL), PSIGS=PSIGS (:, :, IBL), LMFCONV=MISC%LMFCONV, PMFCONV=PMFCONV (:, :, IBL), &
     & PPABST=PPABSM (:, :, IBL), PZZ=ZZZ (:, :, IBL), PEXN=PEXNREF (:, :, IBL), PCF_MF=PCF_MF (:, :, IBL),          &
     & PRC_MF=PRC_MF (:, :, IBL), PRI_MF=PRI_MF  (:, :, IBL), PWEIGHT_MF_CLOUD=PWEIGHT_MF_CLOUD (:, :, IBL),               &
     & PICLDFR=ZDUM1(:, :, IBL), PWCLDFR=ZDUM2(:, :, IBL), PSSIO=ZDUM3(:, :, IBL),                                      &
     & PSSIU=ZDUM4(:, :, IBL), PIFR=ZDUM5(:, :, IBL),                                                                      &
     & PRV=ZRS(:, :, 1, IBL), PRC=ZRS(:, :, 2, IBL),                                                                       &
     & PRVS=PRS(:, :, 1, IBL), PRCS=PRS(:, :, 2, IBL), PTH=ZRS(:, :, 0, IBL), PTHS=PTHS (:, :, IBL),                 &
-    & OCOMPUTE_SRC=PHYEX%MISC%OCOMPUTE_SRC,                                                                                     &
+    & OCOMPUTE_SRC=MISC%OCOMPUTE_SRC,                                                                                     &
     & PSRCS=PSRCS (:, :, IBL), PCLDFR=PCLDFR (:, :, IBL), PRR=ZRS(:, :, 3, IBL), PRI=ZRS(:, :, 4, IBL),             &
     & PRIS=PRS(:, :, 4, IBL), PRS=ZRS(:, :, 5, IBL), PRG=ZRS(:, :, 6, IBL), &
-    & TBUDGETS=PHYEX%MISC%YLBUDGET, KBUDGETS=PHYEX%MISC%NBUDGET,    &
+    & TBUDGETS=MISC%YLBUDGET, KBUDGETS=MISC%NBUDGET,    &
     & PICE_CLD_WGT=ZICE_CLD_WGT(:, IBL),                                                                                     &
     & PHLC_HRC=PHLC_HRC(:, :, IBL), PHLC_HCF=PHLC_HCF(:, :, IBL),                                                         &
     & PHLI_HRI=PHLI_HRI(:, :, IBL), PHLI_HCF=PHLI_HCF(:, :, IBL),                                                         &
@@ -312,12 +314,13 @@ STOP
 
 CONTAINS
 
-SUBROUTINE INIT_PHYEX(KRR, PHYEX)
+SUBROUTINE INIT_PHYEX(KRR, PHYEX, MISC)
 
 USE MODD_BUDGET, ONLY: TBUCONF_ASSOCIATE, NBUDGET_RI, TBUCONF, LBU_ENABLE, LBUDGET_U, LBUDGET_V, LBUDGET_W, LBUDGET_TH, &
                        LBUDGET_TKE, LBUDGET_RV, LBUDGET_RC, LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, LBUDGET_SV
 USE MODE_BUDGET_OFFLINE, ONLY: TBUDGETDATA_OFFLINE
 USE MODD_PHYEX, ONLY: PHYEX_t
+USE MODD_MISC_OFFLINE, ONLY: MISC_OFFLINE_t
 USE MODI_INI_PHYEX, ONLY: INI_PHYEX
 
 IMPLICIT NONE
@@ -326,6 +329,7 @@ IMPLICIT NONE
 !     DUMMY VARIABLES
 INTEGER,          INTENT(IN)  :: KRR
 TYPE(PHYEX_t), TARGET, INTENT(OUT) :: PHYEX
+TYPE(MISC_OFFLINE_t), INTENT(OUT), TARGET :: MISC
 
 !-----------------------------------------------------------------------
 !    LOCAL VARIABLES
@@ -344,21 +348,21 @@ CMICRO='ICE3'
 CSCONV='NONE'
 CTURB='TKEL'
 PTSTEP = 50.000000000000000
-PHYEX%MISC%TPFILE%NLU=0
+MISC%TPFILE%NLU=0
 
 !Default values
-CALL INI_PHYEX(CPROGRAM, PHYEX%MISC%TPFILE, .TRUE., IULOUT, 0, 1, &
+CALL INI_PHYEX(CPROGRAM, MISC%TPFILE, .TRUE., IULOUT, 0, 1, &
               &PTSTEP, ZDZMIN, &
               &CMICRO, CSCONV, CTURB, &
               &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0, LDINIT=.FALSE., &
               &PHYEX_OUT=PHYEX)
 
 !Control parameters
-PHYEX%MISC%PTSTEP       = PTSTEP
-PHYEX%MISC%HBUNAME      = 'DEPI'
-PHYEX%MISC%LMFCONV      = .TRUE.
-PHYEX%MISC%KRR          = KRR
-PHYEX%MISC%OCOMPUTE_SRC = .TRUE.
+MISC%PTSTEP       = PTSTEP
+MISC%HBUNAME      = 'DEPI'
+MISC%LMFCONV      = .TRUE.
+MISC%KRR          = KRR
+MISC%OCOMPUTE_SRC = .TRUE.
 
 !Emulate the namelist reading
 PHYEX%PARAM_ICEN%LCRIAUTI=.TRUE.
@@ -392,7 +396,7 @@ PHYEX%NEBN%CFRAC_ICE_ADJUST='S' ! Ice/liquid partition rule to use in adjustment
 PHYEX%NEBN%CFRAC_ICE_SHALLOW_MF='S' ! Ice/liquid partition rule to use in shallow_mf
 
 !Param initialisation
-CALL INI_PHYEX(CPROGRAM, PHYEX%MISC%TPFILE, .TRUE., IULOUT, 0, 1, &
+CALL INI_PHYEX(CPROGRAM, MISC%TPFILE, .TRUE., IULOUT, 0, 1, &
               &PTSTEP, ZDZMIN, &
               &CMICRO, CSCONV, CTURB, &
               &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., KPRINT=2, LDINIT=.TRUE., &
@@ -400,10 +404,10 @@ CALL INI_PHYEX(CPROGRAM, PHYEX%MISC%TPFILE, .TRUE., IULOUT, 0, 1, &
 
 !Budgets
 CALL TBUCONF_ASSOCIATE
-PHYEX%MISC%NBUDGET=NBUDGET_RI
-DO JRR=1, PHYEX%MISC%NBUDGET
-  PHYEX%MISC%YLBUDGET(JRR)%PTR => OFFBUD(JRR)
-  PHYEX%MISC%YLBUDGET(JRR)%PTR%NBUDGET = JRR
+MISC%NBUDGET=NBUDGET_RI
+DO JRR=1, MISC%NBUDGET
+  MISC%YLBUDGET(JRR)%PTR => OFFBUD(JRR)
+  MISC%YLBUDGET(JRR)%PTR%NBUDGET = JRR
 ENDDO
 LBU_ENABLE=.FALSE.                                                                                                       
 LBUDGET_U=.FALSE.
@@ -419,7 +423,7 @@ LBUDGET_RS=.FALSE.
 LBUDGET_RG=.FALSE.
 LBUDGET_RH=.FALSE.
 LBUDGET_SV=.FALSE.
-PHYEX%MISC%TBUCONF=TBUCONF
+MISC%TBUCONF=TBUCONF
 
 END SUBROUTINE INIT_PHYEX
 

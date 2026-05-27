@@ -113,9 +113,9 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             argList2.append('D')
         elif vartype == 'TYPE(PHYEX_AERO_T)':
             moduleList.append('USE MODD_PHYEX_AERO, ONLY: PHYEX_AERO_t')
-            moduleList.append('USE MODD_MISC, ONLY: MISC_t')
+            moduleList.append('USE MODD_MISC_OFFLINE, ONLY: MISC_OFFLINE_t')
             declList.append('TYPE(PHYEX_AERO_t) :: PHYAERO')
-            declList.append('TYPE(MISC_t), TARGET :: MISC')
+            declList.append('TYPE(MISC_OFFLINE_t), TARGET :: MISC')
             copyList.append('PHYAERO%LSALT         = MISC%LSALT')
             copyList.append('PHYAERO%NMODE_SLT     = MISC%NMODE_SLT')
             copyList.append('PHYAERO%XINISIG_SLT   => MISC%XINISIG_SLT')
