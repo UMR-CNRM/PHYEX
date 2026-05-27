@@ -14,6 +14,7 @@ import sys
 import glob
 
 import pyfortool.scripting
+from pyphyex.testing.coding_norms import coding_norms
 
 try:
     from pyphyex import __version__
@@ -118,66 +119,60 @@ def merge_code(directory, model, subs, mv_func, rm_func):
             src_dir = cand
             break
     if src_dir is None:
-        print(f"{'src/' + model} directory does not exist", file=sys.stderr)
-        sys.exit(5)
+        raise RuntimeError(f"src/{model} directory does not exist")
     if not subs:
-        print("It is not possible to merge without -s options", file=sys.stderr)
-        sys.exit(6)
+        raise RuntimeError("It is not possible to merge without -s options")
 
     logging.info("Merge common code and %s specific code", model)
 
-    orig_cwd = os.getcwd()
-    os.chdir(directory)
-    try:
-        all_files = [f for f in os.listdir('.') if not f.startswith('.')]
+    all_files = [f for f in os.listdir(directory) if not f.startswith('.')]
 
-        for sub in subs:
-            logging.debug("Merging %s directory/file", sub)
-            if os.path.exists(sub):
-                print(f"{sub} must not exist in the repository root, " +
-                      "this is a limitation of the script",
-                      file=sys.stderr)
-                sys.exit(7)
+    for sub in subs:
+        logging.debug("Merging %s directory/file", sub)
+        sub_path = os.path.join(directory, sub)
+        if os.path.exists(sub_path):
+            raise RuntimeError(f"{sub} must not exist in the repository root, "
+                              "this is a limitation of the script")
 
-            common_sub = os.path.join('src', 'common', sub)
-            if os.path.exists(common_sub):
-                mv_func(common_sub, sub)
+        common_sub = os.path.join(directory, 'src', 'common', sub)
+        if os.path.exists(common_sub):
+            mv_func(common_sub, sub_path)
 
-            model_sub = os.path.join(src_dir, sub)
-            if os.path.exists(model_sub):
-                if os.path.isfile(model_sub):
-                    mv_func(model_sub, sub)
-                else:
-                    for root, _, files in os.walk(model_sub):
-                        for f in files:
-                            rel_path = os.path.relpath(os.path.join(root, f), model_sub)
-                            dst_path = os.path.join(sub, rel_path)
-                            os.makedirs(os.path.dirname(dst_path), exist_ok=True)
-                            mv_func(os.path.join(root, f), dst_path)
-                    try:
-                        os.removedirs(model_sub)
-                    except OSError:
-                        pass
+        model_sub = os.path.join(directory, src_dir, sub)
+        if os.path.exists(model_sub):
+            if os.path.isfile(model_sub):
+                mv_func(model_sub, sub_path)
+            else:
+                for root, _, files in os.walk(model_sub):
+                    for f in files:
+                        rel_path = os.path.relpath(os.path.join(root, f), model_sub)
+                        dst_path = os.path.join(directory, sub, rel_path)
+                        os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+                        mv_func(os.path.join(root, f), dst_path)
+                try:
+                    os.removedirs(model_sub)
+                except OSError:
+                    pass
 
-        # Suppress unwanted files
-        suppress_file = os.path.join(src_dir, 'filesToSuppress.txt')
-        if os.path.isfile(suppress_file):
-            with open(suppress_file, encoding='UTF-8') as fh:
-                for line in fh:
-                    filename = line.strip()
-                    if os.path.isfile(filename):
-                        rm_func(filename)
+    # Suppress unwanted files
+    suppress_file = os.path.join(directory, src_dir, 'filesToSuppress.txt')
+    if os.path.isfile(suppress_file):
+        with open(suppress_file, encoding='UTF-8') as fh:
+            for line in fh:
+                filename = line.strip()
+                full_path = os.path.join(directory, filename)
+                if os.path.isfile(full_path):
+                    rm_func(full_path)
 
-        # Clean unrelevant files
-        logging.info("Cleaning unrelevant files")
-        for f in all_files:
-            if f in ('.git', '.git/'):
-                continue
-            if os.path.exists(f):
-                logging.debug("Suppression of %s", f)
-                rm_func(f)
-    finally:
-        os.chdir(orig_cwd)
+    # Clean unrelevant files
+    logging.info("Cleaning unrelevant files")
+    for f in all_files:
+        if f in ('.git', '.git/'):
+            continue
+        full_path = os.path.join(directory, f)
+        if os.path.exists(full_path):
+            logging.debug("Suppression of %s", f)
+            rm_func(full_path)
 
 
 def apply_ilooprm(directory):
@@ -235,7 +230,7 @@ def apply_ilooprm(directory):
                     fh.write(content)
 
 
-def run_prep_code(
+def prep_code(
     directory,
     checkout_point=None,
     model=None,
@@ -297,13 +292,8 @@ def run_prep_code(
     else:
         logging.basicConfig(level=logging.DEBUG, format="%(message)s")
 
-    # Resolve the tools directory
-    phyex_tools_dir_candidate = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tools')
-    if os.path.isdir(phyex_tools_dir_candidate):
-        phyex_tools_dir = phyex_tools_dir_candidate
-    else:
-        phyex_tools_dir = os.path.dirname(os.path.abspath(__file__))
+    # Get full directory path
+    directory = os.path.abspath(directory)
 
     # Build pyfortool options list
     pyfortool_opts = []
@@ -328,10 +318,8 @@ def run_prep_code(
                 (os.path.isdir(os.path.join(directory, 'turb')) and
                  os.path.isdir(os.path.join(directory, 'micro')) and
                  os.path.isdir(os.path.join(directory, 'aux')))):
-            print(f"{directory} must be filled with files and directories as " +
-                  "if it was obtained through a checkout",
-                  file=sys.stderr)
-            sys.exit(2)
+            raise RuntimeError(f"{directory} must be filled with files and directories "
+                              "as if it was obtained through a checkout")
 
         def mv_func(src, dst):
             shutil.move(src, dst)
@@ -343,33 +331,26 @@ def run_prep_code(
     else:
         logging.info("Clone and checkout %s into %s directory", checkout_point, directory)
         if os.path.exists(directory):
-            print(f"{directory} already exists, suppress it before executing the script "
-                  f"(or remove the -c option)", file=sys.stderr)
-            sys.exit(3)
+            raise RuntimeError(f"{directory} already exists, suppress it before executing "
+                              "the script (or remove the -c option)")
         if not repository:
-            print("A repository must be set (use -h option to get help)", file=sys.stderr)
-            sys.exit(1)
+            raise RuntimeError("A repository must be set (use -h option to get help)")
 
         run(['git', 'clone', repository, directory])
-        orig_cwd = os.getcwd()
-        os.chdir(directory)
-        try:
-            if branch:
-                result = subprocess.run(
-                    ['git', 'ls-remote', '--heads', 'origin', 'SR_GPU'],
-                    capture_output=True, text=True, check=True
-                )
-                if result.stdout.strip():
-                    print(f"{branch} branch already exists on remote", file=sys.stderr)
-                    sys.exit(4)
+        if branch:
+            result = subprocess.run(
+                ['git', 'ls-remote', '--heads', 'origin', 'SR_GPU'],
+                capture_output=True, text=True, check=True,
+                cwd=directory
+            )
+            if result.stdout.strip():
+                raise RuntimeError(f"{branch} branch already exists on remote")
 
-            checkout_args = ['git', 'checkout']
-            if branch:
-                checkout_args.extend(['-b', branch])
-            checkout_args.append(checkout_point)
-            run(checkout_args)
-        finally:
-            os.chdir(orig_cwd)
+        checkout_args = ['git', 'checkout']
+        if branch:
+            checkout_args.extend(['-b', branch])
+        checkout_args.append(checkout_point)
+        run(checkout_args, cwd=directory)
 
         def mv_func(src, dst):
             run(['git', 'mv', '-f', src, dst], cwd=directory)
@@ -439,21 +420,9 @@ def run_prep_code(
                 os.chdir(orig_cwd)
 
     # -------- Check coding conventions --------
-    check_script = 'check_coding_conventions.sh'
-    for item in os.listdir(directory):
-        if item == 'ext':
-            continue
-        item_path = os.path.join(directory, item)
-        result = subprocess.run(
-            [check_script, '-v', '--source', item_path],
-            capture_output=True, text=True, check=False
-        )
-        if result.returncode != 0:
-            print(result.stdout)
-            print(result.stderr)
-            if not no_raise_on_coding_norms:
-                print("Errors occurred during code norms verification => STOP", file=sys.stderr)
-                sys.exit(9)
+    if not coding_norms(directory, verbose=True):
+        if not no_raise_on_coding_norms:
+            raise RuntimeError("Coding norms verification failed, see messages above")
 
     # -------- PUSH --------
     if branch:
@@ -470,15 +439,14 @@ def run_prep_code(
 
 
 def main():
-    """Parse command-line arguments and delegate to :func:`run_prep_code`."""
+    """Parse command-line arguments and delegate to :func:`prep_code`."""
     args = parse_args()
 
     if not args.directory:
-        print("A directory must be provided on command line (use -h option to get help)",
-              file=sys.stderr)
-        sys.exit(1)
+        raise RuntimeError("A directory must be provided on command line "
+                           "(use -h option to get help)")
 
-    run_prep_code(
+    prep_code(
         directory=args.directory,
         checkout_point=args.checkout_point,
         model=args.model,

@@ -201,8 +201,6 @@ function main() {
     else
       expand_options=""
     fi
-    PHYEXTOOLSDIR="$DIR/../../../tools" #if run from within a PHYEX repository
-    UPDATEDPATH=$PATH
   
     #Temporary file for the description tree
     descTree=${TMPDIR:-/tmp}/descTree_$$
@@ -213,17 +211,17 @@ function main() {
       echo "Clone repository, and checkout commit $commit (using prep_code)"
       if [[ $commit == testprogs${separator}* || $commit == offline${separator}* ]]; then
         #This commit is ready for inclusion
-        PATH=$UPDATEDPATH phyex-prep_code -c $commit src
+        phyex-prep_code -c $commit src
       else
-        PATH=$UPDATEDPATH phyex-prep_code --pyfortool_opts_env PYFT_OPTS -c $commit $expand_options $subs \
-                                          -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
+        phyex-prep_code --pyfortool_opts_env PYFT_OPTS -c $commit $expand_options $subs \
+                        -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
       fi
     else
       echo "Copy $fromdir"
       mkdir src
       scp -q -r $fromdir/src src/
-      PATH=$UPDATEDPATH phyex-prep_code --pyfortool_opts_env PYFT_OPTS $expand_options $subs \
-                                        -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
+      phyex-prep_code --pyfortool_opts_env PYFT_OPTS $expand_options $subs \
+                      -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
     fi
     
     # Add some code

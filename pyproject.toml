@@ -15,7 +15,7 @@ license = {file = "LICENSE"}
 dependencies = [
     "netCDF4<=1.7.2", # line to be removed completely when belenos is updated
     "matplotlib",
-    "pyfortool>=0.2.18",
+    "pyfortool>=0.2.17",
     "numpy",
     "pandas<=2.3.2", # version constraint to be removed when belenos is updated
     "xarray",
@@ -29,6 +29,7 @@ Homepage = "https://github.com/UMR-CNRM/PHYEX"
 
 [project.scripts]
 "phyex-prep_code" = "pyphyex.prep_code:main"
+"phyex-check_norms" = "pyphyex.testing.coding_norms:main"
 
 [tool.setuptools.package-dir]
 "" = "src"

@@ -507,7 +507,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
     retcoding=0
     log 0 "Test coding conventions"
 
-    codingcmd="check_coding_conventions.sh"
+    codingcmd="phyex-check_norms"
     log 1 "Coding conventions with ${codingcmd}"
     set +e
     ${codingcmd}
