@@ -86,12 +86,12 @@ $(function() {
 Functions/Subroutines</h2></td></tr>
 <tr class="memitem:ae55925d0151bca669f2e99235cf77eff" id="r_ae55925d0151bca669f2e99235cf77eff"><td class="memItemLeft" align="right" valign="top">program&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main__turb_8F90.html#ae55925d0151bca669f2e99235cf77eff">main_turb</a></td></tr>
 <tr class="separator:ae55925d0151bca669f2e99235cf77eff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad38de79851f3964e0d94f6f1d30a79ad" id="r_ad38de79851f3964e0d94f6f1d30a79ad"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main__turb_8F90.html#ad38de79851f3964e0d94f6f1d30a79ad">init_phyex</a> (krr, krrl, krri, ksv, ksize_psigs, phyex)</td></tr>
-<tr class="separator:ad38de79851f3964e0d94f6f1d30a79ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05637b4fa45ee8801bb8e5756d43962c" id="r_a05637b4fa45ee8801bb8e5756d43962c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main__turb_8F90.html#a05637b4fa45ee8801bb8e5756d43962c">init_phyex</a> (krr, krrl, krri, ksv, ksize_psigs, phyex, misc)</td></tr>
+<tr class="separator:a05637b4fa45ee8801bb8e5756d43962c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="ad38de79851f3964e0d94f6f1d30a79ad" name="ad38de79851f3964e0d94f6f1d30a79ad"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad38de79851f3964e0d94f6f1d30a79ad">&#9670;&#160;</a></span>init_phyex()</h2>
+<a id="a05637b4fa45ee8801bb8e5756d43962c" name="a05637b4fa45ee8801bb8e5756d43962c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a05637b4fa45ee8801bb8e5756d43962c">&#9670;&#160;</a></span>init_phyex()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -130,7 +130,13 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__phyex_1_1phyex__t.html">phyex_t</a>), intent(out), target&#160;</td>
-          <td class="paramname"><em>phyex</em>&#160;</td>
+          <td class="paramname"><em>phyex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__misc__offline_1_1misc__offline__t.html">misc_offline_t</a>), intent(out), target&#160;</td>
+          <td class="paramname"><em>misc</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -140,12 +146,12 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="main__turb_8F90_source.html#l00432">432</a> of file <a class="el" href="main__turb_8F90_source.html">main_turb.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main__turb_8F90_source.html#l00434">434</a> of file <a class="el" href="main__turb_8F90_source.html">main_turb.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="main__turb_8F90_ad38de79851f3964e0d94f6f1d30a79ad_cgraph.png" border="0" usemap="#amain__turb_8F90_ad38de79851f3964e0d94f6f1d30a79ad_cgraph" alt=""/></div>
-<map name="amain__turb_8F90_ad38de79851f3964e0d94f6f1d30a79ad_cgraph" id="amain__turb_8F90_ad38de79851f3964e0d94f6f1d30a79ad_cgraph">
+<div class="center"><img src="main__turb_8F90_a05637b4fa45ee8801bb8e5756d43962c_cgraph.png" border="0" usemap="#amain__turb_8F90_a05637b4fa45ee8801bb8e5756d43962c_cgraph" alt=""/></div>
+<map name="amain__turb_8F90_a05637b4fa45ee8801bb8e5756d43962c_cgraph" id="amain__turb_8F90_a05637b4fa45ee8801bb8e5756d43962c_cgraph">
 <area shape="rect" title=" " alt="" coords="5,13,96,38"/>
 <area shape="rect" href="namespacemodd__budget.html#af15bfc58a4de25c3d3c3c8dcb4f017c0" title=" " alt="" coords="144,5,312,45"/>
 <area shape="poly" title=" " alt="" coords="96,23,130,23,130,28,96,28"/>
@@ -177,7 +183,7 @@ Here is the call graph for this function:</div>
 <area shape="poly" title=" " alt="" coords="69,154,102,135,140,117,178,105,179,110,142,122,104,140,72,158"/>
 <area shape="rect" href="namespacegetdata__turb__mod.html#a27cf2183466013400c13b0308a0839f6" title=" " alt="" coords="141,132,373,157"/>
 <area shape="poly" title=" " alt="" coords="93,161,134,156,134,162,94,166"/>
-<area shape="rect" href="main__ice__adjust_8F90.html#a21b7e3321ba604b57e15565542e383ab" title=" " alt="" coords="212,184,303,209"/>
+<area shape="rect" href="main__ice__adjust_8F90.html#a92debc8b658773138ddfa1daec8c809b" title=" " alt="" coords="212,184,303,209"/>
 <area shape="poly" title=" " alt="" coords="94,172,199,186,198,191,93,177"/>
 <area shape="rect" href="namespacexrd__getoptions.html#a5799ba98c89dd37dae3714dd84871074" title=" " alt="" coords="159,243,355,268"/>
 <area shape="poly" title=" " alt="" coords="71,179,104,199,142,218,193,236,191,241,140,223,101,203,68,184"/>

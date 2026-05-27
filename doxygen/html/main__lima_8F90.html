@@ -86,12 +86,12 @@ $(function() {
 Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a98a6c25ee98634744f14468b1801c7ce" id="r_a98a6c25ee98634744f14468b1801c7ce"><td class="memItemLeft" align="right" valign="top">program&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main__lima_8F90.html#a98a6c25ee98634744f14468b1801c7ce">main_lima</a></td></tr>
 <tr class="separator:a98a6c25ee98634744f14468b1801c7ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a670a19ddeec955cbf68091c283724a82" id="r_a670a19ddeec955cbf68091c283724a82"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main__lima_8F90.html#a670a19ddeec955cbf68091c283724a82">init_phyex</a> (krr, phyex)</td></tr>
-<tr class="separator:a670a19ddeec955cbf68091c283724a82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c49063a055f21fc5bbe38a41de986e1" id="r_a0c49063a055f21fc5bbe38a41de986e1"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main__lima_8F90.html#a0c49063a055f21fc5bbe38a41de986e1">init_phyex</a> (krr, phyex, misc)</td></tr>
+<tr class="separator:a0c49063a055f21fc5bbe38a41de986e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a670a19ddeec955cbf68091c283724a82" name="a670a19ddeec955cbf68091c283724a82"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a670a19ddeec955cbf68091c283724a82">&#9670;&#160;</a></span>init_phyex()</h2>
+<a id="a0c49063a055f21fc5bbe38a41de986e1" name="a0c49063a055f21fc5bbe38a41de986e1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0c49063a055f21fc5bbe38a41de986e1">&#9670;&#160;</a></span>init_phyex()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -106,7 +106,13 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__phyex_1_1phyex__t.html">phyex_t</a>), intent(out), target&#160;</td>
-          <td class="paramname"><em>phyex</em>&#160;</td>
+          <td class="paramname"><em>phyex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__misc__offline_1_1misc__offline__t.html">misc_offline_t</a>), intent(out), target&#160;</td>
+          <td class="paramname"><em>misc</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -116,12 +122,12 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="main__lima_8F90_source.html#l00378">378</a> of file <a class="el" href="main__lima_8F90_source.html">main_lima.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main__lima_8F90_source.html#l00380">380</a> of file <a class="el" href="main__lima_8F90_source.html">main_lima.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="main__lima_8F90_a670a19ddeec955cbf68091c283724a82_cgraph.png" border="0" usemap="#amain__lima_8F90_a670a19ddeec955cbf68091c283724a82_cgraph" alt=""/></div>
-<map name="amain__lima_8F90_a670a19ddeec955cbf68091c283724a82_cgraph" id="amain__lima_8F90_a670a19ddeec955cbf68091c283724a82_cgraph">
+<div class="center"><img src="main__lima_8F90_a0c49063a055f21fc5bbe38a41de986e1_cgraph.png" border="0" usemap="#amain__lima_8F90_a0c49063a055f21fc5bbe38a41de986e1_cgraph" alt=""/></div>
+<map name="amain__lima_8F90_a0c49063a055f21fc5bbe38a41de986e1_cgraph" id="amain__lima_8F90_a0c49063a055f21fc5bbe38a41de986e1_cgraph">
 <area shape="rect" title=" " alt="" coords="5,13,96,38"/>
 <area shape="rect" href="namespacemodd__budget.html#af15bfc58a4de25c3d3c3c8dcb4f017c0" title=" " alt="" coords="144,5,312,45"/>
 <area shape="poly" title=" " alt="" coords="96,23,130,23,130,28,96,28"/>
@@ -153,7 +159,7 @@ Here is the call graph for this function:</div>
 <area shape="poly" title=" " alt="" coords="71,154,104,135,143,117,181,105,183,110,145,122,106,140,73,158"/>
 <area shape="rect" href="namespacegetdata__lima__mod.html#af8e4571fd447571e42124d066e22d0f3" title=" " alt="" coords="144,132,383,157"/>
 <area shape="poly" title=" " alt="" coords="96,161,137,156,138,162,96,166"/>
-<area shape="rect" href="main__ice__adjust_8F90.html#a21b7e3321ba604b57e15565542e383ab" title=" " alt="" coords="218,184,309,209"/>
+<area shape="rect" href="main__ice__adjust_8F90.html#a92debc8b658773138ddfa1daec8c809b" title=" " alt="" coords="218,184,309,209"/>
 <area shape="poly" title=" " alt="" coords="96,172,204,186,204,192,96,177"/>
 <area shape="rect" href="namespacexrd__getoptions.html#a5799ba98c89dd37dae3714dd84871074" title=" " alt="" coords="165,243,361,268"/>
 <area shape="poly" title=" " alt="" coords="73,179,106,199,145,218,197,236,196,241,143,223,103,204,70,184"/>

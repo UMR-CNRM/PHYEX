@@ -14,7 +14,7 @@ var searchData=
   ['modd_5ffields_5faddress_11',['modd_fields_address',['../namespacemodd__fields__address.html',1,'']]],
   ['modd_5fio_12',['modd_io',['../namespacemodd__io.html',1,'']]],
   ['modd_5fles_13',['modd_les',['../namespacemodd__les.html',1,'']]],
-  ['modd_5fmisc_14',['modd_misc',['../namespacemodd__misc.html',1,'']]],
+  ['modd_5fmisc_5foffline_14',['modd_misc_offline',['../namespacemodd__misc__offline.html',1,'']]],
   ['modd_5fneb_5fn_15',['modd_neb_n',['../namespacemodd__neb__n.html',1,'']]],
   ['modd_5fnsv_16',['modd_nsv',['../namespacemodd__nsv.html',1,'']]],
   ['modd_5fparam_5fice_5fn_17',['modd_param_ice_n',['../namespacemodd__param__ice__n.html',1,'']]],
