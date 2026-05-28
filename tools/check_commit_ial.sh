@@ -59,6 +59,7 @@ default_expand=true
 extra_doc="The PHYEXROOTPACK environment variable, if set, is used as the argument
 of the --rootpack option of ial-git2pack/ial-to_pack, for incremental packs."
 enable_prepCodeOpts=true
+enable_full=true
 command_line $@
 
 ##############################
@@ -180,7 +181,7 @@ if [ $packupdate == true -o $packcreation == true ]; then
   else
     expand_options=""
   fi
-  prep_code=$PHYEXTOOLSDIR/prep_code.sh
+  prep_code=phyex-prep_code
   echo "Copy $commit"
   mkdir PHYEX
   if [ $model_ready == false ]; then
@@ -424,7 +425,7 @@ if [ $check == true ]; then
         fi
       fi
       if [ $t -eq 0 ]; then
-        cmd="$PHYEXTOOLSDIR/compare.py"
+        cmd="phyex-compare"
         if [ ! -x $cmd ]; then
           echo "Command not found: \"$cmd\""
           exit 10

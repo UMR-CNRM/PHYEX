@@ -111,7 +111,7 @@ if [ $packupdate == true -o $packcreation == true ]; then
     else
       expand_options=""
     fi
-    prep_code=$PHYEXTOOLSDIR/prep_code.sh
+    prep_code=phyex-prep_code
     echo "Copy $commit"
     mkdir PHYEX
     if [ $model_ready == false ]; then
@@ -376,10 +376,10 @@ if [ $check == true ]; then
         echo "Comparison for case $t..."
         set +e
         if [ "$file3" == "" ]; then
-          $PHYEXTOOLSDIR/compare.py --backup $file1 $file2
+          phyex-compare --backup $file1 $file2
           r=$?
         else
-          $PHYEXTOOLSDIR/compare.py --backup $file1 $file2 --diac $file3 $file4
+          phyex-compare --backup $file1 $file2 --diac $file3 $file4
           r=$?
         fi
         set -e
@@ -388,7 +388,7 @@ if [ $check == true ]; then
         #Check bit-repro before date of creation of Synchronous file from ncdump of all values
         #(pb with direct .nc file checks)
         set +e
-        $PHYEXTOOLSDIR/compare.py --ncdump $file1 $file2 $bit_diff
+        phyex-compare --ncdump $file1 $file2 $bit_diff
         r=$?
         set -e
         allt=$(($allt+$r))

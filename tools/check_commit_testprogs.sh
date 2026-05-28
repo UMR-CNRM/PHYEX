@@ -438,7 +438,7 @@ if [ $check == true ]; then
       fi
       if [ $te -eq 0 ]; then
         set +e
-        mess=$($PHYEXTOOLSDIR/compare.py --testprogs $file1 $file2)
+        mess=$(phyex-compare --testprogs $file1 $file2)
         te=$?
         set -e
       fi

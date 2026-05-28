@@ -9,7 +9,7 @@ set -o pipefail #abort if left command on a pipe fails
 ###################
 
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
-              #- separator must be in sync with prep_code.sh separator
+              #- separator must be in sync with prep_code separator
 
 export PHYEXCONF=${PHYEXCONF:-${HOME}/.phyex}
 

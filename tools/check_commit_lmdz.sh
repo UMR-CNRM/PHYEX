@@ -183,7 +183,7 @@ if [ $packupdate == true -o $packcreation == true ]; then
       expand_options=""
     fi
     subs="-s turb -s micro -s aux -s ext"
-    prep_code=$PHYEXTOOLSDIR/prep_code.sh
+    prep_code=phyex-prep_code
     echo "Copy $commit"
     mkdir PHYEX
     scp -q -r $commit/src PHYEX/
