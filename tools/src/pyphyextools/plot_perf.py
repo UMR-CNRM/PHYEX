@@ -4,6 +4,7 @@
 This script plots the data contained in the performance files obtained with the --perf option
 """
 
+import argparse
 import re
 import matplotlib.pyplot as plt
 import numpy
@@ -110,7 +111,6 @@ class Perf():
         return sorted(set(self._df['model']))
 
 def main():
-    import argparse
     parser = argparse.ArgumentParser(description='Plot performance file')
     parser.add_argument('PERF_FILE', type=str,
                         help='file containing the performance statistics')

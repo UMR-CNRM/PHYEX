@@ -397,7 +397,7 @@ def comp_binary(f1, f2, offset):
     """Compare two binary files using the cmp command with an optional offset."""
     # Python filecmp does not allow to specify an offset
     offset = [str(offset), str(offset)] if offset != 0 else []
-    p = subprocess.run(['cmp', f1, f2] + offset, capture_output=True, encoding='UTF8')
+    p = subprocess.run(['cmp', f1, f2] + offset, capture_output=True, encoding='UTF8', check=False)
     if p.returncode != 0:
         print(p.stdout)
     return p.returncode
@@ -407,7 +407,7 @@ def comp_ncdump(f1, f2, nbytes):
     """Compare the first nbytes of ncdump output from two NetCDF files."""
     ncdumps = [
         subprocess.run(['ncdump', f], capture_output=True,
-                       encoding='UTF8').stdout[:int(nbytes)]
+                       encoding='UTF8', check=True).stdout[:int(nbytes)]
         for f in (f1, f2)
     ]
     diff = ''.join(difflib.unified_diff(

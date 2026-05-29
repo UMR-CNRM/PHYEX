@@ -11,6 +11,7 @@ processing for ini_phyex (adding a file name for the namelist and
 flushing the listing file).
 """
 
+import argparse
 import os
 import re
 from pyfortool import PYFT
@@ -474,7 +475,6 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                                                alllist='\n             '.join(alllist)))
 
 def main():
-    import argparse
     parser = argparse.ArgumentParser(description='Python binding maker')
     parser.add_argument('INPUT', type=str,
                         help='FORTRAN input file')

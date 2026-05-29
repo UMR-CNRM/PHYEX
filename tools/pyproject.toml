@@ -35,6 +35,10 @@ Homepage = "https://github.com/UMR-CNRM/PHYEX"
 "phyex-pybinding" = "pyphyextools.pybinding:main"
 "phyex-check_norms" = "pyphyextools.testing.coding_norms:main"
 "phyex-compare" = "pyphyextools.testing.compare:main"
+"phyex-check_ial" = "pyphyextools.testing.check_ial:main"
+"phyex-check_mesonh" = "pyphyextools.testing.check_mesonh:main"
+"phyex-check_lmdz" = "pyphyextools.testing.check_lmdz:main"
+"phyex-check_testprogs" = "pyphyextools.testing.check_testprogs:main"
 
 [tool.setuptools.package-dir]
 "" = "src"
