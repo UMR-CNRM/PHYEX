@@ -37,7 +37,7 @@ class Perf():
                                figsize=(8, 8 * len(models)))
         if len(models) == 1:
             ax = [ax]
- 
+
         #Ordered commit list common to all models
         commits = []
         for commit in self._df['commit']:
@@ -66,7 +66,8 @@ class Perf():
             else:
                 ax[igrpM].set_title(title.replace('%M', grpM))
             ax[igrpM].set_ylabel('gridpoints (gp/ms)' if reverse else 'time (ms/gp)')
-            if logScale: ax[igrpM].set_yscale('log')
+            if logScale:
+                ax[igrpM].set_yscale('log')
 
             dfp = df.get_group(grpM).groupby('case')
             for grp in dfp.groups:
@@ -108,7 +109,7 @@ class Perf():
         """
         return sorted(set(self._df['model']))
 
-if __name__ == '__main__':
+def main():
     import argparse
     parser = argparse.ArgumentParser(description='Plot performance file')
     parser.add_argument('PERF_FILE', type=str,
@@ -138,3 +139,6 @@ if __name__ == '__main__':
                       not args.no_log, args.reverse, args.x_is_num)
     if args.listModels:
         print(' '.join(perf.listModels()))
+
+if __name__ == '__main__':
+    main()

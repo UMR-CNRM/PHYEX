@@ -31,6 +31,7 @@ Homepage = "https://github.com/UMR-CNRM/PHYEX"
 
 [project.scripts]
 "phyex-prep_code" = "pyphyextools.prep_code:main"
+"phyex-plot_perf" = "pyphyextools.plot_perf:main"
 "phyex-check_norms" = "pyphyextools.testing.coding_norms:main"
 "phyex-compare" = "pyphyextools.testing.compare:main"
 
