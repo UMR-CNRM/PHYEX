@@ -229,18 +229,18 @@ function main() {
     cd src
     if [ ${PYBINDING-yes} == 'yes' ]; then
       sorelativenames=$(for soname in $solibnames; do echo ./../lib/$soname; done)
-      pybinding.py micro/ice_adjust.F90 sub:ICE_ADJUST pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py micro/rain_ice.F90 sub:RAIN_ICE pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py micro/mode_ice4_sedimentation.F90 \
-                   module:MODE_ICE4_SEDIMENTATION/sub:ICE4_SEDIMENTATION \
-                   pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py micro/rain_ice_old.F90 sub:RAIN_ICE_OLD pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py turb/shallow_mf.F90 sub:SHALLOW_MF pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py turb/turb.F90 sub:TURB pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py aux/ini_phyex.F90 sub:INI_PHYEX pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py micro/lima_adjust_split.F90 sub:LIMA_ADJUST_SPLIT pyphyex.F90 \
-                   ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py micro/lima.F90 sub:LIMA pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding micro/ice_adjust.F90 sub:ICE_ADJUST pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding micro/rain_ice.F90 sub:RAIN_ICE pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding micro/mode_ice4_sedimentation.F90 \
+                      module:MODE_ICE4_SEDIMENTATION/sub:ICE4_SEDIMENTATION \
+                      pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding micro/rain_ice_old.F90 sub:RAIN_ICE_OLD pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding turb/shallow_mf.F90 sub:SHALLOW_MF pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding turb/turb.F90 sub:TURB pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding aux/ini_phyex.F90 sub:INI_PHYEX pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding micro/lima_adjust_split.F90 sub:LIMA_ADJUST_SPLIT pyphyex.F90 \
+                      ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding micro/lima.F90 sub:LIMA pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
     else
       cat <<......EOF > pyphyex.F90
       SUBROUTINE PYPHYEXSUB

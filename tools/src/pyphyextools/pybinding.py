@@ -473,7 +473,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                  "            None)\n").format(inlist='\n             '.join(inlist),
                                                alllist='\n             '.join(alllist)))
 
-if __name__ == '__main__':
+def main():
     import argparse
     parser = argparse.ArgumentParser(description='Python binding maker')
     parser.add_argument('INPUT', type=str,
@@ -490,3 +490,6 @@ if __name__ == '__main__':
                         help='If set, array indexes are in the same order as the FORTRAN routine')
     args = parser.parse_args()
     pybinding(args.INPUT, args.SCOPE, args.FORTRAN, args.PYTHON, args.LIBSO, args.Findexing)
+
+if __name__ == '__main__':
+    main()
