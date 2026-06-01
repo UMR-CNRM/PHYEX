@@ -318,7 +318,7 @@ if [ $run == true -a "$perffile" != "" ]; then
   firstrun=1
   for t in $(echo $tests | sed 's/,/ /g'); do
     if echo $allowedTests | grep -w $t > /dev/null; then
-      if [ ! -f $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/build/bin/main_${t}.exe ]; then
+      if [ ! -f $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/build/bin/main_${t}_${precision}.exe ]; then
         echo "Directory does not exist ($TESTDIR/$name) or compilation has failed, please check"
         echo "Run '$0 -p -c $commit' to compile."
         exit 7
