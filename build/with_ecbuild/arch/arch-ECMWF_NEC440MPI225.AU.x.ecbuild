@@ -1,0 +1,20 @@
+# Compilation
+set(CMAKE_Fortran_COMPILER mpinfort)
+set(CMAKE_Fortran_FLAGS "-fopenmp -traceback=verbose -fdiag-vector=3 -fdiag-inline=2 -fpic -mstack-arrays")
+set(CMAKE_Fortran_FLAGS_RELEASE "-g -O3 -mno-vector-fma -finline-functions -finline-max-depth=3 -mvector-floating-divide-instruction -mvector-sqrt-instruction -fcse-after-vectorization -mvector-advance-gather")
+set(CMAKE_Fortran_FLAGS_DEBUG "-g -O0  -fbounds-check  -minit-stack=snan")
+set(CMAKE_C_COMPILER mpincc)
+set(CMAKE_C_FLAGS "-fopenmp -traceback=verbose -fdiag-vector=3 -fdiag-inline=2 -fpic")
+set(CMAKE_C_FLAGS_RELEASE "-g -O2 -mno-vector-fma -finline-functions")
+
+# Preprocessor
+add_compile_definitions("$<$<COMPILE_LANGUAGE:C,CXX>:WITHOUT_CXXDEMANGLE>")
+add_compile_definitions("LINUX")
+add_compile_definitions("LITTLE")
+add_compile_definitions("LITTLE_ENDIAN")
+add_compile_definitions("$<$<COMPILE_LANGUAGE:Fortran>:ADDRESS64>")
+set(FPP_FLAGS_TESTPROGS USE_OPENMP)
+
+# Link
+add_link_options(-traceback=verbose -fopenmp -static -static-nec -ftrace)
+set(CMAKE_AR nar)

@@ -99,6 +99,7 @@ function command_line {
     perf=true
     extrapolation=0
     checkOpt="--check"
+    precision='dp'
   fi
 
   function usage {
@@ -149,6 +150,7 @@ function command_line {
     echo "                to transfor all source codes in lower case). Help on prep_code.sh options"
     echo "                can be found with 'prep_code.sh -h'. Note: don't forget to enclose OPTS in ' or \""
     if [ $enable_testprogs_opt == true ]; then
+      echo "--prec          choose precision"
       echo "--no-perf       deactivate DR_HOOK"
       echo "--no-check      suppress value printing (comparison will be impossible)"
       echo "                this option can reduce drastically the running time but only allow"
@@ -225,6 +227,8 @@ function command_line {
       '--no-check') check_allowed $1 $enable_testprogs_opt; checkOpt="";;
       '-e') check_allowed $1 $enable_testprogs_opt;
             extrapolation=$2; toadd="$toadd $2"; shift;;
+      '--prec') check_allowed $1 $enable_testprogs_opt;
+                precision=$2; toadd="$toadd $2"; shift;;
       *) if [ -z "${commit-}" ]; then
           commit=$1
         else

@@ -62,16 +62,13 @@ i=$((i+1)); conf_extra_tag[$i]="_Z120_NPRO32_BLK64_TIMES16"
 i=$((i+1)); conf_extra_tag[$i]='_Z120_NPRO${NPROMA}_BLK${NBLOCKS}_TIMES${NTIMES}'
             conf_extra_opts[$i]='--nflevg 120 --nproma ${NPROMA} --blocks ${NBLOCKS} --times ${NTIMES}'
 
-#Build system
-default_buildSystem='fcm'
-alternative_buildSystem='ecbuild'
+buildSys='ecbuild'
 
 ################################
 #### COMMAND LINE ARGUMENTS ####
 ################################
 
 enable_testprogs_opt=true
-enable_buildSystem=true
 default_expand=true
 command_line $@
 
@@ -261,12 +258,7 @@ if [ $run == true ]; then
           firstrun=0
         fi
 
-        for prec in "" _dp _sp; do
-          if [ -f $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/build/bin/main_${t}${prec}.exe ]; then
-            break
-          fi
-        done
-        if [ ! -f $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/build/bin/main_${t}${prec}.exe ]; then
+        if [ ! -f $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/build/bin/main_${t}_${precision}.exe ]; then
           echo "Directory does not exist ($TESTDIR/$name) or compilation has failed, please check"
           echo "Run '$0 -p -c $commit' to compile."
           exit 6
@@ -285,7 +277,7 @@ if [ $run == true ]; then
         fi
         . $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/arch.env
         set +e
-        submit Output_run Stderr_run $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/build/bin/main_${t}${prec}.exe $checkOpt $extrapolation_opts
+        submit Output_run Stderr_run $TESTDIR/$name/build/with_${buildSys}/arch_${archfile}/build/bin/main_${t}_${precision}.exe $checkOpt $extrapolation_opts
         stat=$?
         set -e
         if [ $stat -ne 0 ]; then

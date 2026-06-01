@@ -1,8 +1,8 @@
 # This file contains the generic functions needed to compile PHYEX
 # It cannot be used directly, instead you can use script under one of the with_* subdirectories
 
-fiat_version=5eef5552c3002aa962caef56c6bdc88932739e77 #this specific version is needed for NEC
-fiat_gh_user=ACCORD-NWP #for official repo, use ecmwf-ifs
+fiat_version=1.5.1
+fiat_gh_user=ecmwf-ifs
 
 export PHYEXCONF=${PHYEXCONF:-${HOME}/.phyex}
 
@@ -129,7 +129,7 @@ function main() {
 
   # Different names are possible depending on the compilation system
   # and the options activated
-  solibnames="libphyex.so libphyex_dp.so libphyex_sp.so"
+  solibnames="lib/libphyex.so lib/libphyex_dp.so lib/libphyex_sp.so lib64/libphyex.so lib64/libphyex_dp.so lib64/libphyex_sp.so"
 
   if [ $inplaceClean -eq 1 ]; then
     # Change current working dir
@@ -231,7 +231,7 @@ function main() {
     mkdir -p build/bin
     cd src
     if [ ${PYBINDING-yes} == 'yes' ]; then
-      sorelativenames=$(for soname in $solibnames; do echo ./../lib/$soname; done)
+      sorelativenames=$(for soname in $solibnames; do echo ./../$soname; done)
       pybinding.py micro/ice_adjust.F90 sub:ICE_ADJUST pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
       pybinding.py micro/rain_ice.F90 sub:RAIN_ICE pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
       pybinding.py micro/mode_ice4_sedimentation.F90 \
@@ -293,11 +293,11 @@ function main() {
     ./compilation.sh
 
     for soname in ${solibnames}; do
-      if [ -f build/lib/$soname ]; then
+      if [ -f build/$soname ]; then
         break
       fi
     done
-    if [ ! -f build/lib/$soname ]; then
+    if [ ! -f build/$soname ]; then
       echo "Shared lib was not built (following names were tested: ${solibnames})!"
       exit 5
     fi
@@ -305,13 +305,13 @@ function main() {
     # Check if python can open the resulting shared lib
     set +e
     #On NEC, the shared library cannot be loaded as other lib if it was compiled for the Vector Engine
-    python3 -c "from ctypes import cdll; cdll.LoadLibrary('./build/lib/$soname')"
+    python3 -c "from ctypes import cdll; cdll.LoadLibrary('./build/$soname')"
     if [ $? -ne 0 ]; then
       echo "On some systems (cross-compilation) it's normal to obtain an error here"
       echo "when python tries to open the shared lib."
     fi
     set -e
     
-    # ldd -r ./build/lib/$soname should also give interesting results
+    # ldd -r ./build/$soname should also give interesting results
   fi
 }

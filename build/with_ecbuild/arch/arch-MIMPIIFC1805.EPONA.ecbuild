@@ -1,0 +1,21 @@
+# Compilation
+set(CMAKE_Fortran_COMPILER /home/gmap/mrpm/khatib/public/bin/mimpifc-18.0.5.274)
+set(CMAKE_Fortran_FLAGS "-convert big_endian -assume byterecl -align array64byte,all -traceback -fpic -qopenmp -qopenmp-threadprivate compat -fp-model source -qopt-report=5 -qopt-report-phase=vec -ftz -diag-disable=remark,cpu-dispatch")
+set(CMAKE_Fortran_FLAGS_RELEASE "-g -O2 -march=core-avx2 -finline-functions -finline-limit=500 -Winline -qopt-prefetch=4 -fast-transcendentals -fimf-use-svml -no-fma")
+set(CMAKE_Fortran_FLAGS_DEBUG "-g -O0  -check bounds  -init=arrays,snan -fp-stack-check -ftrapuv -fpe0 -fp-speculation=strict -check uninit -check pointers")
+set(CMAKE_C_COMPILER /home/gmap/mrpm/khatib/public/bin/mimpicc-18.0.5.274)
+set(CMAKE_C_FLAGS "-qopenmp -qopt-report=2 -qopt-report-phase=vec -fpic -malign-double -ftz -fp-model precise -diag-disable=remark,cpu-dispatch")
+set(CMAKE_C_FLAGS_RELEASE "-g -O2 -march=core-avx2")
+
+# Preprocessor
+add_compile_definitions("$<$<COMPILE_LANGUAGE:C,CXX>:WITHOUT_CXXDEMANGLE>")
+add_compile_definitions("GRIB_API_1")
+add_compile_definitions("LINUX")
+add_compile_definitions("LITTLE")
+add_compile_definitions("LITTLE_ENDIAN")
+add_compile_definitions("$<$<COMPILE_LANGUAGE:Fortran>:ADDRESS64>")
+set(FPP_FLAGS_TESTPROGS USE_OPENMP)
+
+# Link
+add_link_options(-v -lrt -lstdc++)
+set(CMAKE_AR /usr/bin/ar)

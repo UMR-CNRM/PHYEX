@@ -259,8 +259,8 @@ DO ITIME = 1, NTIME
     INUMPIN = 0
 #endif
 
-#ifdef _OPENACC
-    ! Code is not yet ready for GPU
+#ifdef USE_COLCALL
+    ! Code is not yet ready for GPU transformation
     PSRCS(JLON, :, IBL)=0.
     PCLDFR(JLON, :, IBL)=0.
     PICEFR(JLON, :, IBL)=0.

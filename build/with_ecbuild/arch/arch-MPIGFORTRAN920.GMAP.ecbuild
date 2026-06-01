@@ -1,0 +1,19 @@
+# Compilation
+set(CMAKE_Fortran_COMPILER mpigfortran.9.2.0)
+set(CMAKE_Fortran_FLAGS "-fconvert=swap -fno-second-underscore -fbacktrace -m64 -fopenmp -ffree-line-length-none -fno-sign-zero -fpic -fno-range-check -g -pipe")
+set(CMAKE_Fortran_FLAGS_RELEASE "-g -O2")
+set(CMAKE_Fortran_FLAGS_DEBUG "-g -O0  -fbounds-check  -finit-real=snan -ffpe-trap=invalid,zero,overflow")
+set(CMAKE_C_COMPILER mpigcc.9.2.0)
+set(CMAKE_C_FLAGS "-m64 -fopenmp -fpic -g -pipe")
+set(CMAKE_C_FLAGS_RELEASE "-g -O2")
+
+# Preprocessor
+add_compile_definitions("$<$<COMPILE_LANGUAGE:C,CXX>:WITHOUT_CXXDEMANGLE>")
+add_compile_definitions("LINUX")
+add_compile_definitions("LITTLE")
+add_compile_definitions("LITTLE_ENDIAN")
+set(FPP_FLAGS_TESTPROGS USE_OPENMP)
+
+# Link
+add_link_options(-fopenmp -ffast-math -ldl -lrt)
+set(CMAKE_AR ar)

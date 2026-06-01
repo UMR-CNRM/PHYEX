@@ -91,6 +91,7 @@ cmake ../../src/fiat -DCMAKE_INSTALL_PREFIX=\$BUILDDIR \\
                      -DCMAKE_CXX_FLAGS=-lstdc++ \\
                      -DCMAKE_BUILD_TYPE=\$level \\
                      -DBUILD_SHARED_LIBS=OFF \\
+                     -DENABLE_DR_HOOK_NVTX=OFF \\
                      -DCMAKE_TOOLCHAIN_FILE=\$BUILDDIR/../arch.ecbuild
 make -j
 make install
@@ -103,6 +104,7 @@ cmake ../../src -DCMAKE_INSTALL_PREFIX=\$BUILDDIR \\
                 -DCMAKE_BUILD_TYPE=\$level \\
                 -DCMAKE_TOOLCHAIN_FILE=\$BUILDDIR/../arch.ecbuild \\
                 -DENABLE_OMP=OFF \\
+                -DENABLE_ACC=OFF \\
                 -DENABLE_PHYEX_BUILD_PROGS=ON \\
                 -DENABLE_SINGLE_PRECISION=ON
 make -j

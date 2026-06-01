@@ -1,0 +1,14 @@
+# Compilation
+set(CMAKE_Fortran_COMPILER mpiifort)
+set(CMAKE_Fortran_FLAGS "-fPIC -i4 -auto -align all -fp-model strict -qopenmp -qopenmp-threadprivate=compat")
+set(CMAKE_Fortran_FLAGS_RELEASE "-g -traceback -O3 -xHost -qopt-zmm-usage=high")
+set(CMAKE_Fortran_FLAGS_DEBUG "-g -traceback -check bounds")
+set(CMAKE_C_COMPILER )
+
+# Preprocessor
+add_compile_definitions("$<$<COMPILE_LANGUAGE:C,CXX>:WITHOUT_CXXDEMANGLE>")
+set(FPP_FLAGS_TESTPROGS USE_OPENMP)
+
+# Link
+add_link_options(-fPIC -i4 -auto)
+set(CMAKE_AR ar)
