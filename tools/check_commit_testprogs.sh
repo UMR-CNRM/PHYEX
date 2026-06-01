@@ -354,7 +354,7 @@ if [ $run == true -a "$perffile" != "" ]; then
       fi
 
       NPROMA=$NPROMA NBLOCKS=$NBLOCKS NTIMES=$NTIMES OMP_NUM_THREADS=${OMP_NUM_THREADS} \
-              $0 -r -t $t -a ${archfile} --no-check --no-perf -e 4 --name $name ${commit}
+              $0 -r -t $t -a ${archfile} --no-check --no-perf -e 4 --name $name --prec ${precision} ${commit}
       file=$TESTDIR/$name/tests/with_${buildSys}/arch_${archfile}/${t}${perf_extrapolation_tag}/Output_run
       if [ -f $file ]; then
         ZTD=$(grep -m 1 "ZTD =" $file | awk '{print $4}')
@@ -406,12 +406,7 @@ if [ $check == true ]; then
       file2=$TESTDIR/${refname}/tests/with_${buildSys}/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run
       if [ ! -f $file2 -a $computeRefIfNeeded == true ]; then
         # The reference has not been run yet, we run it
-        if [ $default_buildSystem == ${buildSys} ]; then
-          buildSysArg=""
-        else
-          buildSysArg="--no${default_buildSystem}"
-        fi
-        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${caseref} ${buildSysArg}
+        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${caseref}
       fi
       mess=""
       te=0
