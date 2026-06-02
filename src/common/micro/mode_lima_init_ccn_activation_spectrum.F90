@@ -75,9 +75,9 @@ REAL(KIND=MNHREAL64)          :: ZMIN  = 0.1E-6_MNHREAL64 ! minimum diameter for
 REAL(KIND=MNHREAL64)          :: ZMAX  = 10.E-6_MNHREAL64 ! maximum diameter for root search (m)
 REAL                          :: ZPREC = 1.E-8  ! precision wanted for root (m)
 !
-REAL, DIMENSION(IM)           :: ZS             ! saturation ratio (S=1.01 for a 1% supersaturation)
+REAL, DIMENSION(IM), SAVE     :: ZS             ! saturation ratio (S=1.01 for a 1% supersaturation)
 REAL, DIMENSION(IM)           :: ZDCRIT         ! critical diameters (m) for the chosen S values
-REAL, DIMENSION(IM)           :: ZNCCN          ! fraction of the aerosols larger than ZDCRIT (ie activable)
+REAL, DIMENSION(IM), SAVE     :: ZNCCN          ! fraction of the aerosols larger than ZDCRIT (ie activable)
 REAL, DIMENSION(1)            :: ZT             ! temperature
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE

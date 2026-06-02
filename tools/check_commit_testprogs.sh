@@ -121,7 +121,7 @@ EOF
     sbatch --wait -o $outtmp -e $error $myscript
     #Move job accounting in Stderrr (if present)
     str='#########################################'
-    num=$(grep -n -m 1 $str $outtmp)
+    num=$(grep --binary-files=text -n -m 1 $str $outtmp)
     if [ "$num" != "" ]; then
       #Acounting is present in this run
       num=$(echo $num | cut -d : -f 1)
