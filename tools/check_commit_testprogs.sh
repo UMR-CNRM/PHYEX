@@ -285,12 +285,12 @@ if [ $run == true ]; then
           exit $stat
         fi
         if [ $perf == true ]; then
-            firstLine=$(grep -m 1 -n "^ *1" drhook.prof.0 | cut -d: -f1)
+            firstLine=$(grep -m 1 -n "^ *1" drhook.prof.1 | cut -d: -f1)
             python3 -c "import numpy, pandas
 d = {'time': ('<f4', ('mean', )), 'self': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
      'total': ('<f4', ('mean', 'max', 'min', 'std', 'sum')), 'calls': ('<i4', ('sum', )),
      'self_per_call': ('<f4', ('mean', )), 'total_per_call': ('<f4', ('mean', )), 'routine': ('U256', '')}
-arraynp = numpy.loadtxt('drhook.prof.0', dtype=[(k, v[0]) for (k, v) in d.items()],
+arraynp = numpy.loadtxt('drhook.prof.1', dtype=[(k, v[0]) for (k, v) in d.items()],
                         converters={8: lambda s: s.split(b'@')[0].lstrip(b'*')},
                         skiprows=$firstLine - 1, usecols=[1, 3, 4, 5, 6, 7, 8], encoding='bytes')
 df = pandas.DataFrame(arraynp).groupby('routine').agg(

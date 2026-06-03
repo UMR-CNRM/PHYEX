@@ -1,7 +1,7 @@
 # This file contains the generic functions needed to compile PHYEX
 # It cannot be used directly, instead you can use script under one of the with_* subdirectories
 
-fiat_version=1.5.1
+fiat_version=1.6.2
 fiat_gh_user=ecmwf-ifs
 
 export PHYEXCONF=${PHYEXCONF:-${HOME}/.phyex}
