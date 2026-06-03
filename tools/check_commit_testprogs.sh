@@ -406,7 +406,7 @@ if [ $check == true ]; then
       file2=$TESTDIR/${refname}/tests/with_${buildSys}/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run
       if [ ! -f $file2 -a $computeRefIfNeeded == true ]; then
         # The reference has not been run yet, we run it
-        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${caseref}
+        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf --prec ${precision} ${caseref}
       fi
       mess=""
       te=0
