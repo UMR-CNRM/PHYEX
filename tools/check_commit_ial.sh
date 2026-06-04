@@ -59,6 +59,7 @@ default_expand=true
 extra_doc="The PHYEXROOTPACK environment variable, if set, is used as the argument
 of the --rootpack option of ial-git2pack/ial-to_pack, for incremental packs."
 enable_prepCodeOpts=true
+enable_full=true
 command_line $@
 
 ##############################
