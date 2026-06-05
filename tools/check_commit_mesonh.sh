@@ -5,7 +5,6 @@
 # - runs tests and checks if results are identical to a given version
 
 #The folowing environment variables can be defined:
-# TARGZDIR: directory where tar.gz files are searched for
 # MNHPACK: directory where tests are build
 
 
@@ -19,16 +18,21 @@ PHYEXTOOLSDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #######################
 
 #About the tests:
-# - allowedTests is the list of allowed tests which can depend on platform, if we ask to perform an action
-#   with a test not in the allowedTests list, the action is ignored
+# - fileFromCase is an array defining allowed tests which can depend on platform, if we ask to perform an action
+#   with a test not in the fileFromCase array, the action is ignored. First argument is the output file of the
+#   run step and the second one is an optional diachronic file resulting from the run step.
 # - defaultTest is the list of tests to perform when no '-t' option is provided on the command line.
-allowedTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, 007_16janvier/008_run2_lredf, 
-              COLD_BUBBLE/002_mesonh, ARMLES/RUN, COLD_BUBBLE_3D/002_mesonh, OCEAN_LES/004_run2,
-              014_LIMA/002_mesonh"
-defaultTest="007_16janvier/008_run2"
+declare -A fileFromCase=(
+  ["KTEST/007_16janvier"]="008_run2/16JAN.1.12B18.001.nc 008_run2/16JAN.1.12B18.000.nc"
+  ["INTEGRATION_CASES/LOCAL/ARMCU_1D_CONDSAMP"]="002_mesonh/ARM__.1.CEN4T.001.nc 002_mesonh/ARM__.1.CEN4T.001.nc"
+  ["INTEGRATION_CASES/HPC/ARMCU_LES/DEAR"]="ARM__.1.CEN4T.001.nc ARM__.1.CEN4T.000.nc"
+  ["KTEST/014_LIMA"]="002_mesonh/XPREF.1.SEG01.002.nc 002_mesonh/XPREF.1.SEG01.000.nc"
+  ["INTEGRATION_CASES/HPC/OCEAN_LES"]="004_run2/SPWAN.2.25m00.001.nc"
+)
+allowedTests=$(IFS=','; echo "${!fileFromCase[*]}")
+defaultTest="KTEST/007_16janvier"
 
 export MNHPACK=${MNHPACK:=$HOME/MesoNH/PHYEX}
-export TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
 
 ################################
 #### COMMAND LINE ARGUMENTS ####
@@ -84,14 +88,10 @@ if [ $packcreation == true ]; then
 
     # Prepare the pack
     cd $MNHPACK
-    mkdir ${mnhdir}_$$
-    cd ${mnhdir}_$$
-    cp $TARGZDIR/${refversion}.tar.gz .
-    tar xfz ${refversion}.tar.gz 
-    rm ${refversion}.tar.gz
-    mv ${refversion} ../$mnhdir
+    git clone $(json_dictkey2value "$json_content" 'MESONHrepo' 'git@github.com:ACCORD-NWP/IAL.git') ${mnhdir}
+    cd ${mnhdir}
+    git checkout $(json_dictkey2value "$json_content" 'MESONHcommit' 'XXXXXXX')
     cd ..
-    rmdir ${mnhdir}_$$
   fi
 fi
 if [ $packupdate == true -o $packcreation == true ]; then
@@ -174,14 +174,6 @@ if [ $packupdate == true -o $packcreation == true ]; then
 
     # Remove binaries
     rm -f $MNHPACK/$mnhdir/exe/*
-
-    # Remove execution results
-    for t in $(echo $allowedTests | sed 's/,/ /g'); do
-      case1=$(echo $t | cut -d / -f 1)
-      case2=$(echo $t | cut -d / -f 2)
-      casedir=$MNHPACK/$mnhdir/MY_RUN/KTEST/$case1
-      [ -d $casedir/$case2 ] && rm -rf $casedir/$case2
-    done
   fi
 fi
 
@@ -216,10 +208,7 @@ if [ $run == true ]; then
   #Cleaning to suppress old results that may be confusing in case of a crash during the run
   if [ $onlyIfNeeded == false ]; then
     for t in $(echo $tests | sed 's/,/ /g'); do
-      case1=$(echo $t | cut -d / -f 1)
-      case2=$(echo $t | cut -d / -f 2)
-      casedir=$MNHPACK/$mnhdir/MY_RUN/KTEST/$case1
-      [ -d $casedir/$case2 ] && rm -rf $casedir/$case2
+      (cd $MNHPACK/$mnhdir/MY_RUN/$t; make clean)
     done
   fi
 
@@ -227,10 +216,9 @@ if [ $run == true ]; then
   firstrun=1
   for t in $(echo $tests | sed 's/,/ /g'); do
     if echo $allowedTests | grep -w $t > /dev/null; then #test is allowed on this plateform
-      case1=$(echo $t | cut -d / -f 1)
-      case2=$(echo $t | cut -d / -f 2)
-      casedir=$MNHPACK/$mnhdir/MY_RUN/KTEST/$case1
-      if [ ! -d $casedir/$case2 ]; then #We do not enter systematically this part if onlyIfNeeded=true
+      casedir=$MNHPACK/$mnhdir/MY_RUN/$t
+      read -r file1 file2 <<< "${fileFromCase[$t]}"
+      if [ ! -d $casedir/$file1 ]; then #We do not enter systematically this part if onlyIfNeeded=true
         if [ $firstrun -eq 1 ]; then
           echo "### Running of commit $commit"
           firstrun=0
@@ -241,47 +229,20 @@ if [ $run == true ]; then
           exit 6
         fi
 
-        #If the test case didn't exist in the tar.gz, we copy it from from the reference version
-        #and we suppress all the test directories for this case
-        if [ ! -d $casedir ]; then
-          cp -r $MNHPACK/${refversion}/MY_RUN/KTEST/$case1 $casedir/
-          for newt in $(echo $allowedTests | sed 's/,/ /g'); do
-            newcase1=$(echo $newt | cut -d / -f 1)
-            newcase2=$(echo $newt | cut -d / -f 2)
-            if [ $case1 == $newcase1 ]; then
-              [ -d $casedir/$newcase2 ] && rm -rf $casedir/$newcase2
-            fi
-          done
-        fi
-
-        #Loop on the subdirectories to replace them by links to their reference version
-        cd $casedir
-        for d in *; do
-          if [[ -d "$d" || ( -L "$d" && ! -e "$d" ) ]]; then #directory (or a link to a directory) or a broken link
-            if ! echo $allowedTests | grep ${case1}/$d > /dev/null; then
-              #This directory is not a test case but might be needed to run the test case,
-              #we take the reference version
-              rm -rf $d
-              ln -s $MNHPACK/${refversion}/MY_RUN/KTEST/$case1/$d 
-            fi
-          fi
-        done
-
-        #We create the test case directory
-        cp -r $MNHPACK/${refversion}/MY_RUN/KTEST/$case1/${case2} .
-
         #execution
-        cd ${case2}
+        cd ${casedir}
         if [ $profile_sourced -eq 0 ]; then
           set +e #file ends with a test that can return false
           . $MNHPACK/$mnhdir/conf/profile_mesonh-*
           set -e
           profile_sourced=1
         fi
-        ./clean_mesonh_xyz
         set +o pipefail #We want to go through all tests
         t1=$(($(date +%s%N)/1000)) #current time in milliseconds
-        ./run_mesonh_xyz | tee Output_run
+        export POSTRUN=echo #to disable plotting
+        export PHYEX_REDUCED_GRID=yes #to reduce the grid size for some tests
+        #echo yes to accept the dowloading of PGD files
+        echo yes | make all 2>&1 | tee Output_run
         t2=$(($(date +%s%N)/1000))
         set -o pipefail
         if [ "$perffile" != "" ]; then
@@ -309,46 +270,17 @@ if [ $check == true ]; then
       else
         refname=${refversion}-$caseref
       fi
-      case1=$(echo $t | cut -d / -f 1)
-      case2=$(echo $t | cut -d / -f 2)
-      path_user=$MNHPACK/$mnhdir/MY_RUN/KTEST/$case1/$case2
-      path_ref=$MNHPACK/$refname/MY_RUN/KTEST/$case1/$case2
-      file3=""
-      file4=""
-      if [ $case1 == 007_16janvier ]; then
-        file1=$path_user/16JAN.1.12B18.001.nc 
-        file2=$path_ref/16JAN.1.12B18.001.nc
-        file3=$path_user/16JAN.1.12B18.000.nc 
-        file4=$path_ref/16JAN.1.12B18.000.nc
-        bit_diff=40500
-      elif [ $case1 == COLD_BUBBLE ]; then
-        file1=$path_user/BUBBL.1.CEN4T.001.nc
-        file2=$path_ref/BUBBL.1.CEN4T.001.nc
-        bit_diff=27300
-      elif [ $case1 == OCEAN_LES ]; then
-        file1=$path_user/SPWAN.2.25m00.001.nc
-        file2=$path_ref/SPWAN.2.25m00.001.nc
-        bit_diff=18400
-      elif [ $case1 == COLD_BUBBLE_3D ]; then
-        file1=$path_user/BUBBL.1.CEN4T.001.nc
-        file2=$path_ref/BUBBL.1.CEN4T.001.nc
-        file3=$path_user/BUBBL.1.CEN4T.000.nc
-        file4=$path_ref/BUBBL.1.CEN4T.000.nc
-        bit_diff=27300
-      elif [ $case1 == ARMLES ]; then
-        file1=$path_user/ARM__.1.CEN4T.001.nc
-        file2=$path_ref/ARM__.1.CEN4T.001.nc
-        file3=$path_user/ARM__.1.CEN4T.000.nc
-        file4=$path_ref/ARM__.1.CEN4T.000.nc
-        bit_diff=71100
-      elif [ $case1 == 014_LIMA ]; then
-        file1=$path_user/XPREF.1.SEG01.002.nc
-        file2=$path_ref/XPREF.1.SEG01.002.nc
-        file3=$path_user/XPREF.1.SEG01.000.nc
-        file4=$path_ref/XPREF.1.SEG01.000.nc
-        bit_diff=32200
+      read -r file1 file2 <<< "${fileFromCase[$t]}"
+      path_user=$MNHPACK/$mnhdir/MY_RUN/$t
+      path_ref=$MNHPACK/$refname/MY_RUN/$t
+      file1u=$path_user/$file1
+      file1r=$path_ref/$file1
+      if [ "$file2" != "" ]; then
+        file2u=$path_user/$file2
+        file2r=$path_ref/$file2
       else
-        echo "cas $t non reconnu"
+        file2u=""
+        file2r=""
       fi
 
       if [ ! -d $path_user ]; then
@@ -357,10 +289,10 @@ if [ $check == true ]; then
       fi
 
       #Run the reference if needed
-      if [ ! -f $file2 -a $computeRefIfNeeded == true ]; then
+      if [ ! -f $file1r -a $computeRefIfNeeded == true ]; then
           #We must call it in another shell because of the potentially loaded MesoNH profile
           #because we cannot load two MesoNH profiles in the same shell
-          env -i $SHELL -l -c "MNHPACK=${MNHPACK} TARGZDIR=${TARGZDIR} \
+          env -i $SHELL -l -c "MNHPACK=${MNHPACK} \
                                PHYEXREPOuser=${PHYEXREPOuser} PHYEXREPOprotocol=${PHYEXREPOprotocol} \
                                $0 -p -c -r -t $t --onlyIfNeeded ${caseref}"
       fi
@@ -371,30 +303,30 @@ if [ $check == true ]; then
       fi
 
       #Comparison
-      if [ -f $file1 -a -f $file2 ]; then
+      if [ -f $file1u -a -f $file1r ]; then
         # Compare variable of both Synchronous and Diachronic files with printing difference
         echo "Comparison for case $t..."
         set +e
-        if [ "$file3" == "" ]; then
-          $PHYEXTOOLSDIR/compare.py --backup $file1 $file2
+        if [ "$file2u" == "" ]; then
+          $PHYEXTOOLSDIR/compare.py --backup $file1u $file1r
           r=$?
         else
-          $PHYEXTOOLSDIR/compare.py --backup $file1 $file2 --diac $file3 $file4
+          $PHYEXTOOLSDIR/compare.py --backup $file1u $file1r --diac $file2u $file2r
           r=$?
         fi
         set -e
         allt=$(($allt+$r))
 
-        #Check bit-repro before date of creation of Synchronous file from ncdump of all values
+        #Check bit-repro except date of creation of Synchronous file from ncdump of all values
         #(pb with direct .nc file checks)
         set +e
-        $PHYEXTOOLSDIR/compare.py --ncdump $file1 $file2 $bit_diff
+        $PHYEXTOOLSDIR/compare.py --ncdump $file1u $file1r
         r=$?
         set -e
         allt=$(($allt+$r))
       else
-        [ ! -f $file1 ] && echo "  $file1 is missing"
-        [ ! -f $file2 ] && echo "  $file2 is missing"
+        [ ! -f $file1u ] && echo "  $file1u is missing"
+        [ ! -f $file1r ] && echo "  $file1r is missing"
         allt=$(($allt+1))
       fi
     fi

@@ -369,9 +369,11 @@ def comp_binary(f1, f2, offset):
         print(p.stdout)
     return p.returncode
 
-def comp_ncdump(f1, f2, nbytes):
-    ncdumps = [subprocess.run(['ncdump', f], capture_output=True, encoding='UTF8').stdout[:int(nbytes)]
+def comp_ncdump(f1, f2):
+    ncdumps = [subprocess.run(['ncdump', f], capture_output=True, encoding='UTF8').stdout
                for f in (f1, f2)]
+    ncdumps = ['\n'.join(l for l in d.splitlines() if not re.match(r'^\s+:history = .*;$', l))
+               for d in ncdumps]
     diff = ''.join(difflib.unified_diff(*[ncdumps[i].splitlines(keepends=True) for i in (0, 1)]))
     if diff != '':
         print(diff)
@@ -413,9 +415,9 @@ if __name__ == "__main__":
                        type=str, help="NODE files (user and reference) to compare norms")
    parser.add_argument('--binary', nargs=3, metavar=('BIN_USER', 'BIN_REF', 'OFFSET'),
                        type=str, help="Binary files (user and reference) and offset")
-   parser.add_argument('--ncdump', nargs=3, metavar=('NC_USER', 'NC_REF', 'BYTES'),
+   parser.add_argument('--ncdump', nargs=2, metavar=('NC_USER', 'NC_REF'),
                        type=str, help="Netcdf files (user and reference) whose ncdump output" + \
-                                      "first bytes must be compared, with number of bytes")
+                                      "must be compared")
    parser.add_argument('--testprogs', nargs=2, metavar=('LST_USER', 'LST_REF'),
                        type=str, help="Testprogs listing (user and ref)")
    args = parser.parse_args()
