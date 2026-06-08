@@ -292,7 +292,7 @@ if [ $check == true ]; then
       if [ ! -f $file1r -a $computeRefIfNeeded == true ]; then
           #We must call it in another shell because of the potentially loaded MesoNH profile
           #because we cannot load two MesoNH profiles in the same shell
-          env -i $SHELL -l -c "MNHPACK=${MNHPACK} \
+          env -i $SHELL -l -c "HOME=${HOME} PATH=${PATH} MNHPACK=${MNHPACK} \
                                PHYEXREPOuser=${PHYEXREPOuser} PHYEXREPOprotocol=${PHYEXREPOprotocol} \
                                $0 -p -c -r -t $t --onlyIfNeeded ${caseref}"
       fi
