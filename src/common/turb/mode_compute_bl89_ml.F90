@@ -6,6 +6,9 @@ CONTAINS
              PTKEM_DEP,PG_O_THVREF,PVPT,KK,OUPORDN,OFLUX,PSHEAR,PLWORK)
 
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
+
+!$ACDC singlecolumn --dummy
+
 !     ###################################################################
 !!
 !!     COMPUTE_BL89_ML routine to:

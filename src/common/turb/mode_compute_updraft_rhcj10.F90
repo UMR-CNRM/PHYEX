@@ -25,6 +25,9 @@ SUBROUTINE COMPUTE_UPDRAFT_RHCJ10(D,CST,NEBN,PARAMMF,TURBN,CSTURB,&
                                  PEMF,PDETR,PENTR,                &
                                  PBUO_INTEG,KKLCL,KKETL,KKCTL,    &
                                  PDEPTH     )
+
+!$ACDC singlecolumn --dummy
+
 !     #################################################################
 !!
 !!****  *COMPUTE_UPDRAFT_RHCJ10* - calculates caracteristics of the updraft

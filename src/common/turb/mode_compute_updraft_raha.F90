@@ -24,6 +24,8 @@ CONTAINS
                                  PBUO_INTEG,KKLCL,KKETL,KKCTL,       &
                                  PDEPTH     )
 
+!$ACDC singlecolumn --dummy
+
 !     #################################################################
 !!
 !!****  *COMPUTE_UPDRAF_RAHA* - calculates caracteristics of the updraft 

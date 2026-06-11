@@ -25,6 +25,8 @@ CONTAINS
                                  PBUO_INTEG,KKLCL,KKETL,KKCTL,    &
                                  PDEPTH, PDX, PDY     )
 
+!$ACDC singlecolumn --dummy
+
 !     #################################################################
 !!
 !!****  *COMPUTE_UPDRAFT* - calculates caracteristics of the updraft 
