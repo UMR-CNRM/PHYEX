@@ -1,6 +1,7 @@
 # VI temp files
 .*.swp
 .*.swo
+.vimgit/
 
 # Eclipse project files
 /.cproject
