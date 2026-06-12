@@ -4,6 +4,9 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 MODULE MODE_CLOUD_MODIF_LM
+
+!$ACDC singlecolumn --dummy
+
 IMPLICIT NONE
 CONTAINS
   SUBROUTINE CLOUD_MODIF_LM (D, CST, CSTURB, TURBN, TPFILE, TZFIELD, KRR, KRRI, &

@@ -3,6 +3,9 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
 MODULE MODE_TRIDIAG_TKE
+
+!$ACDC singlecolumn
+
 IMPLICIT NONE
 CONTAINS       
 SUBROUTINE TRIDIAG_TKE(D,PVARM,PA,PTSTEP,PEXPL,PIMPL, &
