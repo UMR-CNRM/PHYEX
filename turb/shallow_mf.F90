@@ -24,6 +24,9 @@
                 PFRAC_UP,PEMF,PDETR,PENTR,                            &
                 KKLCL,KKETL,KKCTL,PDX,PDY,PRSVS,PSVMIN,               &
                 BUCONF, TBUDGETS, KBUDGETS                            )
+
+!$ACDC singlecolumn
+
 !     #################################################################
 !!
 !!****  *SHALLOW_MF* - 
