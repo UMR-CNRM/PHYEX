@@ -4,6 +4,9 @@
 !MNH_LIC for details. version 1.
 !    #######################  
      MODULE MODE_ROTATE_WIND
+
+!$ACDC singlecolumn --dummy
+
 !    #######################
 IMPLICIT NONE
 CONTAINS

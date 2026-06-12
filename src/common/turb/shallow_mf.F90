@@ -25,7 +25,7 @@
                 KKLCL,KKETL,KKCTL,PDX,PDY,PRSVS,PSVMIN,               &
                 BUCONF, TBUDGETS, KBUDGETS                            )
 
-!$ACDC singlecolumn
+!$ACDC singlecolumn --nocreate-interface
 
 !     #################################################################
 !!

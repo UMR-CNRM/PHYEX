@@ -5,6 +5,9 @@
 !-----------------------------------------------------------------
 !    #################### 
      MODULE MODE_PRANDTL
+
+!$ACDC singlecolumn
+
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !    #################### 
 !
@@ -18,8 +21,6 @@ USE MODD_TURB_n,     ONLY : TURB_t
 USE MODD_DIMPHYEX,   ONLY : DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY : JPVEXT_TURB
 !
-USE MODE_SHUMAN_PHY, ONLY: MZM_PHY,MZF_PHY
-USE MODE_GRADIENT_M_PHY, ONLY: GZ_M_W_PHY
 IMPLICIT NONE
 !----------------------------------------------------------------------------
 CONTAINS
@@ -154,6 +155,8 @@ USE MODE_EMOIST,         ONLY: EMOIST
 USE MODE_ETHETA,         ONLY: ETHETA
 USE MODE_GRADIENT_M_PHY, ONLY: GX_M_M_PHY, GY_M_M_PHY
 USE MODE_IO_FIELD_WRITE_PHY, ONLY: IO_FIELD_WRITE_PHY
+USE MODE_SHUMAN_PHY     ,ONLY: MZM_PHY
+USE MODE_GRADIENT_M_PHY ,ONLY: GZ_M_W_PHY
 !
 ! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
 #ifdef MNH_COMPILER_CCE
@@ -1293,6 +1296,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_WTH2_O_DDTDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_WTH_WTH2_O_DDTDZ
 !----------------------------------------------------------------------------
 SUBROUTINE M3_WTH_W2TH(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PKEFF,PTKE,PM3_WTH_W2TH)
+  USE MODE_SHUMAN_PHY, ONLY: MZM_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1329,6 +1333,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WTH_W2TH',1,ZHOOK_HANDLE)
 END SUBROUTINE M3_WTH_W2TH
 !----------------------------------------------------------------------------
 SUBROUTINE D_M3_WTH_W2TH_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PBLL_O_E,PETHETA,PKEFF,PTKE,PD_M3_WTH_W2TH_O_DDTDZ)
+  USE MODE_SHUMAN_PHY, ONLY: MZM_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1370,6 +1375,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_W2TH_O_DDTDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_WTH_W2TH_O_DDTDZ
 !----------------------------------------------------------------------------
 SUBROUTINE M3_WTH_W2R(D,CSTURB,TURBN,PD,PKEFF,PTKE,PBLL_O_E,PEMOIST,PDTDZ,PM3_WTH_W2R)
+  USE MODE_SHUMAN_PHY, ONLY: MZM_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1407,6 +1413,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WTH_W2R',1,ZHOOK_HANDLE)
 END SUBROUTINE M3_WTH_W2R
 !----------------------------------------------------------------------------
 SUBROUTINE D_M3_WTH_W2R_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PKEFF,PTKE,PBLL_O_E,PEMOIST,PD_M3_WTH_W2R_O_DDTDZ)
+  USE MODE_SHUMAN_PHY, ONLY: MZM_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1447,6 +1454,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_W2R_O_DDTDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_WTH_W2R_O_DDTDZ
 !----------------------------------------------------------------------------
 SUBROUTINE M3_WTH_WR2(D,CSTURB,TURBN,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST,PDTDZ,PM3_WTH_WR2)
+  USE MODE_SHUMAN_PHY, ONLY: MZM_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1494,6 +1502,7 @@ END SUBROUTINE M3_WTH_WR2
 !----------------------------------------------------------------------------
 SUBROUTINE D_M3_WTH_WR2_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,&
                                &PBETA,PLEPS,PEMOIST,PD_M3_WTH_WR2_O_DDTDZ)
+  USE MODE_SHUMAN_PHY, ONLY: MZM_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1543,6 +1552,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_WR2_O_DDTDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_WTH_WR2_O_DDTDZ
 !----------------------------------------------------------------------------
 SUBROUTINE M3_WTH_WTHR(D,CSTURB,TURBN,PREDR1,PD,PKEFF,PTKE,PSQRT_TKE,PBETA,PLEPS,PEMOIST,PM3_WTH_WTHR)
+  USE MODE_SHUMAN_PHY, ONLY: MZM_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1623,6 +1633,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_WTHR_O_DDTDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_WTH_WTHR_O_DDTDZ
 !----------------------------------------------------------------------------
 SUBROUTINE M3_TH2_W2TH(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PDTDZ,PLM,PLEPS,PTKE,PM3_TH2_W2TH)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1666,6 +1677,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_W2TH',1,ZHOOK_HANDLE)
 END SUBROUTINE M3_TH2_W2TH
 !----------------------------------------------------------------------------
 SUBROUTINE D_M3_TH2_W2TH_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PLM,PLEPS,PTKE,OUSERV,PD_M3_TH2_W2TH_O_DDTDZ)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1731,6 +1743,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_W2TH_O_DDTDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_TH2_W2TH_O_DDTDZ
 !----------------------------------------------------------------------------
 SUBROUTINE M3_TH2_WTH2(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PM3_TH2_WTH2)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1772,6 +1785,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_WTH2',1,ZHOOK_HANDLE)
 END SUBROUTINE M3_TH2_WTH2
 !----------------------------------------------------------------------------
 SUBROUTINE D_M3_TH2_WTH2_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PD_M3_TH2_WTH2_O_DDTDZ)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1817,6 +1831,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_WTH2_O_DDTDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_TH2_WTH2_O_DDTDZ
 !----------------------------------------------------------------------------
 SUBROUTINE M3_TH2_W2R(D,CSTURB,TURBN,PD,PLM,PLEPS,PTKE,PBLL_O_E,PEMOIST,PDTDZ,PM3_TH2_W2R)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1860,6 +1875,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_W2R',1,ZHOOK_HANDLE)
 END SUBROUTINE M3_TH2_W2R
 !----------------------------------------------------------------------------
 SUBROUTINE D_M3_TH2_W2R_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PEMOIST,PDTDZ,PD_M3_TH2_W2R_O_DDTDZ)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1906,6 +1922,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_W2R_O_DDTDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_TH2_W2R_O_DDTDZ
 !----------------------------------------------------------------------------
 SUBROUTINE M3_TH2_WR2(D,CSTURB,TURBN,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ,PM3_TH2_WR2)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1948,6 +1965,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_WR2',1,ZHOOK_HANDLE)
 END SUBROUTINE M3_TH2_WR2
 !----------------------------------------------------------------------------
 SUBROUTINE D_M3_TH2_WR2_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ,PD_M3_TH2_WR2_O_DDTDZ)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -1993,6 +2011,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_WR2_O_DDTDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_TH2_WR2_O_DDTDZ
 !----------------------------------------------------------------------------
 SUBROUTINE M3_TH2_WTHR(D,CSTURB,TURBN,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ,PM3_TH2_WTHR)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -2036,6 +2055,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_WTHR',1,ZHOOK_HANDLE)
 END SUBROUTINE M3_TH2_WTHR
 !----------------------------------------------------------------------------
 SUBROUTINE D_M3_TH2_WTHR_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ,PD_M3_TH2_WTHR_O_DDTDZ)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -2081,6 +2101,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_WTHR_O_DDTDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_TH2_WTHR_O_DDTDZ
 !----------------------------------------------------------------------------
 SUBROUTINE M3_THR_WTHR(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PM3_THR_WTHR)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -2122,6 +2143,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_THR_WTHR',1,ZHOOK_HANDLE)
 END SUBROUTINE M3_THR_WTHR
 !----------------------------------------------------------------------------
 SUBROUTINE D_M3_THR_WTHR_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PD_M3_THR_WTHR_O_DDTDZ)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -2166,6 +2188,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WTHR_O_DDTDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_THR_WTHR_O_DDTDZ
 !----------------------------------------------------------------------------
 SUBROUTINE M3_THR_WTH2(D,CSTURB,TURBN,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ,PM3_THR_WTH2)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -2209,6 +2232,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_THR_WTH2',1,ZHOOK_HANDLE)
 END SUBROUTINE M3_THR_WTH2
 !----------------------------------------------------------------------------
 SUBROUTINE D_M3_THR_WTH2_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ,PD_M3_THR_WTH2_O_DDTDZ)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -2255,6 +2279,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WTH2_O_DDTDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_THR_WTH2_O_DDTDZ
 !----------------------------------------------------------------------------
 SUBROUTINE D_M3_THR_WTH2_O_DDRDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PD_M3_THR_WTH2_O_DDRDZ)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -2299,6 +2324,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WTH2_O_DDRDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_THR_WTH2_O_DDRDZ
 !----------------------------------------------------------------------------
 SUBROUTINE M3_THR_W2TH(D,CSTURB,TURBN,PREDR1,PD,PLM,PLEPS,PTKE,PDRDZ,PM3_THR_W2TH)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -2340,6 +2366,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_THR_W2TH',1,ZHOOK_HANDLE)
 END SUBROUTINE M3_THR_W2TH
 !----------------------------------------------------------------------------
 SUBROUTINE D_M3_THR_W2TH_O_DDTDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PDRDZ,PETHETA,PD_M3_THR_W2TH_O_DDTDZ)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN
@@ -2386,6 +2413,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_W2TH_O_DDTDZ',1,ZHOOK_HANDLE)
 END SUBROUTINE D_M3_THR_W2TH_O_DDTDZ
 !----------------------------------------------------------------------------
 SUBROUTINE D_M3_THR_W2TH_O_DDRDZ(D,CSTURB,TURBN,PREDTH1,PREDR1,PD,PLM,PLEPS,PTKE,PD_M3_THR_W2TH_O_DDRDZ)
+  USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
   TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
   TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
   TYPE(TURB_t),                    INTENT(IN)    :: TURBN

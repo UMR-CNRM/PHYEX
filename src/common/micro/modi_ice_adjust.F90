@@ -20,6 +20,9 @@ INTERFACE
                             &POUT_RV, POUT_RC, POUT_RI, POUT_TH,               &
                             &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,           &
                             &PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF)
+
+!$ACDC singlecolumn
+
 USE MODD_BUDGET,         ONLY: TBUDGETDATA_PTR, TBUDGETCONF_T
 USE MODD_CST,            ONLY: CST_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t

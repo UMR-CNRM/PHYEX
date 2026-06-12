@@ -14,7 +14,7 @@
                            &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                                         &
                            &PICE_CLD_WGT)
 
-!$ACDC singlecolumn
+!$ACDC singlecolumn --nocreate-interface
 
 !   ################################################################################
 !

@@ -4,6 +4,9 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 MODULE MODE_TURB_VER_SV_FLUX
+
+!$ACDC singlecolumn --dummy
+
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,TLES,ONOMIXLG,       &
