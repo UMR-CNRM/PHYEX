@@ -25,7 +25,7 @@ CONTAINS
                                  PBUO_INTEG,KKLCL,KKETL,KKCTL,    &
                                  PDEPTH, PDX, PDY     )
 
-!$ACDC singlecolumn --dummy
+!$ACDC singlecolumn
 
 !     #################################################################
 !!

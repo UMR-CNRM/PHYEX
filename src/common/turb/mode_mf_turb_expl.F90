@@ -14,6 +14,8 @@ CONTAINS
                 PFLXZTHLMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF,&
                 PFRAC_UP)
 
+!$ACDC singlecolumn --dummy
+
 !     #################################################################
 !
 !

@@ -8,6 +8,9 @@ CONTAINS
       SUBROUTINE THL_RT_FROM_TH_R_MF( D, CST, KRR, KRRL, KRRI,       &
                                       PTH, PR, PEXN, &
                                       PTHL, PRT                      )
+
+!$ACDC singlecolumn
+
 !     #################################################################
 !
 !!
@@ -84,7 +87,7 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !----------------------------------------------------------------------------
 !
 !
-IF (LHOOK) CALL DR_HOOK('THL_RT_FRM_TH_R_MF',0,ZHOOK_HANDLE)
+IF (LHOOK) CALL DR_HOOK('THL_RT_FROM_TH_R_MF',0,ZHOOK_HANDLE)
 !
 IIJE=D%NIJE
 IIJB=D%NIJB
@@ -142,6 +145,6 @@ ELSE
   PTHL(IIJB:IIJE,:) = PTH(IIJB:IIJE,:)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END IF
-IF (LHOOK) CALL DR_HOOK('THL_RT_FRM_TH_R_MF',1,ZHOOK_HANDLE)
+IF (LHOOK) CALL DR_HOOK('THL_RT_FROM_TH_R_MF',1,ZHOOK_HANDLE)
 END SUBROUTINE THL_RT_FROM_TH_R_MF
 END MODULE MODE_THL_RT_FROM_TH_R_MF

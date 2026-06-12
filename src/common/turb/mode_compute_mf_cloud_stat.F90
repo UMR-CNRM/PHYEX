@@ -16,6 +16,8 @@ CONTAINS
                             &PDZZ, PTHM, PEXNM, &
                             &PEMF, PTHL_UP, PRT_UP,&
                             &PSIGMF)
+!$ACDC singlecolumn --dummy
+
 !     #################################################################
 !!
 !!****  *COMPUTE_MF_CLOUD_STAT* -

@@ -7,7 +7,7 @@ CONTAINS
 
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 
-!$ACDC singlecolumn --dummy
+!$ACDC singlecolumn
 
 !     ###################################################################
 !!
