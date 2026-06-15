@@ -5,6 +5,9 @@ CONTAINS
       SUBROUTINE CONVECT_CONDENS( CST, D, CONVPAR,                        &
                                   PICE, PEPS0, PPRES, PTHL, PRW, PRCO, PRIO, PZ, &
                                   PT, PEW, PRC, PRI, PLV, PLS, PCPH   )
+
+!$ACDC singlecolumn
+
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #############################################################################
 !

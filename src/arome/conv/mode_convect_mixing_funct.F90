@@ -4,6 +4,8 @@ CONTAINS
 !     ######spl
       SUBROUTINE CONVECT_MIXING_FUNCT( D,  &
                                        PMIXC, KMF, PER, PDR )
+!$ACDC singlecolumn
+
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
