@@ -7,6 +7,9 @@ CONTAINS
                                         PRV, PW, PZ, PTKECLS,                &
                                         PTHLCL, PTLCL, PRVLCL, PWLCL, PZLCL, &
                                         PTHVELCL, KLCL, KDPL, KPBL, OTRIG)
+
+!$ACDC singlecolumn
+
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ########################################################################
 !

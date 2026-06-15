@@ -9,6 +9,8 @@ CONTAINS
                                       KLCL, KDPL, KPBL, KCTL,                     &
                                       PUMF, PUER, PUDR, PUTHL, PURW,              &
                                       PURC, PURI, PCAPE, PTIMEC, KFTSTEPS         )
+!$ACDC singlecolumn
+
      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !    ##############################################################################
 !

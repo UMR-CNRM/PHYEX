@@ -11,6 +11,9 @@ CONTAINS
       SUBROUTINE COMPUTE_MF_CLOUD_DIRECT(D, PARAMMF, &
                                         &KKLCL, PFRAC_UP, PRC_UP, PRI_UP,&
                                         &PRC_MF, PRI_MF, PCF_MF, PWEIGHT_MF_CLOUD)
+
+!$ACDC singlecolumn
+
 !     #################################################################
 !!
 !!****  *COMPUTE_MF_CLOUD_DIRECT* -

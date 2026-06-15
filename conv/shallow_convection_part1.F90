@@ -8,6 +8,9 @@
                                   PCH1, PCH1TEN, PTHT, PSTHV, PSTHES,  &
                                   KSDPL, KSPBL, KSLCL, PSTHLCL, PSTLCL,&
                                   PSRVLCL, PSWLCL, PSZLCL, PSTHVELCL, OTRIG1)
+
+!$ACDC singlecolumn --nocreate-interface
+
     USE YOMHOOK , ONLY : LHOOK, JPHOOK, DR_HOOK
 !   ###############################################################################
 !

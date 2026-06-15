@@ -1,4 +1,7 @@
 MODULE MODE_GRADIENT_M_PHY
+
+!$ACDC singlecolumn 
+
 IMPLICIT NONE
 CONTAINS
 !     #########################################

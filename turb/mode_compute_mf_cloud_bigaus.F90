@@ -15,6 +15,9 @@ CONTAINS
                                   PRHODREF, PEXNM, PPABSM, &
                                   PRC_MF, PRI_MF, PCF_MF, PSIGMF, &
                                   PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PWEIGHT_MF_CLOUD)
+
+!$ACDC singlecolumn --dummy
+
 !     #################################################################
 !!
 !!****  *COMPUTE_MF_CLOUD_BIGAUS* -

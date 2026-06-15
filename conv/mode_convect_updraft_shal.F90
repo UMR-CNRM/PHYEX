@@ -8,6 +8,8 @@ CONTAINS
                                      PMFLCL, OTRIG, KLCL, KDPL, KPBL,                &
                                      PUMF, PUER, PUDR, PUTHL, PUTHV, PURW,           &
                                      PURC, PURI, PCAPE, KCTL, KETL,GTRIG1 )
+!$ACDC singlecolumn
+
     USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 
 !    ###############################################################################

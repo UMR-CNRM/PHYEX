@@ -28,6 +28,9 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
                       PDP,PTP,PSIGS,PWTH,PWRC,PWSV,                 &
                       PSSTFL,PSSTFL_C,PSSRFL_C,PSSUFL_C,PSSVFL_C,   &
                       PSSUFL,PSSVFL                                 )
+
+!$ACDC singlecolumn 
+
 !     ###############################################################
 !
 !
@@ -225,7 +228,7 @@ USE MODD_TURB_n,         ONLY: TURB_t
 USE MODD_NEB_n,          ONLY: NEB_t
 !
 USE MODE_GRADIENT_M_PHY,       ONLY: GZ_M_W_PHY
-USE MODE_IO_FIELD_WRITE_PHY,       ONLY: IO_FIELD_WRITE_PHY
+USE MODE_IO_FIELD_WRITE_PHY,   ONLY: IO_FIELD_WRITE_PHY
 USE MODE_PRANDTL,              ONLY: PSI_SV, PSI3, PHI3, PRANDTL
 USE MODE_SBL_DEPTH,            ONLY: SBL_DEPTH
 USE MODE_TURB_VER_DYN_FLUX,    ONLY: TURB_VER_DYN_FLUX

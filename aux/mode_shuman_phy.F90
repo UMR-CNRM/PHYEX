@@ -1,4 +1,7 @@
 MODULE MODE_SHUMAN_PHY
+
+!$ACDC singlecolumn 
+
 IMPLICIT NONE
 CONTAINS
 !     ###############################
@@ -1206,6 +1209,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDYM     ! result at flux
 !              ------------------
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('DYM',0,ZHOOK_HANDLE)
 CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'DYM_PHY', 'AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE')
 !
 !-------------------------------------------------------------------------------
