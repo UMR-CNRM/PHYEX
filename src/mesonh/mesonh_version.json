@@ -3,10 +3,10 @@
 "MESONHcommit":"2ed097fc61045f26536b03d054ff1b0651172366",
 "refversion":"MNH-600-dev-473daaa2f",
 "testing": {
-            "KTEST/007_16janvier":"57edf2d",
-            "INTEGRATION_CASES/LOCAL/ARMCU_1D_CONDSAMP":"57edf2d",
-            "KTEST/014_LIMA":"57edf2d",
-            "INTEGRATION_CASES/HPC/ARMCU_LES/DEAR":"57edf2d",
-            "INTEGRATION_CASES/HPC/OCEAN_LES":"57edf2d"
+            "KTEST/007_16janvier":"849aa37",
+            "INTEGRATION_CASES/LOCAL/ARMCU_1D_CONDSAMP":"849aa37",
+            "KTEST/014_LIMA":"849aa37",
+            "INTEGRATION_CASES/HPC/ARMCU_LES/DEAR":"849aa37",
+            "INTEGRATION_CASES/HPC/OCEAN_LES":"849aa37"
            }
 }
