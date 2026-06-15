@@ -86,12 +86,15 @@ if [ $packcreation == true ]; then
   else
     echo "### Pack creation for commit $commit"
 
-    # Prepare the pack
+    # Prepare the pack (we use tar.gz instead of 'git clone' to avoid depending on 'git lfs')
     cd $MNHPACK
-    git clone $(json_dictkey2value "$json_content" 'MESONHrepo' 'git@github.com:ACCORD-NWP/IAL.git') ${mnhdir}
-    cd ${mnhdir}
-    git checkout $(json_dictkey2value "$json_content" 'MESONHcommit' 'XXXXXXX')
-    cd ..
+    refcommit=$(json_dictkey2value "$json_content" 'MESONHcommit' 'XXXXXXX')
+    url=$(json_dictkey2value "$json_content" 'MESONHrepo' 'https://src.koda.cnrs.fr/mesonh/mesonh-code')
+    url="${url}/-/archive/${refcommit}/mesonh-code-${refcommit}.tar.gz"
+    wget --no-check-certificate ${url}
+    tar xf mesonh-code-${refcommit}.tar.gz
+    rm -f mesonh-code-${refcommit}.tar.gz
+    mv mesonh-code-${refcommit} ${mnhdir}
   fi
 fi
 if [ $packupdate == true -o $packcreation == true ]; then
