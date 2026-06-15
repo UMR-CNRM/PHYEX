@@ -7,6 +7,8 @@ CONTAINS
                                          PUMF, PUER, PUDR, PDMF, PDER, PDDR, &
                                          PTIMEC, PDXDY, PMIXF, PLMASS, PWSUB,&
                                          KFTSTEPS )
+!$ACDC singlecolumn --dummy
+
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ########################################################################
 !

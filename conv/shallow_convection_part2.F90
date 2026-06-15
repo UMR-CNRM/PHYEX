@@ -9,6 +9,8 @@ SUBROUTINE SHALLOW_CONVECTION_PART2(CVP_SHAL, CVPEXT, CST, D, NSV,   &
                                     PRVC, PRCC, PRIC, ICTL, IMINCTL, &
                                     PPCH1TEN)
 
+!$ACDC singlecolumn --nocreate-interface
+
 USE YOMHOOK , ONLY : LHOOK, JPHOOK, DR_HOOK
 USE MODD_CONVPAR, ONLY : CONVPAR_T
 USE MODD_CONVPAR_SHAL, ONLY : CONVPAR_SHAL
