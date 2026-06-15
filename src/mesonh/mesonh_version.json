@@ -1,6 +1,6 @@
 {
 "MESONHrepo":"https://src.koda.cnrs.fr/sebastien.riette.1/mesonh-code.git",
-"MESONHcommit":"6ea405a973f225d1db2a735d2098c7d62b530735",
+"MESONHcommit":"2ed097fc61045f26536b03d054ff1b0651172366",
 "refversion":"MNH-600-dev-473daaa2f",
 "testing": {
             "KTEST/007_16janvier":"57edf2d",
