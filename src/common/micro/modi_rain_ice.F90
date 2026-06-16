@@ -4,21 +4,21 @@
 !
 IMPLICIT NONE
 INTERFACE
-      SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
-                            OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
-                            PTSTEP, KRR, PEXN,                                    &
-                            PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
-                            PICLDFR, PSSIO, PSSIU, PIFR,                 &
-                            PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
-                            PTHT, PRT, PTHS, PRS, &
-                            PINPRC, PINPRR, PEVAP3D,                              &
-                            PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,               &
-                            TBUDGETS, KBUDGETS,                                   &
-                            PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,           &
-                            PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &
-                            PEFIELDW, PLATHAM_IAGGS,                              &
-                            PSEA, PTOWN, PCONC3D,                                 &
-                            PINPRH, PFPR, PQHT, PQHS                  )
+       SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
+                             OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
+                             PTSTEP, KRR, PEXN,                                    &
+                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
+                             PICLDFR, PSSIO, PSSIU, PIFR,                 &
+                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
+                             PTHT, PRT, PTHS, PRS, &
+                             PINPRC, PINPRR, PEVAP3D,                              &
+                             PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,               &
+                             TBUDGETS, KBUDGETS,                                   &
+                             PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,           &
+                             PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &
+                             PEFIELDW, PLATHAM_IAGGS,                              &
+                             PSEA, PTOWN, PCONC3D,                                 &
+                             PINPRH, PFPR, PQHT, PQHS                  )
 !
 USE MODD_BUDGET,         ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
@@ -54,7 +54,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST  ! absolute pressure at
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCLDFR  ! Cloud fraction
-!OCND2
+! OCND2
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PICLDFR ! Ice cloud fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the supersaturated fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the  subsaturated fraction 
