@@ -91,7 +91,7 @@ if [ $packcreation == true ]; then
     refcommit=$(json_dictkey2value "$json_content" 'MESONHcommit' 'XXXXXXX')
     url=$(json_dictkey2value "$json_content" 'MESONHrepo' 'https://src.koda.cnrs.fr/mesonh/mesonh-code')
     url="${url}/-/archive/${refcommit}/mesonh-code-${refcommit}.tar.gz"
-    wget --no-check-certificate ${url}
+    wget --no-check-certificate ${url} -O mesonh-code-${refcommit}.tar.gz
     tar xf mesonh-code-${refcommit}.tar.gz
     rm -f mesonh-code-${refcommit}.tar.gz
     mv mesonh-code-${refcommit} ${mnhdir}
@@ -151,29 +151,27 @@ if [ $packupdate == true -o $packcreation == true ]; then
       cd ..
       rm -rf PHYEX
       mv PHYEXori PHYEX
-    else
-      cd $MNHPACK/$mnhdir/src/PHYEX/turb
-      # Delete files of ${refversion}/src/MNH and MNH/src/LIB/SURCOUCHE/src with same name
-      for rep in turb micro conv aux ; do
-        cd ../$rep
-        for f in *.f90; do
-          echo $f
-          rm -f ../../MNH/$f
-          rm -f ../../LIB/SURCOUCHE/src/$f
-        done
-      done
-      cd ..
-    
-      # Delete old files of ${refversion}/src/MNH that is now called by mode_... NO /aux NEEDED!
-      find turb micro conv -name 'mode_*' > remove_non_mode.sh
-      sed -i 's/turb\/mode_/rm -f MNH\//g' remove_non_mode.sh
-      sed -i 's/micro\/mode_/rm -f MNH\//g' remove_non_mode.sh
-      sed -i 's/conv\/mode_/rm -f MNH\//g' remove_non_mode.sh
-      chmod +x remove_non_mode.sh
-      mv remove_non_mode.sh ../.
-      cd ../
-      ./remove_non_mode.sh
     fi
+
+    # Some files are in the PHYEX repo but are used in other parts than the
+    # physics in the model. Those files are moved in MNH or LIB directories.
+    # We use existing files in those directory to guess what should be moved
+    # and where.
+    cd $MNHPACK/$mnhdir/src
+    for rep in turb micro conv aux; do
+      for file in $(find PHYEX/$rep -name \*.f90); do
+        duplicate=$(find MNH LIB -name $(basename $file))
+        if [ "$duplicate" != "" ]; then
+          if [ $packupdate == true ]; then
+            mvdiff $file $duplicate
+            rm -f $file
+          else
+            echo mv -f $file $duplicate
+            mv -f $file $duplicate
+          fi
+        fi
+      done
+    done
 
     # Remove binaries
     rm -f $MNHPACK/$mnhdir/exe/*

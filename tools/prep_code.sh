@@ -229,13 +229,13 @@ if [ -n "${model-}" ]; then
   done
 
   #Supression of unwanted files
-  if [ -f $SRC/filesToSuppress.txt ]; then
+  if [ -f $SRC/filesToSuppress_${model}.txt ]; then
     #Some files can be present in the common directory but are not wanted for a model export
     #because these files are already existing elsewhere in the model source code
     while read -r line; do
       filename=$(echo $line | sed -e 's/^[[:space:]]*//' | sed -e 's/[[:space:]]*$//') #trim
       [ -f "$filename" ] && $rm "$filename"
-    done < $SRC/filesToSuppress.txt
+    done < $SRC/filesToSuppress_${model}.txt
   fi
 
   #Cleaning
