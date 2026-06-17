@@ -4,21 +4,23 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ######spl
-       SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
-                             OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
-                             PTSTEP, KRR, PEXN,                                    &
-                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
-                             PICLDFR, PSSIO, PSSIU, PIFR,                 &
-                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
-                             PTHT, PRT, PTHS, PRS, &
-                             PINPRC, PINPRR, PEVAP3D,                              &
-                             PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,               &
-                             TBUDGETS, KBUDGETS,                                   &
-                             PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,           &
-                             PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &
-                             PEFIELDW, PLATHAM_IAGGS,                              &
-                             PSEA, PTOWN, PCONC3D,                                 &
-                             PINPRH, PFPR, PQHT, PQHS                  )
+       SUBROUTINE RAIN_ICE_PART1 ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
+                                   OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
+                                   PTSTEP, KRR, PEXN,                                    &
+                                   PDZZ, PRHODJ, PRHODREF, PPABST, PCIT, PCLDFR,         &
+                                   PICLDFR, PSSIO,                                        &
+                                   PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
+                                   PTHT, PRT, PTHS, PRS,                                 &
+                                   PINPRC, PINPRR, PEVAP3D,                              &
+                                   PINPRS, PINPRG, PRAINFR, PSIGS,               &
+                                   TBUDGETS, KBUDGETS,                                   &
+                                   PQCT, PQRT, PQIT, PQST, PQGT,           &
+                                   PQCS, PQRS, PQIS, PQSS, PQGS,           &
+                                   PEFIELDW,                              &
+                                   PSEA, PTOWN, PCONC3D,                                 &
+                                   PINPRH, PFPR, PQHT, PQHS,                             &
+                                   PT, PLVFACT, PLSFACT, PWR, PWTH, PZCONC3D, OMICRO,    &
+                                   PRVHENI, PZZZZ )
 !     #############################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -167,13 +169,14 @@ USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_ELEC_PARAM,     ONLY: ELEC_PARAM_t
 USE MODD_ELEC_DESCR,     ONLY: ELEC_DESCR_t
-USE MODD_FIELDS_ADDRESS, ONLY: IBUNUM, IBUNUM_EXTRA
+USE MODD_FIELDS_ADDRESS, ONLY: IRC, IRG, IRH, IRI, IRR, IRS, IRV
 
-USE MODI_RAIN_ICE_PART1, ONLY: RAIN_ICE_PART1
-USE MODI_RAIN_ICE_PART3, ONLY: RAIN_ICE_PART3
+USE MODE_MSG,                ONLY: PRINT_MSG, NVERB_FATAL
 
-USE MODE_ICE4_PACK, ONLY: ICE4_PACK
-!
+USE MODE_ICE4_RAINFR_VERT,   ONLY: ICE4_RAINFR_VERT
+USE MODE_ICE4_COMPUTE_PDF,   ONLY: ICE4_COMPUTE_PDF
+USE MODE_ICE4_SEDIMENTATION, ONLY: ICE4_SEDIMENTATION
+
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
@@ -198,17 +201,13 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXN    ! Exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDZZ    ! Layer thikness (m)
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXNREF ! Reference Exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST  ! absolute pressure at t
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCLDFR  ! Cloud fraction
-! OCND2
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PICLDFR ! Ice cloud fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the supersaturated fraction
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the  subsaturated fraction 
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part 
-
+!
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLC_HRC
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLC_HCF
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLI_HRI
@@ -225,7 +224,6 @@ REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRR! Rain instant precip
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     :: PEVAP3D! Rain evap profile
 REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRS! Snow instant precip
 REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRG! Graupel instant precip
-REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PINDEP  ! Cloud instant deposition
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) :: PRAINFR !Precipitation fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
 !
@@ -233,25 +231,19 @@ TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
 ! scalar variables for cloud electricity
-REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(IN)    :: PQPIT  ! Positive ion  -
-REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQCT   ! Cloud droplet | 
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQCT   ! Cloud droplet |
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQRT   ! Rain          | electric
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQIT   ! Ice crystals  |  charge 
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQST   ! Snow          |   at t
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQGT   ! Graupel       |
-REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(IN)    :: PQNIT  ! Negative ion  -
 !
-REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQPIS  ! Positive ion  -
-REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQCS   ! Cloud droplet | 
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQCS   ! Cloud droplet |
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQRS   ! Rain          | electric
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQIS   ! Ice crystals  |  charge 
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQSS   ! Snow          |  source
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQGS   ! Graupel       |
-REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQNIS  ! Negative ion  -
 !
 REAL, DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(D%NKT,0,OSEDIM_BEARD)), OPTIONAL, INTENT(IN) :: PEFIELDW ! vertical electric field
-REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(IN)    :: PLATHAM_IAGGS ! E Function to simulate
-                                                                                            ! enhancement of IAGGS
 !
 ! optional variables
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(IN)    :: PSEA    ! Sea Mask
@@ -262,48 +254,49 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-ai
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHT ! Hail electric charge at t
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHS ! Hail electric charge source
 !
+! Bridge variables
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PT
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PLVFACT
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PLSFACT
+REAL, DIMENSION(D%NIJT,D%NKT,7), INTENT(OUT) :: PWR
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PWTH
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PZCONC3D
+LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: OMICRO
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PRVHENI
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PZZZZ
 !
-!*       0.2   Local variable declarations
+!
+!*       0.2   Declarations of local variables :
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZT
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZZ_LVFACT
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZZ_LSFACT
-REAL, DIMENSION(D%NIJT,D%NKT,7) :: ZWR
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZWTH
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZCONC3D
-LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLMICRO
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZZ_RVHENI
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZZZZ
-REAL, DIMENSION(MERGE(D%NIJT,0,OELEC .OR. BUCONF%LBU_ENABLE), &
-                MERGE(D%NKT,0,OELEC .OR. BUCONF%LBU_ENABLE), &
-                MERGE(IBUNUM-IBUNUM_EXTRA,0,OELEC .OR. BUCONF%LBU_ENABLE)) :: &
-           ZBUDGETS
-INTEGER :: ISIZE, IPROMA, IGPBLKS
+LOGICAL :: LLSEA_AND_TOWN, LLCONC
 INTEGER :: JIJ, JK
 INTEGER :: IKTB, IKTE, IKB, IIJB, IIJE, IIJT
 !
-!-------------------------------------------------------------------------------
-IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 0, ZHOOK_HANDLE)
+!Arrays for nucleation call outside of LLMICRO points
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZSIGMA_RC
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_LCF
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_LRC
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LCF
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LRI
 !
-CALL RAIN_ICE_PART1 ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
-                      OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
-                      PTSTEP, KRR, PEXN,                                    &
-                      PDZZ, PRHODJ, PRHODREF, PPABST, PCIT, PCLDFR,         &
-                      PICLDFR, PSSIO,                                        &
-                      PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
-                      PTHT, PRT, PTHS, PRS,                                 &
-                      PINPRC, PINPRR, PEVAP3D,                              &
-                      PINPRS, PINPRG, PRAINFR, PSIGS,               &
-                      TBUDGETS, KBUDGETS,                                   &
-                       PQCT, PQRT, PQIT, PQST, PQGT,           &
-                       PQCS, PQRS, PQIS, PQSS, PQGS,           &
-                      PEFIELDW,                              &
-                      PSEA, PTOWN, PCONC3D,                                 &
-                      PINPRH, PFPR, PQHT, PQHS,                             &
-                      ZT, ZZ_LVFACT, ZZ_LSFACT, ZWR, ZWTH, ZCONC3D, LLMICRO,&
-                      ZZ_RVHENI, ZZZZ )
+REAL :: ZINV_TSTEP ! Inverse ov PTSTEP
+REAL, DIMENSION(KRR) :: ZICEDRTMIN
+!
+REAL :: ZDEVIDE, ZRICE, ZZSUM
+!
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZW3D
+REAL, DIMENSION(D%NIJT) :: ZCONC_TMP
+
+LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLW3D
+INTEGER :: ISIZE
+!
+!-------------------------------------------------------------------------------
+IF (LHOOK) CALL DR_HOOK('RAIN_ICE_PART1', 0, ZHOOK_HANDLE)
+!
+!*       1.     GENERALITIES
+!               ------------
 !
 IKTB=D%NKTB
 IKTE=D%NKTE
@@ -311,59 +304,281 @@ IKB=D%NKB
 IIJB=D%NIJB
 IIJE=D%NIJE
 IIJT=D%NIJT
+ZICEDRTMIN(1:KRR)=ICED%XRTMIN(1:KRR)
+!-------------------------------------------------------------------------------
 !
-IF(PARAMI%LPACK_MICRO) THEN
-  ISIZE=0
-  DO JK=1,D%NKT
-    DO JIJ=1,D%NIJT
-      IF(LLMICRO(JIJ,JK)) ISIZE=ISIZE+1 ! Number of points with active microphysics
-    END DO
-  END DO
-  !PARAMI%NPROMICRO is the requested size for cache_blocking loop
-  !IPROMA is the effective size
-  !This parameter must be computed here because it is used for array dimensioning in ice4_pack
-  IF (PARAMI%NPROMICRO > 0 .AND. ISIZE > 0) THEN
-    ! Cache-blocking is active
-    ! number of chunks :
-    IGPBLKS = (ISIZE-1)/MIN(PARAMI%NPROMICRO,ISIZE)+1
-    ! Adjust IPROMA to limit the number of small chunks
-    IPROMA=(ISIZE-1)/IGPBLKS+1
-  ELSE
-    IPROMA=ISIZE ! no cache-blocking
-  ENDIF
+
+ZINV_TSTEP=1./PTSTEP
+!
+LLSEA_AND_TOWN=PRESENT(PSEA).AND.PRESENT(PTOWN)
+LLCONC=PRESENT(PCONC3D)
+!
+! LSFACT and LVFACT without exner, and LLMICRO
+! LLMICRO is a mask with a True value on points where microphysics is active
+OMICRO(:,:)=.FALSE.
+
+
+
+DO JK = IKTB,IKTE
+  DO JIJ = IIJB,IIJE
+    !LSFACT and LVFACT
+    IF (KRR==7) THEN
+      ZRICE=PRT(JIJ,JK,IRI)+PRT(JIJ,JK,IRS)+PRT(JIJ,JK,IRG)+PRT(JIJ,JK,IRH)
+    ELSE
+      ZRICE=PRT(JIJ,JK,IRI)+PRT(JIJ,JK,IRS)+PRT(JIJ,JK,IRG)
+    ENDIF
+    ZDEVIDE = CST%XCPD + CST%XCPV*PRT(JIJ,JK,IRV) + CST%XCL*(PRT(JIJ,JK,IRC)+PRT(JIJ,JK,IRR)) + CST%XCI*ZRICE
+    PT(JIJ,JK) = PTHT(JIJ,JK) * PEXN(JIJ,JK)
+    PLSFACT(JIJ,JK)=(CST%XLSTT+(CST%XCPV-CST%XCI)*(PT(JIJ,JK)-CST%XTT)) / ZDEVIDE
+    PLVFACT(JIJ,JK)=(CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(JIJ,JK)-CST%XTT)) / ZDEVIDE
+
+    !OMICRO
+    IF ( PARAMI%LOCND2 ) THEN
+      IF (KRR==7) THEN
+        OMICRO(JIJ,JK)=PSSIO(JIJ,JK)>ICEP%XFRMIN(12) .OR. &
+                        PRT(JIJ,JK,IRC)>ICEP%XFRMIN(13) .OR. &
+                        PRT(JIJ,JK,IRR)>ICEP%XFRMIN(13) .OR. &
+                        PRT(JIJ,JK,IRI)>ICEP%XFRMIN(13) .OR. &
+                        PRT(JIJ,JK,IRS)>ICEP%XFRMIN(13) .OR. &
+                        PRT(JIJ,JK,IRG)>ICEP%XFRMIN(13) .OR. &
+                        PRT(JIJ,JK,IRH)>ICEP%XFRMIN(13)
+      ELSE
+        OMICRO(JIJ,JK)=PSSIO(JIJ,JK)>ICEP%XFRMIN(12) .OR. &
+                        PRT(JIJ,JK,IRC)>ICEP%XFRMIN(13) .OR. &
+                        PRT(JIJ,JK,IRR)>ICEP%XFRMIN(13) .OR. &
+                        PRT(JIJ,JK,IRI)>ICEP%XFRMIN(13) .OR. &
+                        PRT(JIJ,JK,IRS)>ICEP%XFRMIN(13) .OR. &
+                        PRT(JIJ,JK,IRG)>ICEP%XFRMIN(13)
+      ENDIF
+    ELSE
+      IF (KRR==7) THEN
+        OMICRO(JIJ,JK)=PRT(JIJ,JK,IRC)>ICED%XRTMIN(IRC) .OR. &
+                        PRT(JIJ,JK,IRR)>ICED%XRTMIN(IRR) .OR. &
+                        PRT(JIJ,JK,IRI)>ICED%XRTMIN(IRI) .OR. &
+                        PRT(JIJ,JK,IRS)>ICED%XRTMIN(IRS) .OR. &
+                        PRT(JIJ,JK,IRG)>ICED%XRTMIN(IRG) .OR. &
+                        PRT(JIJ,JK,IRH)>ICED%XRTMIN(IRH)
+      ELSE
+        OMICRO(JIJ,JK)=PRT(JIJ,JK,IRC)>ICED%XRTMIN(IRC) .OR. &
+                        PRT(JIJ,JK,IRR)>ICED%XRTMIN(IRR) .OR. &
+                        PRT(JIJ,JK,IRI)>ICED%XRTMIN(IRI) .OR. &
+                        PRT(JIJ,JK,IRS)>ICED%XRTMIN(IRS) .OR. &
+                        PRT(JIJ,JK,IRG)>ICED%XRTMIN(IRG)
+      ENDIF
+    ENDIF
+  ENDDO
+ENDDO
+
+!
+!        1.1    Compute cloud liquid number concentration
+!               -----------------------------------------
+! Model level height
+
+
+DO JIJ=IIJB,IIJE
+  ZZSUM = 0.
+
+  DO JK=IKTE,IKTB, -1
+    ZZSUM = ZZSUM + PDZZ(JIJ,JK)
+    PZZZZ(JIJ,JK) = ZZSUM - PDZZ(JIJ,JK)*0.5
+  ENDDO
+ENDDO
+
+
+
+PZCONC3D(:,:) = ICED%XCONC_LAND
+IF( LLCONC .AND. PARAMI%LEXCLDROP) THEN
+
+  DO JK=IKTB,IKTE
+    DO JIJ=IIJB,IIJE
+      PZCONC3D(JIJ,JK)=PCONC3D(JIJ,JK)
+    ENDDO
+  ENDDO
 ELSE
-  ISIZE=D%NIJT*D%NKT
-  IPROMA=0
+  IF (PARAMI%LEXCLDROP) THEN
+   CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE_PART1', 'WITH LEXCLDROP=TRUE CLOUD DROPLET FIELDS MUST BE PRESENT IN RAIN_ICE')
+  END IF
+  IF(LLSEA_AND_TOWN .AND. ICEP%XFRMIN(26)<0.001) THEN
+
+    DO JK=IKTB,IKTE
+      DO JIJ=IIJB,IIJE
+        ZCONC_TMP(JIJ) = PSEA(JIJ)*ICED%XCONC_SEA+(1.-PSEA(JIJ))*ICED%XCONC_LAND
+        PZCONC3D(JIJ,JK)= (1.-PTOWN(JIJ))*ZCONC_TMP(JIJ) +PTOWN(JIJ)*ICED%XCONC_URBAN
+      ENDDO
+    ENDDO
+  ENDIF
+  IF(ICEP%XFRMIN(26)>0.001)THEN
+
+    DO JK=IKTB,IKTE
+      DO JIJ=IIJB,IIJE
+        PZCONC3D(JIJ,JK) = ICEP%XFRMIN(26)*PPABST(JIJ,JK)/CST%XP00
+        IF(ICEP%XFRMIN(22)>0.001 .AND. LLSEA_AND_TOWN)THEN
+          ZCONC_TMP(JIJ)  = MAX(0., MIN(1.,(PZZZZ(JIJ,JK)- PZZZZ(JIJ,IKTE))/&
+              &(MAX(0.01,ICEP%XFRMIN(29)-PZZZZ(JIJ,IKTE)))))
+          PZCONC3D(JIJ,JK) =  PZCONC3D(JIJ,JK)*(ICEP%XFRMIN(22)*(PSEA(JIJ)*ICEP%XFRMIN(30)+&
+              &(1.-PSEA(JIJ)))*(1.-ZCONC_TMP(JIJ)) + ZCONC_TMP(JIJ))
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDIF
+ENDIF
+
+!
+!
+!-------------------------------------------------------------------------------
+!
+!*       2.     COMPUTE THE SEDIMENTATION (RS) SOURCE
+!               -------------------------------------
+!
+IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
+  CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, BUCONF, &
+                         &OELEC, OSEDIM_BEARD, PTSTEP, KRR, PDZZ, PTHVREFZIKB, &
+                         &PLVFACT, PLSFACT, PRHODREF, PPABST, PTHT, PT, PRHODJ, &
+                         &PTHS, PRT, PRS, PZCONC3D,&
+                         &PINPRC, PINPRR, PINPRS, PINPRG, &
+                         &PQCT, PQRT, PQIT, PQST, PQGT, PQCS, PQRS, PQIS, PQSS, PQGS, PEFIELDW, &
+                         &TBUDGETS, KBUDGETS, &
+                         &PSEA=PSEA, PTOWN=PTOWN, &
+                         &PINPRH=PINPRH, PFPR=PFPR, &
+                         &PQHT=PQHT, PQHS=PQHS)
 ENDIF
 !
-CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,               &
-               IPROMA, ISIZE, &
-               PTSTEP, KRR, OELEC, LLMICRO, OELEC, PEXN, &
-               PRHODREF, PPABST, PCIT, PCLDFR, &
-               PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI,               &
-               PTHS, PRS, &
-               PEVAP3D,                                              &
-               PRAINFR, PSIGS, ZWTH, ZWR,                            &
-               PICLDFR, ZZZZ, ZCONC3D,                               &
-               PSSIO, PSSIU, PIFR,                                   &
-               ZBUDGETS, PLATHAM_IAGGS)
 !
-CALL RAIN_ICE_PART3 ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
-                      OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
-                      PTSTEP, KRR,                                    &
-                      PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, &
-                      PTHT, PRT, PTHS, PRS,                                 &
-                      PINPRC, PINPRR,                              &
-                      PINPRS, PINPRG, PINDEP, PRAINFR,               &
-                      TBUDGETS, KBUDGETS,                                   &
-                      PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,           &
-                      PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &
-                      PEFIELDW,                              &
-                      PSEA, PTOWN,                                 &
-                      PINPRH, PFPR, PQHT, PQHS,                             &
-                      ZT, ZZ_LVFACT, ZZ_LSFACT, ZWR, ZWTH, ZCONC3D,        &
-                      ZZ_RVHENI, ZBUDGETS )
+!-------------------------------------------------------------------------------
 !
-IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 1, ZHOOK_HANDLE)
+!*       3.     INITIAL VALUES SAVING
+!               ---------------------
 !
-END SUBROUTINE RAIN_ICE
+
+DO JK = IKTB,IKTE
+DO JIJ=1, D%NIJT
+    !Copy of T variables to keep untouched the prognostic variables
+    PWTH(JIJ, JK)=PTHT(JIJ, JK)
+    PWR(JIJ, JK, IRV)=PRT(JIJ, JK, IRV)
+    PWR(JIJ, JK, IRC)=PRT(JIJ, JK, IRC)
+    PWR(JIJ, JK, IRR)=PRT(JIJ, JK, IRR)
+    PWR(JIJ, JK, IRI)=PRT(JIJ, JK, IRI)
+    PWR(JIJ, JK, IRS)=PRT(JIJ, JK, IRS)
+    PWR(JIJ, JK, IRG)=PRT(JIJ, JK, IRG)
+    IF (KRR==7) THEN
+      PWR(JIJ, JK, IRH)=PRT(JIJ, JK, IRH)
+    ELSE
+      PWR(JIJ, JK, IRH)=0.
+    ENDIF
+
+    !Preset for output 3D variables
+    IF(PARAMI%LWARM) THEN
+      PEVAP3D(JIJ, JK)=0.
+    ENDIF
+    PRAINFR(JIJ, JK)=0.
+END DO
+ENDDO
+
+!
+!
+!*       4.1    COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF LLMICRO POINTS
+!               -----------------------------------------------------------------
+!
+!The nucleation must be called everywhere
+!This call is for points outside of the OMICRO mask, another call is coded in ice4_tendencies
+
+LLW3D(:,:)=.FALSE.
+
+DO JK=IKTB,IKTE
+  DO JIJ=IIJB,IIJE
+    IF (.NOT. OMICRO(JIJ, JK)) THEN
+      LLW3D(JIJ, JK)=.TRUE.
+      ZW3D(JIJ, JK)=PLSFACT(JIJ, JK)/PEXN(JIJ, JK)
+      PCIT(JIJ,JK)=0. !ri=0 because where are in the not odmicro case
+    ELSE
+      LLW3D(JIJ, JK)=.FALSE.
+    ENDIF
+  ENDDO
+ENDDO
+
+
+
+
+DO JK=IKTB,IKTE
+  DO JIJ=IIJB,IIJE
+!NEC$ noinline
+    CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(JIJ, JK), &
+                         PTHT(JIJ, JK), PPABST(JIJ, JK), PRHODREF(JIJ, JK), &
+                         PEXN(JIJ, JK), ZW3D(JIJ, JK), PT(JIJ, JK), &
+                         PRT(JIJ, JK, IRV), PICLDFR(JIJ, JK), PZZZZ(JIJ, JK), &
+                         PCIT(JIJ, JK), PRVHENI(JIJ, JK))
+  ENDDO
+ENDDO
+
+
+
+
+DO JK = IKTB, IKTE
+  DO JIJ=IIJB, IIJE
+    PRVHENI(JIJ,JK) = MIN(PRS(JIJ,JK,IRV), PRVHENI(JIJ,JK)/PTSTEP)
+  ENDDO
+ENDDO
+
+!
+!
+!*       4.2    COMPUTES PRECIPITATION FRACTION
+!               -------------------------------
+!
+!The ICE4_RAINFR_VERT call was previously in ice4_tendencies to be computed again at each iteration.
+!The computation has been moved here to separate (for GPUs) the part of the code
+!where column computation can occur (here, alongside with the sedimentation) and
+!other routines where computation are only 0D (point by point).
+!This is not completly exact but we can think that the precipitation fraction
+!diagnostic does not evolve too much during a time-step.
+!ICE4_RAINFR_VERT needs the output of ICE4_COMPUTE_PDF; thus this routine
+!is called here but it's still called from within ice4_tendencies.
+IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
+  IF (PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM') THEN
+    DO JK = IKTB, IKTE
+      DO JIJ=IIJB, IIJE
+        ZSIGMA_RC(JIJ, JK)=PSIGS(JIJ, JK)**2
+      ENDDO
+    ENDDO
+  ENDIF
+  IF (PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU') THEN
+    DO JK = IKTB, IKTE
+      DO JIJ=IIJB, IIJE
+        ZHLC_LRC(JIJ, JK) = PWR(JIJ, JK, IRC) - PHLC_HRC(JIJ, JK)
+        ZHLI_LRI(JIJ, JK) = PWR(JIJ, JK, IRI) - PHLI_HRI(JIJ, JK)
+        IF(PWR(JIJ, JK, IRC)>0.) THEN
+          ZHLC_LCF(JIJ, JK) = PCLDFR(JIJ, JK)- PHLC_HCF(JIJ, JK)
+        ELSE
+          ZHLC_LCF(JIJ, JK)=0.
+        ENDIF
+        IF(PWR(JIJ, JK, IRI)>0.) THEN
+          ZHLI_LCF(JIJ, JK) = PCLDFR(JIJ, JK)- PHLI_HCF(JIJ, JK)
+        ELSE
+          ZHLI_LCF(JIJ, JK)=0.
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDIF
+  !We cannot use PWR(:,IKTB:IKTE,IRC) which is not contiguous
+  ISIZE=IIJT*(IKTE-IKTB+1)
+  CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, ISIZE, PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF,&
+                        OMICRO(:,IKTB:IKTE), PRHODREF(:,IKTB:IKTE), PRT(:,IKTB:IKTE,IRC), PRT(:,IKTB:IKTE,IRI), &
+                        PCLDFR(:,IKTB:IKTE), PT(:,IKTB:IKTE), ZSIGMA_RC(:,IKTB:IKTE), &
+                        PHLC_HCF(:,IKTB:IKTE), ZHLC_LCF(:,IKTB:IKTE), PHLC_HRC(:,IKTB:IKTE), ZHLC_LRC(:,IKTB:IKTE), &
+                        PHLI_HCF(:,IKTB:IKTE), ZHLI_LCF(:,IKTB:IKTE), PHLI_HRI(:,IKTB:IKTE), ZHLI_LRI(:,IKTB:IKTE), &
+                        PRAINFR(:,IKTB:IKTE))
+  IF (KRR==7) THEN
+    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, PWR(:,:,IRR), &
+                         &PWR(:,:,IRS), PWR(:,:,IRG), PWR(:,:,IRH))
+  ELSE
+    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, PWR(:,:,IRR), &
+                         &PWR(:,:,IRS), PWR(:,:,IRG))
+  ENDIF
+ELSE
+  PRAINFR(:,:)=1.
+ENDIF
+!
+IF (LHOOK) CALL DR_HOOK('RAIN_ICE_PART1', 1, ZHOOK_HANDLE)
+!
+CONTAINS
+INCLUDE "ice4_nucleation.func.h"
+END SUBROUTINE RAIN_ICE_PART1
