@@ -1,5 +1,7 @@
 <map id="mode_ice4_rainfr_vert::ice4_rainfr_vert" name="mode_ice4_rainfr_vert::ice4_rainfr_vert">
-<area shape="rect" id="Node000001" title=" " alt="" coords="127,5,295,45"/>
-<area shape="rect" id="Node000002" href="$rain__ice_8F90.html#a05fba7fce3a802191c84e7f0520e74e6" title=" " alt="" coords="5,13,79,38"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="113,28,79,28,79,23,113,23"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="168,23,336,63"/>
+<area shape="rect" id="Node000002" href="$rain__ice__part1_8F90.html#a0754f0f198bde13ed950ba6b4aec6f0f" title=" " alt="" coords="5,5,120,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="154,33,120,28,121,23,155,28"/>
+<area shape="rect" id="Node000003" href="$rain__ice__part3_8F90.html#af3e242f6b05040765c2842952d361f6d" title=" " alt="" coords="5,55,120,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="155,58,121,63,120,57,154,53"/>
 </map>

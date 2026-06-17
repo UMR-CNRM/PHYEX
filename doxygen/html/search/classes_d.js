@@ -7,6 +7,8 @@ var searchData=
   ['rain_5fice_5fdescr_5ft_4',['rain_ice_descr_t',['../structmodd__rain__ice__descr__n_1_1rain__ice__descr__t.html',1,'modd_rain_ice_descr_n']]],
   ['rain_5fice_5fold_5',['rain_ice_old',['../interfacemodi__rain__ice__old_1_1rain__ice__old.html',1,'modi_rain_ice_old']]],
   ['rain_5fice_5fparam_5ft_6',['rain_ice_param_t',['../structmodd__rain__ice__param__n_1_1rain__ice__param__t.html',1,'modd_rain_ice_param_n']]],
-  ['replicate_7',['replicate',['../interfacearrays__manip_1_1replicate.html',1,'arrays_manip']]],
-  ['rwupdt_8',['rwupdt',['../interfacemodi__minpack_1_1rwupdt.html',1,'modi_minpack']]]
+  ['rain_5fice_5fpart1_7',['rain_ice_part1',['../interfacemodi__rain__ice__part1_1_1rain__ice__part1.html',1,'modi_rain_ice_part1']]],
+  ['rain_5fice_5fpart3_8',['rain_ice_part3',['../interfacemodi__rain__ice__part3_1_1rain__ice__part3.html',1,'modi_rain_ice_part3']]],
+  ['replicate_9',['replicate',['../interfacearrays__manip_1_1replicate.html',1,'arrays_manip']]],
+  ['rwupdt_10',['rwupdt',['../interfacemodi__minpack_1_1rwupdt.html',1,'modi_minpack']]]
 ];
