@@ -41,6 +41,13 @@ turb/les_mean_subgrid_phy.f90
 aux/tools.f90
 aux/modd_budget.f90
 turb/mode_ibm_mixinglength.f90
+aux/modd_cst.f90
+aux/modd_les.f90
+aux/modd_nsv.f90
+aux/mode_thermo.f90
+aux/gamma.f90
+aux/gamma_inc.f90
+aux/general_gamma.f90
 
 #old version of rain_ice
 micro/mode_rain_ice_old_fast_rg.f90

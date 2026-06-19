@@ -127,21 +127,6 @@ if [ $packupdate == true -o $packcreation == true ]; then
     fi
     find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs
 
-    # Move manually ext/ files in src/MNH
-    if [ -d PHYEX/ext ]; then
-      for file in PHYEX/ext/*; do
-        [ $file = PHYEX/ext/modd_salt.f90 ] && mvdiff $file ACLIB/aux/
-        [ -f $file ] && mvdiff $file MNH/ # Not an ACLIB file
-      done
-      if [ $packupdate == true ]; then
-        #Only modified files are moved
-        rm -rf PHYEX/ext
-      else
-        #All files must have been moved
-        rmdir PHYEX/ext
-      fi
-    fi
-
     if [ $packupdate == true ]; then
       #Update only modified files
       cd PHYEX
@@ -152,26 +137,6 @@ if [ $packupdate == true -o $packcreation == true ]; then
       rm -rf PHYEX
       mv PHYEXori PHYEX
     fi
-
-    # Some files are in the PHYEX repo but are used in other parts than the
-    # physics in the model. Those files are moved in MNH or LIB directories.
-    # We use existing files in those directory to guess what should be moved
-    # and where.
-    cd $MNHPACK/$mnhdir/src
-    for rep in turb micro conv aux; do
-      for file in $(find PHYEX/$rep -name \*.f90); do
-        duplicate=$(find MNH LIB -name $(basename $file))
-        if [ "$duplicate" != "" ]; then
-          if [ $packupdate == true ]; then
-            mvdiff $file $duplicate
-            rm -f $file
-          else
-            echo mv -f $file $duplicate
-            mv -f $file $duplicate
-          fi
-        fi
-      done
-    done
 
     # Remove binaries
     rm -f $MNHPACK/$mnhdir/exe/*
