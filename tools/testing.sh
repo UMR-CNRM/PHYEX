@@ -37,9 +37,9 @@ function usage {
   echo "                This can be usefull when running on a cluster node which can vary from run to run"
   echo "--mail MAIL     comma-separated list of e-mail addresses (no spaces); if not provided, mail is not sent"
   echo "--options-XXX   where XXX is a model name"
-  echo "                Options to give to the check_commit script for this model"
+  echo "                Options to give to the check script for this model"
   echo ""
-  echo "Unrecognized options are given to all the check_commit scripts."
+  echo "Unrecognized options are given to all the check scripts."
   echo ""
   echo "This script provides functionality for automated tests."
   echo "It can be run with cron to periodically test the last commit on the PHYEX repository"
@@ -288,9 +288,8 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
     fi
     log 1 "Installing/updating PHYEX"
   fi
-  . "${WORKDIR}/PHYEX/tools/env.sh"
 
-  #Install requirements in a virtual env
+  #Install pyphyex in a virtual env
   log 1 "Installing requirements"
   TEMPDIR=$(mktemp -d)
   trap "\rm -rf $TEMPDIR; exit_error $?" EXIT
@@ -299,7 +298,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
   . phyex.env/bin/activate
   cd ${WORKDIR}/PHYEX
   set +e
-  pip install -r requirements.txt
+  pip install -e tools/
   result=$?
   set -e
   log 0 "virtual env installation"
@@ -368,7 +367,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
     fi
 
     #Commande
-    cmd="check_commit_${model}.sh --repo-user ${PHYEXREPOuser} --repo-protocol ${PHYEXREPOprotocol} ${additionalOptions} --name ${SHA} ${PHYEXDIR}"
+    cmd="phyex-check_${model} --repo-user ${PHYEXREPOuser} --repo-protocol ${PHYEXREPOprotocol} ${additionalOptions} --name ${SHA} ${PHYEXDIR}"
 
     #Compilation
     result=0
@@ -507,7 +506,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
     retcoding=0
     log 0 "Test coding conventions"
 
-    codingcmd="check_coding_conventions.sh"
+    codingcmd="phyex-check_norms"
     log 1 "Coding conventions with ${codingcmd}"
     set +e
     ${codingcmd}
