@@ -67,6 +67,7 @@ rad=$(json_dictkey2value "$json_content" rad '')
 install_arg=$(json_dictkey2value "$json_content" install_arg '')
 lmdzdir=$LMDZPACK/$name/LMDZ
 phyexdir=$LMDZPACK/$name/PHYEX/
+phyexlmdzdir=$LMDZPACK/$name/phyex-lmdz
 main=lmdz1d
 ##-debug is the default value and there's a bug (in the current script) if we try to specify it here
 ##compilecmd="./compile -L $L -rad $rad -cosp 0 -opt \"-debug \" -main $main"
@@ -175,6 +176,7 @@ if [ $packupdate == true -o $packcreation == true ]; then
     cd $LMDZPACK/$name
     if [ $packupdate == true ]; then
       mv PHYEX PHYEXori
+      mv phyex-lmdz phyex-lmdzori
     fi
   
     if [ $useexpand == true ]; then
@@ -188,6 +190,7 @@ if [ $packupdate == true -o $packcreation == true ]; then
     mkdir PHYEX
     scp -q -r $commit/src PHYEX/
     $prep_code $prepCodeOpts $expand_options $subs -m lmdz PHYEX -- --shumanFUNCtoCALL --removeACC
+    git clone $(json_dictkey2value "$json_content" phyex-lmdz-repo '') phyex-lmdz
     if [ $packupdate == true ]; then
       #Update only modified files
       cd PHYEX
@@ -197,10 +200,18 @@ if [ $packupdate == true -o $packcreation == true ]; then
       cd ..
       rm -rf PHYEX
       mv PHYEXori PHYEX
+      cd phyex-lmdz/src
+      for file in $(find . -type f); do
+        mvdiff $file ../../phyex-lmdzori/src/$file
+      done
+      cd ../..
+      rm -rf phyex-lmdz
+      mv phyex-lmdzori phyex-lmdz
     else
       #Put PHYEX source code in the LMDZ source tree
       cd $lmdzdir/modipsl/modeles/LMDZ/libf/phylmd/
       ln -sf $phyexdir/*/* .
+      ln -sf $phyexlmdzdir/src/* .
     fi
   fi
 

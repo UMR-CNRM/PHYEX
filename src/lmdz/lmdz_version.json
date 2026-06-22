@@ -1,5 +1,7 @@
 {
 "version":"20260512.trunk",
 "install_arg":"-unstable",
-"rad":"oldrad"
+"rad":"oldrad",
+"phyex-lmdz-repo":"https://github.com/SebastienRietteMTO/phyex-lmdz.git",
+"phyex-lmdz-commit":"7f71dbbc7fa300b88d2a1fc58408ababa07872eb"
 }
