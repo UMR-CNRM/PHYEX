@@ -587,9 +587,6 @@ CONTAINS
 !!     
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      Module MODD_PARAMETERS
-!!          JPHEXT       : Horizontal external points number
-!!          JPVEXT       : Vertical external points number
 !!
 !!    REFERENCE
 !!    ---------

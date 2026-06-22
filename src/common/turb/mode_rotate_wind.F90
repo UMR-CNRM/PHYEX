@@ -76,7 +76,6 @@ CONTAINS
 !       
 !*      0. DECLARATIONS
 !          ------------
-USE MODD_PARAMETERS, ONLY: JPVEXT
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 ! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
@@ -139,7 +138,7 @@ IIU = SIZE(PU,1)
 IJU = SIZE(PU,2)
 IIE = IIU - 1
 IJE = IJU - 1
-IKB = 1+JPVEXT
+IKB = D%NKB
 !
 !$acc kernels present(pdircosyw,zvint,zwfin,zcoefm,zufin,pdxx,pdircosxw) &
 !$acc present (zwint,zwground,zvfin,puslope,pdircoszw,zuint,psinslope,pw,pcosslope) &

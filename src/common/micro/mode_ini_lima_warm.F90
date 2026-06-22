@@ -55,8 +55,6 @@ USE MODD_PARAM_LIMA_WARM, ONLY: NAHEN, NHYP, PARAM_LIMA_WARM_ALLOCATE, PARAM_LIM
                                 XLBEXC, XLBEXR, XLBR, XNR, XPSI1, XPSI3, XR0, XSCBU2, XSCBU3, &
                                 XSCBUEXP1, XSCBU_EFF1, XSCBU_EFF2, XSELFC, XSPONBUD1, XSPONBUD2, &
                                 XSPONBUD3, XSPONCOEF2, XTHCO, XTMIN, XWMIN
-USE MODD_PARAMETERS, ONLY: JPVEXT
-!USE MODD_LUNIT, ONLY : TLUOUT0
 !
 USE MODE_LIMA_FUNCTIONS, ONLY: MOMG
 USE MODI_HYPGEO, ONLY: HYPGEO
@@ -72,8 +70,6 @@ REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: IKB                ! Coordinates of the first and last physical 
-                              ! points along z
 INTEGER :: I1                 ! Internal loop indexes
 INTEGER :: IMOD               ! Internal loop to index the CCN modes
 !
@@ -197,7 +193,6 @@ END IF
 !
 !*       4.1    Exponent of the fall-speed air density correction
 !
-IKB = 1 + JPVEXT
 ! Correction
 !ZRHO00 = XP00/(XRD*XTHVREFZ(IKB))
 ZRHO00 = 1.2041 ! at P=1013.25hPa and T=20°C

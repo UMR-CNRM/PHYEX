@@ -49,7 +49,6 @@ CONTAINS
 !
 USE MODD_CST, ONLY: XP00, XPI, XRHOLW, XTT
 !USE MODD_LUNIT, ONLY: TLUOUT0
-USE MODD_PARAMETERS, ONLY: JPVEXT
 USE MODD_PARAM_LIMA, ONLY: CPRISTINE_ICE_LIMA, HTYPE_CRYSTAL_SHAPE, LCRIAUTI, LCRYSTAL_SHAPE, &
                            LICE3, LSNOW_T, NDIAM, NMOM_G, NMOM_H, NMOM_R, NMOM_S, NNB_CRYSTAL_SHAPE, &
                            NPHILLIPS, PARAM_LIMA_ALLOCATE, XABSCISS, XACRIAUTI, XALPHAC, XALPHAG, &
@@ -160,8 +159,6 @@ REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 !*       0.2   Declarations of local variables :
 !
 CHARACTER(LEN=13) :: YVAL     ! String for error message
-INTEGER :: IKB                ! Coordinates of the first  physical 
-                              ! points along z
 INTEGER :: I1, ISH, ISH2      ! Internal loop indexes
 !
 REAL, DIMENSION(8)  :: ZGAMI  ! parameters involving various moments
@@ -640,7 +637,6 @@ XREFFI = (3*XAI/(2*ZRHOIW*10.**3*XGAMMAI)*MOMG(XALPHAI,XNUI,XBI)/MOMG(XALPHAI,XN
 !
 !*       3.1    Exponent of the fall-speed air density correction
 !
-IKB = 1 + JPVEXT
 ! Correction
 ! ZRHO00 = XP00/(XRD*XTHVREFZ(IKB))
 ZRHO00 = 1.2041 ! at P=1013.25hPa and T=20°C

@@ -46,8 +46,6 @@ CONTAINS
 !!        XRHOLW               ! Liquid water density
 !!      Module MODD_REF
 !!        XTHVREFZ             ! Reference virtual pot.temp. without orography
-!!      Module MODD_PARAMETERS
-!!        JPVEXT               !
 !!      Module MODD_RAIN_ICE_DESCR
 !!      Module MODD_RAIN_ICE_PARAM
 !!

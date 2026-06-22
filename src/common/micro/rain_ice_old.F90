@@ -51,9 +51,6 @@
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      Module MODD_PARAMETERS
-!!          JPHEXT       : Horizontal external points number
-!!          JPVEXT       : Vertical external points number
 !!      Module MODD_CONF :
 !!          CCONF configuration of the model for the first time step
 !!      Module MODD_CST
@@ -175,7 +172,6 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS, ONLY: JPVEXT
 USE MODD_BUDGET,     ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, &
                            NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
 USE MODI_GAMMA,      ONLY: GAMMA
@@ -290,6 +286,7 @@ INTEGER :: JK            ! Vertical loop index for the rain sedimentation
 INTEGER :: JIJ            ! Loop index for the interpolation
 INTEGER :: IKB           !
 INTEGER :: IKE           !
+INTEGER :: IKL
 !
 INTEGER :: IMICRO ! Case number of sedimentation, T>0 (for HEN) and r_x>0 locations
 REAL, DIMENSION(D%NIJT)       :: ZCONC_TMP ! Weighted concentration
@@ -420,9 +417,9 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD',0,ZHOOK_HANDLE)
 LCHECKNOISE=.TRUE.
-IKB=KKA+JPVEXT*KKL
-IKE=KKU-JPVEXT*KKL
-
+IKB=D%NKB
+IKE=D%NKE
+IKL=D%NKL
 !
 !*       1.2     COMPUTE SOME CONSTANT PARAMETERS
 !
@@ -917,11 +914,11 @@ IF (KSIZE >= 0) THEN
     ZRAINFR(JIJ,IKE)=0.
   END DO
 
-  DO JK=IKE-KKL, IKB, -KKL
+  DO JK=IKE-IKL, IKB, -IKL
     DO JIJ = D%NIJB, D%NIJE
       IF (PRRT(JIJ,JK) .GT. ICED%XRTMIN(3)) THEN
 
-        ZRAINFR(JIJ,JK)=MAX(ZRAINFR(JIJ,JK), ZRAINFR(JIJ,JK+KKL))
+        ZRAINFR(JIJ,JK)=MAX(ZRAINFR(JIJ,JK), ZRAINFR(JIJ,JK+IKL))
 
         IF (ZRAINFR(JIJ,JK)==0) THEN
           ZRAINFR(JIJ,JK)=1.
@@ -1338,7 +1335,7 @@ IF (HSEDIM == 'STAT') THEN
   ENDIF
 
   CALL RAIN_ICE_OLD_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
-                                       KRR, OSEDIC, PTSTEP, KKL, IKB, IKE, &
+                                       KRR, OSEDIC, PTSTEP, IKL, IKB, IKE, &
                                        PDZZ, PRHODJ, PRHODREF, PPABST, &
                                        PTHT, PRCT, PRRT, PRST, PRGT, &
                                        PRCS, PRRS, PRIS, PRSS, PRGS, &
@@ -1378,7 +1375,7 @@ ELSEIF (HSEDIM == 'SPLI') THEN
   ENDIF
 
   CALL RAIN_ICE_OLD_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, KSIZE, &
-                                        KRR, OSEDIC, PTSTEP, KKL, IKB, KSPLITR, &
+                                        KRR, OSEDIC, PTSTEP, IKL, IKB, KSPLITR, &
                                         PDZZ, PRHODJ, PRHODREF, PPABST, &
                                         PTHT, PRCT, PRRT, PRST, PRGT, &
                                         PRCS, PRRS, PRIS, PRSS, PRGS, &
@@ -1412,10 +1409,10 @@ END IF
   END DO
 
   DO JIJ = D%NIJB, D%NIJE
-    DO JK=IKE-KKL, IKB, -KKL
+    DO JK=IKE-IKL, IKB, -IKL
       IF (PRRS(JIJ,JK)*PTSTEP .GT. ICED%XRTMIN(3)) THEN
 
-        ZRAINFR(JIJ,JK)=MAX(ZRAINFR(JIJ,JK), ZRAINFR(JIJ,JK+KKL))
+        ZRAINFR(JIJ,JK)=MAX(ZRAINFR(JIJ,JK), ZRAINFR(JIJ,JK+IKL))
 
         IF (ZRAINFR(JIJ,JK)==0) THEN
           ZRAINFR(JIJ,JK)=1.
