@@ -24,17 +24,11 @@ aux/gradient_u.f90
 aux/gradient_v.f90
 aux/gradient_w.f90
 aux/mode_io_field_write.f90
-aux/ini_phyex.f90
-aux/modi_ini_phyex.f90
-aux/modd_dust.f90
-aux/modd_salt.f90
-aux/modd_ch_aerosol.f90
 aux/ch_aer_activation.f90
 aux/mode_openacc_set_device.f90
 aux/shuman_device.f90
 aux/get_halo.f90
 aux/mode_io_field_write_phy.f90
-aux/shuman_phy.f90
 aux/shuman.f90
 turb/les_mean_subgrid.f90
 turb/les_mean_subgrid_phy.f90
@@ -48,6 +42,10 @@ aux/mode_thermo.f90
 aux/gamma.f90
 aux/gamma_inc.f90
 aux/general_gamma.f90
+
+#files not used in Meso-NH
+aux/ini_phyex.f90
+aux/modi_ini_phyex.f90
 
 #old version of rain_ice
 micro/mode_rain_ice_old_fast_rg.f90
