@@ -3,14 +3,6 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-module modi_tools
-  ! /!\ converte this module MODE -> in MODI + subroutines/functions outside module
-  ! /!\ to avoid very long compilation time if implementation change in subroutines
-  ! /!\ This 'empty' module is here to avoid 'automatic' generation of wrong interface modi_quisort + modi_upcase
-  ! /!\ in futur version rename all 'use mode_tools' -> 'use modi_tools'
-  ! /!\ and change the module name below  mode_tools -> modi_tools
-  implicit none
-end module modi_tools
 !################
 module mode_tools
 !################
