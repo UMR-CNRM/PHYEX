@@ -46,9 +46,6 @@
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      Module MODD_PARAMETERS
-!!          JPHEXT       : Horizontal external points number
-!!          JPVEXT       : Vertical external points number
 !!      Module MODD_CONF :
 !!          CCONF configuration of the model for the first time step
 !!      Module MODD_CST
