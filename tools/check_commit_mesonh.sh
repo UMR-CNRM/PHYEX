@@ -28,6 +28,7 @@ declare -A fileFromCase=(
   ["INTEGRATION_CASES/HPC/ARMCU_LES/DEAR"]="ARM__.1.CEN4T.001.nc ARM__.1.CEN4T.000.nc"
   ["KTEST/014_LIMA"]="002_mesonh/XPREF.1.SEG01.002.nc 002_mesonh/XPREF.1.SEG01.000.nc"
   ["INTEGRATION_CASES/HPC/OCEAN_LES"]="004_run2/SPWAN.2.25m00.001.nc"
+  ["KTEST/012_dust"]="003_run/DUST7.1.SEG01.001.nc 003_run/DUST7.1.SEG01.000.nc"
 )
 allowedTests=$(IFS=','; echo "${!fileFromCase[*]}")
 defaultTest="KTEST/007_16janvier"
@@ -206,7 +207,7 @@ if [ $run == true ]; then
         set +o pipefail #We want to go through all tests
         t1=$(($(date +%s%N)/1000)) #current time in milliseconds
         export POSTRUN=echo #to disable plotting
-        export PHYEX_REDUCED_GRID=yes #to reduce the grid size for some tests
+        export PHYEX_TEST_MODE=yes #to reduce the grid size for some tests
         #echo yes to accept the dowloading of PGD files
         echo yes | make all 2>&1 | tee Output_run
         t2=$(($(date +%s%N)/1000))

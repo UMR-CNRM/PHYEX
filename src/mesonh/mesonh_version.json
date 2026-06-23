@@ -1,12 +1,13 @@
 {
 "MESONHrepo":"https://src.koda.cnrs.fr/sebastien.riette.1/mesonh-code",
-"MESONHcommit":"30f7b1362d262c6f810c66b855b2053c554ccd18",
+"MESONHcommit":"10510479c1a33937b622e540539e7e441961d990",
 "refversion":"MNH-600-dev-473daaa2f",
 "testing": {
             "KTEST/007_16janvier":"849aa37",
             "INTEGRATION_CASES/LOCAL/ARMCU_1D_CONDSAMP":"849aa37",
             "KTEST/014_LIMA":"849aa37",
             "INTEGRATION_CASES/HPC/ARMCU_LES/DEAR":"849aa37",
-            "INTEGRATION_CASES/HPC/OCEAN_LES":"849aa37"
+            "INTEGRATION_CASES/HPC/OCEAN_LES":"849aa37",
+            "KTEST/012_dust":"849aa37"
            }
 }

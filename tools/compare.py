@@ -216,7 +216,7 @@ def comp_NODE(f1, f2, spnorms=None, gpnorms=None, norm_max_diff=0.050000):
                     (""" + default_gpnorms + """)
     :param norm_max_diff: maximum difference allowed
     """
-    
+
     from collections import defaultdict
 
     if spnorms is None: spnorms = default_spnorms
@@ -275,7 +275,7 @@ def comp_NODE(f1, f2, spnorms=None, gpnorms=None, norm_max_diff=0.050000):
         return s
 
     def main(f1, f2):
-    
+
         fx1 = xave(f1)
         fx2 = xave(f2)
 
@@ -283,64 +283,64 @@ def comp_NODE(f1, f2, spnorms=None, gpnorms=None, norm_max_diff=0.050000):
         print(center(title, 118))
         print(center('=' * len(title), 118))
         print()
-    
+
         x = [[]]
         diff = {}
         zero = 0
         numb = 0
-    
+
         tag1 = "NORMDIFF"
         tag2 = "NORMSTAT"
-    
+
         nout = 0
         while fx1 and fx2:
             (field1, x1) = fx1.pop(0)
             (field2, x2) = fx2.pop(0)
-    
+
             if field1 != field2:
                 return 1
                 #sys.exit("Field mismatch {} != {}".format(field1, field2))
-    
+
             x1, x2 = x1.strip(), x2.strip()
             if x1 and x2:
                 dx = float(x1) - float(x2)
                 dr = (2 * dx) / (float(x1) + float(x2)) if float(x1) + float(x2) > 0 else 0.0
-    
+
                 sdx = '{:17.9e}'.format(dx)
                 sdr = '{:17.9e}'.format(dr)
-    
+
                 dx = float(sdx)
                 dr = float(sdr)
-    
+
                 x[-1].append(" {} | {:20} | {:17.9e}  |  {:17.9e}  |  {:17}  |  {:17} {}\n".format(
                     tag1, center(field1, 20), float(x1), float(x2), sdx, sdr, '*' if dr > opts['norm_max_diff'] else ''))
-    
+
                 nout += 1 if abs(dr) > opts['norm_max_diff'] else 0
-    
+
                 if abs(dr) > 0:
                     n = int(numpy.floor((numpy.log(abs(dr)) / numpy.log(10))))
                     diff[n] = diff.get(n, 0) + 1
                 else:
                     zero += 1
-    
+
                 numb += 1
             else:
                 x.append([])
-    
+
         print(" {} |                      |{:19} | {:19} | {:19} | {:19}".format(
             tag1, center("NORM(REF)", 19), center("NORM(EXP)", 19),
             center("NORM(REF)-NORM(EXP)", 19), center("(NORM(REF)-NORM(EXP))", 19)))
-    
+
         print(" {} |                      |{:19} | {:19} | {:19} | {:19}".format(
             tag1, '', '', '', center("/NORM(REF)", 19)))
-    
+
         for i in range(len(x)):
             if not x[i]:
                 break
             print("".join(x[i]))
-    
+
         print("\n")
-    
+
         diff_cumul = 0
         perc_cumul = 0
         for n1 in sorted(diff.keys()):
@@ -351,14 +351,14 @@ def comp_NODE(f1, f2, spnorms=None, gpnorms=None, norm_max_diff=0.050000):
             perc_cumul += perc
             print(" {} | {:3d} .. {:3} | {:3d} / {:3d} | {:3d} / {:3d} | {:6.2f} %, {:6.2f} %\n".format(
                   tag2, n1, n2, diff_val, numb, diff_cumul, numb, perc, perc_cumul))
-    
+
         if nout:
             print("\n")
             text = "WARNING : SOME NORMS DIFFERENCES ARE OUTSIDE ALLOWED LIMIT OF {:6.2f} %\n".format(
                 100 * opts['norm_max_diff'])
             print(text * 5)
         return nout
-    
+
     return main(f1, f2)
 
 def comp_binary(f1, f2, offset):
@@ -400,55 +400,55 @@ def comp_testprogs(f1, f2):
 
 
 if __name__ == "__main__":
-   import argparse
-   import sys
-   parser = argparse.ArgumentParser(description='Compare all the variables in the different files')
-   parser.add_argument('--backup', metavar=('BACKUP_USER', 'BACKUP_REF'), nargs=2,
-                       type=str, help="Backup files (user and reference)")
-   parser.add_argument('--diac', metavar=('DIAC_USER', 'DIAC_REF'), nargs=2,
-                       type=str, help="Diachronic .000 files (user and reference)")
-   parser.add_argument('--ddh', nargs=2, metavar=('DDH_USER', 'DDH_REF'),
-                       type=str, help="DDH files (user and reference)")
-   parser.add_argument('--ddhplots', metavar='DDHPLOT', nargs='+',
-                       help="Plot filenames for DDH differences")
-   parser.add_argument('--node', nargs=2, metavar=('DDH_USER', 'DDH_REF'),
-                       type=str, help="NODE files (user and reference) to compare norms")
-   parser.add_argument('--binary', nargs=3, metavar=('BIN_USER', 'BIN_REF', 'OFFSET'),
-                       type=str, help="Binary files (user and reference) and offset")
-   parser.add_argument('--ncdump', nargs=2, metavar=('NC_USER', 'NC_REF'),
-                       type=str, help="Netcdf files (user and reference) whose ncdump output" + \
-                                      "must be compared")
-   parser.add_argument('--testprogs', nargs=2, metavar=('LST_USER', 'LST_REF'),
-                       type=str, help="Testprogs listing (user and ref)")
-   args = parser.parse_args()
+    import argparse
+    import sys
+    parser = argparse.ArgumentParser(description='Compare all the variables in the different files')
+    parser.add_argument('--backup', metavar=('BACKUP_USER', 'BACKUP_REF'), nargs=2,
+                        type=str, help="Backup files (user and reference)")
+    parser.add_argument('--diac', metavar=('DIAC_USER', 'DIAC_REF'), nargs=2,
+                        type=str, help="Diachronic .000 files (user and reference)")
+    parser.add_argument('--ddh', nargs=2, metavar=('DDH_USER', 'DDH_REF'),
+                        type=str, help="DDH files (user and reference)")
+    parser.add_argument('--ddhplots', metavar='DDHPLOT', nargs='+',
+                        help="Plot filenames for DDH differences")
+    parser.add_argument('--node', nargs=2, metavar=('DDH_USER', 'DDH_REF'),
+                        type=str, help="NODE files (user and reference) to compare norms")
+    parser.add_argument('--binary', nargs=3, metavar=('BIN_USER', 'BIN_REF', 'OFFSET'),
+                        type=str, help="Binary files (user and reference) and offset")
+    parser.add_argument('--ncdump', nargs=2, metavar=('NC_USER', 'NC_REF'),
+                        type=str, help="Netcdf files (user and reference) whose ncdump output" + \
+                                       "must be compared")
+    parser.add_argument('--testprogs', nargs=2, metavar=('LST_USER', 'LST_REF'),
+                        type=str, help="Testprogs listing (user and ref)")
+    args = parser.parse_args()
 
-   totalstatus = 0
-   if args.backup:
-       status = compareBACKUPFiles(*args.backup)
-       totalstatus += status
-       print('status for backup files = ' + str(status))
-   if args.diac:
-       status = compareTSERIESFiles(*args.diac)
-       totalstatus += status
-       print('status for diachronic files = ' + str(status))
-   if args.ddh:
-       status = comp_DDH(*args.ddh, args.ddhplots)
-       totalstatus += status
-       #print('status for ddh files = ' + str(status))
-   if args.node:
-       status = comp_NODE(*args.node, norm_max_diff=0.)
-       totalstatus += status
-       #print('status for NODE files = ' + str(status))
-   if args.binary:
-       status = comp_binary(*args.binary)
-       totalstatus += status
-       #print('status for binary files = ' + str(status))
-   if args.ncdump:
-       status = comp_ncdump(*args.ncdump)
-       totalstatus += status
-       print('status for ncdump of files = ' + str(status))
-   if args.testprogs:
-       status = comp_testprogs(*args.testprogs)
-       totalstatus += status
-       #print('status for testprogs listings = ' + str(status))
-   sys.exit(totalstatus)
+    totalstatus = 0
+    if args.backup:
+        status = compareBACKUPFiles(*args.backup)
+        totalstatus += status
+        print('status for backup files = ' + str(status))
+    if args.diac:
+        status = compareTSERIESFiles(*args.diac)
+        totalstatus += status
+        print('status for diachronic files = ' + str(status))
+    if args.ddh:
+        status = comp_DDH(*args.ddh, args.ddhplots)
+        totalstatus += status
+        #print('status for ddh files = ' + str(status))
+    if args.node:
+        status = comp_NODE(*args.node, norm_max_diff=0.)
+        totalstatus += status
+        #print('status for NODE files = ' + str(status))
+    if args.binary:
+        status = comp_binary(*args.binary)
+        totalstatus += status
+        #print('status for binary files = ' + str(status))
+    if args.ncdump:
+        status = comp_ncdump(*args.ncdump)
+        totalstatus += status
+        print('status for ncdump of files = ' + str(status))
+    if args.testprogs:
+        status = comp_testprogs(*args.testprogs)
+        totalstatus += status
+        #print('status for testprogs listings = ' + str(status))
+    sys.exit(totalstatus)
