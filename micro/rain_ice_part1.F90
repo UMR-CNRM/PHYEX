@@ -21,6 +21,9 @@
                                    PINPRH, PFPR, PQHT, PQHS,                             &
                                    PT, PLVFACT, PLSFACT, PWR, PWTH, PZCONC3D, OMICRO,    &
                                    PRVHENI, PZZZZ )
+
+!$ACDC singlecolumn --nocreate-interface
+
 !     #############################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -530,6 +533,9 @@ ENDDO
 !ICE4_RAINFR_VERT needs the output of ICE4_COMPUTE_PDF; thus this routine
 !is called here but it's still called from within ice4_tendencies.
 IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
+
+!$ACDC ABORT {
+
   IF (PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM') THEN
     DO JK = IKTB, IKTE
       DO JIJ=IIJB, IIJE
@@ -570,6 +576,9 @@ IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
     CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, PWR(:,:,IRR), &
                          &PWR(:,:,IRS), PWR(:,:,IRG))
   ENDIF
+
+!$ACDC }
+
 ELSE
   PRAINFR(:,:)=1.
 ENDIF
