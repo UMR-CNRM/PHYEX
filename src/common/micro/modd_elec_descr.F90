@@ -159,6 +159,8 @@ REAL, DIMENSION(:,:),   ALLOCATABLE :: XEPOTFW_TOP
 LOGICAL :: LIAGGS_LATHAM=.FALSE.   ! .T.: to enable ELEC=>MICROPHYS via
 !                                  ! ice aggregation rate
 !
+LOGICAL :: LELEC_QLAP=.FALSE.      ! .T.: to set Electric upper/lower boundary condition in QLAP after GDIV
+!
 ! The following variables must be declared with a derived type to match with PHYEX requirements
 TYPE ELEC_DESCR_t
   REAL :: XFC, XFR, XFI, XFS, XFG, XFH ! f_x in q_x = e_x D^f_x
