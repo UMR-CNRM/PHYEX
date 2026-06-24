@@ -266,6 +266,13 @@ if [ $check == true ]; then
       fi
 
       #Comparison
+      if [ $profile_sourced -eq 0 ]; then
+        set +e #file ends with a test that can return false
+        . $MNHPACK/$mnhdir/conf/profile_mesonh-*
+        set -e
+        profile_sourced=1
+      fi
+
       if [ -f $file1u -a -f $file1r ]; then
         # Compare variable of both Synchronous and Diachronic files with printing difference
         echo "Comparison for case $t..."

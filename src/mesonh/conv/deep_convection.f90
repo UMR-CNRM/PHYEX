@@ -127,17 +127,17 @@ END MODULE MODI_DEEP_CONVECTION
 !!      We start by selecting convective columns in the model domain through
 !!      the call of routine TRIGGER_FUNCT. Then, we allocate memory for the
 !!      convection updraft and downdraft variables and gather the grid scale
-!!      variables in convective arrays. 
+!!      variables in convective arrays.
 !!      The updraft and downdraft computations are done level by level starting
 !!      at the  bottom and top of the domain, respectively.
 !!      All computations are done on MNH thermodynamic levels. The depth
 !!      of the current model layer k is defined by DP(k)=P(k-1)-P(k)
-!!      
-!!     
+!!
+!!
 !!
 !!    EXTERNAL
 !!    --------
-!!    CONVECT_TRIGGER_FUNCT 
+!!    CONVECT_TRIGGER_FUNCT
 !!    CONVECT_SATMIXRATIO
 !!    CONVECT_UPDRAFT
 !!        CONVECT_CONDENS
@@ -170,7 +170,7 @@ END MODULE MODI_DEEP_CONVECTION
 !!          XA25                 ! reference grid area
 !!          XCRAD                ! cloud radius
 !!
-!!         
+!!
 !!    REFERENCE
 !!    ---------
 !!
@@ -185,7 +185,7 @@ END MODULE MODI_DEEP_CONVECTION
 !!
 !!    MODIFICATIONS
 !!    -------------
-!!      Original    26/03/96 
+!!      Original    26/03/96
 !!   Peter Bechtold 04/10/97 replace theta_il by enthalpy
 !!         "        10/12/98 changes for ARPEGE
 !!         "        12/12/00 add conservation correction
@@ -199,12 +199,13 @@ END MODULE MODI_DEEP_CONVECTION
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_CST
 USE MODD_CONVPAREXT
 USE MODD_CONVPAR
 USE MODD_NSV,       ONLY : NSV_LGBEG,NSV_LGEND, &
                            NSV_CHEMBEG,NSV_CHEMEND, &
-                           NSV_LNOXBEG
+                           NSV_LNOXBEG, TNSV
 USE MODD_CH_M9_n,   ONLY : CNAMES
 !
 USE MODI_CH_CONVECT_LINOX
@@ -215,7 +216,10 @@ USE MODI_CONVECT_DOWNDRAFT
 USE MODI_CONVECT_PRECIP_ADJUST
 USE MODI_CONVECT_CLOSURE
 USE MODI_CH_CONVECT_SCAVENGING
-USE MODI_CONVECT_CHEM_TRANSPORT
+USE MODE_CONVECT_CHEM_TRANSPORT, ONLY: CONVECT_CHEM_TRANSPORT
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
+USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
+USE MODD_CONVPAREXT, ONLY : CONVPAREXT
 !
 IMPLICIT NONE
 !
@@ -234,28 +238,28 @@ INTEGER,                    INTENT(IN) :: KTDIA    ! vertical computations can b
 REAL,                       INTENT(IN) :: PDTCONV  ! Interval of time between two
                                                    ! calls of the deep convection
                                                    ! scheme
-INTEGER,                    INTENT(IN) :: KICE     ! flag for ice ( 1 = yes, 
+INTEGER,                    INTENT(IN) :: KICE     ! flag for ice ( 1 = yes,
                                                    !                0 = no ice )
 LOGICAL,                    INTENT(IN) :: OREFRESH ! refresh or not tendencies
                                                    ! at every call
 LOGICAL,                    INTENT(IN) :: ODOWN    ! take or not convective
                                                    ! downdrafts into account
 LOGICAL,                    INTENT(IN) :: OSETTADJ ! logical to set convective
-                                                   ! adjustment time by user 
+                                                   ! adjustment time by user
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PTT      ! grid scale temperature at t
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PRVT     ! grid scale water vapor "
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PRCT     ! grid scale r_c  "
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PRIT     ! grid scale r_i "
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PUT      ! grid scale horiz. wind u "
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PVT      ! grid scale horiz. wind v "
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PWT      ! grid scale vertical 
+REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PWT      ! grid scale vertical
                                                    ! velocity (m/s)
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PPABST   ! grid scale pressure at t
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PZZ      ! height of model layer (m) 
-REAL, DIMENSION(KLON),      INTENT(IN) :: PDXDY    ! horizontal grid area (**2)
+REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PZZ      ! height of model layer (m)
+REAL, DIMENSION(KLON),      INTENT(IN) :: PDXDY    ! horizontal grid area (m**2)
 REAL, DIMENSION(KLON),      INTENT(IN) :: PTIMEC   ! value of convective adjustment
                                                    ! time if OSETTADJ=.TRUE.
-!   
+!
 INTEGER, DIMENSION(KLON),   INTENT(INOUT):: KCOUNT ! convective counter (recompute
                                                    ! tendency or keep it)
 REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PTTEN  ! convective temperature
@@ -304,29 +308,31 @@ INTEGER  :: IFTSTEPS                ! only used for chemical tracers
 REAL     :: ZEPS, ZEPSA             ! R_d / R_v, R_v / R_d
 REAL     :: ZRDOCP                  ! R_d/C_p
 !
-LOGICAL, DIMENSION(KLON, KLEV)     :: GTRIG3 ! 3D logical mask for convection 
+LOGICAL, DIMENSION(KLON, KLEV)     :: GTRIG3 ! 3D logical mask for convection
 LOGICAL, DIMENSION(KLON)           :: GTRIG  ! 2D logical mask for trigger test
-REAL, DIMENSION(KLON,KLEV)         :: ZTHT, ZSTHV, ZSTHES  ! grid scale theta, 
+REAL, DIMENSION(KLON,KLEV)         :: ZTHT, ZSTHV, ZSTHES  ! grid scale theta,
                                                            ! theta_v, theta_es
 REAL, DIMENSION(KLON)              :: ZTIME  ! convective time period
-REAL, DIMENSION(KLON)              :: ZWORK2, ZWORK2B ! work array 
+REAL, DIMENSION(KLON)              :: ZWORK2, ZWORK2B ! work array
 REAL                               :: ZW1    ! work variable
+TYPE(DIMPHYEX_T) :: D
+TYPE(CONVPAREXT) :: CVPEXT
 !
 !
 !*       0.2   Declarations of local allocatable  variables :
 !
 INTEGER, DIMENSION(:),ALLOCATABLE  :: IDPL    ! index for parcel departure level
 INTEGER, DIMENSION(:),ALLOCATABLE  :: IPBL    ! index for source layer top
-INTEGER, DIMENSION(:),ALLOCATABLE  :: ILCL    ! index for lifting condensation level 
+INTEGER, DIMENSION(:),ALLOCATABLE  :: ILCL    ! index for lifting condensation level
 INTEGER, DIMENSION(:),ALLOCATABLE  :: IETL    ! index for zero buoyancy level
 INTEGER, DIMENSION(:),ALLOCATABLE  :: ICTL    ! index for cloud top level
 INTEGER, DIMENSION(:),ALLOCATABLE  :: ILFS    ! index for level of free sink
-INTEGER, DIMENSION(:),ALLOCATABLE  :: IDBL    ! index for downdraft base level  
-INTEGER, DIMENSION(:),ALLOCATABLE  :: IML     ! melting level  
+INTEGER, DIMENSION(:),ALLOCATABLE  :: IDBL    ! index for downdraft base level
+INTEGER, DIMENSION(:),ALLOCATABLE  :: IML     ! melting level
 !
 INTEGER, DIMENSION(:), ALLOCATABLE :: ISDPL   ! index for parcel departure level
 INTEGER, DIMENSION(:),ALLOCATABLE  :: ISPBL   ! index for source layer top
-INTEGER, DIMENSION(:), ALLOCATABLE :: ISLCL   ! index for lifting condensation level 
+INTEGER, DIMENSION(:), ALLOCATABLE :: ISLCL   ! index for lifting condensation level
 REAL, DIMENSION(:), ALLOCATABLE    :: ZSTHLCL ! updraft theta at LCL
 REAL, DIMENSION(:), ALLOCATABLE    :: ZSTLCL  ! updraft temp. at LCL
 REAL, DIMENSION(:), ALLOCATABLE    :: ZSRVLCL ! updraft rv at LCL
@@ -336,22 +342,22 @@ REAL, DIMENSION(:), ALLOCATABLE    :: ZSTHVELCL! envir. theta_v at LCL
 REAL, DIMENSION(:), ALLOCATABLE    :: ZSDXDY  ! grid area (m^2)
 !
 ! grid scale variables
-REAL, DIMENSION(:,:), ALLOCATABLE  :: ZZ      ! height of model layer (m) 
+REAL, DIMENSION(:,:), ALLOCATABLE  :: ZZ      ! height of model layer (m)
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZPRES   ! grid scale pressure
-REAL, DIMENSION(:,:), ALLOCATABLE  :: ZDPRES  ! pressure difference between 
+REAL, DIMENSION(:,:), ALLOCATABLE  :: ZDPRES  ! pressure difference between
                                               ! bottom and top of layer (Pa)
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZU      ! grid scale horiz. u component on theta grid
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZV      ! grid scale horiz. v component on theta grid
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZW      ! grid scale vertical velocity on theta grid
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZTT     ! temperature
-REAL, DIMENSION(:,:), ALLOCATABLE  :: ZTH     ! grid scale theta     
-REAL, DIMENSION(:,:), ALLOCATABLE  :: ZTHV    ! grid scale theta_v     
+REAL, DIMENSION(:,:), ALLOCATABLE  :: ZTH     ! grid scale theta
+REAL, DIMENSION(:,:), ALLOCATABLE  :: ZTHV    ! grid scale theta_v
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZTHL    ! grid scale enthalpy (J/kg)
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZTHES, ZTHEST ! grid scale saturated theta_e
-REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRW     ! grid scale total water (kg/kg) 
-REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRV     ! grid scale water vapor (kg/kg) 
-REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRC     ! grid scale cloud water (kg/kg) 
-REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRI     ! grid scale cloud ice (kg/kg) 
+REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRW     ! grid scale total water (kg/kg)
+REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRV     ! grid scale water vapor (kg/kg)
+REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRC     ! grid scale cloud water (kg/kg)
+REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRI     ! grid scale cloud ice (kg/kg)
 REAL, DIMENSION(:),   ALLOCATABLE  :: ZDXDY   ! grid area (m^2)
 !
 ! updraft variables
@@ -371,8 +377,8 @@ REAL, DIMENSION(:,:), ALLOCATABLE  :: ZURR    ! liquid precipit. (kg/kg)
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZURS    ! solid precipit. (kg/kg)
                                               ! produced in  model layer
 REAL, DIMENSION(:),   ALLOCATABLE  :: ZUTPR   ! total updraft precipitation (kg/s)
-REAL, DIMENSION(:),   ALLOCATABLE  :: ZMFLCL  ! cloud base unit mass flux(kg/s) 
-REAL, DIMENSION(:),   ALLOCATABLE  :: ZCAPE   ! available potent. energy     
+REAL, DIMENSION(:),   ALLOCATABLE  :: ZMFLCL  ! cloud base unit mass flux(kg/s)
+REAL, DIMENSION(:),   ALLOCATABLE  :: ZCAPE   ! available potent. energy
 REAL, DIMENSION(:),   ALLOCATABLE  :: ZTHLCL  ! updraft theta at LCL
 REAL, DIMENSION(:),   ALLOCATABLE  :: ZTLCL   ! updraft temp. at LCL
 REAL, DIMENSION(:),   ALLOCATABLE  :: ZRVLCL  ! updraft rv at LCL
@@ -386,7 +392,7 @@ REAL, DIMENSION(:,:), ALLOCATABLE  :: ZDER    ! downdraft entrainment (kg/s)
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZDDR    ! downdraft detrainment (kg/s)
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZDTHL   ! downdraft enthalpy (J/kg)
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZDRW    ! downdraft total water (kg/kg)
-REAL, DIMENSION(:),   ALLOCATABLE  :: ZMIXF   ! mixed fraction at LFS        
+REAL, DIMENSION(:),   ALLOCATABLE  :: ZMIXF   ! mixed fraction at LFS
 REAL, DIMENSION(:),   ALLOCATABLE  :: ZTPR    ! total surf precipitation (kg/s)
 REAL, DIMENSION(:),   ALLOCATABLE  :: ZSPR    ! solid surf precipitation (kg/s)
 REAL, DIMENSION(:),   ALLOCATABLE  :: ZDTEVR  ! donwndraft evapor. (kg/s)
@@ -402,22 +408,22 @@ REAL, DIMENSION(:),   ALLOCATABLE  :: ZTIMEC, ZTIMED! time during which convecti
                                               ! active at grid point (as ZTIME)
 !
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZTHC    ! conv. adj. grid scale theta
-REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRVC    ! conv. adj. grid scale r_w 
-REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRCC    ! conv. adj. grid scale r_c 
-REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRIC    ! conv. adj. grid scale r_i 
+REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRVC    ! conv. adj. grid scale r_w
+REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRCC    ! conv. adj. grid scale r_c
+REAL, DIMENSION(:,:), ALLOCATABLE  :: ZRIC    ! conv. adj. grid scale r_i
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZWSUB   ! envir. compensating subsidence (Pa/s)
 !
-LOGICAL, DIMENSION(:),ALLOCATABLE  :: GTRIG1  ! logical mask for convection    
+LOGICAL, DIMENSION(:),ALLOCATABLE  :: GTRIG1  ! logical mask for convection
 LOGICAL, DIMENSION(:),ALLOCATABLE  :: GWORK   ! logical work array
 INTEGER, DIMENSION(:),ALLOCATABLE  :: IINDEX, IJINDEX, IJSINDEX, IJPINDEX!hor.index
-REAL, DIMENSION(:),   ALLOCATABLE  :: ZCPH    ! specific heat C_ph 
+REAL, DIMENSION(:),   ALLOCATABLE  :: ZCPH    ! specific heat C_ph
 REAL, DIMENSION(:),   ALLOCATABLE  :: ZLV, ZLS! latent heat of vaporis., sublim.
 REAL                               :: ZES     ! saturation vapor mixng ratio
 !
 ! Chemical Tracers:
 REAL, DIMENSION(:,:,:), ALLOCATABLE:: ZCH1    ! grid scale chemical specy (kg/kg)
 REAL, DIMENSION(:,:,:), ALLOCATABLE:: ZCH1C   ! conv. adjust. chemical specy 1
-REAL, DIMENSION(:,:),   ALLOCATABLE:: ZWORK3  ! work array 
+REAL, DIMENSION(:,:),   ALLOCATABLE:: ZWORK3  ! work array
 LOGICAL, DIMENSION(:,:,:),ALLOCATABLE::GTRIG4 ! logical mask
 INTEGER                            :: JN_NO   ! index of NO compound in PCH1
 REAL, DIMENSION(:,:),ALLOCATABLE   :: ZWORK4, ZWORK4C
@@ -425,26 +431,32 @@ REAL, DIMENSION(:,:),ALLOCATABLE   :: ZWORK4, ZWORK4C
 REAL, DIMENSION(:,:),ALLOCATABLE   :: ZZZ, ZRHODREF
 REAL, DIMENSION(:),ALLOCATABLE     :: ZIC_RATE,ZCG_RATE
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+!
 !-------------------------------------------------------------------------------
 !
 !
 !*       0.3    Compute loop bounds
 !               -------------------
 !
+IF (LHOOK) CALL DR_HOOK('DEEP_CONVECTION',0,ZHOOK_HANDLE)
 IIB = KIDIA
 IIE = KFDIA
 JCVEXB = MAX( 0, KBDIA - 1 )
-IKB = 1 + JCVEXB 
+IKB = 1 + JCVEXB
 IKS = KLEV
 JCVEXT = MAX( 0, KTDIA - 1 )
 IKE = IKS - JCVEXT
+CALL FILL_DIMPHYEX(D, KLON, 1, IKS)
+CVPEXT%JCVEXB = MAX( 0, KBDIA - 1 )
+CVPEXT%JCVEXT = MAX( 0, KTDIA - 1)
 !
 !
-!*       0.5    Update convective counter ( where KCOUNT > 0 
+!*       0.5    Update convective counter ( where KCOUNT > 0
 !               convection is still active ).
 !               ---------------------------------------------
 !
-KCOUNT(IIB:IIE) = KCOUNT(IIB:IIE) - 1 
+KCOUNT(IIB:IIE) = KCOUNT(IIB:IIE) - 1
 !
 IF ( OREFRESH ) THEN
   KCOUNT(:) = 1
@@ -454,7 +466,8 @@ END IF
 GTRIG(:)  = KCOUNT(:) <= 0
 ITEST = COUNT( GTRIG(:) )
 IF ( ITEST == 0 )  THEN   ! if convection is already active at every grid point
-  RETURN 
+  IF (LHOOK) CALL DR_HOOK('DEEP_CONVECTION',1,ZHOOK_HANDLE)
+  RETURN
 ENDIF
                           ! exit DEEP_CONVECTION
 !
@@ -478,7 +491,7 @@ WHERE ( GTRIG3(:,:) )
   PUMF(:,:)   = 0.
   PDMF(:,:)   = 0.
 END WHERE
-WHERE ( GTRIG(:) ) 
+WHERE ( GTRIG(:) )
   PPRLTEN(:) = 0.
   PPRSTEN(:) = 0.
   KCLTOP(:)  = 0
@@ -499,11 +512,11 @@ DEALLOCATE( GTRIG4 )
 !               ----------------------------
 !
 ZEPS   = XRD / XRV
-ZEPSA  = XRV / XRD 
+ZEPSA  = XRV / XRD
 ZRDOCP = XRD / XCPD
 !
 !
-!*       1.1    Set up grid scale theta, theta_v, theta_es 
+!*       1.1    Set up grid scale theta, theta_v, theta_es
 !               ------------------------------------------
 !
 ZTHT(:,:) = 300.
@@ -531,7 +544,7 @@ END DO
 !
 !-------------------------------------------------------------------------------
 !
-!*       2.     Test for convective columns and determine properties at the LCL 
+!*       2.     Test for convective columns and determine properties at the LCL
 !               --------------------------------------------------------------
 !
 !*       2.1    Allocate arrays depending on number of model columns that need
@@ -590,15 +603,15 @@ DO JI = 1, ITEST
   ZSDXDY(JI)    = PDXDY(JL)
 END DO
 !
-!*       2.2    Compute environm. enthalpy and total water = r_v + r_i + r_c 
+!*       2.2    Compute environm. enthalpy and total water = r_v + r_i + r_c
 !               and envir. saturation theta_e
 !               ------------------------------------------------------------
 !
 !
-!*       2.3    Test for convective columns and determine properties at the LCL 
+!*       2.3    Test for convective columns and determine properties at the LCL
 !               --------------------------------------------------------------
 !
-ISLCL(:) = MAX( IKB, 2 )   ! initialize DPL PBL and LCL 
+ISLCL(:) = MAX( IKB, 2 )   ! initialize DPL PBL and LCL
 ISDPL(:) = IKB
 ISPBL(:) = IKB
 !
@@ -633,7 +646,7 @@ DEALLOCATE( ZCAPE )
 !               --------------------------------------------------------------
 !
 ICONV = COUNT( GTRIG1(:) )
-IF ( ICONV == 0 )  THEN 
+IF ( ICONV == 0 )  THEN
   DEALLOCATE( ZSTHLCL )
   DEALLOCATE( ZSTLCL )
   DEALLOCATE( ZSRVLCL )
@@ -647,6 +660,7 @@ IF ( ICONV == 0 )  THEN
   DEALLOCATE( GTRIG1 )
   DEALLOCATE( IINDEX )
   DEALLOCATE( IJSINDEX )
+  IF (LHOOK) CALL DR_HOOK('DEEP_CONVECTION',1,ZHOOK_HANDLE)
   RETURN   ! no convective column has been found, exit DEEP_CONVECTION
  ENDIF
 !
@@ -713,7 +727,7 @@ ALLOCATE( ZLS(ICONV) )
 !                   arrays using mask GTRIG
 !                   ---------------------------------------------------
 !
-GTRIG(:)      = UNPACK( GTRIG1(:), MASK=GTRIG, FIELD=.FALSE. )  
+GTRIG(:)      = UNPACK( GTRIG1(:), MASK=GTRIG, FIELD=.FALSE. )
 IJINDEX(:)    = PACK( IINDEX(:), MASK=GTRIG(:) )
 !
 DO JK = IKB, IKE
@@ -758,11 +772,11 @@ DO JI = 1, ICONV
   ZDXDY(JI)     = ZSDXDY(JL)
 END DO
 ALLOCATE( GWORK(ICONV) )
-GWORK(:)      = PACK( GTRIG1(:),  MASK=GTRIG1(:) ) 
+GWORK(:)      = PACK( GTRIG1(:),  MASK=GTRIG1(:) )
 DEALLOCATE( GTRIG1 )
 ALLOCATE( GTRIG1(ICONV) )
 GTRIG1(:)     = GWORK(:)
-!                 
+!
 DEALLOCATE( GWORK )
 DEALLOCATE( IJPINDEX )
 DEALLOCATE( ISDPL )
@@ -777,7 +791,7 @@ DEALLOCATE( ZSTHVELCL )
 DEALLOCATE( ZSDXDY )
 !
 !
-!*           3.2    Compute pressure difference 
+!*           3.2    Compute pressure difference
 !            ---------------------------------------------------
 !
 ZDPRES(:,IKB) = 0.
@@ -785,7 +799,7 @@ DO JK = IKB + 1, IKE
   ZDPRES(:,JK)  = ZPRES(:,JK-1) - ZPRES(:,JK)
 END DO
 !
-!*           3.3   Compute environm. enthalpy and total water = r_v + r_i + r_c 
+!*           3.3   Compute environm. enthalpy and total water = r_v + r_i + r_c
 !                  ----------------------------------------------------------
 !
 DO JK = IKB, IKE, 1
@@ -799,10 +813,10 @@ END DO
 !
 !-------------------------------------------------------------------------------
 !
-!*           4.     Compute updraft properties 
+!*           4.     Compute updraft properties
 !                   ----------------------------
 !
-!*           4.1    Set mass flux at LCL ( here a unit mass flux with w = 1 m/s ) 
+!*           4.1    Set mass flux at LCL ( here a unit mass flux with w = 1 m/s )
 !                   -------------------------------------------------------------
 !
 DO JI = 1, ICONV
@@ -819,7 +833,7 @@ DEALLOCATE( ZLS )
 !
 CALL CONVECT_UPDRAFT( ICONV, KLEV,                                     &
                       KICE, ZPRES, ZDPRES, ZZ, ZTHL, ZTHV, ZTHES, ZRW, &
-                      ZTHLCL, ZTLCL, ZRVLCL, ZWLCL, ZZLCL, ZTHVELCL,   & 
+                      ZTHLCL, ZTLCL, ZRVLCL, ZWLCL, ZZLCL, ZTHVELCL,   &
                       ZMFLCL, GTRIG1, ILCL, IDPL, IPBL,                &
                       ZUMF, ZUER, ZUDR, ZUTHL, ZUTHV, ZURW,            &
                       ZURC, ZURI, ZURR, ZURS, ZUPR,                    &
@@ -827,12 +841,12 @@ CALL CONVECT_UPDRAFT( ICONV, KLEV,                                     &
 !
 !
 !
-!*           4.2    In routine UPDRAFT GTRIG1 has been set to false when cloud 
+!*           4.2    In routine UPDRAFT GTRIG1 has been set to false when cloud
 !                   thickness is smaller than 3 km
 !                   -----------------------------------------------------------
 !
 !
-ICONV1 = COUNT(GTRIG1) 
+ICONV1 = COUNT(GTRIG1)
 !
 IF ( ICONV1 > 0 )  THEN
 !
@@ -875,11 +889,11 @@ IF ( ICONV1 > 0 )  THEN
 !
 !-------------------------------------------------------------------------------
 !
-!*           5.     Compute downdraft properties 
+!*           5.     Compute downdraft properties
 !                   ----------------------------
 !
-!*           5.1    Compute advective time period and precipitation 
-!                   efficiency as a function of mean ambient wind (shear) 
+!*           5.1    Compute advective time period and precipitation
+!                   efficiency as a function of mean ambient wind (shear)
 !                   --------------------------------------------------------
 !
   CALL CONVECT_TSTEP_PREF( ICONV, KLEV,                          &
@@ -907,7 +921,7 @@ IF ( ICONV1 > 0 )  THEN
   END DO
 !
   CALL CONVECT_DOWNDRAFT( ICONV, KLEV,                               &
-                          KICE, ZPRES, ZDPRES, ZZ, ZTH, ZTHES,       & 
+                          KICE, ZPRES, ZDPRES, ZZ, ZTH, ZTHES,       &
                           ZRW, ZRC, ZRI,                             &
                           ZPREF, ILCL, ICTL, IETL,                   &
                           ZUTHL, ZURW, ZURC, ZURI,                   &
@@ -919,7 +933,7 @@ IF ( ICONV1 > 0 )  THEN
 !
 !*           6.     Adjust up and downdraft mass flux to be consistent
 !                   with precipitation efficiency relation.
-!                   --------------------------------------------------- 
+!                   ---------------------------------------------------
 !
   CALL CONVECT_PRECIP_ADJUST( ICONV, KLEV,                              &
                               ZPRES,ZUMF, ZUER, ZUDR, ZUPR, ZUTPR, ZURW,&
@@ -950,7 +964,7 @@ IF ( ICONV1 > 0 )  THEN
 !
 !-------------------------------------------------------------------------------
 !
-!*           8.     Determine the final grid-scale (environmental) convective 
+!*           8.     Determine the final grid-scale (environmental) convective
 !                   tendencies and set convective counter
 !                   --------------------------------------------------------
 !
@@ -964,9 +978,9 @@ IF ( ICONV1 > 0 )  THEN
   DO JK = IKB, IKE
     ZTHC(:,JK) = ( ZTHC(:,JK) - ZTH(:,JK) ) / ZTIMEC(:)             &
       * ( ZPRES(:,JK) / XP00 ) ** ZRDOCP ! change theta in temperature
-    ZRVC(:,JK) = ( ZRVC(:,JK) - ZRW(:,JK) + ZRC(:,JK) + ZRI(:,JK) )/ ZTIMEC(:)  
+    ZRVC(:,JK) = ( ZRVC(:,JK) - ZRW(:,JK) + ZRC(:,JK) + ZRI(:,JK) )/ ZTIMEC(:)
     ZRCC(:,JK) = ( ZRCC(:,JK) - ZRC(:,JK) ) / ZTIMEC(:)
-    ZRIC(:,JK) = ( ZRIC(:,JK) - ZRI(:,JK) ) / ZTIMEC(:) 
+    ZRIC(:,JK) = ( ZRIC(:,JK) - ZRI(:,JK) ) / ZTIMEC(:)
 !
     ZPRLFLX(:,JK) = ZPRLFLX(:,JK) / ( XRHOLW * ZDXDY(:) )
     ZPRSFLX(:,JK) = ZPRSFLX(:,JK) / ( XRHOLW * ZDXDY(:) )
@@ -1191,7 +1205,7 @@ IF ( ICONV1 > 0 )  THEN
 !
     ELSE
 !
-      CALL CONVECT_CHEM_TRANSPORT( ICONV, KLEV, KCH1, ZCH1, ZCH1C,      &
+      CALL CONVECT_CHEM_TRANSPORT( CVPEXT, D, TNSV, CST, KCH1, ZCH1, ZCH1C,      &
                                    IDPL, IPBL, ILCL, ICTL, ILFS, IDBL,  &
                                    ZUMF, ZUER, ZUDR, ZDMF, ZDER, ZDDR,  &
                                    ZTIMEC, ZDXDY, ZMIXF, ZLMASS, ZWSUB, &
@@ -1210,7 +1224,7 @@ IF ( ICONV1 > 0 )  THEN
 !     JKM = MAXVAL( ICTL(:) )
       JKM = IKE - 1
       DO JN = 1, KCH1
-        IF((JN < NSV_LGBEG .OR. JN>NSV_LGEND-1) .AND. JN .NE. JN_NO ) THEN 
+        IF((JN < NSV_LGBEG .OR. JN>NSV_LGEND-1) .AND. JN .NE. JN_NO ) THEN
           ! no correction for Lagrangian and LiNOx variables
           ZWORK3(:,JN) = 0.
           ZWORK2(:)    = 0.
@@ -1219,7 +1233,7 @@ IF ( ICONV1 > 0 )  THEN
             DO JI = 1, ICONV
               ZW1 = .5 * (ZPRES(JI,JK-1) - ZPRES(JI,JKP))
               ZWORK3(JI,JN) = ZWORK3(JI,JN) + (ZCH1C(JI,JK,JN)-ZCH1(JI,JK,JN)) * ZW1
-              ZWORK2(JI)    = ZWORK2(JI)    + ABS(ZCH1C(JI,JK,JN)) * ZW1 
+              ZWORK2(JI)    = ZWORK2(JI)    + ABS(ZCH1C(JI,JK,JN)) * ZW1
             END DO
           END DO
 !
@@ -1254,7 +1268,7 @@ IF ( ICONV1 > 0 )  THEN
 !
 !-------------------------------------------------------------------------------
 !
-!*           9.     Write up- and downdraft mass fluxes 
+!*           9.     Write up- and downdraft mass fluxes
 !                   ------------------------------------
 !
   DO JK = IKB, IKE
@@ -1381,4 +1395,5 @@ DEALLOCATE( IJSINDEX )
 DEALLOCATE( GTRIG1 )
 !
 !
+IF (LHOOK) CALL DR_HOOK('DEEP_CONVECTION',1,ZHOOK_HANDLE)
 END SUBROUTINE DEEP_CONVECTION
