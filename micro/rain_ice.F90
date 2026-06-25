@@ -277,9 +277,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OELEC .OR. BUCONF%LBU_ENABLE), &
                 MERGE(D%NKT,0,OELEC .OR. BUCONF%LBU_ENABLE), &
                 MERGE(IBUNUM-IBUNUM_EXTRA,0,OELEC .OR. BUCONF%LBU_ENABLE)) :: &
            ZBUDGETS
-INTEGER :: ISIZE, IPROMA, IGPBLKS
 INTEGER :: JIJ, JK
-INTEGER :: IKTB, IKTE, IKB, IIJB, IIJE, IIJT
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 0, ZHOOK_HANDLE)
@@ -302,39 +300,7 @@ CALL RAIN_ICE_PART1 ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
                       ZT, ZZ_LVFACT, ZZ_LSFACT, ZWR, ZWTH, ZCONC3D, LLMICRO,&
                       ZZ_RVHENI, ZZZZ )
 !
-IKTB=D%NKTB
-IKTE=D%NKTE
-IKB=D%NKB
-IIJB=D%NIJB
-IIJE=D%NIJE
-IIJT=D%NIJT
-!
-IF(PARAMI%LPACK_MICRO) THEN
-  ISIZE=0
-  DO JK=1,D%NKT
-    DO JIJ=1,D%NIJT
-      IF(LLMICRO(JIJ,JK)) ISIZE=ISIZE+1 ! Number of points with active microphysics
-    END DO
-  END DO
-  !PARAMI%NPROMICRO is the requested size for cache_blocking loop
-  !IPROMA is the effective size
-  !This parameter must be computed here because it is used for array dimensioning in ice4_pack
-  IF (PARAMI%NPROMICRO > 0 .AND. ISIZE > 0) THEN
-    ! Cache-blocking is active
-    ! number of chunks :
-    IGPBLKS = (ISIZE-1)/MIN(PARAMI%NPROMICRO,ISIZE)+1
-    ! Adjust IPROMA to limit the number of small chunks
-    IPROMA=(ISIZE-1)/IGPBLKS+1
-  ELSE
-    IPROMA=ISIZE ! no cache-blocking
-  ENDIF
-ELSE
-  ISIZE=D%NIJT*D%NKT
-  IPROMA=0
-ENDIF
-!
 CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,               &
-               IPROMA, ISIZE, &
                PTSTEP, KRR, OELEC, LLMICRO, OELEC, PEXN, &
                PRHODREF, PPABST, PCIT, PCLDFR, &
                PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI,               &

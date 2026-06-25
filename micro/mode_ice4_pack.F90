@@ -7,7 +7,7 @@ MODULE MODE_ICE4_PACK
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF, &
-                    &KPROMA, KSIZE, PTSTEP, &
+                    &PTSTEP, &
                     &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
                     &PEXN, PRHODREF, PPABST, PCIT, PCLDFR, &
                     &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
@@ -66,14 +66,14 @@ IMPLICIT NONE
 
 !NOTES ON SIZES
 !If we pack:
-! - KSIZE is the number of relevant point (with mixing ratio different from 0)
-! - KPROMA is the size of bloc of points
+! - ISIZE is the number of relevant point (with mixing ratio different from 0)
+! - IPROMA is the size of bloc of points
 !If we do not pack:
-! - KSIZE is the total number of points
-! - KPROMA is null for memory saving
+! - ISIZE is the total number of points
+! - IPROMA is null for memory saving
 !
 !When we do not pack, we can transmit directly the 3D arrays to the ice4_stepping subroutine, we do not need
-!to copy the values. It is why KPROMA is null because we do not need these arrays.
+!to copy the values. It is why IPROMA is null because we do not need these arrays.
 
 
 !
@@ -87,8 +87,6 @@ TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
-INTEGER,                  INTENT(IN)    :: KPROMA ! cache-blocking factor for microphysic loop
-INTEGER,                  INTENT(IN)    :: KSIZE
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 LOGICAL,                  INTENT(IN)    :: OSAVE_MICRO  ! If true, microphysical tendencies are saved
@@ -133,6 +131,9 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), &
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
+INTEGER :: IPROMA ! cache-blocking factor for microphysic loop
+INTEGER :: ISIZE
+INTEGER :: IGPBLKS
 INTEGER :: JIJ, JK
 INTEGER :: IKT, IKTB, IKTE, IIJT, IIJB, IIJE
 INTEGER :: ISTIJ, ISTK
@@ -160,6 +161,25 @@ LLSIGMA_RC=(PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')
 LL_AUCV_ADJU=(PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')
 !
 IF(PARAMI%LPACK_MICRO) THEN
+  ISIZE=0
+
+  DO JK=1,D%NKT
+    DO JIJ=1,D%NIJT
+      IF(LDMICRO(JIJ,JK)) ISIZE=ISIZE+1 ! Number of points with active microphysics
+    END DO
+  END DO
+  !PARAMI%NPROMICRO is the requested size for cache_blocking loop
+  !IPROMA is the effective size
+  !This parameter must be computed here because it is used for array dimensioning in ice4_pack
+  IF (PARAMI%NPROMICRO > 0 .AND. ISIZE > 0) THEN
+    ! Cache-blocking is active
+    ! number of chunks :
+    IGPBLKS = (ISIZE-1)/MIN(PARAMI%NPROMICRO,ISIZE)+1
+    ! Adjust IPROMA to limit the number of small chunks
+    IPROMA=(ISIZE-1)/IGPBLKS+1
+  ELSE
+    IPROMA=ISIZE ! no cache-blocking
+  ENDIF
 
   CALL ICE4_PACK_LOOP
 
@@ -169,9 +189,8 @@ ELSE ! PARAMI%LPACK_MICRO
   !such as "PTHT(JL)>ZTHRESHOLD .AND. LLMICRO(JL)". In these tests, LLMICRO(JL) will be evaluated
   !to .FALSE. on these kind of points but valid values for PTHT are needed to prevent crash.
   !
-  IF (KSIZE /= D%NIJT*D%NKT) THEN
-      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'ICE4_PACK', 'ICE4_PACK : KSIZE /= NIJT*NKT')
-  ENDIF
+  IPROMA=0
+  ISIZE = D%NIJT*D%NKT
   !
   !When PARAMI%LPACK_MICRO=T, values on the extra levels are not given to ice4_stepping,
   !so there was not filled in rain_ice.
@@ -203,7 +222,7 @@ ELSE ! PARAMI%LPACK_MICRO
   !               ----------------------
   !
   CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
-                    &KSIZE, D%NIJB, PTSTEP, &
+                    &ISIZE, D%NIJB, PTSTEP, &
                     &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
                     &PEXN, PRHODREF, &
                     &PPABST, PCIT, PCLDFR, &
@@ -225,7 +244,7 @@ CONTAINS
 
 SUBROUTINE ICE4_PACK_LOOP 
 
-REAL, DIMENSION(KPROMA) :: &
+REAL, DIMENSION(IPROMA) :: &
                         & ZCIT,     & ! Pristine ice conc. at t
                         & ZICLDFR,  & ! Ice cloud fraction
                         & ZZZZ,     & ! model level height
@@ -246,18 +265,18 @@ REAL, DIMENSION(KPROMA) :: &
                         & ZSIGS,    & ! Standard deviation of rc at time t
                         & ZTHT,     &
                         & ZTHS
-LOGICAL, DIMENSION(KPROMA) :: LLMICRO
+LOGICAL, DIMENSION(IPROMA) :: LLMICRO
 !
 !Output packed tendencies (for budgets only)
-REAL, DIMENSION(KPROMA, IBUNUM-IBUNUM_EXTRA) :: ZBUDGETS
+REAL, DIMENSION(IPROMA, IBUNUM-IBUNUM_EXTRA) :: ZBUDGETS
 !
-REAL, DIMENSION(KPROMA,7) :: ZRT !Packed variables
-REAL, DIMENSION(KPROMA,7) :: ZRS !To take into acount external tendencies inside the splitting
+REAL, DIMENSION(IPROMA,7) :: ZRT !Packed variables
+REAL, DIMENSION(IPROMA,7) :: ZRS !To take into acount external tendencies inside the splitting
 !
 !For retroaction of E on IAGGS
-REAL, DIMENSION(MERGE(KPROMA,0,OELEC)) :: ZLATHAM_IAGGS
+REAL, DIMENSION(MERGE(IPROMA,0,OELEC)) :: ZLATHAM_IAGGS
 !
-INTEGER, DIMENSION(KPROMA) :: I1,I2 ! Used to replace the COUNT and PACK intrinsics on variables
+INTEGER, DIMENSION(IPROMA) :: I1,I2 ! Used to replace the COUNT and PACK intrinsics on variables
 
 !
 !*       2.     POINT SELECTION
@@ -266,13 +285,9 @@ INTEGER, DIMENSION(KPROMA) :: I1,I2 ! Used to replace the COUNT and PACK intrins
 !  optimization by looking for locations where
 !  the microphysical fields are larger than a minimal value only !!!
 !
-IF (KSIZE /= COUNT(LDMICRO(IIJB:IIJE,IKTB:IKTE))) THEN
-    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'ICE4_PACK', 'ICE4_PACK : KSIZE /= COUNT(LDMICRO)')
-ENDIF
-
 PBUDGETS(:,:,:)=0.
 
-IF (KSIZE == 0) RETURN
+IF (ISIZE == 0) RETURN
 
 !
 !*       3.     CACHE-BLOCKING LOOP
@@ -283,9 +298,9 @@ IF (KSIZE == 0) RETURN
 IC=0
 ISTK=IKTB
 ISTIJ=IIJB
-DO JMICRO=1,KSIZE,KPROMA
+DO JMICRO=1,ISIZE,IPROMA
 
-  IMICRO=MIN(KPROMA,KSIZE-JMICRO+1)
+  IMICRO=MIN(IPROMA,ISIZE-JMICRO+1)
   !
   !*       4.     PACKING
   !               -------
@@ -390,7 +405,7 @@ DO JMICRO=1,KSIZE,KPROMA
   !               ----------------------
   !
   CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
-                    &KPROMA, IMICRO, PTSTEP, &
+                    &IPROMA, IMICRO, PTSTEP, &
                     &KRR, OSAVE_MICRO, LLMICRO, OELEC, &
                     &ZEXN, ZRHODREF, &
                     &ZPABST, ZCIT, ZCLDFR, &
