@@ -140,39 +140,6 @@ INTEGER :: ISTIJ, ISTK
 !For packing
 INTEGER :: IMICRO ! Case r_x>0 locations
 INTEGER :: JL, JV
-REAL, DIMENSION(KPROMA) :: &
-                        & ZCIT,     & ! Pristine ice conc. at t
-                        & ZICLDFR,  & ! Ice cloud fraction
-                        & ZZZZ,     & ! model level height
-                        & ZCONC3D,  & ! Cloud droplet number concentration at t
-                        & ZSSIO,    & ! Super-saturation with respect to ice in the supersaturated fraction
-                        & ZSSIU,    & ! Sub-saturation with respect to ice in the  subsaturated fraction
-                        & ZIFR,     & ! Ratio cloud ice moist part to dry part
-                        & ZRHODREF, & ! RHO Dry REFerence
-                        & ZPABST,   & ! Pressure
-                        & ZEXN,     & ! EXNer Pressure
-                        & ZCLDFR,   & ! Cloud fraction
-                        & ZHLC_HCF, & ! HLCLOUDS : fraction of High Cloud Fraction in grid
-                        & ZHLC_HRC, & ! HLCLOUDS : LWC that is High LWC in grid
-                        & ZHLI_HCF, &
-                        & ZHLI_HRI, &
-                        & ZRAINFR,  &
-                        & ZRREVAV,  &
-                        & ZSIGS,    & ! Standard deviation of rc at time t
-                        & ZTHT,     &
-                        & ZTHS
-LOGICAL, DIMENSION(KPROMA) :: LLMICRO
-!
-!Output packed tendencies (for budgets only)
-REAL, DIMENSION(KPROMA, IBUNUM-IBUNUM_EXTRA) :: ZBUDGETS
-!
-REAL, DIMENSION(KPROMA,7) :: ZRT !Packed variables
-REAL, DIMENSION(KPROMA,7) :: ZRS !To take into acount external tendencies inside the splitting
-!
-!For retroaction of E on IAGGS
-REAL, DIMENSION(MERGE(KPROMA,0,OELEC)) :: ZLATHAM_IAGGS
-!
-INTEGER, DIMENSION(KPROMA) :: I1,I2 ! Used to replace the COUNT and PACK intrinsics on variables
 !
 INTEGER :: IC, JMICRO, IDX
 LOGICAL :: LLSIGMA_RC, LL_AUCV_ADJU
@@ -193,184 +160,8 @@ LLSIGMA_RC=(PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')
 LL_AUCV_ADJU=(PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')
 !
 IF(PARAMI%LPACK_MICRO) THEN
-  !
-  !*       2.     POINT SELECTION
-  !               ---------------
-  !
-  !  optimization by looking for locations where
-  !  the microphysical fields are larger than a minimal value only !!!
-  !
-  IF (KSIZE /= COUNT(LDMICRO(IIJB:IIJE,IKTB:IKTE))) THEN
-      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'ICE4_PACK', 'ICE4_PACK : KSIZE /= COUNT(LDMICRO)')
-  ENDIF
 
-  PBUDGETS(:,:,:)=0.
-  
-  IF (KSIZE > 0) THEN
-    !
-    !*       3.     CACHE-BLOCKING LOOP
-    !               -------------------
-    !
-  
-    ! starting indexes :
-    IC=0
-    ISTK=IKTB
-    ISTIJ=IIJB
-    DO JMICRO=1,KSIZE,KPROMA
-  
-      IMICRO=MIN(KPROMA,KSIZE-JMICRO+1)
-      !
-      !*       4.     PACKING
-      !               -------
-      !
-  
-      ! Setup packing parameters
-
-
-      OUTER_LOOP: DO JK = ISTK, IKTE
-        IF (ANY(LDMICRO(IIJB:IIJE,JK))) THEN
-          
-          DO JIJ = ISTIJ, IIJE
-            IF (LDMICRO(JIJ,JK)) THEN
-              
-              IC=IC+1
-              IDX=IC !change of variable to use acc atomic capture (IC is shared)
-              
-              LLMICRO(IDX)=.TRUE.
-              ! Initialization of variables in packed format :
-              ZTHT(IDX)=PTHT(JIJ, JK)
-              ZRT(IDX, IRV)=PRT(JIJ, JK, IRV)
-              ZRT(IDX, IRC)=PRT(JIJ, JK, IRC)
-              ZRT(IDX, IRR)=PRT(JIJ, JK, IRR)
-              ZRT(IDX, IRI)=PRT(JIJ, JK, IRI)
-              ZRT(IDX, IRS)=PRT(JIJ, JK, IRS)
-              ZRT(IDX, IRG)=PRT(JIJ, JK, IRG)
-              IF (KRR==7) THEN
-                ZRT(IDX, IRH)=PRT(JIJ, JK, IRH)
-              ENDIF
-              IF (PARAMI%LEXT_TEND) THEN
-                !The th tendency is not related to a mixing ratio change, there is no exn/exnref issue here
-                ZTHS(IDX)=PTHS(JIJ, JK)
-                ZRS(IDX, IRV)=PRS(JIJ, JK, IRV)
-                ZRS(IDX, IRC)=PRS(JIJ, JK, IRC)
-                ZRS(IDX, IRR)=PRS(JIJ, JK, IRR)
-                ZRS(IDX, IRI)=PRS(JIJ, JK, IRI)
-                ZRS(IDX, IRS)=PRS(JIJ, JK, IRS)
-                ZRS(IDX, IRG)=PRS(JIJ, JK, IRG)
-                IF (KRR==7) THEN
-                  ZRS(IDX, IRH)=PRS(JIJ, JK, IRH)
-                ENDIF
-              ENDIF
-              ZCIT       (IDX)=PCIT    (JIJ, JK)
-              ZCLDFR     (IDX)=PCLDFR  (JIJ, JK)
-              ZRHODREF   (IDX)=PRHODREF(JIJ, JK)
-              ZPABST     (IDX)=PPABST  (JIJ, JK)
-              ZEXN       (IDX)=PEXN    (JIJ, JK)
-              ZICLDFR    (IC)=PICLDFR (JIJ, JK)
-              ZZZZ       (IC)=PZZZ    (JIJ, JK)
-              ZCONC3D    (IC)=PCONC3D (JIJ, JK)
-              ZSSIO      (IC)=PSSIO   (JIJ, JK)
-              ZSSIU      (IC)=PSSIU   (JIJ, JK)
-              ZIFR       (IC)=PIFR    (JIJ, JK)
-              IF(LLSIGMA_RC) THEN
-                ZSIGS(IDX)    =PSIGS   (JIJ, JK)
-              ENDIF
-              IF (LL_AUCV_ADJU) THEN
-                ZHLC_HCF(IDX) = PHLC_HCF(JIJ, JK)
-                ZHLC_HRC(IDX) = PHLC_HRC(JIJ, JK)
-                ZHLI_HCF(IDX) = PHLI_HCF(JIJ, JK)
-                ZHLI_HRI(IDX) = PHLI_HRI(JIJ, JK)
-              ENDIF
-              ZRAINFR(IC)=PRAINFR(JIJ, JK)
-              IF (OELEC) ZLATHAM_IAGGS(IC) = PLATHAM_IAGGS(JIJ, JK)
-              ! Save indices for later usages:
-              I1(IDX) = JIJ
-              I2(IDX) = JK
-              IF (IC==IMICRO) THEN
-                ! the end of the chunk has been reached, then reset the starting index :
-                ISTIJ=JIJ+1
-                IF (ISTIJ <= IIJE) THEN
-                  
-                  ISTK=JK
-                  
-                ELSE
-                  ! end of line, restart from 1 and increment upper loop
-                  ISTIJ=D%NIJB
-                  
-                  ISTK=JK+1
-                  
-                  IF (ISTK > IKTE) THEN
-                    ! end of line, restart from 1
-                    
-                    ISTK=IKTB
-                    
-                  ENDIF
-                ENDIF
-#ifndef MNH_OPENACC
-                IC=0
-                EXIT OUTER_LOOP
-#endif
-              ENDIF
-            ENDIF
-          ENDDO
-        ENDIF
-        ! restart inner loop on JIJ :
-        ISTIJ=IIJB
-      ENDDO OUTER_LOOP
-  
-      !
-      !*       5.     TENDENCIES COMPUTATION
-      !               ----------------------
-      !
-      CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
-                        &KPROMA, IMICRO, PTSTEP, &
-                        &KRR, OSAVE_MICRO, LLMICRO, OELEC, &
-                        &ZEXN, ZRHODREF, &
-                        &ZPABST, ZCIT, ZCLDFR, &
-                        &ZHLC_HCF, ZHLC_HRC, &
-                        &ZHLI_HCF, ZHLI_HRI, &
-                        &ZTHS, ZRS, ZRREVAV, &
-                        &ZRAINFR, ZSIGS, &
-                        &ZTHT, ZRT, &
-                        &ZICLDFR, ZZZZ, ZCONC3D, &
-                        &ZSSIO, ZSSIU, ZIFR, &
-                        &ZBUDGETS, &
-                        &ZLATHAM_IAGGS)
-      !
-      !*       6.     UNPACKING
-      !               ---------
-      !
-
-
-      DO JL=1, IMICRO
-        PCIT  (I1(JL),I2(JL))=ZCIT   (JL)
-        PRREVAV(I1(JL),I2(JL))=ZRREVAV(JL)
-        PRT(I1(JL),I2(JL),IRV)=ZRT(JL, IRV)
-        PRT(I1(JL),I2(JL),IRC)=ZRT(JL, IRC)
-        PRT(I1(JL),I2(JL),IRR)=ZRT(JL, IRR)
-        PRT(I1(JL),I2(JL),IRI)=ZRT(JL, IRI)
-        PRT(I1(JL),I2(JL),IRS)=ZRT(JL, IRS)
-        PRT(I1(JL),I2(JL),IRG)=ZRT(JL, IRG)
-        IF (KRR==7) THEN
-          PRT(I1(JL),I2(JL),IRH)=ZRT(JL, IRH)
-        ENDIF
-        PRAINFR(I1(JL),I2(JL))=ZRAINFR(JL)
-      ENDDO
-
-      IF(BUCONF%LBU_ENABLE .OR. OSAVE_MICRO) THEN
-
-
-        DO JV=1, IBUNUM-IBUNUM_EXTRA
-          DO JL=1, IMICRO
-            PBUDGETS(I1(JL),I2(JL),JV)=ZBUDGETS(JL, JV)
-          ENDDO
-        ENDDO
-
-      ENDIF
-  
-  
-    ENDDO ! JMICRO
-  ENDIF ! KSIZE > 0
+  CALL ICE4_PACK_LOOP
 
 ELSE ! PARAMI%LPACK_MICRO
   !We assume, here, that points outside the physical domain of the model (extral levels,
@@ -429,5 +220,225 @@ ELSE ! PARAMI%LPACK_MICRO
 ENDIF ! PARAMI%LPACK_MICRO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_PACK', 1, ZHOOK_HANDLE)
+
+CONTAINS
+
+SUBROUTINE ICE4_PACK_LOOP 
+
+REAL, DIMENSION(KPROMA) :: &
+                        & ZCIT,     & ! Pristine ice conc. at t
+                        & ZICLDFR,  & ! Ice cloud fraction
+                        & ZZZZ,     & ! model level height
+                        & ZCONC3D,  & ! Cloud droplet number concentration at t
+                        & ZSSIO,    & ! Super-saturation with respect to ice in the supersaturated fraction
+                        & ZSSIU,    & ! Sub-saturation with respect to ice in the  subsaturated fraction
+                        & ZIFR,     & ! Ratio cloud ice moist part to dry part
+                        & ZRHODREF, & ! RHO Dry REFerence
+                        & ZPABST,   & ! Pressure
+                        & ZEXN,     & ! EXNer Pressure
+                        & ZCLDFR,   & ! Cloud fraction
+                        & ZHLC_HCF, & ! HLCLOUDS : fraction of High Cloud Fraction in grid
+                        & ZHLC_HRC, & ! HLCLOUDS : LWC that is High LWC in grid
+                        & ZHLI_HCF, &
+                        & ZHLI_HRI, &
+                        & ZRAINFR,  &
+                        & ZRREVAV,  &
+                        & ZSIGS,    & ! Standard deviation of rc at time t
+                        & ZTHT,     &
+                        & ZTHS
+LOGICAL, DIMENSION(KPROMA) :: LLMICRO
+!
+!Output packed tendencies (for budgets only)
+REAL, DIMENSION(KPROMA, IBUNUM-IBUNUM_EXTRA) :: ZBUDGETS
+!
+REAL, DIMENSION(KPROMA,7) :: ZRT !Packed variables
+REAL, DIMENSION(KPROMA,7) :: ZRS !To take into acount external tendencies inside the splitting
+!
+!For retroaction of E on IAGGS
+REAL, DIMENSION(MERGE(KPROMA,0,OELEC)) :: ZLATHAM_IAGGS
+!
+INTEGER, DIMENSION(KPROMA) :: I1,I2 ! Used to replace the COUNT and PACK intrinsics on variables
+
+!
+!*       2.     POINT SELECTION
+!               ---------------
+!
+!  optimization by looking for locations where
+!  the microphysical fields are larger than a minimal value only !!!
+!
+IF (KSIZE /= COUNT(LDMICRO(IIJB:IIJE,IKTB:IKTE))) THEN
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'ICE4_PACK', 'ICE4_PACK : KSIZE /= COUNT(LDMICRO)')
+ENDIF
+
+PBUDGETS(:,:,:)=0.
+
+IF (KSIZE == 0) RETURN
+
+!
+!*       3.     CACHE-BLOCKING LOOP
+!               -------------------
+!
+
+! starting indexes :
+IC=0
+ISTK=IKTB
+ISTIJ=IIJB
+DO JMICRO=1,KSIZE,KPROMA
+
+  IMICRO=MIN(KPROMA,KSIZE-JMICRO+1)
+  !
+  !*       4.     PACKING
+  !               -------
+  !
+
+  ! Setup packing parameters
+
+
+  OUTER_LOOP: DO JK = ISTK, IKTE
+    IF (ANY(LDMICRO(IIJB:IIJE,JK))) THEN
+      
+      DO JIJ = ISTIJ, IIJE
+        IF (LDMICRO(JIJ,JK)) THEN
+          
+          IC=IC+1
+          IDX=IC !change of variable to use acc atomic capture (IC is shared)
+          
+          LLMICRO(IDX)=.TRUE.
+          ! Initialization of variables in packed format :
+          ZTHT(IDX)=PTHT(JIJ, JK)
+          ZRT(IDX, IRV)=PRT(JIJ, JK, IRV)
+          ZRT(IDX, IRC)=PRT(JIJ, JK, IRC)
+          ZRT(IDX, IRR)=PRT(JIJ, JK, IRR)
+          ZRT(IDX, IRI)=PRT(JIJ, JK, IRI)
+          ZRT(IDX, IRS)=PRT(JIJ, JK, IRS)
+          ZRT(IDX, IRG)=PRT(JIJ, JK, IRG)
+          IF (KRR==7) THEN
+            ZRT(IDX, IRH)=PRT(JIJ, JK, IRH)
+          ENDIF
+          IF (PARAMI%LEXT_TEND) THEN
+            !The th tendency is not related to a mixing ratio change, there is no exn/exnref issue here
+            ZTHS(IDX)=PTHS(JIJ, JK)
+            ZRS(IDX, IRV)=PRS(JIJ, JK, IRV)
+            ZRS(IDX, IRC)=PRS(JIJ, JK, IRC)
+            ZRS(IDX, IRR)=PRS(JIJ, JK, IRR)
+            ZRS(IDX, IRI)=PRS(JIJ, JK, IRI)
+            ZRS(IDX, IRS)=PRS(JIJ, JK, IRS)
+            ZRS(IDX, IRG)=PRS(JIJ, JK, IRG)
+            IF (KRR==7) THEN
+              ZRS(IDX, IRH)=PRS(JIJ, JK, IRH)
+            ENDIF
+          ENDIF
+          ZCIT       (IDX)=PCIT    (JIJ, JK)
+          ZCLDFR     (IDX)=PCLDFR  (JIJ, JK)
+          ZRHODREF   (IDX)=PRHODREF(JIJ, JK)
+          ZPABST     (IDX)=PPABST  (JIJ, JK)
+          ZEXN       (IDX)=PEXN    (JIJ, JK)
+          ZICLDFR    (IC)=PICLDFR (JIJ, JK)
+          ZZZZ       (IC)=PZZZ    (JIJ, JK)
+          ZCONC3D    (IC)=PCONC3D (JIJ, JK)
+          ZSSIO      (IC)=PSSIO   (JIJ, JK)
+          ZSSIU      (IC)=PSSIU   (JIJ, JK)
+          ZIFR       (IC)=PIFR    (JIJ, JK)
+          IF(LLSIGMA_RC) THEN
+            ZSIGS(IDX)    =PSIGS   (JIJ, JK)
+          ENDIF
+          IF (LL_AUCV_ADJU) THEN
+            ZHLC_HCF(IDX) = PHLC_HCF(JIJ, JK)
+            ZHLC_HRC(IDX) = PHLC_HRC(JIJ, JK)
+            ZHLI_HCF(IDX) = PHLI_HCF(JIJ, JK)
+            ZHLI_HRI(IDX) = PHLI_HRI(JIJ, JK)
+          ENDIF
+          ZRAINFR(IC)=PRAINFR(JIJ, JK)
+          IF (OELEC) ZLATHAM_IAGGS(IC) = PLATHAM_IAGGS(JIJ, JK)
+          ! Save indices for later usages:
+          I1(IDX) = JIJ
+          I2(IDX) = JK
+          IF (IC==IMICRO) THEN
+            ! the end of the chunk has been reached, then reset the starting index :
+            ISTIJ=JIJ+1
+            IF (ISTIJ <= IIJE) THEN
+              
+              ISTK=JK
+              
+            ELSE
+              ! end of line, restart from 1 and increment upper loop
+              ISTIJ=D%NIJB
+              
+              ISTK=JK+1
+              
+              IF (ISTK > IKTE) THEN
+                ! end of line, restart from 1
+                
+                ISTK=IKTB
+                
+              ENDIF
+            ENDIF
+#ifndef MNH_OPENACC
+            IC=0
+            EXIT OUTER_LOOP
+#endif
+          ENDIF
+        ENDIF
+      ENDDO
+    ENDIF
+    ! restart inner loop on JIJ :
+    ISTIJ=IIJB
+  ENDDO OUTER_LOOP
+
+  !
+  !*       5.     TENDENCIES COMPUTATION
+  !               ----------------------
+  !
+  CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
+                    &KPROMA, IMICRO, PTSTEP, &
+                    &KRR, OSAVE_MICRO, LLMICRO, OELEC, &
+                    &ZEXN, ZRHODREF, &
+                    &ZPABST, ZCIT, ZCLDFR, &
+                    &ZHLC_HCF, ZHLC_HRC, &
+                    &ZHLI_HCF, ZHLI_HRI, &
+                    &ZTHS, ZRS, ZRREVAV, &
+                    &ZRAINFR, ZSIGS, &
+                    &ZTHT, ZRT, &
+                    &ZICLDFR, ZZZZ, ZCONC3D, &
+                    &ZSSIO, ZSSIU, ZIFR, &
+                    &ZBUDGETS, &
+                    &ZLATHAM_IAGGS)
+  !
+  !*       6.     UNPACKING
+  !               ---------
+  !
+
+
+  DO JL=1, IMICRO
+    PCIT  (I1(JL),I2(JL))=ZCIT   (JL)
+    PRREVAV(I1(JL),I2(JL))=ZRREVAV(JL)
+    PRT(I1(JL),I2(JL),IRV)=ZRT(JL, IRV)
+    PRT(I1(JL),I2(JL),IRC)=ZRT(JL, IRC)
+    PRT(I1(JL),I2(JL),IRR)=ZRT(JL, IRR)
+    PRT(I1(JL),I2(JL),IRI)=ZRT(JL, IRI)
+    PRT(I1(JL),I2(JL),IRS)=ZRT(JL, IRS)
+    PRT(I1(JL),I2(JL),IRG)=ZRT(JL, IRG)
+    IF (KRR==7) THEN
+      PRT(I1(JL),I2(JL),IRH)=ZRT(JL, IRH)
+    ENDIF
+    PRAINFR(I1(JL),I2(JL))=ZRAINFR(JL)
+  ENDDO
+
+  IF(BUCONF%LBU_ENABLE .OR. OSAVE_MICRO) THEN
+
+
+    DO JV=1, IBUNUM-IBUNUM_EXTRA
+      DO JL=1, IMICRO
+        PBUDGETS(I1(JL),I2(JL),JV)=ZBUDGETS(JL, JV)
+      ENDDO
+    ENDDO
+
+  ENDIF
+
+
+ENDDO ! JMICRO
+
+END SUBROUTINE ICE4_PACK_LOOP
+
 END SUBROUTINE ICE4_PACK
 END MODULE MODE_ICE4_PACK
