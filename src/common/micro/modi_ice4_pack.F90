@@ -5,7 +5,9 @@
 !-----------------------------------------------------------------
 MODULE MODI_ICE4_PACK
 IMPLICIT NONE
-CONTAINS
+
+INTERFACE
+
 SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                     &PTSTEP, &
                     &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
@@ -96,4 +98,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), &
                                           INTENT(IN)    :: PLATHAM_IAGGS  ! E Function to simulate
                                                                           ! enhancement of IAGGS
 END SUBROUTINE ICE4_PACK
+
+END INTERFACE
+
 END MODULE MODI_ICE4_PACK
