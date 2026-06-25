@@ -3,11 +3,7 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-MODULE MODE_ICE4_PACK
-IMPLICIT NONE
-CONTAINS
-SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF, &
-                    &PTSTEP, &
+SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF, PTSTEP, &
                     &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
                     &PEXN, PRHODREF, PPABST, PCIT, PCLDFR, &
                     &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
@@ -456,4 +452,3 @@ ENDDO ! JMICRO
 END SUBROUTINE ICE4_PACK_LOOP
 
 END SUBROUTINE ICE4_PACK
-END MODULE MODE_ICE4_PACK
