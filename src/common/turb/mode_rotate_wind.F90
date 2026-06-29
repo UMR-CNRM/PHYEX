@@ -157,6 +157,8 @@ JLOC(:,:)=NINT(SIGN(1.,-PSINSLOPE(:,:)))
 ! interpolation in x direction
 !
 !$mnh_do_concurrent(JI=IIB:IIE,JJ=1:IJU)
+DO JJ=1,IJU
+  DO JI=IIB,IIE
     ZCOEFF(JI,JJ) =                                                  &
       (0.5*PDXX(JI,JJ,IKB) + 0.5*PDZZ(JI,JJ,IKB)*PDIRCOSXW(JI,JJ) )  & 
       * 2. / (PDXX(JI,JJ,IKB)+PDXX(JI+1,JJ,IKB))
@@ -171,11 +173,15 @@ JLOC(:,:)=NINT(SIGN(1.,-PSINSLOPE(:,:)))
     ZWINT(JI,JJ) = ZCOEFM(JI,JJ)  * (PW(JI,JJ,IKB+1)+ZWGROUND(JI,JJ)) * 0.5    &
               + (1.-ZCOEFM(JI,JJ))                                             &
                *(PW(JI+ILOC(JI,JJ),JJ,IKB+1)+ZWGROUND(JI+ILOC(JI,JJ),JJ)) * 0.5
+  END DO
+END DO
 !$mnh_end_do()
 !
 ! interpolation in y direction
 !
 !$mnh_do_concurrent(JI=IIB:IIE,JJ=IJB:IJE)    
+DO JJ=IJB,IJE
+  DO JI=IIB,IIE
     ZCOEFF(JI,JJ) =                                                     &
       (0.5*PDYY(JI,JJ,IKB) + 0.5*PDZZ(JI,JJ,IKB)*PDIRCOSYW(JI,JJ) )     & 
       * 2. / (PDYY(JI,JJ,IKB)+PDYY(JI+1,JJ,IKB))
@@ -200,6 +206,8 @@ JLOC(:,:)=NINT(SIGN(1.,-PSINSLOPE(:,:)))
     PVSLOPE(JI,JJ) =-PSINSLOPE(JI,JJ)                    * ZUFIN(JI,JJ) +   &
                      PCOSSLOPE(JI,JJ)                    * ZVFIN(JI,JJ)
     !
+  END DO
+END DO
 !$mnh_end_do()
 !
 !$acc end kernels

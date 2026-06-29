@@ -296,6 +296,8 @@ LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
 LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
 !$acc kernels
 !$mnh_do_concurrent( JIJ=IIJB:IIJE , JK=IKTB:IKTE )
+DO JK=IKTB,IKTE
+  DO JIJ=IIJB,IIJE
     ZRC(JIJ,JK)=ZRC(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
     ZRI(JIJ,JK)=ZRI(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
     PCLDFR(JIJ,JK)=PCLDFR(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
@@ -308,6 +310,8 @@ LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
       PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
       PHLI_HCF(JIJ,JK)=PHLI_HCF(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
     ENDIF
+  END DO
+END DO
 !$mnh_end_do()
 !$acc end kernels
 !
@@ -354,12 +358,16 @@ ENDDO
 IF ( .NOT. NEBN%LSUBG_COND ) THEN
   !$acc kernels
   !$mnh_do_concurrent(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
+  DO JK=IKTB,IKTE
+    DO JIJ=IIJB,IIJE
       IF (PRCS(JIJ,JK) + PRIS(JIJ,JK) > 1.E-12 / PTSTEP) THEN
         PCLDFR(JIJ,JK)  = 1.
       ELSE
         PCLDFR(JIJ,JK)  = 0.
       ENDIF
       ZSRCS(JIJ,JK) = PCLDFR(JIJ,JK)
+    END DO
+  END DO
   !$mnh_end_do()
   !$acc end kernels
 ELSE !NEBN%LSUBG_COND case
@@ -371,6 +379,8 @@ ELSE !NEBN%LSUBG_COND case
     LLBIGA=PARAMI%CSUBG_MF_PDF=='BIGA'
   !$acc kernels
   !$mnh_do_concurrent(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
+  DO JK=IKTB,IKTE
+    DO JIJ=IIJB,IIJE
       !We limit PRC_MF+PRI_MF to PRVS*PTSTEP to avoid negative humidity
       ZW1=PRC_MF(JIJ,JK)/PTSTEP
       ZW2=PRI_MF(JIJ,JK)/PTSTEP
@@ -459,6 +469,8 @@ ELSE !NEBN%LSUBG_COND case
         ZT(JIJ,JK) = ZT(JIJ,JK) + &
                     (ZW1 * ZLV(JIJ,JK) + ZW2 * ZLS(JIJ,JK)) / ZCPH(JIJ,JK)
       ENDIF
+    END DO
+  END DO
 !$mnh_end_do()
 !$acc end kernels
 ENDIF !NEBN%LSUBG_COND
