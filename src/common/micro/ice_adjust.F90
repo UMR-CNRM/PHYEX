@@ -473,8 +473,8 @@ ELSE !NEBN%LSUBG_COND case
         ZT(JIJ,JK) = ZT(JIJ,JK) + &
                     (ZW1 * ZLV(JIJ,JK) + ZW2 * ZLS(JIJ,JK)) / ZCPH(JIJ,JK)
       ENDIF
+    END DO
   END DO
-END DO
 !$mnh_end_do()
 !$acc end kernels
 ENDIF !NEBN%LSUBG_COND
