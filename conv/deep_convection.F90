@@ -1,4 +1,8 @@
-!     ######spl
+!MNH_LIC Copyright 1996-2025 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
     SUBROUTINE DEEP_CONVECTION( KLON, KLEV, KIDIA, KFDIA, KBDIA, KTDIA,        &
                                 PDTCONV, KICE, OREFRESH, ODOWN, OSETTADJ,      &
                                 PPABST, PZZ, PDXDY, PTIMEC,                    &
@@ -10,7 +14,6 @@
                                 OCH1CONV, KCH1, PCH1, PCH1TEN,                 &
                                 OCH_CONV_SCAV, OCH_CONV_LINOX,       &
                                 ODUST, OSALT, PRHODREF, PIC_RATE, PCG_RATE     )
-    USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !   ############################################################################
 !
 !!**** Monitor routine to compute all convective tendencies by calls
@@ -100,6 +103,7 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_CST, ONLY: XALPW, XBETAW, XCI, XCL, XCPD, XCPV, XG, XGAMW, XLSTT, XLVTT, &
                     XP00, XPI, XRD, XRHOLW, XRV, XTT
 USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT
@@ -319,13 +323,14 @@ REAL, DIMENSION(:,:),ALLOCATABLE   :: ZWORK4, ZWORK4C
 REAL, DIMENSION(:,:),ALLOCATABLE   :: ZZZ, ZRHODREF
 REAL, DIMENSION(:),ALLOCATABLE     :: ZIC_RATE,ZCG_RATE
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+!
 !-------------------------------------------------------------------------------
 !
 !
 !*       0.3    Compute loop bounds
 !               -------------------
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DEEP_CONVECTION',0,ZHOOK_HANDLE)
 IIB = KIDIA
 IIE = KFDIA

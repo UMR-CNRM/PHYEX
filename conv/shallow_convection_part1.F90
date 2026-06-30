@@ -1,6 +1,6 @@
 !     ######spl
-    SUBROUTINE SHALLOW_CONVECTION_PART1&
-                                 (CVPEXT, CVP_SHAL, CST, D, NSV, CONVPAR, KBDIA, KTDIA, &
+    SUBROUTINE SHALLOW_CONVECTION_PART1(&
+                                  CVPEXT, CVP_SHAL, CST, D, NSV, CONVPAR, KBDIA, KTDIA, &
                                   KICE, OSETTADJ, PTADJS, PPABST, PZZ, &
                                   PTKECLS, PTT, PRVT, PRCT, PRIT, PWT, &
                                   PTTEN, PRVTEN, PRCTEN, PRITEN,       &
@@ -129,43 +129,43 @@ INTEGER            ,INTENT(IN)     :: KICE     ! flag for ice ( 1 = yes,
 LOGICAL            ,INTENT(IN)     :: OSETTADJ ! logical to set convective
                                                      ! adjustment time by user
 REAL               ,INTENT(IN)     :: PTADJS   ! user defined adjustment time
-REAL               ,INTENT(IN)     :: PPABST(D%NIT,D%NKT)   ! grid scale pressure at t
-REAL               ,INTENT(IN)     :: PZZ(D%NIT,D%NKT)      ! height of model layer (m)
-REAL               ,INTENT(IN)     :: PTKECLS(D%NIT)  ! TKE in the CLS  (m2/s2)
-REAL               ,INTENT(IN)     :: PTT(D%NIT,D%NKT)      ! grid scale temperature at t
-REAL               ,INTENT(IN)     :: PRVT(D%NIT,D%NKT)     ! grid scale water vapor "
-REAL               ,INTENT(IN)     :: PRCT(D%NIT,D%NKT)     ! grid scale r_c  "
-REAL               ,INTENT(IN)     :: PRIT(D%NIT,D%NKT)     ! grid scale r_i "
-REAL               ,INTENT(IN)     :: PWT(D%NIT,D%NKT)      ! grid scale vertical
+REAL               ,INTENT(IN)     :: PPABST(D%NIJT,D%NKT)   ! grid scale pressure at t
+REAL               ,INTENT(IN)     :: PZZ(D%NIJT,D%NKT)      ! height of model layer (m)
+REAL               ,INTENT(IN)     :: PTKECLS(D%NIJT)  ! TKE in the CLS  (m2/s2)
+REAL               ,INTENT(IN)     :: PTT(D%NIJT,D%NKT)      ! grid scale temperature at t
+REAL               ,INTENT(IN)     :: PRVT(D%NIJT,D%NKT)     ! grid scale water vapor "
+REAL               ,INTENT(IN)     :: PRCT(D%NIJT,D%NKT)     ! grid scale r_c  "
+REAL               ,INTENT(IN)     :: PRIT(D%NIJT,D%NKT)     ! grid scale r_i "
+REAL               ,INTENT(IN)     :: PWT(D%NIJT,D%NKT)      ! grid scale vertical
                                                                            ! velocity (m/s)
 !
-REAL               ,INTENT(INOUT)  :: PTTEN(D%NIT,D%NKT)  ! convective temperature
+REAL               ,INTENT(INOUT)  :: PTTEN(D%NIJT,D%NKT)  ! convective temperature
                                                                            ! tendency (K/s)
-REAL               ,INTENT(INOUT)  :: PRVTEN(D%NIT,D%NKT) ! convective r_v tendency (1/s)
-REAL               ,INTENT(INOUT)  :: PRCTEN(D%NIT,D%NKT) ! convective r_c tendency (1/s)
-REAL               ,INTENT(INOUT)  :: PRITEN(D%NIT,D%NKT) ! convective r_i tendency (1/s)
-INTEGER            ,INTENT(INOUT)  :: KCLTOP(D%NIT) ! cloud top level
-INTEGER            ,INTENT(INOUT)  :: KCLBAS(D%NIT) ! cloud base level
+REAL               ,INTENT(INOUT)  :: PRVTEN(D%NIJT,D%NKT) ! convective r_v tendency (1/s)
+REAL               ,INTENT(INOUT)  :: PRCTEN(D%NIJT,D%NKT) ! convective r_c tendency (1/s)
+REAL               ,INTENT(INOUT)  :: PRITEN(D%NIJT,D%NKT) ! convective r_i tendency (1/s)
+INTEGER            ,INTENT(INOUT)  :: KCLTOP(D%NIJT) ! cloud top level
+INTEGER            ,INTENT(INOUT)  :: KCLBAS(D%NIJT) ! cloud base level
                                                    ! they are given a value of
                                                    ! 0 if no convection
-REAL               ,INTENT(INOUT)  :: PUMF(D%NIT,D%NKT)   ! updraft mass flux (kg/s m2)
+REAL               ,INTENT(INOUT)  :: PUMF(D%NIJT,D%NKT)   ! updraft mass flux (kg/s m2)
 LOGICAL            ,INTENT(IN)     :: OCH1CONV ! include tracer transport
 INTEGER            ,INTENT(IN)     :: KCH1     ! number of species
-REAL               ,INTENT(IN)     :: PCH1(D%NIT,D%NKT,KCH1)! grid scale chemical species
-REAL               ,INTENT(INOUT)  :: PCH1TEN(D%NIT,D%NKT,KCH1)! species conv. tendency (1/s)
-REAL               ,INTENT(OUT)    :: PTHT(D%NIT,D%NKT) 
-REAL               ,INTENT(OUT)    :: PSTHV(D%NIT,D%NKT) 
-REAL               ,INTENT(OUT)    :: PSTHES(D%NIT,D%NKT)  ! grid scale theta, theta_v
-INTEGER            ,INTENT(OUT)    :: KSDPL(D%NIT)   ! index for parcel departure level
-INTEGER            ,INTENT(OUT)    :: KSPBL(D%NIT)   ! index for source layer top
-INTEGER            ,INTENT(OUT)    :: KSLCL(D%NIT)   ! index for lifting condensation level
-REAL               ,INTENT(OUT)    :: PSTHLCL(D%NIT) ! updraft theta at LCL/L
-REAL               ,INTENT(OUT)    :: PSTLCL(D%NIT)  ! updraft temp. at LCL
-REAL               ,INTENT(OUT)    :: PSRVLCL(D%NIT) ! updraft rv at LCL
-REAL               ,INTENT(OUT)    :: PSWLCL(D%NIT)  ! updraft w at LCL
-REAL               ,INTENT(OUT)    :: PSZLCL(D%NIT)  ! LCL height
-REAL               ,INTENT(OUT)    :: PSTHVELCL(D%NIT)! envir. theta_v at LCL
-LOGICAL            ,INTENT(OUT)    :: OTRIG1(D%NIT)  ! logical mask for convection
+REAL               ,INTENT(IN)     :: PCH1(D%NIJT,D%NKT,KCH1)! grid scale chemical species
+REAL               ,INTENT(INOUT)  :: PCH1TEN(D%NIJT,D%NKT,KCH1)! species conv. tendency (1/s)
+REAL               ,INTENT(OUT)    :: PTHT(D%NIJT,D%NKT) 
+REAL               ,INTENT(OUT)    :: PSTHV(D%NIJT,D%NKT) 
+REAL               ,INTENT(OUT)    :: PSTHES(D%NIJT,D%NKT)  ! grid scale theta, theta_v
+INTEGER            ,INTENT(OUT)    :: KSDPL(D%NIJT)   ! index for parcel departure level
+INTEGER            ,INTENT(OUT)    :: KSPBL(D%NIJT)   ! index for source layer top
+INTEGER            ,INTENT(OUT)    :: KSLCL(D%NIJT)   ! index for lifting condensation level
+REAL               ,INTENT(OUT)    :: PSTHLCL(D%NIJT) ! updraft theta at LCL/L
+REAL               ,INTENT(OUT)    :: PSTLCL(D%NIJT)  ! updraft temp. at LCL
+REAL               ,INTENT(OUT)    :: PSRVLCL(D%NIJT) ! updraft rv at LCL
+REAL               ,INTENT(OUT)    :: PSWLCL(D%NIJT)  ! updraft w at LCL
+REAL               ,INTENT(OUT)    :: PSZLCL(D%NIJT)  ! LCL height
+REAL               ,INTENT(OUT)    :: PSTHVELCL(D%NIJT)! envir. theta_v at LCL
+LOGICAL            ,INTENT(OUT)    :: OTRIG1(D%NIJT)  ! logical mask for convection
 !
 !
 !*       0.2   Declarations of local fixed memory variables :
@@ -218,7 +218,7 @@ PTHT(:,:) = 300.
 PSTHV(:,:)= 300.
 PSTHES(:,:)= 400.
 DO JK = IKB, IKE
-DO JI = D%NIB, D%NIE
+DO JI = D%NIJB, D%NIJE
   IF ( PPABST(JI,JK) > 40.E2 ) THEN
     PTHT(JI,JK)  = PTT(JI,JK) * ( CST%XP00 / PPABST(JI,JK) ) ** ZRDOCP
     PSTHV(JI,JK) = PTHT(JI,JK) * ( 1. + ZEPSA * PRVT(JI,JK) ) /              &

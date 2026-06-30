@@ -1,11 +1,15 @@
-!     ######spl
+!MNH_LIC Copyright 1996-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+!   ###############################################################################
     SUBROUTINE SHALLOW_CONVECTION(CVP_SHAL, CST, D, NSV, CONVPAR, KBDIA, KTDIA, &
                                   KICE, OSETTADJ, PTADJS, PPABST, PZZ, &
                                   PTKECLS, PTT, PRVT, PRCT, PRIT, PWT, &
                                   PTTEN, PRVTEN, PRCTEN, PRITEN,       &
                                   KCLTOP, KCLBAS, PUMF, OCH1CONV, KCH1,&
                                   PCH1, PCH1TEN)
-    USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !   ###############################################################################
 !
 !!**** Monitor routine to compute all convective tendencies by calls
@@ -87,12 +91,14 @@
 !!   F Bouyssel     05/11/08 Modifications for reproductibility
 !!   E. Bazile      20/07/09 Input of TKECLS.
 !!   F. Bouyssel    08/11/13 Modifications for reproductibility
+!  P. Wautelet 03/06/2019: simplify code (remove always true masks) + replace PACK intrinsics
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST, ONLY : CST_T
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
+USE MODD_CST, ONLY: CST_t
 USE MODD_CONVPAREXT, ONLY : CONVPAREXT
 USE MODD_CONVPAR, ONLY: CONVPAR_T
 USE MODD_CONVPAR_SHAL, ONLY: CONVPAR_SHAL
@@ -101,7 +107,6 @@ USE MODD_NSV, ONLY: NSV_T
 USE MODI_SHALLOW_CONVECTION_PART1, ONLY: SHALLOW_CONVECTION_PART1
 USE MODI_SHALLOW_CONVECTION_PART2, ONLY: SHALLOW_CONVECTION_PART2
 USE MODI_SHALLOW_CONVECTION_PART2_SELECT, ONLY: SHALLOW_CONVECTION_PART2_SELECT
-!
 !
 IMPLICIT NONE
 !
@@ -113,65 +118,63 @@ TYPE(CST_T)        ,INTENT(IN)     :: CST
 TYPE(DIMPHYEX_T)   ,INTENT(IN)     :: D
 TYPE(NSV_T)        ,INTENT(IN)     :: NSV
 TYPE(CONVPAR_T)    ,INTENT(IN)     :: CONVPAR
-INTEGER            ,INTENT(IN)     :: KBDIA    ! vertical  computations start at
-!                                                    ! KBDIA that is at least 1
-INTEGER            ,INTENT(IN)     :: KTDIA    ! vertical computations can be
-                                                     ! limited to D%NKT + 1 - KTDIA
-                                                     ! default=1
-                                                     ! scheme
-INTEGER            ,INTENT(IN)     :: KICE     ! flag for ice ( 1 = yes,
-                                                     !                0 = no ice )
-LOGICAL            ,INTENT(IN)     :: OSETTADJ ! logical to set convective
-                                                     ! adjustment time by user
-REAL               ,INTENT(IN)     :: PTADJS   ! user defined adjustment time
-REAL               ,INTENT(IN)     :: PPABST(D%NIT,D%NKT)   ! grid scale pressure at t
-REAL               ,INTENT(IN)     :: PZZ(D%NIT,D%NKT)      ! height of model layer (m)
-REAL               ,INTENT(IN)     :: PTKECLS(D%NIT)  ! TKE in the CLS  (m2/s2)
-REAL               ,INTENT(IN)     :: PTT(D%NIT,D%NKT)      ! grid scale temperature at t
-REAL               ,INTENT(IN)     :: PRVT(D%NIT,D%NKT)     ! grid scale water vapor "
-REAL               ,INTENT(IN)     :: PRCT(D%NIT,D%NKT)     ! grid scale r_c  "
-REAL               ,INTENT(IN)     :: PRIT(D%NIT,D%NKT)     ! grid scale r_i "
-REAL               ,INTENT(IN)     :: PWT(D%NIT,D%NKT)      ! grid scale vertical
-                                                                           ! velocity (m/s)
+INTEGER,                    INTENT(IN) :: KBDIA    ! vertical  computations start at
+!                                                  ! KBDIA that is at least 1
+INTEGER,                    INTENT(IN) :: KTDIA    ! vertical computations can be
+                                                   ! limited to D%NKT + 1 - KTDIA
+                                                   ! default=1
+INTEGER,                    INTENT(IN) :: KICE     ! flag for ice ( 1 = yes,
+                                                   !                0 = no ice )
+LOGICAL,                    INTENT(IN) :: OSETTADJ ! logical to set convective
+                                                   ! adjustment time by user
+REAL,                       INTENT(IN) :: PTADJS   ! user defined adjustment time
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PPABST   ! grid scale pressure at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PZZ      ! height of model layer (m)
+REAL, DIMENSION(D%NIJT),       INTENT(IN) :: PTKECLS  ! TKE in the CLS  (m2/s2)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PTT      ! grid scale temperature at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PRVT     ! grid scale water vapor "
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PRCT     ! grid scale r_c  "
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PRIT     ! grid scale r_i "
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PWT      ! grid scale vertical
+                                                      ! velocity (m/s)
 !
-REAL               ,INTENT(INOUT)  :: PTTEN(D%NIT,D%NKT)  ! convective temperature
-                                                                           ! tendency (K/s)
-REAL               ,INTENT(INOUT)  :: PRVTEN(D%NIT,D%NKT) ! convective r_v tendency (1/s)
-REAL               ,INTENT(INOUT)  :: PRCTEN(D%NIT,D%NKT) ! convective r_c tendency (1/s)
-REAL               ,INTENT(INOUT)  :: PRITEN(D%NIT,D%NKT) ! convective r_i tendency (1/s)
-INTEGER            ,INTENT(INOUT)  :: KCLTOP(D%NIT) ! cloud top level
-INTEGER            ,INTENT(INOUT)  :: KCLBAS(D%NIT) ! cloud base level
-                                                   ! they are given a value of
-                                                   ! 0 if no convection
-REAL               ,INTENT(INOUT)  :: PUMF(D%NIT,D%NKT)   ! updraft mass flux (kg/s m2)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT):: PTTEN  ! convective temperature tendency (K/s)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT):: PRVTEN ! convective r_v tendency (1/s)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT):: PRCTEN ! convective r_c tendency (1/s)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT):: PRITEN ! convective r_i tendency (1/s)
+INTEGER, DIMENSION(D%NIJT),    INTENT(INOUT):: KCLTOP ! cloud top level
+INTEGER, DIMENSION(D%NIJT),    INTENT(INOUT):: KCLBAS ! cloud base level
+                                                      ! they are given a value of
+                                                      ! 0 if no convection
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT):: PUMF   ! updraft mass flux (kg/s m2)
 !
-LOGICAL            ,INTENT(IN)     :: OCH1CONV ! include tracer transport
-INTEGER            ,INTENT(IN)     :: KCH1     ! number of species
-REAL               ,INTENT(IN)     :: PCH1(D%NIT,D%NKT,KCH1)! grid scale chemical species
-REAL               ,INTENT(INOUT)  :: PCH1TEN(D%NIT,D%NKT,KCH1)! species conv. tendency (1/s)
+LOGICAL,                    INTENT(IN) :: OCH1CONV ! include tracer transport
+INTEGER,                    INTENT(IN) :: KCH1     ! number of species
+REAL, DIMENSION(D%NIJT,D%NKT,KCH1), INTENT(IN)   :: PCH1   ! grid scale chemical species
+REAL, DIMENSION(D%NIJT,D%NKT,KCH1), INTENT(INOUT):: PCH1TEN! species conv. tendency (1/s)
 !
 !
 !*       0.2   Declarations of local fixed memory variables :
 !
-INTEGER  :: ICONV
+INTEGER  :: ICONV                   ! number of convective columns
 REAL     :: ZRDOCP                  ! R_d/C_p
 !
-REAL         :: ZTHT(D%NIT,D%NKT), ZSTHV(D%NIT,D%NKT), ZSTHES(D%NIT,D%NKT)  ! grid scale theta, theta_v
+REAL, DIMENSION(D%NIJT,D%NKT)         :: ZTHT, ZSTHV, ZSTHES  ! grid scale theta, theta_v
 !
 !
 !*       0.2   Declarations of local allocatable  variables :
 !
-INTEGER  :: ISDPL(D%NIT)   ! index for parcel departure level
-INTEGER  :: ISPBL(D%NIT)   ! index for source layer top
-INTEGER  :: ISLCL(D%NIT)   ! index for lifting condensation level
-REAL     :: ZSTHLCL(D%NIT) ! updraft theta at LCL/L
-REAL     :: ZSTLCL(D%NIT)  ! updraft temp. at LCL
-REAL     :: ZSRVLCL(D%NIT) ! updraft rv at LCL
-REAL     :: ZSWLCL(D%NIT)  ! updraft w at LCL
-REAL     :: ZSZLCL(D%NIT)  ! LCL height
-REAL     :: ZSTHVELCL(D%NIT)! envir. theta_v at LCL
+INTEGER  :: ISDPL(D%NIJT)   ! index for parcel departure level
+INTEGER  :: ISPBL(D%NIJT)   ! index for source layer top
+INTEGER  :: ISLCL(D%NIJT)   ! index for lifting condensation level
+REAL     :: ZSTHLCL(D%NIJT) ! updraft theta at LCL/L
+REAL     :: ZSTLCL(D%NIJT)  ! updraft temp. at LCL
+REAL     :: ZSRVLCL(D%NIJT) ! updraft rv at LCL
+REAL     :: ZSWLCL(D%NIJT)  ! updraft w at LCL
+REAL     :: ZSZLCL(D%NIJT)  ! LCL height
+REAL     :: ZSTHVELCL(D%NIJT)! envir. theta_v at LCL
 !
-LOGICAL    :: GTRIG1(D%NIT)  ! logical mask for convection
+LOGICAL    :: GTRIG1(D%NIJT)  ! logical mask for convection
 !
 TYPE(CONVPAREXT) :: CVPEXT
 !
@@ -190,30 +193,28 @@ CVPEXT%JCVEXT = MAX( 0, KTDIA - 1)
 
 ZRDOCP = CST%XRD / CST%XCPD
 
-CALL SHALLOW_CONVECTION_PART1&
-   (CVPEXT, CVP_SHAL, CST, D, NSV, CONVPAR, KBDIA, KTDIA, &
-    KICE, OSETTADJ, PTADJS, PPABST, PZZ, &
-    PTKECLS, PTT, PRVT, PRCT, PRIT, PWT, &
-    PTTEN, PRVTEN, PRCTEN, PRITEN,       &
-    KCLTOP, KCLBAS, PUMF, OCH1CONV, KCH1,&
-    PCH1, PCH1TEN, ZTHT, ZSTHV, ZSTHES,  &
-    ISDPL, ISPBL, ISLCL, ZSTHLCL, ZSTLCL,&
-    ZSRVLCL, ZSWLCL, ZSZLCL, ZSTHVELCL, GTRIG1)
+CALL SHALLOW_CONVECTION_PART1(CVPEXT, CVP_SHAL, CST, D, NSV, CONVPAR, KBDIA, KTDIA, &
+                              KICE, OSETTADJ, PTADJS, PPABST, PZZ, &
+                              PTKECLS, PTT, PRVT, PRCT, PRIT, PWT, &
+                              PTTEN, PRVTEN, PRCTEN, PRITEN,       &
+                              KCLTOP, KCLBAS, PUMF, OCH1CONV, KCH1,&
+                              PCH1, PCH1TEN, ZTHT, ZSTHV, ZSTHES,  &
+                              ISDPL, ISPBL, ISLCL, ZSTHLCL, ZSTLCL,&
+                              ZSRVLCL, ZSWLCL, ZSZLCL, ZSTHVELCL, GTRIG1)
 
-ICONV = COUNT(GTRIG1(D%NIB:D%NIE))
+ICONV = COUNT(GTRIG1(D%NIJB:D%NIJE))
 
 IF(ICONV==0)THEN
   ! Do nothing if there are no selected columns
-ELSE IF (ICONV < D%NIT*9/10) THEN
-  CALL SHALLOW_CONVECTION_PART2_SELECT &
-                             & (CVP_SHAL, CVPEXT, CST, D, NSV, CONVPAR, KICE, &
-                                OSETTADJ, PTADJS, PPABST, PZZ, PTT,  &
-                                PRVT, PRCT, PRIT, OCH1CONV, KCH1,    &
-                                PCH1, ZRDOCP, ZTHT, ZSTHV, ZSTHES,   &
-                                ISDPL, ISPBL, ISLCL, ZSTHLCL, ZSTLCL,&
-                                ZSRVLCL, ZSWLCL, ZSZLCL, ZSTHVELCL,  &
-                                GTRIG1, PUMF, PTTEN, PRVTEN, PRCTEN, &
-                                PRITEN, KCLTOP, KCLBAS, PCH1TEN, ICONV)
+ELSE IF (ICONV < D%NIJT*9/10) THEN
+  CALL SHALLOW_CONVECTION_PART2_SELECT(CVP_SHAL, CVPEXT, CST, D, NSV, CONVPAR, KICE, &
+                                       OSETTADJ, PTADJS, PPABST, PZZ, PTT,  &
+                                       PRVT, PRCT, PRIT, OCH1CONV, KCH1,    &
+                                       PCH1, ZRDOCP, ZTHT, ZSTHV, ZSTHES,   &
+                                       ISDPL, ISPBL, ISLCL, ZSTHLCL, ZSTLCL,&
+                                       ZSRVLCL, ZSWLCL, ZSZLCL, ZSTHVELCL,  &
+                                       GTRIG1, PUMF, PTTEN, PRVTEN, PRCTEN, &
+                                       PRITEN, KCLTOP, KCLBAS, PCH1TEN, ICONV)
 ELSE
   CALL SHALLOW_CONVECTION_PART2 &
                              & (CVP_SHAL, CVPEXT, CST, D, NSV, CONVPAR, KICE, &
@@ -228,4 +229,3 @@ ENDIF
 
 IF (LHOOK) CALL DR_HOOK('SHALLOW_CONVECTION',1,ZHOOK_HANDLE)
 END SUBROUTINE SHALLOW_CONVECTION
-

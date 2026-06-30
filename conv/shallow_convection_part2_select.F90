@@ -24,37 +24,37 @@ TYPE(CONVPAR_T)    ,INTENT(IN)   :: CONVPAR
 INTEGER            ,INTENT(IN)   :: KICE
 LOGICAL            ,INTENT(IN)   :: OSETTADJ
 REAL               ,INTENT(IN)   :: PTADJS
-REAL               ,INTENT(IN)   :: PPABST(D%NIT,D%NKT)
-REAL               ,INTENT(IN)   :: PZZ(D%NIT,D%NKT)
-REAL               ,INTENT(IN)   :: PTT(D%NIT,D%NKT)
-REAL               ,INTENT(IN)   :: PRVT(D%NIT,D%NKT)
-REAL               ,INTENT(IN)   :: PRCT(D%NIT,D%NKT)
-REAL               ,INTENT(IN)   :: PRIT(D%NIT,D%NKT)
+REAL               ,INTENT(IN)   :: PPABST(D%NIJT,D%NKT)
+REAL               ,INTENT(IN)   :: PZZ(D%NIJT,D%NKT)
+REAL               ,INTENT(IN)   :: PTT(D%NIJT,D%NKT)
+REAL               ,INTENT(IN)   :: PRVT(D%NIJT,D%NKT)
+REAL               ,INTENT(IN)   :: PRCT(D%NIJT,D%NKT)
+REAL               ,INTENT(IN)   :: PRIT(D%NIJT,D%NKT)
 LOGICAL            ,INTENT(IN)   :: OCH1CONV
 INTEGER            ,INTENT(IN)   :: KCH1
-REAL               ,INTENT(IN)   :: PCH1(D%NIT,D%NKT,KCH1)
+REAL               ,INTENT(IN)   :: PCH1(D%NIJT,D%NKT,KCH1)
 REAL               ,INTENT(IN)   :: PRDOCP
-REAL               ,INTENT(IN)   :: PTHT(D%NIT,D%NKT)
-REAL               ,INTENT(IN)   :: PSTHV(D%NIT,D%NKT)
-REAL               ,INTENT(IN)   :: PSTHES(D%NIT,D%NKT)
-INTEGER            ,INTENT(IN)   :: ISDPL(D%NIT)
-INTEGER            ,INTENT(IN)   :: ISPBL(D%NIT)
-INTEGER            ,INTENT(IN)   :: ISLCL(D%NIT)
-REAL               ,INTENT(IN)   :: PSTHLCL(D%NIT)
-REAL               ,INTENT(IN)   :: PSTLCL(D%NIT)
-REAL               ,INTENT(IN)   :: PSRVLCL(D%NIT)
-REAL               ,INTENT(IN)   :: PSWLCL(D%NIT)
-REAL               ,INTENT(IN)   :: PSZLCL(D%NIT)
-REAL               ,INTENT(IN)   :: PSTHVELCL(D%NIT)
-LOGICAL            ,INTENT(IN)   :: GTRIG1(D%NIT)
-REAL               ,INTENT(OUT)  :: PUMF(D%NIT,D%NKT)
-REAL               ,INTENT(OUT)  :: PTHC(D%NIT,D%NKT)
-REAL               ,INTENT(OUT)  :: PRVC(D%NIT,D%NKT)
-REAL               ,INTENT(OUT)  :: PRCC(D%NIT,D%NKT)
-REAL               ,INTENT(OUT)  :: PRIC(D%NIT,D%NKT)
-INTEGER            ,INTENT(OUT)  :: ICTL(D%NIT)
-INTEGER            ,INTENT(OUT)  :: IMINCTL(D%NIT)
-REAL               ,INTENT(OUT)  :: PPCH1TEN(D%NIT,D%NKT,KCH1)
+REAL               ,INTENT(IN)   :: PTHT(D%NIJT,D%NKT)
+REAL               ,INTENT(IN)   :: PSTHV(D%NIJT,D%NKT)
+REAL               ,INTENT(IN)   :: PSTHES(D%NIJT,D%NKT)
+INTEGER            ,INTENT(IN)   :: ISDPL(D%NIJT)
+INTEGER            ,INTENT(IN)   :: ISPBL(D%NIJT)
+INTEGER            ,INTENT(IN)   :: ISLCL(D%NIJT)
+REAL               ,INTENT(IN)   :: PSTHLCL(D%NIJT)
+REAL               ,INTENT(IN)   :: PSTLCL(D%NIJT)
+REAL               ,INTENT(IN)   :: PSRVLCL(D%NIJT)
+REAL               ,INTENT(IN)   :: PSWLCL(D%NIJT)
+REAL               ,INTENT(IN)   :: PSZLCL(D%NIJT)
+REAL               ,INTENT(IN)   :: PSTHVELCL(D%NIJT)
+LOGICAL            ,INTENT(IN)   :: GTRIG1(D%NIJT)
+REAL               ,INTENT(OUT)  :: PUMF(D%NIJT,D%NKT)
+REAL               ,INTENT(OUT)  :: PTHC(D%NIJT,D%NKT)
+REAL               ,INTENT(OUT)  :: PRVC(D%NIJT,D%NKT)
+REAL               ,INTENT(OUT)  :: PRCC(D%NIJT,D%NKT)
+REAL               ,INTENT(OUT)  :: PRIC(D%NIJT,D%NKT)
+INTEGER            ,INTENT(OUT)  :: ICTL(D%NIJT)
+INTEGER            ,INTENT(OUT)  :: IMINCTL(D%NIJT)
+REAL               ,INTENT(OUT)  :: PPCH1TEN(D%NIJT,D%NKT,KCH1)
 INTEGER            ,INTENT(IN)   :: KIT_
 
 LOGICAL::GTRIG1_(KIT_)
@@ -92,59 +92,57 @@ INTEGER :: ISORT (KIT_)
 TYPE (DIMPHYEX_T) :: D_
 
 D_ = D
-D_%NIB = 1
-D_%NIE = KIT_
-D_%NIT = KIT_
+D_%NIJB = 1
+D_%NIJE = KIT_
+D_%NIJT = KIT_
 
 JI_ = 0
 
-DO JI = D%NIB, D%NIE
-
-    IF (GTRIG1 (JI)) THEN
-        JI_ = JI_ + 1
-        ISORT (JI_) = JI
-    ENDIF
-
+DO JI = D%NIJB, D%NIJE
+  IF (GTRIG1 (JI)) THEN
+    JI_ = JI_ + 1
+    ISORT (JI_) = JI
+  ENDIF
 ENDDO
 
 DO JI_ = 1, KIT_
-    GTRIG1_(JI_) = GTRIG1(ISORT(JI_))
-    ISDPL_(JI_) = ISDPL(ISORT(JI_))
-    ISLCL_(JI_) = ISLCL(ISORT(JI_))
-    ISPBL_(JI_) = ISPBL(ISORT(JI_))
-    PCH1_(JI_,:,:) = PCH1(ISORT(JI_),:,:)
-    PPABST_(JI_,:) = PPABST(ISORT(JI_),:)
-    PRCT_(JI_,:) = PRCT(ISORT(JI_),:)
-    PRIT_(JI_,:) = PRIT(ISORT(JI_),:)
-    PRVT_(JI_,:) = PRVT(ISORT(JI_),:)
-    PSRVLCL_(JI_) = PSRVLCL(ISORT(JI_))
-    PSTHES_(JI_,:) = PSTHES(ISORT(JI_),:)
-    PSTHLCL_(JI_) = PSTHLCL(ISORT(JI_))
-    PSTHV_(JI_,:) = PSTHV(ISORT(JI_),:)
-    PSTHVELCL_(JI_) = PSTHVELCL(ISORT(JI_))
-    PSTLCL_(JI_) = PSTLCL(ISORT(JI_))
-    PSWLCL_(JI_) = PSWLCL(ISORT(JI_))
-    PSZLCL_(JI_) = PSZLCL(ISORT(JI_))
-    PTHT_(JI_,:) = PTHT(ISORT(JI_),:)
-    PTT_(JI_,:) = PTT(ISORT(JI_),:)
-    PZZ_(JI_,:) = PZZ(ISORT(JI_),:)
+  GTRIG1_(JI_) = GTRIG1(ISORT(JI_))
+  ISDPL_(JI_) = ISDPL(ISORT(JI_))
+  ISLCL_(JI_) = ISLCL(ISORT(JI_))
+  ISPBL_(JI_) = ISPBL(ISORT(JI_))
+  PCH1_(JI_,:,:) = PCH1(ISORT(JI_),:,:)
+  PPABST_(JI_,:) = PPABST(ISORT(JI_),:)
+  PRCT_(JI_,:) = PRCT(ISORT(JI_),:)
+  PRIT_(JI_,:) = PRIT(ISORT(JI_),:)
+  PRVT_(JI_,:) = PRVT(ISORT(JI_),:)
+  PSRVLCL_(JI_) = PSRVLCL(ISORT(JI_))
+  PSTHES_(JI_,:) = PSTHES(ISORT(JI_),:)
+  PSTHLCL_(JI_) = PSTHLCL(ISORT(JI_))
+  PSTHV_(JI_,:) = PSTHV(ISORT(JI_),:)
+  PSTHVELCL_(JI_) = PSTHVELCL(ISORT(JI_))
+  PSTLCL_(JI_) = PSTLCL(ISORT(JI_))
+  PSWLCL_(JI_) = PSWLCL(ISORT(JI_))
+  PSZLCL_(JI_) = PSZLCL(ISORT(JI_))
+  PTHT_(JI_,:) = PTHT(ISORT(JI_),:)
+  PTT_(JI_,:) = PTT(ISORT(JI_),:)
+  PZZ_(JI_,:) = PZZ(ISORT(JI_),:)
 ENDDO
 
-CALL SHALLOW_CONVECTION_PART2 (CVP_SHAL, CVPEXT, CST, D_, NSV, CONVPAR, KICE, OSETTADJ, PTADJS&
-&, PPABST_, PZZ_, PTT_, PRVT_, PRCT_, PRIT_, OCH1CONV, KCH1, PCH1_, PRDOCP, PTHT_, PSTHV_&
-&, PSTHES_, ISDPL_, ISPBL_, ISLCL_, PSTHLCL_, PSTLCL_, PSRVLCL_, PSWLCL_, PSZLCL_, PSTHVELCL_&
-&, GTRIG1_, PUMF_, PTHC_, PRVC_, PRCC_, PRIC_, ICTL_, IMINCTL_, PPCH1TEN_)
+CALL SHALLOW_CONVECTION_PART2(CVP_SHAL, CVPEXT, CST, D_, NSV, CONVPAR, KICE, OSETTADJ, PTADJS,&
+&PPABST_, PZZ_, PTT_, PRVT_, PRCT_, PRIT_, OCH1CONV, KCH1, PCH1_, PRDOCP, PTHT_, PSTHV_, &
+&PSTHES_, ISDPL_, ISPBL_, ISLCL_, PSTHLCL_, PSTLCL_, PSRVLCL_, PSWLCL_, PSZLCL_, PSTHVELCL_, &
+&GTRIG1_, PUMF_, PTHC_, PRVC_, PRCC_, PRIC_, ICTL_, IMINCTL_, PPCH1TEN_)
 
 
 DO JI_ = 1, KIT_
-    ICTL(ISORT(JI_)) = ICTL_(JI_)
-    IMINCTL(ISORT(JI_)) = IMINCTL_(JI_)
-    PPCH1TEN(ISORT(JI_),:,:) = PPCH1TEN_(JI_,:,:)
-    PRCC(ISORT(JI_),:) = PRCC_(JI_,:)
-    PRIC(ISORT(JI_),:) = PRIC_(JI_,:)
-    PRVC(ISORT(JI_),:) = PRVC_(JI_,:)
-    PTHC(ISORT(JI_),:) = PTHC_(JI_,:)
-    PUMF(ISORT(JI_),:) = PUMF_(JI_,:)
+  ICTL(ISORT(JI_)) = ICTL_(JI_)
+  IMINCTL(ISORT(JI_)) = IMINCTL_(JI_)
+  PPCH1TEN(ISORT(JI_),:,:) = PPCH1TEN_(JI_,:,:)
+  PRCC(ISORT(JI_),:) = PRCC_(JI_,:)
+  PRIC(ISORT(JI_),:) = PRIC_(JI_,:)
+  PRVC(ISORT(JI_),:) = PRVC_(JI_,:)
+  PTHC(ISORT(JI_),:) = PTHC_(JI_,:)
+  PUMF(ISORT(JI_),:) = PUMF_(JI_,:)
 ENDDO
 
 

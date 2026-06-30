@@ -1,3 +1,13 @@
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+!--------------- special set of characters for RCS information
+!-----------------------------------------------------------------
+! $Source$ $Revision$
+! MASDEV4_7 modd 2006/05/18 13:07:25
+!-----------------------------------------------------------------
 !     ######spl
       MODULE MODD_CONVPAR
 
@@ -143,8 +153,7 @@ IF (LHOOK) CALL DR_HOOK('INI_CONVPAR1',1,ZHOOK_HANDLE)
 
 END SUBROUTINE INI_CONVPAR1
 
-SUBROUTINE INI_CONVPAR0
-USE YOMHOOK , ONLY : LHOOK, JPHOOK, DR_HOOK
+SUBROUTINE INI_CONVPAR0(OE1)
 !     ######################
 !
 !!****  *INI_CONVPAR * - routine to initialize the constants modules 
@@ -186,7 +195,18 @@ USE YOMHOOK , ONLY : LHOOK, JPHOOK, DR_HOOK
 !              ------------
 !
 !
+USE YOMHOOK , ONLY : LHOOK, JPHOOK, DR_HOOK
 IMPLICIT NONE
+LOGICAL, OPTIONAL, INTENT(IN) :: OE1
+LOGICAL :: LE1
+!
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+!
+IF(.NOT. PRESENT(OE1)) THEN
+  LE1=.FALSE.
+ELSE
+  LE1=OE1
+ENDIF
 !  
 !-------------------------------------------------------------------------------
 !
@@ -195,38 +215,71 @@ IMPLICIT NONE
 !              ---------------------------------------------------
 !
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('INI_CONVPAR0',0,ZHOOK_HANDLE)
-XA25     = 625.E6    ! 25 km x 25 km reference grid area
-!
-XCRAD    = 1500.     ! cloud radius 
-XCDEPTH  = 2.5E3      ! minimum necessary cloud depth
-XENTR    = 0.03      ! entrainment constant (m/Pa) = 0.2 (m)  
-!
-XZLCL    = 3.5E3     ! maximum allowed allowed height 
-                     ! difference between the surface and the LCL
-XZPBL    = 60.E2     ! minimum mixed layer depth to sustain convection
-XWTRIG   = 6.00      ! constant in vertical velocity trigger
-!
-!
-XNHGAM   = 1.3333    ! accounts for non-hydrost. pressure 
-                     ! in buoyancy term of w equation
-                     ! = 2 / (1+gamma)
-XTFRZ1   = 268.16    ! begin of freezing interval
-XTFRZ2   = 248.16    ! end of freezing interval
-!
-XRHDBC   = 0.9       ! relative humidity below cloud in downdraft
 
-XRCONV   = 0.015     ! constant in precipitation conversion 
-XSTABT   = 0.75      ! factor to assure stability in  fractional time
-                     ! integration, routine CONVECT_CLOSURE
-XSTABC   = 0.95      ! factor to assure stability in CAPE adjustment,
-                     !  routine CONVECT_CLOSURE
-XUSRDPTH = 165.E2    ! pressure thickness used to compute updraft
-                     ! moisture supply rate for downdraft
-XMELDPTH = 100.E2    ! layer (Pa) through which precipitation melt is
-                     ! allowed below downdraft
-XUVDP    = 0.7       ! constant for pressure perturb in momentum transport
+IF(.NOT. LE1) THEN
+  XA25     = 625.E6    ! 25 km x 25 km reference grid area
+  !
+  XCRAD    = 1500.     ! cloud radius 
+  XCDEPTH  = 2.5E3      ! minimum necessary cloud depth
+  XENTR    = 0.03      ! entrainment constant (m/Pa) = 0.2 (m)  
+  !
+  XZLCL    = 3.5E3     ! maximum allowed allowed height 
+                       ! difference between the surface and the LCL
+  XZPBL    = 60.E2     ! minimum mixed layer depth to sustain convection
+  XWTRIG   = 6.00      ! constant in vertical velocity trigger
+  !
+  !
+  XNHGAM   = 1.3333    ! accounts for non-hydrost. pressure 
+                       ! in buoyancy term of w equation
+                       ! = 2 / (1+gamma)
+  XTFRZ1   = 268.16    ! begin of freezing interval
+  XTFRZ2   = 248.16    ! end of freezing interval
+  !
+  XRHDBC   = 0.9       ! relative humidity below cloud in downdraft
+  
+  XRCONV   = 0.015     ! constant in precipitation conversion 
+  XSTABT   = 0.75      ! factor to assure stability in  fractional time
+                       ! integration, routine CONVECT_CLOSURE
+  XSTABC   = 0.95      ! factor to assure stability in CAPE adjustment,
+                       !  routine CONVECT_CLOSURE
+  XUSRDPTH = 165.E2    ! pressure thickness used to compute updraft
+                       ! moisture supply rate for downdraft
+  XMELDPTH = 100.E2    ! layer (Pa) through which precipitation melt is
+                       ! allowed below downdraft
+  XUVDP    = 0.7       ! constant for pressure perturb in momentum transport
+ELSE
+  XA25     = 625.E6    ! 25 km x 25 km reference grid area
+  !
+  XCRAD    =  500.     ! cloud radius 
+  XCDEPTH  = 3.E3      ! minimum necessary cloud depth
+  XENTR    = 0.03      ! entrainment constant (m/Pa) = 0.2 (m)  
+  !
+  XZLCL    = 3.5E3     ! maximum allowed allowed height 
+                       ! difference between the surface and the LCL
+  XZPBL    = 60.E2     ! minimum mixed layer depth to sustain convection
+  XWTRIG   = 6.00      ! constant in vertical velocity trigger
+  !
+  !
+  XNHGAM   = 1.3333    ! accounts for non-hydrost. pressure 
+                       ! in buoyancy term of w equation
+                       ! = 2 / (1+gamma)
+  XTFRZ1   = 268.16    ! begin of freezing interval
+  XTFRZ2   = 248.16    ! end of freezing interval
+  !
+  XRHDBC   = 0.9       ! relative humidity below cloud in downdraft
+  
+  XRCONV   = 0.015     ! constant in precipitation conversion 
+  XSTABT   = 0.75      ! factor to assure stability in  fractional time
+                       ! integration, routine CONVECT_CLOSURE
+  XSTABC   = 0.95      ! factor to assure stability in CAPE adjustment,
+                       !  routine CONVECT_CLOSURE
+  XUSRDPTH = 165.E2    ! pressure thickness used to compute updraft
+                       ! moisture supply rate for downdraft
+  XMELDPTH = 200.E2    ! layer (Pa) through which precipitation melt is
+                       ! allowed below downdraft
+  XUVDP    = 0.7       ! constant for pressure perturb in momentum transport
+ENDIF
 !
 !
 IF (LHOOK) CALL DR_HOOK('INI_CONVPAR0',1,ZHOOK_HANDLE)

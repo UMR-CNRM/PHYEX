@@ -1,7 +1,10 @@
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
 MODULE MODE_CONVECT_TRIGGER_SHAL
 IMPLICIT NONE
 CONTAINS
-!     ######spl
       SUBROUTINE CONVECT_TRIGGER_SHAL(  CVP_SHAL, CVPEXT, CST, D,  &
                                         PPRES, PTH, PTHV, PTHES,             &
                                         PRV, PW, PZ, PTKECLS,                &
@@ -10,7 +13,6 @@ CONTAINS
 
 !$ACDC singlecolumn
 
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ########################################################################
 !
 !!**** Determine convective columns as well as the cloudy values of theta,
@@ -85,6 +87,7 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_CST, ONLY : CST_T
 USE MODD_CONVPAR_SHAL, ONLY : CONVPAR_SHAL
 USE MODD_CONVPAREXT, ONLY : CONVPAREXT
@@ -99,24 +102,24 @@ TYPE(CONVPAR_SHAL),        INTENT(IN) :: CVP_SHAL
 TYPE(CONVPAREXT),          INTENT(IN) :: CVPEXT
 TYPE(CST_T),               INTENT(IN) :: CST
 TYPE(DIMPHYEX_T),          INTENT(IN) :: D
-REAL, DIMENSION(D%NIT),     INTENT(IN) :: PTKECLS   ! TKE CLS
-REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PTH, PTHV ! theta, theta_v
-REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PTHES     ! envir. satur. theta_e
-REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PRV       ! vapor mixing ratio
-REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PPRES     ! pressure
-REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PZ        ! height of grid point (m)
-REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PW        ! vertical velocity
+REAL, DIMENSION(D%NIJT),     INTENT(IN) :: PTKECLS   ! TKE CLS
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN) :: PTH, PTHV ! theta, theta_v
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN) :: PTHES     ! envir. satur. theta_e
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN) :: PRV       ! vapor mixing ratio
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN) :: PPRES     ! pressure
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN) :: PZ        ! height of grid point (m)
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN) :: PW        ! vertical velocity
 !
-REAL, DIMENSION(D%NIT),     INTENT(OUT):: PTHLCL    ! theta at LCL
-REAL, DIMENSION(D%NIT),     INTENT(OUT):: PTLCL     ! temp. at LCL
-REAL, DIMENSION(D%NIT),     INTENT(OUT):: PRVLCL    ! vapor mixing ratio at  LCL
-REAL, DIMENSION(D%NIT),     INTENT(OUT):: PWLCL     ! parcel velocity at  LCL
-REAL, DIMENSION(D%NIT),     INTENT(OUT):: PZLCL     ! height at LCL (m)
-REAL, DIMENSION(D%NIT),     INTENT(OUT):: PTHVELCL  ! environm. theta_v at LCL (K)
-LOGICAL, DIMENSION(D%NIT),  INTENT(OUT):: OTRIG     ! logical mask for convection
-INTEGER, DIMENSION(D%NIT),  INTENT(INOUT):: KLCL    ! contains vert. index of LCL
-INTEGER, DIMENSION(D%NIT),  INTENT(INOUT):: KDPL    ! contains vert. index of DPL
-INTEGER, DIMENSION(D%NIT),  INTENT(INOUT):: KPBL    ! contains index of source layer top
+REAL, DIMENSION(D%NIJT),     INTENT(OUT):: PTHLCL    ! theta at LCL
+REAL, DIMENSION(D%NIJT),     INTENT(OUT):: PTLCL     ! temp. at LCL
+REAL, DIMENSION(D%NIJT),     INTENT(OUT):: PRVLCL    ! vapor mixing ratio at  LCL
+REAL, DIMENSION(D%NIJT),     INTENT(OUT):: PWLCL     ! parcel velocity at  LCL
+REAL, DIMENSION(D%NIJT),     INTENT(OUT):: PZLCL     ! height at LCL (m)
+REAL, DIMENSION(D%NIJT),     INTENT(OUT):: PTHVELCL  ! environm. theta_v at LCL (K)
+LOGICAL, DIMENSION(D%NIJT),  INTENT(OUT):: OTRIG     ! logical mask for convection
+INTEGER, DIMENSION(D%NIJT),  INTENT(INOUT):: KLCL    ! contains vert. index of LCL
+INTEGER, DIMENSION(D%NIJT),  INTENT(INOUT):: KDPL    ! contains vert. index of DPL
+INTEGER, DIMENSION(D%NIJT),  INTENT(INOUT):: KPBL    ! contains index of source layer top
 !
 !*       0.2   Declarations of local variables :
 !
@@ -127,32 +130,32 @@ REAL    :: ZEPS, ZEPSA         ! R_d / R_v, R_v / R_d
 REAL    :: ZCPORD, ZRDOCP      ! C_pd / R_d, R_d / C_pd
 REAL    :: ZX1, ZX2
 !
-REAL, DIMENSION(D%NIT) :: ZTHLCL, ZTLCL, ZRVLCL, & ! locals for PTHLCL,PTLCL
+REAL, DIMENSION(D%NIJT) :: ZTHLCL, ZTLCL, ZRVLCL, & ! locals for PTHLCL,PTLCL
                                ZWLCL,  ZZLCL, ZTHVELCL  ! PRVLCL, ....
-INTEGER, DIMENSION(D%NIT) :: IDPL, IPBL, ILCL      ! locals for KDPL, ...
-REAL, DIMENSION(D%NIT) :: ZPLCL    ! pressure at LCL
-REAL, DIMENSION(D%NIT) :: ZZDPL    ! height of DPL
-REAL, DIMENSION(D%NIT) :: ZTHVLCL  ! theta_v at LCL = mixed layer value
-REAL, DIMENSION(D%NIT) :: ZTMIX    ! mixed layer temperature
-REAL, DIMENSION(D%NIT) :: ZEVMIX   ! mixed layer water vapor pressure
-REAL, DIMENSION(D%NIT) :: ZDPTHMIX, ZPRESMIX ! mixed layer depth and pressure
-REAL, DIMENSION(D%NIT) :: ZCAPE    ! convective available energy (m^2/s^2/g)
-REAL, DIMENSION(D%NIT) :: ZCAP     ! pseudo fro CAPE
-REAL, DIMENSION(D%NIT) :: ZTHEUL   ! updraft equiv. pot. temperature (K)
-REAL, DIMENSION(D%NIT) :: ZLVA, ZCPHA! specific heats of vaporisation, dry air
-REAL, DIMENSION(D%NIT) :: ZLVB, ZCPHB! specific heats of vaporisation, dry air
-REAL, DIMENSION(D%NIT) :: ZEWA, ZEWB ! vapor saturation mixing ratios
-REAL, DIMENSION(D%NIT) :: ZLSA, ZLSB  ! latent heat L_s
-REAL, DIMENSION(D%NIT) :: ZDP      ! pressure between LCL and model layer
-REAL, DIMENSION(D%NIT) :: ZTOP,ZTOPP     ! estimated cloud top (m)
-REAL, DIMENSION(D%NIT) :: ZWORK3    ! work arrays
-LOGICAL, DIMENSION(D%NIT) :: GTRIG2          ! local arrays for OTRIG
-LOGICAL, DIMENSION(D%NIT) :: GWORK1                 ! work array
+INTEGER, DIMENSION(D%NIJT) :: IDPL, IPBL, ILCL      ! locals for KDPL, ...
+REAL, DIMENSION(D%NIJT) :: ZPLCL    ! pressure at LCL
+REAL, DIMENSION(D%NIJT) :: ZZDPL    ! height of DPL
+REAL, DIMENSION(D%NIJT) :: ZTHVLCL  ! theta_v at LCL = mixed layer value
+REAL, DIMENSION(D%NIJT) :: ZTMIX    ! mixed layer temperature
+REAL, DIMENSION(D%NIJT) :: ZEVMIX   ! mixed layer water vapor pressure
+REAL, DIMENSION(D%NIJT) :: ZDPTHMIX, ZPRESMIX ! mixed layer depth and pressure
+REAL, DIMENSION(D%NIJT) :: ZCAPE    ! convective available energy (m^2/s^2/g)
+REAL, DIMENSION(D%NIJT) :: ZCAP     ! pseudo fro CAPE
+REAL, DIMENSION(D%NIJT) :: ZTHEUL   ! updraft equiv. pot. temperature (K)
+REAL, DIMENSION(D%NIJT) :: ZLVA, ZCPHA! specific heats of vaporisation, dry air
+REAL, DIMENSION(D%NIJT) :: ZLVB, ZCPHB! specific heats of vaporisation, dry air
+REAL, DIMENSION(D%NIJT) :: ZEWA, ZEWB ! vapor saturation mixing ratios
+REAL, DIMENSION(D%NIJT) :: ZLSA, ZLSB  ! latent heat L_s
+REAL, DIMENSION(D%NIJT) :: ZDP      ! pressure between LCL and model layer
+REAL, DIMENSION(D%NIJT) :: ZTOP,ZTOPP     ! estimated cloud top (m)
+REAL, DIMENSION(D%NIJT) :: ZWORK3    ! work arrays
+LOGICAL, DIMENSION(D%NIJT) :: GTRIG2          ! local arrays for OTRIG
+LOGICAL, DIMENSION(D%NIJT) :: GWORK1                 ! work array
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
-REAL, DIMENSION(D%NIT,D%NKT) :: ZZZX1, ZZPPRES,ZZPTH,ZZPRV
-REAL, DIMENSION(D%NIT)       :: ZWLCLSQRENT
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZZZX1, ZZPPRES,ZZPTH,ZZPRV
+REAL, DIMENSION(D%NIJT)       :: ZWLCLSQRENT
 INTEGER  :: JLSTEP,JLSIZE,JLSTART
 INTEGER  :: JLCLMIN   !!MIN value of LCL on all grid points, used to remove
                       !!unnecessary computation for smaller vertical levels.
@@ -199,7 +202,7 @@ GTRIG2(:)  = .TRUE.
 !
 !!!Auxiliary arrays, computed once here and used for each JKK in 3.
 DO JK=IKB+1,IKE-1
-  DO JI=D%NIB,D%NIE
+  DO JI=D%NIJB,D%NIJE
     ZZZX1(JI,JK)=PPRES(JI,JK)-PPRES(JI,JK+1)
     ZZPPRES(JI,JK)=PPRES(JI,JK)*ZZZX1(JI,JK)
     ZZPTH(JI,JK)=PTH(JI,JK)*ZZZX1(JI,JK)
@@ -217,12 +220,12 @@ JT = IKE - 2
 !
 DO JKK = IKB + 1, IKE - 2
 !
-     DO JI=D%NIB, D%NIE
+     DO JI=D%NIJB, D%NIJE
        GWORK1(JI) = ZZDPL(JI) - PZ(JI,IKB) < CVP_SHAL%XZLCL
      ENDDO
           ! we exit the trigger test when the center of the mixed layer is more
           ! than 1500 m  above soil level.
-     DO JI=D%NIB, D%NIE
+     DO JI=D%NIJB, D%NIJE
        IF ( GWORK1(JI) ) THEN
           ZDPTHMIX(JI) = 0.
           ZPRESMIX(JI) = 0.
@@ -239,7 +242,7 @@ DO JKK = IKB + 1, IKE - 2
 !
      DO JK = JKK, IKE - 1
        JKM = JK + 1
-       DO JI = D%NIB, D%NIE
+       DO JI = D%NIJB, D%NIJE
          IF ( GWORK1(JI) .AND. ZDPTHMIX(JI) < CVP_SHAL%XZPBL ) THEN
             IPBL(JI)     = JK
             ZDPTHMIX(JI) = ZDPTHMIX(JI) + ZZZX1(JI,JK)        !!!uses the auxiliary arrays of 0. 
@@ -251,7 +254,7 @@ DO JKK = IKB + 1, IKE - 2
      END DO
 !
 !
-     DO JI=D%NIB, D%NIE
+     DO JI=D%NIJB, D%NIJE
      IF ( GWORK1(JI) ) THEN
 !
         ZPRESMIX(JI) = ZPRESMIX(JI) / ZDPTHMIX(JI)
@@ -263,7 +266,7 @@ DO JKK = IKB + 1, IKE - 2
 !
 !*       4.1    Use an empirical direct solution ( Bolton formula )
 !               to determine temperature and pressure at LCL.
-!               NotaJI the adiabatic saturation temperature is not
+!               Nota: the adiabatic saturation temperature is not
 !                     equal to the dewpoint temperature
 !               ----------------------------------------------------
 !
@@ -283,7 +286,7 @@ DO JKK = IKB + 1, IKE - 2
      END IF
      ENDDO
 !
-     DO JI=D%NIB, D%NIE
+     DO JI=D%NIJB, D%NIJE
      !arrays ZEWA, ZLVA, ZLSA, ZCPHA, 
      !       ZEWB, ZLVB, ZLSB, ZCPHB are only used if GWORK1(JI)=.TRUE.
      !in the rest of the code.
@@ -297,7 +300,7 @@ DO JKK = IKB + 1, IKE - 2
 !               with MNH saturation formula
 !               ---------------------------------------------
 !
-     DO JI=D%NIB, D%NIE
+     DO JI=D%NIJB, D%NIJE
      IF( GWORK1(JI) ) THEN
         ZLSA(JI) = ZEWA(JI) / ZTLCL(JI) * ( CST%XBETAW / ZTLCL(JI) - CST%XGAMW ) ! dr_sat/dT
         ZLSA(JI) = ( ZEWA(JI) - ZRVLCL(JI) ) /                              &
@@ -312,7 +315,7 @@ DO JKK = IKB + 1, IKE - 2
 !               and temperature to saturation values.
 !               ---------------------------------------------
 !
-     DO JI=D%NIB, D%NIE
+     DO JI=D%NIJB, D%NIJE
      IF( GWORK1(JI) .AND. ZRVLCL(JI) > ZEWB(JI) ) THEN
         ZLSB(JI) = ZEWB(JI) / ZTMIX(JI) * ( CST%XBETAW / ZTMIX(JI) - CST%XGAMW ) ! dr_sat/dT
         ZLSB(JI) = ( ZEWB(JI) - ZRVLCL(JI) ) /                              &
@@ -338,15 +341,15 @@ DO JKK = IKB + 1, IKE - 2
     DO JLSTART=JKK,IKE-1,JLSTEP
       JLSIZE=MIN(JLSTEP,JT-JLSTART+1) 
       IF (JLSTART .EQ. JKK) THEN
-        IJIMIN=D%NIB
-        IJIMAX=D%NIE
+        IJIMIN=D%NIJB
+        IJIMAX=D%NIJE
         LLCOMPUTE=.TRUE.
       ELSE
         IF (LLCOMPUTE) THEN
           LLCOMPUTE=.FALSE.
           IJIMIN2=IJIMIN
           IJIMAX2=IJIMAX
-          DO JI=D%NIB,D%NIE
+          DO JI=D%NIJB,D%NIJE
             IF ((JI .GE. IJIMIN2) .AND. (JI .LE. IJIMAX2) .AND. GWORK1(JI) .AND. (ZPLCL(JI) <= PPRES(JI,JLSTART))) THEN
               IF (.NOT. LLCOMPUTE) IJIMIN=JI      
               IJIMAX=JI 
@@ -358,7 +361,7 @@ DO JKK = IKB + 1, IKE - 2
 
       IF (LLCOMPUTE) THEN
         DO JK = JLSTART, JLSTART+JLSIZE-1
-           DO JI = D%NIB,D%NIE
+           DO JI = D%NIJB,D%NIJE
              IF ( (JI .GE. IJIMIN) .AND. (JI .LE. IJIMAX) .AND. ZPLCL(JI) <= PPRES(JI,JK) .AND. GWORK1(JI) ) ILCL(JI) = JK + 1
            END DO
         END DO
@@ -370,8 +373,8 @@ DO JKK = IKB + 1, IKE - 2
 !*        5.2   Estimate height and environm. theta_v at LCL
 !               --------------------------------------------------
 !
-    JLCLMIN=ILCL(D%NIB)
-    DO JI = D%NIB, D%NIE
+    JLCLMIN=ILCL(D%NIJB)
+    DO JI = D%NIJB, D%NIJE
       IF ( GWORK1(JI) ) THEN
         JK   = ILCL(JI)
         JKM  = JK - 1
@@ -384,7 +387,6 @@ DO JKK = IKB + 1, IKE - 2
       END IF
     END DO
 !
-!
 !*       6.     Check to see if cloud is bouyant
 !               --------------------------------
 !
@@ -392,7 +394,7 @@ DO JKK = IKB + 1, IKE - 2
 !               -------------------------------------------------------------
 !
 !            !  normalize w grid scale to a 25 km refer. grid
-!    DO JI = 1, D%NIT
+!    DO JI = 1, D%NIJT
 !       JK  = ILCL(JI)
 !       JKM = JK - 1
 !       ZWORK1(JI) =  ( PW(JI,JKM)  + ( PW(JI,JK) - PW(JI,JKM) ) * ZDP(JI) )  &
@@ -407,7 +409,7 @@ DO JKK = IKB + 1, IKE - 2
 !*       6.2    Compute parcel vertical velocity at LCL
 !               ---------------------------------------
 !
-!    DO JI = 1, D%NIT
+!    DO JI = 1, D%NIJT
 !       JKDL = IDPL(JI)
 !       ZWORK3(JI) = XG * ZWORK1(JI) * ( ZZLCL(JI) - PZ(JI,JKDL) )       &
 !                      / ( PTHV(JI,JKDL) + ZTHVELCL(JI) )
@@ -417,7 +419,7 @@ DO JKK = IKB + 1, IKE - 2
 !      GTRIG(:)  = ZTHVLCL(:) - ZTHVELCL(:) + ZWORK1(:) > 0. .AND.       &
 !                  ZWLCL(:) > 0.
 !    END WHERE
-    DO JI = D%NIB, D%NIE
+    DO JI = D%NIJB, D%NIJE
       JLCLMIN=MIN(JLCLMIN,ILCL(JI))  
       ZWLCL(JI) = CVP_SHAL%XAW * MAX(0.,PW(JI,IKB)) + CVP_SHAL%XBW
                  ! the factor 1.05 takes entrainment into account
@@ -435,10 +437,10 @@ DO JKK = IKB + 1, IKE - 2
                                ZRVLCL(JI) * ( 1. + 0.81 * ZRVLCL(JI) ) )
     END DO
 
-     ZCAPE(D%NIB:D%NIE)  = MAX(JLCLMIN-1-IKB,0)*CST%XG 
-     ZCAP(D%NIB:D%NIE) = 0.
-     ZTOP(D%NIB:D%NIE)  = 0.
-     ZWORK3(D%NIB:D%NIE)= 0.
+     ZCAPE(D%NIJB:D%NIJE)  = MAX(JLCLMIN-1-IKB,0)*CST%XG 
+     ZCAP(D%NIJB:D%NIJE) = 0.
+     ZTOP(D%NIJB:D%NIJE)  = 0.
+     ZWORK3(D%NIJB:D%NIJE)= 0.
      JKM=MAX(IKB,JLCLMIN-1) 
 
 !REK : should try if's instead of sign & max
@@ -458,7 +460,7 @@ DO JKK = IKB + 1, IKE - 2
        ELSE
          IF (LLCOMPUTE) THEN
            LLCOMPUTE=.FALSE.
-           DO JI=D%NIB,D%NIE
+           DO JI=D%NIJB,D%NIJE
              IF (GTRIG2(JI) .AND. ((ZWORK3(JI) .GT. -0.5) .OR. (ZCAPE(JI) .LE. 10.))) LLCOMPUTE=.TRUE.
            ENDDO
          ENDIF
@@ -468,7 +470,7 @@ DO JKK = IKB + 1, IKE - 2
          DO JL = JLSTART,JLSTART+JLSIZE-1
            JK = JL + 1
   
-           DO JI = D%NIB, D%NIE
+           DO JI = D%NIJB, D%NIJE
              !!!it was not possible to use a mask IF (JI>=IJIMIN .AND. JI
              !!!<=IJIMAX) here, as the loop did not vectorize.
              ZX1 = ( 2. * ZTHEUL(JI) / ( PTHES(JI,JK) + PTHES(JI,JL) ) - 1. ) *&
@@ -496,7 +498,7 @@ DO JKK = IKB + 1, IKE - 2
 !
 !
 
-     DO JI=D%NIB, D%NIE
+     DO JI=D%NIJB, D%NIJE
      IF( (ZTOP(JI)-ZZLCL(JI)) .GE. CVP_SHAL%XCDEPTH .AND. GTRIG2(JI) .AND. ZCAPE(JI) > 10. )THEN
         GTRIG2(JI)   = .FALSE.
         OTRIG(JI)    = .TRUE.

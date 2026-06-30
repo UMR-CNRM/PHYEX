@@ -6,7 +6,6 @@
                               PUMF, PUER, PUDR, PUTHL, PUTHV, PURW,            &
                               PURC, PURI, PURR, PURS, PUPR,                    &
                               PUTPR, PCAPE, KCTL, KETL, PUTT )
-  USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##########################################################################
 !
 !!**** Compute updraft properties from DPL to CTL.
@@ -76,11 +75,12 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_CST, ONLY: CST, XCPD, XCPV, XG, XP00, XRD, XRV
 USE MODD_CONVPAR, ONLY: CONVPAR_T, XCDEPTH, XCRAD, XENTR, XNHGAM, XRCONV, XTFRZ1, &
                         XTFRZ2
 USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT
-USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODE_CONVECT_CONDENS, ONLY: CONVECT_CONDENS
 !USE MODE_CONVECT_MIXING_FUNCT, ONLY: CONVECT_MIXING_FUNCT
 !
@@ -165,8 +165,8 @@ LOGICAL, DIMENSION(KLON) :: GWORK1, GWORK2, GWORK4
                                             ! work arrays
 LOGICAL, DIMENSION(KLON,KLEV) :: GWORK6     ! work array
 !
-TYPE(DIMPHYEX_T) :: D
-TYPE(CONVPAR_T)  :: CONVPAR
+TYPE(DIMPHYEX_t) :: D
+TYPE(CONVPAR_t)  :: CONVPAR
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
@@ -217,9 +217,9 @@ GWORK4(:)  = .FALSE.
 !
 CONVPAR%XTFRZ1=XTFRZ1
 CONVPAR%XTFRZ2=XTFRZ2
-D%NIT=KLON
-D%NIB=1
-D%NIE=KLON
+D%NIJT=KLON
+D%NIJB=1
+D%NIJE=KLON
 
 !
 !*       1.1    Compute undilute updraft theta_e for CAPE computations
@@ -259,7 +259,9 @@ END DO
 !
 ZICE=REAL(KICE)
 ZEPS0=CST%XRD/CST%XRV
-JKMIN = MINVAL( KLCL(:) ) - 1
+! Correction for reproduciblity
+!JKMIN = MINVAL( KLCL(:) ) - 1
+JKMIN = MINVAL( KLCL(:) ) - 2
 DO JK = MAX( IKB + 1, JKMIN ), IKE - 1
   ZWORK6(:) = 1.
   JKP = JK + 1
@@ -366,10 +368,10 @@ DO JK = MAX( IKB + 1, JKMIN ), IKE - 1
                               ( PUTHV(:,JKP) - ZWORK3(:) + 1.E-10 )
     ZMIXF(:) = MAX( 0., MIN( 1., ZMIXF(:) ) )
 !
-!
 !*       8.2     Compute final midlevel values for entr. and detrainment
 !                after call of distribution function
 !                -------------------------------------------------------
+!    
 !
 !
 CALL ABOR1('FIXME : THE INTERFACE IS WRONG')
@@ -410,6 +412,7 @@ CALL ABOR1('FIXME : THE INTERFACE IS WRONG')
   WHERE( GWORK1(:) )                                                   &
         GWORK2(:) = PUMF(:,JK) - PUDR(:,JKP) > 10. .AND. ZUW2(:) > 0.
   WHERE ( GWORK2(:) ) KCTL(:) = JKP   ! cloud top level
+  KCTL(:) = MIN( KCTL(:), IKE-1 )
   GWORK1(:) = GWORK2(:) .AND. GWORK4(:)
 !
   IF ( COUNT( GWORK2(:) ) == 0 ) EXIT
