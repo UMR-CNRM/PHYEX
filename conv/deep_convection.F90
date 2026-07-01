@@ -3,7 +3,7 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-    SUBROUTINE DEEP_CONVECTION( KLON, KLEV, KIDIA, KFDIA, KBDIA, KTDIA,        &
+    SUBROUTINE DEEP_CONVECTION( D, KLON, KLEV, KIDIA, KFDIA, KBDIA, KTDIA,     &
                                 PDTCONV, KICE, OREFRESH, ODOWN, OSETTADJ,      &
                                 PPABST, PZZ, PDXDY, PTIMEC,                    &
                                 PTT, PRVT, PRCT, PRIT, PUT, PVT, PWT,          &
@@ -12,7 +12,7 @@
                                 KCLTOP, KCLBAS, PPRLFLX, PPRSFLX,              &
                                 PUMF, PDMF, PCAPE,                             &
                                 OCH1CONV, KCH1, PCH1, PCH1TEN,                 &
-                                OCH_CONV_SCAV, OCH_CONV_LINOX,       &
+                                OUSECHEM, OCH_CONV_SCAV, OCH_CONV_LINOX,       &
                                 ODUST, OSALT, PRHODREF, PIC_RATE, PCG_RATE     )
 !   ############################################################################
 !
@@ -98,6 +98,8 @@
 !!      C. Mari     13/02/01 add scavenging of chemical species in updraft
 !!     P. Jabouille 02/07/01 case of lagragian variables
 !!     P. Tulet     02/03/05 update for dust
+!!     C.Lac        27/09/10 modification loop index for reproducibility
+!!    Juan 24/09/2012: for BUG Pgi rewrite PACK function on mode_pack_pgi
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -105,22 +107,35 @@
 !
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_CST, ONLY: XALPW, XBETAW, XCI, XCL, XCPD, XCPV, XG, XGAMW, XLSTT, XLVTT, &
-                    XP00, XPI, XRD, XRHOLW, XRV, XTT
-USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT
+                    XP00, XPI, XRD, XRHOLW, XRV, XTT, CST
+USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT, CONVPAREXT
 USE MODD_CONVPAR, ONLY: XA25, XCRAD
 USE MODD_NSV,       ONLY : NSV_LGBEG,NSV_LGEND, &
-                           NSV_LNOXBEG
-!chemistry to be rephased
-!USE MODI_CH_CONVECT_LINOX
-!USE MODE_CONVECT_CHEM_TRANSPORT, ONLY: CONVECT_CHEM_TRANSPORT
-USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
+                           NSV_CHEMBEG,NSV_CHEMEND, &
+                           NSV_LNOXBEG, TNSV
 !
+USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
+USE MODE_CONVECT_TRIGGER_FUNCT, ONLY: CONVECT_TRIGGER_FUNCT
+USE MODE_CONVECT_UPDRAFT, ONLY: CONVECT_UPDRAFT
+USE MODE_CONVECT_TSTEP_PREF, ONLY: CONVECT_TSTEP_PREF
+USE MODE_CONVECT_DOWNDRAFT, ONLY: CONVECT_DOWNDRAFT
+USE MODE_CONVECT_PRECIP_ADJUST, ONLY: CONVECT_PRECIP_ADJUST
+USE MODE_CONVECT_CLOSURE, ONLY: CONVECT_CLOSURE
+USE MODE_CONVECT_CHEM_TRANSPORT, ONLY: CONVECT_CHEM_TRANSPORT
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
+!
+#ifdef PHYEX_MESONH
+USE MODD_CH_M9_n,   ONLY : CNAMES
+USE MODI_CH_CONVECT_LINOX, ONLY: CH_CONVECT_LINOX
+USE MODI_CH_CONVECT_SCAVENGING, ONLY: CH_CONVECT_SCAVENGING
+#endif
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
 !
+TYPE(DIMPHYEX_T),           INTENT(IN) :: D
 INTEGER,                    INTENT(IN) :: KLON     ! horizontal dimension
 INTEGER,                    INTENT(IN) :: KLEV     ! vertical dimension
 INTEGER,                    INTENT(IN) :: KIDIA    ! value of the first point in x
@@ -180,6 +195,7 @@ LOGICAL,                    INTENT(IN) :: OCH1CONV ! include tracer transport
 INTEGER,                    INTENT(IN) :: KCH1     ! number of species
 REAL, DIMENSION(KLON,KLEV,KCH1), INTENT(IN) :: PCH1! grid scale chemical species
 REAL, DIMENSION(KLON,KLEV,KCH1), INTENT(INOUT):: PCH1TEN! species conv. tendency (1/s)
+LOGICAL,                    INTENT(IN) :: OUSECHEM      ! flag for chemistry 
 LOGICAL,                    INTENT(IN) :: OCH_CONV_SCAV !  & scavenging
 LOGICAL,                    INTENT(IN) :: OCH_CONV_LINOX ! & LiNOx
 LOGICAL,                    INTENT(IN) :: ODUST         ! flag for dust
@@ -195,7 +211,7 @@ INTEGER  :: ITEST, ICONV, ICONV1    ! number of convective columns
 INTEGER  :: IIB, IIE                ! horizontal loop bounds
 INTEGER  :: IKB, IKE                ! vertical loop bounds
 INTEGER  :: IKS                     ! vertical dimension
-INTEGER  :: JI, JL                  ! horizontal loop index
+INTEGER  :: JI, JL, JJ              ! horizontal loop index
 INTEGER  :: JN                      ! number of tracers
 INTEGER  :: JK, JKP, JKM            ! vertical loop index
 INTEGER  :: IFTSTEPS                ! only used for chemical tracers
@@ -209,6 +225,7 @@ REAL, DIMENSION(KLON,KLEV)         :: ZTHT, ZSTHV, ZSTHES  ! grid scale theta,
 REAL, DIMENSION(KLON)              :: ZTIME  ! convective time period
 REAL, DIMENSION(KLON)              :: ZWORK2, ZWORK2B ! work array
 REAL                               :: ZW1    ! work variable
+TYPE(CONVPAREXT) :: CVPEXT
 !
 !
 !*       0.2   Declarations of local allocatable  variables :
@@ -339,6 +356,8 @@ IKB = 1 + JCVEXB
 IKS = KLEV
 JCVEXT = MAX( 0, KTDIA - 1 )
 IKE = IKS - JCVEXT
+CVPEXT%JCVEXB = MAX( 0, KBDIA - 1 )
+CVPEXT%JCVEXT = MAX( 0, KTDIA - 1)
 !
 !
 !*       0.5    Update convective counter ( where KCOUNT > 0
@@ -365,7 +384,11 @@ ENDIF
 !               counter becomes negative
 !               -------------------------------------------------
 !
-GTRIG3(:,:) = SPREAD( GTRIG(:), DIM=2, NCOPIES=IKS )
+DO JJ=1,KLEV
+  DO JI=1,KLON
+    GTRIG3(JI,JJ)=GTRIG(JI)
+  ENDDO
+ENDDO 
 WHERE ( GTRIG3(:,:) )
   PTTEN(:,:)  = 0.
   PRVTEN(:,:) = 0.
@@ -386,7 +409,13 @@ WHERE ( GTRIG(:) )
   PCAPE(:)   = 0.
 END WHERE
 ALLOCATE( GTRIG4(KLON,KLEV,KCH1) )
-GTRIG4(:,:,:) = SPREAD( GTRIG3(:,:), DIM=3, NCOPIES=KCH1 )
+DO JK=1,KCH1
+  DO JJ=1,KLEV
+    DO JI=1,KLON
+      GTRIG4(JI,JJ,JK) = GTRIG3(JI,JJ)
+    ENDDO
+  ENDDO
+ENDDO
 WHERE( GTRIG4(:,:,:) ) PCH1TEN(:,:,:) = 0.
 DEALLOCATE( GTRIG4 )
 !
@@ -461,6 +490,14 @@ DO JI = 1, KLON
   IINDEX(JI) = JI
 END DO
 IJSINDEX(:) = PACK( IINDEX(:), MASK=GTRIG(:) )
+!
+ZPRES = 0.     
+ZZ    = 0.
+ZTH   = 0.
+ZTHV  = 0.
+ZTHEST = 0.
+ZRV   = 0.
+ZW    = 0.
 !
 DO JK = IKB, IKE
 DO JI = 1, ITEST
@@ -872,7 +909,7 @@ IF ( ICONV1 > 0 )  THEN
 !
           ! Compute vertical integrals
 !
-  JKM = MAXVAL( ICTL(:) )
+  JKM = IKE - 1
   ZWORK2(:) = 0.
   ZWORK2B(:) = 0.
   DO JK = IKB+1, JKM
@@ -1005,52 +1042,67 @@ IF ( ICONV1 > 0 )  THEN
       ZWORK4C=0.
     END IF
 !
-    DO JK = IKB, IKE
     DO JI = 1, ICONV
-      JL = IJINDEX(JI)
-      ZCH1(JI,JK,:) = PCH1(JL,JK,:)
-      ZRHODREF(JI,JK)=PRHODREF(JL,JK)
+      DO JK = IKB, IKE
+        JL = IJINDEX(JI)
+        ZCH1(JI,JK,:) = PCH1(JL,JK,:)
+        ZRHODREF(JI,JK)=PRHODREF(JL,JK)
+      END DO
+      ZRHODREF(JI,1) = PRHODREF(JL,IKB) 
+      ZRHODREF(JI,IKS) = PRHODREF(JL,IKE) 
     END DO
-    END DO
+    ZCH1(:,1,:) = ZCH1(:,IKB,:) 
+    ZCH1(:,IKS,:) = ZCH1(:,IKE,:) 
 !
     JN_NO = 0
     IF ( OCH_CONV_LINOX ) THEN
+#ifdef PHYEX_MESONH
       DO JK = IKB, IKE
-      DO JI = 1, ICONV
-        JL = IJINDEX(JI)
-        ZZZ(JI,JK)=PZZ(JL,JK)
-        ZIC_RATE(JI)=PIC_RATE(JL)
-        ZCG_RATE(JI)=PCG_RATE(JL)
+        DO JI = 1, ICONV
+          JL = IJINDEX(JI)
+          ZZZ(JI,JK)=PZZ(JL,JK)
+          ZIC_RATE(JI)=PIC_RATE(JL)
+          ZCG_RATE(JI)=PCG_RATE(JL)
+        END DO
       END DO
-      END DO
-      JN_NO = NSV_LNOXBEG
+      IF (OUSECHEM) THEN
+        DO JN = NSV_CHEMBEG,NSV_CHEMEND
+          IF (CNAMES(JN-NSV_CHEMBEG+1)=='NO') JN_NO = JN
+        END DO
+      ELSE
+        JN_NO = NSV_LNOXBEG
+      ENDIF
       ZWORK4(:,:) = ZCH1(:,:,JN_NO)
-! ***  for AROME *****
-!      CALL CH_CONVECT_LINOX( ICONV, KLEV, ZWORK4, ZWORK4C,        &
-!                             IDPL, IPBL, ILCL, ICTL, ILFS, IDBL,  &
-!                             ZUMF, ZUER, ZUDR, ZDMF, ZDER, ZDDR,  &
-!                             ZTIMEC, ZDXDY, ZMIXF, ZLMASS, ZWSUB, &
-!                             IFTSTEPS, ZUTT, ZRHODREF,            &
-!                             OUSECHEM, ZZZ, ZIC_RATE, ZCG_RATE    )
+      CALL CH_CONVECT_LINOX( ICONV, KLEV, ZWORK4, ZWORK4C,        &
+                             IDPL, IPBL, ILCL, ICTL, ILFS, IDBL,  &
+                             ZUMF, ZUER, ZUDR, ZDMF, ZDER, ZDDR,  &
+                             ZTIMEC, ZDXDY, ZMIXF, ZLMASS, ZWSUB, &
+                             IFTSTEPS, ZUTT, ZRHODREF,            &
+                             OUSECHEM, ZZZ, ZIC_RATE, ZCG_RATE    )
       DO JI = 1, ICONV
         JL = IJINDEX(JI)
         PIC_RATE(JL)=ZIC_RATE(JI)
         PCG_RATE(JL)=ZCG_RATE(JI)
       ENDDO
+#else
+      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'Forbidden call of CH_CONVECT_LINOX from a model other than Meso-NH')
+#endif
     ENDIF
 !
-    IF ((ODUST .AND.  OCH_CONV_SCAV).OR.&
+    IF ((OUSECHEM .AND. OCH_CONV_SCAV).OR.(ODUST .AND.  OCH_CONV_SCAV).OR.&
         (OSALT .AND.  OCH_CONV_SCAV)  ) THEN
 !
-! chemistry to be rephased
-       CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'call to CH_CONVECT_SCAVENGING needs rephasing: breaks independence of phyex')
-!      CALL CH_CONVECT_SCAVENGING( ICONV, KLEV, KCH1, ZCH1, ZCH1C,      &
-!                                  IDPL, IPBL, ILCL, ICTL, ILFS, IDBL,  &
-!                                  ZUMF, ZUER, ZUDR, ZDMF, ZDER, ZDDR,  &
-!                                  ZTIMEC, ZDXDY, ZMIXF, ZLMASS, ZWSUB, &
-!                                  IFTSTEPS,                            &
-!                                  ZURC, ZURR, ZURI, ZURS, ZUTT, ZPRES, &
-!                                  ZRHODREF                             )
+#ifdef PHYEX_MESONH
+      CALL CH_CONVECT_SCAVENGING( ICONV, KLEV, KCH1, ZCH1, ZCH1C,      &
+                                  IDPL, IPBL, ILCL, ICTL, ILFS, IDBL,  &
+                                  ZUMF, ZUER, ZUDR, ZDMF, ZDER, ZDDR,  &
+                                  ZTIMEC, ZDXDY, ZMIXF, ZLMASS, ZWSUB, &
+                                  IFTSTEPS,                            &
+                                  ZURC, ZURR, ZURI, ZURS, ZUTT, ZPRES, &
+                                  ZRHODREF, PPABST, ZTHT               )
+#else
+      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'Forbidden call of CH_CONVECT_SCAVENGING from a model other than Meso-NH')
+#endif
 !
       IF (OCH_CONV_LINOX) THEN
         ZCH1C(:,:,JN_NO) = ZWORK4C(:,:)
@@ -1072,12 +1124,11 @@ IF ( ICONV1 > 0 )  THEN
 !
     ELSE
 !
-      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'DEEP_CONVECTION', 'FIXME: THE INTERFACE IS WRONG')
-      !CALL CONVECT_CHEM_TRANSPORT( ICONV, KLEV, KCH1, ZCH1, ZCH1C,      &
-      !                             IDPL, IPBL, ILCL, ICTL, ILFS, IDBL,  &
-      !                             ZUMF, ZUER, ZUDR, ZDMF, ZDER, ZDDR,  &
-      !                             ZTIMEC, ZDXDY, ZMIXF, ZLMASS, ZWSUB, &
-      !                             IFTSTEPS )
+      CALL CONVECT_CHEM_TRANSPORT( CVPEXT, D, TNSV, CST, KCH1, ZCH1, ZCH1C,      &
+                                   IDPL, IPBL, ILCL, ICTL, ILFS, IDBL,  &
+                                   ZUMF, ZUER, ZUDR, ZDMF, ZDER, ZDDR,  &
+                                   ZTIMEC, ZDXDY, ZMIXF, ZLMASS, ZWSUB, &
+                                   IFTSTEPS )
 !
       IF (OCH_CONV_LINOX) THEN
         ZCH1C(:,:,JN_NO) = ZWORK4C(:,:)
@@ -1088,7 +1139,7 @@ IF ( ICONV1 > 0 )  THEN
 !
           ! Compute vertical integrals
 !
-      JKM = MAXVAL( ICTL(:) )
+      JKM = IKE - 1
       DO JN = 1, KCH1
         IF((JN < NSV_LGBEG .OR. JN>NSV_LGEND-1) .AND. JN .NE. JN_NO ) THEN
           ! no correction for Lagrangian and LiNOx variables

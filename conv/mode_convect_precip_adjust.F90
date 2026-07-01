@@ -1,4 +1,10 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+MODULE MODE_CONVECT_PRECIP_ADJUST
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE CONVECT_PRECIP_ADJUST( KLON, KLEV,                        &
                                         PPRES, PUMF, PUER, PUDR,           &
                                         PUPR, PUTPR, PURW,                 &
@@ -6,7 +12,6 @@
                                         PPREF, PTPR, PMIXF, PDTEVR,        &
                                         KLFS, KDBL, KLCL, KCTL, KETL,      &
                                         PDTEVRF )
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ######################################################################
 !
 !!**** Adjust up- and downdraft mass fluxes to be consistent with the
@@ -59,6 +64,7 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT
 USE MODD_CONVPAR, ONLY: XUSRDPTH
 !
@@ -106,6 +112,7 @@ INTEGER :: JI                   ! horizontal loop index
 INTEGER, DIMENSION(KLON) :: IPRL
 REAL, DIMENSION(KLON)    :: ZWORK1, ZWORK2, ZWORK3,     &
                             ZWORK4, ZWORK5, ZWORK6 ! work arrays
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 !-------------------------------------------------------------------------------
@@ -113,7 +120,6 @@ REAL, DIMENSION(KLON)    :: ZWORK1, ZWORK2, ZWORK3,     &
 !        0.3   Set loop bounds
 !              ---------------
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_PRECIP_ADJUST',0,ZHOOK_HANDLE)
 IKB  = 1 + JCVEXB
 IKE  = KLEV - JCVEXT
@@ -194,9 +200,9 @@ ZWORK4(:) = PUTPR(:) - PTPR(:)
 !
 ZWORK5(:) = 0.
 DO JK = JKT3, JKT1
-     WHERE ( JK >= KLCL(:) .AND. JK <= KLFS(:) )
-        ZWORK5(:) = ZWORK5(:) +  PUPR(:,JK)
-     END WHERE
+  WHERE ( JK >= KLCL(:) .AND. JK <= KLFS(:) )
+    ZWORK5(:) = ZWORK5(:) +  PUPR(:,JK)
+  END WHERE
 END DO
 !
 DO JI = 1, IIE
@@ -214,7 +220,6 @@ END DO
 !               ---------------------------------------------------------
 !
 !
-!ZWORK1(:) = ZWORK4(:) / ( ZWORK1(:) + ZWORK2(:) + 1.E-8 )
 ZWORK1(:) = -ZWORK4(:) / ( -ZWORK1(:) + ZWORK2(:) + 1.E-8 )
 ZWORK2(:) = ZWORK1(:) / MIN( -1.E-1, ZWORK6(:) ) ! ratio of budget consistent to actual DMF
 !
@@ -280,3 +285,4 @@ END WHERE
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_PRECIP_ADJUST',1,ZHOOK_HANDLE)
 END SUBROUTINE CONVECT_PRECIP_ADJUST
+END MODULE MODE_CONVECT_PRECIP_ADJUST

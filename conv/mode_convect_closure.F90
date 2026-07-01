@@ -1,4 +1,10 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+MODULE MODE_CONVECT_CLOSURE
+IMPLICIT NONE
+CONTAINS
      SUBROUTINE CONVECT_CLOSURE( KLON, KLEV,                                 &
                                  PPRES, PDPRES, PZ, PDXDY, PLMASS,           &
                                  PTHL, PTH, PRW, PRC, PRI, OTRIG1,           &
@@ -438,9 +444,9 @@ DO JITER = 1, 6  ! Enter adjustment loop to assure that all CAPE is
     KFTSTEPS = MAXVAL( ITSTEP(:) )
     DO JSTEP = 1, KFTSTEPS ! Enter the fractional time step loop here
 !
-            ICOUNT(:) = ICOUNT(:) + 1
+      ICOUNT(:) = ICOUNT(:) + 1
 !
-            GWORK3(:) =  ITSTEP(:) >= ICOUNT(:) .AND. GWORK1(:)
+      GWORK3(:) =  ITSTEP(:) >= ICOUNT(:) .AND. GWORK1(:)
 !
 !
 !*       7.     Assign enthalpy and r_w values at the top and bottom of each
@@ -681,3 +687,4 @@ CONTAINS
 INCLUDE "convect_satmixratio.h"
 !
 END SUBROUTINE CONVECT_CLOSURE
+END MODULE MODE_CONVECT_CLOSURE

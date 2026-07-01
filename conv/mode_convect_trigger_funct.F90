@@ -1,11 +1,16 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+MODULE MODE_CONVECT_TRIGGER_FUNCT
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE CONVECT_TRIGGER_FUNCT( KLON, KLEV,                           &
                                         PPRES, PTH, PTHV, PTHES,              &
                                         PRV, PW, PZ, PDXDY,                   &
                                         PTHLCL, PTLCL, PRVLCL, PWLCL, PZLCL,  &
                                         PTHVELCL, KLCL, KDPL, KPBL, OTRIG,    &
                                         PCAPE )
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #########################################################################
 !
 !!**** Determine convective columns as well as the cloudy values of theta,
@@ -74,6 +79,7 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_CST, ONLY: CST
 USE MODD_CONVPAR, ONLY: XA25, XCDEPTH, XNHGAM, XWTRIG, XZLCL, XZPBL
 USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT
@@ -104,7 +110,6 @@ INTEGER, DIMENSION(KLON),  INTENT(INOUT):: KLCL    ! contains vert. index of LCL
 INTEGER, DIMENSION(KLON),  INTENT(INOUT):: KDPL    ! contains vert. index of DPL
 INTEGER, DIMENSION(KLON),  INTENT(INOUT):: KPBL    ! contains index of source layer top
 REAL, DIMENSION(KLON),     INTENT(OUT):: PCAPE     ! CAPE (J/kg) for diagnostics
-
 !
 !*       0.2   Declarations of local variables :
 !
@@ -413,3 +418,4 @@ CONTAINS
 INCLUDE "convect_satmixratio.h"
 !
 END SUBROUTINE CONVECT_TRIGGER_FUNCT
+END MODULE MODE_CONVECT_TRIGGER_FUNCT
