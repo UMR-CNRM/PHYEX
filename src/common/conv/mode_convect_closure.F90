@@ -2,96 +2,9 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
-!-----------------------------------------------------------------
-!--------------- special set of characters for RCS information
-!-----------------------------------------------------------------
-! $Source$ $Revision$
-! MASDEV4_7 conv 2006/05/18 13:07:25
-!-----------------------------------------------------------------
-!     #################
-      MODULE MODI_CONVECT_CLOSURE
-!     #################
-!
-INTERFACE
-!
-       SUBROUTINE CONVECT_CLOSURE( KLON, KLEV,                                 &
-                                 PPRES, PDPRES, PZ, PDXDY, PLMASS,           &
-                                 PTHL, PTH, PRW, PRC, PRI, OTRIG1,           &
-                                 PTHC, PRWC, PRCC, PRIC, PWSUB,              &
-                                 KLCL, KDPL, KPBL, KLFS, KCTL, KML,          &
-                                 PUMF, PUER, PUDR, PUTHL, PURW,              &
-                                 PURC, PURI, PUPR,                           &
-                                 PDMF, PDER, PDDR, PDTHL, PDRW,              &
-                                 PTPR, PSPR, PDTEVR,                         &
-                                 PCAPE, PTIMEC,                              &
-                                 KFTSTEPS,                                   &
-                                 PDTEVRF, PPRLFLX, PPRSFLX                   )
-!
-INTEGER,                   INTENT(IN) :: KLON   ! horizontal dimension
-INTEGER,                   INTENT(IN) :: KLEV   ! vertical dimension
-INTEGER, DIMENSION(KLON),  INTENT(IN) :: KLFS   ! index for level of free sink
-INTEGER, DIMENSION(KLON),  INTENT(IN) :: KLCL   ! index lifting condens. level
-INTEGER, DIMENSION(KLON),  INTENT(IN) :: KCTL   ! index for cloud top level
-INTEGER, DIMENSION(KLON),  INTENT(IN) :: KDPL   ! index for departure level 
-INTEGER, DIMENSION(KLON),  INTENT(IN) :: KPBL   ! index for top of source layer
-INTEGER, DIMENSION(KLON),  INTENT(IN) :: KML    ! index for melting level
-REAL, DIMENSION(KLON),  INTENT(INOUT) :: PTIMEC ! convection time step 
-REAL, DIMENSION(KLON),     INTENT(IN) :: PDXDY  ! grid area (m^2)
-REAL, DIMENSION(KLON,KLEV),INTENT(IN) :: PTHL   ! grid scale enthalpy (J/kg)
-REAL, DIMENSION(KLON,KLEV),INTENT(IN) :: PTH    ! grid scale theta        
-REAL, DIMENSION(KLON,KLEV),INTENT(IN) :: PRW    ! grid scale total water  
-                                                ! mixing ratio 
-REAL, DIMENSION(KLON,KLEV),INTENT(IN) :: PRC    ! grid scale r_c 
-REAL, DIMENSION(KLON,KLEV),INTENT(IN) :: PRI    ! grid scale r_i 
-LOGICAL, DIMENSION(KLON),  INTENT(IN) :: OTRIG1 ! logical to keep trace of 
-                                                ! convective arrays modified in UPDRAFT
-!   
-!
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PPRES  ! pressure (P)
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PDPRES ! pressure difference between 
-                                                 ! bottom and top of layer (Pa)
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PLMASS ! mass of model layer (kg)
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PZ     ! height of model layer (m) 
-REAL, DIMENSION(KLON),     INTENT(IN)  :: PCAPE  ! available potent. energy
-INTEGER,                INTENT(OUT)   :: KFTSTEPS! maximum of fract time steps
-                                                 ! only used for chemical tracers
-!
-!
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PUMF  ! updraft mass flux (kg/s)
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PUER  ! updraft entrainment (kg/s)
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PUDR  ! updraft detrainment (kg/s)
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PUPR  ! updraft precipitation in
-                                                  ! flux units (kg water / s)
-REAL, DIMENSION(KLON,KLEV), INTENT(IN)  :: PUTHL  ! updraft enthalpy (J/kg)
-REAL, DIMENSION(KLON,KLEV), INTENT(IN)  :: PURW   ! updraft total water (kg/kg)
-REAL, DIMENSION(KLON,KLEV), INTENT(IN)  :: PURC   ! updraft cloud water (kg/kg)
-REAL, DIMENSION(KLON,KLEV), INTENT(IN)  :: PURI   ! updraft cloud ice   (kg/kg)
-!
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PDMF  ! downdraft mass flux (kg/s)
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PDER  ! downdraft entrainment (kg/s)
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PDDR  ! downdraft detrainment (kg/s)
-REAL, DIMENSION(KLON,KLEV), INTENT(IN)   :: PDTHL ! downdraft enthalpy (J/kg)
-REAL, DIMENSION(KLON,KLEV), INTENT(IN)   :: PDRW  ! downdraft total water (kg/kg)
-REAL, DIMENSION(KLON),      INTENT(INOUT):: PTPR  ! total surf precipitation (kg/s)
-REAL, DIMENSION(KLON),      INTENT(OUT)  :: PSPR  ! solid surf precipitation (kg/s)
-REAL, DIMENSION(KLON),      INTENT(INOUT):: PDTEVR! donwndraft evapor. (kg/s)
-!
-REAL, DIMENSION(KLON,KLEV), INTENT(OUT)  :: PTHC  ! conv. adj. grid scale theta
-REAL, DIMENSION(KLON,KLEV), INTENT(OUT)  :: PRWC  ! conv. adj. grid scale r_w 
-REAL, DIMENSION(KLON,KLEV), INTENT(OUT)  :: PRCC  ! conv. adj. grid scale r_c 
-REAL, DIMENSION(KLON,KLEV), INTENT(OUT)  :: PRIC  ! conv. adj. grid scale r_i 
-REAL, DIMENSION(KLON,KLEV), INTENT(OUT)  :: PWSUB ! envir. compensating subsidence(Pa/s)
-!
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PDTEVRF! downdraft evaporation rate
-REAL, DIMENSION(KLON,KLEV), INTENT(OUT)  :: PPRLFLX! liquid precip flux
-REAL, DIMENSION(KLON,KLEV), INTENT(OUT)  :: PPRSFLX! solid  precip flux
-!
-END SUBROUTINE CONVECT_CLOSURE
-!
-END INTERFACE
-!
-END MODULE MODI_CONVECT_CLOSURE
-!    #########################################################################
+MODULE MODE_CONVECT_CLOSURE
+IMPLICIT NONE
+CONTAINS
      SUBROUTINE CONVECT_CLOSURE( KLON, KLEV,                                 &
                                  PPRES, PDPRES, PZ, PDXDY, PLMASS,           &
                                  PTHL, PTH, PRW, PRC, PRI, OTRIG1,           &
@@ -172,11 +85,10 @@ END MODULE MODI_CONVECT_CLOSURE
 !              ------------
 !
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
-USE MODD_CST
-USE MODD_CONVPAR
-USE MODD_CONVPAREXT
+USE MODD_CST, ONLY: CST
+USE MODD_CONVPAR, ONLY: XMELDPTH, XSTABC, XSTABT
+USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT, CONVPAREXT
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODI_CONVECT_SATMIXRATIO
 USE MODE_CONVECT_CLOSURE_THRVLCL, ONLY: CONVECT_CLOSURE_THRVLCL
 USE MODE_CONVECT_CLOSURE_ADJUST, ONLY: CONVECT_CLOSURE_ADJUST
 !
@@ -254,6 +166,7 @@ INTEGER :: JI             ! horizontal loop index
 INTEGER :: JITER          ! iteration loop index
 INTEGER :: JSTEP          ! fractional time loop index
 REAL    :: ZCPORD, ZRDOCP ! C_pd / R_d, R_d / C_pd
+REAL    :: ZEPS
 !
 REAL, DIMENSION(KLON,KLEV) :: ZTHLC       ! convectively adjusted
                                           ! grid scale enthalpy
@@ -331,8 +244,9 @@ GWORK3(:) = .FALSE.
 GWORK4(:,:) = .FALSE.
 ILCL(:)   = KLCL(:)
 !
-ZCPORD    = XCPD / XRD
-ZRDOCP    = XRD / XCPD
+ZEPS      = CST%XRD / CST%XRV
+ZCPORD    = CST%XCPD / CST%XRD
+ZRDOCP    = CST%XRD / CST%XCPD
 !
 ZADJ(:)   = 1.
 ZWORK5(:) = 1.
@@ -390,11 +304,11 @@ DO JK = JKMAX + 1, IKB + 1, -1
      ZPRMELT(JI)   = ZPRMELT(JI) + MIN( 0., ZWORK1(JI) )
      ZPRSFLX(JI,JK)= ZPRMELT(JI)
      IF ( KML(JI) >= JK .AND. ZMELDPTH(JI) <= XMELDPTH ) THEN
-          ZPI(JI)    = ( PPRES(JI,JK) / XP00 ) ** ZRDOCP
+          ZPI(JI)    = ( PPRES(JI,JK) / CST%XP00 ) ** ZRDOCP
           ZWORK3(JI) = PTH(JI,JK) * ZPI(JI)            ! temperature estimate
-          ZLM(JI)    = XLSTT + ( XCPV - XCI ) * ( ZWORK3(JI) - XTT ) -       &
-               ( XLVTT + ( XCPV - XCL ) * ( ZWORK3(JI) - XTT ) ) ! L_s - L_v
-          ZCPH(JI)   = XCPD + XCPV * PRW(JI,JK)
+          ZLM(JI)    = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( ZWORK3(JI) - CST%XTT ) -       &
+               ( CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZWORK3(JI) - CST%XTT ) ) ! L_s - L_v
+          ZCPH(JI)   = CST%XCPD + CST%XCPV * PRW(JI,JK)
           ZMELDPTH(JI) = ZMELDPTH(JI) + PDPRES(JI,JK)
           ZWORK6(JI,JK)= ZLM(JI) * PTIMEC(JI) / PLMASS(JI,JK) * PDPRES(JI,JK)
           ZOMG(JI,JK)= 1. ! at this place only used as work variable
@@ -481,7 +395,7 @@ DO JITER = 1, 6  ! Enter adjustment loop to assure that all CAPE is
              ZTIMEC(:) = MIN( ZTIMEC(:), ZWORK1(:) )
 !
               ! transform vertical velocity in mass flux units
-             ZOMG(:,JK) = PWSUB(:,JK) * PDXDY(:) / XG 
+             ZOMG(:,JK) = PWSUB(:,JK) * PDXDY(:) / CST%XG
          END WHERE
      END DO
 !
@@ -631,14 +545,14 @@ DO JITER = 1, 6  ! Enter adjustment loop to assure that all CAPE is
       DO JK = IKB + 1, JKMAX
          DO JI = 1, IIE
          IF( GWORK1(JI) .AND. JK <= KCTL(JI) ) THEN
-           ZPI(JI)    = ( XP00 / PPRES(JI,JK) ) ** ZRDOCP
-           ZCPH(JI)   = XCPD + PRWC(JI,JK) * XCPV
+           ZPI(JI)    = ( CST%XP00 / PPRES(JI,JK) ) ** ZRDOCP
+           ZCPH(JI)   = CST%XCPD + PRWC(JI,JK) * CST%XCPV
            ZWORK2(JI) = PTH(JI,JK) / ZPI(JI)  ! first temperature estimate
-           ZLV(JI)    = XLVTT + ( XCPV - XCL ) * ( ZWORK2(JI) - XTT )
-           ZLS(JI)    = XLVTT + ( XCPV - XCI ) * ( ZWORK2(JI) - XTT )
+           ZLV(JI)    = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZWORK2(JI) - CST%XTT )
+           ZLS(JI)    = CST%XLVTT + ( CST%XCPV - CST%XCI ) * ( ZWORK2(JI) - CST%XTT )
              ! final linearized temperature
            ZWORK2(JI) = ( ZTHLC(JI,JK) + ZLV(JI) * PRCC(JI,JK) + ZLS(JI) * PRIC(JI,JK) &
-                       - (1. + PRWC(JI,JK) ) * XG * PZ(JI,JK) ) / ZCPH(JI)
+                       - (1. + PRWC(JI,JK) ) * CST%XG * PZ(JI,JK) ) / ZCPH(JI)
            ZWORK2(JI) = MAX( 180., MIN( 340., ZWORK2(JI) ) )
            PTHC(JI,JK)= ZWORK2(JI) * ZPI(JI) ! final adjusted envir. theta
          END IF
@@ -669,9 +583,11 @@ DO JITER = 1, 6  ! Enter adjustment loop to assure that all CAPE is
        ZCAPE(:)  = 0.
        ZPI(:)    = ZTHLCL(:) / ZTLCL(:)
        ZPI(:)    = MAX( 0.95, MIN( 1.5, ZPI(:) ) )
-       ZWORK1(:) = XP00 / ZPI(:) ** ZCPORD ! pressure at LCL
+       ZWORK1(:) = CST%XP00 / ZPI(:) ** ZCPORD ! pressure at LCL
 !
-       CALL CONVECT_SATMIXRATIO( KLON, ZWORK1, ZTELCL, ZWORK3, ZLV, ZLS, ZCPH )
+       DO JI = 1, IIE
+         CALL CONVECT_SATMIXRATIO( ZWORK1(JI), ZTELCL(JI), ZEPS, ZWORK3(JI), ZLV(JI), ZLS(JI), ZCPH(JI) )
+       END DO
        ZWORK3(:) = MIN(   .1, MAX(   0., ZWORK3(:) ) )
 !
                 ! compute theta_e updraft undilute
@@ -695,11 +611,13 @@ DO JITER = 1, 6  ! Enter adjustment loop to assure that all CAPE is
 !
           GWORK3(JI)  = JK >= ILCL(JI) .AND. JK <= KCTL(JI) .AND. GWORK1(JI)
 !
-          ZPI(JI)     = ( XP00 / PPRES(JI,JK) ) ** ZRDOCP
+          ZPI(JI)     = ( CST%XP00 / PPRES(JI,JK) ) ** ZRDOCP
           ZWORK2(JI)  = PTHC(JI,JK) / ZPI(JI)
         END DO
 !
-        CALL CONVECT_SATMIXRATIO( KLON, PPRES(:,JK), ZWORK2, ZWORK3, ZLV, ZLS, ZCPH )
+        DO JI = 1, IIE
+          CALL CONVECT_SATMIXRATIO( PPRES(JI,JK), ZWORK2(JI), ZEPS, ZWORK3(JI), ZLV(JI), ZLS(JI), ZCPH(JI) )
+        END DO
 !
 !
         DO JI = 1, IIE
@@ -711,7 +629,7 @@ DO JITER = 1, 6  ! Enter adjustment loop to assure that all CAPE is
               ZWORK3(JI)  = PZ(JI,JK) - PZ(JI,JKP) * ZWORK4(JI) -                &
                            ( 1. - ZWORK4(JI) ) * ZZLCL(JI)    ! level thickness
               ZWORK1(JI)  = ( 2. * ZTHEUL(JI) ) / ( ZTHES1(JI) + ZTHES2(JI) ) - 1.
-              ZCAPE(JI)   = ZCAPE(JI) + XG * ZWORK3(JI) * MAX( 0., ZWORK1(JI) )
+              ZCAPE(JI)   = ZCAPE(JI) + CST%XG * ZWORK3(JI) * MAX( 0., ZWORK1(JI) )
               ZTHES1(JI)  = ZTHES2(JI)
           END IF
         END DO
@@ -764,4 +682,9 @@ PSPR(:) = ZPRMELT(:) * ( 1. - ZMELDPTH(:) / XMELDPTH )
 PSPR(:) = MAX( 0., PSPR(:) )
 !
 !
+IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "convect_satmixratio.h"
+!
 END SUBROUTINE CONVECT_CLOSURE
+END MODULE MODE_CONVECT_CLOSURE

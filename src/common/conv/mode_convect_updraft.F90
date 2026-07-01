@@ -1,4 +1,10 @@
-!     ######spl
+!MNH_LIC Copyright 1995-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+MODULE MODE_CONVECT_UPDRAFT
+IMPLICIT NONE
+CONTAINS
   SUBROUTINE CONVECT_UPDRAFT( KLON, KLEV,                                      &
                               KICE, PPRES, PDPRES, PZ, PTHL, PTHV, PTHES, PRW, &
                               PTHLCL, PTLCL, PRVLCL, PWLCL, PZLCL, PTHVELCL,   &
@@ -70,6 +76,7 @@
 !!    -------------
 !!      Original    07/11/95
 !!   Last modified  10/12/97
+!!   V.Masson, C.Lac, Sept. 2010 : Correction of a loop for reproducibility
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -77,12 +84,11 @@
 !
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_CST, ONLY: CST, XCPD, XCPV, XG, XP00, XRD, XRV
-USE MODD_CONVPAR, ONLY: CONVPAR_T, XCDEPTH, XCRAD, XENTR, XNHGAM, XRCONV, XTFRZ1, &
-                        XTFRZ2
+USE MODD_CONVPAR, ONLY: CONVPAR_T, XCDEPTH, XCRAD, XENTR, XNHGAM, XRCONV, XTFRZ1, XTFRZ2
 USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODE_CONVECT_CONDENS, ONLY: CONVECT_CONDENS
-!USE MODE_CONVECT_MIXING_FUNCT, ONLY: CONVECT_MIXING_FUNCT
+USE MODE_CONVECT_MIXING_FUNCT, ONLY: CONVECT_MIXING_FUNCT
 !
 !
 IMPLICIT NONE
@@ -373,9 +379,7 @@ DO JK = MAX( IKB + 1, JKMIN ), IKE - 1
 !                -------------------------------------------------------
 !    
 !
-!
-CALL ABOR1('FIXME : THE INTERFACE IS WRONG')
-    !CALL CONVECT_MIXING_FUNCT ( KLON, ZMIXF, 1, ZE2, ZD2 )
+    CALL CONVECT_MIXING_FUNCT ( D, ZMIXF, 1, ZE2, ZD2 )
 !       Note: routine MIXING_FUNCT returns fractional entrainm/detrainm. rates
 !
 ! ZWORK1(:) = XENTR * PMFLCL(:) * PDPRES(:,JKP) / XCRAD ! rate of env. inflow
@@ -581,3 +585,4 @@ END WHERE
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_UPDRAFT',1,ZHOOK_HANDLE)
 END SUBROUTINE CONVECT_UPDRAFT
+END MODULE MODE_CONVECT_UPDRAFT

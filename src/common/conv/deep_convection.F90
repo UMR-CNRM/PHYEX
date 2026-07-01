@@ -3,103 +3,9 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-!     ######################
-      MODULE MODI_DEEP_CONVECTION
-!     ######################
-!
-INTERFACE
-!
-    SUBROUTINE DEEP_CONVECTION( KLON, KLEV, KIDIA, KFDIA, KBDIA, KTDIA,        &
+    SUBROUTINE DEEP_CONVECTION( D, KLON, KLEV, KIDIA, KFDIA, KBDIA, KTDIA,     &
                                 PDTCONV, KICE, OREFRESH, ODOWN, OSETTADJ,      &
                                 PPABST, PZZ, PDXDY, PTIMEC,                    &
-                                PTT, PRVT, PRCT, PRIT, PUT, PVT, PWT,          &
-                                KCOUNT, PTTEN, PRVTEN, PRCTEN, PRITEN,         &
-                                PPRLTEN, PPRSTEN,                              &
-                                KCLTOP, KCLBAS, PPRLFLX, PPRSFLX,              &
-                                PUMF, PDMF, PCAPE,                             &
-                                OCH1CONV, KCH1, PCH1, PCH1TEN,                 &
-                                OUSECHEM, OCH_CONV_SCAV, OCH_CONV_LINOX,       &
-                                ODUST, OSALT, PRHODREF, PIC_RATE, PCG_RATE     )
-
-INTEGER,                    INTENT(IN) :: KLON     ! horizontal dimension
-INTEGER,                    INTENT(IN) :: KLEV     ! vertical dimension
-INTEGER,                    INTENT(IN) :: KIDIA    ! value of the first point in x
-INTEGER,                    INTENT(IN) :: KFDIA    ! value of the last point in x
-INTEGER,                    INTENT(IN) :: KBDIA    ! vertical  computations start at
-!                                                  ! KBDIA that is at least 1
-INTEGER,                    INTENT(IN) :: KTDIA    ! vertical computations can be
-                                                   ! limited to KLEV + 1 - KTDIA
-                                                   ! default=1
-REAL,                       INTENT(IN) :: PDTCONV  ! Interval of time between two
-                                                   ! calls of the deep convection
-                                                   ! scheme
-INTEGER,                    INTENT(IN) :: KICE     ! flag for ice ( 1 = yes, 
-                                                   !                0 = no ice )
-LOGICAL,                    INTENT(IN) :: OREFRESH ! refresh or not tendencies
-                                                   ! at every call
-LOGICAL,                    INTENT(IN) :: ODOWN    ! take or not convective
-                                                   ! downdrafts into account
-LOGICAL,                    INTENT(IN) :: OSETTADJ ! logical to set convective
-                                                   ! adjustment time by user 
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PTT      ! grid scale temperature at t
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PRVT     ! grid scale water vapor "
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PRCT     ! grid scale r_c  "
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PRIT     ! grid scale r_i "
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PUT      ! grid scale horiz. wind u "
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PVT      ! grid scale horiz. wind v "
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PWT      ! grid scale vertical 
-                                                   ! velocity (m/s)
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PPABST   ! grid scale pressure at t
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PZZ      ! height of model layer (m) 
-REAL, DIMENSION(KLON),      INTENT(IN) :: PDXDY    ! horizontal grid area (m**2)
-REAL, DIMENSION(KLON),      INTENT(IN) :: PTIMEC   ! value of convective adjustment
-                                                   ! time if OSETTADJ=.TRUE.
-!   
-INTEGER, DIMENSION(KLON),   INTENT(INOUT):: KCOUNT ! convective counter (recompute
-                                                   ! tendency or keep it)
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PTTEN  ! convective temperature
-                                                   ! tendency (K/s)
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PRVTEN ! convective r_v tendency (1/s)
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PRCTEN ! convective r_c tendency (1/s)
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PRITEN ! convective r_i tendency (1/s)
-REAL, DIMENSION(KLON),      INTENT(INOUT):: PPRLTEN! liquid surf. precipitation
-                                                   ! tendency (m/s)
-REAL, DIMENSION(KLON),      INTENT(INOUT):: PPRSTEN! solid surf. precipitation
-                                                   ! tendency (m/s)
-INTEGER, DIMENSION(KLON),   INTENT(INOUT):: KCLTOP ! cloud top level
-INTEGER, DIMENSION(KLON),   INTENT(INOUT):: KCLBAS ! cloud base level
-                                                   ! they are given a value of
-                                                   ! 0 if no convection
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PPRLFLX! liquid precip flux (m/s)
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PPRSFLX! solid  precip flux (m/s)
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PUMF   ! updraft mass flux (kg/s m2)
-REAL, DIMENSION(KLON,KLEV), INTENT(INOUT):: PDMF   ! downdraft mass flux (kg/s m2)
-REAL, DIMENSION(KLON),      INTENT(INOUT):: PCAPE  ! maximum CAPE (J/kg)
-!
-LOGICAL,                    INTENT(IN) :: OCH1CONV ! include tracer transport
-INTEGER,                    INTENT(IN) :: KCH1     ! number of species
-REAL, DIMENSION(KLON,KLEV,KCH1), INTENT(IN) :: PCH1! grid scale chemical species
-REAL, DIMENSION(KLON,KLEV,KCH1), INTENT(INOUT):: PCH1TEN! species conv. tendency (1/s)
-LOGICAL,                    INTENT(IN) :: OUSECHEM      ! flag for chemistry 
-LOGICAL,                    INTENT(IN) :: OCH_CONV_SCAV !  & scavenging
-LOGICAL,                    INTENT(IN) :: OCH_CONV_LINOX ! & LiNOx
-LOGICAL,                    INTENT(IN) :: ODUST         ! flag for dust
-LOGICAL,                    INTENT(IN) :: OSALT         ! flag for sea salt
-REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PRHODREF      ! grid scale density
-REAL, DIMENSION(KLON), INTENT(INOUT) :: PIC_RATE ! IC lightning frequency
-REAL, DIMENSION(KLON), INTENT(INOUT) :: PCG_RATE ! CG lightning frequency
-
-!
-END SUBROUTINE DEEP_CONVECTION
-!
-END INTERFACE
-!
-END MODULE MODI_DEEP_CONVECTION
-!
-!   ############################################################################
-    SUBROUTINE DEEP_CONVECTION( KLON, KLEV, KIDIA, KFDIA, KBDIA, KTDIA,        &
-                                PDTCONV, KICE, OREFRESH, ODOWN, OSETTADJ,      &
-                                PPABST,  PZZ, PDXDY, PTIMEC,                   &
                                 PTT, PRVT, PRCT, PRIT, PUT, PVT, PWT,          &
                                 KCOUNT, PTTEN, PRVTEN, PRCTEN, PRITEN,         &
                                 PPRLTEN, PPRSTEN,                              &
@@ -200,32 +106,36 @@ END MODULE MODI_DEEP_CONVECTION
 !              ------------
 !
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
-USE MODD_CST
-USE MODD_CONVPAREXT
-USE MODD_CONVPAR
+USE MODD_CST, ONLY: XALPW, XBETAW, XCI, XCL, XCPD, XCPV, XG, XGAMW, XLSTT, XLVTT, &
+                    XP00, XPI, XRD, XRHOLW, XRV, XTT, CST
+USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT, CONVPAREXT
+USE MODD_CONVPAR, ONLY: XA25, XCRAD
 USE MODD_NSV,       ONLY : NSV_LGBEG,NSV_LGEND, &
                            NSV_CHEMBEG,NSV_CHEMEND, &
                            NSV_LNOXBEG, TNSV
-USE MODD_CH_M9_n,   ONLY : CNAMES
 !
-USE MODI_CH_CONVECT_LINOX
-USE MODI_CONVECT_TRIGGER_FUNCT
-USE MODI_CONVECT_UPDRAFT
-USE MODI_CONVECT_TSTEP_PREF
-USE MODI_CONVECT_DOWNDRAFT
-USE MODI_CONVECT_PRECIP_ADJUST
-USE MODI_CONVECT_CLOSURE
-USE MODI_CH_CONVECT_SCAVENGING
+USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
+USE MODE_CONVECT_TRIGGER_FUNCT, ONLY: CONVECT_TRIGGER_FUNCT
+USE MODE_CONVECT_UPDRAFT, ONLY: CONVECT_UPDRAFT
+USE MODE_CONVECT_TSTEP_PREF, ONLY: CONVECT_TSTEP_PREF
+USE MODE_CONVECT_DOWNDRAFT, ONLY: CONVECT_DOWNDRAFT
+USE MODE_CONVECT_PRECIP_ADJUST, ONLY: CONVECT_PRECIP_ADJUST
+USE MODE_CONVECT_CLOSURE, ONLY: CONVECT_CLOSURE
 USE MODE_CONVECT_CHEM_TRANSPORT, ONLY: CONVECT_CHEM_TRANSPORT
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
-USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
-USE MODD_CONVPAREXT, ONLY : CONVPAREXT
+!
+#ifdef PHYEX_MESONH
+USE MODD_CH_M9_n,   ONLY : CNAMES
+USE MODI_CH_CONVECT_LINOX, ONLY: CH_CONVECT_LINOX
+USE MODI_CH_CONVECT_SCAVENGING, ONLY: CH_CONVECT_SCAVENGING
+#endif
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
 !
+TYPE(DIMPHYEX_T),           INTENT(IN) :: D
 INTEGER,                    INTENT(IN) :: KLON     ! horizontal dimension
 INTEGER,                    INTENT(IN) :: KLEV     ! vertical dimension
 INTEGER,                    INTENT(IN) :: KIDIA    ! value of the first point in x
@@ -315,7 +225,6 @@ REAL, DIMENSION(KLON,KLEV)         :: ZTHT, ZSTHV, ZSTHES  ! grid scale theta,
 REAL, DIMENSION(KLON)              :: ZTIME  ! convective time period
 REAL, DIMENSION(KLON)              :: ZWORK2, ZWORK2B ! work array
 REAL                               :: ZW1    ! work variable
-TYPE(DIMPHYEX_T) :: D
 TYPE(CONVPAREXT) :: CVPEXT
 !
 !
@@ -447,7 +356,6 @@ IKB = 1 + JCVEXB
 IKS = KLEV
 JCVEXT = MAX( 0, KTDIA - 1 )
 IKE = IKS - JCVEXT
-CALL FILL_DIMPHYEX(D, KLON, 1, IKS)
 CVPEXT%JCVEXB = MAX( 0, KBDIA - 1 )
 CVPEXT%JCVEXT = MAX( 0, KTDIA - 1)
 !
@@ -476,10 +384,12 @@ ENDIF
 !               counter becomes negative
 !               -------------------------------------------------
 !
-DO JJ=1,KLEV ; DO JI=1,KLON
- GTRIG3(JI,JJ)=GTRIG(JI)
-ENDDO ; ENDDO 
-WHERE ( GTRIG3(:,:) ) 
+DO JJ=1,KLEV
+  DO JI=1,KLON
+    GTRIG3(JI,JJ)=GTRIG(JI)
+  ENDDO
+ENDDO 
+WHERE ( GTRIG3(:,:) )
   PTTEN(:,:)  = 0.
   PRVTEN(:,:) = 0.
   PRCTEN(:,:) = 0.
@@ -499,10 +409,13 @@ WHERE ( GTRIG(:) )
   PCAPE(:)   = 0.
 END WHERE
 ALLOCATE( GTRIG4(KLON,KLEV,KCH1) )
-DO JK=1,KCH1; DO JJ=1,KLEV ; DO JI=1,KLON
-!GTRIG4(:,:,:) = SPREAD( GTRIG3(:,:), DIM=3, NCOPIES=KCH1 )
-  GTRIG4(JI,JJ,JK) = GTRIG3(JI,JJ)
-ENDDO ; ENDDO ; ENDDO
+DO JK=1,KCH1
+  DO JJ=1,KLEV
+    DO JI=1,KLON
+      GTRIG4(JI,JJ,JK) = GTRIG3(JI,JJ)
+    ENDDO
+  ENDDO
+ENDDO
 WHERE( GTRIG4(:,:,:) ) PCH1TEN(:,:,:) = 0.
 DEALLOCATE( GTRIG4 )
 !
@@ -996,8 +909,6 @@ IF ( ICONV1 > 0 )  THEN
 !
           ! Compute vertical integrals
 !
-! Reproducibility
-! JKM = MAXVAL( ICTL(:) )
   JKM = IKE - 1
   ZWORK2(:) = 0.
   ZWORK2B(:) = 0.
@@ -1132,26 +1043,27 @@ IF ( ICONV1 > 0 )  THEN
     END IF
 !
     DO JI = 1, ICONV
-     DO JK = IKB, IKE
-      JL = IJINDEX(JI)
-      ZCH1(JI,JK,:) = PCH1(JL,JK,:)
-      ZRHODREF(JI,JK)=PRHODREF(JL,JK)
-     END DO
-     ZRHODREF(JI,1) = PRHODREF(JL,IKB) 
-     ZRHODREF(JI,IKS) = PRHODREF(JL,IKE) 
+      DO JK = IKB, IKE
+        JL = IJINDEX(JI)
+        ZCH1(JI,JK,:) = PCH1(JL,JK,:)
+        ZRHODREF(JI,JK)=PRHODREF(JL,JK)
+      END DO
+      ZRHODREF(JI,1) = PRHODREF(JL,IKB) 
+      ZRHODREF(JI,IKS) = PRHODREF(JL,IKE) 
     END DO
     ZCH1(:,1,:) = ZCH1(:,IKB,:) 
     ZCH1(:,IKS,:) = ZCH1(:,IKE,:) 
 !
     JN_NO = 0
     IF ( OCH_CONV_LINOX ) THEN
+#ifdef PHYEX_MESONH
       DO JK = IKB, IKE
-      DO JI = 1, ICONV
-        JL = IJINDEX(JI)
-        ZZZ(JI,JK)=PZZ(JL,JK)
-        ZIC_RATE(JI)=PIC_RATE(JL)
-        ZCG_RATE(JI)=PCG_RATE(JL)
-      END DO
+        DO JI = 1, ICONV
+          JL = IJINDEX(JI)
+          ZZZ(JI,JK)=PZZ(JL,JK)
+          ZIC_RATE(JI)=PIC_RATE(JL)
+          ZCG_RATE(JI)=PCG_RATE(JL)
+        END DO
       END DO
       IF (OUSECHEM) THEN
         DO JN = NSV_CHEMBEG,NSV_CHEMEND
@@ -1172,11 +1084,15 @@ IF ( ICONV1 > 0 )  THEN
         PIC_RATE(JL)=ZIC_RATE(JI)
         PCG_RATE(JL)=ZCG_RATE(JI)
       ENDDO
+#else
+      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'Forbidden call of CH_CONVECT_LINOX from a model other than Meso-NH')
+#endif
     ENDIF
 !
     IF ((OUSECHEM .AND. OCH_CONV_SCAV).OR.(ODUST .AND.  OCH_CONV_SCAV).OR.&
         (OSALT .AND.  OCH_CONV_SCAV)  ) THEN
-! 
+!
+#ifdef PHYEX_MESONH
       CALL CH_CONVECT_SCAVENGING( ICONV, KLEV, KCH1, ZCH1, ZCH1C,      &
                                   IDPL, IPBL, ILCL, ICTL, ILFS, IDBL,  &
                                   ZUMF, ZUER, ZUDR, ZDMF, ZDER, ZDDR,  &
@@ -1184,6 +1100,9 @@ IF ( ICONV1 > 0 )  THEN
                                   IFTSTEPS,                            &
                                   ZURC, ZURR, ZURI, ZURS, ZUTT, ZPRES, &
                                   ZRHODREF, PPABST, ZTHT               )
+#else
+      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'Forbidden call of CH_CONVECT_SCAVENGING from a model other than Meso-NH')
+#endif
 !
       IF (OCH_CONV_LINOX) THEN
         ZCH1C(:,:,JN_NO) = ZWORK4C(:,:)
@@ -1220,8 +1139,6 @@ IF ( ICONV1 > 0 )  THEN
 !
           ! Compute vertical integrals
 !
-! Reproducibility
-!     JKM = MAXVAL( ICTL(:) )
       JKM = IKE - 1
       DO JN = 1, KCH1
         IF((JN < NSV_LGBEG .OR. JN>NSV_LGEND-1) .AND. JN .NE. JN_NO ) THEN
