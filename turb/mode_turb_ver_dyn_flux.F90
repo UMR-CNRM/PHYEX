@@ -16,8 +16,8 @@ SUBROUTINE TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,TLES,KSV,O2D,OFLAT, &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
                       PTHLM,PRM,PSVM,PUM,PVM,PWM,PUSLOPEM,PVSLOPEM, &
                       PTKEM,PLM,MFMOIST,PWU,PWV,                    &
-                      PRUS,PRVS,PRWS,                               &
-                      PDP,PTP,PSSUFL_C,PSSVFL_C,PSSUFL,PSSVFL       )
+                      PRUS,PRVS,PRWS,PDP,PTP,                       &
+                      PTURB_SPP,PSSUFL_C,PSSVFL_C,PSSUFL,PSSVFL     )
 !     ###############################################################
 !
 !
@@ -317,6 +317,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)   ::  PRUS, PRVS, PRWS
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PDP          ! Dynamic TKE production term
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTP          ! Thermal TKE production term
+REAL, DIMENSION(D%NIJT,TURBN%ZTURB_S), INTENT(IN)       ::  PTURB_SPP    ! Thermal TKE production term
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSUFL_C  ! Time evol Flux of U at sea surface (LOCEAN)
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSVFL_C  !
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSUFL   
@@ -351,12 +352,12 @@ INTEGER             :: JSV,JIJ,JK   ! scalar loop counter
 INTEGER             :: IKL
 REAL, DIMENSION(D%NIJT)   :: ZCOEFFLXU, &
                              ZCOEFFLXV, ZUSLOPEM, ZVSLOPEM, &
-                             ZFLUXSFCU,ZFLUXSFCV
+                             ZFLUXSFCU,ZFLUXSFCV, ZCMFSF
                                     ! coefficients for the surface flux
                                     ! evaluation and copy of PUSLOPEM and
                                     ! PVSLOPEM in local 3D arrays
 !
-REAL :: ZTIME1, ZTIME2, ZCMFS
+REAL :: ZTIME1, ZTIME2
 TYPE(TFIELDMETADATA) :: TZFIELD
 LOGICAL :: GOCEAN !Intermediate variable used to work around a Cray compiler bug (CCE 13.0.0)
 !----------------------------------------------------------------------------
@@ -425,8 +426,8 @@ PDP(:,:)=XUNDEF
 !
 ZSOURCE(:,:) = 0.
 ZFLXZ(:,:) = 0.
-ZCMFS = CSTURB%XCMFS
-IF (TURBN%LHARAT) ZCMFS=1.
+ZCMFSF(:) = PTURB_SPP(:,TURBN%ZCMFS)
+IF (TURBN%LHARAT) ZCMFSF(:)=1.
 !
 DO JIJ=IIJB, IIJE
   ZDIRSINZW(JIJ) = SQRT(1.-PDIRCOSZW(JIJ)**2)
@@ -480,7 +481,7 @@ CALL MXM_PHY(D, PDZZ, ZMXM2D_WORK3)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    ZA(JIJ, JK)    = -PTSTEP * ZCMFS * ZMXM2D_WORK1(JIJ, JK) * &
+    ZA(JIJ, JK)    = -PTSTEP * ZCMFSF(JIJ) * ZMXM2D_WORK1(JIJ, JK) * &
                    ZMXM2D_WORK2(JIJ, JK) / ZMXM2D_WORK3(JIJ, JK)**2
   END DO
 END DO
@@ -642,7 +643,7 @@ CALL MXM_PHY(D, PDZZ, ZMXM2D_WORK2)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    ZFLXZ(JIJ, JK)     = -ZCMFS * ZMXM2D_WORK1(JIJ, JK) * &
+    ZFLXZ(JIJ, JK)     = -ZCMFSF(JIJ) * ZMXM2D_WORK1(JIJ, JK) * &
                       ZDZM2D_WORK1(JIJ, JK) / ZMXM2D_WORK2(JIJ, JK)
   END DO
 END DO
@@ -833,7 +834,12 @@ END DO
 
 !
 CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_RES_ddxa_U_SBG_UaU )
-  ZWKLES = ZCMFS * ZKEFF
+
+  DO JK=1, IKT
+    DO JIJ=IIJB, IIJE
+      ZWKLES(JIJ, JK)    = ZCMFSF(JIJ) * ZKEFF(JIJ, JK) 
+    END DO
+  END DO
   CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_SUBGRID_Km )
   CALL SECOND_MNH(ZTIME2)
   TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
@@ -1154,7 +1160,7 @@ CALL MYM_PHY(D, PDZZ, ZMYM2D_WORK3)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    ZA(JIJ, JK) = -PTSTEP * ZCMFS * ZMYM2D_WORK1(JIJ, JK) * ZMYM2D_WORK2(JIJ, JK) / ZMYM2D_WORK3(JIJ, JK)**2
+    ZA(JIJ, JK) = -PTSTEP * ZCMFSF(JIJ) * ZMYM2D_WORK1(JIJ, JK) * ZMYM2D_WORK2(JIJ, JK) / ZMYM2D_WORK3(JIJ, JK)**2
   END DO
 END DO
 
@@ -1318,7 +1324,7 @@ CALL MYM_PHY(D, PDZZ, ZMYM2D_WORK2)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    ZFLXZ(JIJ, JK)   = -ZCMFS * ZMYM2D_WORK1(JIJ, JK) * &
+    ZFLXZ(JIJ, JK)   = -ZCMFSF(JIJ) * ZMYM2D_WORK1(JIJ, JK) * &
                   ZDZM2D_WORK1(JIJ, JK) / ZMYM2D_WORK2(JIJ, JK)
   END DO
 END DO
@@ -1814,7 +1820,7 @@ IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. TURBN%CTURBDIM == '1DIM') THEN
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     ZFLXZ(JIJ, JK)= (2./3.) * PTKEM(JIJ, JK)                     &
-         -ZCMFS*PLM(JIJ, JK)*SQRT(PTKEM(JIJ, JK))*ZGZ_W_M2D_WORK1(JIJ, JK)  
+         -ZCMFSF(JIJ)*PLM(JIJ, JK)*SQRT(PTKEM(JIJ, JK))*ZGZ_W_M2D_WORK1(JIJ, JK)  
   END DO
 END DO
 

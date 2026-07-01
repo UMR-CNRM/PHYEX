@@ -23,7 +23,7 @@
                 PU_UP, PV_UP, PTKE_UP, PTHV_UP, PW_UP,                &
                 PFRAC_UP,PEMF,PDETR,PENTR,                            &
                 KKLCL,KKETL,KKCTL,PDX,PDY,PRSVS,PSVMIN,               &
-                BUCONF, TBUDGETS, KBUDGETS                            )
+                PXCTV,PXCMF,BUCONF, TBUDGETS, KBUDGETS                )
 !     #################################################################
 !!
 !!****  *SHALLOW_MF* - 
@@ -169,6 +169,8 @@ INTEGER,DIMENSION(D%NIJT),     INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,E
 REAL,                          INTENT(IN)  :: PDX, PDY
 REAL, DIMENSION(D%NIJT,D%NKT,KSV),      INTENT(IN),    OPTIONAL :: PRSVS ! sources of sv (for Budgets with lagrangian tracer)
 REAL,DIMENSION(JPSVMAX),                INTENT(IN),    OPTIONAL :: PSVMIN       ! minimum value for SV variables (for Budgets)
+REAL,DIMENSION(D%NIJT),                 INTENT(IN)              :: PXCTV       ! SPP variable for turbulence
+REAL,DIMENSION(D%NIJT),                 INTENT(IN)              :: PXCMF       ! SPP variable for shallow convection
 TYPE(TBUDGETCONF_t),                    INTENT(IN),    OPTIONAL :: BUCONF       ! budget structure
 TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT), OPTIONAL :: TBUDGETS
 INTEGER,                                INTENT(IN)              :: KBUDGETS     ! option. because not used in arpifs
@@ -265,7 +267,7 @@ IF (PARAMMF%CMF_UPDRAFT == 'EDKF') THEN
                        PTHV_UP, PW_UP, PU_UP, PV_UP, ZSV_UP,     &
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PTKE_UP,PEMF,PDETR,&
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH,&
-                       PDX,PDY)
+                       PDX,PDY,PXCMF)
 ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
   GENTR_DETR = .TRUE.
   CALL COMPUTE_UPDRAFT_RHCJ10(D, CST, NEBN, PARAMMF, TURBN, CSTURB,&
@@ -278,7 +280,8 @@ ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
                        ZTH_UP,PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,&
                        PTHV_UP, PW_UP, PU_UP, PV_UP, ZSV_UP,     &
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
-                       PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH )
+                       PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH,&
+                       PXCMF )
 ELSEIF (PARAMMF%CMF_UPDRAFT == 'RAHA') THEN
    CALL COMPUTE_UPDRAFT_RAHA(D, CST, NEBN, PARAMMF,              &
                        KSV, GENTR_DETR,                          &
@@ -315,7 +318,7 @@ CALL COMPUTE_MF_CLOUD(D,CST,TURBN,PARAMMF,ICEP,NEBN%LSTATNW, &
                       PPABSM,PRHODREF,                  &
                       PRC_MF,PRI_MF,PCF_MF,PSIGMF,      &
                       PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
-                      PWEIGHT_MF_CLOUD)
+                      PWEIGHT_MF_CLOUD,PXCTV)
 
 !!! 3. Compute fluxes of conservative variables and their divergence = tendency
 !!!    ------------------------------------------------------------------------

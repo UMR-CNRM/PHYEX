@@ -13,7 +13,7 @@ CONTAINS
                       PDYY,PDZZ,PDZY,                                &
                       PRHODJ,PTHVREF,                                &
                       PVM,PWM,PTHLM,PRM,PSVM,                        &
-                      PTKEM,PLM,                                     &
+                      PTKEM,PLM,PTURB_SPP,                           &
                       PDP,                                           &
                       PRVS,PRWS                                      )
 !     ################################################################
@@ -129,6 +129,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(:,:),     INTENT(IN)    ::  PTURB_SPP    ! Turb. mixing length
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRVS, PRWS   ! var. at t+1 -split-
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE production terms
@@ -137,13 +138,13 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE produ
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZFLX,ZWORK
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZFLX,ZWORK,ZCMFSF
     ! work arrays
 !   
 INTEGER             :: IKB,IKE,IKU, IIT, IJT, IKT
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain  
-INTEGER             :: JSV,JI,JJ,JK          ! scalar loop counter
+INTEGER             :: JSV,JI,JJ,JK,ZZ          ! scalar loop counter
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GY_W_VW_PWM
 !
@@ -187,6 +188,13 @@ IKU = SIZE(PWM,3)
 IIT=D%NIT
 IJT=D%NJT
 IKT=D%NKT 
+DO ZZ=1,SIZE(PWM,3) 
+   DO JJ=1,SIZE(PWM,2)
+      ZCMFSF(:,JJ,ZZ)=PTURB_SPP(:,TURBN%ZCMFS)
+   ENDDO
+ENDDO
+
+
 !
 !
 IF (.NOT. O2D) THEN
@@ -217,7 +225,7 @@ DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
       ZFLX(JI, JJ, JK) =                                                      &
-          - XCMFS * ZMYM3D_WORK1(JI, JJ, JK) * GY_W_VW_PWM(JI, JJ, JK)
+          - ZCMFSF(JI,JJ,JK) * ZMYM3D_WORK1(JI, JJ, JK) * GY_W_VW_PWM(JI, JJ, JK)
     END DO
   END DO
 END DO

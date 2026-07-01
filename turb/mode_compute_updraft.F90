@@ -23,7 +23,7 @@ CONTAINS
                                  PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,PTKE_UP, &
                                  PEMF,PDETR,PENTR,                &
                                  PBUO_INTEG,KKLCL,KKETL,KKCTL,    &
-                                 PDEPTH, PDX, PDY     )
+                                 PDEPTH, PDX, PDY, PXCMF     )
 
 !     #################################################################
 !!
@@ -143,6 +143,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PBUO_INTEG       ! Integrated 
 INTEGER, DIMENSION(D%NIJT),  INTENT(INOUT) :: KKLCL,KKETL,KKCTL! LCL, ETL, CTL
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)   :: PDEPTH           ! Deepness of cloud
 REAL,                   INTENT(IN)    :: PDX, PDY
+REAL, DIMENSION(D%NIJT), INTENT(IN)   ::  PXCMF           ! SPP parameter
 !                       1.2  Declaration of local variables
 !
 !
@@ -463,7 +464,7 @@ IF (OENTR_DETR) THEN
   ENDIF
   DO JIJ=IIJB, IIJE
     IF (ZWTHVSURF(JIJ)>0.) THEN
-      PEMF(JIJ, IKB) = PARAMMF%XCMF * ZSURF(JIJ) * ZRHO_F(JIJ, IKB) *  &
+      PEMF(JIJ, IKB) =  PXCMF(JIJ) * ZSURF(JIJ) * ZRHO_F(JIJ, IKB) *  &
               ((ZG_O_THVREF(JIJ, IKB))*ZWTHVSURF(JIJ)*ZLUPSURF(JIJ))**(1./3.)
       PFRAC_UP(JIJ, IKB)=MIN(PEMF(JIJ, IKB)/(SQRT(ZW_UP2(JIJ, IKB))*ZRHO_F(JIJ, IKB)), &
                                      &PARAMMF%XFRAC_UP_MAX)

@@ -15,7 +15,7 @@ CONTAINS
                       PRHODJ,PTHVREF,                                &
                       PUM,PWM,PTHLM,PRM,PSVM,                        &
                       PTKEM,PLM,                                     &
-                      PDP,                                           &
+                      PTURB_SPP,PDP,                                 &
                       PRUS,PRWS                                      )
 !     ################################################################
 !
@@ -129,6 +129,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(:,:),     INTENT(IN)    ::  PTURB_SPP    ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRWS
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE production terms
@@ -138,13 +139,13 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE produ
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZFLX,ZWORK
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZFLX,ZWORK,ZCMFSF
     ! work arrays
 !   
 INTEGER             :: IKB,IKE,IKU, IIT, IJT, IKT
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain  
-INTEGER             :: JSV,JI,JJ,JK          ! scalar loop counter
+INTEGER             :: JSV,JI,JJ,JK,ZZ          ! scalar loop counter
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GX_W_UW_PWM
 !
@@ -187,6 +188,12 @@ IKU = SIZE(PWM,3)
 IIT=D%NIT
 IJT=D%NJT
 IKT=D%NKT 
+DO ZZ=1,SIZE(PWM,3)
+   DO JJ=1,SIZE(PWM,2)
+      ZCMFSF(:,JJ,ZZ)=PTURB_SPP(:,TURBN%ZCMFS)
+   ENDDO
+ENDDO
+
 !
 !
 CALL GX_W_UW_PHY(D, OFLAT,PWM,PDXX,PDZZ,PDZX, ZGX_W_UW3D_WORK1)
@@ -214,7 +221,7 @@ DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
       ZFLX(JI, JJ, JK) =                                                      &
-        - XCMFS * ZMXM3D_WORK1(JI, JJ, JK) * GX_W_UW_PWM(JI, JJ, JK)
+        - ZCMFSF(JI,JJ,JK) * ZMXM3D_WORK1(JI, JJ, JK) * GX_W_UW_PWM(JI, JJ, JK)
     END DO
   END DO
 END DO

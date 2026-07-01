@@ -16,7 +16,7 @@ CONTAINS
                       PSFTHM,PSFRM,                                  &
                       PWM,PTHLM,PRM,                                 &
                       PATHETA,PAMOIST,PSRCM,PFRAC_ICE,               &
-                      PRTHLS,PRRS                                    )
+                      PTURB_SPP,PRTHLS,PRRS                          )
 !     ################################################################
 !
 !
@@ -143,6 +143,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PSRCM
                                   ! s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PFRAC_ICE    ! ri fraction of rc+ri
+REAL, DIMENSION(:,:),   INTENT(IN)      ::  PTURB_SPP    ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRTHLS
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS         ! var. at t+1 -split-
@@ -151,9 +152,9 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS         ! var. at
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZFLX,ZFLXC,ZWKLES ! work arrays
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZFLX,ZFLXC,ZCSHF,ZWKLES ! work arrays
 !
-INTEGER             :: IKB,IKE,IKU, IKT, IIT, IJT
+INTEGER             :: IKB,IKE,IKU, IKT, IIT, IJT, ZZ
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain  
 REAL, DIMENSION(D%NIT,D%NJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF 
@@ -201,6 +202,11 @@ TYPE(TFIELDMETADATA) :: TZFIELD
 IKB = 1+JPVEXT               
 IKE = SIZE(PTHLM,3)-JPVEXT    
 IKU = SIZE(PTHLM,3)
+DO ZZ=1,SIZE(PTHLM,3)
+   DO JJ=1,SIZE(PTHLM,2)
+      ZCSHF(:,JJ,ZZ)=PTURB_SPP(:,TURBN%ZCED)
+   ENDDO
+ENDDO 
 IIT=D%NIT
 IJT=D%NJT
 IKT=D%NKT
@@ -230,7 +236,7 @@ CALL GX_M_U_PHY(D, OFLAT,PTHLM,PDXX,PDZZ,PDZX, ZGX_M_U3D_WORK1)
 DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
-      ZFLX(JI, JJ, JK)     = -TURBN%XCSHF * ZMXM3D_WORK1(JI, JJ, JK) * ZGX_M_U3D_WORK1(JI, JJ, JK)
+      ZFLX(JI, JJ, JK)     = -ZCSHF(JI, JJ, JK) * ZMXM3D_WORK1(JI, JJ, JK) * ZGX_M_U3D_WORK1(JI, JJ, JK)
     END DO
   END DO
 END DO
@@ -258,7 +264,7 @@ CALL DXM2D_PHY(D, PTHLM(:,:,IKB), ZDXM2D_WORK1)
 
 DO JJ=1, IJT
   DO JI=1, IIT
-    ZFLX(JI, JJ, IKB) = -TURBN%XCSHF * ZMXM2D_WORK1(JI, JJ) *          &
+    ZFLX(JI, JJ, IKB) = -ZCSHF(JI, JJ, JK) * ZMXM2D_WORK1(JI, JJ) *          &
       ( ZDXM2D_WORK1(JI, JJ) * PINV_PDXX(JI, JJ, IKB)           &
        -ZMXM2D_WORK2(JI, JJ)      &
             *0.5* ( PDZX(JI, JJ, IKB+1)+PDZX(JI, JJ, IKB))       &
@@ -1694,7 +1700,7 @@ CALL GY_M_V_PHY(D, OFLAT,PTHLM,PDYY,PDZZ,PDZY, ZGY_M_V3D_WORK1)
 DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
-      ZFLX(JI, JJ, JK)     = -TURBN%XCSHF * ZMYM3D_WORK1(JI, JJ, JK) * ZGY_M_V3D_WORK1(JI, JJ, JK)
+      ZFLX(JI, JJ, JK)     = -ZCSHF(JI, JJ, JK) * ZMYM3D_WORK1(JI, JJ, JK) * ZGY_M_V3D_WORK1(JI, JJ, JK)
     END DO
   END DO
 END DO
@@ -1728,7 +1734,7 @@ CALL MYM2D_PHY(D, ZSHUGRADWK1_2D, ZMYM2D_WORK2)
 
 DO JJ=1, IJT
   DO JI=1, IIT
-    ZFLX(JI, JJ, IKB) = -TURBN%XCSHF * ZMYM2D_WORK1(JI, JJ) *          &
+    ZFLX(JI, JJ, IKB) = -ZCSHF(JI, JJ, JK) * ZMYM2D_WORK1(JI, JJ) *          &
       ( ZDYM2D_WORK1(JI, JJ) * PINV_PDYY(JI, JJ, IKB)           &
        -ZMYM2D_WORK2(JI, JJ)     &
             *0.5* ( PDZY(JI, JJ, IKB+1)+PDZY(JI, JJ, IKB))       &

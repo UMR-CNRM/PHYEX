@@ -53,7 +53,8 @@ CONTAINS
 !
 USE MODD_CST, ONLY: XKARMAN
 USE MODD_TURB_n, ONLY : XCTP, XCED, XCSHF, XCHF, XCTV, XCHV, XCHT1, XCHT2, XCPR1, CTURBLEN, &
-                      & XBL89EXP,  XUSRBL89, LBL89EXP
+                      & XBL89EXP,  XUSRBL89, LBL89EXP, ZCTP, ZCTV, ZCSHF, ZCEP, ZCED, ZCMFS, ZBL89EXP, &
+                      & ZUSRBL89, ZTURB_S
 USE MODD_NEB_n, ONLY: LSTATNW
 USE MODD_CTURB, ONLY: CTURB_ASSOCIATE, XA0, XA2, XA3, XA5, XALPSBL, XCDD, XCDP, XCDT, XCEP, XCET, &
                       XCMFS, XCPR2, XCPR3, XCPR4, XCPR5, XCTD, XFTOP_O_FSURF, XLINF, XPHI_LIM, &
@@ -183,6 +184,16 @@ XALPSBL = 4.63
 !
 XRM17 = 0.5  ! Rodier et al 2017
 !
+!         1.12 Index indicators for turbulence SPP
+ZCTP=1
+ZCTV=2
+ZCSHF=3
+ZCEP=4
+ZCED=5
+ZCMFS=6
+ZBL89EXP=7
+ZUSRBL89=8
+ZTURB_S=8
 !
 !         2. Derivated constants
 !            -------------------

@@ -27,7 +27,7 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
                       PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,             &
                       PDP,PTP,PSIGS,PWTH,PWRC,PWSV,                 &
                       PSSTFL,PSSTFL_C,PSSRFL_C,PSSUFL_C,PSSVFL_C,   &
-                      PSSUFL,PSSVFL                                 )
+                      PSSUFL,PSSVFL,PTURB_SPP                       )
 !     ###############################################################
 !
 !
@@ -352,6 +352,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSUFL_C   
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSVFL_C  !
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSUFL   
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSVFL  !
+REAL, DIMENSION(D%NIJT,TURBN%ZTURB_S), INTENT(IN)          ::  PTURB_SPP  
 !
 !*       0.2  declaration of local variables
 !
@@ -416,7 +417,7 @@ CALL PRANDTL(D,CST,CSTURB,TURBN, KRR,KSV,KRRI,TURBN%LTURB_FLX,  &
              PDXX,PDYY,PDZZ,PDZX,PDZY,             &
              PTHVREF,PLOCPEXNM,PATHETA,PAMOIST,    &
              PLM,PLEPS,PTKEM,PTHLM,PRM,PSVM,PSRCM, &
-             ZREDTH1, ZREDR1,                      &
+             PTURB_SPP,ZREDTH1, ZREDR1,            &
              ZRED2TH3, ZRED2R3, ZRED2THR3,         &
              ZREDS1,ZRED2THS, ZRED2RS,             &
              ZBLL_O_E,                             &
@@ -493,7 +494,7 @@ END IF
 !
 ! Prandtl numbers for scalars
 !
-CALL PSI_SV(D,CSTURB,TURBN,KSV,ZREDTH1,ZREDR1,ZREDS1,ZRED2THS,ZRED2RS,ZPHI3,ZPSI3,ZPSI_SV)
+CALL PSI_SV(D,CSTURB,TURBN,KSV,ZREDTH1,ZREDR1,ZREDS1,ZRED2THS,ZRED2RS,ZPHI3,ZPSI3,ZPSI_SV,PTURB_SPP)
 !
 ! LES diagnostics
 !
@@ -545,7 +546,7 @@ ENDIF
                         PFWTH,PFWR,PFTH2,PFR2,PFTHR,                  &
                         MFMOIST,PBL_DEPTH,ZWTHV,                      &
                         PRTHLS,PRRS,ZTHLP,ZRP,PTP,PWTH,PWRC,          &
-                        PSSTFL, PSSTFL_C, PSSRFL_C                    )
+                        PSSTFL, PSSTFL_C, PSSRFL_C,PTURB_SPP          )
 !
   CALL  TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,NEBN,TLES,            &
                         KRR,KRRL,KRRI,KSV,                            &
@@ -562,7 +563,7 @@ ENDIF
                         ZRED2R3, ZRED2THR3, ZBLL_O_E, ZETHETA,        &
                         ZEMOIST, ZREDTH1, ZREDR1, ZPHI3, ZPSI3, ZD,   &
                         PFWTH,PFWR,PFTH2,PFR2,PFTHR,                  &
-                        ZTHLP,ZRP,MFMOIST,PSIGS                  )
+                        ZTHLP,ZRP,MFMOIST,PTURB_SPP,PSIGS             )
 !
 !----------------------------------------------------------------------------
 !
@@ -590,8 +591,8 @@ CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,TLES,KSV,O2D,OFLAT,      &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
                       PTHLM,PRM,PSVM,PUM,PVM,PWM,PUSLOPEM,PVSLOPEM, &
                       PTKEM,ZLM,MFMOIST,ZWU,ZWV,                    &
-                      PRUS,PRVS,PRWS,                               &
-                      PDP,PTP,PSSUFL_C,PSSVFL_C,PSSUFL,PSSVFL       )
+                      PRUS,PRVS,PRWS,PDP,PTP,PTURB_SPP,             &
+                      PSSUFL_C,PSSVFL_C,PSSUFL,PSSVFL       )
 !
 !----------------------------------------------------------------------------
 !
@@ -611,7 +612,7 @@ CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,TLES,ONOMIXLG,            &
                       PSFSVM,PSFSVP,                                &
                       PSVM,                                         &
                       PTKEM,ZLM,MFMOIST,ZPSI_SV,                    &
-                      PRSVS,PWSV                                    )
+                      PTURB_SPP,PRSVS,PWSV                          )
 !
 !
 IF (KSV>0 .AND. TLES%LLES_CALL)                                          &
@@ -621,7 +622,7 @@ CALL  TURB_VER_SV_CORR(D,CST,CSTURB,TURBN,TLES,KRR,KRRL,KRRI,OOCEAN,&
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,ZPHI3,ZPSI3,  &
                       PWM,PSVM,                                     &
-                      PTKEM,ZLM,PLEPS,ZPSI_SV                       )
+                      PTKEM,ZLM,PLEPS,ZPSI_SV,PTURB_SPP             )
 !
 !
 !----------------------------------------------------------------------------

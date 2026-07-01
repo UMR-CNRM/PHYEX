@@ -21,7 +21,7 @@ CONTAINS
                       PUM,PVM,PWM,PUSLOPEM,PVSLOPEM,PTHLM,PRM,PSVM,  &
                       PTKEM,PLM,PLEPS,                               &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PFRAC_ICE,     &
-                      PDP,PTP,PSIGS,                                 &
+                      PTURB_SPP,PDP,PTP,PSIGS,                       &
                       PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS               )
 !     ################################################################
 !
@@ -236,6 +236,7 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PSRCM
                                   ! s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PFRAC_ICE    ! ri fraction of rc+ri
+REAL, DIMENSION(:,:),     INTENT(IN)    ::  PTURB_SPP    ! SPP for turbuelence
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRUS, PRVS, PRWS, PRTHLS
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS,PRRS   ! var. at t+1 -split-
@@ -272,7 +273,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
                       PSFTHM,PSFRM,                                  &
                       PWM,PTHLM,PRM,                                 &
                       PATHETA,PAMOIST,PSRCM,PFRAC_ICE,               &
-                      PRTHLS,PRRS                                    )
+                      PTURB_SPP,PRTHLS,PRRS                          )
 !
 !
 !*       8.   TURBULENT CORRELATIONS : <THl THl>, <THl Rnp>, <Rnp Rnp>, Sigma_s
@@ -288,7 +289,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
                       PWM,PTHLM,PRM,                                 &
                       PTKEM,PLM,PLEPS,                               &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,               & 
-                      PSIGS                                          )
+                      PTURB_SPP, PSIGS                               )
 !
 !
 !*       9.   < U'U'>
@@ -307,7 +308,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
                       PUM,PVM,PWM, PUSLOPEM,PVSLOPEM,                &
                       PTHLM,PRM,PSVM,                                &
                       PTKEM,PLM,                                     &
-                      PDP,PTP,                                       &
+                      PTURB_SPP,PDP,PTP,                             &
                       PRUS,PRVS,PRWS                                 )
 !
 !
@@ -322,7 +323,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
                       PRHODJ,                                        &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU22M,PTAU33M,       &
                       PUM,PVM,PUSLOPEM,PVSLOPEM,                     &
-                      PDP,                                           &
+                      PTURB_SPP,PDP,                                 &
                       PRUS,PRVS                                      )
 !
 !
@@ -336,7 +337,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
                       PRHODJ,PTHVREF,                                &
                       PUM,PWM,PTHLM,PRM,PSVM,                        &
                       PTKEM,PLM,                                     &
-                      PDP,                                           &
+                      PTURB_SPP,PDP,                                 &
                       PRUS,PRWS                                      )
 !
 !
@@ -350,7 +351,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
                       PRHODJ,PTHVREF,                                &
                       PVM,PWM,PTHLM,PRM,PSVM,                        &
                       PTKEM,PLM,                                     &
-                      PDP,                                           &
+                      PTURB_SPP,PDP,                                 &
                       PRVS,PRWS                                      )
 
 !
@@ -376,7 +377,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
                       PLM,PLEPS,PTKEM,PTHVREF,                       &
                       PTHLM,PRM,                                     &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,               &
-                      PWM,PSVM                                       )
+                      PWM,PSVM,PTURB_SPP                             )
 !
 !
 END SUBROUTINE TURB_HOR
