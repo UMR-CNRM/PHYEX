@@ -24,7 +24,7 @@ INTERFACE
                 PU_UP, PV_UP, PTKE_UP, PTHV_UP, PW_UP,                &
                 PFRAC_UP,PEMF,PDETR,PENTR,PTAUFUNC,                   &
                 KKLCL,KKETL,KKCTL,PDX,PDY,PRSVS,PSVMIN,               &
-                BUCONF, TBUDGETS, KBUDGETS                            )
+                PXCTV,PXCMF,BUCONF, TBUDGETS, KBUDGETS                            )
 
 !$ACDC singlecolumn
 
@@ -108,6 +108,8 @@ INTEGER,DIMENSION(D%NIJT),     INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,E
 REAL,                          INTENT(IN)  :: PDX, PDY
 REAL, DIMENSION(D%NIJT,D%NKT,KSV),      INTENT(IN),    OPTIONAL :: PRSVS ! sources of sv (for Budgets with lagrangian tracer)
 REAL,DIMENSION(JPSVMAX),                INTENT(IN),    OPTIONAL :: PSVMIN       ! minimum value for SV variables (for Budgets)
+REAL,DIMENSION(D%NIJT),                 INTENT(IN)              :: PXCTV       ! SPP variable for turbulence
+REAL,DIMENSION(D%NIJT),                 INTENT(IN)              :: PXCMF       ! SPP variable for shallow convection
 TYPE(TBUDGETCONF_t),                    INTENT(IN),    OPTIONAL :: BUCONF       ! budget structure
 TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT), OPTIONAL :: TBUDGETS
 INTEGER,                                INTENT(IN)              :: KBUDGETS     ! option. because not used in arpifs

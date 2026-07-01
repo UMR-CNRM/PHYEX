@@ -12,7 +12,7 @@ CONTAINS
                       PLM,PLEPS,PTKEM,PTHVREF,                       &
                       PTHLM,PRM,                                     &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,               &
-                      PWM,PSVM                                       )
+                      PWM,PSVM,PTURB_SPP                             )
 !     ################################################################
 !
 !
@@ -104,16 +104,17 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PSRCM        ! normalize
                   ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PWM          ! w at t-1
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
+REAL, DIMENSION(:,:), INTENT(IN)        ::  PTURB_SPP    ! SPP for turbulence 
 !
 !
 !
 !*       0.2  declaration of local variables
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT)       &
-                                     :: ZFLX, ZA, ZWKLES
+                                     :: ZFLX, ZA, ZWKLES, ZCSV, ZCSV2
 !
 INTEGER             :: JSV          ! loop counter
-INTEGER             :: IKU, IIT, IJT, IKT
+INTEGER             :: IKU, IIT, IJT, IKT, JJ, ZZ
 !
 REAL :: ZTIME1, ZTIME2
 !
@@ -129,7 +130,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZGY_M_M3D_WORK2
 INTEGER :: JI
 INTEGER :: JJ
 INTEGER :: JK
-REAL :: ZCSV          !constant for the scalar flux 
 ! ---------------------------------------------------------------------------
 !
 IKU=SIZE(PTKEM,3)
@@ -138,12 +138,18 @@ IJT=D%NJT
 IKT=D%NKT
 CALL SECOND_MNH(ZTIME1)
 !
-IF(OBLOWSNOW) THEN
-! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables        
-   ZCSV= TURBN%XCHF/PRSNOW 
-ELSE
-   ZCSV= TURBN%XCHF
-ENDIF
+DO JJ=1,SIZE(PSVM,2)
+   DO ZZ=1,SIZE(PSVM,3)
+      IF(OBLOWSNOW) THEN
+      ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
+         ZCSV(:,JJ,ZZ)=PTURB_SPP(:,TURBN%ZCED)/PRSNOW
+      ELSE
+         ZCSV(:,JJ,ZZ)=PTURB_SPP(:,TURBN%ZCED)
+      ENDIF
+         ZCSV2(:,JJ,ZZ)=PTURB_SPP(:,TURBN%ZCED)
+   ENDDO
+ENDDO
+
 !
 DO JSV=1,KSV
 !
@@ -159,7 +165,7 @@ CALL GY_M_M_PHY(D, OFLAT,PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY, ZGY_M_M3D_WORK1)
 DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
-      ZFLX(JI, JJ, JK) =  ZCSV / ZCSVD * PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *   &
+      ZFLX(JI, JJ, JK) =  ZCSV(JI,JJ,JK) / ZCSVD * PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *   &
                (  ZGX_M_M3D_WORK1(JI, JJ, JK)**2             &
                 + ZGY_M_M3D_WORK1(JI, JJ, JK)**2 )    
     END DO
@@ -173,7 +179,7 @@ ELSE
 DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
-      ZFLX(JI, JJ, JK) =  ZCSV / ZCSVD * PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *   &
+      ZFLX(JI, JJ, JK) =  ZCSV(JI,JJ,JK) / ZCSVD * PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *   &
                   ZGX_M_M3D_WORK1(JI, JJ, JK)**2    
     END DO
   END DO
@@ -214,7 +220,7 @@ DO JK=1, IKT
       ZFLX(JI, JJ, JK)=  PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK)                                          &
                 *  (  ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
                     + ZGY_M_M3D_WORK1(JI, JJ, JK) * ZGY_M_M3D_WORK2(JI, JJ, JK)  &
-                   ) * (TURBN%XCSHF+ZCSV) / (2.*ZCTSVD)    
+                   ) * (ZCSV2(JI,JJ,JK)+ZCSV(JI,JJ,JK)) / (2.*ZCTSVD)    
     END DO
   END DO
 END DO
@@ -229,7 +235,7 @@ DO JK=1, IKT
     DO JI=1, IIT
       ZFLX(JI, JJ, JK)=  PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK)                                          &
                     * ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
-                    * (TURBN%XCSHF+ZCSV) / (2.*ZCTSVD)    
+                    * (ZCSV2(JI,JJ,JK)+ZCSV(JI,JJ,JK)) / (2.*ZCTSVD)    
     END DO
   END DO
 END DO
@@ -255,7 +261,7 @@ DO JK=1, IKT
       ZFLX(JI, JJ, JK)=  PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK)                                                 &
                   *  (  ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
                       + ZGY_M_M3D_WORK1(JI, JJ, JK) * ZGY_M_M3D_WORK2(JI, JJ, JK)  &
-                     ) * (TURBN%XCHF+ZCSV) / (2.*ZCQSVD)      
+                     ) * (ZCSV2(JI,JJ,JK)+ZCSV(JI,JJ,JK)) / (2.*ZCQSVD)      
     END DO
   END DO
 END DO
@@ -270,7 +276,7 @@ DO JK=1, IKT
     DO JI=1, IIT
       ZFLX(JI, JJ, JK)=  PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK)                                                 &
                       * ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
-                      * (TURBN%XCHF+ZCSV) / (2.*ZCQSVD)      
+                      * (ZCSV2(JI,JJ,JK)+ZCSV(JI,JJ,JK)) / (2.*ZCQSVD)      
     END DO
   END DO
 END DO

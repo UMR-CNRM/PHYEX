@@ -15,7 +15,7 @@ CONTAINS
                             &PTHLM, PRTM, PPABSM, PRM,&
                             &PDZZ, PTHM, PEXNM, &
                             &PEMF, PTHL_UP, PRT_UP,&
-                            &PSIGMF, PTAUFUNC)
+                            &PSIGMF, PTAUFUNC,PXCTV)
 !$ACDC singlecolumn --dummy
 
 !     #################################################################
@@ -92,6 +92,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PEMF                    ! updra
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTAUFUNC                ! profile convection time scale
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHL_UP, PRT_UP         ! rc,w,Mass Flux,Thetal,rt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PSIGMF                  ! SQRT(variance) for statistical cloud scheme
+REAL, DIMENSION(D%NIJT),         INTENT(IN)   :: PXCTV                  ! SPP parameter for turbulence
 !
 !*                    0.1  Declaration of local variables
 !
@@ -146,7 +147,7 @@ IF (KRRL > 0)  THEN
       ELSE
         DO JK=1, IKT
           DO JIJ=IIJB, IIJE
-            ZFLXZ(JIJ, JK) = -2 * TURBN%XCTV* PARAMMF%XTAUSIGMF * PEMF(JIJ, JK)* &
+            ZFLXZ(JIJ, JK) = -2 * PXCTV(JIJ)* PARAMMF%XTAUSIGMF * PEMF(JIJ, JK)* &
                                  & (PTHL_UP(JIJ, JK)-ZFLXZ(JIJ, JK)) * ZWK(JIJ, JK)
           END DO
         END DO
@@ -154,7 +155,7 @@ IF (KRRL > 0)  THEN
     ELSE
       DO JK=1, IKT
         DO JIJ=IIJB, IIJE
-          ZFLXZ(JIJ, JK) = -2 * PARAMMF%XTAUSIGMF * PEMF(JIJ, JK)* &
+          ZFLXZ(JIJ, JK) = -2  *PARAMMF%XTAUSIGMF * PEMF(JIJ, JK)* &
                                & (PTHL_UP(JIJ, JK)-ZFLXZ(JIJ, JK)) * ZWK(JIJ, JK)
         END DO
       END DO
@@ -195,7 +196,7 @@ IF (KRRL > 0)  THEN
       ELSE
         DO JK=1, IKT
           DO JIJ=IIJB, IIJE
-            ZFLXZ2(JIJ, JK) = -2 * TURBN%XCTV * PARAMMF%XTAUSIGMF * PEMF(JIJ, JK)* &
+            ZFLXZ2(JIJ, JK) = -2 * PXCTV(JIJ) * PARAMMF%XTAUSIGMF * PEMF(JIJ, JK)* &
                                  & (PRT_UP(JIJ, JK)-ZFLXZ2(JIJ, JK)) * ZWK2(JIJ, JK)
           END DO
         END DO
@@ -239,7 +240,7 @@ IF (KRRL > 0)  THEN
       ELSE
         DO JK=1, IKT
           DO JIJ=IIJB, IIJE
-            ZFLXZ3(JIJ, JK) = - TURBN%XCTV * PARAMMF%XTAUSIGMF * &
+            ZFLXZ3(JIJ, JK) = - PXCTV(JIJ) * PARAMMF%XTAUSIGMF * &
                           (PEMF(JIJ, JK)*(PRT_UP(JIJ, JK)-ZFLXZ2(JIJ, JK)) * &
                                          ZWK(JIJ, JK) + &
                                          PEMF(JIJ, JK)*(PTHL_UP(JIJ, JK)-ZFLXZ(JIJ, JK)) * &

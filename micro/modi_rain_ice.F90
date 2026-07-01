@@ -19,21 +19,6 @@ INTERFACE
                              PEFIELDW, PLATHAM_IAGGS,                              &
                              PSEA, PTOWN, PCONC3D,                                 &
                              PINPRH, PFPR, PQHT, PQHS, PRCRIAUTI, PRCRIAUTC        )
-      SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
-                            OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
-                            PTSTEP, KRR, PEXN,                                    &
-                            PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
-                            PICLDFR, PSSIO, PSSIU, PIFR,                 &
-                            PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
-                            PTHT, PRT, PTHS, PRS, &
-                            PINPRC, PINPRR, PEVAP3D,                              &
-                            PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,               &
-                            TBUDGETS, KBUDGETS,                                   &
-                            PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,           &
-                            PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &
-                            PEFIELDW, PLATHAM_IAGGS,                              &
-                            PSEA, PTOWN, PCONC3D,                                 &
-                            PINPRH, PFPR, PQHT, PQHS, PRCRIAUTI, PRCRIAUTC        )
 !
 USE MODD_BUDGET,         ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
