@@ -77,6 +77,7 @@ CONTAINS
 !!      Original    07/11/95
 !!   Last modified  10/12/97
 !!   F. Bouyssel    05/11/08  Modifications for reproductibility
+!!   F. Bouyssel    08/11/13  Modifications for reproductibility
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -227,8 +228,8 @@ ENDDO
 !*       2.     Set updraft properties between DPL and LCL
 !               ------------------------------------------
 !
-JKP = MAXVAL( KLCL(:) )
-JKM = MINVAL( KDPL(:) )
+JKP=IKE
+JKM=IKB
 DO JK = JKM, JKP
    DO JI = D%NIJB, D%NIJE
    IF ( JK >= KDPL(JI) .AND. JK < KLCL(JI) ) THEN
@@ -414,7 +415,6 @@ DO JK = IKB + 1, IKE - 1
     GWORK1(JI) = GWORK2(JI) .AND. GWORK4(JI)
   ENDDO
   !
-  IF ( COUNT( GWORK2(:) ) == 0 ) EXIT        
   !
   !
   !*       9.   Compute CAPE for undilute ascent using theta_e and
@@ -510,8 +510,8 @@ END DO
 !                -------------------------------------------------------
 !
 ZWORK1(:) = 0.
-JK1 = MINVAL( KETL(:) )
-JK2 = MAXVAL( KCTL(:) )
+JK1 = IKB
+JK2 = IKE
 
 DO JK = JK1, JK2
     DO JI = D%NIJB, D%NIJE
@@ -549,7 +549,7 @@ DO JI = D%NIJB, D%NIJE
      ZWORK2(JI) = PPRES(JI,JK) - PPRES(JI,JKP) + PDPRES(JI,JK)
 END DO
 !
-JKP = MAXVAL( IWORK(:) )
+JKP=IKE
 DO JK = JKM, JKP
    DO JI = D%NIJB, D%NIJE
    IF ( JK >= KDPL(JI)  .AND. JK <= IWORK(JI) .AND. GTRIG1(JI)) THEN

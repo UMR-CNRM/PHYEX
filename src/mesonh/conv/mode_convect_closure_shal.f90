@@ -76,6 +76,7 @@ CONTAINS
 !!      Original    26/03/96
 !!   Peter Bechtold 15/11/96 change for enthalpie, r_c + r_i tendencies
 !!      Tony Dore   14/10/96 Initialise local variables
+!!      F Bouyssel  08/11/13 Modifications for reproductibility
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -693,9 +694,6 @@ DO JITER = 1, 4  ! Enter adjustment loop to assure that all CAPE is
                                    PUMF, ZUMF, PUER, ZUER, PUDR, ZUDR    )
   !
   !
-  IF ( COUNT( GWORK1(:) ) == 0 ) EXIT ! exit big adjustment iteration loop
-                                      ! when all columns have reached
-                                      ! desired degree of stabilization.
   !
 END DO  ! end of big adjustment iteration loop
 !

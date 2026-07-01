@@ -277,7 +277,7 @@ ENDIF
 !
           ! Compute vertical integrals - Fluxes
 !
-JKM = MAXVAL( ICTL(:) )
+JKM = IKE
 ZWORK2(:) = 0.
 ZWORK2B(:) = 0.
 DO JK = IKB+1, JKM
@@ -336,7 +336,7 @@ IF ( OCH1CONV ) THEN
 !
           ! Compute vertical integrals
 !
-  JKM = MAXVAL( ICTL(:) )
+  JKM = IKE
   DO JN = 1, KCH1
     IF(JN < NSV%NSV_LGBEG .OR. JN>NSV%NSV_LGEND-1) THEN ! no correction for xy lagrangian variables
       ZWORK3(:,JN) = 0.
@@ -358,18 +358,22 @@ IF ( OCH1CONV ) THEN
             ZCH1C(JI,JK,JN) = ZCH1C(JI,JK,JN) -   &
                               ZWORK3(JI,JN)*ABS(ZCH1C(JI,JK,JN))/MAX(1.E-30,ZWORK2(JI))
           END IF
-          !PPCH1TEN(JI,JK,JN) = (ZCH1C(JI,JK,JN)-PCH1(JI,JK,JN) ) / ZTIMEC(JI)
-          !IF(.NOT. GTRIG1(JI)) PPCH1TEN(JI,JK,JN) = 0.
+#ifndef PHYEX_MESONH
+          PPCH1TEN(JI,JK,JN) = (ZCH1C(JI,JK,JN)-PCH1(JI,JK,JN) ) / ZTIMEC(JI)
+          IF(.NOT. GTRIG1(JI)) PPCH1TEN(JI,JK,JN) = 0.
+#endif
         END DO
       END DO
     END IF
     !
+#ifdef PHYEX_MESONH
     DO JK = IKB, IKE
       DO JI = D%NIJB,D%NIJE
         PPCH1TEN(JI,JK,JN) = (ZCH1C(JI,JK,JN)-PCH1(JI,JK,JN) ) / ZTIMEC(JI)
         IF(.NOT. GTRIG1(JI)) PPCH1TEN(JI,JK,JN) = 0.
       ENDDO
     ENDDO
+#endif
   END DO
 END IF
 

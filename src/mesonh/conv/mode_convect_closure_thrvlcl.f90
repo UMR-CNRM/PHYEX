@@ -68,6 +68,7 @@ CONTAINS
 !!    -------------
 !!      Original    07/11/95 
 !!   Last modified  04/10/97
+!!      F Bouyssel  08/11/13 Modifications for reproductibility
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -152,8 +153,8 @@ KLCL(:)     = IKB + 1
 !*       2.     Construct a mixed layer as in TRIGGER_FUNCT
 !               -------------------------------------------
 !
-     JKMAX = MAXVAL( KPBL(:) )
-     JKMIN = MINVAL( KDPL(:) )
+     JKMAX=IKE
+     JKMIN=IKB
      DO JK = IKB + 1, JKMAX
         JKM = JK + 1
         DO JI = D%NIJB, D%NIJE

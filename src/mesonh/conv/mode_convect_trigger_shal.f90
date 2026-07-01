@@ -219,9 +219,13 @@ JT = IKE - 2
 !*       2.     Enter loop for convection test
 !               ------------------------------
 !
+#ifdef PHYEX_MESONH
 JKP = MINVAL( IDPL(:) ) + 1
-JKT = JT
 JKT = JKP ! do not allow for looping anymore, test only for surface mixed layer
+#else
+JKP = IKB + 1
+JKT = IKE - 2
+#endif
 DO JKK = JKP, JKT
 !
      DO JI=D%NIJB, D%NIJE

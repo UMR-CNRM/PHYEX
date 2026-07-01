@@ -72,6 +72,7 @@ CONTAINS
 !!    -------------
 !!      Original    07/11/95
 !!   Last modified  04/10/97
+!!   C.Lac          27/09/10 modification loop index for reproducibility
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -129,7 +130,7 @@ INTEGER, DIMENSION(KLON),  INTENT(OUT):: KDBL    ! contains vert. index of DBL
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: IIE, IKB, IKE     ! horizontal + vertical loop bounds
-INTEGER :: JK, JKP, JKM, JKT ! vertical loop index
+INTEGER :: JK, JKP, JKM      ! vertical loop index
 INTEGER :: JI, JL            ! horizontal loop index
 INTEGER :: JITER          ! iteration loop index
 REAL    :: ZRDOCP         ! R_d / C_pd
@@ -377,9 +378,7 @@ END DO
 !               -----------------------------------------------
 !
 PDTEVRF(:,:) = 0.
-!
-JKT = MAXVAL( IDDT(:) )
-DO JK = IKB + 1, JKT
+DO JK = IKB + 1, IKE
 !
        ZPI(:) = ( CST%XP00 / PPRES(:,JK) ) ** ZRDOCP
        ZDT(:) = PTH(:,JK) / ZPI(:)
