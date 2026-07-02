@@ -367,12 +367,12 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
     fi
 
     #Commande
-    cmd="phyex-check_${model} --repo-user ${PHYEXREPOuser} --repo-protocol ${PHYEXREPOprotocol} ${additionalOptions} --name ${SHA} ${PHYEXDIR}"
+    cmd="phyex-check_${model} --repo-user ${PHYEXREPOuser} --repo-protocol ${PHYEXREPOprotocol} ${additionalOptions} --name ${SHA}"
 
     #Compilation
     result=0
     if [ ${compil} -eq 1 ]; then
-      compilecmd="$cmd ${compilation}"
+      compilecmd="$cmd ${compilation} ${PHYEXDIR}"
       log 1 "Compilation with ${compilecmd}"
       set +e
       ${compilecmd}
@@ -408,7 +408,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
       
         result=0
         if [ ${execute} -eq 1 ]; then
-          execcmd="$cmd ${execution} ${casearg}"
+          execcmd="$cmd ${execution} ${casearg} ${PHYEXDIR}"
           log 1 "Excution with ${execcmd}"
           set +e
           ${execcmd}
@@ -422,7 +422,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
           fi
         fi
         if [ ${result} -eq 0 -a ${docmp} -eq 1 -a ${comp} -eq 1 ]; then
-          compcmd="$cmd ${comparison} ${casearg} ${refarg}"
+          compcmd="$cmd ${comparison} ${casearg} ${PHYEXDIR} ${refarg}"
           log 1 "Comparison with ${compcmd}"
           set +e
           ${compcmd}
@@ -439,7 +439,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
 
       #Cleaning
       if [ ${remove} -eq 1 ]; then
-        cleancmd="${cmd} --remove"
+        cleancmd="${cmd} --remove ${PHYEXDIR}"
         log 1 "Cleaning with ${cleancmd}"
         set +e
         ${cleancmd}
@@ -464,19 +464,6 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
   if [ $docgen -eq 1 ]; then
     retdoc=0
     log 0 "Test doc generation"
-
-    doccmd="generate_standalone_doc.sh ${WORKDIR}/documentation.html"
-    log 1 "Doc generation with ${doccmd}"
-    set +e
-    ${doccmd}
-    result=$?
-    set -e
-    if [ ${result} -ne 0 ]; then
-      retdoc=1
-      log 0 "  doc generarion with generate_standalone_doc.sh: error"
-    else
-      log 0 "  doc generarion with generate_standalone_doc.sh: OK"
-    fi
 
     doccmd="doxygen doxygen_config"
     log 1 "Doc generation with ${doccmd}"
@@ -506,7 +493,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
     retcoding=0
     log 0 "Test coding conventions"
 
-    codingcmd="phyex-check_norms"
+    codingcmd="phyex-check_norms ${WORKDIR}/PHYEX/src/"
     log 1 "Coding conventions with ${codingcmd}"
     set +e
     ${codingcmd}
