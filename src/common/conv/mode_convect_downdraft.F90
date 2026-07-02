@@ -130,7 +130,7 @@ INTEGER, DIMENSION(KLON),  INTENT(OUT):: KDBL    ! contains vert. index of DBL
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: IIE, IKB, IKE     ! horizontal + vertical loop bounds
-INTEGER :: JK, JKP, JKM, JKT ! vertical loop index
+INTEGER :: JK, JKP, JKM      ! vertical loop index
 INTEGER :: JI, JL            ! horizontal loop index
 INTEGER :: JITER          ! iteration loop index
 REAL    :: ZRDOCP         ! R_d / C_pd
