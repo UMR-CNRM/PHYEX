@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a2dcf87f2ea0be70a4d9e2dbf43ae7517" id="r_a2dcf87f2ea0be70a4d9e2dbf43ae7517"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__compute__mf__cloud__stat.html#a2dcf87f2ea0be70a4d9e2dbf43ae7517">compute_mf_cloud_stat</a> (d, cst, turbn, parammf, krr, krrl, krri, ostatnw, pfrac_ice, pthlm, prtm, ppabsm, prm, pdzz, pthm, pexnm, pemf, pthl_up, prt_up, psigmf)</td></tr>
-<tr class="separator:a2dcf87f2ea0be70a4d9e2dbf43ae7517"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae811f0315a54b49a32abcb7a9471fb26" id="r_ae811f0315a54b49a32abcb7a9471fb26"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__compute__mf__cloud__stat.html#ae811f0315a54b49a32abcb7a9471fb26">compute_mf_cloud_stat</a> (d, cst, turbn, parammf, krr, krrl, krri, ostatnw, otauconv, pfrac_ice, pthlm, prtm, ppabsm, prm, pdzz, pthm, pexnm, pemf, pthl_up, prt_up, psigmf, ptaufunc)</td></tr>
+<tr class="separator:ae811f0315a54b49a32abcb7a9471fb26"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a2dcf87f2ea0be70a4d9e2dbf43ae7517" name="a2dcf87f2ea0be70a4d9e2dbf43ae7517"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2dcf87f2ea0be70a4d9e2dbf43ae7517">&#9670;&#160;</a></span>compute_mf_cloud_stat()</h2>
+<a id="ae811f0315a54b49a32abcb7a9471fb26" name="ae811f0315a54b49a32abcb7a9471fb26"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae811f0315a54b49a32abcb7a9471fb26">&#9670;&#160;</a></span>compute_mf_cloud_stat()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -135,6 +135,12 @@ Functions/Subroutines</h2></td></tr>
           <td></td>
           <td class="paramtype">logical, intent(in)&#160;</td>
           <td class="paramname"><em>ostatnw</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in)&#160;</td>
+          <td class="paramname"><em>otauconv</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -206,7 +212,13 @@ Functions/Subroutines</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out)&#160;</td>
-          <td class="paramname"><em>psigmf</em>&#160;</td>
+          <td class="paramname"><em>psigmf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>ptaufunc</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -220,8 +232,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__compute__mf__cloud__stat_a2dcf87f2ea0be70a4d9e2dbf43ae7517_cgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud__stat_a2dcf87f2ea0be70a4d9e2dbf43ae7517_cgraph" alt=""/></div>
-<map name="anamespacemode__compute__mf__cloud__stat_a2dcf87f2ea0be70a4d9e2dbf43ae7517_cgraph" id="anamespacemode__compute__mf__cloud__stat_a2dcf87f2ea0be70a4d9e2dbf43ae7517_cgraph">
+<div class="center"><img src="namespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_cgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_cgraph" alt=""/></div>
+<map name="anamespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_cgraph" id="anamespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_cgraph">
 <area shape="rect" title=" " alt="" coords="5,114,224,154"/>
 <area shape="rect" href="namespacemode__compute__function__thermo__mf.html#ad44bff713166d26e5a081206e25109cd" title=" " alt="" coords="272,5,497,60"/>
 <area shape="poly" title=" " alt="" coords="165,111,271,70,292,62,294,67,273,75,167,116"/>
@@ -236,12 +248,12 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__compute__mf__cloud__stat_a2dcf87f2ea0be70a4d9e2dbf43ae7517_icgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud__stat_a2dcf87f2ea0be70a4d9e2dbf43ae7517_icgraph" alt=""/></div>
-<map name="anamespacemode__compute__mf__cloud__stat_a2dcf87f2ea0be70a4d9e2dbf43ae7517_icgraph" id="anamespacemode__compute__mf__cloud__stat_a2dcf87f2ea0be70a4d9e2dbf43ae7517_icgraph">
+<div class="center"><img src="namespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_icgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_icgraph" alt=""/></div>
+<map name="anamespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_icgraph" id="anamespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_icgraph">
 <area shape="rect" title=" " alt="" coords="389,5,608,45"/>
-<area shape="rect" href="namespacemode__compute__mf__cloud.html#aebb83719f8f011a846bc0386bb7b6cb1" title=" " alt="" coords="151,5,341,45"/>
+<area shape="rect" href="namespacemode__compute__mf__cloud.html#af5cc1f0ad743f83a43f5dfb47bdc4ced" title=" " alt="" coords="151,5,341,45"/>
 <area shape="poly" title=" " alt="" coords="376,28,342,28,342,23,376,23"/>
-<area shape="rect" href="shallow__mf_8F90.html#a5a75b1faaeb7bcea20095a4248b8453b" title=" " alt="" coords="5,13,103,38"/>
+<area shape="rect" href="shallow__mf_8F90.html#aa22ee3808d718a1685bddf418c2e532e" title=" " alt="" coords="5,13,103,38"/>
 <area shape="poly" title=" " alt="" coords="137,28,103,28,103,23,137,23"/>
 </map>
 </div>
