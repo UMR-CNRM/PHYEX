@@ -25,7 +25,7 @@ jobs:
           # Python environment and dependencies
           python3 -m venv phyex.env
           . phyex.env/bin/activate
-          pip install -r ${{ github.workspace }}/requirements.txt
+          pip install --prefer-binary -e ${{ github.workspace }}/tools/
           # Loop on all new commits from the oldest to the newest, restricted to the immediate family
           for commit in $(git rev-list --reverse --topo-order --ancestry-path ${{ github.event.before}}..${{ github.sha}}); do
             # Get the arome branch in a new repo
@@ -42,8 +42,7 @@ jobs:
             find . -not -path './.git/*' -not -path './.git' -delete
             # Copy the new commit src directory and transform it using prep_code
             cp -r ${{ github.workspace }}/src .
-            cmd="prep_code.sh -s gmkpack_ignored_files -s turb -s micro -s aux -s conv -s ial_version.json -s CMakeLists.txt -s cmake -m arome $temp_dir -- --shumanFUNCtoCALL --removeACC --mnhExpand"
-            ${{ github.workspace }}/tools/$cmd
+            phyex-prep_code -s gmkpack_ignored_files -s turb -s micro -s aux -s conv -s ial_version.json -s CMakeLists.txt -s cmake -m arome $temp_dir -- --shumanFUNCtoCALL --removeACC --mnhExpand
             # Commit and push to the main repo
             git add .
             git commit -m "AROME version of commit $commit" -m "$cmd"
