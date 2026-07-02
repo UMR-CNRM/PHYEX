@@ -11,6 +11,7 @@ processing for ini_phyex (adding a file name for the namelist and
 flushing the listing file).
 """
 
+import argparse
 import os
 import re
 from pyfortool import PYFT
@@ -472,8 +473,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                  "            None)\n").format(inlist='\n             '.join(inlist),
                                                alllist='\n             '.join(alllist)))
 
-if __name__ == '__main__':
-    import argparse
+def main():
     parser = argparse.ArgumentParser(description='Python binding maker')
     parser.add_argument('INPUT', type=str,
                         help='FORTRAN input file')
@@ -489,3 +489,6 @@ if __name__ == '__main__':
                         help='If set, array indexes are in the same order as the FORTRAN routine')
     args = parser.parse_args()
     pybinding(args.INPUT, args.SCOPE, args.FORTRAN, args.PYTHON, args.LIBSO, args.Findexing)
+
+if __name__ == '__main__':
+    main()

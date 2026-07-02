@@ -6,3 +6,10 @@
 # Eclipse project files
 /.cproject
 /.project
+
+# Python
+*.egg-info
+/tools/build/lib/pyphyextools
+*.whl
+__pycache__
+venv

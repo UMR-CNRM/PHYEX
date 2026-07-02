@@ -201,30 +201,27 @@ function main() {
     else
       expand_options=""
     fi
-    PHYEXTOOLSDIR="$DIR/../../../tools" #if run from within a PHYEX repository
-    UPDATEDPATH=$PATH
   
     #Temporary file for the description tree
     descTree=${TMPDIR:-/tmp}/descTree_$$
     trap "\rm -f $descTree" EXIT
   
-    which prep_code.sh > /dev/null || export UPDATEDPATH=$PHYEXTOOLSDIR:$PATH
     subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s conv -s support -s progs $EXTRASUBS"
     if [ "$fromdir" == '' ]; then
-      echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
+      echo "Clone repository, and checkout commit $commit (using prep_code)"
       if [[ $commit == testprogs${separator}* || $commit == offline${separator}* ]]; then
         #This commit is ready for inclusion
-        PATH=$UPDATEDPATH prep_code.sh -c $commit src
+        phyex-prep_code -c $commit src
       else
-        PATH=$UPDATEDPATH prep_code.sh --pyfortool_opts_env PYFT_OPTS -c $commit $expand_options $subs \
-                                       -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
+        phyex-prep_code --pyfortool_opts_env PYFT_OPTS -c $commit $expand_options $subs \
+                        -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
       fi
     else
       echo "Copy $fromdir"
       mkdir src
       scp -q -r $fromdir/src src/
-      PATH=$UPDATEDPATH prep_code.sh --pyfortool_opts_env PYFT_OPTS $expand_options $subs \
-                                     -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
+      phyex-prep_code --pyfortool_opts_env PYFT_OPTS $expand_options $subs \
+                      -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
     fi
     
     # Add some code
@@ -232,18 +229,18 @@ function main() {
     cd src
     if [ ${PYBINDING-yes} == 'yes' ]; then
       sorelativenames=$(for soname in $solibnames; do echo ./../$soname; done)
-      pybinding.py micro/ice_adjust.F90 sub:ICE_ADJUST pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py micro/rain_ice.F90 sub:RAIN_ICE pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py micro/mode_ice4_sedimentation.F90 \
-                   module:MODE_ICE4_SEDIMENTATION/sub:ICE4_SEDIMENTATION \
-                   pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py micro/rain_ice_old.F90 sub:RAIN_ICE_OLD pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py turb/shallow_mf.F90 sub:SHALLOW_MF pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py turb/turb.F90 sub:TURB pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py aux/ini_phyex.F90 sub:INI_PHYEX pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py micro/lima_adjust_split.F90 sub:LIMA_ADJUST_SPLIT pyphyex.F90 \
-                   ../build/bin/pyphyex.py ${sorelativenames}
-      pybinding.py micro/lima.F90 sub:LIMA pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding micro/ice_adjust.F90 sub:ICE_ADJUST pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding micro/rain_ice.F90 sub:RAIN_ICE pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding micro/mode_ice4_sedimentation.F90 \
+                      module:MODE_ICE4_SEDIMENTATION/sub:ICE4_SEDIMENTATION \
+                      pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding micro/rain_ice_old.F90 sub:RAIN_ICE_OLD pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding turb/shallow_mf.F90 sub:SHALLOW_MF pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding turb/turb.F90 sub:TURB pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding aux/ini_phyex.F90 sub:INI_PHYEX pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding micro/lima_adjust_split.F90 sub:LIMA_ADJUST_SPLIT pyphyex.F90 \
+                      ../build/bin/pyphyex.py ${sorelativenames}
+      phyex-pybinding micro/lima.F90 sub:LIMA pyphyex.F90 ../build/bin/pyphyex.py ${sorelativenames}
     else
       cat <<......EOF > pyphyex.F90
       SUBROUTINE PYPHYEXSUB

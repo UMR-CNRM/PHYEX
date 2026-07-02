@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyphyextools"
+authors = [
+    {name = "Quentin Rodier", email = "quentin.rodier@meteo.fr"},
+    {name = "Sébastien Riette", email = "sebastien.riette@meteo.Fr"},
+]
+dynamic = ["version"]
+description = "PHYEX tools package"
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
+dependencies = [
+    "netCDF4<=1.7.2", # line to be removed completely when belenos is updated
+    "matplotlib",
+    "pyfortool>=0.2.17",
+    "numpy",
+    "pandas<=2.3.2", # version constraint to be removed when belenos is updated
+    "xarray",
+    "epygram",
+    "ctypesForFortran>=1.3.0,!=2.0.*,!=2.1.*",
+    "fypp",
+    "ecbundle @ git+https://github.com/ecmwf/ecbundle",
+    "ial_build>=1.4.8",
+]
+
+[project.urls]
+Homepage = "https://github.com/UMR-CNRM/PHYEX"
+
+[project.scripts]
+"phyex-prep_code" = "pyphyextools.prep_code:main"
+"phyex-plot_perf" = "pyphyextools.plot_perf:main"
+"phyex-pybinding" = "pyphyextools.pybinding:main"
+"phyex-check_norms" = "pyphyextools.testing.coding_norms:main"
+"phyex-compare" = "pyphyextools.testing.compare:main"
+"phyex-check_ial" = "pyphyextools.testing.check_ial:main"
+"phyex-check_mesonh" = "pyphyextools.testing.check_mesonh:main"
+"phyex-check_lmdz" = "pyphyextools.testing.check_lmdz:main"
+"phyex-check_testprogs" = "pyphyextools.testing.check_testprogs:main"
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "pyphyextools.__version__"}
+
