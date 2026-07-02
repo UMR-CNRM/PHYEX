@@ -415,7 +415,6 @@ DO JK = IKB + 1, IKE - 1
     GWORK1(JI) = GWORK2(JI) .AND. GWORK4(JI)
   ENDDO
   !
-  !IF ( COUNT( GWORK2(:) ) == 0 ) EXIT        
   !
   !
   !*       9.   Compute CAPE for undilute ascent using theta_e and
