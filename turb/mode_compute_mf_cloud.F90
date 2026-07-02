@@ -12,14 +12,14 @@ CONTAINS
 !
 !     ######spl
       SUBROUTINE COMPUTE_MF_CLOUD(D, CST, TURBN, PARAMMF, ICEP, OSTATNW,    &
-                                  KRR, KRRL, KRRI,                          &
+                                  OTAUCONV, KRR, KRRL, KRRI,                &
                                   PFRAC_ICE,                                &
                                   PRV_UP, PRC_UP, PRI_UP, PEMF,             &
                                   PTHL_UP, PRT_UP, PFRAC_UP, PTH_UP,        &
                                   PEXNM, PTHLM, PRTM, PTHM, PRM,            &
                                   PDZZ, KKLCL,                              &
                                   PPABSM, PRHODREF,                         &
-                                  PRC_MF, PRI_MF, PCF_MF, PSIGMF,           &
+                                  PRC_MF, PRI_MF, PCF_MF, PSIGMF, PTAUFUNC, &
                                   PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,   &
                                   PWEIGHT_MF_CLOUD)
 
@@ -92,7 +92,8 @@ TYPE(RAIN_ICE_PARAM_t), INTENT(IN)   :: ICEP
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   ::  KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   ::  KRRI         ! number of ice water var.
-LOGICAL,                INTENT(IN)   :: OSTATNW      ! cloud scheme inclues convect. covar. contrib
+LOGICAL,                INTENT(IN)   :: OSTATNW       ! new cloud scheme also including convect. covar. contrib
+LOGICAL,                INTENT(IN)   :: OTAUCONV      ! new convection time scale
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PFRAC_ICE    ! liquid/ice fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PRV_UP, PRC_UP, PRI_UP, PEMF! updraft characteritics
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHL_UP, PRT_UP   ! rc,w,Mass Flux,Thetal,rt
@@ -101,6 +102,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTH_UP            ! updraft th
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PEXNM             ! exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHLM, PRTM       ! cons. var. at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHM              ! theta
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTAUFUNC          ! profile convection time scale
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)   ::  PRM               ! water var. at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PDZZ
 INTEGER, DIMENSION(D%NIJT),  INTENT(IN)   ::  KKLCL             ! index of updraft condensation level
@@ -143,11 +145,11 @@ ELSEIF (PARAMMF%CMF_CLOUD == 'STAT') THEN
   !Bechtold et al (95).
   CALL COMPUTE_MF_CLOUD_STAT(D, CST, TURBN, PARAMMF, &
                             &KRR, KRRL, KRRI, OSTATNW, &
-                            &PFRAC_ICE,&
+                            &OTAUCONV,PFRAC_ICE,&
                             &PTHLM, PRTM, PPABSM, PRM,&
                             &PDZZ, PTHM, PEXNM,&
                             &PEMF, PTHL_UP, PRT_UP,&
-                            &PSIGMF)
+                            &PSIGMF,PTAUFUNC)
 ELSEIF (PARAMMF%CMF_CLOUD == 'BIGA') THEN
   !Statistical scheme using the bi-gaussian PDF
   CALL COMPUTE_MF_CLOUD_BIGAUS(D, CST, PARAMMF, ICEP, KRR, &

@@ -22,7 +22,7 @@ INTERFACE
                 PFLXZTHMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF,      &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTKE_UP, PTHV_UP, PW_UP,                &
-                PFRAC_UP,PEMF,PDETR,PENTR,                            &
+                PFRAC_UP,PEMF,PDETR,PENTR,PTAUFUNC,                   &
                 KKLCL,KKETL,KKCTL,PDX,PDY,PRSVS,PSVMIN,               &
                 BUCONF, TBUDGETS, KBUDGETS                            )
 
@@ -68,6 +68,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PEXNM       ! Exner function at 
 
 REAL, DIMENSION(D%NIJT),         INTENT(IN) ::  PSFTH,PSFRV ! normal surface fluxes of theta and Rv
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTHM        ! Theta at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTAUFUNC    ! New convection time scale
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM         ! water var. at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PUM,PVM     ! wind components at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTKEM       ! tke at t-dt

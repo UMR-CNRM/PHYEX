@@ -21,7 +21,7 @@
                 PFLXZTHMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF,      &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTKE_UP, PTHV_UP, PW_UP,                &
-                PFRAC_UP,PEMF,PDETR,PENTR,                            &
+                PFRAC_UP,PEMF,PDETR,PENTR,PTAUFUNC,                   &
                 KKLCL,KKETL,KKCTL,PDX,PDY,PRSVS,PSVMIN,               &
                 BUCONF, TBUDGETS, KBUDGETS                            )
 
@@ -136,6 +136,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTHM        ! Theta at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM         ! water var. at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PUM,PVM     ! wind components at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTKEM       ! tke at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTAUFUNC    ! profile convection time scale
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM        ! scalar variable a t-dt
 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)::  PDUDT_MF     ! tendency of U   by massflux scheme
@@ -308,7 +309,7 @@ ENDIF
 !!!    --------------------------------------------------------
 !
 CALL COMPUTE_MF_CLOUD(D,CST,TURBN,PARAMMF,ICEP,NEBN%LSTATNW, &
-                      KRR, KRRL, KRRI,                  &
+                      NEBN%LTAUCONV,KRR,KRRL,KRRI,      &
                       ZFRAC_ICE,                        &
                       PRV_UP,PRC_UP,PRI_UP,PEMF,        &
                       PTHL_UP,PRT_UP,PFRAC_UP,ZTH_UP,   &
@@ -316,7 +317,7 @@ CALL COMPUTE_MF_CLOUD(D,CST,TURBN,PARAMMF,ICEP,NEBN%LSTATNW, &
                       PTHM, PRM,                        &
                       PDZZ,KKLCL,                       &
                       PPABSM,PRHODREF,                  &
-                      PRC_MF,PRI_MF,PCF_MF,PSIGMF,      &
+                      PRC_MF,PRI_MF,PCF_MF,PSIGMF,PTAUFUNC,&
                       PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
                       PWEIGHT_MF_CLOUD)
 
@@ -353,8 +354,10 @@ IF( PARAMMF%CMF_UPDRAFT == 'DUAL') THEN
   ! Now thetav_up from vdfhghtnn is used!
   PFLXZTHVMF(:,:)=0.
   ! Yes/No UV mixing!
-!  PDUDT_MF=0.
-!  PDVDT_MF=0.
+  ! Now 50% momentum mixing if UVMIX TRUE (we know 100% too much 0% too little)
+  ! If LMIXUV=FALSE have no impact (0.5*0.=0.)
+  PDUDT_MF=0.5*PDUDT_MF
+  PDVDT_MF=0.5*PDVDT_MF
 ENDIF
 !
 IF(PRESENT(BUCONF)) THEN

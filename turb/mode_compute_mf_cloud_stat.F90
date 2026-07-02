@@ -11,11 +11,11 @@ CONTAINS
 !     ######spl
       SUBROUTINE COMPUTE_MF_CLOUD_STAT(D, CST, TURBN, PARAMMF, &
                             &KRR, KRRL, KRRI, OSTATNW,     &
-                            &PFRAC_ICE,&
+                            &OTAUCONV, PFRAC_ICE,&
                             &PTHLM, PRTM, PPABSM, PRM,&
                             &PDZZ, PTHM, PEXNM, &
                             &PEMF, PTHL_UP, PRT_UP,&
-                            &PSIGMF)
+                            &PSIGMF, PTAUFUNC)
 !$ACDC singlecolumn --dummy
 
 !     #################################################################
@@ -76,7 +76,8 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
-LOGICAL,                INTENT(IN)   :: OSTATNW      ! cloud scheme inclues convect. covar. contrib
+LOGICAL,                INTENT(IN)   :: OSTATNW      ! updated cloud scheme also including convect. covar. contrib
+LOGICAL,                INTENT(IN)   :: OTAUCONV     ! new convection time scale
 INTEGER,                INTENT(IN)   :: KRR                     ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL                    ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI                    ! number of ice water var.
@@ -88,6 +89,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PDZZ
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHM                    ! environement
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PEXNM
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PEMF                    ! updraft characteritics
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTAUFUNC                ! profile convection time scale
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHL_UP, PRT_UP         ! rc,w,Mass Flux,Thetal,rt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PSIGMF                  ! SQRT(variance) for statistical cloud scheme
 !
@@ -115,6 +117,9 @@ IKT=D%NKT
 !
 !*      1. COMPUTE SIGMA_MF (saturation deviation variance)
 !          Soares et al (2004) formulation
+!          Several updates see https://doi.org/10.5194/gmd-15-1513-2022 plus
+!          a new convection time scale consistent with the convection
+!          scheme and based on https://journals.ametsoc.org/view/journals/atsc/57/10/1520-0469_2000_057_1585_abmfar_2.0.co_2.pdf
 !          ------------------------------------------------
 !
 ! Thermodynamics functions
@@ -131,12 +136,21 @@ IF (KRRL > 0)  THEN
     CALL MZM_MF(D, PTHLM, ZFLXZ)
     CALL GZ_M_W_MF(D, PTHLM, PDZZ, ZWK)
     IF (OSTATNW) THEN
-      DO JK=1, IKT
-        DO JIJ=IIJB, IIJE
-          ZFLXZ(JIJ, JK) = -2 * TURBN%XCTV* PARAMMF%XTAUSIGMF * PEMF(JIJ, JK)* &
-                               & (PTHL_UP(JIJ, JK)-ZFLXZ(JIJ, JK)) * ZWK(JIJ, JK)
+      IF (OTAUCONV) THEN
+        DO JK=1, IKT
+          DO JIJ=IIJB, IIJE
+            ZFLXZ(JIJ, JK) = -2 * PTAUFUNC(JIJ, JK) * PEMF(JIJ, JK)* &
+                                 & (PTHL_UP(JIJ, JK)-ZFLXZ(JIJ, JK)) * ZWK(JIJ, JK)
+          END DO
         END DO
-      END DO
+      ELSE
+        DO JK=1, IKT
+          DO JIJ=IIJB, IIJE
+            ZFLXZ(JIJ, JK) = -2 * TURBN%XCTV* PARAMMF%XTAUSIGMF * PEMF(JIJ, JK)* &
+                                 & (PTHL_UP(JIJ, JK)-ZFLXZ(JIJ, JK)) * ZWK(JIJ, JK)
+          END DO
+        END DO
+      ENDIF
     ELSE
       DO JK=1, IKT
         DO JIJ=IIJB, IIJE
@@ -171,12 +185,21 @@ IF (KRRL > 0)  THEN
     CALL MZM_MF(D, PRTM, ZFLXZ2)
     CALL GZ_M_W_MF(D, PRTM, PDZZ, ZWK2)
     IF (OSTATNW) THEN
-      DO JK=1, IKT
-        DO JIJ=IIJB, IIJE
-          ZFLXZ2(JIJ, JK) = -2 * TURBN%XCTV * PARAMMF%XTAUSIGMF * PEMF(JIJ, JK)* &
-                               & (PRT_UP(JIJ, JK)-ZFLXZ2(JIJ, JK)) * ZWK2(JIJ, JK)
+      IF (OTAUCONV) THEN
+        DO JK=1, IKT
+          DO JIJ=IIJB, IIJE
+            ZFLXZ2(JIJ, JK) = -2 * PTAUFUNC(JIJ, JK) * PEMF(JIJ, JK)* &
+                                 & (PRT_UP(JIJ, JK)-ZFLXZ2(JIJ, JK)) * ZWK2(JIJ, JK)
+          END DO
         END DO
-      END DO
+      ELSE
+        DO JK=1, IKT
+          DO JIJ=IIJB, IIJE
+            ZFLXZ2(JIJ, JK) = -2 * TURBN%XCTV * PARAMMF%XTAUSIGMF * PEMF(JIJ, JK)* &
+                                 & (PRT_UP(JIJ, JK)-ZFLXZ2(JIJ, JK)) * ZWK2(JIJ, JK)
+          END DO
+        END DO
+      ENDIF
     ELSE
       DO JK=1, IKT
         DO JIJ=IIJB, IIJE
@@ -203,15 +226,27 @@ IF (KRRL > 0)  THEN
       !wc Now including convection covariance contribution in case of OSTATNW=TRUE
       !
       !       1.2.2 contribution from <Rnp Thl>
-      DO JK=1, IKT
-        DO JIJ=IIJB, IIJE
-          ZFLXZ3(JIJ, JK) = - TURBN%XCTV * PARAMMF%XTAUSIGMF * &
-                        (PEMF(JIJ, JK)*(PRT_UP(JIJ, JK)-ZFLXZ2(JIJ, JK)) * &
-                                       ZWK(JIJ, JK) + &
-                                       PEMF(JIJ, JK)*(PTHL_UP(JIJ, JK)-ZFLXZ(JIJ, JK)) * &
-                                       ZWK2(JIJ, JK))
+      IF (OTAUCONV) THEN
+        DO JK=1, IKT
+          DO JIJ=IIJB, IIJE
+            ZFLXZ3(JIJ, JK) = - PTAUFUNC(JIJ, JK) * &
+                           (PEMF(JIJ, JK)*(PRT_UP(JIJ, JK)-ZFLXZ2(JIJ, JK)) * &
+                                          ZWK(JIJ, JK) + &
+                                          PEMF(JIJ, JK)*(PTHL_UP(JIJ, JK)-ZFLXZ(JIJ, JK)) * &
+                                          ZWK2(JIJ, JK))
+          END DO
         END DO
-      END DO
+      ELSE
+        DO JK=1, IKT
+          DO JIJ=IIJB, IIJE
+            ZFLXZ3(JIJ, JK) = - TURBN%XCTV * PARAMMF%XTAUSIGMF * &
+                          (PEMF(JIJ, JK)*(PRT_UP(JIJ, JK)-ZFLXZ2(JIJ, JK)) * &
+                                         ZWK(JIJ, JK) + &
+                                         PEMF(JIJ, JK)*(PTHL_UP(JIJ, JK)-ZFLXZ(JIJ, JK)) * &
+                                         ZWK2(JIJ, JK))
+          END DO
+        END DO
+      ENDIF
       CALL MZF_MF(D, ZFLXZ3, ZFLXZ)
       DO JK=1, IKT
         DO JIJ=IIJB, IIJE
