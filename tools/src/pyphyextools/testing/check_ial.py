@@ -107,21 +107,10 @@ class CheckCommitIAL(CheckCommitBase):
     def submit(self, output, script_args, cwd=None, env=None):
         """Run a script, either through SLURM or directly."""
         if self.HPC:
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.sh', delete=False) as f:
-                f.write('#!/bin/bash\n')
-                f.write('#SBATCH -n 1\n')
-                f.write('#SBATCH -N 1\n')
-                f.write('#SBATCH -t 10\n')
-                f.write('#SBATCH --export=ALL\n')
-                f.write(f'\ncd {cwd or os.getcwd()}\n')
-                f.write(' '.join(script_args) + '\n')
-                f.flush()
-                os.chmod(f.name, 0o755)
-            subprocess.run(['sbatch', '--wait', '-o', output, f.name],
-                           env=env, check=True)
+            subprocess.run(['sbatch', '--wait', '-o', output, ' '.join(script_args)],
+                           cwd=cwd, env=env, check=True)
             with open(output, encoding='utf-8') as f:
                 print(f.read(), end='')
-            os.unlink(f.name)
         else:
             self._run_with_tee(script_args, cwd, output, env=env)
 
@@ -333,9 +322,9 @@ class CheckCommitIAL(CheckCommitBase):
 
             if os.path.isfile(os.path.join(ialdir_full, 'ics_packages')):
                 self.submit(os.path.join(ialdir_full, 'Output_compilation_hub'),
-                            ['ics_packages'], cwd=ialdir_full)
+                            ['./ics_packages'], cwd=ialdir_full)
             self.submit(os.path.join(ialdir_full, 'Output_compilation'),
-                        ['ics_masterodb'], cwd=ialdir_full)
+                        ['./ics_masterodb'], cwd=ialdir_full)
 
     def execution(self):
         """Run each test case and optionally collect profiling data."""
