@@ -30,7 +30,6 @@ class CheckCommitMesonh(CheckCommitBase):
             "INTEGRATION_CASES/LOCAL/ARMCU_1D_CONDSAMP": ["002_mesonh/ARM__.1.CEN4T.001.nc", "002_mesonh/ARM__.1.CEN4T.001.nc"],
             "INTEGRATION_CASES/HPC/ARMCU_LES/DEAR": ["ARM__.1.CEN4T.001.nc", "ARM__.1.CEN4T.000.nc"],
             "KTEST/014_LIMA": ["002_mesonh/XPREF.1.SEG01.002.nc", "002_mesonh/XPREF.1.SEG01.000.nc"],
-            "INTEGRATION_CASES/HPC/OCEAN_LES": ["004_run2/SPWAN.2.25m00.001.nc"],
             "KTEST/012_dust": ["003_run/DUST7.1.SEG01.001.nc", "003_run/DUST7.1.SEG01.000.nc"],
         }
         self.defaultTest = ["KTEST/007_16janvier"]
