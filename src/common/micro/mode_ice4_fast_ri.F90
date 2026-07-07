@@ -13,7 +13,7 @@ SUBROUTINE ICE4_FAST_RI(ICEP, ICED, D, LDSOFT, LDCOMPUTE, &
                        &PRCT, PRIT, &
                        &PRCBERI)
 
-!$ACDC singlecolumn --dummy
+!$ACDC singlecolumn
 
 !!
 !!**  PURPOSE
