@@ -3,9 +3,6 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-MODULE MODE_ICE4_STEPPING
-IMPLICIT NONE
-CONTAINS
 SUBROUTINE ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, KMICRO, PTSTEP, &
                         &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
@@ -556,4 +553,3 @@ ENDDO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_STEPPING', 1, ZHOOK_HANDLE)
 END SUBROUTINE ICE4_STEPPING
-END MODULE MODE_ICE4_STEPPING
