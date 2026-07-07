@@ -11,6 +11,9 @@ SUBROUTINE ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
                         &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
                         &PICLDFR, PZZZ, PCONC3D, PSSIO, PSSIU, PIFR, &
                         &PBUDGETS, PLATHAM_IAGGS)
+
+!$ACDC singlecolumn --nocreate-interface
+
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources

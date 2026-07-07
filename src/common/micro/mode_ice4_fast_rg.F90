@@ -15,6 +15,9 @@ SUBROUTINE ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, D, LDSOFT, LDCOMPUTE, KRR, &
                        &PRICFRRG, PRRCFRIG, PRICFRR, PRCWETG, PRIWETG, PRRWETG, PRSWETG, &
                        &PRCDRYG, PRIDRYG, PRRDRYG, PRSDRYG, PRWETGH, PRWETGH_MR, PRGMLTR, &
                        &PRG_TEND)
+
+!$ACDC singlecolumn --dummy
+
 !!
 !!**  PURPOSE
 !!    -------

@@ -13,6 +13,9 @@ SUBROUTINE ICE4_FAST_RH(CST, PARAMI, ICEP, ICED, D, LDSOFT, LDCOMPUTE, LDWETG, &
                        &PRCWETH, PRIWETH, PRSWETH, PRGWETH, PRRWETH, &
                        &PRCDRYH, PRIDRYH, PRSDRYH, PRRDRYH, PRGDRYH, PRDRYHG, PRHMLTR, &
                        &PRH_TEND)
+
+!$ACDC singlecolumn --dummy
+
 !!
 !!**  PURPOSE
 !!    -------
