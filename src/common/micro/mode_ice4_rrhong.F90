@@ -12,7 +12,7 @@ SUBROUTINE ICE4_RRHONG(CST, PARAMI, ICED, D, LDCOMPUTE, &
                        &PTHT, &
                        &PRRHONG_MR)
 
-!$ACDC singlecolumn --dummy
+!$ACDC singlecolumn
 
 !!
 !!**  PURPOSE

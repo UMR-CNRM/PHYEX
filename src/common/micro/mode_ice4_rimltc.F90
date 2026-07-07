@@ -13,7 +13,7 @@ SUBROUTINE ICE4_RIMLTC(CST, PARAMI, D, LDCOMPUTE, &
                        &PTHT, PRIT, &
                        &PRIMLTC_MR)
 
-!$ACDC singlecolumn --dummy
+!$ACDC singlecolumn
 
 !!
 !!**  PURPOSE
