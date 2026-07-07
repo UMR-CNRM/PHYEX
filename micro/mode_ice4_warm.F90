@@ -14,7 +14,7 @@ SUBROUTINE ICE4_WARM(CST, PARAMI, ICEP, ICED, D, LDSOFT, LDCOMPUTE, HSUBG_RC_RR_
                     &PRVT, PRCT, PRRT, PCONC, PACRF, &
                     &PRCAUTR, PRCACCR, PRREVAV)
 
-!$ACDC singlecolumn --dummy
+!$ACDC singlecolumn
 
 !!
 !!**  PURPOSE
