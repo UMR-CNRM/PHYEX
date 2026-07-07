@@ -6,7 +6,7 @@
 MODULE MODE_ICE4_COMPUTE_PDF
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_COMPUTE_PDF(CST, ICEP, ICED, KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
+SUBROUTINE ICE4_COMPUTE_PDF(CST, ICEP, ICED, D, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
                             LDMICRO, PRHODREF, PRCT, PRIT, PCF, PT, PSIGMA_RC,&
                             PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
                             PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, PRF)
@@ -29,6 +29,7 @@ SUBROUTINE ICE4_COMPUTE_PDF(CST, ICEP, ICED, KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI
 !          ------------
 !
 !
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
@@ -44,33 +45,33 @@ IMPLICIT NONE
 TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
-INTEGER,                INTENT(IN)  :: KSIZE
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 CHARACTER(LEN=4),       INTENT(IN)  :: HSUBG_AUCV_RC     ! Kind of Subgrid autoconversion method for cloud water
 CHARACTER(LEN=80),      INTENT(IN)  :: HSUBG_AUCV_RI     ! Kind of Subgrid autoconversion method for cloud ice
 CHARACTER(LEN=80),      INTENT(IN)  :: HSUBG_PR_PDF   ! pdf for subgrid precipitation
-LOGICAL, DIMENSION(KSIZE), INTENT(IN)  :: LDMICRO    ! Computation mask
-REAL, DIMENSION(KSIZE), INTENT(IN)  :: PRHODREF   ! Reference density
-REAL, DIMENSION(KSIZE), INTENT(IN)  :: PRCT       ! Cloud water m.r. at t
-REAL, DIMENSION(KSIZE), INTENT(IN)  :: PRIT       ! Ice Crystal m.r. at t
-REAL, DIMENSION(KSIZE), INTENT(IN)  :: PCF        ! Cloud fraction
-REAL, DIMENSION(KSIZE), INTENT(IN)  :: PT         ! Temperature
-REAL, DIMENSION(KSIZE), INTENT(IN)  :: PSIGMA_RC  ! Standard deviation of rc at time t
+LOGICAL, DIMENSION(D%NIJT), INTENT(IN)  :: LDMICRO    ! Computation mask
+REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PRHODREF   ! Reference density
+REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PRCT       ! Cloud water m.r. at t
+REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PRIT       ! Ice Crystal m.r. at t
+REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PCF        ! Cloud fraction
+REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PT         ! Temperature
+REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PSIGMA_RC  ! Standard deviation of rc at time t
 !Note for INTENT STATUS: in 'ADJU' case the PHL?_??? variables must be able to "cross" the subroutine untouched
-REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLC_HCF   ! HLCLOUDS : fraction of High Cloud Fraction in grid
-REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLC_LCF   ! HLCLOUDS : fraction of Low  Cloud Fraction in grid
+REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLC_HCF   ! HLCLOUDS : fraction of High Cloud Fraction in grid
+REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLC_LCF   ! HLCLOUDS : fraction of Low  Cloud Fraction in grid
                                                   !    note that PCF = PHLC_HCF + PHLC_LCF
-REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLC_HRC   ! HLCLOUDS : LWC that is High LWC in grid
-REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLC_LRC   ! HLCLOUDS : LWC that is Low  LWC in grid
+REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLC_HRC   ! HLCLOUDS : LWC that is High LWC in grid
+REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLC_LRC   ! HLCLOUDS : LWC that is Low  LWC in grid
                                                   !    note that PRC = PHLC_HRC + PHLC_LRC
-REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLI_HCF
-REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLI_LCF
-REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLI_HRI
-REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLI_LRI
-REAL, DIMENSION(KSIZE), INTENT(OUT) :: PRF        ! Rain fraction
+REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLI_HCF
+REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLI_LCF
+REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLI_HRI
+REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLI_LRI
+REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PRF        ! Rain fraction
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(KSIZE) :: ZRCRAUTC,      & !RC value to begin rain formation =XCRIAUTC/RHODREF
+REAL, DIMENSION(D%NIJT) :: ZRCRAUTC,      & !RC value to begin rain formation =XCRIAUTC/RHODREF
                           ZCRIAUTI,      & !RI value to begin snow formation
                           ZHLC_RCMAX,    & !HLCLOUDS : maximum value for RC in distribution
                           ZHLC_LRCLOCAL, & !HLCLOUDS : LWC that is Low  LWC local in LCF
@@ -80,7 +81,7 @@ REAL, DIMENSION(KSIZE) :: ZRCRAUTC,      & !RC value to begin rain formation =XC
                           ZSUMRC, ZSUMRI
 REAL :: ZCOEFFRCM
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER :: JL
+INTEGER :: JIJ
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 0, ZHOOK_HANDLE)
@@ -91,18 +92,18 @@ IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 0, ZHOOK_HANDLE)
 !
 !Cloud water split between high and low content part is done according to autoconversion option
 !$acc kernels
-!$mnh_expand_where(JL=1:KSIZE)
+!$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
 WHERE (LDMICRO(:))
   ZRCRAUTC(:)=ICEP%XCRIAUTC/PRHODREF(:) ! Autoconversion rc threshold
 ELSEWHERE
   ZRCRAUTC(:)=0.
 END WHERE
-!$mnh_end_expand_where(JL=1:KSIZE)
+!$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !$acc end kernels
 IF(HSUBG_AUCV_RC=='NONE') THEN
   !Cloud water is entirely in low or high part
 !$acc kernels
- !$mnh_expand_where(JL=1:KSIZE)
+ !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
   WHERE(.NOT. LDMICRO(:))
     ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
     PHLC_HCF(:)=0.
@@ -125,12 +126,12 @@ IF(HSUBG_AUCV_RC=='NONE') THEN
     PHLC_HRC(:)=0.
     PHLC_LRC(:)=0.
   END WHERE
-  !$mnh_end_expand_where(JL=1:KSIZE)
+  !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !$acc end kernels
 ELSEIF(HSUBG_AUCV_RC=='CLFR') THEN
   !Cloud water is only in the cloudy part and entirely in low or high part
 !$acc kernels
- !$mnh_expand_where(JL=1:KSIZE)
+ !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
   WHERE(.NOT. LDMICRO(:))
     ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
     PHLC_HCF(:)=0.
@@ -153,11 +154,11 @@ ELSEIF(HSUBG_AUCV_RC=='CLFR') THEN
     PHLC_HRC(:)=0.
     PHLC_LRC(:)=0.
   END WHERE
-  !$mnh_end_expand_where(JL=1:KSIZE)
+  !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !$acc end kernels
 ELSEIF(HSUBG_AUCV_RC=='ADJU') THEN
 !$acc kernels
-  !$mnh_expand_where(JL=1:KSIZE)
+  !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
   WHERE(LDMICRO(:))
     ZSUMRC(:)=PHLC_LRC(:)+PHLC_HRC(:)
   ELSEWHERE
@@ -170,7 +171,7 @@ ELSEIF(HSUBG_AUCV_RC=='ADJU') THEN
     PHLC_LRC(:)=0.
     PHLC_HRC(:)=0.
   ENDWHERE
-  !$mnh_end_expand_where(JL=1:KSIZE)
+  !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !$acc end kernels
 ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
   !Cloud water is split between high and low part according to a PDF
@@ -182,7 +183,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
   IF(HSUBG_PR_PDF=='SIGM') THEN
     ! Redelsperger and Sommeria (1986) but organised according to Turner (2011, 2012)
 !$acc kernels
-    !$mnh_expand_where(JL=1:KSIZE)
+    !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
     WHERE(.NOT. LDMICRO(:))
       ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
       PHLC_HCF(:)=0.
@@ -213,7 +214,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
       PHLC_HRC(:)=0.
       PHLC_LRC(:)=0.
     END WHERE
-    !$mnh_end_expand_where(JL=1:KSIZE)
+    !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !$acc end kernels
   ELSEIF(HSUBG_PR_PDF=='HLCRECTPDF' .OR. HSUBG_PR_PDF=='HLCISOTRIPDF' .OR. &
          &HSUBG_PR_PDF=='HLCTRIANGPDF' .OR. HSUBG_PR_PDF=='HLCQUADRAPDF') THEN
@@ -227,7 +228,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
       ZCOEFFRCM=4.
     END IF
 !$acc kernels
-    !$mnh_expand_where(JL=1:KSIZE)
+    !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
     WHERE(.NOT. LDMICRO(:))
       ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
       ZHLC_RCMAX(:)=0.
@@ -236,12 +237,12 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
     ELSEWHERE
       ZHLC_RCMAX(:)=0.
     END WHERE
-    !$mnh_end_expand_where(JL=1:KSIZE)
+    !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 
     ! Split available water and cloud fraction in two parts
     ! Calculate local mean values int he low and high parts for the 3 PDF forms:
     IF(HSUBG_PR_PDF=='HLCRECTPDF') THEN
-      !$mnh_expand_where(JL=1:KSIZE)
+      !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
       WHERE(.NOT. LDMICRO(:))
         ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
         ZHLC_LRCLOCAL(:)=0.
@@ -253,9 +254,9 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
         ZHLC_LRCLOCAL(:)=0.
         ZHLC_HRCLOCAL(:)=0.
       END WHERE
-      !$mnh_end_expand_where(JL=1:KSIZE)
+      !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
     ELSE IF(HSUBG_PR_PDF=='HLCTRIANGPDF') THEN
-      !$mnh_expand_where(JL=1:KSIZE)
+      !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
       WHERE(.NOT. LDMICRO(:))
         ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
         ZHLC_LRCLOCAL(:)=0.
@@ -268,9 +269,9 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
         ZHLC_LRCLOCAL(:)=0.
         ZHLC_HRCLOCAL(:)=0.
       END WHERE
-      !$mnh_end_expand_where(JL=1:KSIZE)
+      !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
     ELSE IF(HSUBG_PR_PDF=='HLCQUADRAPDF') THEN
-      !$mnh_expand_where(JL=1:KSIZE)
+      !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
       WHERE(.NOT. LDMICRO(:))
         ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
         ZHLC_LRCLOCAL(:)=0.
@@ -286,9 +287,9 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
         ZHLC_LRCLOCAL(:)=0.
         ZHLC_HRCLOCAL(:)=0.
       END WHERE
-      !$mnh_end_expand_where(JL=1:KSIZE)
+      !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
     ELSE IF(HSUBG_PR_PDF=='HLCISOTRIPDF') THEN
-      !$mnh_expand_where(JL=1:KSIZE)
+      !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
       WHERE(.NOT. LDMICRO(:))
         ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
         ZHLC_LRCLOCAL(:)=0.
@@ -311,10 +312,10 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
         ZHLC_LRCLOCAL(:)=0.
         ZHLC_HRCLOCAL(:)=0.
       END WHERE
-      !$mnh_end_expand_where(JL=1:KSIZE)
+      !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
     END IF
     ! Compare r_cM  to r_cR to know if cloud water content is high enough to split in two parts or not
-    !$mnh_expand_where(JL=1:KSIZE)
+    !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
     WHERE(.NOT. LDMICRO(:))
       ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
       PHLC_HCF(:)=0.
@@ -344,7 +345,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
       PHLC_LRC(:)=0.
       PHLC_HRC(:)=0.
     END WHERE
-    !$mnh_end_expand_where(JL=1:KSIZE)
+    !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !$acc end kernels
   ELSE
     CALL PRINT_MSG(NVERB_FATAL,'GEN','ICE4_COMPUTE_PDF','wrong HSUBG_PR_PDF case')
@@ -355,18 +356,18 @@ ENDIF
 !
 !Ice water split between high and low content part is done according to autoconversion option
 !$acc kernels
-!$mnh_expand_where(JL=1:KSIZE)
+!$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
 WHERE(LDMICRO(:))
   ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(:)-CST%XTT)+ICEP%XBCRIAUTI)) ! Autoconversion ri threshold
 ELSEWHERE
   ZCRIAUTI(:)=0.
 ENDWHERE
-!$mnh_end_expand_where(JL=1:KSIZE)
+!$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !$acc end kernels
 IF(HSUBG_AUCV_RI=='NONE') THEN
   !Cloud water is entirely in low or high part
 !$acc kernels
-  !$mnh_expand_where(JL=1:KSIZE)
+  !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
   WHERE(.NOT. LDMICRO(:))
     ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
     PHLI_HCF(:)=0.
@@ -389,12 +390,12 @@ IF(HSUBG_AUCV_RI=='NONE') THEN
     PHLI_HRI(:)=0.
     PHLI_LRI(:)=0.
   END WHERE
-  !$mnh_end_expand_where(JL=1:KSIZE)
+  !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !$acc end kernels
 ELSEIF(HSUBG_AUCV_RI=='CLFR') THEN
   !Cloud water is only in the cloudy part and entirely in low or high part
 !$acc kernels
-  !$mnh_expand_where(JL=1:KSIZE)
+  !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
   WHERE(.NOT. LDMICRO(:))
     ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
     PHLI_HCF(:)=0.
@@ -417,11 +418,11 @@ ELSEIF(HSUBG_AUCV_RI=='CLFR') THEN
     PHLI_HRI(:)=0.
     PHLI_LRI(:)=0.
   END WHERE
-  !$mnh_end_expand_where(JL=1:KSIZE)
+  !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !$acc end kernels
 ELSEIF(HSUBG_AUCV_RI=='ADJU') THEN
 !$acc kernels
-  !$mnh_expand_where(JL=1:KSIZE)
+  !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
   WHERE(LDMICRO(:))
     ZSUMRI(:)=PHLI_LRI(:)+PHLI_HRI(:)
   ELSEWHERE
@@ -434,7 +435,7 @@ ELSEIF(HSUBG_AUCV_RI=='ADJU') THEN
     PHLI_LRI(:)=0.
     PHLI_HRI(:)=0.
   ENDWHERE
-  !$mnh_end_expand_where(JL=1:KSIZE)
+  !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !$acc end kernels
 ELSE
   !wrong HSUBG_AUCV_RI case
@@ -442,13 +443,13 @@ ELSE
 ENDIF
 !
 !$acc kernels
-!$mnh_expand_where(JL=1:KSIZE)
+!$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
 WHERE(LDMICRO(:))
   PRF(:)=MAX(PHLC_HCF(:),PHLI_HCF(:))
 ELSEWHERE
   PRF(:)=0.
 ENDWHERE
-!$mnh_end_expand_where(JL=1:KSIZE)
+!$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 1, ZHOOK_HANDLE)

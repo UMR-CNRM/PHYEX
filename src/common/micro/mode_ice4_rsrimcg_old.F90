@@ -6,7 +6,7 @@
 MODULE MODE_ICE4_RSRIMCG_OLD
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_RSRIMCG_OLD(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, &
+SUBROUTINE ICE4_RSRIMCG_OLD(CST, PARAMI, ICEP, ICED, D, LDSOFT, LDCOMPUTE, &
                            &PRHODREF, &
                            &PLBDAS, &
                            &PT, PRCT, PRST, &
@@ -30,6 +30,7 @@ SUBROUTINE ICE4_RSRIMCG_OLD(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCO
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
@@ -44,24 +45,24 @@ TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
-INTEGER, INTENT(IN) :: KPROMA, KSIZE
+TYPE(DIMPHYEX_t),INTENT(IN) :: D
 LOGICAL,                       INTENT(IN)    :: LDSOFT
-LOGICAL, DIMENSION(KPROMA),    INTENT(IN)    :: LDCOMPUTE
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRHODREF ! Reference density
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PT       ! Temperature
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
-REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRSRIMCG_MR ! Mr change due to cloud droplet riming of the aggregates
+LOGICAL, DIMENSION(D%NIJT),    INTENT(IN)    :: LDCOMPUTE
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRHODREF ! Reference density
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PT       ! Temperature
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
+REAL, DIMENSION(D%NIJT),       INTENT(OUT)   :: PRSRIMCG_MR ! Mr change due to cloud droplet riming of the aggregates
 !
 !*       0.2  declaration of local variables
 !
-LOGICAL, DIMENSION(KPROMA) :: GRIM
+LOGICAL, DIMENSION(D%NIJT) :: GRIM
 INTEGER :: IGRIM
-REAL, DIMENSION(KPROMA) :: ZBUF1, ZBUF2
-INTEGER, DIMENSION(KPROMA) :: IBUF1, IBUF2
-REAL, DIMENSION(KPROMA) :: ZZW
-INTEGER :: JL
+REAL, DIMENSION(D%NIJT) :: ZBUF1, ZBUF2
+INTEGER, DIMENSION(D%NIJT) :: IBUF1, IBUF2
+REAL, DIMENSION(D%NIJT) :: ZZW
+INTEGER :: JIJ
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
@@ -78,33 +79,33 @@ PRSRIMCG_MR(:)=0.
 IF(.NOT. LDSOFT) THEN
 !$acc kernels
 !$acc loop independent
-  DO JL = 1, KSIZE
-    GRIM(JL)=PRCT(JL)>ICED%XRTMIN(2) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL) .AND. PT(JL)<CST%XTT
+  DO JIJ=D%NIJB, D%NIJE
+    GRIM(JIJ)=PRCT(JIJ)>ICED%XRTMIN(2) .AND. PRST(JIJ)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JIJ) .AND. PT(JIJ)<CST%XTT
   ENDDO
 !$acc end kernels
-  CALL INTERP_MICRO_1D(KPROMA, KSIZE, PLBDAS, ICEP%NGAMINC, ICEP%XRIMINTP1, ICEP%XRIMINTP2, &
+  CALL INTERP_MICRO_1D(D, PLBDAS, ICEP%NGAMINC, ICEP%XRIMINTP1, ICEP%XRIMINTP2, &
                       &PARAMI%LPACK_INTERP, GRIM, IBUF1, IBUF2, ZBUF1, ZBUF2, &
                       &IGRIM, &
                       &ICEP%XGAMINC_RIM2, ZZW)
   !
   IF(IGRIM>0) THEN
 !$acc kernels
-    !$mnh_expand_where(JL=1:KSIZE)
+    !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
     IF(.NOT. ICEP%LNEWCOEFF) THEN
-      WHERE(GRIM(1:KSIZE))
-        PRSRIMCG_MR(1:KSIZE) = ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG   & ! RSRIMCG
-                                 * (1.0 - ZZW(1:KSIZE) )/PRHODREF(1:KSIZE)
+      WHERE(GRIM(D%NIJB:D%NIJE))
+        PRSRIMCG_MR(D%NIJB:D%NIJE) = ICEP%XSRIMCG * PLBDAS(D%NIJB:D%NIJE)**ICEP%XEXSRIMCG   & ! RSRIMCG
+                                 * (1.0 - ZZW(D%NIJB:D%NIJE) )/PRHODREF(D%NIJB:D%NIJE)
       END WHERE
     ELSE
-      WHERE(GRIM(1:KSIZE))
-        PRSRIMCG_MR(1:KSIZE) = ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG   & ! RSRIMCG
-                                 * (1.0 - ZZW(1:KSIZE) )*PRST(1:KSIZE)
+      WHERE(GRIM(D%NIJB:D%NIJE))
+        PRSRIMCG_MR(D%NIJB:D%NIJE) = ICEP%XSRIMCG * PLBDAS(D%NIJB:D%NIJE)**ICEP%XEXSRIMCG   & ! RSRIMCG
+                                 * (1.0 - ZZW(D%NIJB:D%NIJE) )*PRST(D%NIJB:D%NIJE)
       END WHERE
     ENDIF
-    WHERE(GRIM(1:KSIZE))
-      PRSRIMCG_MR(1:KSIZE)=MIN(PRST(1:KSIZE), PRSRIMCG_MR(1:KSIZE))
+    WHERE(GRIM(D%NIJB:D%NIJE))
+      PRSRIMCG_MR(D%NIJB:D%NIJE)=MIN(PRST(D%NIJB:D%NIJE), PRSRIMCG_MR(D%NIJB:D%NIJE))
     END WHERE
-    !$mnh_end_expand_where(JL=1:KSIZE)
+    !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !$acc end kernels
   END IF
 ENDIF
