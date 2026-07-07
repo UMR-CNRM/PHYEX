@@ -225,8 +225,7 @@ ELSE ! PARAMI%LPACK_MICRO
   DD%NIJB = 1 
   DD%NIJE = ISIZE
 
-  CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
-                    &DD, PTSTEP, &
+  CALL ICE4_STEPPING(DD, CST, PARAMI, ICEP, ICED, BUCONF, PTSTEP, &
                     &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
                     &PEXN, PRHODREF, &
                     &PPABST, PCIT, PCLDFR, &
@@ -414,8 +413,7 @@ DO JMICRO=1,ISIZE,IPROMA
   DD%NIJB = 1 
   DD%NIJE = IMICRO
 
-  CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
-                    &DD, PTSTEP, &
+  CALL ICE4_STEPPING(DD, CST, PARAMI, ICEP, ICED, BUCONF, PTSTEP, &
                     &KRR, OSAVE_MICRO, LLMICRO, OELEC, &
                     &ZEXN, ZRHODREF, &
                     &ZPABST, ZCIT, ZCLDFR, &
