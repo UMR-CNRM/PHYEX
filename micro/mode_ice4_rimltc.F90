@@ -7,7 +7,7 @@ MODULE MODE_ICE4_RIMLTC
 IMPLICIT NONE
 CONTAINS
 
-SUBROUTINE ICE4_RIMLTC(CST, PARAMI, KPROMA, KSIZE, LDCOMPUTE, &
+SUBROUTINE ICE4_RIMLTC(CST, PARAMI, D, LDCOMPUTE, &
                        &PEXN, PLVFACT, PLSFACT, &
                        &PT, &
                        &PTHT, PRIT, &
@@ -29,6 +29,7 @@ SUBROUTINE ICE4_RIMLTC(CST, PARAMI, KPROMA, KSIZE, LDCOMPUTE, &
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_DIMPHYEX,  ONLY: DIMPHYEX_t
 USE MODD_CST,       ONLY: CST_t
 USE MODD_PARAM_ICE_n, ONLY: PARAM_ICE_t
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
@@ -39,20 +40,20 @@ IMPLICIT NONE
 !
 TYPE(CST_t),                  INTENT(IN)    :: CST
 TYPE(PARAM_ICE_t),            INTENT(IN)    :: PARAMI
-INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
-LOGICAL, DIMENSION(KPROMA),    INTENT(IN)    :: LDCOMPUTE
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PEXN     ! Exner function
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLVFACT  ! L_v/(Pi_ref*C_ph)
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLSFACT  ! L_s/(Pi_ref*C_ph)
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PT       ! Temperature
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PTHT     ! Theta at t
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRIT     ! Cloud ice at t
-REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRIMLTC_MR ! Mixing ratio change due to cloud ice melting
+TYPE(DIMPHYEX_t),             INTENT(IN)    :: D
+LOGICAL, DIMENSION(D%NIJT),    INTENT(IN)    :: LDCOMPUTE
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PEXN     ! Exner function
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PLVFACT  ! L_v/(Pi_ref*C_ph)
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PLSFACT  ! L_s/(Pi_ref*C_ph)
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PT       ! Temperature
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PTHT     ! Theta at t
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRIT     ! Cloud ice at t
+REAL, DIMENSION(D%NIJT),       INTENT(OUT)   :: PRIMLTC_MR ! Mixing ratio change due to cloud ice melting
 !
 !*       0.2  declaration of local variables
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER :: JL
+INTEGER :: JIJ
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_RIMLTC',0,ZHOOK_HANDLE)
@@ -61,15 +62,15 @@ IF (LHOOK) CALL DR_HOOK('ICE4_RIMLTC',0,ZHOOK_HANDLE)
 !
 
 
-DO JL=1, KSIZE
-  IF(PRIT(JL)>0. .AND. PT(JL)>CST%XTT .AND. LDCOMPUTE(JL)) THEN
-    PRIMLTC_MR(JL)=PRIT(JL)
+DO JIJ=D%NIJB, D%NIJE
+  IF(PRIT(JIJ)>0. .AND. PT(JIJ)>CST%XTT .AND. LDCOMPUTE(JIJ)) THEN
+    PRIMLTC_MR(JIJ)=PRIT(JIJ)
     IF(PARAMI%LFEEDBACKT) THEN
       !Limitation due to 0 crossing of temperature
-      PRIMLTC_MR(JL)=MIN(PRIMLTC_MR(JL), MAX(0., (PTHT(JL)-CST%XTT/PEXN(JL)) / (PLSFACT(JL)-PLVFACT(JL))))
+      PRIMLTC_MR(JIJ)=MIN(PRIMLTC_MR(JIJ), MAX(0., (PTHT(JIJ)-CST%XTT/PEXN(JIJ)) / (PLSFACT(JIJ)-PLVFACT(JIJ))))
     ENDIF
   ELSE
-    PRIMLTC_MR(JL)=0.
+    PRIMLTC_MR(JIJ)=0.
   ENDIF
 ENDDO
 

@@ -6,7 +6,7 @@
 MODULE MODE_ICE4_WARM
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_WARM(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
+SUBROUTINE ICE4_WARM(CST, PARAMI, ICEP, ICED, D, LDSOFT, LDCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
                     &PRHODREF, PLVFACT, PT, PPRES, PTHT, &
                     &PLBDAR, PLBDAR_RF, PKA, PDV, PCJ, &
                     &PHLC_LCF, PHLC_HCF, PHLC_LRC, PHLC_HRC, &
@@ -32,6 +32,7 @@ SUBROUTINE ICE4_WARM(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, 
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
@@ -48,43 +49,43 @@ TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
-INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
+TYPE(DIMPHYEX_t),             INTENT(IN)    :: D
 LOGICAL,                      INTENT(IN)    :: LDSOFT
-LOGICAL, DIMENSION(KPROMA),   INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(D%NIJT),   INTENT(IN)    :: LDCOMPUTE
 CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_RC_RR_ACCR ! subgrid rc-rr accretion
 CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_RR_EVAP ! subgrid rr evaporation
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRHODREF ! Reference density
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLVFACT
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PT       ! Temperature
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PPRES    ! absolute pressure at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PTHT     ! Theta at time t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLBDAR   ! Slope parameter of the raindrop  distribution
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLBDAR_RF!like PLBDAR but for the Rain Fraction part
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PKA      ! Thermal conductivity of the air
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PDV      ! Diffusivity of water vapor in the air
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PHLC_HCF ! HLCLOUDS : fraction of High Cloud Fraction in grid
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PHLC_LCF ! HLCLOUDS : fraction of Low  Cloud Fraction in grid
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PHLC_HRC ! HLCLOUDS : LWC that is High LWC in grid
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PHLC_LRC ! HLCLOUDS : LWC that is Low  LWC in grid
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCF      ! Cloud fraction
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRF      ! Rain fraction
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRVT     ! Water vapor m.r. at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRRT     ! Rain water m.r. at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCONC    ! Cloud Droplet number concentration
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PACRF    ! Collision factor cloud droplet-rain
-REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRCAUTR  ! Autoconversion of r_c for r_r production
-REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRCACCR  ! Accretion of r_c for r_r production
-REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRREVAV  ! Evaporation of r_r
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRHODREF ! Reference density
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PLVFACT
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PT       ! Temperature
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PPRES    ! absolute pressure at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PTHT     ! Theta at time t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PLBDAR   ! Slope parameter of the raindrop  distribution
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PLBDAR_RF!like PLBDAR but for the Rain Fraction part
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PKA      ! Thermal conductivity of the air
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PDV      ! Diffusivity of water vapor in the air
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PHLC_HCF ! HLCLOUDS : fraction of High Cloud Fraction in grid
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PHLC_LCF ! HLCLOUDS : fraction of Low  Cloud Fraction in grid
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PHLC_HRC ! HLCLOUDS : LWC that is High LWC in grid
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PHLC_LRC ! HLCLOUDS : LWC that is Low  LWC in grid
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PCF      ! Cloud fraction
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRF      ! Rain fraction
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRVT     ! Water vapor m.r. at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRRT     ! Rain water m.r. at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PCONC    ! Cloud Droplet number concentration
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PACRF    ! Collision factor cloud droplet-rain
+REAL, DIMENSION(D%NIJT),      INTENT(INOUT) :: PRCAUTR  ! Autoconversion of r_c for r_r production
+REAL, DIMENSION(D%NIJT),      INTENT(INOUT) :: PRCACCR  ! Accretion of r_c for r_r production
+REAL, DIMENSION(D%NIJT),      INTENT(INOUT) :: PRREVAV  ! Evaporation of r_r
 !
 !*       0.2  declaration of local variables
 !
 REAL :: ZZW2, ZZW3, ZZW4
-REAL, DIMENSION(KPROMA) :: ZUSW ! Undersaturation over water
-REAL, DIMENSION(KPROMA) :: ZTHLT    ! Liquid potential temperature
+REAL, DIMENSION(D%NIJT) :: ZUSW ! Undersaturation over water
+REAL, DIMENSION(D%NIJT) :: ZTHLT    ! Liquid potential temperature
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER :: JL
+INTEGER :: JIJ
 LOGICAL :: LMASK, LMASK1, LMASK2
 !-------------------------------------------------------------------------------
 !
@@ -99,21 +100,21 @@ IF (LHOOK) CALL DR_HOOK('ICE4_WARM', 0, ZHOOK_HANDLE)
 !*       4.2    compute the autoconversion of r_c for r_r production: RCAUTR
 !
 
-!$mnh_do_concurrent( JL=1:KSIZE )
-DO JL=1, KSIZE
-  IF(PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0. .AND. LDCOMPUTE(JL)) THEN
+!$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
+DO JIJ=D%NIJB, D%NIJE
+  IF(PHLC_HRC(JIJ)>ICED%XRTMIN(2) .AND. PHLC_HCF(JIJ)>0. .AND. LDCOMPUTE(JIJ)) THEN
     IF(.NOT. LDSOFT) THEN
       IF(PARAMI%LKOGAN) THEN
-        PRCAUTR(JL) =  1350.0* ICEP%XFRMIN(10)* PCONC(JL)**(-1.79) * &
-            &  (PRCT(JL)/(MAX(ICEP%XFRMIN(11),PCF(JL))))**2.47
-        PRCAUTR(JL) = PRCAUTR(JL)*MAX(ICEP%XFRMIN(11),PCF(JL))
+        PRCAUTR(JIJ) =  1350.0* ICEP%XFRMIN(10)* PCONC(JIJ)**(-1.79) * &
+            &  (PRCT(JIJ)/(MAX(ICEP%XFRMIN(11),PCF(JIJ))))**2.47
+        PRCAUTR(JIJ) = PRCAUTR(JIJ)*MAX(ICEP%XFRMIN(11),PCF(JIJ))
       ELSE
         !HCF*autoconv(HRC/HCF) with simplification
-        PRCAUTR(JL) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JL) - PHLC_HCF(JL)*ICEP%XCRIAUTC/PRHODREF(JL), 0.0)
+        PRCAUTR(JIJ) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JIJ) - PHLC_HCF(JIJ)*ICEP%XCRIAUTC/PRHODREF(JIJ), 0.0)
       ENDIF
     ENDIF
   ELSE
-    PRCAUTR(JL) = 0.
+    PRCAUTR(JIJ) = 0.
   ENDIF
 ENDDO
 !$mnh_end_do()
@@ -125,16 +126,16 @@ ENDDO
 IF (HSUBG_RC_RR_ACCR=='NONE') THEN
   !CLoud water and rain are diluted over the grid box
 
-  !$mnh_do_concurrent( JL=1:KSIZE )
-  DO JL=1, KSIZE
-    IF(PRCT(JL)>ICED%XRTMIN(2) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)) THEN
+  !$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
+  DO JIJ=D%NIJB, D%NIJE
+    IF(PRCT(JIJ)>ICED%XRTMIN(2) .AND. PRRT(JIJ)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JIJ)) THEN
       IF(.NOT. LDSOFT) THEN
-        PRCACCR(JL) = ICEP%XFCACCR * PRCT(JL) * PACRF(JL)   &
-                    & * PLBDAR(JL)**ICEP%XEXCACCR    &
-                    & * PRHODREF(JL)**(-ICED%XCEXVT)
+        PRCACCR(JIJ) = ICEP%XFCACCR * PRCT(JIJ) * PACRF(JIJ)   &
+                    & * PLBDAR(JIJ)**ICEP%XEXCACCR    &
+                    & * PRHODREF(JIJ)**(-ICED%XCEXVT)
       ENDIF
     ELSE
-      PRCACCR(JL) = 0.
+      PRCACCR(JIJ) = 0.
     ENDIF
   ENDDO
   !$mnh_end_do()
@@ -148,32 +149,32 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
   ! if PRF>PCF (rain is falling in cloud and in clear sky): PCF-PHLC_HCF
   ! => min(PCF, PRF)-PHLC_HCF
 
-  !$mnh_do_concurrent( JL=1:KSIZE )
-  DO JL=1, KSIZE
-    LMASK = PRCT(JL)>ICED%XRTMIN(2) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)
-    LMASK1 = LMASK .AND. PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0.
-    LMASK2 = LMASK .AND. PHLC_LRC(JL)>ICED%XRTMIN(2) .AND. PHLC_LCF(JL)>1.E-20
+  !$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
+  DO JIJ=D%NIJB, D%NIJE
+    LMASK = PRCT(JIJ)>ICED%XRTMIN(2) .AND. PRRT(JIJ)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JIJ)
+    LMASK1 = LMASK .AND. PHLC_HRC(JIJ)>ICED%XRTMIN(2) .AND. PHLC_HCF(JIJ)>0.
+    LMASK2 = LMASK .AND. PHLC_LRC(JIJ)>ICED%XRTMIN(2) .AND. PHLC_LCF(JIJ)>1.E-20
     IF(LMASK1 .OR. LMASK2) THEN
       IF(.NOT. LDSOFT) THEN
         IF(LMASK1) THEN
           !Accretion due to rain falling in high cloud content
           !HCF*accretion(HRC/HCF) with simplification
-          PRCACCR(JL) = ICEP%XFCACCR * PHLC_HRC(JL)     &
-                      &*PLBDAR_RF(JL)**ICEP%XEXCACCR &
-                      &*PRHODREF(JL)**(-ICED%XCEXVT)
+          PRCACCR(JIJ) = ICEP%XFCACCR * PHLC_HRC(JIJ)     &
+                      &*PLBDAR_RF(JIJ)**ICEP%XEXCACCR &
+                      &*PRHODREF(JIJ)**(-ICED%XCEXVT)
         ELSE
-          PRCACCR(JL)=0.
+          PRCACCR(JIJ)=0.
         ENDIF
         IF(LMASK2) THEN
           !We add acrretion due to rain falling in low cloud content
-          PRCACCR(JL) = PRCACCR(JL) + ICEP%XFCACCR * ( PHLC_LRC(JL)/PHLC_LCF(JL) )     &
-                      &*PLBDAR_RF(JL)**ICEP%XEXCACCR &
-                      &*PRHODREF(JL)**(-ICED%XCEXVT) &
-                      &*(MIN(PCF(JL), PRF(JL))-PHLC_HCF(JL))
+          PRCACCR(JIJ) = PRCACCR(JIJ) + ICEP%XFCACCR * ( PHLC_LRC(JIJ)/PHLC_LCF(JIJ) )     &
+                      &*PLBDAR_RF(JIJ)**ICEP%XEXCACCR &
+                      &*PRHODREF(JIJ)**(-ICED%XCEXVT) &
+                      &*(MIN(PCF(JIJ), PRF(JIJ))-PHLC_HCF(JIJ))
         ENDIF
       ENDIF
     ELSE
-      PRCACCR(JL)=0.
+      PRCACCR(JIJ)=0.
     ENDIF
   ENDDO
   !$mnh_end_do()
@@ -186,19 +187,19 @@ ENDIF
 !
 IF (HSUBG_RR_EVAP=='NONE') THEN
 
-  !$mnh_do_concurrent( JL=1:KSIZE )
-  DO JL=1, KSIZE
-    IF(PRRT(JL)>ICED%XRTMIN(3) .AND. PRCT(JL)<=ICED%XRTMIN(2) .AND. LDCOMPUTE(JL)) THEN
+  !$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
+  DO JIJ=D%NIJB, D%NIJE
+    IF(PRRT(JIJ)>ICED%XRTMIN(3) .AND. PRCT(JIJ)<=ICED%XRTMIN(2) .AND. LDCOMPUTE(JIJ)) THEN
       IF(.NOT. LDSOFT) THEN
-        PRREVAV(JL) = EXP(CST%XALPW - CST%XBETAW/PT(JL) - CST%XGAMW*LOG(PT(JL))) ! es_w
-        ZUSW(JL) = 1. - PRVT(JL)*(PPRES(JL)-PRREVAV(JL)) / (CST%XEPSILO * PRREVAV(JL)) ! Undersaturation over water
-        PRREVAV(JL) = (CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(JL)-CST%XTT) )**2 / (PKA(JL)*CST%XRV*PT(JL)**2) &
-                    &+(CST%XRV*PT(JL)) / (PDV(JL)*PRREVAV(JL))
-        PRREVAV(JL) = (MAX(0.,ZUSW(JL) )/(PRHODREF(JL)*PRREVAV(JL)) ) * &
-                    & (ICEP%X0EVAR*PLBDAR(JL)**ICEP%XEX0EVAR+ICEP%X1EVAR*PCJ(JL)*PLBDAR(JL)**ICEP%XEX1EVAR)
+        PRREVAV(JIJ) = EXP(CST%XALPW - CST%XBETAW/PT(JIJ) - CST%XGAMW*LOG(PT(JIJ))) ! es_w
+        ZUSW(JIJ) = 1. - PRVT(JIJ)*(PPRES(JIJ)-PRREVAV(JIJ)) / (CST%XEPSILO * PRREVAV(JIJ)) ! Undersaturation over water
+        PRREVAV(JIJ) = (CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(JIJ)-CST%XTT) )**2 / (PKA(JIJ)*CST%XRV*PT(JIJ)**2) &
+                    &+(CST%XRV*PT(JIJ)) / (PDV(JIJ)*PRREVAV(JIJ))
+        PRREVAV(JIJ) = (MAX(0.,ZUSW(JIJ) )/(PRHODREF(JIJ)*PRREVAV(JIJ)) ) * &
+                    & (ICEP%X0EVAR*PLBDAR(JIJ)**ICEP%XEX0EVAR+ICEP%X1EVAR*PCJ(JIJ)*PLBDAR(JIJ)**ICEP%XEX1EVAR)
       ENDIF
     ELSE
-      PRREVAV(JL)=0.
+      PRREVAV(JIJ)=0.
     ENDIF
   ENDDO
   !$mnh_end_do()
@@ -212,47 +213,47 @@ ELSEIF (HSUBG_RR_EVAP=='CLFR' .OR. HSUBG_RR_EVAP=='PRFR') THEN
   !On utiliserait la bonne version suivant l'option NONE, CLFR... dans l'évaporation et ailleurs
 
 
-  !$mnh_do_concurrent( JL=1:KSIZE )
-  DO JL=1, KSIZE
+  !$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
+  DO JIJ=D%NIJB, D%NIJE
     !Evaporation in clear sky part
     !With CLFR, rain is diluted over the grid box
     !With PRFR, rain is concentrated in its fraction
     !Use temperature and humidity in clear sky part like Bechtold et al. (1993)
     IF (HSUBG_RR_EVAP=='CLFR') THEN
       ZZW4=1. !Precipitation fraction
-      ZZW3=PLBDAR(JL)
+      ZZW3=PLBDAR(JIJ)
     ELSE
-      ZZW4=PRF(JL) !Precipitation fraction
-      ZZW3=PLBDAR_RF(JL)
+      ZZW4=PRF(JIJ) !Precipitation fraction
+      ZZW3=PLBDAR_RF(JIJ)
     ENDIF
 
-    IF(PRRT(JL)>ICED%XRTMIN(3) .AND. ZZW4>PCF(JL) .AND. LDCOMPUTE(JL)) THEN
+    IF(PRRT(JIJ)>ICED%XRTMIN(3) .AND. ZZW4>PCF(JIJ) .AND. LDCOMPUTE(JIJ)) THEN
       IF(.NOT. LDSOFT) THEN
         ! outside the cloud (environment) the use of T^u (unsaturated) instead of T
         ! Bechtold et al. 1993
         !
         ! T_l
-        ZTHLT(JL) = PTHT(JL) - CST%XLVTT*PTHT(JL)/CST%XCPD/PT(JL)*PRCT(JL)
+        ZTHLT(JIJ) = PTHT(JIJ) - CST%XLVTT*PTHT(JIJ)/CST%XCPD/PT(JIJ)*PRCT(JIJ)
         !
         ! T^u = T_l = theta_l * (T/theta)
-        ZZW2 =  ZTHLT(JL) * PT(JL) / PTHT(JL)
+        ZZW2 =  ZTHLT(JIJ) * PT(JIJ) / PTHT(JIJ)
         !
         ! es_w with new T^u
-        PRREVAV(JL)  = EXP(CST%XALPW - CST%XBETAW/ZZW2 - CST%XGAMW*LOG(ZZW2))
+        PRREVAV(JIJ)  = EXP(CST%XALPW - CST%XBETAW/ZZW2 - CST%XGAMW*LOG(ZZW2))
         !
         ! S, Undersaturation over water (with new theta^u)
-        ZUSW(JL) = 1.0 - PRVT(JL)*(PPRES(JL)-PRREVAV(JL)) / (CST%XEPSILO * PRREVAV(JL))
+        ZUSW(JIJ) = 1.0 - PRVT(JIJ)*(PPRES(JIJ)-PRREVAV(JIJ)) / (CST%XEPSILO * PRREVAV(JIJ))
         !
-        PRREVAV(JL) = (CST%XLVTT+(CST%XCPV-CST%XCL)*(ZZW2-CST%XTT))**2 / (PKA(JL)*CST%XRV*ZZW2**2) &
-                    &+(CST%XRV*ZZW2) / (PDV(JL)*PRREVAV(JL))
+        PRREVAV(JIJ) = (CST%XLVTT+(CST%XCPV-CST%XCL)*(ZZW2-CST%XTT))**2 / (PKA(JIJ)*CST%XRV*ZZW2**2) &
+                    &+(CST%XRV*ZZW2) / (PDV(JIJ)*PRREVAV(JIJ))
         !
-        PRREVAV(JL) = MAX(0., ZUSW(JL))/(PRHODREF(JL)*PRREVAV(JL))  *      &
-                    & (ICEP%X0EVAR*ZZW3**ICEP%XEX0EVAR+ICEP%X1EVAR*PCJ(JL)*ZZW3**ICEP%XEX1EVAR)
+        PRREVAV(JIJ) = MAX(0., ZUSW(JIJ))/(PRHODREF(JIJ)*PRREVAV(JIJ))  *      &
+                    & (ICEP%X0EVAR*ZZW3**ICEP%XEX0EVAR+ICEP%X1EVAR*PCJ(JIJ)*ZZW3**ICEP%XEX1EVAR)
         !
-        PRREVAV(JL) = PRREVAV(JL)*(ZZW4-PCF(JL))
+        PRREVAV(JIJ) = PRREVAV(JIJ)*(ZZW4-PCF(JIJ))
       ENDIF
     ELSE
-      PRREVAV(JL)=0.
+      PRREVAV(JIJ)=0.
     ENDIF
   ENDDO
   !$mnh_end_do()

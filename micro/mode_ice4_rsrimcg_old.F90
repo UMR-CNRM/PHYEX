@@ -6,7 +6,7 @@
 MODULE MODE_ICE4_RSRIMCG_OLD
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_RSRIMCG_OLD(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, &
+SUBROUTINE ICE4_RSRIMCG_OLD(CST, PARAMI, ICEP, ICED, D, LDSOFT, LDCOMPUTE, &
                            &PRHODREF, &
                            &PLBDAS, &
                            &PT, PRCT, PRST, &
@@ -30,6 +30,7 @@ SUBROUTINE ICE4_RSRIMCG_OLD(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCO
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
@@ -44,24 +45,24 @@ TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
-INTEGER, INTENT(IN) :: KPROMA, KSIZE
+TYPE(DIMPHYEX_t),INTENT(IN) :: D
 LOGICAL,                       INTENT(IN)    :: LDSOFT
-LOGICAL, DIMENSION(KPROMA),    INTENT(IN)    :: LDCOMPUTE
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRHODREF ! Reference density
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PT       ! Temperature
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
-REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRSRIMCG_MR ! Mr change due to cloud droplet riming of the aggregates
+LOGICAL, DIMENSION(D%NIJT),    INTENT(IN)    :: LDCOMPUTE
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRHODREF ! Reference density
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PT       ! Temperature
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
+REAL, DIMENSION(D%NIJT),       INTENT(OUT)   :: PRSRIMCG_MR ! Mr change due to cloud droplet riming of the aggregates
 !
 !*       0.2  declaration of local variables
 !
-LOGICAL, DIMENSION(KPROMA) :: GRIM
+LOGICAL, DIMENSION(D%NIJT) :: GRIM
 INTEGER :: IGRIM
-REAL, DIMENSION(KPROMA) :: ZBUF1, ZBUF2
-INTEGER, DIMENSION(KPROMA) :: IBUF1, IBUF2
-REAL, DIMENSION(KPROMA) :: ZZW
-INTEGER :: JL
+REAL, DIMENSION(D%NIJT) :: ZBUF1, ZBUF2
+INTEGER, DIMENSION(D%NIJT) :: IBUF1, IBUF2
+REAL, DIMENSION(D%NIJT) :: ZZW
+INTEGER :: JIJ
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
@@ -78,31 +79,31 @@ PRSRIMCG_MR(:)=0.
 IF(.NOT. LDSOFT) THEN
 
 
-  DO JL = 1, KSIZE
-    GRIM(JL)=PRCT(JL)>ICED%XRTMIN(2) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL) .AND. PT(JL)<CST%XTT
+  DO JIJ=D%NIJB, D%NIJE
+    GRIM(JIJ)=PRCT(JIJ)>ICED%XRTMIN(2) .AND. PRST(JIJ)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JIJ) .AND. PT(JIJ)<CST%XTT
   ENDDO
 
-  CALL INTERP_MICRO_1D(KPROMA, KSIZE, PLBDAS, ICEP%NGAMINC, ICEP%XRIMINTP1, ICEP%XRIMINTP2, &
+  CALL INTERP_MICRO_1D(D, PLBDAS, ICEP%NGAMINC, ICEP%XRIMINTP1, ICEP%XRIMINTP2, &
                       &PARAMI%LPACK_INTERP, GRIM, IBUF1, IBUF2, ZBUF1, ZBUF2, &
                       &IGRIM, &
                       &ICEP%XGAMINC_RIM2, ZZW)
   !
   IF(IGRIM>0) THEN
 
-    DO JL=1, KSIZE
+    DO JIJ=D%NIJB, D%NIJE
       IF(.NOT. ICEP%LNEWCOEFF) THEN
-        IF (GRIM(JL)) THEN
-          PRSRIMCG_MR(JL) = ICEP%XSRIMCG * PLBDAS(JL)**ICEP%XEXSRIMCG   & ! RSRIMCG
-                                 * (1.0 - ZZW(JL) )/PRHODREF(JL)
+        IF (GRIM(JIJ)) THEN
+          PRSRIMCG_MR(JIJ) = ICEP%XSRIMCG * PLBDAS(JIJ)**ICEP%XEXSRIMCG   & ! RSRIMCG
+                                 * (1.0 - ZZW(JIJ) )/PRHODREF(JIJ)
         END IF
       ELSE
-        IF (GRIM(JL)) THEN
-          PRSRIMCG_MR(JL) = ICEP%XSRIMCG * PLBDAS(JL)**ICEP%XEXSRIMCG   & ! RSRIMCG
-                                 * (1.0 - ZZW(JL) )*PRST(JL)
+        IF (GRIM(JIJ)) THEN
+          PRSRIMCG_MR(JIJ) = ICEP%XSRIMCG * PLBDAS(JIJ)**ICEP%XEXSRIMCG   & ! RSRIMCG
+                                 * (1.0 - ZZW(JIJ) )*PRST(JIJ)
         END IF
       ENDIF
-      IF (GRIM(JL)) THEN
-        PRSRIMCG_MR(JL)=MIN(PRST(JL), PRSRIMCG_MR(JL))
+      IF (GRIM(JIJ)) THEN
+        PRSRIMCG_MR(JIJ)=MIN(PRST(JIJ), PRSRIMCG_MR(JIJ))
       END IF
     END DO
 

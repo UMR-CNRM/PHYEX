@@ -140,6 +140,7 @@ INTEGER :: JL, JV
 !
 INTEGER :: IC, JMICRO, IDX
 LOGICAL :: LLSIGMA_RC, LL_AUCV_ADJU
+TYPE(DIMPHYEX_t) :: DD
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_PACK', 0, ZHOOK_HANDLE)
@@ -217,8 +218,15 @@ ELSE ! PARAMI%LPACK_MICRO
   !*       5bis.  TENDENCIES COMPUTATION
   !               ----------------------
   !
+
+
+  DD = D 
+  DD%NIJT = ISIZE
+  DD%NIJB = 1 
+  DD%NIJE = ISIZE
+
   CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
-                    &ISIZE, D%NIJB, PTSTEP, &
+                    &DD, PTSTEP, &
                     &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
                     &PEXN, PRHODREF, &
                     &PPABST, PCIT, PCLDFR, &
@@ -400,8 +408,14 @@ DO JMICRO=1,ISIZE,IPROMA
   !*       5.     TENDENCIES COMPUTATION
   !               ----------------------
   !
+
+  DD = D 
+  DD%NIJT = IPROMA
+  DD%NIJB = 1 
+  DD%NIJE = IMICRO
+
   CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
-                    &IPROMA, IMICRO, PTSTEP, &
+                    &DD, PTSTEP, &
                     &KRR, OSAVE_MICRO, LLMICRO, OELEC, &
                     &ZEXN, ZRHODREF, &
                     &ZPABST, ZCIT, ZCLDFR, &

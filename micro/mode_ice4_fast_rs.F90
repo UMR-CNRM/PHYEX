@@ -6,7 +6,7 @@
 MODULE MODE_ICE4_FAST_RS
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, &
+SUBROUTINE ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, D, LDSOFT, LDCOMPUTE, &
                        &PRHODREF, PLVFACT, PLSFACT, PPRES, &
                        &PDV, PKA, PCJ, PCOLF, &
                        &PLBDAR, PLBDAS, &
@@ -39,6 +39,7 @@ SUBROUTINE ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUT
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
@@ -53,45 +54,45 @@ TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
-INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
+TYPE(DIMPHYEX_t),             INTENT(IN)    :: D
 LOGICAL,                      INTENT(IN)    :: LDSOFT
-LOGICAL, DIMENSION(KPROMA),   INTENT(IN)    :: LDCOMPUTE
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRHODREF ! Reference density
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLVFACT
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLSFACT
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PPRES    ! absolute pressure at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PDV      ! Diffusivity of water vapor in the air
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PKA      ! Thermal conductivity of the air
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCOLF    ! Collision factor cloud water - snow/graupel
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLBDAR   ! Slope parameter of the raindrop  distribution
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PT       ! Temperature
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRVT     ! Water vapor m.r. at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRRT     ! Rain water m.r. at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRIAGGS  ! r_i aggregation on r_s
-REAL, DIMENSION(KPROMA),      INTENT(OUT)   :: PRCRIMSS ! Cloud droplet riming of the aggregates
-REAL, DIMENSION(KPROMA),      INTENT(OUT)   :: PRCRIMSG ! Cloud droplet riming of the aggregates
-REAL, DIMENSION(KPROMA),      INTENT(OUT)   :: PRSRIMCG ! Cloud droplet riming of the aggregates
-REAL, DIMENSION(KPROMA),      INTENT(OUT)   :: PRRACCSS ! Rain accretion onto the aggregates
-REAL, DIMENSION(KPROMA),      INTENT(OUT)   :: PRRACCSG ! Rain accretion onto the aggregates
-REAL, DIMENSION(KPROMA),      INTENT(OUT)   :: PRSACCRG ! Rain accretion onto the aggregates
-REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRSMLTG  ! Conversion-Melting of the aggregates
-REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRCMLTSR ! Cloud droplet collection onto aggregates by positive temperature
-REAL, DIMENSION(KPROMA, 8),   INTENT(INOUT) :: PRS_TEND ! Individual tendencies
+LOGICAL, DIMENSION(D%NIJT),   INTENT(IN)    :: LDCOMPUTE
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRHODREF ! Reference density
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PLVFACT
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PLSFACT
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PPRES    ! absolute pressure at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PDV      ! Diffusivity of water vapor in the air
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PKA      ! Thermal conductivity of the air
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PCOLF    ! Collision factor cloud water - snow/graupel
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PLBDAR   ! Slope parameter of the raindrop  distribution
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PT       ! Temperature
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRVT     ! Water vapor m.r. at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRRT     ! Rain water m.r. at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRIAGGS  ! r_i aggregation on r_s
+REAL, DIMENSION(D%NIJT),      INTENT(OUT)   :: PRCRIMSS ! Cloud droplet riming of the aggregates
+REAL, DIMENSION(D%NIJT),      INTENT(OUT)   :: PRCRIMSG ! Cloud droplet riming of the aggregates
+REAL, DIMENSION(D%NIJT),      INTENT(OUT)   :: PRSRIMCG ! Cloud droplet riming of the aggregates
+REAL, DIMENSION(D%NIJT),      INTENT(OUT)   :: PRRACCSS ! Rain accretion onto the aggregates
+REAL, DIMENSION(D%NIJT),      INTENT(OUT)   :: PRRACCSG ! Rain accretion onto the aggregates
+REAL, DIMENSION(D%NIJT),      INTENT(OUT)   :: PRSACCRG ! Rain accretion onto the aggregates
+REAL, DIMENSION(D%NIJT),      INTENT(INOUT) :: PRSMLTG  ! Conversion-Melting of the aggregates
+REAL, DIMENSION(D%NIJT),      INTENT(INOUT) :: PRCMLTSR ! Cloud droplet collection onto aggregates by positive temperature
+REAL, DIMENSION(D%NIJT, 8),   INTENT(INOUT) :: PRS_TEND ! Individual tendencies
 !
 !*       0.2  declaration of local variables
 !
 INTEGER, PARAMETER :: IRCRIMS=1, IRCRIMSS=2, IRSRIMCG=3, IRRACCS=4, IRRACCSS=5, IRSACCRG=6, &
                     & IFREEZ1=7, IFREEZ2=8
-LOGICAL, DIMENSION(KPROMA) :: GRIM, GACC
+LOGICAL, DIMENSION(D%NIJT) :: GRIM, GACC
 INTEGER :: IGRIM, IGACC
-INTEGER, DIMENSION(KPROMA) :: IBUF1, IBUF2, IBUF3
-REAL, DIMENSION(KPROMA) :: ZBUF1, ZBUF2, ZBUF3
-REAL, DIMENSION(KPROMA) :: ZZW, ZZW1, ZZW2, ZZW3, ZFREEZ_RATE
-INTEGER :: JL
+INTEGER, DIMENSION(D%NIJT) :: IBUF1, IBUF2, IBUF3
+REAL, DIMENSION(D%NIJT) :: ZBUF1, ZBUF2, ZBUF3
+REAL, DIMENSION(D%NIJT) :: ZZW, ZZW1, ZZW2, ZZW3, ZFREEZ_RATE
+INTEGER :: JIJ
 REAL :: ZZW0D
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
@@ -109,39 +110,39 @@ IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RS', 0, ZHOOK_HANDLE)
 #endif
 !
 
-!$mnh_do_concurrent( JL=1:KSIZE )
-DO JL=1, KSIZE
-  IF(PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
+!$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
+DO JIJ=D%NIJB, D%NIJE
+  IF(PRST(JIJ)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JIJ)) THEN
     IF(.NOT. LDSOFT) THEN
-      PRS_TEND(JL, IFREEZ1)=PRVT(JL)*PPRES(JL)/(CST%XEPSILO+PRVT(JL)) ! Vapor pressure
+      PRS_TEND(JIJ, IFREEZ1)=PRVT(JIJ)*PPRES(JIJ)/(CST%XEPSILO+PRVT(JIJ)) ! Vapor pressure
       IF(PARAMI%LEVLIMIT) THEN
-        PRS_TEND(JL, IFREEZ1)=MIN(PRS_TEND(JL, IFREEZ1), EXP(CST%XALPI-CST%XBETAI/PT(JL)-CST%XGAMI*LOG(PT(JL)))) ! min(ev, es_i(T))
+        PRS_TEND(JIJ, IFREEZ1)=MIN(PRS_TEND(JIJ, IFREEZ1), EXP(CST%XALPI-CST%XBETAI/PT(JIJ)-CST%XGAMI*LOG(PT(JIJ)))) ! min(ev, es_i(T))
       ENDIF
-      PRS_TEND(JL, IFREEZ1)=PKA(JL)*(CST%XTT-PT(JL)) +                              &
-                           &(PDV(JL)*(CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(JL)-CST%XTT)) &
-                           &*(CST%XESTT-PRS_TEND(JL, IFREEZ1))/(CST%XRV*PT(JL))           )
+      PRS_TEND(JIJ, IFREEZ1)=PKA(JIJ)*(CST%XTT-PT(JIJ)) +                              &
+                           &(PDV(JIJ)*(CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(JIJ)-CST%XTT)) &
+                           &*(CST%XESTT-PRS_TEND(JIJ, IFREEZ1))/(CST%XRV*PT(JIJ))           )
       IF(.NOT. ICEP%LNEWCOEFF) THEN
-        PRS_TEND(JL, IFREEZ1)=PRS_TEND(JL, IFREEZ1)* (ICEP%X0DEPS*       PLBDAS(JL)**ICEP%XEX0DEPS +     &
-                             &                        ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS )/ &
-                             &(PRHODREF(JL)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(JL))))
+        PRS_TEND(JIJ, IFREEZ1)=PRS_TEND(JIJ, IFREEZ1)* (ICEP%X0DEPS*       PLBDAS(JIJ)**ICEP%XEX0DEPS +     &
+                             &                        ICEP%X1DEPS*PCJ(JIJ)*PLBDAS(JIJ)**ICEP%XEX1DEPS )/ &
+                             &(PRHODREF(JIJ)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(JIJ))))
       ELSE
-        PRS_TEND(JL, IFREEZ1)=PRS_TEND(JL, IFREEZ1)* PRST(JL) *(ICEP%X0DEPS*       PLBDAS(JL)**ICEP%XEX0DEPS + &
-                             &                        ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**(ICED%XBS+ICEP%XEX1DEPS )* &
-           (1+0.5*(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS))/ &
-                             &(PRHODREF(JL)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(JL))))
+        PRS_TEND(JIJ, IFREEZ1)=PRS_TEND(JIJ, IFREEZ1)* PRST(JIJ) *(ICEP%X0DEPS*       PLBDAS(JIJ)**ICEP%XEX0DEPS + &
+                             &                        ICEP%X1DEPS*PCJ(JIJ)*PLBDAS(JIJ)**(ICED%XBS+ICEP%XEX1DEPS )* &
+           (1+0.5*(ICED%XFVELOS/PLBDAS(JIJ))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS))/ &
+                             &(PRHODREF(JIJ)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(JIJ))))
       ENDIF
-      PRS_TEND(JL, IFREEZ2)=(PRHODREF(JL)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-PT(JL)))   ) / &
-                           &(PRHODREF(JL)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(JL))))
+      PRS_TEND(JIJ, IFREEZ2)=(PRHODREF(JIJ)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-PT(JIJ)))   ) / &
+                           &(PRHODREF(JIJ)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(JIJ))))
     ENDIF
     !We must agregate, at least, the cold species
     !And we are only interested by the freezing rate of liquid species
-    ZFREEZ_RATE(JL)=MAX(0., MAX(0., PRS_TEND(JL, IFREEZ1) + &
-                                    &PRS_TEND(JL, IFREEZ2) * PRIAGGS(JL)) - &
-                            PRIAGGS(JL))
+    ZFREEZ_RATE(JIJ)=MAX(0., MAX(0., PRS_TEND(JIJ, IFREEZ1) + &
+                                    &PRS_TEND(JIJ, IFREEZ2) * PRIAGGS(JIJ)) - &
+                            PRIAGGS(JIJ))
   ELSE
-    PRS_TEND(JL, IFREEZ1)=0.
-    PRS_TEND(JL, IFREEZ2)=0.
-    ZFREEZ_RATE(JL)=0.
+    PRS_TEND(JIJ, IFREEZ1)=0.
+    PRS_TEND(JIJ, IFREEZ2)=0.
+    ZFREEZ_RATE(JIJ)=0.
   ENDIF
 ENDDO
 !$mnh_end_do()
@@ -150,20 +151,20 @@ ENDDO
 !*       5.1    cloud droplet riming of the aggregates
 !
 
-!$mnh_do_concurrent( JL=1:KSIZE )
-DO JL=1, KSIZE
-  IF (PRCT(JL)>ICED%XRTMIN(2) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
+!$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
+DO JIJ=D%NIJB, D%NIJE
+  IF (PRCT(JIJ)>ICED%XRTMIN(2) .AND. PRST(JIJ)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JIJ)) THEN
     IF(.NOT. ICEP%LNEWCOEFF) THEN
-      ZZW(JL) = PLBDAS(JL)
+      ZZW(JIJ) = PLBDAS(JIJ)
     ELSE
-      ZZW(JL) = (PLBDAS(JL)**ICED%XALPHAS + ICED%XFVELOS**ICED%XALPHAS)**(1./ICED%XALPHAS)
+      ZZW(JIJ) = (PLBDAS(JIJ)**ICED%XALPHAS + ICED%XFVELOS**ICED%XALPHAS)**(1./ICED%XALPHAS)
     ENDIF
-    GRIM(JL) = .TRUE.
+    GRIM(JIJ) = .TRUE.
   ELSE
-    GRIM(JL) = .FALSE.
-    PRS_TEND(JL, IRCRIMS)=0.
-    PRS_TEND(JL, IRCRIMSS)=0.
-    PRS_TEND(JL, IRSRIMCG)=0.
+    GRIM(JIJ) = .FALSE.
+    PRS_TEND(JIJ, IRCRIMS)=0.
+    PRS_TEND(JIJ, IRCRIMSS)=0.
+    PRS_TEND(JIJ, IRSRIMCG)=0.
   ENDIF
 ENDDO
 !$mnh_end_do()
@@ -171,7 +172,7 @@ ENDDO
 !
 ! Collection of cloud droplets by snow: this rate is used for riming (T<0) and for conversion/melting (T>0)
 IF(.NOT. LDSOFT) THEN
-  CALL INTERP_MICRO_1D(KPROMA, KSIZE, ZZW, ICEP%NGAMINC, ICEP%XRIMINTP1, ICEP%XRIMINTP2, &
+  CALL INTERP_MICRO_1D(D, ZZW, ICEP%NGAMINC, ICEP%XRIMINTP1, ICEP%XRIMINTP2, &
                            PARAMI%LPACK_INTERP, GRIM, IBUF1, IBUF2, ZBUF1, ZBUF2, &
                            IGRIM, &
                            ICEP%XGAMINC_RIM1, ZZW1, ICEP%XGAMINC_RIM2, ZZW2, ICEP%XGAMINC_RIM4, ZZW3)
@@ -180,20 +181,20 @@ IF(.NOT. LDSOFT) THEN
     !        5.1.4  riming of the small sized aggregates
     !
 
-    DO JL=1, KSIZE
+    DO JIJ=D%NIJB, D%NIJE
       IF(.NOT. ICEP%LNEWCOEFF) THEN
-        IF (GRIM(JL)) THEN
-          PRS_TEND(JL, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(JL) * PRCT(JL) * PCOLF(JL) & ! RCRIMSS
-                                        * PLBDAS(JL)**ICEP%XEXCRIMSS &
-                                          * PRHODREF(JL)**(-ICED%XCEXVT)
+        IF (GRIM(JIJ)) THEN
+          PRS_TEND(JIJ, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(JIJ) * PRCT(JIJ) * PCOLF(JIJ) & ! RCRIMSS
+                                        * PLBDAS(JIJ)**ICEP%XEXCRIMSS &
+                                          * PRHODREF(JIJ)**(-ICED%XCEXVT)
         END IF
       ELSE
-        IF (GRIM(JL)) THEN
-          PRS_TEND(JL, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(JL) * PRCT(JL) * PCOLF(JL) & ! RCRIMSS
-                                        * PRST(JL)*(1+(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS) &
+        IF (GRIM(JIJ)) THEN
+          PRS_TEND(JIJ, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(JIJ) * PRCT(JIJ) * PCOLF(JIJ) & ! RCRIMSS
+                                        * PRST(JIJ)*(1+(ICED%XFVELOS/PLBDAS(JIJ))**ICED%XALPHAS) &
                                             **(-ICED%XNUS+ICEP%XEXCRIMSS/ICED%XALPHAS) &
-                                          * PRHODREF(JL)**(-ICED%XCEXVT+1.) &
-                                          * (PLBDAS(JL)) ** (ICEP%XEXCRIMSS+ICED%XBS)
+                                          * PRHODREF(JIJ)**(-ICED%XCEXVT+1.) &
+                                          * (PLBDAS(JIJ)) ** (ICEP%XEXCRIMSS+ICED%XBS)
         END IF
       ENDIF
     END DO
@@ -203,20 +204,20 @@ IF(.NOT. LDSOFT) THEN
     !
     !
 
-    DO JL=1, KSIZE
+    DO JIJ=D%NIJB, D%NIJE
       IF(.NOT. ICEP%LNEWCOEFF) THEN
-        IF (GRIM(JL)) THEN
-          PRS_TEND(JL, IRCRIMS)=ICEP%XCRIMSG * PRCT(JL) * PCOLF(JL)               & ! RCRIMS
-                                     * PLBDAS(JL)**ICEP%XEXCRIMSG  &
-                                       * PRHODREF(JL)**(-ICED%XCEXVT)
+        IF (GRIM(JIJ)) THEN
+          PRS_TEND(JIJ, IRCRIMS)=ICEP%XCRIMSG * PRCT(JIJ) * PCOLF(JIJ)               & ! RCRIMS
+                                     * PLBDAS(JIJ)**ICEP%XEXCRIMSG  &
+                                       * PRHODREF(JIJ)**(-ICED%XCEXVT)
         END IF
       ELSE
-        IF (GRIM(JL)) THEN
-          PRS_TEND(JL, IRCRIMS)=ICEP%XCRIMSG * PRCT(JL) * PCOLF(JL)               & ! RCRIMS
-                                     * PRST(JL)*(1+(ICED%XFVELOS/PLBDAS(JL))**(ICED%XALPHAS)) &
+        IF (GRIM(JIJ)) THEN
+          PRS_TEND(JIJ, IRCRIMS)=ICEP%XCRIMSG * PRCT(JIJ) * PCOLF(JIJ)               & ! RCRIMS
+                                     * PRST(JIJ)*(1+(ICED%XFVELOS/PLBDAS(JIJ))**(ICED%XALPHAS)) &
                                          **(-ICED%XNUS+ICEP%XEXCRIMSG/ICED%XALPHAS) &
-                                       * PRHODREF(JL)**(-ICED%XCEXVT+1.) &
-                                       * PLBDAS(JL)**(ICED%XBS+ICEP%XEXCRIMSG)
+                                       * PRHODREF(JIJ)**(-ICED%XCEXVT+1.) &
+                                       * PLBDAS(JIJ)**(ICED%XBS+ICEP%XEXCRIMSG)
         END IF
       ENDIF
     END DO
@@ -224,27 +225,27 @@ IF(.NOT. LDSOFT) THEN
     IF(PARAMI%CSNOWRIMING=='M90 ')THEN
       !Murakami 1990
 
-      DO JL=1, KSIZE
-        IF (GRIM(JL)) THEN
-          ZZW(JL) = PRS_TEND(JL, IRCRIMS) - PRS_TEND(JL, IRCRIMSS) ! RCRIMSG
+      DO JIJ=D%NIJB, D%NIJE
+        IF (GRIM(JIJ)) THEN
+          ZZW(JIJ) = PRS_TEND(JIJ, IRCRIMS) - PRS_TEND(JIJ, IRCRIMSS) ! RCRIMSG
         END IF
         IF(.NOT. ICEP%LNEWCOEFF) THEN
-          IF (GRIM(JL)) THEN
-            PRS_TEND(JL, IRSRIMCG)=ICEP%XSRIMCG * PLBDAS(JL)**ICEP%XEXSRIMCG*(1.0-ZZW2(JL))
-            PRS_TEND(JL, IRSRIMCG)=ZZW(JL)*PRS_TEND(JL, IRSRIMCG)/ &
+          IF (GRIM(JIJ)) THEN
+            PRS_TEND(JIJ, IRSRIMCG)=ICEP%XSRIMCG * PLBDAS(JIJ)**ICEP%XEXSRIMCG*(1.0-ZZW2(JIJ))
+            PRS_TEND(JIJ, IRSRIMCG)=ZZW(JIJ)*PRS_TEND(JIJ, IRSRIMCG)/ &
                            MAX(1.E-20, &
-                               ICEP%XSRIMCG3*ICEP%XSRIMCG2*PLBDAS(JL)**ICEP%XEXSRIMCG2*(1.-ZZW3(JL)) - &
-                               ICEP%XSRIMCG3*PRS_TEND(JL, IRSRIMCG))
+                               ICEP%XSRIMCG3*ICEP%XSRIMCG2*PLBDAS(JIJ)**ICEP%XEXSRIMCG2*(1.-ZZW3(JIJ)) - &
+                               ICEP%XSRIMCG3*PRS_TEND(JIJ, IRSRIMCG))
           END IF
         ELSE
-          IF (GRIM(JL)) THEN
-            PRS_TEND(JL, IRSRIMCG)=ICEP%XSRIMCG * PRST(JL)*PRHODREF(JL) &
-                                                     * PLBDAS(JL)**(ICEP%XEXSRIMCG+ICED%XBS)*(1.0-ZZW2(JL))
-            PRS_TEND(JL, IRSRIMCG)=ZZW(JL)*PRS_TEND(JL, IRSRIMCG)/ &
+          IF (GRIM(JIJ)) THEN
+            PRS_TEND(JIJ, IRSRIMCG)=ICEP%XSRIMCG * PRST(JIJ)*PRHODREF(JIJ) &
+                                                     * PLBDAS(JIJ)**(ICEP%XEXSRIMCG+ICED%XBS)*(1.0-ZZW2(JIJ))
+            PRS_TEND(JIJ, IRSRIMCG)=ZZW(JIJ)*PRS_TEND(JIJ, IRSRIMCG)/ &
                            MAX(1.E-20, &
-                               ICEP%XSRIMCG3*ICEP%XSRIMCG2*PRST(JL)*PRHODREF(JL) &
-                                                          *PLBDAS(JL)**ICEP%XEXSRIMCG2*(1.-ZZW3(JL)) - &
-                               ICEP%XSRIMCG3*PRS_TEND(JL, IRSRIMCG))
+                               ICEP%XSRIMCG3*ICEP%XSRIMCG2*PRST(JIJ)*PRHODREF(JIJ) &
+                                                          *PLBDAS(JIJ)**ICEP%XEXSRIMCG2*(1.-ZZW3(JIJ)) - &
+                               ICEP%XSRIMCG3*PRS_TEND(JIJ, IRSRIMCG))
 
           END IF
         ENDIF
@@ -259,23 +260,23 @@ IF(.NOT. LDSOFT) THEN
 ENDIF
 !
 
-!$mnh_do_concurrent( JL=1:KSIZE )
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
+DO JIJ=D%NIJB, D%NIJE
   ! More restrictive RIM mask to be used for riming by negative temperature only
-  IF(GRIM(JL) .AND. PT(JL)<CST%XTT) THEN
-    PRCRIMSS(JL)=MIN(ZFREEZ_RATE(JL), PRS_TEND(JL, IRCRIMSS))
-    ZFREEZ_RATE(JL)=MAX(0., ZFREEZ_RATE(JL)-PRCRIMSS(JL))
-    ZZW0D = MIN(1., ZFREEZ_RATE(JL) / MAX(1.E-20, PRS_TEND(JL, IRCRIMS) - PRCRIMSS(JL))) ! proportion we are able to freeze
-    PRCRIMSG(JL) = ZZW0D * MAX(0., PRS_TEND(JL, IRCRIMS) - PRCRIMSS(JL)) ! RCRIMSG
-    ZFREEZ_RATE(JL)=MAX(0., ZFREEZ_RATE(JL)-PRCRIMSG(JL))
-    PRSRIMCG(JL) = ZZW0D * PRS_TEND(JL, IRSRIMCG)
+  IF(GRIM(JIJ) .AND. PT(JIJ)<CST%XTT) THEN
+    PRCRIMSS(JIJ)=MIN(ZFREEZ_RATE(JIJ), PRS_TEND(JIJ, IRCRIMSS))
+    ZFREEZ_RATE(JIJ)=MAX(0., ZFREEZ_RATE(JIJ)-PRCRIMSS(JIJ))
+    ZZW0D = MIN(1., ZFREEZ_RATE(JIJ) / MAX(1.E-20, PRS_TEND(JIJ, IRCRIMS) - PRCRIMSS(JIJ))) ! proportion we are able to freeze
+    PRCRIMSG(JIJ) = ZZW0D * MAX(0., PRS_TEND(JIJ, IRCRIMS) - PRCRIMSS(JIJ)) ! RCRIMSG
+    ZFREEZ_RATE(JIJ)=MAX(0., ZFREEZ_RATE(JIJ)-PRCRIMSG(JIJ))
+    PRSRIMCG(JIJ) = ZZW0D * PRS_TEND(JIJ, IRSRIMCG)
 
-    PRSRIMCG(JL) = PRSRIMCG(JL) * MAX(0., -SIGN(1., -PRCRIMSG(JL)))
-    PRCRIMSG(JL)=MAX(0., PRCRIMSG(JL))
+    PRSRIMCG(JIJ) = PRSRIMCG(JIJ) * MAX(0., -SIGN(1., -PRCRIMSG(JIJ)))
+    PRCRIMSG(JIJ)=MAX(0., PRCRIMSG(JIJ))
   ELSE
-    PRCRIMSS(JL)=0.
-    PRCRIMSG(JL)=0.
-    PRSRIMCG(JL)=0.
+    PRCRIMSS(JIJ)=0.
+    PRCRIMSG(JIJ)=0.
+    PRSRIMCG(JIJ)=0.
   ENDIF
 ENDDO
 !$mnh_end_do()
@@ -284,15 +285,15 @@ ENDDO
 !*       5.2    rain accretion onto the aggregates
 !
 
-!$mnh_do_concurrent( JL=1:KSIZE )
-DO JL = 1, KSIZE
-  IF (PRRT(JL)>ICED%XRTMIN(3) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
-    GACC(JL) = .TRUE.
+!$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
+DO JIJ=D%NIJB, D%NIJE
+  IF (PRRT(JIJ)>ICED%XRTMIN(3) .AND. PRST(JIJ)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JIJ)) THEN
+    GACC(JIJ) = .TRUE.
   ELSE
-    GACC(JL) = .FALSE.
-    PRS_TEND(JL, IRRACCS)=0.
-    PRS_TEND(JL, IRRACCSS)=0.
-    PRS_TEND(JL, IRSACCRG)=0.
+    GACC(JIJ) = .FALSE.
+    PRS_TEND(JIJ, IRRACCS)=0.
+    PRS_TEND(JIJ, IRRACCSS)=0.
+    PRS_TEND(JIJ, IRSACCRG)=0.
   END IF
 ENDDO
 !$mnh_end_do()
@@ -303,7 +304,7 @@ IF(.NOT. LDSOFT) THEN
   PRS_TEND(:, IRRACCSS)=0.
   PRS_TEND(:, IRSACCRG)=0.
 
-  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAS, PLBDAR, ICEP%NACCLBDAS, ICEP%NACCLBDAR, &
+  CALL INTERP_MICRO_2D(D, PLBDAS, PLBDAR, ICEP%NACCLBDAS, ICEP%NACCLBDAR, &
                       &ICEP%XACCINTP1S, ICEP%XACCINTP2S, ICEP%XACCINTP1R, ICEP%XACCINTP2R,&
                       &PARAMI%LPACK_INTERP, GACC, IBUF1, IBUF2, IBUF3, ZBUF1, ZBUF2, ZBUF3, &
                       &IGACC, &
@@ -312,39 +313,39 @@ IF(.NOT. LDSOFT) THEN
     !        5.2.4  raindrop accretion on the small sized aggregates
     !
 
-    DO JL=1, KSIZE
+    DO JIJ=D%NIJB, D%NIJE
       IF(.NOT. ICEP%LNEWCOEFF) THEN
-        IF (GACC(JL)) THEN
-          ZZW(JL) =                                                        & !! coef of RRACCS
-              ICEP%XFRACCSS*( PLBDAS(JL)**ICED%XCXS )*( PRHODREF(JL)**(-ICED%XCEXVT-1.) ) &
-           *( ICEP%XLBRACCS1/((PLBDAS(JL)**2)               ) +                  &
-              ICEP%XLBRACCS2/( PLBDAS(JL)    * PLBDAR(JL)    ) +                  &
-              ICEP%XLBRACCS3/(               (PLBDAR(JL)**2)) )/PLBDAR(JL)**4
+        IF (GACC(JIJ)) THEN
+          ZZW(JIJ) =                                                        & !! coef of RRACCS
+              ICEP%XFRACCSS*( PLBDAS(JIJ)**ICED%XCXS )*( PRHODREF(JIJ)**(-ICED%XCEXVT-1.) ) &
+           *( ICEP%XLBRACCS1/((PLBDAS(JIJ)**2)               ) +                  &
+              ICEP%XLBRACCS2/( PLBDAS(JIJ)    * PLBDAR(JIJ)    ) +                  &
+              ICEP%XLBRACCS3/(               (PLBDAR(JIJ)**2)) )/PLBDAR(JIJ)**4
         END IF
       ELSE
-        IF (GACC(JL)) THEN
-          ZZW(JL) =                                                        & !! coef of RRACCS
-              ICEP%XFRACCSS*( PRST(JL)*PLBDAS(JL)**ICED%XBS )*( PRHODREF(JL)**(-ICED%XCEXVT) ) &
-           *( ICEP%XLBRACCS1/((PLBDAS(JL)**2)               ) +                  &
-              ICEP%XLBRACCS2/( PLBDAS(JL)    * PLBDAR(JL)    ) +                  &
-              ICEP%XLBRACCS3/(               (PLBDAR(JL)**2)) )/PLBDAR(JL)**4
+        IF (GACC(JIJ)) THEN
+          ZZW(JIJ) =                                                        & !! coef of RRACCS
+              ICEP%XFRACCSS*( PRST(JIJ)*PLBDAS(JIJ)**ICED%XBS )*( PRHODREF(JIJ)**(-ICED%XCEXVT) ) &
+           *( ICEP%XLBRACCS1/((PLBDAS(JIJ)**2)               ) +                  &
+              ICEP%XLBRACCS2/( PLBDAS(JIJ)    * PLBDAR(JIJ)    ) +                  &
+              ICEP%XLBRACCS3/(               (PLBDAR(JIJ)**2)) )/PLBDAR(JIJ)**4
         END IF
       ENDIF
-      IF (GACC(JL)) THEN
-        PRS_TEND(JL, IRRACCSS) =ZZW1(JL)*ZZW(JL)
+      IF (GACC(JIJ)) THEN
+        PRS_TEND(JIJ, IRRACCSS) =ZZW1(JIJ)*ZZW(JIJ)
       END IF
       IF(PARAMI%LOCND2) THEN
-        IF (GACC(JL)) THEN
-          PRS_TEND(JL, IRRACCSS) = PRS_TEND(JL, IRRACCSS) * ICEP%XFRMIN(7)
+        IF (GACC(JIJ)) THEN
+          PRS_TEND(JIJ, IRRACCSS) = PRS_TEND(JIJ, IRRACCSS) * ICEP%XFRMIN(7)
         END IF
       ENDIF
     END DO
 
     !
 
-    DO JL=1, KSIZE
-      IF (GACC(JL)) THEN
-        PRS_TEND(JL, IRRACCS) = ZZW2(JL)*ZZW(JL)
+    DO JIJ=D%NIJB, D%NIJE
+      IF (GACC(JIJ)) THEN
+        PRS_TEND(JIJ, IRRACCS) = ZZW2(JIJ)*ZZW(JIJ)
       END IF
     END DO
 
@@ -353,22 +354,22 @@ IF(.NOT. LDSOFT) THEN
     !               into graupeln
     !
 
-    DO JL=1, KSIZE
+    DO JIJ=D%NIJB, D%NIJE
       IF(.NOT. ICEP%LNEWCOEFF) THEN
-        IF (GACC(JL) .AND. (.NOT. PARAMI%LOCND2 .OR. PRST(JL)>ICEP%XFRMIN(1) )) THEN
-          PRS_TEND(JL, IRSACCRG) = ICEP%XFSACCRG*ZZW3(JL)*                    & ! RSACCRG
-            ( PLBDAS(JL)**(ICED%XCXS-ICED%XBS) )*( PRHODREF(JL)**(-ICED%XCEXVT-1.) ) &
-             *( ICEP%XLBSACCR1/((PLBDAR(JL)**2)               ) +           &
-                ICEP%XLBSACCR2/( PLBDAR(JL)    * PLBDAS(JL)    ) +           &
-                ICEP%XLBSACCR3/(               (PLBDAS(JL)**2)) )/PLBDAR(JL)
+        IF (GACC(JIJ) .AND. (.NOT. PARAMI%LOCND2 .OR. PRST(JIJ)>ICEP%XFRMIN(1) )) THEN
+          PRS_TEND(JIJ, IRSACCRG) = ICEP%XFSACCRG*ZZW3(JIJ)*                    & ! RSACCRG
+            ( PLBDAS(JIJ)**(ICED%XCXS-ICED%XBS) )*( PRHODREF(JIJ)**(-ICED%XCEXVT-1.) ) &
+             *( ICEP%XLBSACCR1/((PLBDAR(JIJ)**2)               ) +           &
+                ICEP%XLBSACCR2/( PLBDAR(JIJ)    * PLBDAS(JIJ)    ) +           &
+                ICEP%XLBSACCR3/(               (PLBDAS(JIJ)**2)) )/PLBDAR(JIJ)
         END IF
       ELSE
-        IF (GACC(JL) .AND. (.NOT. PARAMI%LOCND2 .OR. PRST(JL)>ICEP%XFRMIN(1) )) THEN
-          PRS_TEND(JL, IRSACCRG) = ICEP%XFSACCRG*ZZW3(JL)*                    & ! RSACCRG
-            ( PRST(JL))*( PRHODREF(JL)**(-ICED%XCEXVT) ) &
-             *( ICEP%XLBSACCR1/((PLBDAR(JL)**2)               ) +           &
-                ICEP%XLBSACCR2/( PLBDAR(JL)    * PLBDAS(JL)    ) +           &
-                ICEP%XLBSACCR3/(               (PLBDAS(JL)**2)) )/PLBDAR(JL)
+        IF (GACC(JIJ) .AND. (.NOT. PARAMI%LOCND2 .OR. PRST(JIJ)>ICEP%XFRMIN(1) )) THEN
+          PRS_TEND(JIJ, IRSACCRG) = ICEP%XFSACCRG*ZZW3(JIJ)*                    & ! RSACCRG
+            ( PRST(JIJ))*( PRHODREF(JIJ)**(-ICED%XCEXVT) ) &
+             *( ICEP%XLBSACCR1/((PLBDAR(JIJ)**2)               ) +           &
+                ICEP%XLBSACCR2/( PLBDAR(JIJ)    * PLBDAS(JIJ)    ) +           &
+                ICEP%XLBSACCR3/(               (PLBDAS(JIJ)**2)) )/PLBDAR(JIJ)
         END IF
       ENDIF
     END DO
@@ -377,23 +378,23 @@ IF(.NOT. LDSOFT) THEN
 ENDIF
 !
 
-!$mnh_do_concurrent( JL=1:KSIZE )
-DO JL=1, KSIZE
+!$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
+DO JIJ=D%NIJB, D%NIJE
   ! More restrictive ACC mask to be used for accretion by negative temperature only
-  IF(GACC(JL) .AND. PT(JL)<CST%XTT) THEN
-    PRRACCSS(JL)=MIN(ZFREEZ_RATE(JL), PRS_TEND(JL, IRRACCSS))
-    ZFREEZ_RATE(JL)=MAX(0., ZFREEZ_RATE(JL)-PRRACCSS(JL))
-    ZZW(JL) = MIN(1., ZFREEZ_RATE(JL) / MAX(1.E-20, PRS_TEND(JL, IRRACCS)-PRRACCSS(JL))) ! proportion we are able to freeze
-    PRRACCSG(JL)=ZZW(JL) * MAX(0., PRS_TEND(JL, IRRACCS)-PRRACCSS(JL))
-    ZFREEZ_RATE(JL) = MAX(0., ZFREEZ_RATE(JL)-PRRACCSG(JL))
-    PRSACCRG(JL)=ZZW(JL) * PRS_TEND(JL, IRSACCRG)
+  IF(GACC(JIJ) .AND. PT(JIJ)<CST%XTT) THEN
+    PRRACCSS(JIJ)=MIN(ZFREEZ_RATE(JIJ), PRS_TEND(JIJ, IRRACCSS))
+    ZFREEZ_RATE(JIJ)=MAX(0., ZFREEZ_RATE(JIJ)-PRRACCSS(JIJ))
+    ZZW(JIJ) = MIN(1., ZFREEZ_RATE(JIJ) / MAX(1.E-20, PRS_TEND(JIJ, IRRACCS)-PRRACCSS(JIJ))) ! proportion we are able to freeze
+    PRRACCSG(JIJ)=ZZW(JIJ) * MAX(0., PRS_TEND(JIJ, IRRACCS)-PRRACCSS(JIJ))
+    ZFREEZ_RATE(JIJ) = MAX(0., ZFREEZ_RATE(JIJ)-PRRACCSG(JIJ))
+    PRSACCRG(JIJ)=ZZW(JIJ) * PRS_TEND(JIJ, IRSACCRG)
 
-    PRSACCRG(JL) = PRSACCRG(JL) * MAX(0., -SIGN(1., -PRRACCSG(JL)))
-    PRRACCSG(JL)=MAX(0., PRRACCSG(JL))
+    PRSACCRG(JIJ) = PRSACCRG(JIJ) * MAX(0., -SIGN(1., -PRRACCSG(JIJ)))
+    PRRACCSG(JIJ)=MAX(0., PRRACCSG(JIJ))
   ELSE
-    PRRACCSS(JL)=0.
-    PRRACCSG(JL)=0.
-    PRSACCRG(JL)=0.
+    PRRACCSS(JIJ)=0.
+    PRRACCSG(JIJ)=0.
+    PRSACCRG(JIJ)=0.
   ENDIF
 ENDDO
 !$mnh_end_do()
@@ -403,37 +404,37 @@ ENDDO
 !*       5.3    Conversion-Melting of the aggregates
 !
 
-!$mnh_do_concurrent( JL=1:KSIZE )
-DO JL=1, KSIZE
-  IF(PRST(JL)>ICED%XRTMIN(5) .AND. PT(JL)>CST%XTT .AND. LDCOMPUTE(JL)) THEN
+!$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
+DO JIJ=D%NIJB, D%NIJE
+  IF(PRST(JIJ)>ICED%XRTMIN(5) .AND. PT(JIJ)>CST%XTT .AND. LDCOMPUTE(JIJ)) THEN
     IF(.NOT. LDSOFT) THEN
-      PRSMLTG(JL)=PRVT(JL)*PPRES(JL)/(CST%XEPSILO+PRVT(JL)) ! Vapor pressure
+      PRSMLTG(JIJ)=PRVT(JIJ)*PPRES(JIJ)/(CST%XEPSILO+PRVT(JIJ)) ! Vapor pressure
       IF(PARAMI%LEVLIMIT) THEN
-        PRSMLTG(JL)=MIN(PRSMLTG(JL), EXP(CST%XALPW-CST%XBETAW/PT(JL)-CST%XGAMW*LOG(PT(JL)))) ! min(ev, es_w(T))
+        PRSMLTG(JIJ)=MIN(PRSMLTG(JIJ), EXP(CST%XALPW-CST%XBETAW/PT(JIJ)-CST%XGAMW*LOG(PT(JIJ)))) ! min(ev, es_w(T))
       ENDIF
-      PRSMLTG(JL)= PKA(JL)*(CST%XTT-PT(JL)) +                                 &
-                  &(PDV(JL)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( PT(JL) - CST%XTT )) &
-                  & *(CST%XESTT-PRSMLTG(JL))/(CST%XRV*PT(JL))             )
+      PRSMLTG(JIJ)= PKA(JIJ)*(CST%XTT-PT(JIJ)) +                                 &
+                  &(PDV(JIJ)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( PT(JIJ) - CST%XTT )) &
+                  & *(CST%XESTT-PRSMLTG(JIJ))/(CST%XRV*PT(JIJ))             )
       !
       ! compute RSMLT
       !
       IF(.NOT. ICEP%LNEWCOEFF) THEN
-        PRSMLTG(JL)  = ICEP%XFSCVMG*MAX(0., (-PRSMLTG(JL) * &
-                   (ICEP%X0DEPS*       PLBDAS(JL)**ICEP%XEX0DEPS +     &
-                   ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS)    &
-                   -(PRS_TEND(JL, IRCRIMS) + PRS_TEND(JL, IRRACCS)) *       &
-                   (PRHODREF(JL)*CST%XCL*(CST%XTT-PT(JL))) &
-                   ) / (PRHODREF(JL)*CST%XLMTT))
+        PRSMLTG(JIJ)  = ICEP%XFSCVMG*MAX(0., (-PRSMLTG(JIJ) * &
+                   (ICEP%X0DEPS*       PLBDAS(JIJ)**ICEP%XEX0DEPS +     &
+                   ICEP%X1DEPS*PCJ(JIJ)*PLBDAS(JIJ)**ICEP%XEX1DEPS)    &
+                   -(PRS_TEND(JIJ, IRCRIMS) + PRS_TEND(JIJ, IRRACCS)) *       &
+                   (PRHODREF(JIJ)*CST%XCL*(CST%XTT-PT(JIJ))) &
+                   ) / (PRHODREF(JIJ)*CST%XLMTT))
       ELSE
-        PRSMLTG(JL)  = ICEP%XFSCVMG*MAX(0., (-PRSMLTG(JL) * &
-                   PRST(JL)*PRHODREF(JL) *    &
-                   (ICEP%X0DEPS*       PLBDAS(JL)**(ICED%XBS+ICEP%XEX0DEPS) + &
-                   ICEP%X1DEPS*PCJ(JL)* &
-                   (1+0.5*(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS) &
-                   *PLBDAS(JL)**(ICED%XBS+ICEP%XEX1DEPS)) &
-                   -(PRS_TEND(JL, IRCRIMS) + PRS_TEND(JL, IRRACCS)) *       &
-                   (PRHODREF(JL)*CST%XCL*(CST%XTT-PT(JL))) &
-                   ) / (PRHODREF(JL)*CST%XLMTT))
+        PRSMLTG(JIJ)  = ICEP%XFSCVMG*MAX(0., (-PRSMLTG(JIJ) * &
+                   PRST(JIJ)*PRHODREF(JIJ) *    &
+                   (ICEP%X0DEPS*       PLBDAS(JIJ)**(ICED%XBS+ICEP%XEX0DEPS) + &
+                   ICEP%X1DEPS*PCJ(JIJ)* &
+                   (1+0.5*(ICED%XFVELOS/PLBDAS(JIJ))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS) &
+                   *PLBDAS(JIJ)**(ICED%XBS+ICEP%XEX1DEPS)) &
+                   -(PRS_TEND(JIJ, IRCRIMS) + PRS_TEND(JIJ, IRRACCS)) *       &
+                   (PRHODREF(JIJ)*CST%XCL*(CST%XTT-PT(JIJ))) &
+                   ) / (PRHODREF(JIJ)*CST%XLMTT))
       ENDIF
       !
       ! note that RSCVMG = RSMLT*XFSCVMG but no heat is exchanged (at the rate RSMLT)
@@ -443,11 +444,11 @@ DO JL=1, KSIZE
       ! When T > XTT, if riming was still enabled, rc would produce snow and graupel with snow becomming graupel (conversion/melting) and graupel becomming rain (melting)
       ! To insure consistency when crossing T=XTT, rc collected with T>XTT must be transformed in rain.
       ! rc cannot produce iced species with a positive temperature but is still collected with a good efficiency by snow
-      PRCMLTSR(JL) = PRS_TEND(JL, IRCRIMS) ! both species are liquid, no heat is exchanged
+      PRCMLTSR(JIJ) = PRS_TEND(JIJ, IRCRIMS) ! both species are liquid, no heat is exchanged
     ENDIF
   ELSE
-    PRSMLTG(JL)=0.
-    PRCMLTSR(JL)=0.
+    PRSMLTG(JIJ)=0.
+    PRCMLTSR(JIJ)=0.
   ENDIF
 ENDDO
 !$mnh_end_do()
