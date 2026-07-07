@@ -11,6 +11,9 @@ SUBROUTINE ICE4_RSRIMCG_OLD(CST, PARAMI, ICEP, ICED, D, LDSOFT, LDCOMPUTE, &
                            &PLBDAS, &
                            &PT, PRCT, PRST, &
                            &PRSRIMCG_MR)
+
+!$ACDC singlecolumn --dummy
+
 !!
 !!**  PURPOSE
 !!    -------

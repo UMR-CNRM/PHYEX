@@ -12,6 +12,9 @@ SUBROUTINE ICE4_SLOW(CST, PARAMI, ICEP, ICED, D, LDSOFT, OELEC, LDCOMPUTE, PRHOD
                      &PAI, PCJ, PHLI_HCF, PHLI_HRI,&
                      &PLATHAM_IAGGS, &
                      &PRCHONI, PRVDEPS, PRIAGGS, PRIAUTS, PRVDEPG)
+
+!$ACDC singlecolumn --dummy
+
 !!
 !!**  PURPOSE
 !!    -------

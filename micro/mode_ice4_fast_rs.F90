@@ -16,6 +16,9 @@ SUBROUTINE ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, D, LDSOFT, LDCOMPUTE, &
                        &PRRACCSS, PRRACCSG, PRSACCRG, PRSMLTG, &
                        &PRCMLTSR, &
                        &PRS_TEND)
+
+!$ACDC singlecolumn --dummy
+
 !!
 !!**  PURPOSE
 !!    -------

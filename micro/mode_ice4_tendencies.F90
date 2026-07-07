@@ -21,6 +21,9 @@ SUBROUTINE ICE4_TENDENCIES(CST, PARAMI, ICEP, ICED, BUCONF, D, &
                           &PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
                           &PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, &
                           &PRAINFR)
+
+!$ACDC singlecolumn --dummy --nocreate-interface
+
 !!
 !!**  PURPOSE
 !!    -------

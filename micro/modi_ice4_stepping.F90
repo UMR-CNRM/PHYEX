@@ -17,6 +17,8 @@ SUBROUTINE ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
                         &PICLDFR, PZZZ, PCONC3D, PSSIO, PSSIU, PIFR, &
                         &PBUDGETS, PLATHAM_IAGGS)
 
+!$ACDC singlecolumn
+
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_BUDGET,         ONLY: TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
@@ -33,9 +35,6 @@ USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & IBUNUM_EXTRA, & ! Number of extra tendency terms
       & IRREVAV,      & ! Index for the evaporation tendency
       & IBUEXTRAIND
-! Index indirection
-!
-USE MODE_ICE4_TENDENCIES, ONLY: ICE4_TENDENCIES
 !
 IMPLICIT NONE
 !

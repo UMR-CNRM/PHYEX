@@ -7,6 +7,9 @@ SUBROUTINE ICE4_FAST_RI_RS(CST, PARAMI, ICEP, ICED, D, LDSOFT, LDCOMPUTE, &
                        &PSSI, PSSIO, PSSIU, PICLDFR, PIFR, &
                        &PRVT, PRIT, PRST, PT, &
                        &PRILARS, PRVDEPI)
+
+!$ACDC singlecolumn --dummy
+
 !!
 !!**  PURPOSE
 !!    -------
