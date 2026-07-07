@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 SUBROUTINE ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
-                        &KPROMA, KMICRO, PTSTEP, &
+                        &KPROMA, KSIZE , PTSTEP, &
                         &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
                         &PEXN, PRHODREF, PPABST, PCIT, PCLDFR, &
                         &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
@@ -68,7 +68,7 @@ TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KPROMA ! cache-blocking factor for microphysic loop
-INTEGER,                  INTENT(IN)    :: KMICRO ! Case r_x>0 locations
+INTEGER,                  INTENT(IN)    :: KSIZE  ! Case r_x>0 locations
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 LOGICAL,                  INTENT(IN)    :: OSAVE_MICRO   ! if true, save the microphysical tendencies
@@ -187,14 +187,14 @@ ENDIF
 
 IF (PARAMI%LEXT_TEND) THEN
 
-  DO JL=1, KMICRO
+  DO JL=1, KSIZE 
     ZEXTTH(JL)=PTHS(JL)-PTHT(JL)*ZINV_TSTEP
   ENDDO
 
 
 
   DO JV=1, KRR
-    DO JL=1, KMICRO
+    DO JL=1, KSIZE 
       ZEXTPK(JL, JV)=PRS(JL, JV)-PRT(JL, JV)*ZINV_TSTEP
     ENDDO
   ENDDO
@@ -203,7 +203,7 @@ ENDIF
 IF (PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM') THEN
 
 
-  DO JL=1, KMICRO
+  DO JL=1, KSIZE 
     ZSIGMA_RC(JL)=PSIGS(JL)*2.
   ENDDO
 
@@ -211,7 +211,7 @@ ENDIF
 IF (PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU') THEN
 
 
-  DO JL=1, KMICRO
+  DO JL=1, KSIZE 
     ZHLC_LRC(JL) = PRT(JL, IRC) - PHLC_HRC(JL)
     ZHLI_LRI(JL) = PRT(JL, IRI) - PHLI_HRI(JL)
     IF(PRT(JL, IRC)>0.) THEN
@@ -234,9 +234,9 @@ ENDIF
 !
 !
 
-IITER(1:KMICRO)=0
+IITER(1:KSIZE )=0
 
-DO JL=1, KMICRO
+DO JL=1, KSIZE 
   IF(LDMICRO(JL)) THEN
     ZTIME(JL)=0. ! Current integration time (all points may have a different integration time)
   ELSE
@@ -245,16 +245,16 @@ DO JL=1, KMICRO
 ENDDO
 
 
-DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
+DO WHILE(ANY(ZTIME(1:KSIZE )<PTSTEP)) ! Loop to *really* compute tendencies
 
   IF(PARAMI%XTSTEP_TS/=0.) THEN
     ! In this case we need to remember the time when tendencies were computed
     ! because when time has evolved more than a limit, we must re-compute tendencies
-    ZTIME_LASTCALL(1:KMICRO)=ZTIME(1:KMICRO)
+    ZTIME_LASTCALL(1:KSIZE )=ZTIME(1:KSIZE )
   ENDIF
 
 
-  DO JL=1, KMICRO
+  DO JL=1, KSIZE 
     IF (ZTIME(JL) < PTSTEP) THEN
       LLCOMPUTE(JL)=.TRUE. ! Computation (.TRUE.) only for points for which integration time has not reached the timestep
       IITER(JL)=IITER(JL)+1
@@ -263,23 +263,23 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     ENDIF
   ENDDO
 
-  LL_ANY_ITER=ANY(IITER(1:KMICRO) < INB_ITER_MAX)
+  LL_ANY_ITER=ANY(IITER(1:KSIZE ) < INB_ITER_MAX)
   LLCPZ0RT=.TRUE.
   LSOFT=.FALSE. ! We *really* compute the tendencies
 
-  DO WHILE(ANY(LLCOMPUTE(1:KMICRO))) ! Loop to adjust tendencies when we cross the 0°C or when a species disappears
+  DO WHILE(ANY(LLCOMPUTE(1:KSIZE ))) ! Loop to adjust tendencies when we cross the 0°C or when a species disappears
 
-    ZSUM2(1:KMICRO)=PRT(1:KMICRO, IRI)
+    ZSUM2(1:KSIZE )=PRT(1:KSIZE , IRI)
 
     DO JV=IRI+1,KRR
-      DO JL=1, KMICRO
+      DO JL=1, KSIZE 
         ZSUM2(JL)=ZSUM2(JL)+PRT(JL, JV)
       ENDDO
     ENDDO
 
 
 
-    DO JL=1, KMICRO
+    DO JL=1, KSIZE 
       ZDEVIDE=(CST%XCPD + CST%XCPV*PRT(JL, IRV) + CST%XCL*(PRT(JL, IRC)+PRT(JL, IRR)) + CST%XCI*ZSUM2(JL)) * PEXN(JL)
       ZZT(JL) = PTHT(JL) * PEXN(JL)
       ZLSFACT(JL)=(CST%XLSTT+(CST%XCPV-CST%XCI)*(ZZT(JL)-CST%XTT)) / ZDEVIDE
@@ -293,7 +293,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     !
     ! Tendencies are *really* computed when LSOFT==.FALSE. and only adjusted otherwise
     CALL ICE4_TENDENCIES(CST, PARAMI, ICEP, ICED, BUCONF, &
-                        &KPROMA, KMICRO, &
+                        &KPROMA, KSIZE , &
                         &KRR, LSOFT, LLCOMPUTE, &
                         &OSAVE_MICRO, OELEC, &
                         &PEXN, PRHODREF, ZLVFACT, ZLSFACT, &
@@ -311,14 +311,14 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     ! External tendencies
     IF(PARAMI%LEXT_TEND) THEN
 
-      DO JL=1, KMICRO
+      DO JL=1, KSIZE 
         ZATH(JL) = ZATH(JL) + ZEXTTH(JL)
       ENDDO
 
 
 
       DO JV=1, KRR
-        DO JL=1, KMICRO
+        DO JL=1, KSIZE 
           ZA(JL, JV) = ZA(JL, JV) + ZEXTPK(JL, JV)
         ENDDO
       ENDDO
@@ -332,7 +332,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     ! If we can, we shall use these tendencies until the end of the timestep
 
 
-    DO JL=1, KMICRO
+    DO JL=1, KSIZE 
       IF(LLCOMPUTE(JL)) THEN
         ZMAXTIME(JL)=(PTSTEP-ZTIME(JL)) ! Remaining time until the end of the timestep
       ELSE
@@ -343,8 +343,8 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     !We need to adjust tendencies when temperature reaches 0
     IF(PARAMI%LFEEDBACKT) THEN
 
-      !$mnh_do_concurrent( JL=1:KMICRO )
-      DO JL=1, KMICRO
+      !$mnh_do_concurrent( JL=1:KSIZE  )
+      DO JL=1, KSIZE 
         !Is ZB(:, ITH) enough to change temperature sign?
         ZX=CST%XTT/PEXN(JL)
         IF ((PTHT(JL) - ZX) * (PTHT(JL) + ZBTH(JL) - ZX) < 0.) THEN
@@ -367,7 +367,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 
     DO JV=1, KRR
 
-      DO JL=1, KMICRO
+      DO JL=1, KSIZE 
         IF (ZA(JL, JV) < -1.E-20 .AND. PRT(JL, JV) > ZRSMIN(JV)) THEN
           ZMAXTIME(JL)=MIN(ZMAXTIME(JL), -(ZB(JL, JV)+PRT(JL, JV))/ZA(JL, JV))
           ZMAXTIME(JL)=MAX(ZMAXTIME(JL), CST%XMNH_TINY) !to prevent rounding errors
@@ -378,7 +378,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     !We stop when the end of the timestep is reached
 
 
-    DO JL=1, KMICRO
+    DO JL=1, KSIZE 
       IF (ZTIME(JL)+ZMAXTIME(JL) >= PTSTEP) THEN
         LLCOMPUTE(JL)=.FALSE.
       ENDIF
@@ -388,7 +388,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     IF (PARAMI%XTSTEP_TS/=0.) THEN
 
 
-      DO JL=1, KMICRO
+      DO JL=1, KSIZE 
         IF ((IITER(JL) < INB_ITER_MAX) .AND. (ZTIME(JL)+ZMAXTIME(JL) > ZTIME_LASTCALL(JL)+ZTSTEP)) THEN
           ZMAXTIME(JL)=ZTIME_LASTCALL(JL)-ZTIME(JL)+ZTSTEP
           LLCOMPUTE(JL)=.FALSE.
@@ -408,10 +408,10 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
         DO JV=1,KRR
 
           IF (LLCPZ0RT) THEN
-            Z0RT(1:KMICRO, JV)=PRT(1:KMICRO, JV)
+            Z0RT(1:KSIZE , JV)=PRT(1:KSIZE , JV)
           ENDIF
 
-          DO JL=1, KMICRO
+          DO JL=1, KSIZE 
             IF (IITER(JL)<INB_ITER_MAX .AND. ABS(ZA(JL,JV))>1.E-20) THEN
               ZTIME_THRESHOLD1D(JL)=(SIGN(1., ZA(JL, JV))*PARAMI%XMRSTEP+ &
                                     &Z0RT(JL, JV)-PRT(JL, JV)-ZB(JL, JV))/ZA(JL, JV)
@@ -420,7 +420,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
             ENDIF
           ENDDO
 
-          DO JL=1, KMICRO
+          DO JL=1, KSIZE 
             IF (ZTIME_THRESHOLD1D(JL)>=0 .AND. ZTIME_THRESHOLD1D(JL)<ZMAXTIME(JL) .AND. &
                &(PRT(JL, JV)>ZRSMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
               ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD1D(JL))
@@ -429,12 +429,12 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
           ENDDO
           IF (JV == 1) THEN
 
-            DO JL=1, KMICRO
+            DO JL=1, KSIZE 
               ZMAXB(JL)=ABS(ZB(JL, JV))
             ENDDO
           ELSE
 
-            DO JL=1, KMICRO
+            DO JL=1, KSIZE 
               ZMAXB(JL)=MAX(ZMAXB(JL), ABS(ZB(JL, JV)))
             ENDDO
           ENDIF
@@ -443,7 +443,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
         LLCPZ0RT=.FALSE.
 
 
-        DO JL=1, KMICRO
+        DO JL=1, KSIZE 
           IF (IITER(JL)<INB_ITER_MAX .AND. ZMAXB(JL)>PARAMI%XMRSTEP) THEN
             ZMAXTIME(JL)=0.
             LLCOMPUTE(JL)=.FALSE.
@@ -458,7 +458,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     !
     !
 
-    DO JL=1, KMICRO
+    DO JL=1, KSIZE 
       IF(LDMICRO(JL)) THEN
         PTHT(JL)=PTHT(JL)+ZATH(JL)*ZMAXTIME(JL)+ZBTH(JL)
       ENDIF
@@ -467,7 +467,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 
 
     DO JV=1, KRR
-      DO JL=1, KMICRO
+      DO JL=1, KSIZE 
         IF(LDMICRO(JL)) THEN
           PRT(JL, JV)=PRT(JL, JV)+ZA(JL, JV)*ZMAXTIME(JL)+ZB(JL, JV)
         ENDIF
@@ -476,7 +476,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 
 
 
-    DO JL=1, KMICRO
+    DO JL=1, KSIZE 
       IF (PRT(JL,IRI)<=0. .AND. LDMICRO(JL)) PCIT(JL) = 0.
       ZTIME(JL)=ZTIME(JL)+ZMAXTIME(JL)
     ENDDO
@@ -490,7 +490,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 
 
       DO JV=1, IBUNUM-IBUNUM_MR-IBUNUM_EXTRA
-        DO JL=1, KMICRO
+        DO JL=1, KSIZE 
           PBUDGETS(JL, JV) = PBUDGETS(JL, JV) + ZBU_INST(JL, JV)*ZMAXTIME(JL)
         ENDDO
       ENDDO
@@ -500,7 +500,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 
 
       DO JV=IBUNUM-IBUNUM_MR-IBUNUM_EXTRA+1, IBUNUM-IBUNUM_EXTRA
-        DO JL=1, KMICRO
+        DO JL=1, KSIZE 
           PBUDGETS(JL, JV) = PBUDGETS(JL, JV) + ZBU_INST(JL, JV)
         ENDDO
       ENDDO
@@ -511,7 +511,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
         JJV=IBUEXTRAIND(JV)
 
 
-        DO JL=1, KMICRO
+        DO JL=1, KSIZE 
           PBUDGETS(JL, JJV) = PBUDGETS(JL, JJV) + ZBU_INST(JL, JV)
         ENDDO
 
@@ -528,7 +528,7 @@ ENDDO !Temporal loop
 IF(PARAMI%LEXT_TEND) THEN
   !Z..T variables contain the external tendency, we substract it
 
-  DO JL=1, KMICRO
+  DO JL=1, KSIZE 
     IF(LDMICRO(JL)) THEN
       PTHT(JL)=PTHT(JL) - ZEXTTH(JL) * PTSTEP
     ENDIF
@@ -537,7 +537,7 @@ IF(PARAMI%LEXT_TEND) THEN
 
 
   DO JV=1, KRR
-    DO JL=1, KMICRO
+    DO JL=1, KSIZE 
       IF(LDMICRO(JL)) THEN
         PRT(JL, JV) = PRT(JL, JV) - ZEXTPK(JL, JV) * PTSTEP
       ENDIF
@@ -546,7 +546,7 @@ IF(PARAMI%LEXT_TEND) THEN
 
 ENDIF
 
-DO JL=1, KMICRO
+DO JL=1, KSIZE 
   PRREVAV(JL)=ZBU_INST(JL, IRREVAV)
 ENDDO
 
