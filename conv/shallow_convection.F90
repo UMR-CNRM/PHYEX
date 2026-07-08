@@ -213,7 +213,7 @@ ELSE IF (ICONV < D%NIT*9/10) THEN
                                 ISDPL, ISPBL, ISLCL, ZSTHLCL, ZSTLCL,&
                                 ZSRVLCL, ZSWLCL, ZSZLCL, ZSTHVELCL,  &
                                 GTRIG1, PUMF, PTTEN, PRVTEN, PRCTEN, &
-                                PRITEN, KCLTOP, KCLBAS, PCH1TEN, ICONV)
+                                PRITEN, KCLTOP, KCLBAS, PCH1TEN)
 ELSE
   CALL SHALLOW_CONVECTION_PART2 &
                              & (CVP_SHAL, CVPEXT, CST, D, NSV, CONVPAR, KICE, &
