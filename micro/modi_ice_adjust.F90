@@ -16,7 +16,7 @@ INTERFACE
                             &OCOMPUTE_SRC, PSRCS, PCLDFR,                      &
                             &PRR, PRI, PRIS, PRS, PRG, TBUDGETS, KBUDGETS,     &
                             &PICE_CLD_WGT,                                     &
-                            &PRH,                                              &
+                            &PRH,PRCRIAUTI,PRCRIAUTC,                          &
                             &POUT_RV, POUT_RC, POUT_RI, POUT_TH,               &
                             &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,           &
                             &PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF)
@@ -96,6 +96,8 @@ TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS),       INTENT(INOUT)::  TBUDGETS
 INTEGER,                                      INTENT(IN)   ::  KBUDGETS
 REAL, DIMENSION(D%NIJT),       OPTIONAL, INTENT(IN)   ::  PICE_CLD_WGT
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PRH  ! Hail       m.r. to adjust
+REAL, DIMENSION(D%NIJT), INTENT(IN)   ::  PRCRIAUTI ! SPP for microphysic
+REAL, DIMENSION(D%NIJT), INTENT(IN)   ::  PRCRIAUTC ! SPP for microphysic
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RV ! Adjusted value
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RC ! Adjusted value
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RI ! Adjusted value

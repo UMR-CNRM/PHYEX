@@ -9,8 +9,8 @@
                            &PPABS, PZZ, PRHODREF, PT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT,    &
                            &PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, PSIGRC, OUSERI,                 &
                            &OSIGMAS, OCND2,                                                                 &
-                           &PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, PSIGQSAT,                                 &
-                           &PLV, PLS, PCPH,                                                                 &
+                           &PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, PSIGQSAT,PRCRIAUTI, PRCRIAUTC,            &
+                           &ZXACRIAUTI, ZXBCRIAUTI,PLV, PLS, PCPH,                                          &
                            &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                                         &
                            &PICE_CLD_WGT)
 
@@ -149,7 +149,10 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PSSIU    ! Sub-saturation with r
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PIFR     ! Ratio cloud ice moist part
 REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PSIGQSAT ! use an extra "qsat" variance contribution (OSIGMAS case)
                                                               ! multiplied by PSIGQSAT
-
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRCRIAUTI ! SPP for microphysics
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRCRIAUTC ! SPP for microphysics
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: ZXACRIAUTI! SPP for microphysics
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: ZXBCRIAUTI! SPP for microphysics
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)    :: PLV    ! Latent heat L_v
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)    :: PLS    ! Latent heat L_s
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)    :: PCPH   ! Specific heat C_ph
@@ -509,12 +512,12 @@ DO JK=IKTB,IKTE
     !Computation warm/cold Cloud Fraction and content in high water content part
     IF(PRESENT(PHLC_HCF) .AND. PRESENT(PHLC_HRC))THEN
         IF(1-ZFRAC(JIJ,JK) > 1.E-20)THEN
-          ZAUTC(JIJ,JK) = (ZSBAR(JIJ,JK) - ICEP%XCRIAUTC/(PRHODREF(JIJ,JK)*(1-ZFRAC(JIJ,JK))))/ZSIGMA(JIJ,JK)
+          ZAUTC(JIJ,JK) = (ZSBAR(JIJ,JK) - PRCRIAUTC(JIJ)/(PRHODREF(JIJ,JK)*(1-ZFRAC(JIJ,JK))))/ZSIGMA(JIJ,JK)
           ZGAUTC(JIJ,JK) = -ZAUTC(JIJ,JK)/SQRT(2.)
           ZGAUC(JIJ,JK) = 1 + ERF(-ZGAUTC(JIJ,JK))
           PHLC_HCF(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUC(JIJ,JK)))
           PHLC_HRC(JIJ,JK) = (1-ZFRAC(JIJ,JK))*(EXP(-ZGAUTC(JIJ,JK)**2)-ZGAUTC(JIJ,JK)*SQRT(CST%XPI)*ZGAUC(JIJ,JK))*ZSIGMA(JIJ,JK)/SQRT(2.*CST%XPI)
-          PHLC_HRC(JIJ,JK) = PHLC_HRC(JIJ,JK) + ICEP%XCRIAUTC/PRHODREF(JIJ,JK) * PHLC_HCF(JIJ,JK)
+          PHLC_HRC(JIJ,JK) = PHLC_HRC(JIJ,JK) + PRCRIAUTC(JIJ)/PRHODREF(JIJ,JK) * PHLC_HCF(JIJ,JK)
           PHLC_HRC(JIJ,JK) = MAX(PHLC_HRC(JIJ,JK), 0.)
           IF(PHLC_HRC(JIJ,JK) < 1.E-12 .OR. PHLC_HCF(JIJ,JK) < 1.E-6) THEN
             PHLC_HRC(JIJ,JK)=0.
@@ -528,7 +531,7 @@ DO JK=IKTB,IKTE
 
     IF(PRESENT(PHLI_HCF) .AND. PRESENT(PHLI_HRI))THEN
         IF(ZFRAC(JIJ,JK) > 1.E-20)THEN
-          ZCRIAUTI(JIJ,JK)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JIJ,JK)-CST%XTT)+ICEP%XBCRIAUTI))
+          ZCRIAUTI(JIJ,JK)=MIN(PRCRIAUTI(JIJ),10**(ZXACRIAUTI(JIJ)*(PT(JIJ,JK)-CST%XTT)+ZXBCRIAUTI(JIJ)))
           ZAUTI(JIJ,JK) = (ZSBAR(JIJ,JK) - ZCRIAUTI(JIJ,JK)/ZFRAC(JIJ,JK))/ZSIGMA(JIJ,JK)
           ZGAUTI(JIJ,JK) = -ZAUTI(JIJ,JK)/SQRT(2.)
           ZGAUI(JIJ,JK) = 1 + ERF(-ZGAUTI(JIJ,JK))

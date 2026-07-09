@@ -16,7 +16,8 @@ SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, TNSV, D, CST, NEBN, TURBN, BUCONF, TB
                              PRC_MF, PRI_MF, PCF_MF,                            &
                              PICE_CLD_WGT, PWEIGHT_MF_CLOUD,                    &
                              PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,            &
-                             PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF )
+                             PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,&
+                             PRCRIAUTI, PRCRIAUTC)
 !     ###########################################################################
 !
 !!****  *MIMA_ADJUST* -  compute the fast microphysical sources 
@@ -101,6 +102,7 @@ USE MODD_CST,            ONLY: CST_T
 USE MODD_NSV,             ONLY: NSV_T
 USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_T
 USE MODD_PARAM_LIMA_WARM, ONLY : PARAM_LIMA_WARM_T
+USE MODD_PARAM_ICE_n,    ONLY: LCRIAUTI,XACRIAUTI_NAM, XBCRIAUTI_NAM
 USE MODD_RAIN_ICE_PARAM_N,   ONLY: RAIN_ICE_PARAMN
 USE MODD_NEB_N,            ONLY: NEB_T
 USE MODD_TURB_N,           ONLY: TURB_T
@@ -180,6 +182,8 @@ REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(OUT) :: PICEFR    ! Cloud fraction
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(IN)  :: PRC_MF! Convective Mass Flux liquid mixing ratio
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(IN)  :: PRI_MF! Convective Mass Flux ice mixing ratio
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(IN)  :: PCF_MF! Convective Mass Flux Cloud fraction 
+REAL, DIMENSION(:),       INTENT(IN)   ::  PRCRIAUTI ! SPP for microphysic
+REAL, DIMENSION(:),       INTENT(IN)   ::  PRCRIAUTC ! SPP for microphysic
 REAL, DIMENSION(D%NIJT),       OPTIONAL, INTENT(IN)   ::  PICE_CLD_WGT
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)    :: PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HRC
@@ -240,7 +244,9 @@ REAL, DIMENSION(D%NIJT,D%NKT) &
                             ZWKBUD, &
                             ZWTOT, &
                             ZWR, ZWS, ZWG
-!
+REAL                     :: ZTCRI0,ZCRI0
+REAL, DIMENSION(SIZE(PRHODJ,1)) :: ZXACRIAUTI, ZXBCRIAUTI 
+                    !
 INTEGER, DIMENSION(D%NIJT,D%NKT) :: IVEC1
 INTEGER                           :: ISIZE
 LOGICAL                           :: G_SIGMAS, GUSERI
@@ -272,6 +278,18 @@ ISV_LIMA_NC       = TNSV%NSV_LIMA_NC       - TNSV%NSV_LIMA_BEG + 1
 ISV_LIMA_CCN_FREE = TNSV%NSV_LIMA_CCN_FREE - TNSV%NSV_LIMA_BEG + 1
 ISV_LIMA_CCN_ACTI = TNSV%NSV_LIMA_CCN_ACTI - TNSV%NSV_LIMA_BEG + 1
 ISV_LIMA_SCAVMASS = TNSV%NSV_LIMA_SCAVMASS - TNSV%NSV_LIMA_BEG + 1
+IF(LCRIAUTI) THEN 
+  !second point to determine 10**(aT+b) law
+  ZTCRI0=-40.0         
+  ZCRI0=1.25E-6
+  ZXBCRIAUTI(:)=-( LOG10(PRCRIAUTI(:)) - LOG10(ZCRI0)*RAIN_ICE_PARAMN%XT0CRIAUTI/ZTCRI0 )&
+          *ZTCRI0/(RAIN_ICE_PARAMN%XT0CRIAUTI-ZTCRI0)
+  ZXACRIAUTI(:)=(LOG10(ZCRI0)-ZXBCRIAUTI(:))/ZTCRI0
+ELSE
+  ZXACRIAUTI(:)=XACRIAUTI_NAM
+  ZXBCRIAUTI(:)=XBCRIAUTI_NAM
+ENDIF
+
 !
 ISIZE = SIZE(LIMAP%XRTMIN)
 ALLOCATE(ZRTMIN(ISIZE))
@@ -410,7 +428,7 @@ IF (LIMAP%LADJ) THEN
         ZWR, ZWS, ZWG, &
         Z_SIGS, .FALSE., PMFCONV, PCLDFR, Z_SRCS, GUSERI, G_SIGMAS, .FALSE., &
         ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                                        &
-        PSIGQSAT, PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                               &
+        PSIGQSAT, PRCRIAUTI, PRCRIAUTC, ZXACRIAUTI, ZXBCRIAUTI, PLV=ZLV, PLS=ZLS, PCPH=ZCPH, &
         PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,&
         PICE_CLD_WGT=PICE_CLD_WGT )
    !
