@@ -12,7 +12,7 @@ SUBROUTINE ICE4_WARM(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, 
                     &PHLC_LCF, PHLC_HCF, PHLC_LRC, PHLC_HRC, &
                     &PCF, PRF, &
                     &PRVT, PRCT, PRRT, PCONC, PACRF, &
-                    &PRCAUTR, PRCACCR, PRREVAV)
+                    &PRCAUTR, PRCACCR, PRREVAV,PRCRIAUTC)
 !!
 !!**  PURPOSE
 !!    -------
@@ -77,6 +77,7 @@ REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PACRF    ! Collision factor cloud
 REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRCAUTR  ! Autoconversion of r_c for r_r production
 REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRCACCR  ! Accretion of r_c for r_r production
 REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRREVAV  ! Evaporation of r_r
+REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRCRIAUTC! SPP for microphysics
 !
 !*       0.2  declaration of local variables
 !
@@ -109,7 +110,7 @@ DO JL=1, KSIZE
         PRCAUTR(JL) = PRCAUTR(JL)*MAX(ICEP%XFRMIN(11),PCF(JL))
       ELSE
         !HCF*autoconv(HRC/HCF) with simplification
-        PRCAUTR(JL) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JL) - PHLC_HCF(JL)*ICEP%XCRIAUTC/PRHODREF(JL), 0.0)
+        PRCAUTR(JL) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JL) - PHLC_HCF(JL)*PRCRIAUTC(JL)/PRHODREF(JL), 0.0)
       ENDIF
     ENDIF
   ELSE

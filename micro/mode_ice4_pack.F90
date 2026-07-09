@@ -13,7 +13,7 @@ SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                     &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
                     &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
                     &PICLDFR, PZZZ, PCONC3D, PSSIO, PSSIU, PIFR, &
-                    &PBUDGETS, PLATHAM_IAGGS)
+                    &PBUDGETS, PLATHAM_IAGGS,  PRCRIAUTI, PRCRIAUTC)
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -127,7 +127,8 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OSAVE_MICRO .OR. BUCONF%LBU_ENABLE), &
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), &
                                           INTENT(IN)    :: PLATHAM_IAGGS  ! E Function to simulate
                                                                           ! enhancement of IAGGS
-!
+REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRCRIAUTI,PRCRIAUTC   !SPP for microphysics
+                                                                          !
 !
 !*       0.2   Declarations of local variables :
 !
@@ -160,7 +161,9 @@ REAL, DIMENSION(KPROMA) :: &
                         & ZRREVAV,  &
                         & ZSIGS,    & ! Standard deviation of rc at time t
                         & ZTHT,     &
-                        & ZTHS
+                        & ZTHS,     &
+                        & ZRCRIAUTI,&
+                        & ZRCRIAUTC
 LOGICAL, DIMENSION(KPROMA) :: LLMICRO
 !
 !Output packed tendencies (for budgets only)
@@ -266,6 +269,8 @@ IF(PARAMI%LPACK_MICRO) THEN
               ZRHODREF   (IDX)=PRHODREF(JIJ, JK)
               ZPABST     (IDX)=PPABST  (JIJ, JK)
               ZEXN       (IDX)=PEXN    (JIJ, JK)
+              ZRCRIAUTI  (IC)=PRCRIAUTI(JIJ)
+              ZRCRIAUTC  (IC)=PRCRIAUTC(JIJ)
               ZICLDFR    (IC)=PICLDFR (JIJ, JK)
               ZZZZ       (IC)=PZZZ    (JIJ, JK)
               ZCONC3D    (IC)=PCONC3D (JIJ, JK)
@@ -335,7 +340,7 @@ IF(PARAMI%LPACK_MICRO) THEN
                         &ZICLDFR, ZZZZ, ZCONC3D, &
                         &ZSSIO, ZSSIU, ZIFR, &
                         &ZBUDGETS, &
-                        &ZLATHAM_IAGGS)
+                        &ZLATHAM_IAGGS,ZRCRIAUTI, ZRCRIAUTC)
       !
       !*       6.     UNPACKING
       !               ---------
@@ -424,7 +429,7 @@ ELSE ! PARAMI%LPACK_MICRO
                     &PICLDFR, PZZZ, PCONC3D, &
                     &PSSIO, PSSIU, PIFR, &
                     &PBUDGETS, &
-                    &PLATHAM_IAGGS)
+                    &PLATHAM_IAGGS, PRCRIAUTI, PRCRIAUTC)
 
 ENDIF ! PARAMI%LPACK_MICRO
 !

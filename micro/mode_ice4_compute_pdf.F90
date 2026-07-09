@@ -9,7 +9,7 @@ CONTAINS
 SUBROUTINE ICE4_COMPUTE_PDF(CST, ICEP, ICED, KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
                             LDMICRO, PRHODREF, PRCT, PRIT, PCF, PT, PSIGMA_RC,&
                             PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
-                            PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, PRF)
+                            PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, PRF, PRCRIAUTI, PRCRIAUTC)
 !!
 !!**  PURPOSE
 !!    -------
@@ -34,6 +34,7 @@ USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 USE MODE_MSG, ONLY: NVERB_FATAL, PRINT_MSG
+USE MODD_PARAM_ICE_n, ONLY: LCRIAUTI,XACRIAUTI_NAM, XBCRIAUTI_NAM
 !
 IMPLICIT NONE
 !
@@ -65,6 +66,8 @@ REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLI_LCF
 REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLI_HRI
 REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLI_LRI
 REAL, DIMENSION(KSIZE), INTENT(OUT) :: PRF        ! Rain fraction
+REAL, DIMENSION(KSIZE), INTENT(IN)   :: PRCRIAUTI    ! SPP for microphysics
+REAL, DIMENSION(KSIZE), INTENT(IN)   :: PRCRIAUTC    ! SPP for microphysics
 !
 !*       0.2  declaration of local variables
 !
@@ -76,7 +79,8 @@ REAL, DIMENSION(KSIZE) :: ZRCRAUTC,      & !RC value to begin rain formation =XC
                                                     !    note that ZRC/CF = ZHLC_HRCLOCAL+ ZHLC_LRCLOCAL
                                                     !                     = PHLC_HRC/HCF+ PHLC_LRC/LCF
                           ZSUMRC, ZSUMRI
-REAL :: ZCOEFFRCM
+REAL, DIMENSION(KSIZE) :: ZXACRIAUTI, ZXBCRIAUTI
+REAL :: ZCOEFFRCM,ZTCRI0,ZCRI0
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: JL
 !-------------------------------------------------------------------------------
@@ -88,6 +92,18 @@ IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 0, ZHOOK_HANDLE)
 #endif
 !
 !Cloud water split between high and low content part is done according to autoconversion option
+IF(LCRIAUTI) THEN 
+   !second point to determine 10**(aT+b) law
+   ZTCRI0=-40.0
+   ZCRI0=1.25E-6        
+   ZXBCRIAUTI(:)=-( LOG10(PRCRIAUTI(:)) - LOG10(ZCRI0)*ICEP%XT0CRIAUTI/ZTCRI0 )&
+                *ZTCRI0/(ICEP%XT0CRIAUTI-ZTCRI0)
+   ZXACRIAUTI(:)=(LOG10(ZCRI0)-ZXBCRIAUTI(:))/ZTCRI0
+ELSE
+   ZXACRIAUTI(:)=XACRIAUTI_NAM
+   ZXBCRIAUTI(:)=XBCRIAUTI_NAM
+ENDIF
+ZRCRAUTC(:)=PRCRIAUTC(:)/PRHODREF(:) ! Autoconversion rc threshold
 
 DO JL=1, KSIZE
   IF (LDMICRO(JL)) THEN
@@ -355,7 +371,7 @@ ENDIF
 
 DO JL=1, KSIZE
   IF (LDMICRO(JL)) THEN
-    ZCRIAUTI(JL)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JL)-CST%XTT)+ICEP%XBCRIAUTI)) ! Autoconversion ri threshold
+    ZCRIAUTI(JL)=MIN(PRCRIAUTI(JL),10**(ZXACRIAUTI(JL)*(PT(JL)-CST%XTT)+ZXBCRIAUTI(JL))) ! Autoconversion ri threshold
   ELSE
     ZCRIAUTI(JL)=0.
   END IF

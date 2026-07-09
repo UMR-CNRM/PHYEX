@@ -18,7 +18,7 @@ INTERFACE
                             PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &
                             PEFIELDW, PLATHAM_IAGGS,                              &
                             PSEA, PTOWN, PCONC3D,                                 &
-                            PINPRH, PFPR, PQHT, PQHS                  )
+                            PINPRH, PFPR, PQHT, PQHS, PRCRIAUTI, PRCRIAUTC        )
 !
 USE MODD_BUDGET,         ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
@@ -112,6 +112,8 @@ REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail ins
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-air precipitation fluxes
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHT ! Hail electric charge at t
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHS ! Hail electric charge source
+REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRCRIAUTI
+REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRCRIAUTC
 !
 END SUBROUTINE RAIN_ICE
 END INTERFACE

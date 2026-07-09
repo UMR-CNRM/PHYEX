@@ -13,6 +13,7 @@
                                OAERONRT, OAEIFN, PCLDROP, PIFNNC,                     &
                                TBUDGETS, KBUDGETS,                                    &
                                PICENU, PKGN_ACON, PKGN_SBGR,                          &
+                               PRCRIAUTI,PRCRIAUTC,PRDEPSRED,PRDEPGRED,               &
                                PRHT, PRHS, PINPRH, PFPR)
 
       USE YOMHOOK,             ONLY: LHOOK, DR_HOOK, JPHOOK
@@ -277,7 +278,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PIFNNC   ! Ice freezing nuclei con
 !
 TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
-REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PICENU, PKGN_ACON, PKGN_SBGR
+REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PICENU, PKGN_ACON, PKGN_SBGR, PRCRIAUTI, PRCRIAUTC, PRDEPSRED, PRDEPGRED
 REAL, DIMENSION(D%NIJT,D%NKT),   OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
 REAL, DIMENSION(D%NIJT),         OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
@@ -398,7 +399,7 @@ REAL            :: ZKVO  ! factor used for caluclate maximum mass in the ice
 !    *******  end logical switch OCND2 *******
 
 ! SPP arrays
-REAL, DIMENSION(KSIZE) :: ZZKGN_ACON,ZZKGN_SBGR
+REAL, DIMENSION(KSIZE) :: ZZKGN_ACON,ZZKGN_SBGR,ZZRCRIAUTI,ZZRCRIAUTC,ZZRDEPSRED,ZZRDEPGRED
 
      !internal fractions etc, finally saturation ratio over ice 'source' value
 
@@ -639,6 +640,10 @@ IF (KSIZE >= 0) THEN
     IF (LTIW) ZTIW(JL)=TIWMX_TAB(CST, ICEP%TIWMX, ZPRES(JL),ZZT(JL), ZRVS(JL)*PTSTEP,0.,ZRSP,ZRSW,0.1)
     ZZKGN_ACON(JL)=PKGN_ACON(I1(JL))
     ZZKGN_SBGR(JL)=PKGN_SBGR(I1(JL))
+    ZZRCRIAUTI(JL)=PRCRIAUTI(I1(JL))
+    ZZRCRIAUTC(JL)=PRCRIAUTC(I1(JL))
+    ZZRDEPGRED(JL)=PRDEPGRED(I1(JL))
+    ZZRDEPSRED(JL)=PRDEPSRED(I1(JL))
 
     IF (OCND2) THEN
        ZESI(JL) = ESATI(ICEP%TIWMX, ZZT(JL))
@@ -701,7 +706,7 @@ IF (KSIZE >= 0) THEN
   !Cloud water split between high and low content part is done here
   !according to autoconversion option
   DO JL = 1, KSIZE
-    ZRCRAUTC(JL) = ICEP%XCRIAUTC/ZRHODREF(JL) ! Autoconversion rc threshold
+    ZRCRAUTC(JL) = PRCRIAUTI(JL)/ZRHODREF(JL) ! Autoconversion rc threshold
   ENDDO
 
   IF (HSUBG_AUCV_RC == 'NONE') THEN
@@ -948,7 +953,7 @@ IF (KSIZE >= 0) THEN
                          ZLBDAG, ZKA, ZDV, &
                          ZAI, ZCJ, ZAA2, ZBB3, &
                          ZDICRIT, ZREDGR, ZKVO, &
-                         TBUDGETS, KBUDGETS)
+                         TBUDGETS, KBUDGETS, ZZRCRIAUTI, ZZRDEPSRED, ZZRDEPGRED)
 !
 !-------------------------------------------------------------------------------
 !
@@ -987,7 +992,7 @@ IF (KSIZE >= 0) THEN
                            ZHLC_HCF, ZHLC_LCF, ZHLC_HRC, ZHLC_LRC, &
                            ZAA2W, ZBB3W, &
                            ZZT, ZPRES, ZESW, &
-                           TBUDGETS, KBUDGETS)
+                           TBUDGETS, KBUDGETS, ZZRCRIAUTC)
   END IF
 !
 !-------------------------------------------------------------------------------

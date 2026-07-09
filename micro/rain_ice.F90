@@ -18,7 +18,7 @@
                             PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &
                             PEFIELDW, PLATHAM_IAGGS,                              &
                             PSEA, PTOWN, PCONC3D,                                 &
-                            PINPRH, PFPR, PQHT, PQHS                  )
+                            PINPRH, PFPR, PQHT, PQHS, PRCRIAUTI, PRCRIAUTC        )
 !     #############################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -275,6 +275,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-ai
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHT ! Hail electric charge at t
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHS ! Hail electric charge source
 !
+REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRCRIAUTI,PRCRIAUTC
 !
 !*       0.2   Declarations of local variables :
 !
@@ -595,7 +596,7 @@ IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
                         PCLDFR(:,IKTB:IKTE), ZT(:,IKTB:IKTE), ZSIGMA_RC(:,IKTB:IKTE), &
                         PHLC_HCF(:,IKTB:IKTE), ZHLC_LCF(:,IKTB:IKTE), PHLC_HRC(:,IKTB:IKTE), ZHLC_LRC(:,IKTB:IKTE), &
                         PHLI_HCF(:,IKTB:IKTE), ZHLI_LCF(:,IKTB:IKTE), PHLI_HRI(:,IKTB:IKTE), ZHLI_LRI(:,IKTB:IKTE), &
-                        PRAINFR(:,IKTB:IKTE))
+                        PRAINFR(:,IKTB:IKTE),PRCRIAUTI(:),PRCRIAUTC(:))
 !CALL ICE4_COMPUTE_PDF2D(D, CST, ICEP, ICED, PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF, &
 !                        LLMICRO, PRHODREF, ZWR(:,:,IRC), ZWR(:,:,IRI), PCLDFR, ZT, ZSIGMA_RC,&
 !                            PHLC_HCF, ZHLC_LCF, PHLC_HRC, ZHLC_LRC, &
@@ -650,7 +651,7 @@ CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                PRAINFR, PSIGS, ZWTH, ZWR,                            &
                PICLDFR, ZZZZ, ZCONC3D,                               &
                PSSIO, PSSIU, PIFR,                                   &
-               ZBUDGETS, PLATHAM_IAGGS)
+               ZBUDGETS, PLATHAM_IAGGS, PRCRIAUTI, PRCRIAUTC         )
 !
 IF(BUCONF%LBU_ENABLE .OR. OELEC) THEN
   DO JK = IKTB, IKTE

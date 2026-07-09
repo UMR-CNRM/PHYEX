@@ -21,7 +21,8 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
                                PLBDAG, PKA, PDV,                   &
                                PAI, PCJ, PAA2, PBB3,               &
                                ZDICRIT, ZREDGR, ZKVO,              &
-                               TBUDGETS, KBUDGETS)
+                               TBUDGETS, KBUDGETS, ZZRCRIAUTI,     &
+                               ZZRDEPSRED, ZZRDEPGRED)
 
     USE PARKIND1,             ONLY: JPRB
     USE YOMHOOK,              ONLY: LHOOK, DR_HOOK, JPHOOK
@@ -34,6 +35,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
                                NBUDGET_RI, NBUDGET_RS, NBUDGET_RV
 
     USE MODE_RAIN_ICE_OLD_ICENUMBER2, ONLY: ICENUMBER2
+    USE MODD_PARAM_ICE_n, ONLY: LCRIAUTI,XACRIAUTI_NAM, XBCRIAUTI_NAM 
 
     IMPLICIT NONE
 
@@ -96,18 +98,25 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
     TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
     INTEGER, INTENT(IN) :: KBUDGETS
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZZRCRIAUTI ! SPP for microphysics
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZZRDEPSRED ! SPP for microphysics
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZZRDEPGRED ! SPP for microphysics
+
 !
 !*       3.2     compute the homogeneous nucleation source: RCHONI
 !
     REAL, DIMENSION(KSIZE) :: ZBFT ! Mean time for a pristine ice crystal to reach
                                    ! size of an snow/graupel particle (ZDICRIT)
     REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
+    REAL, DIMENSION(KSIZE) :: ZXACRIAUTI, ZXBCRIAUTI
     REAL, DIMENSION(KSIZE) :: ZZW      ! Work array
     REAL, DIMENSION(KSIZE) :: ZZW2     ! Work array
     REAL, DIMENSION(D%NIT,D%NKT) :: ZWKBUD
 
     INTEGER :: JL
     REAL    :: ZINVTSTEP
+    REAL    :: ZTCRI0
+    REAL    :: ZCRI0
 
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
@@ -116,6 +125,17 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     ZINVTSTEP=1./PTSTEP
     ZZW(:) = 0.0
 
+    IF(LCRIAUTI) THEN
+      !second point to determine 10**(aT+b) law 
+      ZTCRI0=-40.0
+      ZCRI0=1.25E-6
+      ZXBCRIAUTI(:)=-( LOG10(ZZRCRIAUTI(:)) - LOG10(ZCRI0)*ICEP%XT0CRIAUTI/ZTCRI0 )&
+               *ZTCRI0/(ICEP%XT0CRIAUTI-ZTCRI0)
+      ZXACRIAUTI(:)=(LOG10(ZCRI0)-ZXBCRIAUTI(:))/ZTCRI0
+    ELSE
+      ZXACRIAUTI(:)=XACRIAUTI_NAM
+      ZXBCRIAUTI(:)=XBCRIAUTI_NAM
+    ENDIF
     IF (BUCONF%LBUDGET_TH) ZWKBUD(:,:) = UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:)
     IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%INIT_PHY(D, 'HON', ZWKBUD)
     IF (BUCONF%LBUDGET_RC) ZWKBUD(:,:) = UNPACK(PRCS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0)
@@ -206,7 +226,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
           ZZW(JL) = (PSSI(JL)/(PRHODREF(JL)*PAI(JL))) *  &
                     (ICEP%X0DEPS*PLDBAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*PCJ(JL)*PLDBAS(JL)**ICEP%XEX1DEPS)
           ZZW(JL) = MIN( PZRVS(JL),MAX(-PRSS(JL),ZZW(JL)))  ! Simpler
-          ZZW(JL) = ZZW(JL)*ZREDSN ! Possible tuning by using ZREDSN /=  1
+          ZZW(JL) = ZZW(JL)*ZZRDEPSRED(JL) ! Possible tuning by using ZREDSN /=  1
           PRSS(JL) = PRSS(JL) + ZZW(JL)
           PZRVS(JL) = PZRVS(JL) - ZZW(JL)
           PZTHS(JL) = PZTHS(JL) + ZZW(JL)*PLSFACT(JL)
@@ -221,7 +241,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
                   - MIN(PRSS(JL),ABS(ZZW(JL)))*(0.5-SIGN(0.5,ZZW(JL)))
 
           IF (ZZW(JL) < 0.0) THEN
-            ZZW(JL) = ZZW(JL) * ICEP%XRDEPSRED
+            ZZW(JL) = ZZW(JL) * ZZRDEPSRED(JL)
           END IF
 
           PRSS(JL) = PRSS(JL) + ZZW(JL)
@@ -264,7 +284,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
 !*       3.4.5  compute the autoconversion of r_i for r_s production: RIAUTS
 
-    ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PZT(:)-CST%XTT)+ICEP%XBCRIAUTI))
+    ZCRIAUTI(:)=MIN(ZZRCRIAUTI(:),10**(ZXACRIAUTI(:)*(PZT(:)-CST%XTT)+ZXBCRIAUTI(:)))
     ZZW(:) = 0.0
     IF (BUCONF%LBUDGET_RI) ZWKBUD(:,:) = UNPACK(PRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0)
     IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%INIT_PHY(D, 'AUTS', ZWKBUD)
@@ -354,10 +374,10 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
         ZZW(JL) = MIN(PZRVS(JL),ZZW(JL)      )*(0.5+SIGN(0.5,ZZW(JL))) &
                 - MIN(PRGS(JL),ABS(ZZW(JL)) )*(0.5-SIGN(0.5,ZZW(JL)))
-        ZZW(JL) = ZZW(JL)*ZREDGR
+        ZZW(JL) = ZZW(JL)*ZZRDEPGRED(JL)
 
         IF (ZZW(JL) < 0.0 ) THEN
-          ZZW(JL)  = ZZW(JL) * ICEP%XRDEPGRED
+          ZZW(JL)  = ZZW(JL) * ZZRDEPGRED(JL)
         END IF
 
         PRSS(JL) = (ZZW(JL) + PRGS(JL))* ZZW2(JL) + PRSS(JL)
@@ -369,7 +389,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
     DO JL = 1, KSIZE
       IF (ZZW(JL) < 0.0) THEN
-        ZZW(JL)  = ZZW(JL) * ICEP%XRDEPGRED
+        ZZW(JL)  = ZZW(JL) * ZZRDEPGRED(JL)
       END IF
     END DO
 
