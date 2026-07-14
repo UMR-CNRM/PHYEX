@@ -10,6 +10,9 @@ IMPLICIT NONE
 INTERFACE GAMMA
 !
 PURE FUNCTION GAMMA_X0D(PX)  RESULT(PGAMMA)
+
+!$acc routine seq
+
 IMPLICIT NONE
 
 REAL, INTENT(IN)                                  :: PX
