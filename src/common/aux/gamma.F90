@@ -10,9 +10,6 @@
 !
 !     ######################################
       PURE FUNCTION GAMMA_X0D(PX)  RESULT(PGAMMA)
-
-!$acc routine seq
-
 !     ######################################
 !
 !
