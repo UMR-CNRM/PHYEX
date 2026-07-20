@@ -1,4 +1,19 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+!--------------- special set of characters for RCS information
+!-----------------------------------------------------------------
+! $Source$ $Revision$
+! MASDEV4_7 conv 2006/05/18 13:07:25
+!-----------------------------------------------------------------
+!     #################
+      MODULE MODE_CONVECT_CLOSURE_ADJUST
+!     #################
+!
+IMPLICIT NONE
+CONTAINS
      SUBROUTINE CONVECT_CLOSURE_ADJUST( KLON, KLEV, PADJ,                      &
                                         PUMF, PZUMF, PUER, PZUER, PUDR, PZUDR, &
                                         PDMF, PZDMF, PDER, PZDER, PDDR, PZDDR, &
@@ -129,3 +144,4 @@ IKE  = KLEV - JCVEXT
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE_ADJUST',1,ZHOOK_HANDLE)
 END SUBROUTINE CONVECT_CLOSURE_ADJUST
+END MODULE MODE_CONVECT_CLOSURE_ADJUST

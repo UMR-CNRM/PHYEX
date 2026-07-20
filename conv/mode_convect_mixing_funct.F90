@@ -1,12 +1,14 @@
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
 MODULE MODE_CONVECT_MIXING_FUNCT
 IMPLICIT NONE
 CONTAINS
-!     ######spl
       SUBROUTINE CONVECT_MIXING_FUNCT( D,  &
                                        PMIXC, KMF, PER, PDR )
 !$ACDC singlecolumn
 
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!**** Determine the area under the distribution function
@@ -52,6 +54,7 @@ CONTAINS
 !!      Original    07/11/95
 !!   Last modified  04/10/97
 !-------------------------------------------------------------------------------
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
 !
 !*       0.    DECLARATIONS
@@ -63,11 +66,11 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 TYPE(DIMPHYEX_T)                   ,INTENT(IN)   :: D
-REAL             ,DIMENSION(D%NIT) ,INTENT(IN)   :: PMIXC  ! critical mixed fraction
-INTEGER                            ,INTENT(IN)   :: KMF    ! switch for dist. function
+REAL, DIMENSION(D%NIJT), INTENT(IN) :: PMIXC  ! critical mixed fraction
+INTEGER, INTENT(IN) :: KMF    ! switch for dist. function
 !
-REAL             ,DIMENSION(D%NIT) ,INTENT(OUT)  :: PER    ! normalized entrainment rate
-REAL             ,DIMENSION(D%NIT) ,INTENT(OUT)  :: PDR    ! normalized detrainment rate
+REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PER    ! normalized entrainment rate
+REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PDR    ! normalized detrainment rate
 !
 !*       0.2   Declarations of local variables :
 !
@@ -78,9 +81,10 @@ REAL, PARAMETER   :: ZA1    = 0.4361836, ZA2 =-0.1201676    ! constants
 REAL, PARAMETER   :: ZA3    = 0.9372980, ZT1 = 0.500498     ! constants
 REAL, PARAMETER   :: ZE45   = 0.01111                       ! constant
 !
-REAL, DIMENSION(D%NIT) :: ZX, ZY, ZW1, ZW2         ! work variables
+REAL, DIMENSION(D%NIJT) :: ZX, ZY, ZW1, ZW2         ! work variables
 REAL    :: ZW11
 INTEGER :: JI
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 !-------------------------------------------------------------------------------
@@ -88,43 +92,42 @@ INTEGER :: JI
 !       1.     Use gaussian function for KMF=1
 !              -------------------------------
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_MIXING_FUNCT',0,ZHOOK_HANDLE)
 IF( KMF == 1 ) THEN
     ! ZX(:)  = ( PMIXC(:) - 0.5 ) / ZSIGMA
-    DO JI = D%NIB, D%NIE
+    DO JI = D%NIJB, D%NIJE
       ZX(JI)  = 6. * PMIXC(JI) - 3.
       ZW1(JI) = 1. / ( 1.+ ZP * ABS ( ZX(JI) ) )
       ZY(JI)  = EXP( -0.5 * ZX(JI) * ZX(JI) )
       ZW2(JI) = ZA1 * ZW1(JI) + ZA2 * ZW1(JI) * ZW1(JI) +                   &
-               ZA3 * ZW1(JI) * ZW1(JI) * ZW1(JI)
+                ZA3 * ZW1(JI) * ZW1(JI) * ZW1(JI)
       ZW11   = ZA1 * ZT1 + ZA2 * ZT1 * ZT1 + ZA3 * ZT1 * ZT1 * ZT1
     ENDDO
 ENDIF
 !
-DO JI=D%NIB, D%NIE
+DO JI=D%NIJB, D%NIJE
   IF ( KMF == 1 .AND. ZX(JI) >= 0. ) THEN
-          PER(JI) = ZSIGMA * ( 0.5 * ( ZSQRTP - ZE45 * ZW11                 &
-                   - ZY(JI) * ZW2(JI) ) + ZSIGMA * ( ZE45 - ZY(JI) ) )        &
-                   - 0.5 * ZE45 * PMIXC(JI) * PMIXC(JI)
-          PDR(JI) = ZSIGMA*( 0.5 * ( ZY(JI) * ZW2(JI) - ZE45 * ZW11   )       &
-                   + ZSIGMA * ( ZE45 - ZY(JI) ) )                           &
-                   - ZE45 * ( 0.5 + 0.5 * PMIXC(JI) * PMIXC(JI) - PMIXC(JI) )
+    PER(JI) = ZSIGMA * ( 0.5 * ( ZSQRTP - ZE45 * ZW11                 &
+             - ZY(JI) * ZW2(JI) ) + ZSIGMA * ( ZE45 - ZY(JI) ) )        &
+             - 0.5 * ZE45 * PMIXC(JI) * PMIXC(JI)
+    PDR(JI) = ZSIGMA*( 0.5 * ( ZY(JI) * ZW2(JI) - ZE45 * ZW11   )       &
+             + ZSIGMA * ( ZE45 - ZY(JI) ) )                           &
+             - ZE45 * ( 0.5 + 0.5 * PMIXC(JI) * PMIXC(JI) - PMIXC(JI) )
   END IF
 ENDDO
-DO JI=D%NIB, D%NIE
-IF ( KMF == 1 .AND. ZX(JI) < 0. ) THEN
-        PER(JI) = ZSIGMA*( 0.5 * ( ZY(JI) * ZW2(JI) - ZE45 * ZW11   )       &
-                 + ZSIGMA * ( ZE45 - ZY(JI) ) )                           &
-                 - 0.5 * ZE45 * PMIXC(JI) * PMIXC(JI)
-        PDR(JI) = ZSIGMA * ( 0.5 * ( ZSQRTP - ZE45 * ZW11 - ZY(JI)         &
-                 * ZW2(JI) ) + ZSIGMA * ( ZE45 - ZY(JI) ) )                &
-                 - ZE45 * ( 0.5 + 0.5 * PMIXC(JI) * PMIXC(JI) - PMIXC(JI) )
+DO JI=D%NIJB, D%NIJE
+  IF ( KMF == 1 .AND. ZX(JI) < 0. ) THEN
+    PER(JI) = ZSIGMA*( 0.5 * ( ZY(JI) * ZW2(JI) - ZE45 * ZW11   )       &
+             + ZSIGMA * ( ZE45 - ZY(JI) ) )                           &
+             - 0.5 * ZE45 * PMIXC(JI) * PMIXC(JI)
+    PDR(JI) = ZSIGMA * ( 0.5 * ( ZSQRTP - ZE45 * ZW11 - ZY(JI)         &
+             * ZW2(JI) ) + ZSIGMA * ( ZE45 - ZY(JI) ) )                &
+             - ZE45 * ( 0.5 + 0.5 * PMIXC(JI) * PMIXC(JI) - PMIXC(JI) )
   END IF
 ENDDO
 
 !
-DO JI = D%NIB, D%NIE
+DO JI = D%NIJB, D%NIJE
   PER(JI) = PER(JI) * ZFE
   PDR(JI) = PDR(JI) * ZFE
 ENDDO

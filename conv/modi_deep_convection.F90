@@ -1,7 +1,11 @@
+!MNH_LIC Copyright 1996-2025 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
 MODULE MODI_DEEP_CONVECTION
 IMPLICIT NONE
 INTERFACE
-    SUBROUTINE DEEP_CONVECTION( KLON, KLEV, KIDIA, KFDIA, KBDIA, KTDIA,        &
+    SUBROUTINE DEEP_CONVECTION( D, KLON, KLEV, KIDIA, KFDIA, KBDIA, KTDIA,     &
                                 PDTCONV, KICE, OREFRESH, ODOWN, OSETTADJ,      &
                                 PPABST, PZZ, PDXDY, PTIMEC,                    &
                                 PTT, PRVT, PRCT, PRIT, PUT, PVT, PWT,          &
@@ -10,15 +14,17 @@ INTERFACE
                                 KCLTOP, KCLBAS, PPRLFLX, PPRSFLX,              &
                                 PUMF, PDMF, PCAPE,                             &
                                 OCH1CONV, KCH1, PCH1, PCH1TEN,                 &
-                                OCH_CONV_SCAV, OCH_CONV_LINOX,       &
+                                OUSECHEM, OCH_CONV_SCAV, OCH_CONV_LINOX,       &
                                 ODUST, OSALT, PRHODREF, PIC_RATE, PCG_RATE     )
 !
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
 !
+TYPE(DIMPHYEX_T),           INTENT(IN) :: D
 INTEGER,                    INTENT(IN) :: KLON     ! horizontal dimension
 INTEGER,                    INTENT(IN) :: KLEV     ! vertical dimension
 INTEGER,                    INTENT(IN) :: KIDIA    ! value of the first point in x
@@ -78,6 +84,7 @@ LOGICAL,                    INTENT(IN) :: OCH1CONV ! include tracer transport
 INTEGER,                    INTENT(IN) :: KCH1     ! number of species
 REAL, DIMENSION(KLON,KLEV,KCH1), INTENT(IN) :: PCH1! grid scale chemical species
 REAL, DIMENSION(KLON,KLEV,KCH1), INTENT(INOUT):: PCH1TEN! species conv. tendency (1/s)
+LOGICAL,                    INTENT(IN) :: OUSECHEM      ! flag for chemistry 
 LOGICAL,                    INTENT(IN) :: OCH_CONV_SCAV !  & scavenging
 LOGICAL,                    INTENT(IN) :: OCH_CONV_LINOX ! & LiNOx
 LOGICAL,                    INTENT(IN) :: ODUST         ! flag for dust

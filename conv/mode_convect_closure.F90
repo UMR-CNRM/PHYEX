@@ -1,4 +1,10 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+MODULE MODE_CONVECT_CLOSURE
+IMPLICIT NONE
+CONTAINS
      SUBROUTINE CONVECT_CLOSURE( KLON, KLEV,                                 &
                                  PPRES, PDPRES, PZ, PDXDY, PLMASS,           &
                                  PTHL, PTH, PRW, PRC, PRI, OTRIG1,           &
@@ -11,7 +17,6 @@
                                  PCAPE, PTIMEC,                              &
                                  KFTSTEPS,                                   &
                                  PDTEVRF, PPRLFLX, PPRSFLX                   )
-     USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !    #########################################################################
 !
 !!**** Uses modified Fritsch-Chappell closure
@@ -79,10 +84,13 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_CST, ONLY: CST
 USE MODD_CONVPAR, ONLY: XMELDPTH, XSTABC, XSTABT
-USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT
-!USE MODE_CONVECT_CLOSURE_THRVLCL, ONLY: CONVECT_CLOSURE_THRVLCL
+USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT, CONVPAREXT
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+USE MODE_CONVECT_CLOSURE_THRVLCL, ONLY: CONVECT_CLOSURE_THRVLCL
+USE MODE_CONVECT_CLOSURE_ADJUST, ONLY: CONVECT_CLOSURE_ADJUST
 !
 !
 IMPLICIT NONE
@@ -207,6 +215,8 @@ LOGICAL, DIMENSION(KLON)  :: GWORK1, GWORK3! work arrays
 LOGICAL, DIMENSION(KLON,KLEV) :: GWORK4    ! work array
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+TYPE(CONVPAREXT)  :: CVPEXT
+TYPE(DIMPHYEX_T)  :: D
 !
 !-------------------------------------------------------------------------------
 !
@@ -215,6 +225,12 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE',0,ZHOOK_HANDLE)
+CVPEXT%JCVEXB=JCVEXB
+CVPEXT%JCVEXT=JCVEXT
+D%NIJT=KLON
+D%NIJB=1
+D%NIJE=KLON
+D%NKT=KLEV
 PSPR(:)   = 0.
 ZTIMC(:,:) = 0.
 ZTHES2(:) = 0.
@@ -428,9 +444,9 @@ DO JITER = 1, 6  ! Enter adjustment loop to assure that all CAPE is
     KFTSTEPS = MAXVAL( ITSTEP(:) )
     DO JSTEP = 1, KFTSTEPS ! Enter the fractional time step loop here
 !
-            ICOUNT(:) = ICOUNT(:) + 1
+      ICOUNT(:) = ICOUNT(:) + 1
 !
-            GWORK3(:) =  ITSTEP(:) >= ICOUNT(:) .AND. GWORK1(:)
+      GWORK3(:) =  ITSTEP(:) >= ICOUNT(:) .AND. GWORK1(:)
 !
 !
 !*       7.     Assign enthalpy and r_w values at the top and bottom of each
@@ -549,11 +565,10 @@ DO JITER = 1, 6  ! Enter adjustment loop to assure that all CAPE is
 !                           that in routine TRIGGER_FUNCT
 !                  ---------------------------------------------
 !
-CALL ABOR1('FIXME: THE INTERFACE IS WRONG')
-      !CALL CONVECT_CLOSURE_THRVLCL(  KLON, KLEV,                           &
-                                     !PPRES, PTHC, PRWC, PZ, GWORK1,        &
-                                     !ZTHLCL, ZRVLCL, ZZLCL, ZTLCL, ZTELCL, &
-                                     !ILCL, KDPL, KPBL )
+      CALL CONVECT_CLOSURE_THRVLCL(CVPEXT, CST, D, &
+                                   PPRES, PTHC, PRWC, PZ, GWORK1,        &
+                                   ZTHLCL, ZRVLCL, ZZLCL, ZTLCL, ZTELCL, &
+                                   ILCL, KDPL, KPBL )
 !
 !
        ZTLCL(:)  = MAX( 230., MIN( 335., ZTLCL(:) ) )  ! set some overflow bounds
@@ -672,3 +687,4 @@ CONTAINS
 INCLUDE "convect_satmixratio.h"
 !
 END SUBROUTINE CONVECT_CLOSURE
+END MODULE MODE_CONVECT_CLOSURE

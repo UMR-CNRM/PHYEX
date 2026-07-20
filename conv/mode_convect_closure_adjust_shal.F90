@@ -1,13 +1,15 @@
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
 MODULE MODE_CONVECT_CLOSURE_ADJUST_SHAL
 IMPLICIT NONE
 CONTAINS
-!     ######spl
      SUBROUTINE CONVECT_CLOSURE_ADJUST_SHAL( CVPEXT, D, PADJ,        &
                                              PUMF, PZUMF, PUER, PZUER, PUDR, PZUDR  )
 
 !$ACDC singlecolumn
 
-     USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !    ################################################################################
 !
 !!**** Uses closure adjustment factor to adjust mass flux and to modify
@@ -57,6 +59,7 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_CONVPAREXT, ONLY : CONVPAREXT
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
 !
@@ -67,21 +70,22 @@ IMPLICIT NONE
 !
 TYPE(CONVPAREXT),           INTENT(IN) :: CVPEXT
 TYPE(DIMPHYEX_T),           INTENT(IN) :: D
-REAL, DIMENSION(D%NIT),      INTENT(IN) :: PADJ     ! mass adjustment factor
+REAL, DIMENSION(D%NIJT),      INTENT(IN) :: PADJ     ! mass adjustment factor
 !
 !
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PUMF  ! updraft mass flux (kg/s)
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PZUMF ! initial value of  "
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PUER  ! updraft entrainment (kg/s)
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PZUER ! initial value of  "
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PUDR  ! updraft detrainment (kg/s)
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PZUDR ! initial value of  "
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PUMF  ! updraft mass flux (kg/s)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PZUMF ! initial value of  "
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PUER  ! updraft entrainment (kg/s)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PZUER ! initial value of  "
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PUDR  ! updraft detrainment (kg/s)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PZUDR ! initial value of  "
 !
 !
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: IKB, IKE                 ! vert. loop bounds
 INTEGER :: JK, JI                   ! vertical loop index
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 !-------------------------------------------------------------------------------
@@ -89,7 +93,6 @@ INTEGER :: JK, JI                   ! vertical loop index
 !*       0.3   Compute loop bounds
 !              -------------------
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE_ADJUST_SHAL',0,ZHOOK_HANDLE)
 IKB  = 1 + CVPEXT%JCVEXB
 IKE  = D%NKT - CVPEXT%JCVEXT
@@ -100,11 +103,11 @@ IKE  = D%NKT - CVPEXT%JCVEXT
 !               ----------------------------------------------------
 !
 DO JK = IKB + 1, IKE
-  DO JI = D%NIB, D%NIE
-     PUMF(JI,JK)  = PZUMF(JI,JK)   * PADJ(JI)
-     PUER(JI,JK)  = PZUER(JI,JK)   * PADJ(JI)
-     PUDR(JI,JK)  = PZUDR(JI,JK)   * PADJ(JI)
-   ENDDO
+  DO JI = D%NIJB, D%NIJE
+    PUMF(JI,JK)  = PZUMF(JI,JK)   * PADJ(JI)
+    PUER(JI,JK)  = PZUER(JI,JK)   * PADJ(JI)
+    PUDR(JI,JK)  = PZUDR(JI,JK)   * PADJ(JI)
+  ENDDO
 END DO
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE_ADJUST_SHAL',1,ZHOOK_HANDLE)

@@ -1,4 +1,10 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+MODULE MODE_CONVECT_DOWNDRAFT
+IMPLICIT NONE
+CONTAINS
      SUBROUTINE CONVECT_DOWNDRAFT( KLON, KLEV,                                &
                                    KICE, PPRES, PDPRES, PZ, PTH, PTHES,       &
                                    PRW, PRC, PRI,                             &
@@ -7,7 +13,6 @@
                                    PDMF, PDER, PDDR, PDTHL, PDRW,             &
                                    PMIXF, PDTEVR, KLFS, KDBL, KML,            &
                                    PDTEVRF )
-     USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !    ##########################################################################
 !
 !!**** Compute downdraft properties from LFS to DBL.
@@ -72,6 +77,7 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_CST, ONLY: CST
 USE MODD_CONVPAR, ONLY: XCRAD, XENTR, XRHDBC
 USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT
@@ -119,7 +125,6 @@ REAL, DIMENSION(KLON),      INTENT(OUT):: PDTEVR ! total downdraft evaporation
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT):: PDTEVRF! downdraft evaporation rate
 INTEGER, DIMENSION(KLON),  INTENT(OUT):: KLFS    ! contains vert. index of LFS
 INTEGER, DIMENSION(KLON),  INTENT(OUT):: KDBL    ! contains vert. index of DBL
-
 !
 !*       0.2   Declarations of local variables :
 !
@@ -445,3 +450,4 @@ CONTAINS
 INCLUDE "convect_satmixratio.h"
 !
 END SUBROUTINE CONVECT_DOWNDRAFT
+END MODULE MODE_CONVECT_DOWNDRAFT

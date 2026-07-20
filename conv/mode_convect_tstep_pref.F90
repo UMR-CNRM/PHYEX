@@ -1,8 +1,13 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+MODULE MODE_CONVECT_TSTEP_PREF
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE CONVECT_TSTEP_PREF( KLON, KLEV,                           &
                                      PU, PV, PPRES, PZ, PDXDY, KLCL, KCTL, &
                                      PTIMEA, PPREF )
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ######################################################################
 !
 !!**** Routine to compute convective advection time step and precipitation
@@ -52,6 +57,7 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_CONVPAREXT, ONLY: JCVEXB, JCVEXT
 !
 !
@@ -82,6 +88,7 @@ INTEGER :: JK, JKLC, JKP5, JKCT               ! vertical loop index
 INTEGER, DIMENSION(KLON)  :: IP500       ! index of 500 hPa levels
 REAL, DIMENSION(KLON)     :: ZCBH        ! cloud base height
 REAL, DIMENSION(KLON)     :: ZWORK1, ZWORK2, ZWORK3  ! work arrays
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 !-------------------------------------------------------------------------------
@@ -89,7 +96,6 @@ REAL, DIMENSION(KLON)     :: ZWORK1, ZWORK2, ZWORK3  ! work arrays
 !        0.3   Set loop bounds
 !              ---------------
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_TSTEP_PREF',0,ZHOOK_HANDLE)
 IIE = KLON
 IKB = 1 + JCVEXB
@@ -116,11 +122,11 @@ DO JI = 1, IIE
    JKP5 = IP500(JI)
    JKCT = KCTL(JI)
    ZWORK1(JI) = SQRT( PU(JI,JKLC) * PU(JI,JKLC) +           &
-                PV(JI,JKLC) * PV(JI,JKLC)  )
+                      PV(JI,JKLC) * PV(JI,JKLC)  )
    ZWORK2(JI) = SQRT( PU(JI,JKP5) * PU(JI,JKP5) +           &
-                PV(JI,JKP5) * PV(JI,JKP5)  )
+                      PV(JI,JKP5) * PV(JI,JKP5)  )
    ZWORK3(JI) = SQRT( PU(JI,JKCT) * PU(JI,JKCT) +           &
-                PV(JI,JKCT) * PV(JI,JKCT)  )
+                      PV(JI,JKCT) * PV(JI,JKCT)  )
 END DO
 !
 ZWORK2(:) = MAX( 0.1, 0.5 * ( ZWORK1(:) + ZWORK2(:) ) )
@@ -158,7 +164,7 @@ DO JI = 1, IIE
    ZCBH(JI)   = MAX( 3., ( PZ(JI,JKLC) - PZ(JI,IKB) ) * 3.281E-3 )
 END DO
 ZWORK1(:) = .9673 + ZCBH(:) * ( -.7003 + ZCBH(:) * ( .1622 + &
-          ZCBH(:) *  ( -1.2570E-2 + ZCBH(:) * ( 4.2772E-4 -  &
+              ZCBH(:) *  ( -1.2570E-2 + ZCBH(:) * ( 4.2772E-4 -  &
               ZCBH(:) * 5.44E-6 ) ) ) )
 ZWORK1(:) = MAX( .4, MIN( .9, 1./ ( 1. + ZWORK1(:) ) ) )
 !
@@ -170,3 +176,4 @@ PPREF(:) = 0.5 * ( PPREF(:) + ZWORK1(:) )
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_TSTEP_PREF',1,ZHOOK_HANDLE)
 END SUBROUTINE CONVECT_TSTEP_PREF
+END MODULE MODE_CONVECT_TSTEP_PREF

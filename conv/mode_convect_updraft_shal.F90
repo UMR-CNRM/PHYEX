@@ -1,7 +1,10 @@
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
 MODULE MODE_CONVECT_UPDRAFT_SHAL
 IMPLICIT NONE
 CONTAINS
-!     ######spl
     SUBROUTINE CONVECT_UPDRAFT_SHAL( CVP_SHAL, CVPEXT, CST, D, CONVPAR,              &
                                      KICE, PPRES, PDPRES, PZ, PTHL, PTHV, PTHES, PRW,&
                                      PTHLCL, PTLCL, PRVLCL, PWLCL, PZLCL, PTHVELCL,  &
@@ -9,8 +12,6 @@ CONTAINS
                                      PUMF, PUER, PUDR, PUTHL, PUTHV, PURW,           &
                                      PURC, PURI, PCAPE, KCTL, KETL,GTRIG1 )
 !$ACDC singlecolumn
-
-    USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 
 !    ###############################################################################
 !
@@ -82,8 +83,9 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST, ONLY : CST_T
-USE MODD_CONVPAR, ONLY : CONVPAR_T
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
+USE MODD_CST, ONLY : CST_t
+USE MODD_CONVPAR, ONLY : CONVPAR_t
 USE MODD_CONVPAR_SHAL, ONLY : CONVPAR_SHAL
 USE MODD_CONVPAREXT, ONLY : CONVPAREXT
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
@@ -97,47 +99,46 @@ IMPLICIT NONE
 !
 TYPE(CONVPAR_SHAL)                         ,INTENT(IN)     :: CVP_SHAL
 TYPE(CONVPAREXT)                           ,INTENT(IN)     :: CVPEXT
-TYPE(CST_T)                                ,INTENT(IN)     :: CST
-TYPE(DIMPHYEX_T)                           ,INTENT(IN)     :: D
-TYPE(CONVPAR_T)                            ,INTENT(IN)     :: CONVPAR
+TYPE(CST_t)                                ,INTENT(IN)     :: CST
+TYPE(DIMPHYEX_t)                           ,INTENT(IN)     :: D
+TYPE(CONVPAR_t)                            ,INTENT(IN)     :: CONVPAR
 INTEGER                                    ,INTENT(IN)     :: KICE  ! flag for ice ( 1 = yes,
-                                                !                0 = no ice )
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PPRES ! pressure (P)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PDPRES! pressure difference between
-                                                ! bottom and top of layer (Pa)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PZ    ! height of model layer (m)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PTHL  ! grid scale enthalpy (J/kg)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PTHV  ! grid scale theta_v
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PTHES ! grid scale saturated theta_e
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PRW   ! grid scale total water
-                                                ! mixing ratio
-REAL               ,DIMENSION(D%NIT)       ,INTENT(IN)     :: PTHLCL ! theta at LCL
-REAL               ,DIMENSION(D%NIT)       ,INTENT(IN)     :: PTLCL  ! temp. at LCL
-REAL               ,DIMENSION(D%NIT)       ,INTENT(IN)     :: PRVLCL ! vapor mixing ratio at  LCL
-REAL               ,DIMENSION(D%NIT)       ,INTENT(IN)     :: PWLCL  ! parcel velocity at LCL (m/s)
-REAL               ,DIMENSION(D%NIT)       ,INTENT(IN)     :: PZLCL  ! height at LCL (m)
-REAL               ,DIMENSION(D%NIT)       ,INTENT(IN)     :: PTHVELCL  ! environm. theta_v at LCL (K)
-REAL                                       ,INTENT(IN)     :: PMFLCL ! cloud  base unit mass flux
-                                                ! (kg/s)
-LOGICAL            ,DIMENSION(D%NIT)       ,INTENT(INOUT)  :: OTRIG! logical mask for convection
-INTEGER            ,DIMENSION(D%NIT)       ,INTENT(IN)     :: KLCL   ! contains vert. index of LCL
-INTEGER            ,DIMENSION(D%NIT)       ,INTENT(IN)     :: KDPL   ! contains vert. index of DPL
-INTEGER            ,DIMENSION(D%NIT)       ,INTENT(IN)     :: KPBL   !  " vert. index of source layertop
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(OUT)    :: PUMF  ! updraft mass flux (kg/s)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(OUT)    :: PUER  ! updraft entrainment (kg/s)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(OUT)    :: PUDR  ! updraft detrainment (kg/s)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(OUT)    :: PUTHL ! updraft enthalpy (J/kg)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(OUT)    :: PUTHV ! updraft theta_v (K)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(OUT)    :: PURW  ! updraft total water (kg/kg)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(OUT)    :: PURC  ! updraft cloud water (kg/kg)
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(OUT)    :: PURI  ! updraft cloud ice   (kg/kg)
-REAL               ,DIMENSION(D%NIT)       ,INTENT(OUT)    :: PCAPE  ! available potent. energy
+                                                                    !                0 = no ice )
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PPRES ! pressure (P)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PDPRES! pressure difference between
+                                                   ! bottom and top of layer (Pa)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PZ    ! height of model layer (m)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PTHL  ! grid scale enthalpy (J/kg)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PTHV  ! grid scale theta_v
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PTHES ! grid scale saturated theta_e
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PRW   ! grid scale total water
+                                                   ! mixing ratio
+REAL, DIMENSION(D%NIJT), INTENT(IN) :: PTHLCL ! theta at LCL
+REAL, DIMENSION(D%NIJT), INTENT(IN) :: PTLCL  ! temp. at LCL
+REAL, DIMENSION(D%NIJT), INTENT(IN) :: PRVLCL ! vapor mixing ratio at  LCL
+REAL, DIMENSION(D%NIJT), INTENT(IN) :: PWLCL  ! parcel velocity at LCL (m/s)
+REAL, DIMENSION(D%NIJT), INTENT(IN) :: PZLCL  ! height at LCL (m)
+REAL, DIMENSION(D%NIJT), INTENT(IN) :: PTHVELCL  ! environm. theta_v at LCL (K)
+REAL,                    INTENT(IN) :: PMFLCL ! cloud  base unit mass flux
+                                              ! (kg/s)
+LOGICAL, DIMENSION(D%NIJT), INTENT(INOUT) :: OTRIG! logical mask for convection
+INTEGER, DIMENSION(D%NIJT), INTENT(IN)    :: KLCL   ! contains vert. index of LCL
+INTEGER, DIMENSION(D%NIJT), INTENT(IN)    :: KDPL   ! contains vert. index of DPL
+INTEGER, DIMENSION(D%NIJT), INTENT(IN)    :: KPBL   !  " vert. index of source layertop
 !
-!
-INTEGER            ,DIMENSION(D%NIT)       ,INTENT(OUT)    :: KCTL   ! contains vert. index of CTL
-INTEGER            ,DIMENSION(D%NIT)       ,INTENT(OUT)    :: KETL   ! contains vert. index of        &
-                                                !equilibrium (zero buoyancy) level
-LOGICAL            ,DIMENSION(D%NIT)       ,INTENT(IN)     :: GTRIG1! logical mask for convection
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PUMF  ! updraft mass flux (kg/s)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PUER  ! updraft entrainment (kg/s)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PUDR  ! updraft detrainment (kg/s)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PUTHL ! updraft enthalpy (J/kg)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PUTHV ! updraft theta_v (K)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PURW  ! updraft total water (kg/kg)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PURC  ! updraft cloud water (kg/kg)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PURI  ! updraft cloud ice   (kg/kg)
+REAL, DIMENSION(D%NIJT),       INTENT(OUT) :: PCAPE  ! available potent. energy
+INTEGER, DIMENSION(D%NIJT),    INTENT(OUT) :: KCTL   ! contains vert. index of CTL
+INTEGER, DIMENSION(D%NIJT),    INTENT(OUT) :: KETL   ! contains vert. index of
+                                                     ! equilibrium (zero buoyancy) level
+LOGICAL, DIMENSION(D%NIJT),    INTENT(IN)  :: GTRIG1 ! logical mask for convection
 !
 !*       0.2   Declarations of local variables :
 !
@@ -148,22 +149,23 @@ REAL    :: ZEPSA          ! R_v / R_d, C_pv / C_pd
 REAL    :: ZRDOCP         ! C_pd / R_d, R_d / C_pd
 REAL    :: ZICE, ZEPS0
 !
-REAL, DIMENSION(D%NIT)    :: ZUT             ! updraft temperature (K)
-REAL, DIMENSION(D%NIT)    :: ZUW1, ZUW2      ! square of updraft vert.
+REAL, DIMENSION(D%NIJT)    :: ZUT             ! updraft temperature (K)
+REAL, DIMENSION(D%NIJT)    :: ZUW1, ZUW2      ! square of updraft vert.
                                             ! velocity at levels k and k+1
-REAL, DIMENSION(D%NIT)    :: ZE1,ZE2,ZD1,ZD2 ! fractional entrainm./detrain
+REAL, DIMENSION(D%NIJT)    :: ZE1,ZE2,ZD1,ZD2 ! fractional entrainm./detrain
                                             ! rates at levels k and k+1
-REAL, DIMENSION(D%NIT)    :: ZMIXF           ! critical mixed fraction
-REAL, DIMENSION(D%NIT)    :: ZCPH            ! specific heat C_ph
-REAL, DIMENSION(D%NIT)    :: ZLV, ZLS        ! latent heat of vaporis., sublim.
-REAL, DIMENSION(D%NIT)    :: ZURV            ! updraft water vapor at level k+1
-REAL, DIMENSION(D%NIT)    :: ZPI             ! Pi=(P0/P)**(Rd/Cpd)
-REAL, DIMENSION(D%NIT)    :: ZTHEUL          ! theta_e for undilute ascent
-REAL, DIMENSION(D%NIT)    :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5,   &
+REAL, DIMENSION(D%NIJT)    :: ZMIXF           ! critical mixed fraction
+REAL, DIMENSION(D%NIJT)    :: ZCPH            ! specific heat C_ph
+REAL, DIMENSION(D%NIJT)    :: ZLV, ZLS        ! latent heat of vaporis., sublim.
+REAL, DIMENSION(D%NIJT)    :: ZURV            ! updraft water vapor at level k+1
+REAL, DIMENSION(D%NIJT)    :: ZPI             ! Pi=(P0/P)**(Rd/Cpd)
+REAL, DIMENSION(D%NIJT)    :: ZTHEUL          ! theta_e for undilute ascent
+REAL, DIMENSION(D%NIJT)    :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5,   &
                             ZWORK6          ! work arrays
-INTEGER, DIMENSION(D%NIT) :: IWORK           ! wok array
-LOGICAL, DIMENSION(D%NIT) :: GWORK1, GWORK2, GWORK4
+INTEGER, DIMENSION(D%NIJT) :: IWORK           ! wok array
+LOGICAL, DIMENSION(D%NIJT) :: GWORK1, GWORK2, GWORK4
                                             ! work arrays
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 !-------------------------------------------------------------------------------
@@ -171,7 +173,6 @@ LOGICAL, DIMENSION(D%NIT) :: GWORK1, GWORK2, GWORK4
 !        0.3   Set loop bounds
 !              ---------------
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
 IF (LHOOK) CALL DR_HOOK('CONVECT_UPDRAFT_SHAL',0,ZHOOK_HANDLE)
 IKB = 1 + CVPEXT%JCVEXB
@@ -214,13 +215,11 @@ GWORK4(:)  = .FALSE.
 !               Define accurate enthalpy for updraft
 !               -----------------------------------------------------
 !
-
-DO JI = D%NIB, D%NIE
+DO JI = D%NIJB, D%NIJE
   ZTHEUL(JI) = PTLCL(JI) * ( PTHLCL(JI) / PTLCL(JI) ) ** ( 1. - 0.28 * PRVLCL(JI) )  &
               * EXP( ( 3374.6525 / PTLCL(JI) - 2.5403 ) *                        &
                                      PRVLCL(JI) * ( 1. + 0.81 * PRVLCL(JI) ) )
-!
-!
+  !
   ZWORK1(JI) = ( CST%XCPD + PRVLCL(JI) * CST%XCPV ) * PTLCL(JI)                            &
               + ( 1. + PRVLCL(JI) ) * CST%XG * PZLCL(JI)
 ENDDO
@@ -231,9 +230,8 @@ ENDDO
 !
 JKP=IKE
 JKM=IKB
-
 DO JK = JKM, JKP
-   DO JI = D%NIB, D%NIE
+   DO JI = D%NIJB, D%NIJE
    IF ( JK >= KDPL(JI) .AND. JK < KLCL(JI) ) THEN
         PUMF(JI,JK)  = PMFLCL
         PUTHL(JI,JK) = ZWORK1(JI)
@@ -253,17 +251,17 @@ ZEPS0=CST%XRD/CST%XRV
 DO JK = IKB + 1, IKE - 1
   ZWORK6(:) = 1.
   JKP = JK + 1
-  
-!
-  DO JI = D%NIB, D%NIE
+  !
+  DO JI = D%NIJB, D%NIJE
     GWORK4(JI) = JK >= KLCL(JI) - 1
     GWORK1(JI) = GWORK4(JI) .AND. GWORK2(JI) ! this mask is used to confine
-                             ! updraft computations between the LCL and the CTL
+                                             ! updraft computations between the LCL and the CTL
   ENDDO
-!
-  DO JI=D%NIB, D%NIE
+  !
+  DO JI=D%NIJB, D%NIJE
     IF( JK == KLCL(JI) - 1 ) ZWORK6(JI) = 0. ! factor that is used in buoyancy
-  ENDDO                                      ! computation at first level above LCL
+                                             ! computation at first level above LCL
+  ENDDO
 !
 !
 !*       4.     Estimate condensate, L_v L_i, Cph and theta_v at level k+1
@@ -271,28 +269,28 @@ DO JK = IKB + 1, IKE - 1
 !
   ZWORK1(:) = PURC(:,JK)
   ZWORK2(:) = PURI(:,JK)
-  CALL CONVECT_CONDENS(CST, D, CONVPAR, ZICE, ZEPS0, PPRES(:,JKP),&
-                       PUTHL(:,JK), PURW(:,JK),  &
-                       ZWORK1, ZWORK2, PZ(:,JKP), ZUT,ZURV,&
+  CALL CONVECT_CONDENS(CST, D, CONVPAR, ZICE, ZEPS0, PPRES(:,JKP), &
+                       PUTHL(:,JK), PURW(:,JK), &
+                       ZWORK1, ZWORK2, PZ(:,JKP), ZUT, ZURV, &
                        PURC(:,JKP), PURI(:,JKP), &
                        ZLV, ZLS, ZCPH )
 !
 !
-  DO JI = D%NIB, D%NIE
+  DO JI = D%NIJB, D%NIJE
     ZPI(JI) = ( CST%XP00 / PPRES(JI,JKP) ) ** ZRDOCP
   ENDDO
 
-  DO JI=D%NIB, D%NIE
+  DO JI=D%NIJB, D%NIJE
     IF ( GWORK1(JI) ) THEN
-!
+      !
       PUTHV(JI,JKP) = ZPI(JI) * ZUT(JI) * ( 1. + ZEPSA * ZURV(JI) )           &
                            / ( 1. + PURW(JI,JK) )
-!
-!
-!*         5.     Compute square of vertical velocity using entrainment
-!                 at level k
-!                 -----------------------------------------------------
-!
+      !
+      !
+      !*       5.     Compute square of vertical velocity using entrainment
+      !               at level k
+      !               -----------------------------------------------------
+      !
       ZWORK3(JI) = PZ(JI,JKP) - PZ(JI,JK) * ZWORK6(JI) -         &
                        ( 1. - ZWORK6(JI) ) * PZLCL(JI)          ! level thickness
       ZWORK4(JI) = PTHV(JI,JK) * ZWORK6(JI) +                   &
@@ -302,27 +300,27 @@ DO JK = IKB + 1, IKE - 1
                     ( ( PUTHV(JI,JK) + PUTHV(JI,JKP) ) /       &
                     ( ZWORK4(JI) + PTHV(JI,JKP) ) - 1. )       & ! buoyancy term
                   - ZWORK5(JI)                                  ! entrainment term
-!
-!
-!*         6.     Update total precipitationJI dr_r=(r_c+r_i)*exp(-rate*dz)
-!                 --------------------------------------------------------
-!
-!                      compute level mean vertical velocity
+      !
+      !
+      !*       6.     Update total precipitation: dr_r=(r_c+r_i)*exp(-rate*dz)
+      !               --------------------------------------------------------
+      !
+      !                    compute level mean vertical velocity
       ZWORK2(JI)   = 0.5 *                                                    &
                          ( SQRT( MAX( 1.E-2, ZUW2(JI) ) ) +                   &
                            SQRT( MAX( 1.E-2, ZUW1(JI) ) ) )
-!
-!
-!*         7.     Update r_c, r_i, enthalpy, r_w  for precipitation
-!                 -------------------------------------------------------
-!
+      !
+      !
+      !*       7.     Update r_c, r_i, enthalpy, r_w  for precipitation
+      !               -------------------------------------------------------
+      !
       PURW(JI,JKP)  = PURW(JI,JK)
       PURC(JI,JKP)  = PURC(JI,JKP)
       PURI(JI,JKP)  = PURI(JI,JKP)
       PUTHL(JI,JKP) = PUTHL(JI,JK)
-!
+      !
       ZUW1(JI)      = ZUW2(JI)
-!
+      !
     END IF
   ENDDO
 !
@@ -337,7 +335,7 @@ DO JK = IKB + 1, IKE - 1
 !               evaluating the derivative using ZMIXF=0.1.
 !               -----------------------------------------------------
 !
-  DO JI = D%NIB, D%NIE
+  DO JI = D%NIJB, D%NIJE
     ZMIXF(JI)  = 0.1   ! starting value for critical mixed fraction
     ZWORK1(JI) = ZMIXF(JI) * PTHL(JI,JKP)                                     &
                      + ( 1. - ZMIXF(JI) ) * PUTHL(JI,JKP) ! mixed enthalpy
@@ -345,14 +343,14 @@ DO JK = IKB + 1, IKE - 1
                      + ( 1. - ZMIXF(JI) ) * PURW(JI,JKP)  ! mixed r_w
   ENDDO
 !
-  CALL CONVECT_CONDENS(CST, D, CONVPAR, ZICE, ZEPS0, PPRES(:,JKP),&
-                       ZWORK1, ZWORK2, PURC(:,JKP),        &
-                       PURI(:,JKP), PZ(:,JKP),   &
+  CALL CONVECT_CONDENS(CST, D, CONVPAR, ZICE, ZEPS0, PPRES(:,JKP), &
+                       ZWORK1, ZWORK2, PURC(:,JKP), &
+                       PURI(:,JKP), PZ(:,JKP), &
                        ZUT, ZWORK3, ZWORK4, ZWORK5, ZLV, ZLS, ZCPH)
 !        put in enthalpy and r_w and get T r_c, r_i (ZUT, ZWORK4-5)
 !
      ! compute theta_v of mixture
-  DO JI = D%NIB, D%NIE
+  DO JI = D%NIJB, D%NIJE
     ZWORK3(JI) = ZUT(JI) * ZPI(JI) * ( 1. + ZEPSA * (                         &
                 ZWORK2(JI) - ZWORK4(JI) - ZWORK5(JI) ) ) / ( 1. + ZWORK2(JI) )
      ! compute final value of critical mixed fraction using theta_v
@@ -369,85 +367,80 @@ DO JK = IKB + 1, IKE - 1
 !
 !
     CALL CONVECT_MIXING_FUNCT ( D, ZMIXF, 1, ZE2, ZD2 )
-!       NoteD%NIB:D%NIE routine MIXING_FUNCT returns fractional entrainm/detrainm. rates
+!       Note: routine MIXING_FUNCT returns fractional entrainm/detrainm. rates
 !
   ZE2=MIN(ZD2,MAX(.3,ZE2))
 !
-! ZWORK1(D%NIB:D%NIE) = XENTR * PMFLCL * PDPRES(D%NIB:D%NIE,JKP) / XCRAD ! rate of env. inflow
-!*MOD
-  DO JI = D%NIB, D%NIE
-    zwork1(JI) = CVP_SHAL%xentr * CST%xg / CVP_SHAL%xcrad * pumf(JI,jk) * ( pz(JI,jkp) - pz(JI,jk) )
+  DO JI = D%NIJB, D%NIJE
+    ZWORK1(JI) = CVP_SHAL%XENTR * CST%XG / CVP_SHAL%XCRAD * PUMF(JI,JK) * ( PZ(JI,JKP) - PZ(JI,JK) )
   ENDDO
-! ZWORK1(D%NIB:D%NIE) = XENTR * pumf(D%NIB:D%NIE,jk) * PDPRES(D%NIB:D%NIE,JKP) / XCRAD ! rate of env. inflow
-!*MOD
   ZWORK2(:) = 0.
-  DO JI=D%NIB, D%NIE
+  DO JI=D%NIJB, D%NIJE
     IF( GWORK1(JI) ) ZWORK2(JI) = 1.
   ENDDO
-  DO JI=D%NIB, D%NIE
-  IF ( PUTHV(JI,JKP) > PTHV(JI,JKP) ) THEN
-    PUER(JI,JKP) = 0.5 * ZWORK1(JI) * ( ZE1(JI) + ZE2(JI) ) * ZWORK2(JI)
-    PUDR(JI,JKP) = 0.5 * ZWORK1(JI) * ( ZD1(JI) + ZD2(JI) ) * ZWORK2(JI)
-  ELSE
-    PUER(JI,JKP) = 0.
-    PUDR(JI,JKP) = ZWORK1(JI) * ZWORK2(JI)
-  END IF
-  ENDDO
-!
-!*       8.3     Determine equilibrium temperature level
-!                --------------------------------------
-!
-  DO JI=D%NIB, D%NIE
-    IF ( PUTHV(JI,JKP) > PTHV(JI,JKP) .AND. JK > KLCL(JI) + 1 .AND. GWORK1(JI) )THEN
-         KETL(JI) = JKP            ! equilibrium temperature level
+  DO JI=D%NIJB, D%NIJE
+    IF ( PUTHV(JI,JKP) > PTHV(JI,JKP) ) THEN
+      PUER(JI,JKP) = 0.5 * ZWORK1(JI) * ( ZE1(JI) + ZE2(JI) ) * ZWORK2(JI)
+      PUDR(JI,JKP) = 0.5 * ZWORK1(JI) * ( ZD1(JI) + ZD2(JI) ) * ZWORK2(JI)
+    ELSE
+      PUER(JI,JKP) = 0.
+      PUDR(JI,JKP) = ZWORK1(JI) * ZWORK2(JI)
     END IF
   ENDDO
-!
-!*       8.4     If the calculated detrained mass flux is greater than
-!                the total updraft mass flux, or vertical velocity is
-!                negative, all cloud mass detrains at previous model level,
-!                exit updraft calculations - CTL is attained
-!                -------------------------------------------------------
-!
-  DO JI=D%NIB, D%NIE
+  !
+  !*       8.3     Determine equilibrium temperature level
+  !                --------------------------------------
+  !
+  DO JI=D%NIJB, D%NIJE
+    IF (PUTHV(JI,JKP) > PTHV(JI,JKP) .AND. JK > KLCL(JI) + 1 .AND. GWORK1(JI) ) THEN
+      KETL(JI) = JKP            ! equilibrium temperature level
+    END IF
+  ENDDO
+  !
+  !*       8.4     If the calculated detrained mass flux is greater than
+  !                the total updraft mass flux, or vertical velocity is
+  !                negative, all cloud mass detrains at previous model level,
+  !                exit updraft calculations - CTL is attained
+  !                -------------------------------------------------------
+  !
+  DO JI=D%NIJB, D%NIJE
     IF( GWORK1(JI) ) THEN
       GWORK2(JI) = PUMF(JI,JK) - PUDR(JI,JKP) > 10. .AND. ZUW2(JI) > 0.
     ENDIF
   ENDDO
-  DO JI=D%NIB, D%NIE
+  DO JI=D%NIJB, D%NIJE
     IF ( GWORK2(JI) ) KCTL(JI) = JKP   ! cloud top level
   ENDDO
-  
-  DO JI=D%NIB, D%NIE
+  DO JI=D%NIJB, D%NIJE
     GWORK1(JI) = GWORK2(JI) .AND. GWORK4(JI)
   ENDDO
-!
+  !
   !IF ( COUNT( GWORK2(:) ) == 0 ) EXIT        
-!
-!
-!*       9.   Compute CAPE for undilute ascent using theta_e and
-!             theta_es instead of theta_v. This estimation produces
-!             a significantly larger value for CAPE than the actual one.
-!             ----------------------------------------------------------
-!
-  DO JI=D%NIB, D%NIE
-    IF ( GWORK1(JI) )THEN
-!
+  !
+  !
+  !*       9.   Compute CAPE for undilute ascent using theta_e and
+  !             theta_es instead of theta_v. This estimation produces
+  !             a significantly larger value for CAPE than the actual one.
+  !             ----------------------------------------------------------
+  !
+  DO JI=D%NIJB, D%NIJE
+    IF ( GWORK1(JI) ) THEN
+      !
       ZWORK3(JI)   = PZ(JI,JKP) - PZ(JI,JK) * ZWORK6(JI) -                      &
                     ( 1. - ZWORK6(JI) ) *  PZLCL(JI)              ! level thickness
       ZWORK2(JI)   = PTHES(JI,JK) + ( 1. - ZWORK6(JI) ) *                      &
        ( PTHES(JI,JKP) - PTHES(JI,JK) ) / ( PZ(JI,JKP) - PZ(JI,JK) ) *          &
        ( PZLCL(JI) - PZ(JI,JK) ) ! linear interpolation for theta_es at LCL
                               ! ( this is only done for model level just above LCL
-!
+      !
       ZWORK1(JI) = ( 2. * ZTHEUL(JI) ) / ( ZWORK2(JI) + PTHES(JI,JKP) ) - 1.
       PCAPE(JI)  = PCAPE(JI) + CST%XG * ZWORK3(JI) * MAX( 0., ZWORK1(JI) )
-!
-!
-!*         10.   Compute final values of updraft mass flux, enthalpy, r_w
-!                at level k+1
-!                --------------------------------------------------------
-!
+      !
+      !
+      !*       10.   Compute final values of updraft mass flux, enthalpy, r_w
+      !              at level k+1
+      !              --------------------------------------------------------
+      !
       PUMF(JI,JKP)  = PUMF(JI,JK) - PUDR(JI,JKP) + PUER(JI,JKP)
       PUMF(JI,JKP)  = MAX( PUMF(JI,JKP), 0.1 )
       PUTHL(JI,JKP) = ( PUMF(JI,JK) * PUTHL(JI,JK) +                              &
@@ -456,11 +449,11 @@ DO JK = IKB + 1, IKE - 1
       PURW(JI,JKP)  = ( PUMF(JI,JK) * PURW(JI,JK) +                               &
                        PUER(JI,JKP) * PRW(JI,JK) - PUDR(JI,JKP) * PURW(JI,JK) )    &
                       / PUMF(JI,JKP)
-!
-!
+      !
+      !
       ZE1(JI) = ZE2(JI) ! update fractional entrainment/detrainment
       ZD1(JI) = ZD2(JI)
-!
+      !
     END IF
   ENDDO
 !
@@ -470,18 +463,17 @@ END DO
 !                or > 3km (deep convection) or CAPE < 1
 !                ------------------------------------------------
 !
-    DO JI = D%NIB, D%NIE
-          JK  = KCTL(JI)
-          ZWORK1(JI) = PZ(JI,JK) - PZLCL(JI)
-          OTRIG(JI) = ZWORK1(JI) >= CVP_SHAL%XCDEPTH  .AND. ZWORK1(JI) < CVP_SHAL%XCDEPTH_D        &
-                     .AND. PCAPE(JI) > 1.
-    END DO
-    DO JI = D%NIB, D%NIE
-    IF( .NOT. OTRIG(JI) ) KCTL(JI) = IKB
-    ENDDO
+DO JI = D%NIJB, D%NIJE
+  JK  = KCTL(JI)
+  ZWORK1(JI) = PZ(JI,JK) - PZLCL(JI)
+  OTRIG(JI) = ZWORK1(JI) >= CVP_SHAL%XCDEPTH  .AND. ZWORK1(JI) < CVP_SHAL%XCDEPTH_D        &
+             .AND. PCAPE(JI) > 1.
+END DO
+DO JI = D%NIJB, D%NIJE
+  IF( .NOT. OTRIG(JI) ) KCTL(JI) = IKB
+ENDDO
 
-
-DO JI = D%NIB, D%NIE
+DO JI = D%NIJB, D%NIJE
   KETL(JI) = MAX( KETL(JI), KLCL(JI) + 2 )
   KETL(JI) = MIN( KETL(JI), KCTL(JI) )
 ENDDO
@@ -492,11 +484,11 @@ ENDDO
 !                -------------------------------------------------------
 !
 ZWORK1(:) = 0.
-DO JI=D%NIB, D%NIE
+DO JI=D%NIJB, D%NIJE
   IF ( KETL(JI) == KCTL(JI) ) ZWORK1(JI) = 1.
 ENDDO
 !
-DO JI = D%NIB, D%NIE
+DO JI = D%NIJB, D%NIJE
     JK = KETL(JI)
     PUDR(JI,JK)   = PUDR(JI,JK) +                                    &
                           ( PUMF(JI,JK) - PUER(JI,JK) )  * ZWORK1(JI)
@@ -523,21 +515,21 @@ JK1 = IKB
 JK2 = IKE
 
 DO JK = JK1, JK2
-    DO JI = D%NIB, D%NIE
+    DO JI = D%NIJB, D%NIJE
     IF( JK > KETL(JI) .AND. JK <= KCTL(JI) ) THEN
         ZWORK1(JI) = ZWORK1(JI) + PDPRES(JI,JK)
     END IF
     END DO
 END DO
 !
-DO JI = D%NIB, D%NIE
+DO JI = D%NIJB, D%NIJE
     JK = KETL(JI)
     ZWORK1(JI) = PUMF(JI,JK) / MAX( 1., ZWORK1(JI) )
 END DO
 !
 DO JK = JK1 + 1, JK2
     JKP = JK - 1
-    DO JI = D%NIB, D%NIE
+    DO JI = D%NIJB, D%NIJE
     IF ( JK > KETL(JI) .AND. JK <= KCTL(JI) ) THEN
         PUDR(JI,JK)  = PDPRES(JI,JK) * ZWORK1(JI)
         PUMF(JI,JK)  = PUMF(JI,JKP) - PUDR(JI,JK)
@@ -551,7 +543,7 @@ END DO
 !
 !IWORK(:) = MIN( KPBL(:), KLCL(:) - 1 )
 IWORK(:) = KPBL(:)
-DO JI = D%NIB, D%NIE
+DO JI = D%NIJB, D%NIJE
      JK  = KDPL(JI)
      JKP = IWORK(JI)
 !          mixed layer depth
@@ -560,7 +552,7 @@ END DO
 !
 JKP=IKE
 DO JK = JKM, JKP
-   DO JI = D%NIB, D%NIE
+   DO JI = D%NIJB, D%NIJE
    IF ( JK >= KDPL(JI)  .AND. JK <= IWORK(JI) .AND. GTRIG1(JI)) THEN
        PUER(JI,JK) = PUER(JI,JK) + PMFLCL * PDPRES(JI,JK) / ( ZWORK2(JI) + 0.1 )
        PUMF(JI,JK) = PUMF(JI,JK-1) + PUER(JI,JK)
@@ -578,17 +570,17 @@ END DO
 !              ---------------------------------------------------
 !
 DO JK=1,D%NKT
-    DO JI=D%NIB, D%NIE
-        IF(.NOT. OTRIG(JI))THEN
-            PUMF(JI,JK)  = 0.
-            PUDR(JI,JK)  = 0.
-            PUER(JI,JK)  = 0.
-            PUTHL(JI,JK) = PTHL(JI,JK)
-            PURW(JI,JK)  = PRW(JI,JK)
-            PURC(JI,JK)  = 0.
-            PURI(JI,JK)  = 0.
-        ENDIF
-    ENDDO
+  DO JI=D%NIJB, D%NIJE
+    IF(.NOT. OTRIG(JI)) THEN
+      PUMF(JI,JK)  = 0.
+      PUDR(JI,JK)  = 0.
+      PUER(JI,JK)  = 0.
+      PUTHL(JI,JK) = PTHL(JI,JK)
+      PURW(JI,JK)  = PRW(JI,JK)
+      PURC(JI,JK)  = 0.
+      PURI(JI,JK)  = 0.
+    ENDIF
+  ENDDO
 ENDDO
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_UPDRAFT_SHAL',1,ZHOOK_HANDLE)
