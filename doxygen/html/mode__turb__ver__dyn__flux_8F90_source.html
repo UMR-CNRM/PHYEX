@@ -82,7 +82,7 @@ $(document).ready(function() { init_codefold(0); });
   <div class="headertitle"><div class="title">mode_turb_ver_dyn_flux.F90</div></div>
 </div><!--header-->
 <div class="contents">
-<a href="mode__turb__ver__dyn__flux_8F90.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier</span></div>
+<a href="mode__turb__ver__dyn__flux_8F90.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">!MNH_LIC Copyright 1994-2026 CNRS, Meteo-France and Universite Paul Sabatier</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment">!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment">!MNH_LIC for details. version 1.</span></div>
@@ -306,7 +306,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__parameters.html">modd_parameters</a>,     <span class="keywordtype">ONLY</span>: <a class="code hl_variable" href="namespacemodd__parameters.html#a9823d3f349d55a2aa6599eddabe6f16f">xundef</a></div>
 <div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__turb__n.html">modd_turb_n</a>,         <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__turb__n_1_1turb__t.html">turb_t</a></div>
 <div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span><span class="comment">!</span></div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__io__field__write__phy.html">mode_io_field_write_phy</a>, <span class="keywordtype">only</span>: <a class="code hl_function" href="namespacemode__io__field__write__phy.html#ae90c9595e48348b2813cd33897aa4a2f">io_field_write_phy</a></div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__io__field__write__phy.html">mode_io_field_write_phy</a>, <span class="keywordtype">only</span>: <a class="code hl_interface" href="interfacemode__io__field__write__phy_1_1io__field__write__phy.html">io_field_write_phy</a></div>
 <div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__tridiag__wind.html">mode_tridiag_wind</a>,   <span class="keywordtype">ONLY</span>: <a class="code hl_function" href="namespacemode__tridiag__wind.html#afee635ec12a0577e6a297f4bdcca41f6">tridiag_wind</a></div>
 <div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span><span class="comment">!</span></div>
 <div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodi__les__mean__subgrid__phy.html">modi_les_mean_subgrid_phy</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a></div>
@@ -606,436 +606,414 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00521" name="l00521"></a><span class="lineno">  521</span><span class="keywordflow">IF</span> ( turbn%LTURB_FLX .AND. tpfile%LOPENED ) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00522" name="l00522"></a><span class="lineno">  522</span><span class="comment">!$acc update self(ZFLXZ)</span></div>
 <div class="line"><a id="l00523" name="l00523"></a><span class="lineno">  523</span>  <span class="comment">! stores the U wind component vertical flux</span></div>
-<div class="line"><a id="l00524" name="l00524"></a><span class="lineno">  524</span>  tzfield = <a class="code hl_struct" href="structmodd__field_1_1tfieldmetadata.html">tfieldmetadata</a>(                        &amp;</div>
-<div class="line"><a id="l00525" name="l00525"></a><span class="lineno">  525</span>    cmnhname   = <span class="stringliteral">&#39;UW_FLX&#39;</span>,                         &amp;</div>
-<div class="line"><a id="l00526" name="l00526"></a><span class="lineno">  526</span>    cstdname   = <span class="stringliteral">&#39;&#39;</span>,                               &amp;</div>
-<div class="line"><a id="l00527" name="l00527"></a><span class="lineno">  527</span>    clongname  = <span class="stringliteral">&#39;UW_FLX&#39;</span>,                         &amp;</div>
-<div class="line"><a id="l00528" name="l00528"></a><span class="lineno">  528</span>    cunits     = <span class="stringliteral">&#39;m2 s-2&#39;</span>,                         &amp;</div>
-<div class="line"><a id="l00529" name="l00529"></a><span class="lineno">  529</span>    cdir       = <span class="stringliteral">&#39;XY&#39;</span>,                             &amp;</div>
-<div class="line"><a id="l00530" name="l00530"></a><span class="lineno">  530</span>    ccomment   = <span class="stringliteral">&#39;U wind component vertical flux&#39;</span>, &amp;</div>
-<div class="line"><a id="l00531" name="l00531"></a><span class="lineno">  531</span>    ngrid      = 4,                                &amp;</div>
-<div class="line"><a id="l00532" name="l00532"></a><span class="lineno">  532</span>    ntype      = <a class="code hl_variable" href="namespacemodd__field.html#a7d4c3932f9ca5c6781119dba51724c2d">typereal</a>,                         &amp;</div>
-<div class="line"><a id="l00533" name="l00533"></a><span class="lineno">  533</span>    ndims      = 3,                                &amp;</div>
-<div class="line"><a id="l00534" name="l00534"></a><span class="lineno">  534</span>    ltimedep   = .true.                            )</div>
-<div class="line"><a id="l00535" name="l00535"></a><span class="lineno">  535</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__io__field__write__phy.html#ae90c9595e48348b2813cd33897aa4a2f">io_field_write_phy</a>(d,tpfile,tzfield,zflxz)</div>
-<div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00524" name="l00524"></a><span class="lineno">  524</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__io__field__write__phy_1_1io__field__write__phy.html">io_field_write_phy</a>(d,tpfile,<span class="stringliteral">&#39;UW_FLX&#39;</span>,zflxz)</div>
+<div class="line"><a id="l00525" name="l00525"></a><span class="lineno">  525</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00526" name="l00526"></a><span class="lineno">  526</span><span class="comment">!</span></div>
+<div class="line"><a id="l00527" name="l00527"></a><span class="lineno">  527</span><span class="comment">! first part of total momentum flux</span></div>
+<div class="line"><a id="l00528" name="l00528"></a><span class="lineno">  528</span><span class="comment">!</span></div>
+<div class="line"><a id="l00529" name="l00529"></a><span class="lineno">  529</span><span class="comment">!$acc kernels present_cr(PWU)</span></div>
+<div class="line"><a id="l00530" name="l00530"></a><span class="lineno">  530</span>pwu(iijb:iije,1:ikt) = zflxz(iijb:iije,1:ikt)</div>
+<div class="line"><a id="l00531" name="l00531"></a><span class="lineno">  531</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00532" name="l00532"></a><span class="lineno">  532</span><span class="comment">!</span></div>
+<div class="line"><a id="l00533" name="l00533"></a><span class="lineno">  533</span><span class="comment">! Contribution to the TKE dynamic production of TKE</span></div>
+<div class="line"><a id="l00534" name="l00534"></a><span class="lineno">  534</span><span class="comment">! (computed at mass point)</span></div>
+<div class="line"><a id="l00535" name="l00535"></a><span class="lineno">  535</span><span class="comment">!</span></div>
+<div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span>pdp(:,:) = - <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>( <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>( zflxz * <a class="code hl_function" href="gradient__u_8F90.html#acc308949033045e8380f5d3012419466">gz_u_uw</a>(turbn%XIMPL*zres + pexpl*pum, pdzz) ) )</div>
 <div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span><span class="comment">!</span></div>
-<div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span><span class="comment">! first part of total momentum flux</span></div>
-<div class="line"><a id="l00539" name="l00539"></a><span class="lineno">  539</span><span class="comment">!</span></div>
-<div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span><span class="comment">!$acc kernels present_cr(PWU)</span></div>
-<div class="line"><a id="l00541" name="l00541"></a><span class="lineno">  541</span>pwu(iijb:iije,1:ikt) = zflxz(iijb:iije,1:ikt)</div>
-<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span><span class="comment">!</span></div>
-<div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span><span class="comment">! Contribution to the TKE dynamic production of TKE</span></div>
-<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span><span class="comment">! (computed at mass point)</span></div>
-<div class="line"><a id="l00546" name="l00546"></a><span class="lineno">  546</span><span class="comment">!</span></div>
-<div class="line"><a id="l00547" name="l00547"></a><span class="lineno">  547</span>pdp(:,:) = - <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>( <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>( zflxz * <a class="code hl_function" href="gradient__u_8F90.html#acc308949033045e8380f5d3012419466">gz_u_uw</a>(turbn%XIMPL*zres + pexpl*pum, pdzz) ) )</div>
+<div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span><span class="comment">! Special cases near surface</span></div>
+<div class="line"><a id="l00539" name="l00539"></a><span class="lineno">  539</span><span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span>  <span class="comment">! evaluate the dynamic production at w(IKE) and store in PDP(IKE)</span></div>
+<div class="line"><a id="l00541" name="l00541"></a><span class="lineno">  541</span>  <span class="comment">! before to be extrapolated in tke_eps routine</span></div>
+<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span>  pdp(:,ike) = -<a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(zflxz(:,ike-ikl) * (turbn%XIMPL*(zres(:,ike)-zres(:,ike-ikl)) + &amp;</div>
+<div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span>                                        pexpl*(pum(:,ike)-pum(:,ike-ikl)))/ <a class="code hl_function" href="shuman_8F90.html#ab3e06558ef84e1779e4c5fcb5d09a763">mxm</a>(pdzz(:,ike-ikl)))</div>
+<div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span><span class="keywordflow">ELSE</span> <span class="comment">! Atmosphere</span></div>
+<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span>  <span class="comment">! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)</span></div>
+<div class="line"><a id="l00546" name="l00546"></a><span class="lineno">  546</span>  pdp(:,ikb) = -<a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(zflxz(:,ikb+ikl) * (turbn%XIMPL*(zres(:,ikb+ikl)-zres(:,ikb)) + &amp;</div>
+<div class="line"><a id="l00547" name="l00547"></a><span class="lineno">  547</span>                                        pexpl*(pum(:,ikb+ikl)-pum(:,ikb)))/ <a class="code hl_function" href="shuman_8F90.html#ab3e06558ef84e1779e4c5fcb5d09a763">mxm</a>(pdzz(:,ikb+ikl)))</div>
 <div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span><span class="comment">!</span></div>
-<div class="line"><a id="l00549" name="l00549"></a><span class="lineno">  549</span><span class="comment">! Special cases near surface</span></div>
-<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span><span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span>  <span class="comment">! evaluate the dynamic production at w(IKE) and store in PDP(IKE)</span></div>
-<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span>  <span class="comment">! before to be extrapolated in tke_eps routine</span></div>
-<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span>  pdp(:,ike) = -<a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(zflxz(:,ike-ikl) * (turbn%XIMPL*(zres(:,ike)-zres(:,ike-ikl)) + &amp;</div>
-<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span>                                        pexpl*(pum(:,ike)-pum(:,ike-ikl)))/ <a class="code hl_function" href="shuman_8F90.html#ab3e06558ef84e1779e4c5fcb5d09a763">mxm</a>(pdzz(:,ike-ikl)))</div>
-<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span><span class="keywordflow">ELSE</span> <span class="comment">! Atmosphere</span></div>
-<div class="line"><a id="l00556" name="l00556"></a><span class="lineno">  556</span>  <span class="comment">! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)</span></div>
-<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span>  pdp(:,ikb) = -<a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(zflxz(:,ikb+ikl) * (turbn%XIMPL*(zres(:,ikb+ikl)-zres(:,ikb)) + &amp;</div>
-<div class="line"><a id="l00558" name="l00558"></a><span class="lineno">  558</span>                                        pexpl*(pum(:,ikb+ikl)-pum(:,ikb)))/ <a class="code hl_function" href="shuman_8F90.html#ab3e06558ef84e1779e4c5fcb5d09a763">mxm</a>(pdzz(:,ikb+ikl)))</div>
-<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span><span class="comment">!</span></div>
-<div class="line"><a id="l00560" name="l00560"></a><span class="lineno">  560</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span><span class="comment">!</span></div>
-<div class="line"><a id="l00562" name="l00562"></a><span class="lineno">  562</span><span class="comment">! Storage in the LES configuration</span></div>
-<div class="line"><a id="l00563" name="l00563"></a><span class="lineno">  563</span><span class="comment">!</span></div>
-<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span><span class="keywordflow">IF</span> (tles%LLES_CALL) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime1)</div>
-<div class="line"><a id="l00566" name="l00566"></a><span class="lineno">  566</span>  zwkles = <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(<a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(zflxz))</div>
-<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_SUBGRID_WU )</div>
-<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span>  zwkles = <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(<a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(<a class="code hl_function" href="gradient__u_8F90.html#acc308949033045e8380f5d3012419466">gz_u_uw</a>(pum,pdzz) *zflxz))</div>
-<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_U_SBG_UaU )</div>
-<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span>  zwkles = zcmfs * zkeff</div>
-<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_SUBGRID_Km )</div>
-<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime2)</div>
-<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span>  tles%XTIME_LES = tles%XTIME_LES + ztime2 - ztime1</div>
-<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span><span class="comment">!</span></div>
-<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span><span class="comment">!*       5.3  Source of W wind component</span></div>
-<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span><span class="comment">!</span></div>
-<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span><span class="comment">!</span></div>
-<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span><span class="keywordflow">IF</span>(turbn%CTURBDIM==<span class="stringliteral">&#39;3DIM&#39;</span>) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span>  <span class="comment">! Compute the source for the W wind component</span></div>
-<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span>                <span class="comment">! used to compute the W source at the ground</span></div>
-<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span><span class="comment">!$acc kernels present_cr(ZFLXZ)</span></div>
-<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>  zflxz(iijb:iije,ika) = 2 * zflxz(iijb:iije,ikb) - zflxz(iijb:iije,ikb+ikl) <span class="comment">! extrapolation </span></div>
-<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span> <span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span><span class="comment">!$acc kernels present_cr(ZFLXZ)</span></div>
-<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>   <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>   zflxz(iijb:iije,iku) = 2 * zflxz(iijb:iije,ike) - zflxz(iijb:iije,ike-ikl) <span class="comment">! extrapolation</span></div>
-<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>   <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span><span class="keywordflow"> END IF</span></div>
+<div class="line"><a id="l00549" name="l00549"></a><span class="lineno">  549</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span><span class="comment">!</span></div>
+<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span><span class="comment">! Storage in the LES configuration</span></div>
+<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span><span class="comment">!</span></div>
+<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span><span class="keywordflow">IF</span> (tles%LLES_CALL) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime1)</div>
+<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span>  zwkles = <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(<a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(zflxz))</div>
+<div class="line"><a id="l00556" name="l00556"></a><span class="lineno">  556</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_SUBGRID_WU )</div>
+<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span>  zwkles = <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(<a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(<a class="code hl_function" href="gradient__u_8F90.html#acc308949033045e8380f5d3012419466">gz_u_uw</a>(pum,pdzz) *zflxz))</div>
+<div class="line"><a id="l00558" name="l00558"></a><span class="lineno">  558</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_U_SBG_UaU )</div>
+<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span>  zwkles = zcmfs * zkeff</div>
+<div class="line"><a id="l00560" name="l00560"></a><span class="lineno">  560</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_SUBGRID_Km )</div>
+<div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime2)</div>
+<div class="line"><a id="l00562" name="l00562"></a><span class="lineno">  562</span>  tles%XTIME_LES = tles%XTIME_LES + ztime2 - ztime1</div>
+<div class="line"><a id="l00563" name="l00563"></a><span class="lineno">  563</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span><span class="comment">!</span></div>
+<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span><span class="comment">!*       5.3  Source of W wind component</span></div>
+<div class="line"><a id="l00566" name="l00566"></a><span class="lineno">  566</span><span class="comment">!</span></div>
+<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span><span class="comment">!</span></div>
+<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span><span class="keywordflow">IF</span>(turbn%CTURBDIM==<span class="stringliteral">&#39;3DIM&#39;</span>) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span>  <span class="comment">! Compute the source for the W wind component</span></div>
+<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span>                <span class="comment">! used to compute the W source at the ground</span></div>
+<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span><span class="comment">!$acc kernels present_cr(ZFLXZ)</span></div>
+<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span>  zflxz(iijb:iije,ika) = 2 * zflxz(iijb:iije,ikb) - zflxz(iijb:iije,ikb+ikl) <span class="comment">! extrapolation </span></div>
+<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span> <span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span><span class="comment">!$acc kernels present_cr(ZFLXZ)</span></div>
+<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span>   <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span>   zflxz(iijb:iije,iku) = 2 * zflxz(iijb:iije,ike) - zflxz(iijb:iije,ike-ikl) <span class="comment">! extrapolation</span></div>
+<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span>   <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span><span class="keywordflow"> END IF</span></div>
+<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>  <span class="keywordflow">IF</span> (.NOT. oflat) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span>    <span class="comment">!</span></div>
+<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span>    prws(:,:)= prws                                      &amp;</div>
+<div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span>                -<a class="code hl_function" href="shuman_8F90.html#aca7d90fd1a917685fc36d087f7e7dedc">dxf</a>( <a class="code hl_function" href="shuman_8F90.html#a620b12be5daf1abac11fc6e553221834">mzm</a>( <a class="code hl_function" href="shuman_8F90.html#ab3e06558ef84e1779e4c5fcb5d09a763">mxm</a>(prhodj) /pdxx(:,:) )  * zflxz(:,:) )  &amp;</div>
+<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span>                +<a class="code hl_function" href="shuman_8F90.html#a73362ac83a8e3824c77dfc9963893fc8">dzm</a>( prhodj / <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(pdzz ) *                &amp;</div>
+<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>                      <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>( <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>( zflxz(:,:)*pdzx(:,:) ) / pdxx(:,:) )      &amp;</div>
+<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>                    )</div>
+<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>  <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>    prws(:,:)= prws(:,:) -<a class="code hl_function" href="shuman_8F90.html#aca7d90fd1a917685fc36d087f7e7dedc">dxf</a>( <a class="code hl_function" href="shuman_8F90.html#a620b12be5daf1abac11fc6e553221834">mzm</a>( <a class="code hl_function" href="shuman_8F90.html#ab3e06558ef84e1779e4c5fcb5d09a763">mxm</a>(prhodj) /pdxx(:,:) )  * zflxz(:,:) )</div>
+<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span><span class="keywordflow">  END IF</span></div>
 <div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span>  <span class="keywordflow">IF</span> (.NOT. oflat) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span>    <span class="comment">!</span></div>
-<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>    prws(:,:)= prws                                      &amp;</div>
-<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>                -<a class="code hl_function" href="shuman_8F90.html#aca7d90fd1a917685fc36d087f7e7dedc">dxf</a>( <a class="code hl_function" href="shuman_8F90.html#a620b12be5daf1abac11fc6e553221834">mzm</a>( <a class="code hl_function" href="shuman_8F90.html#ab3e06558ef84e1779e4c5fcb5d09a763">mxm</a>(prhodj) /pdxx(:,:) )  * zflxz(:,:) )  &amp;</div>
-<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>                +<a class="code hl_function" href="shuman_8F90.html#a73362ac83a8e3824c77dfc9963893fc8">dzm</a>( prhodj / <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(pdzz ) *                &amp;</div>
-<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span>                      <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>( <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>( zflxz(:,:)*pdzx(:,:) ) / pdxx(:,:) )      &amp;</div>
-<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span>                    )</div>
-<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>  <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span>    prws(:,:)= prws(:,:) -<a class="code hl_function" href="shuman_8F90.html#aca7d90fd1a917685fc36d087f7e7dedc">dxf</a>( <a class="code hl_function" href="shuman_8F90.html#a620b12be5daf1abac11fc6e553221834">mzm</a>( <a class="code hl_function" href="shuman_8F90.html#ab3e06558ef84e1779e4c5fcb5d09a763">mxm</a>(prhodj) /pdxx(:,:) )  * zflxz(:,:) )</div>
-<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span><span class="keywordflow">  END IF</span></div>
+<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span>  <span class="comment">! Complete the TKE dynamical production with the W wind contribution </span></div>
+<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>  za(:,:)=-<a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>( <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>( zflxz * <a class="code hl_function" href="gradient__w_8F90.html#ab1291a8e8aa08e2f9add73fe3ab80bd1">gx_w_uw</a>(oflat,pwm,pdxx,pdzz,pdzx) )  )</div>
+<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>  <span class="comment">! Special cases near surface</span></div>
+<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span>  <span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span>    <span class="comment">! evaluate the dynamic production at w(IKE) in PDP(IKE)</span></div>
+<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span>    za(:,ike) = - <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(zflxz(:,ike) *  <a class="code hl_function" href="shuman_8F90.html#adbdf84b791dabd41232fe5cf4131c89a">dxm</a>(pwm(:,ike)) &amp;</div>
+<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span>                            / (0.5*(pdxx(:,ike-ikl)+pdxx(:,ike))) )</div>
 <div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span>  <span class="comment">! Complete the TKE dynamical production with the W wind contribution </span></div>
-<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span>  za(:,:)=-<a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>( <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>( zflxz * <a class="code hl_function" href="gradient__w_8F90.html#ab1291a8e8aa08e2f9add73fe3ab80bd1">gx_w_uw</a>(oflat,pwm,pdxx,pdzz,pdzx) )  )</div>
-<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span>  <span class="comment">! Special cases near surface</span></div>
-<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span>  <span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span>    <span class="comment">! evaluate the dynamic production at w(IKE) in PDP(IKE)</span></div>
-<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span>    za(:,ike) = - <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(zflxz(:,ike) *  <a class="code hl_function" href="shuman_8F90.html#adbdf84b791dabd41232fe5cf4131c89a">dxm</a>(pwm(:,ike)) &amp;</div>
-<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span>                            / (0.5*(pdxx(:,ike-ikl)+pdxx(:,ike))) )</div>
-<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span>  <span class="keywordflow">ELSE</span> <span class="comment">!Atmosphere</span></div>
-<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span>    <span class="comment">! evaluate the dynamic production at w(IKB+IKL) in PDP(IKB)</span></div>
-<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span>  za(:,ikb) = - <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(                               &amp;</div>
-<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span>   zflxz(:,ikb+ikl) *                               &amp;</div>
-<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span>     ( <a class="code hl_function" href="shuman_8F90.html#adbdf84b791dabd41232fe5cf4131c89a">dxm</a>( pwm(:,ikb+ikl) )                        &amp;</div>
-<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span>      -<a class="code hl_function" href="shuman_8F90.html#ab3e06558ef84e1779e4c5fcb5d09a763">mxm</a>(  (pwm(:,ikb+2*ikl   )-pwm(:,ikb+ikl))   &amp;</div>
-<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span>              /(pdzz(:,ikb+2*ikl)+pdzz(:,ikb+ikl))  &amp;</div>
-<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>            +(pwm(:,ikb+ikl)-pwm(:,ikb  ))          &amp;</div>
-<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>              /(pdzz(:,ikb+ikl)+pdzz(:,ikb  ))      &amp;</div>
-<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>          )                                         &amp;</div>
-<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>        * pdzx(:,ikb+ikl)                           &amp;</div>
-<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span>     ) / (0.5*(pdxx(:,ikb+ikl)+pdxx(:,ikb)))        &amp;</div>
-<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span>                          )</div>
-<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span><span class="keywordflow">  END IF</span></div>
-<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span><span class="comment">!$acc kernels</span></div>
-<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
-<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span>  pdp(iijb:iije,1:ikt)=pdp(iijb:iije,1:ikt)+za(iijb:iije,1:ikt)</div>
-<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
-<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span>  <span class="comment">! Storage in the LES configuration</span></div>
-<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span>  <span class="keywordflow">IF</span> (tles%LLES_CALL) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime1)</div>
-<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span>    zwkles = <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(<a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(<a class="code hl_function" href="gradient__w_8F90.html#ab1291a8e8aa08e2f9add73fe3ab80bd1">gx_w_uw</a>(oflat, pwm,pdxx,pdzz,pdzx)*zflxz))</div>
-<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_W_SBG_UaW )</div>
-<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span>    zwkles = <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(<a class="code hl_function" href="gradient__m_8F90.html#adaf88cd29c62ab6a856a501b290f0fa4">gx_m_u</a>(oflat, pthlm,pdxx,pdzz,pdzx)* <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(zflxz))</div>
-<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_Thl_SBG_UaW )</div>
-<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span>    <span class="keywordflow">IF</span> (krr&gt;=1) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span>      zwkles = <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(<a class="code hl_function" href="gradient__u_8F90.html#af35c7e159090a20c1947fc4eec1a57c0">gx_u_m</a>(oflat, prm(:,:,1),pdxx,pdzz,pdzx)*<a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(zflxz))</div>
-<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span>      <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_Rt_SBG_UaW )</div>
-<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span><span class="keywordflow">    END IF</span></div>
-<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span>    <span class="keywordflow">DO</span> jsv=1,ksv</div>
-<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span>      zwkles = <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(<a class="code hl_function" href="gradient__u_8F90.html#af35c7e159090a20c1947fc4eec1a57c0">gx_u_m</a>(oflat, psvm(:,:,jsv),pdxx,pdzz,pdzx)*<a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(zflxz))</div>
-<div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span>      <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,jsv) )</div>
-<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span><span class="keywordflow">    END DO</span></div>
-<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime2)</div>
-<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span>    tles%XTIME_LES = tles%XTIME_LES + ztime2 - ztime1</div>
-<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span><span class="keywordflow">  END IF</span></div>
-<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00658" name="l00658"></a><span class="lineno">  658</span><span class="comment">!</span></div>
-<div class="line"><a id="l00659" name="l00659"></a><span class="lineno">  659</span><span class="comment">!----------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span><span class="comment">!</span></div>
-<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span><span class="comment">!</span></div>
-<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span><span class="comment">!*       6.   SOURCES OF V,W WIND COMPONENTS AND COMPLETE 1D TKE DYNAMIC PRODUCTION </span></div>
-<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span><span class="comment">!             -----------------------------------------------------------------</span></div>
-<div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span><span class="comment">!</span></div>
-<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span><span class="comment">!*       6.1  Source of V wind component</span></div>
-<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span><span class="comment">!</span></div>
-<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span><span class="comment">! Preparation of the arguments for TRIDIAG_WIND</span></div>
-<div class="line"><a id="l00668" name="l00668"></a><span class="lineno">  668</span><span class="comment">!!</span></div>
-<div class="line"><a id="l00669" name="l00669"></a><span class="lineno">  669</span>za(:,:) = -ptstep * zcmfs * <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>( zkeff ) * <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(<a class="code hl_function" href="shuman_8F90.html#a620b12be5daf1abac11fc6e553221834">mzm</a>( prhodj )) / <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>( pdzz )**2</div>
-<div class="line"><a id="l00670" name="l00670"></a><span class="lineno">  670</span><span class="comment">!</span></div>
-<div class="line"><a id="l00671" name="l00671"></a><span class="lineno">  671</span><span class="comment">! Compute the source of V wind component</span></div>
-<div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span><span class="comment">! compute the coefficient between the vertical flux and the 2 components of the</span></div>
-<div class="line"><a id="l00673" name="l00673"></a><span class="lineno">  673</span><span class="comment">! wind following the slope</span></div>
-<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span><span class="comment">!$acc kernels</span></div>
-<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span><span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span>zcoefflxu(iijb:iije) = pcdueff(iijb:iije) * (pdircoszw(iijb:iije)**2 - zdirsinzw(iijb:iije)**2) &amp;</div>
-<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span>                                   * psinslope(iijb:iije)</div>
-<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span>zcoefflxv(iijb:iije) = pcdueff(iijb:iije) * pdircoszw(iijb:iije) * pcosslope(iijb:iije)</div>
-<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span> </div>
-<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span><span class="comment">! prepare the implicit scheme coefficients for the surface flux</span></div>
-<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span>zcoefs(iijb:iije)=  zcoefflxu(iijb:iije) * psinslope(iijb:iije) * pdircoszw(iijb:iije)  &amp;</div>
-<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span>               +zcoefflxv(iijb:iije) * pcosslope(iijb:iije)</div>
-<div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span><span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span><span class="comment">!</span></div>
-<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span><span class="comment">! average this flux to be located at the V,W vorticity point</span></div>
-<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span>zcoefs(:)=<a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(zcoefs(:) / pdzz(:,ikb) )</div>
-<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span><span class="comment">!</span></div>
-<div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span><span class="comment">! No flux in SOURCE TERM NULL OUTSIDE BC</span></div>
-<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span><span class="comment">!$acc kernels</span></div>
-<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span><span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKB+1:IKE-1)</span></div>
-<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span>zsource(iijb:iije,ikb+1:ike-1) = 0.</div>
-<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span><span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKB+1:IKE-1)</span></div>
-<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span><span class="comment">!</span></div>
-<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span><span class="comment">! Surface case</span></div>
-<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span><span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span> <span class="comment">! Ocean case</span></div>
-<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span><span class="comment">!$acc kernels</span></div>
+<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span>  <span class="keywordflow">ELSE</span> <span class="comment">!Atmosphere</span></div>
+<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span>    <span class="comment">! evaluate the dynamic production at w(IKB+IKL) in PDP(IKB)</span></div>
+<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span>  za(:,ikb) = - <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(                               &amp;</div>
+<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span>   zflxz(:,ikb+ikl) *                               &amp;</div>
+<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span>     ( <a class="code hl_function" href="shuman_8F90.html#adbdf84b791dabd41232fe5cf4131c89a">dxm</a>( pwm(:,ikb+ikl) )                        &amp;</div>
+<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span>      -<a class="code hl_function" href="shuman_8F90.html#ab3e06558ef84e1779e4c5fcb5d09a763">mxm</a>(  (pwm(:,ikb+2*ikl   )-pwm(:,ikb+ikl))   &amp;</div>
+<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span>              /(pdzz(:,ikb+2*ikl)+pdzz(:,ikb+ikl))  &amp;</div>
+<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span>            +(pwm(:,ikb+ikl)-pwm(:,ikb  ))          &amp;</div>
+<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span>              /(pdzz(:,ikb+ikl)+pdzz(:,ikb  ))      &amp;</div>
+<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span>          )                                         &amp;</div>
+<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span>        * pdzx(:,ikb+ikl)                           &amp;</div>
+<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span>     ) / (0.5*(pdxx(:,ikb+ikl)+pdxx(:,ikb)))        &amp;</div>
+<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span>                          )</div>
+<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span><span class="keywordflow">  END IF</span></div>
+<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span><span class="comment">!$acc kernels</span></div>
+<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span>  pdp(iijb:iije,1:ikt)=pdp(iijb:iije,1:ikt)+za(iijb:iije,1:ikt)</div>
+<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>  <span class="comment">! Storage in the LES configuration</span></div>
+<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span>  <span class="keywordflow">IF</span> (tles%LLES_CALL) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime1)</div>
+<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span>    zwkles = <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(<a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(<a class="code hl_function" href="gradient__w_8F90.html#ab1291a8e8aa08e2f9add73fe3ab80bd1">gx_w_uw</a>(oflat, pwm,pdxx,pdzz,pdzx)*zflxz))</div>
+<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_W_SBG_UaW )</div>
+<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span>    zwkles = <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(<a class="code hl_function" href="gradient__m_8F90.html#adaf88cd29c62ab6a856a501b290f0fa4">gx_m_u</a>(oflat, pthlm,pdxx,pdzz,pdzx)* <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(zflxz))</div>
+<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_Thl_SBG_UaW )</div>
+<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span>    <span class="keywordflow">IF</span> (krr&gt;=1) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span>      zwkles = <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(<a class="code hl_function" href="gradient__u_8F90.html#af35c7e159090a20c1947fc4eec1a57c0">gx_u_m</a>(oflat, prm(:,:,1),pdxx,pdzz,pdzx)*<a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(zflxz))</div>
+<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span>      <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_Rt_SBG_UaW )</div>
+<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span><span class="keywordflow">    END IF</span></div>
+<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span>    <span class="keywordflow">DO</span> jsv=1,ksv</div>
+<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span>      zwkles = <a class="code hl_function" href="shuman_8F90.html#a4418146e7bf01e06aed852aca8075896">mxf</a>(<a class="code hl_function" href="gradient__u_8F90.html#af35c7e159090a20c1947fc4eec1a57c0">gx_u_m</a>(oflat, psvm(:,:,jsv),pdxx,pdzz,pdzx)*<a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(zflxz))</div>
+<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span>      <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,jsv) )</div>
+<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span><span class="keywordflow">    END DO</span></div>
+<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime2)</div>
+<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span>    tles%XTIME_LES = tles%XTIME_LES + ztime2 - ztime1</div>
+<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span><span class="keywordflow">  END IF</span></div>
+<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span><span class="comment">!</span></div>
+<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span><span class="comment">!----------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span><span class="comment">!</span></div>
+<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span><span class="comment">!</span></div>
+<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span><span class="comment">!*       6.   SOURCES OF V,W WIND COMPONENTS AND COMPLETE 1D TKE DYNAMIC PRODUCTION </span></div>
+<div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span><span class="comment">!             -----------------------------------------------------------------</span></div>
+<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span><span class="comment">!</span></div>
+<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span><span class="comment">!*       6.1  Source of V wind component</span></div>
+<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span><span class="comment">!</span></div>
+<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span><span class="comment">! Preparation of the arguments for TRIDIAG_WIND</span></div>
+<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span><span class="comment">!!</span></div>
+<div class="line"><a id="l00658" name="l00658"></a><span class="lineno">  658</span>za(:,:) = -ptstep * zcmfs * <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>( zkeff ) * <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(<a class="code hl_function" href="shuman_8F90.html#a620b12be5daf1abac11fc6e553221834">mzm</a>( prhodj )) / <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>( pdzz )**2</div>
+<div class="line"><a id="l00659" name="l00659"></a><span class="lineno">  659</span><span class="comment">!</span></div>
+<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span><span class="comment">! Compute the source of V wind component</span></div>
+<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span><span class="comment">! compute the coefficient between the vertical flux and the 2 components of the</span></div>
+<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span><span class="comment">! wind following the slope</span></div>
+<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span><span class="comment">!$acc kernels</span></div>
+<div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span><span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span>zcoefflxu(iijb:iije) = pcdueff(iijb:iije) * (pdircoszw(iijb:iije)**2 - zdirsinzw(iijb:iije)**2) &amp;</div>
+<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span>                                   * psinslope(iijb:iije)</div>
+<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span>zcoefflxv(iijb:iije) = pcdueff(iijb:iije) * pdircoszw(iijb:iije) * pcosslope(iijb:iije)</div>
+<div class="line"><a id="l00668" name="l00668"></a><span class="lineno">  668</span> </div>
+<div class="line"><a id="l00669" name="l00669"></a><span class="lineno">  669</span><span class="comment">! prepare the implicit scheme coefficients for the surface flux</span></div>
+<div class="line"><a id="l00670" name="l00670"></a><span class="lineno">  670</span>zcoefs(iijb:iije)=  zcoefflxu(iijb:iije) * psinslope(iijb:iije) * pdircoszw(iijb:iije)  &amp;</div>
+<div class="line"><a id="l00671" name="l00671"></a><span class="lineno">  671</span>               +zcoefflxv(iijb:iije) * pcosslope(iijb:iije)</div>
+<div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span><span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00673" name="l00673"></a><span class="lineno">  673</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span><span class="comment">!</span></div>
+<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span><span class="comment">! average this flux to be located at the V,W vorticity point</span></div>
+<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span>zcoefs(:)=<a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(zcoefs(:) / pdzz(:,ikb) )</div>
+<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span><span class="comment">!</span></div>
+<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span><span class="comment">! No flux in SOURCE TERM NULL OUTSIDE BC</span></div>
+<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span><span class="comment">!$acc kernels</span></div>
+<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span><span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKB+1:IKE-1)</span></div>
+<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span>zsource(iijb:iije,ikb+1:ike-1) = 0.</div>
+<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span><span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKB+1:IKE-1)</span></div>
+<div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span><span class="comment">!</span></div>
+<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span><span class="comment">! Surface case</span></div>
+<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span><span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span> <span class="comment">! Ocean case</span></div>
+<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span><span class="comment">!$acc kernels</span></div>
+<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span>  zcoefflxu(iijb:iije) = pcdueff(iijb:iije)</div>
+<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span>  zcoefflxv(iijb:iije) = pcdueff(iijb:iije)</div>
+<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span>  zcoefs(iijb:iije)=zcoefflxu(iijb:iije)</div>
+<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span>  <span class="comment">! average this flux to be located at the U,W vorticity point</span></div>
+<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span>  zsource(:,ike) = <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(zfluxsfcv(:) / pdzz(:,ike)) &amp;</div>
+<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span>        *0.5 * ( 1. + <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,iku)) / <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,ike)))</div>
+<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span>  <span class="comment">!No flux at the ocean domain bottom</span></div>
+<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span><span class="comment">!$acc kernels present_cr(ZSOURCE)</span></div>
 <div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>  zcoefflxu(iijb:iije) = pcdueff(iijb:iije)</div>
-<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>  zcoefflxv(iijb:iije) = pcdueff(iijb:iije)</div>
-<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>  zcoefs(iijb:iije)=zcoefflxu(iijb:iije)</div>
-<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>  <span class="comment">! average this flux to be located at the U,W vorticity point</span></div>
-<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span>  zsource(:,ike) = <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(zfluxsfcv(:) / pdzz(:,ike)) &amp;</div>
-<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>        *0.5 * ( 1. + <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,iku)) / <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,ike)))</div>
-<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span>  <span class="comment">!No flux at the ocean domain bottom</span></div>
-<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span><span class="comment">!$acc kernels present_cr(ZSOURCE)</span></div>
-<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span>  zsource(iijb:iije,ikb) = 0.</div>
-<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span><span class="comment">!</span></div>
-<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span><span class="keywordflow">ELSE</span> <span class="comment">! Atmos case</span></div>
-<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span><span class="comment">!</span></div>
-<div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span> <span class="comment">! compute the explicit tangential flux at the W point</span></div>
-<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span><span class="comment">!$acc kernels present_cr(ZSOURCE)</span></div>
-<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span>  zsource(iijb:iije,ikb) =                                                                    &amp;</div>
-<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span>    ptau11m(iijb:iije) * psinslope(iijb:iije) * pdircoszw(iijb:iije) * zdirsinzw(iijb:iije)   &amp;</div>
-<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span>   +ptau12m(iijb:iije) * pcosslope(iijb:iije) * zdirsinzw(iijb:iije)                          &amp;</div>
-<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span>   -ptau33m(iijb:iije) * psinslope(iijb:iije) * zdirsinzw(iijb:iije) * pdircoszw(iijb:iije)</div>
-<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00725" name="l00725"></a><span class="lineno">  725</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span><span class="comment">!</span></div>
-<div class="line"><a id="l00727" name="l00727"></a><span class="lineno">  727</span>    zsource(:,ikb) =                                      &amp;</div>
-<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span>      (   <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>( zsource(:,ikb)   / pdzz(:,ikb) )     &amp;</div>
-<div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span>       +  <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>( zcoefflxu(:) / pdzz(:,ikb)           &amp;</div>
-<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span>              *zuslopem(:)                                &amp;</div>
-<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span>              +zcoefflxv(:) / pdzz(:,ikb)           &amp;</div>
-<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span>              *zvslopem(:)                      )         &amp;</div>
-<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span>       - zcoefs(:) * pvm(:,ikb) * turbn%XIMPL       &amp;</div>
-<div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span>      ) * 0.5 * ( 1. + <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,ika)) / <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,ikb)) )</div>
-<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span><span class="comment">!</span></div>
-<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span>  <span class="comment">!No flux at the atmosphere top</span></div>
-<div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span><span class="comment">!$acc kernels present_cr(ZSOURCE)</span></div>
-<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span>  zsource(iijb:iije,ike) = 0.</div>
-<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span><span class="keywordflow">ENDIF</span> <span class="comment">! End of Ocean or Atmospher Cases</span></div>
-<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span><span class="comment">! </span></div>
-<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span><span class="comment">!  Obtention of the split V at t+ deltat </span></div>
-<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span><span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__tridiag__wind.html#afee635ec12a0577e6a297f4bdcca41f6">tridiag_wind</a>(d,pvm,psea_vcu,za,zcoefs,ptstep,pexpl,turbn%XIMPL,  &amp;</div>
-<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span>                  <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj),zsource,zres)</div>
-<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span><span class="comment">!</span></div>
-<div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span><span class="comment">! Compute the equivalent tendency for the V wind component</span></div>
-<div class="line"><a id="l00749" name="l00749"></a><span class="lineno">  749</span><span class="comment">!</span></div>
-<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span>prvs(:,:)=prvs(:,:)+<a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,:))*(zres(:,:)-pvm(:,:))/ptstep</div>
-<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span><span class="comment">!</span></div>
-<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span><span class="comment">!</span></div>
-<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span><span class="comment">!*       6.2  Complete 1D dynamic Production</span></div>
-<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span><span class="comment">!</span></div>
-<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span><span class="comment">!  vertical flux of the V wind component</span></div>
-<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span><span class="comment">!</span></div>
-<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span>zflxz(:,:)   = -zcmfs * <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(zkeff) * &amp;</div>
-<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span>              <a class="code hl_function" href="shuman_8F90.html#a73362ac83a8e3824c77dfc9963893fc8">dzm</a>( turbn%XIMPL*zres + pexpl*pvm ) / <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(pdzz)</div>
-<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span><span class="comment">!</span></div>
-<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span><span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>  zsource(iijb:iije,ikb) = 0.</div>
+<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span><span class="comment">!</span></div>
+<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span><span class="keywordflow">ELSE</span> <span class="comment">! Atmos case</span></div>
+<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span><span class="comment">!</span></div>
+<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span> <span class="comment">! compute the explicit tangential flux at the W point</span></div>
+<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span><span class="comment">!$acc kernels present_cr(ZSOURCE)</span></div>
+<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span>  zsource(iijb:iije,ikb) =                                                                    &amp;</div>
+<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span>    ptau11m(iijb:iije) * psinslope(iijb:iije) * pdircoszw(iijb:iije) * zdirsinzw(iijb:iije)   &amp;</div>
+<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span>   +ptau12m(iijb:iije) * pcosslope(iijb:iije) * zdirsinzw(iijb:iije)                          &amp;</div>
+<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>   -ptau33m(iijb:iije) * psinslope(iijb:iije) * zdirsinzw(iijb:iije) * pdircoszw(iijb:iije)</div>
+<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span><span class="comment">!</span></div>
+<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span>    zsource(:,ikb) =                                      &amp;</div>
+<div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span>      (   <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>( zsource(:,ikb)   / pdzz(:,ikb) )     &amp;</div>
+<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span>       +  <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>( zcoefflxu(:) / pdzz(:,ikb)           &amp;</div>
+<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span>              *zuslopem(:)                                &amp;</div>
+<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span>              +zcoefflxv(:) / pdzz(:,ikb)           &amp;</div>
+<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span>              *zvslopem(:)                      )         &amp;</div>
+<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span>       - zcoefs(:) * pvm(:,ikb) * turbn%XIMPL       &amp;</div>
+<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span>      ) * 0.5 * ( 1. + <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,ika)) / <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,ikb)) )</div>
+<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span><span class="comment">!</span></div>
+<div class="line"><a id="l00725" name="l00725"></a><span class="lineno">  725</span>  <span class="comment">!No flux at the atmosphere top</span></div>
+<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span><span class="comment">!$acc kernels present_cr(ZSOURCE)</span></div>
+<div class="line"><a id="l00727" name="l00727"></a><span class="lineno">  727</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span>  zsource(iijb:iije,ike) = 0.</div>
+<div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span><span class="keywordflow">ENDIF</span> <span class="comment">! End of Ocean or Atmospher Cases</span></div>
+<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span><span class="comment">! </span></div>
+<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span><span class="comment">!  Obtention of the split V at t+ deltat </span></div>
+<div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span><span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__tridiag__wind.html#afee635ec12a0577e6a297f4bdcca41f6">tridiag_wind</a>(d,pvm,psea_vcu,za,zcoefs,ptstep,pexpl,turbn%XIMPL,  &amp;</div>
+<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span>                  <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj),zsource,zres)</div>
+<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span><span class="comment">!</span></div>
+<div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span><span class="comment">! Compute the equivalent tendency for the V wind component</span></div>
+<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span><span class="comment">!</span></div>
+<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span>prvs(:,:)=prvs(:,:)+<a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,:))*(zres(:,:)-pvm(:,:))/ptstep</div>
+<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span><span class="comment">!</span></div>
+<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span><span class="comment">!</span></div>
+<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span><span class="comment">!*       6.2  Complete 1D dynamic Production</span></div>
+<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span><span class="comment">!</span></div>
+<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span><span class="comment">!  vertical flux of the V wind component</span></div>
+<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span><span class="comment">!</span></div>
+<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span>zflxz(:,:)   = -zcmfs * <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(zkeff) * &amp;</div>
+<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span>              <a class="code hl_function" href="shuman_8F90.html#a73362ac83a8e3824c77dfc9963893fc8">dzm</a>( turbn%XIMPL*zres + pexpl*pvm ) / <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(pdzz)</div>
+<div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span><span class="comment">!</span></div>
+<div class="line"><a id="l00749" name="l00749"></a><span class="lineno">  749</span><span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span><span class="comment">!$acc kernels</span></div>
+<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span>  zflxz(iijb:iije,ike+1)  = zfluxsfcv(iijb:iije)</div>
+<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span><span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span>zflxz(:,ikb)   =   <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(pdzz(:,ikb))  *                       &amp;</div>
+<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span>  ( zsource(:,ikb)                                           &amp;</div>
+<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span>   +zcoefs(:) * zres(:,ikb) * turbn%XIMPL                    &amp;</div>
+<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span>  ) / 0.5 / ( 1. + <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,ika)) / <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,ikb)) )</div>
+<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span>  <span class="comment">!</span></div>
 <div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span>  zflxz(iijb:iije,ike+1)  = zfluxsfcv(iijb:iije)</div>
+<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span>  zflxz(iijb:iije,ika) = zflxz(iijb:iije,ikb)</div>
 <div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span><span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span>zflxz(:,ikb)   =   <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(pdzz(:,ikb))  *                       &amp;</div>
-<div class="line"><a id="l00768" name="l00768"></a><span class="lineno">  768</span>  ( zsource(:,ikb)                                           &amp;</div>
-<div class="line"><a id="l00769" name="l00769"></a><span class="lineno">  769</span>   +zcoefs(:) * zres(:,ikb) * turbn%XIMPL                    &amp;</div>
-<div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span>  ) / 0.5 / ( 1. + <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,ika)) / <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj(:,ikb)) )</div>
-<div class="line"><a id="l00771" name="l00771"></a><span class="lineno">  771</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00772" name="l00772"></a><span class="lineno">  772</span><span class="comment">!$acc kernels</span></div>
-<div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00774" name="l00774"></a><span class="lineno">  774</span>  zflxz(iijb:iije,ika) = zflxz(iijb:iije,ikb)</div>
-<div class="line"><a id="l00775" name="l00775"></a><span class="lineno">  775</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00776" name="l00776"></a><span class="lineno">  776</span><span class="comment">!$acc end kernels </span></div>
-<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span><span class="comment">!</span></div>
-<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span><span class="keywordflow">IF</span> ( turbn%LTURB_FLX .AND. tpfile%LOPENED ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span>  <span class="comment">! stores the V wind component vertical flux</span></div>
-<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span><span class="comment">!$acc update self(ZFLXZ)</span></div>
-<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span>  tzfield = <a class="code hl_struct" href="structmodd__field_1_1tfieldmetadata.html">tfieldmetadata</a>(                        &amp;</div>
-<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span>    cmnhname   = <span class="stringliteral">&#39;VW_FLX&#39;</span>,                         &amp;</div>
-<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span>    cstdname   = <span class="stringliteral">&#39;&#39;</span>,                               &amp;</div>
-<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span>    clongname  = <span class="stringliteral">&#39;VW_FLX&#39;</span>,                         &amp;</div>
-<div class="line"><a id="l00786" name="l00786"></a><span class="lineno">  786</span>    cunits     = <span class="stringliteral">&#39;m2 s-2&#39;</span>,                         &amp;</div>
-<div class="line"><a id="l00787" name="l00787"></a><span class="lineno">  787</span>    cdir       = <span class="stringliteral">&#39;XY&#39;</span>,                             &amp;</div>
-<div class="line"><a id="l00788" name="l00788"></a><span class="lineno">  788</span>    ccomment   = <span class="stringliteral">&#39;V wind component vertical flux&#39;</span>, &amp;</div>
-<div class="line"><a id="l00789" name="l00789"></a><span class="lineno">  789</span>    ngrid      = 4,                                &amp;</div>
-<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span>    ntype      = <a class="code hl_variable" href="namespacemodd__field.html#a7d4c3932f9ca5c6781119dba51724c2d">typereal</a>,                         &amp;</div>
-<div class="line"><a id="l00791" name="l00791"></a><span class="lineno">  791</span>    ndims      = 3,                                &amp;</div>
-<div class="line"><a id="l00792" name="l00792"></a><span class="lineno">  792</span>    ltimedep   = .true.                            )</div>
-<div class="line"><a id="l00793" name="l00793"></a><span class="lineno">  793</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__io__field__write__phy.html#ae90c9595e48348b2813cd33897aa4a2f">io_field_write_phy</a>(d,tpfile,tzfield,zflxz)</div>
-<div class="line"><a id="l00794" name="l00794"></a><span class="lineno">  794</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00795" name="l00795"></a><span class="lineno">  795</span><span class="comment">!</span></div>
-<div class="line"><a id="l00796" name="l00796"></a><span class="lineno">  796</span><span class="comment">! second part of total momentum flux</span></div>
-<div class="line"><a id="l00797" name="l00797"></a><span class="lineno">  797</span><span class="comment">!</span></div>
-<div class="line"><a id="l00798" name="l00798"></a><span class="lineno">  798</span><span class="comment">!$acc kernels present_cr(PWV)</span></div>
-<div class="line"><a id="l00799" name="l00799"></a><span class="lineno">  799</span><span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
-<div class="line"><a id="l00800" name="l00800"></a><span class="lineno">  800</span>pwv(iijb:iije,1:ikt) = zflxz(iijb:iije,1:ikt)</div>
-<div class="line"><a id="l00801" name="l00801"></a><span class="lineno">  801</span><span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
-<div class="line"><a id="l00802" name="l00802"></a><span class="lineno">  802</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00803" name="l00803"></a><span class="lineno">  803</span><span class="comment">!</span></div>
-<div class="line"><a id="l00804" name="l00804"></a><span class="lineno">  804</span><span class="comment">!  Contribution to the TKE dynamical production </span></div>
-<div class="line"><a id="l00805" name="l00805"></a><span class="lineno">  805</span><span class="comment">!    computed at mass point</span></div>
-<div class="line"><a id="l00806" name="l00806"></a><span class="lineno">  806</span><span class="comment">!</span></div>
-<div class="line"><a id="l00807" name="l00807"></a><span class="lineno">  807</span>za(:,:) = - <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>( <a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>( zflxz * <a class="code hl_function" href="gradient__v_8F90.html#a41ca3dd27096c3e43809344c68c38df0">gz_v_vw</a>(turbn%XIMPL*zres + pexpl*pvm, pdzz) ) )</div>
-<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span><span class="comment">!</span></div>
-<div class="line"><a id="l00809" name="l00809"></a><span class="lineno">  809</span><span class="comment">! Special cases at surface</span></div>
-<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span><span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span>  <span class="comment">! evaluate the dynamic production at w(IKE) in PDP(IKE)</span></div>
-<div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span>  <span class="comment">! before extrapolation done in routine tke_eps_source</span></div>
-<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span>  za(:,ike) = -<a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(zflxz(:,ike-ikl) * (turbn%XIMPL*(zres(:,ike)-zres(:,ike-ikl)) + &amp;</div>
-<div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span>                                       pexpl*(pvm(:,ike)-pvm(:,ike-ikl)))/ <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(pdzz(:,ike-ikl)))</div>
-<div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span><span class="comment">!</span></div>
-<div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span><span class="keywordflow">ELSE</span> <span class="comment">! Atmosphere</span></div>
-<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span>  <span class="comment">! evaluate the dynamic production at w(IKB+IKL) in PDP(IKB)</span></div>
-<div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span>  za(:,ikb) = -<a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(zflxz(:,ikb+ikl) * (turbn%XIMPL*(zres(:,ikb+ikl)-zres(:,ikb)) + &amp;</div>
-<div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span>                                       pexpl*(pvm(:,ikb+ikl)-pvm(:,ikb)))/ <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(pdzz(:,ikb+ikl)))</div>
-<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00821" name="l00821"></a><span class="lineno">  821</span><span class="comment">!</span></div>
-<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span><span class="comment">!$acc kernels</span></div>
-<div class="line"><a id="l00823" name="l00823"></a><span class="lineno">  823</span><span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
-<div class="line"><a id="l00824" name="l00824"></a><span class="lineno">  824</span>pdp(iijb:iije,1:ikt)=pdp(iijb:iije,1:ikt)+za(iijb:iije,1:ikt)</div>
-<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span><span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
-<div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span><span class="comment">!</span></div>
-<div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span><span class="comment">! Storage in the LES configuration</span></div>
-<div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span><span class="comment">!</span></div>
-<div class="line"><a id="l00830" name="l00830"></a><span class="lineno">  830</span><span class="keywordflow">IF</span> (tles%LLES_CALL) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00831" name="l00831"></a><span class="lineno">  831</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime1)</div>
-<div class="line"><a id="l00832" name="l00832"></a><span class="lineno">  832</span>  zwkles = <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(<a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(zflxz))</div>
-<div class="line"><a id="l00833" name="l00833"></a><span class="lineno">  833</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_SUBGRID_WV )</div>
-<div class="line"><a id="l00834" name="l00834"></a><span class="lineno">  834</span>  zwkles = <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(<a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(<a class="code hl_function" href="gradient__v_8F90.html#a41ca3dd27096c3e43809344c68c38df0">gz_v_vw</a>(pvm,pdzz)*zflxz))</div>
-<div class="line"><a id="l00835" name="l00835"></a><span class="lineno">  835</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_V_SBG_UaV )</div>
-<div class="line"><a id="l00836" name="l00836"></a><span class="lineno">  836</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime2)</div>
-<div class="line"><a id="l00837" name="l00837"></a><span class="lineno">  837</span>  tles%XTIME_LES = tles%XTIME_LES + ztime2 - ztime1</div>
-<div class="line"><a id="l00838" name="l00838"></a><span class="lineno">  838</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00839" name="l00839"></a><span class="lineno">  839</span><span class="comment">!</span></div>
-<div class="line"><a id="l00840" name="l00840"></a><span class="lineno">  840</span><span class="comment">!</span></div>
-<div class="line"><a id="l00841" name="l00841"></a><span class="lineno">  841</span><span class="comment">!*       6.3  Source of W wind component</span></div>
-<div class="line"><a id="l00842" name="l00842"></a><span class="lineno">  842</span><span class="comment">!</span></div>
-<div class="line"><a id="l00843" name="l00843"></a><span class="lineno">  843</span><span class="keywordflow">IF</span>(turbn%CTURBDIM==<span class="stringliteral">&#39;3DIM&#39;</span>) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00844" name="l00844"></a><span class="lineno">  844</span>  <span class="comment">! Compute the source for the W wind component</span></div>
-<div class="line"><a id="l00845" name="l00845"></a><span class="lineno">  845</span>  <span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00846" name="l00846"></a><span class="lineno">  846</span><span class="comment">!$acc kernels present_cr(ZFLXZ)</span></div>
-<div class="line"><a id="l00847" name="l00847"></a><span class="lineno">  847</span>    <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00848" name="l00848"></a><span class="lineno">  848</span>    zflxz(iijb:iije,ike+ikl) = 2 * zflxz(iijb:iije,ike) - zflxz(iijb:iije,ike-ikl) <span class="comment">! extrapolation </span></div>
-<div class="line"><a id="l00849" name="l00849"></a><span class="lineno">  849</span>    <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00850" name="l00850"></a><span class="lineno">  850</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00851" name="l00851"></a><span class="lineno">  851</span>  <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00852" name="l00852"></a><span class="lineno">  852</span><span class="comment">!$acc kernels present_cr(ZFLXZ)</span></div>
-<div class="line"><a id="l00853" name="l00853"></a><span class="lineno">  853</span>    <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00854" name="l00854"></a><span class="lineno">  854</span>    zflxz(iijb:iije,ika) = 2 * zflxz(iijb:iije,ikb) - zflxz(iijb:iije,ikb+ikl) <span class="comment">! extrapolation</span></div>
-<div class="line"><a id="l00855" name="l00855"></a><span class="lineno">  855</span>    <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00856" name="l00856"></a><span class="lineno">  856</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00857" name="l00857"></a><span class="lineno">  857</span><span class="keywordflow">  END IF</span></div>
-<div class="line"><a id="l00858" name="l00858"></a><span class="lineno">  858</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00859" name="l00859"></a><span class="lineno">  859</span>  <span class="keywordflow">IF</span> (.NOT. o2d) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00860" name="l00860"></a><span class="lineno">  860</span>    <span class="keywordflow">IF</span> (.NOT. oflat) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00861" name="l00861"></a><span class="lineno">  861</span>      prws(:,:)= prws(:,:)                                   &amp;</div>
-<div class="line"><a id="l00862" name="l00862"></a><span class="lineno">  862</span>                  -<a class="code hl_function" href="shuman_8F90.html#a4d11b9eedb8f366ecdcc0edf217ea5c6">dyf</a>( <a class="code hl_function" href="shuman_8F90.html#a620b12be5daf1abac11fc6e553221834">mzm</a>( <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj) /pdyy ) * zflxz )   &amp;</div>
-<div class="line"><a id="l00863" name="l00863"></a><span class="lineno">  863</span>                  +<a class="code hl_function" href="shuman_8F90.html#a73362ac83a8e3824c77dfc9963893fc8">dzm</a>( prhodj / <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(pdzz ) *                &amp;</div>
-<div class="line"><a id="l00864" name="l00864"></a><span class="lineno">  864</span>                        <a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>( <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>( zflxz*pdzy ) / pdyy )      &amp;</div>
-<div class="line"><a id="l00865" name="l00865"></a><span class="lineno">  865</span>                      )</div>
-<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span>    <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span>      prws(:,:)= prws(:,:) -<a class="code hl_function" href="shuman_8F90.html#a4d11b9eedb8f366ecdcc0edf217ea5c6">dyf</a>( <a class="code hl_function" href="shuman_8F90.html#a620b12be5daf1abac11fc6e553221834">mzm</a>( <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj) /pdyy ) * zflxz )</div>
-<div class="line"><a id="l00868" name="l00868"></a><span class="lineno">  868</span><span class="keywordflow">    END IF</span></div>
-<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span><span class="keywordflow">  END IF</span></div>
-<div class="line"><a id="l00870" name="l00870"></a><span class="lineno">  870</span>  <span class="comment">! </span></div>
-<div class="line"><a id="l00871" name="l00871"></a><span class="lineno">  871</span>  <span class="comment">! Complete the Dynamical production with the W wind component </span></div>
-<div class="line"><a id="l00872" name="l00872"></a><span class="lineno">  872</span>  <span class="keywordflow">IF</span> (.NOT. o2d) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00873" name="l00873"></a><span class="lineno">  873</span>    za(:,:) = - <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>( <a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>( zflxz(:,:) * <a class="code hl_function" href="gradient__w_8F90.html#a03ed84a9a4cc12a951c233f0fe0889eb">gy_w_vw</a>(oflat, pwm,pdyy,pdzz,pdzy) )  )</div>
-<div class="line"><a id="l00874" name="l00874"></a><span class="lineno">  874</span>    <span class="comment">! Special case near surface </span></div>
-<div class="line"><a id="l00875" name="l00875"></a><span class="lineno">  875</span>    <span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00876" name="l00876"></a><span class="lineno">  876</span>      <span class="comment">! evaluate the dynamic production at w(IKE) and stored in PDP(IKE)</span></div>
-<div class="line"><a id="l00877" name="l00877"></a><span class="lineno">  877</span>      za(:,ike) = -<a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(zflxz(:,ike) *  <a class="code hl_function" href="shuman_8F90.html#a0f5ee63d98d49e0d7141c312a34c8336">dym</a>(pwm(:,ike)) &amp;</div>
-<div class="line"><a id="l00878" name="l00878"></a><span class="lineno">  878</span>                            / (0.5*(pdyy(:,ike-ikl)+pdyy(:,ike))))</div>
-<div class="line"><a id="l00879" name="l00879"></a><span class="lineno">  879</span>    <span class="keywordflow">ELSE</span> <span class="comment">! Atmosphere</span></div>
-<div class="line"><a id="l00880" name="l00880"></a><span class="lineno">  880</span>      <span class="comment">! evaluate the dynamic production at w(IKB+IKL) and stored in PDP(IKB)</span></div>
-<div class="line"><a id="l00881" name="l00881"></a><span class="lineno">  881</span>    za(:,ikb) = - <a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(                                &amp;</div>
-<div class="line"><a id="l00882" name="l00882"></a><span class="lineno">  882</span>     zflxz(:,ikb+ikl) *                                &amp;</div>
-<div class="line"><a id="l00883" name="l00883"></a><span class="lineno">  883</span>       ( <a class="code hl_function" href="shuman_8F90.html#a0f5ee63d98d49e0d7141c312a34c8336">dym</a>( pwm(:,ikb+ikl) )                         &amp;</div>
-<div class="line"><a id="l00884" name="l00884"></a><span class="lineno">  884</span>        -<a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(  (pwm(:,ikb+2*ikl)-pwm(:,ikb+ikl))       &amp;</div>
-<div class="line"><a id="l00885" name="l00885"></a><span class="lineno">  885</span>                /(pdzz(:,ikb+2*ikl)+pdzz(:,ikb+ikl))   &amp;</div>
-<div class="line"><a id="l00886" name="l00886"></a><span class="lineno">  886</span>              +(pwm(:,ikb+ikl)-pwm(:,ikb  ))           &amp;</div>
-<div class="line"><a id="l00887" name="l00887"></a><span class="lineno">  887</span>                /(pdzz(:,ikb+ikl)+pdzz(:,ikb  ))       &amp;</div>
-<div class="line"><a id="l00888" name="l00888"></a><span class="lineno">  888</span>            )                                          &amp;</div>
-<div class="line"><a id="l00889" name="l00889"></a><span class="lineno">  889</span>          * pdzy(:,ikb+ikl)                            &amp;</div>
-<div class="line"><a id="l00890" name="l00890"></a><span class="lineno">  890</span>       ) / (0.5*(pdyy(:,ikb+ikl)+pdyy(:,ikb)))         &amp;</div>
-<div class="line"><a id="l00891" name="l00891"></a><span class="lineno">  891</span>                            )</div>
-<div class="line"><a id="l00892" name="l00892"></a><span class="lineno">  892</span>    <span class="comment">!</span></div>
-<div class="line"><a id="l00893" name="l00893"></a><span class="lineno">  893</span><span class="keywordflow">    END IF</span></div>
-<div class="line"><a id="l00894" name="l00894"></a><span class="lineno">  894</span><span class="comment">!</span></div>
-<div class="line"><a id="l00895" name="l00895"></a><span class="lineno">  895</span><span class="comment">!$acc kernels</span></div>
-<div class="line"><a id="l00896" name="l00896"></a><span class="lineno">  896</span>    <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
-<div class="line"><a id="l00897" name="l00897"></a><span class="lineno">  897</span>    pdp(iijb:iije,1:ikt)=pdp(iijb:iije,1:ikt)+za(iijb:iije,1:ikt)</div>
-<div class="line"><a id="l00898" name="l00898"></a><span class="lineno">  898</span>    <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
-<div class="line"><a id="l00899" name="l00899"></a><span class="lineno">  899</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00900" name="l00900"></a><span class="lineno">  900</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00901" name="l00901"></a><span class="lineno">  901</span><span class="keywordflow">  END IF</span></div>
-<div class="line"><a id="l00902" name="l00902"></a><span class="lineno">  902</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00903" name="l00903"></a><span class="lineno">  903</span>  <span class="comment">! Storage in the LES configuration</span></div>
-<div class="line"><a id="l00904" name="l00904"></a><span class="lineno">  904</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00905" name="l00905"></a><span class="lineno">  905</span>  <span class="keywordflow">IF</span> (tles%LLES_CALL) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00906" name="l00906"></a><span class="lineno">  906</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime1)</div>
-<div class="line"><a id="l00907" name="l00907"></a><span class="lineno">  907</span>    zwkles = <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(<a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(<a class="code hl_function" href="gradient__w_8F90.html#a03ed84a9a4cc12a951c233f0fe0889eb">gy_w_vw</a>(oflat, pwm,pdyy,pdzz,pdzy)*zflxz(:,:)))</div>
-<div class="line"><a id="l00908" name="l00908"></a><span class="lineno">  908</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_W_SBG_UaW , .true. )</div>
-<div class="line"><a id="l00909" name="l00909"></a><span class="lineno">  909</span>    zwkles = <a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(<a class="code hl_function" href="gradient__m_8F90.html#a52660ed77771802e855795ea519c087b">gy_m_v</a>(oflat, pthlm,pdyy,pdzz,pdzy)*<a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(zflxz))</div>
-<div class="line"><a id="l00910" name="l00910"></a><span class="lineno">  910</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_Thl_SBG_UaW , .true. )</div>
-<div class="line"><a id="l00911" name="l00911"></a><span class="lineno">  911</span>    <span class="keywordflow">IF</span> (krr&gt;=1) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00912" name="l00912"></a><span class="lineno">  912</span>      zwkles = <a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(<a class="code hl_function" href="gradient__v_8F90.html#a19ac6c76d88715e4438d2bddfb7e53fe">gy_v_m</a>(oflat, prm(:,:,1),pdyy,pdzz,pdzy)*<a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(zflxz(:,:)))</div>
-<div class="line"><a id="l00913" name="l00913"></a><span class="lineno">  913</span>      <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_Rt_SBG_UaW , .true. )</div>
-<div class="line"><a id="l00914" name="l00914"></a><span class="lineno">  914</span><span class="keywordflow">    END IF</span></div>
-<div class="line"><a id="l00915" name="l00915"></a><span class="lineno">  915</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime2)</div>
-<div class="line"><a id="l00916" name="l00916"></a><span class="lineno">  916</span>    tles%XTIME_LES = tles%XTIME_LES + ztime2 - ztime1</div>
-<div class="line"><a id="l00917" name="l00917"></a><span class="lineno">  917</span><span class="keywordflow">  END IF</span></div>
-<div class="line"><a id="l00918" name="l00918"></a><span class="lineno">  918</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00919" name="l00919"></a><span class="lineno">  919</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00920" name="l00920"></a><span class="lineno">  920</span><span class="comment">!</span></div>
-<div class="line"><a id="l00921" name="l00921"></a><span class="lineno">  921</span><span class="comment">!</span></div>
-<div class="line"><a id="l00922" name="l00922"></a><span class="lineno">  922</span><span class="comment">!----------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00923" name="l00923"></a><span class="lineno">  923</span><span class="comment">!</span></div>
-<div class="line"><a id="l00924" name="l00924"></a><span class="lineno">  924</span><span class="comment">!*       7.   DIAGNOSTIC COMPUTATION OF THE 1D &lt;W W&gt; VARIANCE</span></div>
-<div class="line"><a id="l00925" name="l00925"></a><span class="lineno">  925</span><span class="comment">!             -----------------------------------------------</span></div>
-<div class="line"><a id="l00926" name="l00926"></a><span class="lineno">  926</span><span class="comment">!</span></div>
-<div class="line"><a id="l00927" name="l00927"></a><span class="lineno">  927</span><span class="keywordflow">IF</span> ( turbn%LTURB_FLX .AND. tpfile%LOPENED .AND. turbn%CTURBDIM == <span class="stringliteral">&#39;1DIM&#39;</span>) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00928" name="l00928"></a><span class="lineno">  928</span>  zflxz(:,:)= (2./3.) * ptkem(:,:)                     &amp;</div>
-<div class="line"><a id="l00929" name="l00929"></a><span class="lineno">  929</span>     -zcmfs*plm(:,:)*sqrt(ptkem(:,:))*<a class="code hl_function" href="gradient__w_8F90.html#acbaf413ae4b32b9ec7e8b67084d9ec38">gz_w_m</a>(pwm,pdzz)</div>
-<div class="line"><a id="l00930" name="l00930"></a><span class="lineno">  930</span>  <span class="comment">! to be tested &amp;</span></div>
-<div class="line"><a id="l00931" name="l00931"></a><span class="lineno">  931</span>  <span class="comment">!   +XCMFB*(4./3.)*PLM(:,:,:)/SQRT(PTKEM(:,:,:))*PTP(:,:,:)</span></div>
-<div class="line"><a id="l00932" name="l00932"></a><span class="lineno">  932</span>  <span class="comment">! stores the W variance</span></div>
-<div class="line"><a id="l00933" name="l00933"></a><span class="lineno">  933</span>  tzfield = <a class="code hl_struct" href="structmodd__field_1_1tfieldmetadata.html">tfieldmetadata</a>(      &amp;</div>
-<div class="line"><a id="l00934" name="l00934"></a><span class="lineno">  934</span>    cmnhname   = <span class="stringliteral">&#39;W_VVAR&#39;</span>,       &amp;</div>
-<div class="line"><a id="l00935" name="l00935"></a><span class="lineno">  935</span>    cstdname   = <span class="stringliteral">&#39;&#39;</span>,             &amp;</div>
-<div class="line"><a id="l00936" name="l00936"></a><span class="lineno">  936</span>    clongname  = <span class="stringliteral">&#39;W_VVAR&#39;</span>,       &amp;</div>
-<div class="line"><a id="l00937" name="l00937"></a><span class="lineno">  937</span>    cunits     = <span class="stringliteral">&#39;m2 s-2&#39;</span>,       &amp;</div>
-<div class="line"><a id="l00938" name="l00938"></a><span class="lineno">  938</span>    cdir       = <span class="stringliteral">&#39;XY&#39;</span>,           &amp;</div>
-<div class="line"><a id="l00939" name="l00939"></a><span class="lineno">  939</span>    ccomment   = <span class="stringliteral">&#39;X_Y_Z_W_VVAR&#39;</span>, &amp;</div>
-<div class="line"><a id="l00940" name="l00940"></a><span class="lineno">  940</span>    ngrid      = 1,              &amp;</div>
-<div class="line"><a id="l00941" name="l00941"></a><span class="lineno">  941</span>    ntype      = <a class="code hl_variable" href="namespacemodd__field.html#a7d4c3932f9ca5c6781119dba51724c2d">typereal</a>,       &amp;</div>
-<div class="line"><a id="l00942" name="l00942"></a><span class="lineno">  942</span>    ndims      = 3,              &amp;</div>
-<div class="line"><a id="l00943" name="l00943"></a><span class="lineno">  943</span>    ltimedep   = .true.          )</div>
-<div class="line"><a id="l00944" name="l00944"></a><span class="lineno">  944</span><span class="comment">!$acc update self(ZFLXZ)</span></div>
-<div class="line"><a id="l00945" name="l00945"></a><span class="lineno">  945</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__io__field__write__phy.html#ae90c9595e48348b2813cd33897aa4a2f">io_field_write_phy</a>(d,tpfile,tzfield,zflxz)</div>
-<div class="line"><a id="l00946" name="l00946"></a><span class="lineno">  946</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00947" name="l00947"></a><span class="lineno">  947</span><span class="comment">!</span></div>
-<div class="line"><a id="l00948" name="l00948"></a><span class="lineno">  948</span><span class="comment">!----------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00949" name="l00949"></a><span class="lineno">  949</span><span class="comment">!</span></div>
-<div class="line"><a id="l00950" name="l00950"></a><span class="lineno">  950</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;TURB_VER_DYN_FLUX&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span><span class="comment">!$acc end kernels </span></div>
+<div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span><span class="comment">!</span></div>
+<div class="line"><a id="l00768" name="l00768"></a><span class="lineno">  768</span><span class="keywordflow">IF</span> ( turbn%LTURB_FLX .AND. tpfile%LOPENED ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00769" name="l00769"></a><span class="lineno">  769</span>  <span class="comment">! stores the V wind component vertical flux</span></div>
+<div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span><span class="comment">!$acc update self(ZFLXZ)</span></div>
+<div class="line"><a id="l00771" name="l00771"></a><span class="lineno">  771</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__io__field__write__phy_1_1io__field__write__phy.html">io_field_write_phy</a>(d,tpfile,<span class="stringliteral">&#39;VW_FLX&#39;</span>,zflxz)</div>
+<div class="line"><a id="l00772" name="l00772"></a><span class="lineno">  772</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span><span class="comment">!</span></div>
+<div class="line"><a id="l00774" name="l00774"></a><span class="lineno">  774</span><span class="comment">! second part of total momentum flux</span></div>
+<div class="line"><a id="l00775" name="l00775"></a><span class="lineno">  775</span><span class="comment">!</span></div>
+<div class="line"><a id="l00776" name="l00776"></a><span class="lineno">  776</span><span class="comment">!$acc kernels present_cr(PWV)</span></div>
+<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span><span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span>pwv(iijb:iije,1:ikt) = zflxz(iijb:iije,1:ikt)</div>
+<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span><span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span><span class="comment">!</span></div>
+<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span><span class="comment">!  Contribution to the TKE dynamical production </span></div>
+<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span><span class="comment">!    computed at mass point</span></div>
+<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span><span class="comment">!</span></div>
+<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span>za(:,:) = - <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>( <a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>( zflxz * <a class="code hl_function" href="gradient__v_8F90.html#a41ca3dd27096c3e43809344c68c38df0">gz_v_vw</a>(turbn%XIMPL*zres + pexpl*pvm, pdzz) ) )</div>
+<div class="line"><a id="l00786" name="l00786"></a><span class="lineno">  786</span><span class="comment">!</span></div>
+<div class="line"><a id="l00787" name="l00787"></a><span class="lineno">  787</span><span class="comment">! Special cases at surface</span></div>
+<div class="line"><a id="l00788" name="l00788"></a><span class="lineno">  788</span><span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00789" name="l00789"></a><span class="lineno">  789</span>  <span class="comment">! evaluate the dynamic production at w(IKE) in PDP(IKE)</span></div>
+<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span>  <span class="comment">! before extrapolation done in routine tke_eps_source</span></div>
+<div class="line"><a id="l00791" name="l00791"></a><span class="lineno">  791</span>  za(:,ike) = -<a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(zflxz(:,ike-ikl) * (turbn%XIMPL*(zres(:,ike)-zres(:,ike-ikl)) + &amp;</div>
+<div class="line"><a id="l00792" name="l00792"></a><span class="lineno">  792</span>                                       pexpl*(pvm(:,ike)-pvm(:,ike-ikl)))/ <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(pdzz(:,ike-ikl)))</div>
+<div class="line"><a id="l00793" name="l00793"></a><span class="lineno">  793</span><span class="comment">!</span></div>
+<div class="line"><a id="l00794" name="l00794"></a><span class="lineno">  794</span><span class="keywordflow">ELSE</span> <span class="comment">! Atmosphere</span></div>
+<div class="line"><a id="l00795" name="l00795"></a><span class="lineno">  795</span>  <span class="comment">! evaluate the dynamic production at w(IKB+IKL) in PDP(IKB)</span></div>
+<div class="line"><a id="l00796" name="l00796"></a><span class="lineno">  796</span>  za(:,ikb) = -<a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(zflxz(:,ikb+ikl) * (turbn%XIMPL*(zres(:,ikb+ikl)-zres(:,ikb)) + &amp;</div>
+<div class="line"><a id="l00797" name="l00797"></a><span class="lineno">  797</span>                                       pexpl*(pvm(:,ikb+ikl)-pvm(:,ikb)))/ <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(pdzz(:,ikb+ikl)))</div>
+<div class="line"><a id="l00798" name="l00798"></a><span class="lineno">  798</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00799" name="l00799"></a><span class="lineno">  799</span><span class="comment">!</span></div>
+<div class="line"><a id="l00800" name="l00800"></a><span class="lineno">  800</span><span class="comment">!$acc kernels</span></div>
+<div class="line"><a id="l00801" name="l00801"></a><span class="lineno">  801</span><span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00802" name="l00802"></a><span class="lineno">  802</span>pdp(iijb:iije,1:ikt)=pdp(iijb:iije,1:ikt)+za(iijb:iije,1:ikt)</div>
+<div class="line"><a id="l00803" name="l00803"></a><span class="lineno">  803</span><span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00804" name="l00804"></a><span class="lineno">  804</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00805" name="l00805"></a><span class="lineno">  805</span><span class="comment">!</span></div>
+<div class="line"><a id="l00806" name="l00806"></a><span class="lineno">  806</span><span class="comment">! Storage in the LES configuration</span></div>
+<div class="line"><a id="l00807" name="l00807"></a><span class="lineno">  807</span><span class="comment">!</span></div>
+<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span><span class="keywordflow">IF</span> (tles%LLES_CALL) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00809" name="l00809"></a><span class="lineno">  809</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime1)</div>
+<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span>  zwkles = <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(<a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(zflxz))</div>
+<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_SUBGRID_WV )</div>
+<div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span>  zwkles = <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(<a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(<a class="code hl_function" href="gradient__v_8F90.html#a41ca3dd27096c3e43809344c68c38df0">gz_v_vw</a>(pvm,pdzz)*zflxz))</div>
+<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_V_SBG_UaV )</div>
+<div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime2)</div>
+<div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span>  tles%XTIME_LES = tles%XTIME_LES + ztime2 - ztime1</div>
+<div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span><span class="comment">!</span></div>
+<div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span><span class="comment">!</span></div>
+<div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span><span class="comment">!*       6.3  Source of W wind component</span></div>
+<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span><span class="comment">!</span></div>
+<div class="line"><a id="l00821" name="l00821"></a><span class="lineno">  821</span><span class="keywordflow">IF</span>(turbn%CTURBDIM==<span class="stringliteral">&#39;3DIM&#39;</span>) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span>  <span class="comment">! Compute the source for the W wind component</span></div>
+<div class="line"><a id="l00823" name="l00823"></a><span class="lineno">  823</span>  <span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00824" name="l00824"></a><span class="lineno">  824</span><span class="comment">!$acc kernels present_cr(ZFLXZ)</span></div>
+<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span>    <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span>    zflxz(iijb:iije,ike+ikl) = 2 * zflxz(iijb:iije,ike) - zflxz(iijb:iije,ike-ikl) <span class="comment">! extrapolation </span></div>
+<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span>    <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span>  <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00830" name="l00830"></a><span class="lineno">  830</span><span class="comment">!$acc kernels present_cr(ZFLXZ)</span></div>
+<div class="line"><a id="l00831" name="l00831"></a><span class="lineno">  831</span>    <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00832" name="l00832"></a><span class="lineno">  832</span>    zflxz(iijb:iije,ika) = 2 * zflxz(iijb:iije,ikb) - zflxz(iijb:iije,ikb+ikl) <span class="comment">! extrapolation</span></div>
+<div class="line"><a id="l00833" name="l00833"></a><span class="lineno">  833</span>    <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE)</span></div>
+<div class="line"><a id="l00834" name="l00834"></a><span class="lineno">  834</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00835" name="l00835"></a><span class="lineno">  835</span><span class="keywordflow">  END IF</span></div>
+<div class="line"><a id="l00836" name="l00836"></a><span class="lineno">  836</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00837" name="l00837"></a><span class="lineno">  837</span>  <span class="keywordflow">IF</span> (.NOT. o2d) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00838" name="l00838"></a><span class="lineno">  838</span>    <span class="keywordflow">IF</span> (.NOT. oflat) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00839" name="l00839"></a><span class="lineno">  839</span>      prws(:,:)= prws(:,:)                                   &amp;</div>
+<div class="line"><a id="l00840" name="l00840"></a><span class="lineno">  840</span>                  -<a class="code hl_function" href="shuman_8F90.html#a4d11b9eedb8f366ecdcc0edf217ea5c6">dyf</a>( <a class="code hl_function" href="shuman_8F90.html#a620b12be5daf1abac11fc6e553221834">mzm</a>( <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj) /pdyy ) * zflxz )   &amp;</div>
+<div class="line"><a id="l00841" name="l00841"></a><span class="lineno">  841</span>                  +<a class="code hl_function" href="shuman_8F90.html#a73362ac83a8e3824c77dfc9963893fc8">dzm</a>( prhodj / <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(pdzz ) *                &amp;</div>
+<div class="line"><a id="l00842" name="l00842"></a><span class="lineno">  842</span>                        <a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>( <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>( zflxz*pdzy ) / pdyy )      &amp;</div>
+<div class="line"><a id="l00843" name="l00843"></a><span class="lineno">  843</span>                      )</div>
+<div class="line"><a id="l00844" name="l00844"></a><span class="lineno">  844</span>    <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00845" name="l00845"></a><span class="lineno">  845</span>      prws(:,:)= prws(:,:) -<a class="code hl_function" href="shuman_8F90.html#a4d11b9eedb8f366ecdcc0edf217ea5c6">dyf</a>( <a class="code hl_function" href="shuman_8F90.html#a620b12be5daf1abac11fc6e553221834">mzm</a>( <a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(prhodj) /pdyy ) * zflxz )</div>
+<div class="line"><a id="l00846" name="l00846"></a><span class="lineno">  846</span><span class="keywordflow">    END IF</span></div>
+<div class="line"><a id="l00847" name="l00847"></a><span class="lineno">  847</span><span class="keywordflow">  END IF</span></div>
+<div class="line"><a id="l00848" name="l00848"></a><span class="lineno">  848</span>  <span class="comment">! </span></div>
+<div class="line"><a id="l00849" name="l00849"></a><span class="lineno">  849</span>  <span class="comment">! Complete the Dynamical production with the W wind component </span></div>
+<div class="line"><a id="l00850" name="l00850"></a><span class="lineno">  850</span>  <span class="keywordflow">IF</span> (.NOT. o2d) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00851" name="l00851"></a><span class="lineno">  851</span>    za(:,:) = - <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>( <a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>( zflxz(:,:) * <a class="code hl_function" href="gradient__w_8F90.html#a03ed84a9a4cc12a951c233f0fe0889eb">gy_w_vw</a>(oflat, pwm,pdyy,pdzz,pdzy) )  )</div>
+<div class="line"><a id="l00852" name="l00852"></a><span class="lineno">  852</span>    <span class="comment">! Special case near surface </span></div>
+<div class="line"><a id="l00853" name="l00853"></a><span class="lineno">  853</span>    <span class="keywordflow">IF</span> (gocean) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00854" name="l00854"></a><span class="lineno">  854</span>      <span class="comment">! evaluate the dynamic production at w(IKE) and stored in PDP(IKE)</span></div>
+<div class="line"><a id="l00855" name="l00855"></a><span class="lineno">  855</span>      za(:,ike) = -<a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(zflxz(:,ike) *  <a class="code hl_function" href="shuman_8F90.html#a0f5ee63d98d49e0d7141c312a34c8336">dym</a>(pwm(:,ike)) &amp;</div>
+<div class="line"><a id="l00856" name="l00856"></a><span class="lineno">  856</span>                            / (0.5*(pdyy(:,ike-ikl)+pdyy(:,ike))))</div>
+<div class="line"><a id="l00857" name="l00857"></a><span class="lineno">  857</span>    <span class="keywordflow">ELSE</span> <span class="comment">! Atmosphere</span></div>
+<div class="line"><a id="l00858" name="l00858"></a><span class="lineno">  858</span>      <span class="comment">! evaluate the dynamic production at w(IKB+IKL) and stored in PDP(IKB)</span></div>
+<div class="line"><a id="l00859" name="l00859"></a><span class="lineno">  859</span>    za(:,ikb) = - <a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(                                &amp;</div>
+<div class="line"><a id="l00860" name="l00860"></a><span class="lineno">  860</span>     zflxz(:,ikb+ikl) *                                &amp;</div>
+<div class="line"><a id="l00861" name="l00861"></a><span class="lineno">  861</span>       ( <a class="code hl_function" href="shuman_8F90.html#a0f5ee63d98d49e0d7141c312a34c8336">dym</a>( pwm(:,ikb+ikl) )                         &amp;</div>
+<div class="line"><a id="l00862" name="l00862"></a><span class="lineno">  862</span>        -<a class="code hl_function" href="shuman_8F90.html#a9cbf979d93ee38f20c61e97141e0c1c8">mym</a>(  (pwm(:,ikb+2*ikl)-pwm(:,ikb+ikl))       &amp;</div>
+<div class="line"><a id="l00863" name="l00863"></a><span class="lineno">  863</span>                /(pdzz(:,ikb+2*ikl)+pdzz(:,ikb+ikl))   &amp;</div>
+<div class="line"><a id="l00864" name="l00864"></a><span class="lineno">  864</span>              +(pwm(:,ikb+ikl)-pwm(:,ikb  ))           &amp;</div>
+<div class="line"><a id="l00865" name="l00865"></a><span class="lineno">  865</span>                /(pdzz(:,ikb+ikl)+pdzz(:,ikb  ))       &amp;</div>
+<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span>            )                                          &amp;</div>
+<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span>          * pdzy(:,ikb+ikl)                            &amp;</div>
+<div class="line"><a id="l00868" name="l00868"></a><span class="lineno">  868</span>       ) / (0.5*(pdyy(:,ikb+ikl)+pdyy(:,ikb)))         &amp;</div>
+<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span>                            )</div>
+<div class="line"><a id="l00870" name="l00870"></a><span class="lineno">  870</span>    <span class="comment">!</span></div>
+<div class="line"><a id="l00871" name="l00871"></a><span class="lineno">  871</span><span class="keywordflow">    END IF</span></div>
+<div class="line"><a id="l00872" name="l00872"></a><span class="lineno">  872</span><span class="comment">!</span></div>
+<div class="line"><a id="l00873" name="l00873"></a><span class="lineno">  873</span><span class="comment">!$acc kernels</span></div>
+<div class="line"><a id="l00874" name="l00874"></a><span class="lineno">  874</span>    <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00875" name="l00875"></a><span class="lineno">  875</span>    pdp(iijb:iije,1:ikt)=pdp(iijb:iije,1:ikt)+za(iijb:iije,1:ikt)</div>
+<div class="line"><a id="l00876" name="l00876"></a><span class="lineno">  876</span>    <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00877" name="l00877"></a><span class="lineno">  877</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00878" name="l00878"></a><span class="lineno">  878</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00879" name="l00879"></a><span class="lineno">  879</span><span class="keywordflow">  END IF</span></div>
+<div class="line"><a id="l00880" name="l00880"></a><span class="lineno">  880</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00881" name="l00881"></a><span class="lineno">  881</span>  <span class="comment">! Storage in the LES configuration</span></div>
+<div class="line"><a id="l00882" name="l00882"></a><span class="lineno">  882</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00883" name="l00883"></a><span class="lineno">  883</span>  <span class="keywordflow">IF</span> (tles%LLES_CALL) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00884" name="l00884"></a><span class="lineno">  884</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime1)</div>
+<div class="line"><a id="l00885" name="l00885"></a><span class="lineno">  885</span>    zwkles = <a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(<a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(<a class="code hl_function" href="gradient__w_8F90.html#a03ed84a9a4cc12a951c233f0fe0889eb">gy_w_vw</a>(oflat, pwm,pdyy,pdzz,pdzy)*zflxz(:,:)))</div>
+<div class="line"><a id="l00886" name="l00886"></a><span class="lineno">  886</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_W_SBG_UaW , .true. )</div>
+<div class="line"><a id="l00887" name="l00887"></a><span class="lineno">  887</span>    zwkles = <a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(<a class="code hl_function" href="gradient__m_8F90.html#a52660ed77771802e855795ea519c087b">gy_m_v</a>(oflat, pthlm,pdyy,pdzz,pdzy)*<a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(zflxz))</div>
+<div class="line"><a id="l00888" name="l00888"></a><span class="lineno">  888</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_Thl_SBG_UaW , .true. )</div>
+<div class="line"><a id="l00889" name="l00889"></a><span class="lineno">  889</span>    <span class="keywordflow">IF</span> (krr&gt;=1) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00890" name="l00890"></a><span class="lineno">  890</span>      zwkles = <a class="code hl_function" href="shuman_8F90.html#aea1a3fcd4a2a27cdc1c6ffef98f134f4">myf</a>(<a class="code hl_function" href="gradient__v_8F90.html#a19ac6c76d88715e4438d2bddfb7e53fe">gy_v_m</a>(oflat, prm(:,:,1),pdyy,pdzz,pdzy)*<a class="code hl_function" href="shuman_8F90.html#ae979a6f8353cd295f3e8f5208f166bd0">mzf</a>(zflxz(:,:)))</div>
+<div class="line"><a id="l00891" name="l00891"></a><span class="lineno">  891</span>      <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">les_mean_subgrid_phy</a>(d, tles, zwkles, tles%X_LES_RES_ddxa_Rt_SBG_UaW , .true. )</div>
+<div class="line"><a id="l00892" name="l00892"></a><span class="lineno">  892</span><span class="keywordflow">    END IF</span></div>
+<div class="line"><a id="l00893" name="l00893"></a><span class="lineno">  893</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__second__mnh_1_1second__mnh.html">second_mnh</a>(ztime2)</div>
+<div class="line"><a id="l00894" name="l00894"></a><span class="lineno">  894</span>    tles%XTIME_LES = tles%XTIME_LES + ztime2 - ztime1</div>
+<div class="line"><a id="l00895" name="l00895"></a><span class="lineno">  895</span><span class="keywordflow">  END IF</span></div>
+<div class="line"><a id="l00896" name="l00896"></a><span class="lineno">  896</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00897" name="l00897"></a><span class="lineno">  897</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00898" name="l00898"></a><span class="lineno">  898</span><span class="comment">!</span></div>
+<div class="line"><a id="l00899" name="l00899"></a><span class="lineno">  899</span><span class="comment">!</span></div>
+<div class="line"><a id="l00900" name="l00900"></a><span class="lineno">  900</span><span class="comment">!----------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00901" name="l00901"></a><span class="lineno">  901</span><span class="comment">!</span></div>
+<div class="line"><a id="l00902" name="l00902"></a><span class="lineno">  902</span><span class="comment">!*       7.   DIAGNOSTIC COMPUTATION OF THE 1D &lt;W W&gt; VARIANCE</span></div>
+<div class="line"><a id="l00903" name="l00903"></a><span class="lineno">  903</span><span class="comment">!             -----------------------------------------------</span></div>
+<div class="line"><a id="l00904" name="l00904"></a><span class="lineno">  904</span><span class="comment">!</span></div>
+<div class="line"><a id="l00905" name="l00905"></a><span class="lineno">  905</span><span class="keywordflow">IF</span> ( turbn%LTURB_FLX .AND. tpfile%LOPENED .AND. turbn%CTURBDIM == <span class="stringliteral">&#39;1DIM&#39;</span>) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00906" name="l00906"></a><span class="lineno">  906</span>  zflxz(:,:)= (2./3.) * ptkem(:,:)                     &amp;</div>
+<div class="line"><a id="l00907" name="l00907"></a><span class="lineno">  907</span>     -zcmfs*plm(:,:)*sqrt(ptkem(:,:))*<a class="code hl_function" href="gradient__w_8F90.html#acbaf413ae4b32b9ec7e8b67084d9ec38">gz_w_m</a>(pwm,pdzz)</div>
+<div class="line"><a id="l00908" name="l00908"></a><span class="lineno">  908</span>  <span class="comment">! to be tested &amp;</span></div>
+<div class="line"><a id="l00909" name="l00909"></a><span class="lineno">  909</span>  <span class="comment">!   +XCMFB*(4./3.)*PLM(:,:,:)/SQRT(PTKEM(:,:,:))*PTP(:,:,:)</span></div>
+<div class="line"><a id="l00910" name="l00910"></a><span class="lineno">  910</span>  <span class="comment">! stores the W variance</span></div>
+<div class="line"><a id="l00911" name="l00911"></a><span class="lineno">  911</span>  tzfield = <a class="code hl_struct" href="structmodd__field_1_1tfieldmetadata.html">tfieldmetadata</a>(      &amp;</div>
+<div class="line"><a id="l00912" name="l00912"></a><span class="lineno">  912</span>    cmnhname   = <span class="stringliteral">&#39;W_VVAR&#39;</span>,       &amp;</div>
+<div class="line"><a id="l00913" name="l00913"></a><span class="lineno">  913</span>    cstdname   = <span class="stringliteral">&#39;&#39;</span>,             &amp;</div>
+<div class="line"><a id="l00914" name="l00914"></a><span class="lineno">  914</span>    clongname  = <span class="stringliteral">&#39;W_VVAR&#39;</span>,       &amp;</div>
+<div class="line"><a id="l00915" name="l00915"></a><span class="lineno">  915</span>    cunits     = <span class="stringliteral">&#39;m2 s-2&#39;</span>,       &amp;</div>
+<div class="line"><a id="l00916" name="l00916"></a><span class="lineno">  916</span>    cdir       = <span class="stringliteral">&#39;XY&#39;</span>,           &amp;</div>
+<div class="line"><a id="l00917" name="l00917"></a><span class="lineno">  917</span>    ccomment   = <span class="stringliteral">&#39;X_Y_Z_W_VVAR&#39;</span>, &amp;</div>
+<div class="line"><a id="l00918" name="l00918"></a><span class="lineno">  918</span>    ngrid      = 1,              &amp;</div>
+<div class="line"><a id="l00919" name="l00919"></a><span class="lineno">  919</span>    ntype      = <a class="code hl_variable" href="namespacemodd__field.html#a7d4c3932f9ca5c6781119dba51724c2d">typereal</a>,       &amp;</div>
+<div class="line"><a id="l00920" name="l00920"></a><span class="lineno">  920</span>    ndims      = 3,              &amp;</div>
+<div class="line"><a id="l00921" name="l00921"></a><span class="lineno">  921</span>    ltimedep   = .true.          )</div>
+<div class="line"><a id="l00922" name="l00922"></a><span class="lineno">  922</span><span class="comment">!$acc update self(ZFLXZ)</span></div>
+<div class="line"><a id="l00923" name="l00923"></a><span class="lineno">  923</span>  <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__io__field__write__phy_1_1io__field__write__phy.html">io_field_write_phy</a>(d,tpfile,tzfield,zflxz)</div>
+<div class="line"><a id="l00924" name="l00924"></a><span class="lineno">  924</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00925" name="l00925"></a><span class="lineno">  925</span><span class="comment">!</span></div>
+<div class="line"><a id="l00926" name="l00926"></a><span class="lineno">  926</span><span class="comment">!----------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00927" name="l00927"></a><span class="lineno">  927</span><span class="comment">!</span></div>
+<div class="line"><a id="l00928" name="l00928"></a><span class="lineno">  928</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;TURB_VER_DYN_FLUX&#39;</span>,1,zhook_handle)</div>
 </div>
-<div class="line"><a id="l00951" name="l00951"></a><span class="lineno">  951</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__turb__ver__dyn__flux.html#a077a54e63ab22b827d3c526c990dd607">turb_ver_dyn_flux</a></div>
-<div class="line"><a id="l00952" name="l00952"></a><span class="lineno">  952</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__turb__ver__dyn__flux.html">mode_turb_ver_dyn_flux</a></div>
+<div class="line"><a id="l00929" name="l00929"></a><span class="lineno">  929</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__turb__ver__dyn__flux.html#a077a54e63ab22b827d3c526c990dd607">turb_ver_dyn_flux</a></div>
+<div class="line"><a id="l00930" name="l00930"></a><span class="lineno">  930</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__turb__ver__dyn__flux.html">mode_turb_ver_dyn_flux</a></div>
 <div class="ttc" id="agradient__m_8F90_html_a52660ed77771802e855795ea519c087b"><div class="ttname"><a href="gradient__m_8F90.html#a52660ed77771802e855795ea519c087b">gy_m_v</a></div><div class="ttdeci">real function, dimension(size(py, 1), size(py, 2), size(py, 3)) gy_m_v(kka, kku, kl, py, pdyy, pdzz, pdzy)</div><div class="ttdef"><b>Definition</b> <a href="gradient__m_8F90_source.html#l00364">gradient_m.F90:365</a></div></div>
 <div class="ttc" id="agradient__m_8F90_html_adaf88cd29c62ab6a856a501b290f0fa4"><div class="ttname"><a href="gradient__m_8F90.html#adaf88cd29c62ab6a856a501b290f0fa4">gx_m_u</a></div><div class="ttdeci">real function, dimension(size(py, 1), size(py, 2), size(py, 3)) gx_m_u(kka, kku, kl, py, pdxx, pdzz, pdzx)</div><div class="ttdef"><b>Definition</b> <a href="gradient__m_8F90_source.html#l00109">gradient_m.F90:110</a></div></div>
 <div class="ttc" id="agradient__u_8F90_html_acc308949033045e8380f5d3012419466"><div class="ttname"><a href="gradient__u_8F90.html#acc308949033045e8380f5d3012419466">gz_u_uw</a></div><div class="ttdeci">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3)) gz_u_uw(pa, pdzz, kka, kku, kl)</div><div class="ttdef"><b>Definition</b> <a href="gradient__u_8F90_source.html#l00223">gradient_u.F90:224</a></div></div>
@@ -1045,6 +1023,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="agradient__w_8F90_html_a03ed84a9a4cc12a951c233f0fe0889eb"><div class="ttname"><a href="gradient__w_8F90.html#a03ed84a9a4cc12a951c233f0fe0889eb">gy_w_vw</a></div><div class="ttdeci">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3)) gy_w_vw(pa, pdyy, pdzz, pdzy, kka, kku, kl)</div><div class="ttdef"><b>Definition</b> <a href="gradient__w_8F90_source.html#l00092">gradient_w.F90:93</a></div></div>
 <div class="ttc" id="agradient__w_8F90_html_ab1291a8e8aa08e2f9add73fe3ab80bd1"><div class="ttname"><a href="gradient__w_8F90.html#ab1291a8e8aa08e2f9add73fe3ab80bd1">gx_w_uw</a></div><div class="ttdeci">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3)) gx_w_uw(pa, pdxx, pdzz, pdzx, kka, kku, kl)</div><div class="ttdef"><b>Definition</b> <a href="gradient__w_8F90_source.html#l00002">gradient_w.F90:3</a></div></div>
 <div class="ttc" id="agradient__w_8F90_html_acbaf413ae4b32b9ec7e8b67084d9ec38"><div class="ttname"><a href="gradient__w_8F90.html#acbaf413ae4b32b9ec7e8b67084d9ec38">gz_w_m</a></div><div class="ttdeci">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3)) gz_w_m(pa, pdzz, kka, kku, kl)</div><div class="ttdef"><b>Definition</b> <a href="gradient__w_8F90_source.html#l00182">gradient_w.F90:183</a></div></div>
+<div class="ttc" id="ainterfacemode__io__field__write__phy_1_1io__field__write__phy_html"><div class="ttname"><a href="interfacemode__io__field__write__phy_1_1io__field__write__phy.html">mode_io_field_write_phy::io_field_write_phy</a></div><div class="ttdef"><b>Definition</b> <a href="mode__io__field__write__phy_8F90_source.html#l00006">mode_io_field_write_phy.F90:6</a></div></div>
 <div class="ttc" id="ainterfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy_html"><div class="ttname"><a href="interfacemodi__les__mean__subgrid__phy_1_1les__mean__subgrid__phy.html">modi_les_mean_subgrid_phy::les_mean_subgrid_phy</a></div><div class="ttdef"><b>Definition</b> <a href="les__mean__subgrid__phy_8F90_source.html#l00016">les_mean_subgrid_phy.F90:16</a></div></div>
 <div class="ttc" id="ainterfacemodi__second__mnh_1_1second__mnh_html"><div class="ttname"><a href="interfacemodi__second__mnh_1_1second__mnh.html">modi_second_mnh::second_mnh</a></div><div class="ttdef"><b>Definition</b> <a href="modi__second__mnh_8F90_source.html#l00004">modi_second_mnh.F90:4</a></div></div>
 <div class="ttc" id="anamespacemodd__cst_html"><div class="ttname"><a href="namespacemodd__cst.html">modd_cst</a></div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00007">modd_cst.F90:7</a></div></div>
@@ -1058,7 +1037,6 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="anamespacemodd__parameters_html_a9823d3f349d55a2aa6599eddabe6f16f"><div class="ttname"><a href="namespacemodd__parameters.html#a9823d3f349d55a2aa6599eddabe6f16f">modd_parameters::xundef</a></div><div class="ttdeci">real, parameter xundef</div><div class="ttdef"><b>Definition</b> <a href="modd__parameters_8F90_source.html#l00061">modd_parameters.F90:61</a></div></div>
 <div class="ttc" id="anamespacemodd__turb__n_html"><div class="ttname"><a href="namespacemodd__turb__n.html">modd_turb_n</a></div><div class="ttdef"><b>Definition</b> <a href="modd__turbn_8F90_source.html#l00007">modd_turbn.F90:7</a></div></div>
 <div class="ttc" id="anamespacemode__io__field__write__phy_html"><div class="ttname"><a href="namespacemode__io__field__write__phy.html">mode_io_field_write_phy</a></div><div class="ttdef"><b>Definition</b> <a href="mode__io__field__write__phy_8F90_source.html#l00001">mode_io_field_write_phy.F90:1</a></div></div>
-<div class="ttc" id="anamespacemode__io__field__write__phy_html_ae90c9595e48348b2813cd33897aa4a2f"><div class="ttname"><a href="namespacemode__io__field__write__phy.html#ae90c9595e48348b2813cd33897aa4a2f">mode_io_field_write_phy::io_field_write_phy</a></div><div class="ttdeci">subroutine io_field_write_phy(d, tpfile, tzfield, pfield)</div><div class="ttdef"><b>Definition</b> <a href="mode__io__field__write__phy_8F90_source.html#l00018">mode_io_field_write_phy.F90:19</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html"><div class="ttname"><a href="namespacemode__shuman__phy.html">mode_shuman_phy</a></div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00001">mode_shuman_phy.F90:1</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_a86441e6781603bb2b6b1f30d8c0e39b4"><div class="ttname"><a href="namespacemode__shuman__phy.html#a86441e6781603bb2b6b1f30d8c0e39b4">mode_shuman_phy::mzm_phy</a></div><div class="ttdeci">subroutine mzm_phy(d, pa, pmzm)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00311">mode_shuman_phy.F90:312</a></div></div>
 <div class="ttc" id="anamespacemode__tridiag__wind_html"><div class="ttname"><a href="namespacemode__tridiag__wind.html">mode_tridiag_wind</a></div><div class="ttdef"><b>Definition</b> <a href="mode__tridiag__wind_8F90_source.html#l00005">mode_tridiag_wind.F90:5</a></div></div>

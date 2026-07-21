@@ -184,8 +184,10 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>      ::  MFMOIST <span class="comment">! moist mass flux dual scheme</span></div>
 <div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>      ::  PTHVREF   <span class="comment">! Virtual Potential</span></div>
 <div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>                                        <span class="comment">! Temperature of the reference state</span></div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT,KGRADIENTSLEO)</span>,   <span class="keywordtype">INTENT(IN)</span> ::  PHGRADLEO  <span class="comment">! horizontal gradients</span></div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT,KGRADIENTSGOG)</span>,   <span class="keywordtype">INTENT(IN)</span> ::  PHGRADGOG  <span class="comment">! horizontal gradients</span></div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,TURBN%LLEONARD),MERGE(D%NKT,0,TURBN%LLEONARD), &amp;
+                MERGE(KGRADIENTSLEO,0,TURBN%LLEONARD))</span>,   <span class="keywordtype">INTENT(IN)</span> ::  PHGRADLEO  <span class="comment">! horizontal gradients in Moeng</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,TURBN%LGOGER),MERGE(D%NKT,0,TURBN%LGOGER),     &amp;
+                MERGE(KGRADIENTSGOG,0,TURBN%LGOGER))</span>,     <span class="keywordtype">INTENT(IN)</span> ::  PHGRADGOG  <span class="comment">! horizontal gradients in Goger</span></div>
 <div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="comment">!</span></div>
 <div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>,   <span class="keywordtype">INTENT(IN)</span>      ::  PSFTH,PSFRV,   &amp;</div>
 <div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span><span class="comment">! normal surface fluxes of theta and Rv</span></div>
@@ -285,9 +287,9 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span><span class="keyword">END SUBROUTINE </span><a class="code hl_interface" href="interfacemodi__turb_1_1turb.html">turb</a></div>
 <div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span><span class="comment">!</span></div>
 <div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span><span class="keyword">END INTERFACE</span></div>
-</div>
 <div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span><span class="comment">!</span></div>
 <div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemodi__turb.html">modi_turb</a></div>
+</div>
 <div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span> </div>
 <div class="ttc" id="ainterfacemodi__turb_1_1turb_html"><div class="ttname"><a href="interfacemodi__turb_1_1turb.html">modi_turb::turb</a></div><div class="ttdef"><b>Definition</b> <a href="modi__turb_8F90_source.html#l00011">modi_turb.F90:11</a></div></div>
 <div class="ttc" id="anamespacemodd__budget_html"><div class="ttname"><a href="namespacemodd__budget.html">modd_budget</a></div><div class="ttdef"><b>Definition</b> <a href="modd__budget_8F90_source.html#l00002">modd_budget.F90:2</a></div></div>

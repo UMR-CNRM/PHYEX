@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a832296ffdd143f05525e5b27002e652b" id="r_a832296ffdd143f05525e5b27002e652b"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__elec__tendencies.html#a832296ffdd143f05525e5b27002e652b">elec_tendencies</a> (d, cst, iced, icep, elecd, elecp, krr, kmicro, ptstep, odmicro, buconf, tbudgets, kbudgets, hcloud, pthvrefzikb, prhodref, prhodj, pzt, pcit, prvt, prct, prrt, prit, prst, prgt, pqpit, pqct, pqrt, pqit, pqst, pqgt, pqnit, pqpis, pqcs, pqrs, pqis, pqss, pqgs, pqnis, prvheni, prrhong, primltc, prchoni, prvdeps, priaggs, priauts, prvdepg, prcautr, prcaccr, prrevav, prcrimss, prcrimsg, prsrimcg, prraccss, prraccsg, prsaccrg, prsmltg, pricfrrg, prrcfrig, prcwetg, priwetg, prrwetg, prswetg, prcdryg, pridryg, prrdryg, prsdryg, prgmltr, prcberi, prcmltsr, pricfrr, pcct, pcrt, pcst, pcgt, prvhenc, prchinc, prvhonh, prrcvrc, pricnvi, prvdepi, prshmsi, prghmgi, pricibu, prirdsf, prccorr2, prrcorr2, pricorr2, prwetgh, prcweth, priweth, prsweth, prgweth, prrweth, prcdryh, pridryh, prsdryh, prrdryh, prgdryh, prhmltr, prdryhg, prht, pcht, pqht, pqhs)</td></tr>
-<tr class="separator:a832296ffdd143f05525e5b27002e652b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47b4d8ed9feb35987c01d4315265c431" id="r_a47b4d8ed9feb35987c01d4315265c431"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__elec__tendencies.html#a47b4d8ed9feb35987c01d4315265c431">elec_tendencies</a> (d, cst, iced, icep, elecd, elecp, limap, limac, limam, krr, kmicro, ptstep, odmicro, buconf, tbudgets, kbudgets, hcloud, pthvrefzikb, prhodref, prhodj, pzt, pcit, prvt, prct, prrt, prit, prst, prgt, pqpit, pqct, pqrt, pqit, pqst, pqgt, pqnit, pqpis, pqcs, pqrs, pqis, pqss, pqgs, pqnis, prvheni, prrhong, primltc, prchoni, prvdeps, priaggs, priauts, prvdepg, prcautr, prcaccr, prrevav, prcrimss, prcrimsg, prsrimcg, prraccss, prraccsg, prsaccrg, prsmltg, pricfrrg, prrcfrig, prcwetg, priwetg, prrwetg, prswetg, prcdryg, pridryg, prrdryg, prsdryg, prgmltr, prcberi, prcmltsr, pricfrr, pcct, pcrt, pcst, pcgt, prvhenc, prchinc, prvhonh, prrcvrc, pricnvi, prvdepi, prshmsi, prghmgi, pricibu, prirdsf, prccorr2, prrcorr2, pricorr2, prwetgh, prcweth, priweth, prsweth, prgweth, prrweth, prcdryh, pridryh, prsdryh, prrdryh, prgdryh, prhmltr, prdryhg, prht, pcht, pqht, pqhs)</td></tr>
+<tr class="separator:a47b4d8ed9feb35987c01d4315265c431"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a832296ffdd143f05525e5b27002e652b" name="a832296ffdd143f05525e5b27002e652b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a832296ffdd143f05525e5b27002e652b">&#9670;&#160;</a></span>elec_tendencies()</h2>
+<a id="a47b4d8ed9feb35987c01d4315265c431" name="a47b4d8ed9feb35987c01d4315265c431"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a47b4d8ed9feb35987c01d4315265c431">&#9670;&#160;</a></span>elec_tendencies()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -123,6 +123,24 @@ Functions/Subroutines</h2></td></tr>
           <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__elec__param_1_1elec__param__t.html">elec_param_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>elecp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limap</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__cold_1_1param__lima__cold__t.html">param_lima_cold_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limac</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__mixed_1_1param__lima__mixed__t.html">param_lima_mixed_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limam</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -730,8 +748,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__elec__tendencies_a832296ffdd143f05525e5b27002e652b_cgraph.png" border="0" usemap="#anamespacemode__elec__tendencies_a832296ffdd143f05525e5b27002e652b_cgraph" alt=""/></div>
-<map name="anamespacemode__elec__tendencies_a832296ffdd143f05525e5b27002e652b_cgraph" id="anamespacemode__elec__tendencies_a832296ffdd143f05525e5b27002e652b_cgraph">
+<div class="center"><img src="namespacemode__elec__tendencies_a47b4d8ed9feb35987c01d4315265c431_cgraph.png" border="0" usemap="#anamespacemode__elec__tendencies_a47b4d8ed9feb35987c01d4315265c431_cgraph" alt=""/></div>
+<map name="anamespacemode__elec__tendencies_a47b4d8ed9feb35987c01d4315265c431_cgraph" id="anamespacemode__elec__tendencies_a47b4d8ed9feb35987c01d4315265c431_cgraph">
 <area shape="rect" title=" " alt="" coords="5,69,176,109"/>
 <area shape="rect" href="namespacemode__compute__lambda.html#af2d05e2662d02460970ea3f49bac8d82" title=" " alt="" coords="225,5,403,45"/>
 <area shape="poly" title=" " alt="" coords="160,67,230,47,231,52,162,72"/>
@@ -746,12 +764,12 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__elec__tendencies_a832296ffdd143f05525e5b27002e652b_icgraph.png" border="0" usemap="#anamespacemode__elec__tendencies_a832296ffdd143f05525e5b27002e652b_icgraph" alt=""/></div>
-<map name="anamespacemode__elec__tendencies_a832296ffdd143f05525e5b27002e652b_icgraph" id="anamespacemode__elec__tendencies_a832296ffdd143f05525e5b27002e652b_icgraph">
+<div class="center"><img src="namespacemode__elec__tendencies_a47b4d8ed9feb35987c01d4315265c431_icgraph.png" border="0" usemap="#anamespacemode__elec__tendencies_a47b4d8ed9feb35987c01d4315265c431_icgraph" alt=""/></div>
+<map name="anamespacemode__elec__tendencies_a47b4d8ed9feb35987c01d4315265c431_icgraph" id="anamespacemode__elec__tendencies_a47b4d8ed9feb35987c01d4315265c431_icgraph">
 <area shape="rect" title=" " alt="" coords="168,23,339,63"/>
 <area shape="rect" href="lima_8F90.html#a44669a04dd97ef6c68aeb7803059fd3c" title=" " alt="" coords="37,5,88,31"/>
 <area shape="poly" title=" " alt="" coords="154,33,88,24,88,19,155,28"/>
-<area shape="rect" href="rain__ice__part3_8F90.html#af3e242f6b05040765c2842952d361f6d" title=" " alt="" coords="5,55,120,80"/>
+<area shape="rect" href="rain__ice__part3_8F90.html#a06c3d164de603312b22e7d92bb33487a" title=" " alt="" coords="5,55,120,80"/>
 <area shape="poly" title=" " alt="" coords="155,58,121,63,120,57,154,53"/>
 </map>
 </div>

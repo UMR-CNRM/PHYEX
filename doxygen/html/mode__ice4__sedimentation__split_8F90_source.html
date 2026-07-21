@@ -816,7 +816,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span>    <span class="comment">!$acc_cr loop independent</span></div>
-<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span>    <span class="comment">!$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE,OPENACC=&#39;private(ZEXT)&#39; )</span></div>
+<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span>    <span class="comment">!$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE,OPENACC=&#39; private(ZEXT)&#39; )</span></div>
 <div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span>    <span class="keywordflow">DO</span> jk = iktb,ikte</div>
 <div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span>      <span class="keywordflow">DO</span> jij = iijb,iije</div>
 <div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span>        <span class="keywordflow">IF</span>(prxt(jij,jk)&gt;iced%XRTMIN(kspe) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
@@ -892,43 +892,42 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00805" name="l00805"></a><span class="lineno">  805</span><span class="keywordflow">  ENDDO</span></div>
 <div class="line"><a id="l00806" name="l00806"></a><span class="lineno">  806</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00807" name="l00807"></a><span class="lineno">  807</span><span class="comment">!$acc kernels</span></div>
-<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span><span class="comment">!$acc loop independent private(ZMRCHANGE,ZQCHANGE)</span></div>
-<div class="line"><a id="l00809" name="l00809"></a><span class="lineno">  809</span><span class="comment">!$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE, OPENACC=&#39;private(ZMRCHANGE,ZQCHANGE)&#39; )</span></div>
-<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span>   <span class="keywordflow">DO</span> jk = iktb , ikte</div>
-<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span>    <span class="keywordflow">DO</span> jij = iijb, iije</div>
-<div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span>      zmrchange = zmax_tstep1d(jij) * poorhodz(jij,jk)*(zwsed(jij,jk+ikl)-zwsed(jij,jk))</div>
-<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span>      prxt(jij,jk) = prxt(jij,jk) + zmrchange + pprxs(jij,jk) * zmax_tstep1d(jij)</div>
-<div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span>      prxs(jij,jk) = prxs(jij,jk) + zmrchange * zinvtstep</div>
-<div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span>      <span class="keywordflow">IF</span> (gpresent_pfpr) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span>        pfpr(jij,jk,kspe) = pfpr(jij,jk,kspe) + zwsed(jij,jk) * (zmax_tstep1d(jij) * zinvtstep)</div>
-<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span><span class="keywordflow">      ENDIF</span></div>
-<div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span>      <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span>        zqchange = zmax_tstep1d(jij) * poorhodz(jij,jk) * (zwsedq(jij,jk+ikl) - zwsedq(jij,jk))</div>
-<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span>        pqxt(jij,jk) = pqxt(jij,jk) + zqchange + ppqxs(jij,jk) * zmax_tstep1d(jij)</div>
-<div class="line"><a id="l00821" name="l00821"></a><span class="lineno">  821</span>        pqxs(jij,jk) = pqxs(jij,jk) + zqchange * zinvtstep</div>
-<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span><span class="keywordflow">      ENDIF</span></div>
-<div class="line"><a id="l00823" name="l00823"></a><span class="lineno">  823</span><span class="keywordflow">    ENDDO</span></div>
-<div class="line"><a id="l00824" name="l00824"></a><span class="lineno">  824</span><span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span><span class="comment">!$mnh_end_do()</span></div>
-<div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span><span class="comment">!$acc kernels</span></div>
-<div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span>  ganyremaint = .false.</div>
-<div class="line"><a id="l00830" name="l00830"></a><span class="lineno">  830</span>  zanyremaint = 0.0</div>
-<div class="line"><a id="l00831" name="l00831"></a><span class="lineno">  831</span><span class="comment">!$acc loop independent reduction(max:ZANYREMAINT)</span></div>
-<div class="line"><a id="l00832" name="l00832"></a><span class="lineno">  832</span>  <span class="keywordflow">DO</span> jij=iijb,iije</div>
-<div class="line"><a id="l00833" name="l00833"></a><span class="lineno">  833</span>    zanyremaint=max(zanyremaint,zremaint(jij))</div>
-<div class="line"><a id="l00834" name="l00834"></a><span class="lineno">  834</span><span class="keywordflow">  END DO</span></div>
-<div class="line"><a id="l00835" name="l00835"></a><span class="lineno">  835</span>  <span class="keywordflow">IF</span>(zanyremaint&gt;0.) ganyremaint = .true.</div>
-<div class="line"><a id="l00836" name="l00836"></a><span class="lineno">  836</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00837" name="l00837"></a><span class="lineno">  837</span><span class="keywordflow">END DO</span></div>
-<div class="line"><a id="l00838" name="l00838"></a><span class="lineno">  838</span><span class="comment">!</span></div>
-<div class="line"><a id="l00839" name="l00839"></a><span class="lineno">  839</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT&#39;</span>, 1, zhook_handle)</div>
+<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span><span class="comment">!$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE, OPENACC=&#39; private(ZMRCHANGE,ZQCHANGE)&#39; )</span></div>
+<div class="line"><a id="l00809" name="l00809"></a><span class="lineno">  809</span>   <span class="keywordflow">DO</span> jk = iktb , ikte</div>
+<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span>    <span class="keywordflow">DO</span> jij = iijb, iije</div>
+<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span>      zmrchange = zmax_tstep1d(jij) * poorhodz(jij,jk)*(zwsed(jij,jk+ikl)-zwsed(jij,jk))</div>
+<div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span>      prxt(jij,jk) = prxt(jij,jk) + zmrchange + pprxs(jij,jk) * zmax_tstep1d(jij)</div>
+<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span>      prxs(jij,jk) = prxs(jij,jk) + zmrchange * zinvtstep</div>
+<div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span>      <span class="keywordflow">IF</span> (gpresent_pfpr) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span>        pfpr(jij,jk,kspe) = pfpr(jij,jk,kspe) + zwsed(jij,jk) * (zmax_tstep1d(jij) * zinvtstep)</div>
+<div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span><span class="keywordflow">      ENDIF</span></div>
+<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span>      <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span>        zqchange = zmax_tstep1d(jij) * poorhodz(jij,jk) * (zwsedq(jij,jk+ikl) - zwsedq(jij,jk))</div>
+<div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span>        pqxt(jij,jk) = pqxt(jij,jk) + zqchange + ppqxs(jij,jk) * zmax_tstep1d(jij)</div>
+<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span>        pqxs(jij,jk) = pqxs(jij,jk) + zqchange * zinvtstep</div>
+<div class="line"><a id="l00821" name="l00821"></a><span class="lineno">  821</span><span class="keywordflow">      ENDIF</span></div>
+<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span><span class="keywordflow">    ENDDO</span></div>
+<div class="line"><a id="l00823" name="l00823"></a><span class="lineno">  823</span><span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a id="l00824" name="l00824"></a><span class="lineno">  824</span><span class="comment">!$mnh_end_do()</span></div>
+<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span><span class="comment">!$acc kernels</span></div>
+<div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span>  ganyremaint = .false.</div>
+<div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span>  zanyremaint = 0.0</div>
+<div class="line"><a id="l00830" name="l00830"></a><span class="lineno">  830</span><span class="comment">!$acc loop independent reduction(max:ZANYREMAINT)</span></div>
+<div class="line"><a id="l00831" name="l00831"></a><span class="lineno">  831</span>  <span class="keywordflow">DO</span> jij=iijb,iije</div>
+<div class="line"><a id="l00832" name="l00832"></a><span class="lineno">  832</span>    zanyremaint=max(zanyremaint,zremaint(jij))</div>
+<div class="line"><a id="l00833" name="l00833"></a><span class="lineno">  833</span><span class="keywordflow">  END DO</span></div>
+<div class="line"><a id="l00834" name="l00834"></a><span class="lineno">  834</span>  <span class="keywordflow">IF</span>(zanyremaint&gt;0.) ganyremaint = .true.</div>
+<div class="line"><a id="l00835" name="l00835"></a><span class="lineno">  835</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00836" name="l00836"></a><span class="lineno">  836</span><span class="keywordflow">END DO</span></div>
+<div class="line"><a id="l00837" name="l00837"></a><span class="lineno">  837</span><span class="comment">!</span></div>
+<div class="line"><a id="l00838" name="l00838"></a><span class="lineno">  838</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT&#39;</span>, 1, zhook_handle)</div>
 </div>
-<div class="line"><a id="l00840" name="l00840"></a><span class="lineno">  840</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__ice4__sedimentation__split.html#aaa9eb9db0298ea90ee032543ebcf5889">internal_sedim_spli</a></div>
-<div class="line"><a id="l00841" name="l00841"></a><span class="lineno">  841</span><span class="comment">!</span></div>
-<div class="line"><a id="l00842" name="l00842"></a><span class="lineno">  842</span><span class="comment">!!$END SUBROUTINE ICE4_SEDIMENTATION_SPLIT</span></div>
-<div class="line"><a id="l00843" name="l00843"></a><span class="lineno">  843</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__ice4__sedimentation__split.html">mode_ice4_sedimentation_split</a></div>
+<div class="line"><a id="l00839" name="l00839"></a><span class="lineno">  839</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__ice4__sedimentation__split.html#aaa9eb9db0298ea90ee032543ebcf5889">internal_sedim_spli</a></div>
+<div class="line"><a id="l00840" name="l00840"></a><span class="lineno">  840</span><span class="comment">!</span></div>
+<div class="line"><a id="l00841" name="l00841"></a><span class="lineno">  841</span><span class="comment">!!$END SUBROUTINE ICE4_SEDIMENTATION_SPLIT</span></div>
+<div class="line"><a id="l00842" name="l00842"></a><span class="lineno">  842</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__ice4__sedimentation__split.html">mode_ice4_sedimentation_split</a></div>
 <div class="ttc" id="ainterfacemode__msg_1_1print__msg_html"><div class="ttname"><a href="interfacemode__msg_1_1print__msg.html">mode_msg::print_msg</a></div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00018">mode_msg.F90:18</a></div></div>
 <div class="ttc" id="ainterfacemodi__gamma_1_1gamma_html"><div class="ttname"><a href="interfacemodi__gamma_1_1gamma.html">modi_gamma::gamma</a></div><div class="ttdef"><b>Definition</b> <a href="modi__gamma_8F90_source.html#l00010">modi_gamma.F90:10</a></div></div>
 <div class="ttc" id="ainterfacemodi__momg_1_1momg_html"><div class="ttname"><a href="interfacemodi__momg_1_1momg.html">modi_momg::momg</a></div><div class="ttdef"><b>Definition</b> <a href="momg_8F90_source.html#l00010">momg.F90:10</a></div></div>

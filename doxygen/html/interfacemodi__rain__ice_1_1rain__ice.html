@@ -83,15 +83,15 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ae65f4751b825aa818f666593337fdbae" id="r_ae65f4751b825aa818f666593337fdbae"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__rain__ice_1_1rain__ice.html#ae65f4751b825aa818f666593337fdbae">rain_ice</a> (d, cst, parami, icep, iced, elecp, elecd, buconf, oelec, osedim_beard, pthvrefzikb, ptstep, krr, pexn, pdzz, prhodj, prhodref, pexnref, ppabst, pcit, pcldfr, picldfr, pssio, pssiu, pifr, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, ptht, prt, pths, prs, pinprc, pinprr, pevap3d, pinprs, pinprg, pindep, prainfr, psigs, tbudgets, kbudgets, pqpit, pqct, pqrt, pqit, pqst, pqgt, pqnit, pqpis, pqcs, pqrs, pqis, pqss, pqgs, pqnis, pefieldw, platham_iaggs, psea, ptown, pconc3d, pinprh, pfpr, pqht, pqhs)</td></tr>
-<tr class="separator:ae65f4751b825aa818f666593337fdbae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac558a3e81995f56ea7d3b4a79e00205a" id="r_ac558a3e81995f56ea7d3b4a79e00205a"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacemodi__rain__ice_1_1rain__ice.html#ac558a3e81995f56ea7d3b4a79e00205a">rain_ice</a> (d, cst, parami, icep, iced, elecp, elecd, buconf, limap, limac, limam, oelec, osedim_beard, pthvrefzikb, ptstep, krr, pexn, pdzz, prhodj, prhodref, pexnref, ppabst, pcit, pcldfr, picldfr, pssio, pssiu, pifr, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, ptht, prt, pths, prs, pinprc, pinprr, pevap3d, pinprs, pinprg, pindep, prainfr, psigs, tbudgets, kbudgets, pqpit, pqct, pqrt, pqit, pqst, pqgt, pqnit, pqpis, pqcs, pqrs, pqis, pqss, pqgs, pqnis, pefieldw, platham_iaggs, psea, ptown, pconc3d, pinprh, pfpr, pqht, pqhs)</td></tr>
+<tr class="separator:ac558a3e81995f56ea7d3b4a79e00205a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
 <p class="definition">Definition at line <a class="el" href="modi__rain__ice_8F90_source.html#l00007">7</a> of file <a class="el" href="modi__rain__ice_8F90_source.html">modi_rain_ice.F90</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ae65f4751b825aa818f666593337fdbae" name="ae65f4751b825aa818f666593337fdbae"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae65f4751b825aa818f666593337fdbae">&#9670;&#160;</a></span>rain_ice()</h2>
+<a id="ac558a3e81995f56ea7d3b4a79e00205a" name="ac558a3e81995f56ea7d3b4a79e00205a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac558a3e81995f56ea7d3b4a79e00205a">&#9670;&#160;</a></span>rain_ice()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -143,6 +143,24 @@ Public Member Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__budget_1_1tbudgetconf__t.html">tbudgetconf_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>buconf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limap</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__cold_1_1param__lima__cold__t.html">param_lima_cold_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limac</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__lima__mixed_1_1param__lima__mixed__t.html">param_lima_mixed_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>limam</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

@@ -309,7 +309,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv_lima), intent(in)&#160;</td>
           <td class="paramname"><em>psvt</em>, </td>
         </tr>
         <tr>
@@ -333,13 +333,13 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt, d%nkt, 10), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,oorilam),                 merge(d%nkt ,0,oorilam),                 merge(ksoa    ,0,oorilam)), intent(in)&#160;</td>
           <td class="paramname"><em>psolorg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt, d%nkt, ksp+kcarb+ksoa), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt         ,0,oorilam),                 merge(d%nkt          ,0,oorilam),                 merge(ksp+kcarb+ksoa ,0,oorilam)), intent(in)&#160;</td>
           <td class="paramname"><em>pmi</em>, </td>
         </tr>
         <tr>
@@ -357,7 +357,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv_lima), intent(inout)&#160;</td>
           <td class="paramname"><em>psvs</em>, </td>
         </tr>
         <tr>
@@ -459,7 +459,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt, d%nkt), intent(in), optional&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,oelec),                 merge(d%nkt,0,oelec)), intent(in), optional&#160;</td>
           <td class="paramname"><em>platham_iaggs</em>, </td>
         </tr>
         <tr>
@@ -471,13 +471,13 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv), intent(in), optional&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv_elec), intent(in), optional&#160;</td>
           <td class="paramname"><em>psv_elec_t</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv), intent(inout), optional&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv_elec), intent(inout), optional&#160;</td>
           <td class="paramname"><em>psv_elec_s</em>&#160;</td>
         </tr>
         <tr>

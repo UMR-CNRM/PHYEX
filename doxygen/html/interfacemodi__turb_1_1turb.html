@@ -423,13 +423,13 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt,kgradientsleo), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,turbn%lleonard),merge(d%nkt,0,turbn%lleonard),                 merge(kgradientsleo,0,turbn%lleonard)), intent(in)&#160;</td>
           <td class="paramname"><em>phgradleo</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt,kgradientsgog), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,turbn%lgoger),merge(d%nkt,0,turbn%lgoger),                     merge(kgradientsgog,0,turbn%lgoger)), intent(in)&#160;</td>
           <td class="paramname"><em>phgradgog</em>, </td>
         </tr>
         <tr>

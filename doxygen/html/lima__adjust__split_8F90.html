@@ -313,13 +313,13 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv_lima), intent(in)&#160;</td>
           <td class="paramname"><em>psvt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt, d%nkt, tnsv%nsv_lima), intent(inout)&#160;</td>
           <td class="paramname"><em>psvs</em>, </td>
         </tr>
         <tr>
@@ -337,13 +337,13 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt, d%nkt, 10), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,oorilam),                 merge(d%nkt,0,oorilam),                 merge(ksoa,0,oorilam)), intent(in)&#160;</td>
           <td class="paramname"><em>psolorg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt, d%nkt, ksp+kcarb+ksoa), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(merge(d%nijt         ,0,oorilam),                 merge(d%nkt          ,0,oorilam),                 merge(ksp+kcarb+ksoa ,0,oorilam)), intent(in)&#160;</td>
           <td class="paramname"><em>pmi</em>, </td>
         </tr>
         <tr>
