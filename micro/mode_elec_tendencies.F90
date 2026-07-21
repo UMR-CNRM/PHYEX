@@ -10,6 +10,7 @@ CONTAINS
 !
 !     #########################################################################################
       SUBROUTINE ELEC_TENDENCIES (D, CST, ICED, ICEP, ELECD, ELECP,                           &
+                                  LIMAP, LIMAC, LIMAM,                                        &
                                   KRR, KMICRO, PTSTEP, ODMICRO,                               &
                                   BUCONF, TBUDGETS, KBUDGETS,                                 &
                                   HCLOUD, PTHVREFZIKB,                                        &
@@ -93,26 +94,9 @@ USE MODD_ELEC_PARAM, ONLY: ELEC_PARAM_T, NIND_LWC, NIND_TEMP, XAIGAMMABI, XAUX_L
                            XSKN, XSKN_TAK, XSKP, XSKP_TAK, XSMN, XSMP, XSNN, XSNP, XTAKA_TM, &
                            XVGCOEF, XVSCOEF      
 USE MODD_ELEC_n, ONLY: XEFIELDW, XEW, XIND_RATE, XNI_IAGGS, XNI_IDRYG, XNI_SDRYG
-USE MODD_PARAM_LIMA,       ONLY: XALPHAI_L=>XALPHAI, XNUI_L=>XNUI,   &
-                                 XCEXVT_L=>XCEXVT, XRTMIN_L=>XRTMIN, &
-                                 LCIBU, LRDSF,                       &
-                                 NMOM_C, NMOM_R, NMOM_S, NMOM_G, NMOM_H
-USE MODD_PARAM_LIMA_COLD,  ONLY: XAI_L=>XAI, XBI_L=>XBI,   &
-                                 XDS_L=>XDS, XCXS_L=>XCXS, &
-                                 XCOLEXIS_L=>XCOLEXIS
-USE MODD_PARAM_LIMA_MIXED, ONLY: XDG_L=>XDG, XCXG_L=>XCXG,                           &
-                                 XCOLIG_L=>XCOLIG, XCOLEXIG_L=>XCOLEXIG,             &
-                                 XCOLSG_L=>XCOLSG, XCOLEXSG_L=>XCOLEXSG,             &
-                                 NGAMINC_L=>NGAMINC,                                 &
-                                 NACCLBDAR_L=>NACCLBDAR, NACCLBDAS_L=>NACCLBDAS,     &
-                                 XACCINTP1S_L=>XACCINTP1S, XACCINTP2S_L=>XACCINTP2S, &
-                                 XACCINTP1R_L=>XACCINTP1R, XACCINTP2R_L=>XACCINTP2R, &
-                                 NDRYLBDAR_L=>NDRYLBDAR, NDRYLBDAS_L=>NDRYLBDAS,     &
-                                 NDRYLBDAG_L=>NDRYLBDAG,                             &
-                                 XDRYINTP1R_L=>XDRYINTP1R, XDRYINTP2R_L=>XDRYINTP2R, &
-                                 XDRYINTP1S_L=>XDRYINTP1S, XDRYINTP2S_L=>XDRYINTP2S, &
-                                 XDRYINTP1G_L=>XDRYINTP1G, XDRYINTP2G_L=>XDRYINTP2G, &
-                                 XRIMINTP1_L=>XRIMINTP1,   XRIMINTP2_L=>XRIMINTP2
+USE MODD_PARAM_LIMA_MIXED,ONLY:PARAM_LIMA_MIXED_T
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
+USE MODD_PARAM_LIMA,      ONLY:PARAM_LIMA_T
 !
 !#ifdef MNH_PGI
 !USE MODE_PACK_PGI
@@ -135,6 +119,9 @@ TYPE(RAIN_ICE_DESCR_t),                INTENT(IN)     :: ICED
 TYPE(RAIN_ICE_PARAM_t),                INTENT(IN)     :: ICEP
 TYPE(ELEC_PARAM_t),                    INTENT(IN)     :: ELECP   ! electrical parameters
 TYPE(ELEC_DESCR_t),                    INTENT(IN)     :: ELECD   ! electrical descriptive csts
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
 TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS),INTENT(INOUT)  :: TBUDGETS
 INTEGER,                               INTENT(IN)     :: KBUDGETS
 !
@@ -385,7 +372,24 @@ ASSOCIATE(XCEXVT_I=>ICED%XCEXVT, XRTMIN_I=>ICED%XRTMIN,                       &
                                 XDRYINTP1R_I=>ICEP%XDRYINTP1R, XDRYINTP2R_I=>ICEP%XDRYINTP2R, &
                                 XDRYINTP1S_I=>ICEP%XDRYINTP1S, XDRYINTP2S_I=>ICEP%XDRYINTP2S, &
                                 XDRYINTP1G_I=>ICEP%XDRYINTP1G, XDRYINTP2G_I=>ICEP%XDRYINTP2G, &
-                                XRIMINTP1_I=>ICEP%XRIMINTP1,   XRIMINTP2_I=>ICEP%XRIMINTP2    )
+                                XRIMINTP1_I=>ICEP%XRIMINTP1,   XRIMINTP2_I=>ICEP%XRIMINTP2,   &
+                                XCEXVT_L=>LIMAP%XCEXVT, XRTMIN_L=>LIMAP%XRTMIN,                       &
+                                XALPHAI_L=>LIMAP%XALPHAI, XNUI_L=>LIMAP%XNUI, XAI_L=>LIMAC%XAI, XBI_L=>LIMAC%XBI, &
+                                XDS_L=>LIMAC%XDS, XDG_L=>LIMAM%XDG,                             &
+                                XCXS_L=>LIMAC%XCXS, XCXG_L=>LIMAM%XCXG,                         &
+                                XCOLIS_L=>LIMAC%XCOLIS, XCOLEXIS_L=>LIMAC%XCOLEXIS,             &
+                                XCOLIG_L=>LIMAM%XCOLIG, XCOLEXIG_L=>LIMAM%XCOLEXIG,             &
+                                XCOLSG_L=>LIMAM%XCOLSG, XCOLEXSG_L=>LIMAM%XCOLEXSG,             &
+                                NGAMINC_L=>LIMAM%NGAMINC,                                 &                                
+                                NACCLBDAR_L=>LIMAM%NACCLBDAR, NACCLBDAS_L=>LIMAM%NACCLBDAS,     &
+                                XACCINTP1S_L=>LIMAM%XACCINTP1S, XACCINTP2S_L=>LIMAM%XACCINTP2S, &
+                                XACCINTP1R_L=>LIMAM%XACCINTP1R, XACCINTP2R_L=>LIMAM%XACCINTP2R, &
+                                NDRYLBDAR_L=>LIMAM%NDRYLBDAR, NDRYLBDAS_L=>LIMAM%NDRYLBDAS,     &
+                                NDRYLBDAG_L=>LIMAM%NDRYLBDAG,                             &
+                                XDRYINTP1R_L=>LIMAM%XDRYINTP1R, XDRYINTP2R_L=>LIMAM%XDRYINTP2R, &
+                                XDRYINTP1S_L=>LIMAM%XDRYINTP1S, XDRYINTP2S_L=>LIMAM%XDRYINTP2S, &
+                                XDRYINTP1G_L=>LIMAM%XDRYINTP1G, XDRYINTP2G_L=>LIMAM%XDRYINTP2G, &
+                                XRIMINTP1_L=>LIMAM%XRIMINTP1,   XRIMINTP2_L=>LIMAM%XRIMINTP2    )
 !
 !*      1.    INITIALIZATIONS
 !             ---------------
@@ -416,12 +420,12 @@ IF (HCLOUD(1:3) == 'ICE') THEN
   END IF
 ELSE IF (HCLOUD == 'LIMA') THEN
   ZCEXVT = XCEXVT_L
-  IMOM_C = NMOM_C
-  IMOM_R = NMOM_R
+  IMOM_C = LIMAP%NMOM_C
+  IMOM_R = LIMAP%NMOM_R
   IMOM_I = 2 ! Ni is diagnostic and always available
-  IMOM_S = NMOM_S
-  IMOM_G = NMOM_G
-  IMOM_H = NMOM_H
+  IMOM_S = LIMAP%NMOM_S
+  IMOM_G = LIMAP%NMOM_G
+  IMOM_H = LIMAP%NMOM_H
 END IF
 !
 ZRHO00 = CST%XP00 / (CST%XRD * PTHVREFZIKB)
@@ -706,7 +710,7 @@ IF (KMICRO >= 0) THEN
     ZCXS = XCXS_L
     ZCXG = XCXG_L
     !
-    ZCOLIS   = 0.25  ! variable not defined in LIMA, the value of ICEx is used 
+    ZCOLIS   = XCOLIS_L
     ZCOLEXIS = XCOLEXIS_L
     ZCOLIG   = XCOLIG_L
     ZCOLEXIG = XCOLEXIG_L
@@ -1922,14 +1926,14 @@ IF (KMICRO >= 0) THEN
 !
 !*      6.1   collisional ice breakup (cibu)
 !
-  IF (HCLOUD == 'LIMA' .AND. LCIBU) &
+  IF (HCLOUD == 'LIMA' .AND. LIMAP%LCIBU) &
     CALL COMPUTE_CHARGE_TRANSFER (ZRICIBU, ZRST, ZQST, PTSTEP,           &
                                   XRTMIN_ELEC(5), XQTMIN(5), XCOEF_RQ_S, &
                                   ZWQ, ZQSS, ZQIS)
 !
 !*      6.2   raindrop shattering freezing (rdsf)
 !
-  IF (HCLOUD == 'LIMA' .AND. LRDSF) &
+  IF (HCLOUD == 'LIMA' .AND. LIMAP%LRDSF) &
     CALL COMPUTE_CHARGE_TRANSFER (ZRIRDSF, ZRRT, ZQRT, PTSTEP,           &
                                   XRTMIN_ELEC(3), XQTMIN(3), XCOEF_RQ_R, &
                                   ZWQ, ZQRS, ZQIS)
@@ -2123,7 +2127,7 @@ IF (KMICRO >= 0) THEN
     ZWQ1(:) = 0.
     WHERE (ZRCCORR2(:) .NE. 0. .AND. ZRCT(:) .GT. XRTMIN_ELEC(2))
       ZWQ1(:) = XCOEF_RQ_C * ZQCT(:) * ZRCCORR2(:) / ZRCT(:)
-      ZWQ(:) = SIGN( MIN( ABS(ZQCT(:)/PTSTEP),ABS(ZWQ1(:)) ),ZQCS(:) )
+      ZWQ1(:) = SIGN( MIN( ABS(ZQCT(:)/PTSTEP),ABS(ZWQ1(:)) ),ZQCS(:) )
       !
       ZQCS(:)  = ZQCS(:)  - ZWQ1(:)
       ZQPIS(:) = ZQPIS(:) + MAX( 0.0,ZWQ1(:)/ELECD%XECHARGE )

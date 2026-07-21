@@ -88,7 +88,7 @@ REAL, DIMENSION(SIZE(PTHT)) ::  &
      ZMASK,    &
      ZCIT
 !
-INTEGER :: IMOD_IFN, ISH
+INTEGER :: ISH
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
@@ -138,10 +138,6 @@ IF (LIMAP%LCRYSTAL_SHAPE) THEN
     END WHERE
   END DO
 END IF
-
-DO IMOD_IFN = 1,LIMAP%NMOD_IFN
-   PB_IFNN(:,IMOD_IFN) = PB_IFNN(:,IMOD_IFN) - PINT(:,IMOD_IFN)* ZMASK(:)
-ENDDO
 !
 !
 !-------------------------------------------------------------------------------

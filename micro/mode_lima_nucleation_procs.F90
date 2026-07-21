@@ -73,9 +73,10 @@ TYPE(NEB_T),              INTENT(IN)    :: NEBN
 TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
 TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS 
+INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
+LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 !
 REAL,                     INTENT(IN)    :: PTSTEP     ! Double Time step 
-!TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODJ     ! Reference density
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF   ! Reference density
@@ -85,11 +86,13 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PT         ! Temperature
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDTHRAD    ! Radiative temperature tendency
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
 REAL, DIMENSION(D%NIJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO  ! Aerosol concentration
-REAL, DIMENSION(D%NIJT, D%NKT, 10), INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
-REAL, DIMENSION(D%NIJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
+REAL, DIMENSION(MERGE(D%NIJT,0,OORILAM), &
+                MERGE(D%NKT ,0,OORILAM), &
+                MERGE(KSOA,0,OORILAM)),   INTENT(IN) :: PSOLORG   ! [%] solubility fraction of soa
+REAL, DIMENSION(MERGE(D%NIJT         ,0,OORILAM), &
+                MERGE(D%NKT          ,0,OORILAM), &
+                MERGE(KSP+KCARB+KSOA ,0,OORILAM)), INTENT(IN) :: PMI
 CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
-INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
-LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHT       ! Theta at t 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRVT       ! Water vapor m.r. at t 

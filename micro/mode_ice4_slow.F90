@@ -167,16 +167,16 @@ DO JL=1, KSIZE
     IF(.NOT. LDSOFT) THEN
       IF(.NOT. ICEP%LNEWCOEFF) THEN
         PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
-                           * PRIT(JL)                      &
-                           * PLBDAS(JL)**ICEP%XEXIAGGS          &
-                           * PRHODREF(JL)**(-ICED%XCEXVT)
+                      * PRIT(JL)                      &
+                      * PLBDAS(JL)**ICEP%XEXIAGGS          &
+                      * PRHODREF(JL)**(-ICED%XCEXVT)
       ELSE
         PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
-                           * PRIT(JL)                      &
-                           * PRST(JL) * (1+(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**&
-                           (-ICED%XNUS+ICEP%XEXIAGGS/ICED%XALPHAS) &
-                           * PRHODREF(JL)**(-ICED%XCEXVT+1.) &
-                           * ((PLBDAS(JL))**(ICED%XBS+ICEP%XEXIAGGS))
+                      * PRIT(JL)                      &
+                      * PRST(JL) &
+                      * (1.+(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEXIAGGS/ICED%XALPHAS) &
+                      * PRHODREF(JL)**(-ICED%XCEXVT+1.) &
+                      * ((PLBDAS(JL))**(ICED%XBS+ICEP%XEXIAGGS))
       ENDIF
       IF (OELEC) PRIAGGS(JL) = PRIAGGS(JL) * PLATHAM_IAGGS(JL)
     ENDIF

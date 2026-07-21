@@ -39,7 +39,12 @@ CONTAINS
     USE MODE_SHUMAN_PHY, ONLY: MXF_PHY,MYF_PHY
     USE MODE_ETHETA,     ONLY: ETHETA
     USE MODE_EMOIST,     ONLY: EMOIST
-
+    ! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
+#ifdef MNH_COMPILER_CCE
+    !$mnh_undef(LOOP)
+    !$mnh_undef(OPENACC)
+#endif
+    !
     IMPLICIT NONE
     !
     !*       0.1   Declarations of dummy arguments
@@ -222,7 +227,11 @@ END DO
     !  mixing length limited by the distance normal to the surface (with the same factor as for BL89)
     !
     IF (.NOT. TURBN%LRMC01) THEN
-      ZALPHA = 0.5**(-1.5)
+      IF (TURBN%LLEMARIE21) THEN
+        ZALPHA = 0.5**(-6./7.)
+      ELSE
+        ZALPHA = 0.5**(-1.5)
+      END IF
       !
 
       DO JIJ=IIJB,IIJE

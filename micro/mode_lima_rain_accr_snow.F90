@@ -171,23 +171,25 @@ ZVEC3(:) = 0.
 !        ---------------------
 !
 ! but what happens to collected liquid water and snow when this limit is reached ?
-DO II=1, KSIZE
-   IF ( PRST(II)/PPF1D(II)>LIMAP%XRTMIN(5) .AND. PCST(II)/PPF1D(II)>LIMAP%XCTMIN(5) .AND. ODCOMPUTE(II) ) THEN
-      ZZW1(II) = PRVT(II)*PPRES(II)/(CST%XEPSILO+PRVT(II)) ! Vapor pressure ev
-!      ZZW1(II) = MIN(ZZW1(II), EXP(CST%XALPI-CST%XBETAI/PT(II)-CST%XGAMI*LOG(PT(II)))) ! min(ev, es_i(T))
-      ZZW1(II) = PKA(II)*(CST%XTT-PT(II)) +                              &
-           (PDV(II)*(CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(II)-CST%XTT)) &
-           *(CST%XESTT-ZZW1(II))/(CST%XRV*PT(II))           )
-      ZZW1(II) = ZZW1(II) * PCST(II)/PPF1D(II) *(LIMAC%X0DEPS * PLBDS(II)**LIMAC%XEX0DEPS + &
-                                       LIMAC%X1DEPS*PCJ(II)*PLBDS(II)**(LIMAC%XEX1DEPS )* &
-           (1+0.5*(LIMAC%XFVELOS/PLBDS(II))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEX1DEPS/LIMAP%XALPHAS))/ &
-           ((CST%XLMTT-CST%XCL*(CST%XTT-PT(II))))
-      ZZW2(II) =(PRHODREF(II)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-PT(II)))   ) / &
-           &(PRHODREF(II)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(II))))
-      ! PRIAGGS has an opposite sign in ICE3 and LIMA
-      ZFREEZ_RATE(II)=MAX(0., MAX(0., ZZW1(II) - ZZW2(II) * PRIAGGS(II)) + PRIAGGS(II))
-   END IF
-ENDDO
+IF (LIMAP%LFREEZ_RATE) THEN
+   DO II=1, KSIZE
+      IF ( PRST(II)/PPF1D(II)>LIMAP%XRTMIN(5) .AND. PCST(II)/PPF1D(II)>LIMAP%XCTMIN(5) .AND. ODCOMPUTE(II) ) THEN
+         ZZW1(II) = PRVT(II)*PPRES(II)/(CST%XEPSILO+PRVT(II)) ! Vapor pressure ev
+         !      ZZW1(II) = MIN(ZZW1(II), EXP(CST%XALPI-CST%XBETAI/PT(II)-CST%XGAMI*LOG(PT(II)))) ! min(ev, es_i(T))
+         ZZW1(II) = PKA(II)*(CST%XTT-PT(II)) +                              &
+              (PDV(II)*(CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(II)-CST%XTT)) &
+              *(CST%XESTT-ZZW1(II))/(CST%XRV*PT(II))           )
+         ZZW1(II) = ZZW1(II) * PCST(II)/PPF1D(II) *(LIMAC%X0DEPS * PLBDS(II)**LIMAC%XEX0DEPS + &
+              LIMAC%X1DEPS*PCJ(II)*PLBDS(II)**(LIMAC%XEX1DEPS )* &
+              (1+0.5*(LIMAC%XFVELOS/PLBDS(II))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEX1DEPS/LIMAP%XALPHAS))/ &
+              ((CST%XLMTT-CST%XCL*(CST%XTT-PT(II))))
+         ZZW2(II) =(PRHODREF(II)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-PT(II)))   ) / &
+              &(PRHODREF(II)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(II))))
+         ! PRIAGGS has an opposite sign in ICE3 and LIMA
+         ZFREEZ_RATE(II)=MAX(0., MAX(0., ZZW1(II) - ZZW2(II) * PRIAGGS(II)) + PRIAGGS(II))
+      END IF
+   ENDDO
+END IF
 ZZW1(:) = 0.
 ZZW2(:) = 0.  
 !
@@ -485,7 +487,7 @@ IF (LIMAP%LICE3) THEN
    ZZW1(:) = MIN(1., ZFREEZ_RATE(:) / MAX(1.E-20, P_RR_ACCSG(:) ) )
    P_RR_ACCSG(:) = ZZW1(:) * P_RR_ACCSG(:)
    P_RS_ACCRG(:) = ZZW1(:) * P_RS_ACCRG(:)
-ELSE
+ELSE IF (LIMAP%LFREEZ_RATE) THEN
    ZZW1(:) = MIN(1., ZFREEZ_RATE(:) / MAX(1.E-20, P_RR_ACCSG(:)+P_RR_ACCSS(:)-P_RC_RIMSS(:)-P_RC_RIMSG(:) ) )
    P_RC_RIMSS(:) = ZZW1(:) * P_RC_RIMSS(:)
    P_RC_RIMSG(:) = ZZW1(:) * P_RC_RIMSG(:)

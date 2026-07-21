@@ -71,6 +71,7 @@ LOGICAL :: LCIBU                  ! TRUE to use collisional ice breakup
 LOGICAL :: LRDSF                  ! TRUE to use rain drop shattering by freezing
 LOGICAL :: LCRYSTAL_SHAPE         ! TRUE to use several shapes for ice crystals
 LOGICAL :: LICE_ISC               ! TRUE to add ice crystals self collection process
+LOGICAL :: LFREEZ_RATE            ! TRUE to limit riming efficiency (heat budget on icy hydrometeors)
 !
 INTEGER :: NMOM_I                 ! Number of moments for pristine ice
 INTEGER :: NMOM_S                 ! Number of moments for snow
@@ -296,7 +297,8 @@ LOGICAL, POINTER :: LLIMA_DIAG => NULL(), &
                     LAERO_MASS => NULL(),&
                     LCRIAUTI => NULL(), &
                     LSIGMOIDE_G => NULL(),&
-                    LSIGMOIDE_NG => NULL()
+                    LSIGMOIDE_NG => NULL(),&
+                    LFREEZ_RATE => NULL()
 
 INTEGER, POINTER :: NMAXITER => NULL(), &
                     NMOM_I => NULL(), &
@@ -429,7 +431,8 @@ NAMELIST/NAM_PARAM_LIMA/LICE3, LNUCL, LSEDI, LHHONI, LMEYERS,              &
                         LSIGMOIDE_NG, LSIGMOIDE_G, XSIGMOIDE_G, XMVDMIN_G, &
                         LINITORILAM, LINTERP_CAMS,                         &
                         XCRIAUTC, XCRIAUTI, XACRIAUTI, XBCRIAUTI, LCRIAUTI, XT0CRIAUTI,&
-                        CSUBG_PR_PDF, CSUBG_AUCV_RC, CSUBG_AUCV_RI
+                        CSUBG_PR_PDF, CSUBG_AUCV_RC, CSUBG_AUCV_RI, &
+                        LFREEZ_RATE
 
 CONTAINS
 SUBROUTINE PARAM_LIMA_ASSOCIATE()
@@ -471,6 +474,7 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   LSIGMOIDE_G        => PARAM_LIMA%LSIGMOIDE_G
   LSIGMOIDE_NG       => PARAM_LIMA%LSIGMOIDE_NG
   LCRIAUTI           => PARAM_LIMA%LCRIAUTI
+  LFREEZ_RATE        => PARAM_LIMA%LFREEZ_RATE
 
   NMAXITER           => PARAM_LIMA%NMAXITER
   NMOM_I             => PARAM_LIMA%NMOM_I
@@ -830,6 +834,7 @@ IF(GLDEFAULTVAL) THEN
   CSUBG_PR_PDF='SIGM'
   CSUBG_AUCV_RC='NONE'
   CSUBG_AUCV_RI='NONE'
+  LFREEZ_RATE=.TRUE.
 ENDIF
 !
 !*      2. NAMELIST
@@ -851,6 +856,7 @@ IF(GLREADNAM) THEN
      LKESSLERAC=.TRUE.
      XALPHAR=1.
      XNUR=1.
+     LFREEZ_RATE=.TRUE.
   END IF
 ENDIF
 !
