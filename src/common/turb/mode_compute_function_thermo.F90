@@ -32,7 +32,12 @@ SUBROUTINE COMPUTE_FUNCTION_THERMO (D, CST, PALP, PBETA, PGAM, PLTT, PC, PT, PEX
     USE YOMHOOK, ONLY: LHOOK, DR_HOOK, JPHOOK
     USE MODD_CST, ONLY: CST_t
     USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-
+    ! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
+#ifdef MNH_COMPILER_CCE
+    !$mnh_undef(LOOP)
+    !$mnh_undef(OPENACC)
+#endif
+    !    
     IMPLICIT NONE
     !
     !*       0.1   Declarations of dummy arguments
@@ -66,7 +71,7 @@ SUBROUTINE COMPUTE_FUNCTION_THERMO (D, CST, PALP, PBETA, PGAM, PLTT, PC, PT, PEX
     !*       1.1 Lv/Cph at  t
     !
     ! present(ZRVSAT,ZDRVSATDT) ! present(PLOCPEXN) ! present(ZDRVSATDT)
-!$acc kernels present_cr( PLOCPEXN )
+!$acc kernels present_crm( PLOCPEXN )
 !$mnh_expand_array( JIJ=IIJB:IIJE,JK=1:IKT )
     PLOCPEXN(IIJB:IIJE, 1:IKT) = (PLTT + (CST%XCPV - PC)*(PT(IIJB:IIJE, 1:IKT) - CST%XTT)) / PCP(IIJB:IIJE, 1:IKT)
 !$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )

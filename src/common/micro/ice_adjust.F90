@@ -125,6 +125,12 @@ USE MODD_BUDGET,     ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_R
 USE MODD_RAIN_ICE_PARAM_n, ONLY : RAIN_ICE_PARAM_t
 !
 !
+! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+!$mnh_undef(OPENACC)
+#endif
+!    
 IMPLICIT NONE
 !
 !
@@ -293,7 +299,7 @@ ENDDO         ! end of the iterative loop
 LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
 LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
 !$acc kernels
-!$acc loop independent collapse(2)
+!$mnh_do_concurrent(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
 DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
     ZRC(JIJ,JK)=ZRC(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
@@ -308,8 +314,9 @@ DO JK=IKTB,IKTE
       PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
       PHLI_HCF(JIJ,JK)=PHLI_HCF(JIJ,JK)*(1.-PWEIGHT_MF_CLOUD(JIJ,JK))
     ENDIF
-  ENDDO
-ENDDO
+  END DO
+END DO
+!$mnh_end_do()
 !$acc end kernels
 !
 !$acc kernels
@@ -354,7 +361,7 @@ ENDDO
   !
 IF ( .NOT. NEBN%LSUBG_COND ) THEN
   !$acc kernels
-  !$acc loop independent collapse(2)
+  !$mnh_do_concurrent(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
   DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       IF (PRCS(JIJ,JK) + PRIS(JIJ,JK) > 1.E-12 / PTSTEP) THEN
@@ -363,18 +370,19 @@ IF ( .NOT. NEBN%LSUBG_COND ) THEN
         PCLDFR(JIJ,JK)  = 0.
       ENDIF
       ZSRCS(JIJ,JK) = PCLDFR(JIJ,JK)
-    ENDDO
-  ENDDO
+    END DO
+  END DO
+  !$mnh_end_do()
   !$acc end kernels
 ELSE !NEBN%LSUBG_COND case
-  !$acc kernels
     ! Tests on characters strings can break the vectorization, or at least they would
     ! slow down considerably the performance of a vector loop. One should use tests on
     ! reals, integers or booleans only. REK.
     LLNONE=PARAMI%CSUBG_MF_PDF=='NONE'
     LLTRIANGLE=PARAMI%CSUBG_MF_PDF=='TRIANGLE'
     LLBIGA=PARAMI%CSUBG_MF_PDF=='BIGA'
-  !$acc loop independent collapse(2)
+  !$acc kernels
+  !$mnh_do_concurrent(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
   DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       !We limit PRC_MF+PRI_MF to PRVS*PTSTEP to avoid negative humidity
@@ -466,7 +474,8 @@ ELSE !NEBN%LSUBG_COND case
                     (ZW1 * ZLV(JIJ,JK) + ZW2 * ZLS(JIJ,JK)) / ZCPH(JIJ,JK)
       ENDIF
     END DO
-  ENDDO
+  END DO
+!$mnh_end_do()
 !$acc end kernels
 ENDIF !NEBN%LSUBG_COND
 !

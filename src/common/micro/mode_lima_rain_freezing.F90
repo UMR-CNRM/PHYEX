@@ -101,20 +101,25 @@ WHERE( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRRT(:)>LIMAP%XRTMIN(3) .AND. PT(:)<CST%XTT
                                      * PLBDR(:)**LIMAM%XEXRCFRI         &
                                      * PRHODREF(:)**(-LIMAP%XCEXVT+1.0)
 !
-! Comparison between heat to be released (to freeze rain) and heat sink (rain and ice temperature change)
-! ZW0 is the proportion of process that can take place
+END WHERE
+
+IF (LIMAP%LFREEZ_RATE) THEN
+   ! Comparison between heat to be released (to freeze rain) and heat sink (rain and ice temperature change)
+   ! ZW0 is the proportion of process that can take place
    ZW0(:) = MAX(0., MIN(1., (ZW1(:)*CST%XCI+ZW2(:)*CST%XCL)*(CST%XTT-PT(:)) / &
         MAX(1.E-20, CST%XLVTT*ZW2(:))))
    ZW2(:) = ZW0(:) * ZW2(:)       ! Part of rain that can be frozen
    ZW3(:) = (1.- ZW0(:)) * ZW1(:) ! Part of collected pristine ice converted to rain
    ZW1(:) = ZW0(:) * ZW1(:)       ! Part of collected pristine ice that leads to graupel
-!   
+END IF
+   
+WHERE( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRRT(:)>LIMAP%XRTMIN(3) .AND. PT(:)<CST%XTT .AND. &
+       PCIT(:)>LIMAP%XCTMIN(4) .AND. PCRT(:)>LIMAP%XCTMIN(3) .AND. ODCOMPUTE(:) )
    P_RR_CFRZ(:) = - ZW2(:) + ZW3(:)
    P_CR_CFRZ(:) =   P_RR_CFRZ(:) * (PCRT(:)/PRRT(:))
    P_RI_CFRZ(:) = - ZW1(:) - ZW3(:)
    P_CI_CFRZ(:) =   P_RI_CFRZ(:) * (PCIT(:)/PRIT(:))
    P_TH_CFRZ(:) = - P_RR_CFRZ(:) * (PLSFACT(:)-PLVFACT(:))
-!
 END WHERE
 !
 !-------------------------------------------------------------------------------

@@ -5,6 +5,7 @@
 IMPLICIT NONE
 INTERFACE
        SUBROUTINE RAIN_ICE_PART3 ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
+                                   LIMAP, LIMAC, LIMAM,                                  &
                                    OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
                                    PTSTEP, KRR,                                    &
                                    PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, &
@@ -29,6 +30,9 @@ USE MODD_ELEC_DESCR,     ONLY: ELEC_DESCR_t
 USE MODD_ELEC_PARAM,     ONLY: ELEC_PARAM_t
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_FIELDS_ADDRESS, ONLY: IBUNUM, IBUNUM_EXTRA
+USE MODD_PARAM_LIMA_MIXED,ONLY:PARAM_LIMA_MIXED_T
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
+USE MODD_PARAM_LIMA,      ONLY:PARAM_LIMA_T
 !
 IMPLICIT NONE
 !
@@ -40,6 +44,9 @@ TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(ELEC_PARAM_t),       INTENT(IN)    :: ELECP
 TYPE(ELEC_DESCR_t),       INTENT(IN)    :: ELECD
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(PARAM_LIMA_T),       INTENT(IN)    :: LIMAP
+TYPE(PARAM_LIMA_COLD_T),  INTENT(IN)    :: LIMAC
+TYPE(PARAM_LIMA_MIXED_T), INTENT(IN)    :: LIMAM
 LOGICAL,                  INTENT(IN)    :: OELEC
 LOGICAL,                  INTENT(IN)    :: OSEDIM_BEARD
 REAL,                     INTENT(IN)    :: PTHVREFZIKB
