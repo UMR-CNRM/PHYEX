@@ -171,16 +171,16 @@ DO JIJ=D%NIJB, D%NIJE
     IF(.NOT. LDSOFT) THEN
       IF(.NOT. ICEP%LNEWCOEFF) THEN
         PRIAGGS(JIJ) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JIJ)-CST%XTT) ) &
-                           * PRIT(JIJ)                      &
-                           * PLBDAS(JIJ)**ICEP%XEXIAGGS          &
-                           * PRHODREF(JIJ)**(-ICED%XCEXVT)
+                      * PRIT(JIJ)                      &
+                      * PLBDAS(JIJ)**ICEP%XEXIAGGS          &
+                      * PRHODREF(JIJ)**(-ICED%XCEXVT)
       ELSE
         PRIAGGS(JIJ) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JIJ)-CST%XTT) ) &
-                           * PRIT(JIJ)                      &
-                           * PRST(JIJ) * (1+(ICED%XFVELOS/PLBDAS(JIJ))**ICED%XALPHAS)**&
-                           (-ICED%XNUS+ICEP%XEXIAGGS/ICED%XALPHAS) &
-                           * PRHODREF(JIJ)**(-ICED%XCEXVT+1.) &
-                           * ((PLBDAS(JIJ))**(ICED%XBS+ICEP%XEXIAGGS))
+                      * PRIT(JIJ)                      &
+                      * PRST(JIJ) &
+                      * (1.+(ICED%XFVELOS/PLBDAS(JIJ))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEXIAGGS/ICED%XALPHAS) &
+                      * PRHODREF(JIJ)**(-ICED%XCEXVT+1.) &
+                      * ((PLBDAS(JIJ))**(ICED%XBS+ICEP%XEXIAGGS))
       ENDIF
       IF (OELEC) PRIAGGS(JIJ) = PRIAGGS(JIJ) * PLATHAM_IAGGS(JIJ)
     ENDIF

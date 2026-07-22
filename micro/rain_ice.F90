@@ -5,6 +5,7 @@
 !-----------------------------------------------------------------
 !     ######spl
        SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
+                             LIMAP, LIMAC, LIMAM, &
                              OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
                              PTSTEP, KRR, PEXN,                                    &
                              PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
@@ -170,6 +171,10 @@ USE MODI_RAIN_ICE_PART1, ONLY: RAIN_ICE_PART1
 USE MODI_ICE4_PACK     , ONLY: ICE4_PACK
 USE MODI_RAIN_ICE_PART3, ONLY: RAIN_ICE_PART3
 !
+USE MODD_PARAM_LIMA_MIXED,ONLY:PARAM_LIMA_MIXED_T
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
+USE MODD_PARAM_LIMA,      ONLY:PARAM_LIMA_T
+!
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
@@ -184,6 +189,9 @@ TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(ELEC_PARAM_t),       INTENT(IN)    :: ELECP   ! electrical parameters
 TYPE(ELEC_DESCR_t),       INTENT(IN)    :: ELECD   ! electrical descriptive csts
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
 LOGICAL,                  INTENT(IN)    :: OELEC  ! Switch for cloud electricity
 LOGICAL,                  INTENT(IN)    :: OSEDIM_BEARD  ! Switch for effect of electrical forces on sedim.
 REAL,                     INTENT(IN)    :: PTHVREFZIKB ! Reference thv at IKB for electricity
@@ -311,6 +319,7 @@ CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,               &
                ZBUDGETS, PLATHAM_IAGGS)
 !
 CALL RAIN_ICE_PART3 ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
+                      LIMAP, LIMAC, LIMAM,                                  &
                       OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
                       PTSTEP, KRR,                                    &
                       PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, &

@@ -160,7 +160,7 @@ END DO
 !
 ! interpolation in x direction
 !
-
+!$mnh_do_concurrent(JI=IIB:IIE,JJ=1:IJU)
 DO JJ=1,IJU
   DO JI=IIB,IIE
     ZCOEFF(JI,JJ) =                                                  &
@@ -179,10 +179,11 @@ DO JJ=1,IJU
                *(PW(JI+ILOC(JI,JJ),JJ,IKB+1)+ZWGROUND(JI+ILOC(JI,JJ),JJ)) * 0.5
   END DO
 END DO
+!$mnh_end_do()
 !
 ! interpolation in y direction
 !
-
+!$mnh_do_concurrent(JI=IIB:IIE,JJ=IJB:IJE)    
 DO JJ=IJB,IJE
   DO JI=IIB,IIE
     ZCOEFF(JI,JJ) =                                                     &
@@ -211,6 +212,7 @@ DO JJ=IJB,IJE
     !
   END DO
 END DO
+!$mnh_end_do()
 !
 
 !
