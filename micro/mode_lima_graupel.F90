@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2018-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2018-2026 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -284,6 +284,9 @@ WHERE( GDRY(:) )
                       *( LIMAM%XLBNSDRYG1/( PLBDG(:)**2                ) + &
                          LIMAM%XLBNSDRYG2/( PLBDG(:)    * PLBDS(:)     ) + &
                          LIMAM%XLBNSDRYG3/(               PLBDS(:)**2) )
+ELSEWHERE
+   IVEC1(:) = 0
+   IVEC2(:) = 0
 END WHERE
 !
 !*           1.c  Collection of rr in the dry mode
@@ -351,7 +354,9 @@ WHERE( GDRY(:) )
                        *( LIMAM%XLBNRDRYG1/( PLBDG(:)**2               ) + &
                           LIMAM%XLBNRDRYG2/( PLBDG(:)   * PLBDR(:)     ) + &
                           LIMAM%XLBNRDRYG3/(              PLBDR(:)**2) )
-   
+ELSEWHERE
+   IVEC1(:) = 0
+   IVEC2(:) = 0
 END WHERE
 !
 !            1.d Total collection in the dry mode
