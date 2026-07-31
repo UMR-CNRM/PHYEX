@@ -112,8 +112,6 @@ CONTAINS
 !!
 !!           JPVEXT     : number of vertical external points
 !!
-!!      Module MODD_CONF
-!!
 !!           HPROGRAM
 !!           
 !!

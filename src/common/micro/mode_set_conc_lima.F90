@@ -48,7 +48,6 @@ CONTAINS
 !!    ------------------
 !!      Module MODD_RAIN_C2R2_DESCR, ONLY : XRTMIN, XCTMIN
 !!      Module MODD_RAIN_C2R2_KHKO_PARAM, ONLY : XCONCC_INI, XCONCR_PARAM_INI
-!!      Module MODD_CONF,            ONLY : NVERB
 !!
 !!    REFERENCE
 !!    ---------

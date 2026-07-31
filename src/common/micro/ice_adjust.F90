@@ -62,8 +62,6 @@
 !!                            !  pressure  function 
 !!         XALPI,XBETAI,XGAMI ! Constants for saturation vapor over ice
 !!                            !  pressure  function 
-!!      Module  MODD_CONF 
-!!         CCONF
 !!      Module MODD_BUDGET:
 !!         NBUMOD 
 !!         CBUTYPE
