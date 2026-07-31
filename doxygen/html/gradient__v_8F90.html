@@ -86,16 +86,16 @@ $(function() {
 Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a5f4116949457439ef61104756f00593d" id="r_a5f4116949457439ef61104756f00593d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__v_8F90.html#a5f4116949457439ef61104756f00593d">gx_v_uv_device</a> (pa, pdxx, pdzz, pdzx, pgx_v_uv_device)</td></tr>
 <tr class="separator:a5f4116949457439ef61104756f00593d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6eb5c38c94abdeda511512895be14673" id="r_a6eb5c38c94abdeda511512895be14673"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__v_8F90.html#a6eb5c38c94abdeda511512895be14673">gx_v_uv</a> (pa, pdxx, pdzz, pdzx, kka, kku, kl)</td></tr>
-<tr class="separator:a6eb5c38c94abdeda511512895be14673"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a19ac6c76d88715e4438d2bddfb7e53fe" id="r_a19ac6c76d88715e4438d2bddfb7e53fe"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__v_8F90.html#a19ac6c76d88715e4438d2bddfb7e53fe">gy_v_m</a> (pa, pdyy, pdzz, pdzy, kka, kku, kl)</td></tr>
-<tr class="separator:a19ac6c76d88715e4438d2bddfb7e53fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac119a4d6f34f92c1596c767fae918ae6" id="r_ac119a4d6f34f92c1596c767fae918ae6"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__v_8F90.html#ac119a4d6f34f92c1596c767fae918ae6">gx_v_uv</a> (oflat, pa, pdxx, pdzz, pdzx, kka, kku, kl)</td></tr>
+<tr class="separator:ac119a4d6f34f92c1596c767fae918ae6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a027f043b8484f7d05139598d53c5cfe0" id="r_a027f043b8484f7d05139598d53c5cfe0"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__v_8F90.html#a027f043b8484f7d05139598d53c5cfe0">gy_v_m</a> (oflat, pa, pdyy, pdzz, pdzy, kka, kku, kl)</td></tr>
+<tr class="separator:a027f043b8484f7d05139598d53c5cfe0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a41ca3dd27096c3e43809344c68c38df0" id="r_a41ca3dd27096c3e43809344c68c38df0"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__v_8F90.html#a41ca3dd27096c3e43809344c68c38df0">gz_v_vw</a> (pa, pdzz, kka, kku, kl)</td></tr>
 <tr class="separator:a41ca3dd27096c3e43809344c68c38df0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a6eb5c38c94abdeda511512895be14673" name="a6eb5c38c94abdeda511512895be14673"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6eb5c38c94abdeda511512895be14673">&#9670;&#160;</a></span>gx_v_uv()</h2>
+<a id="ac119a4d6f34f92c1596c767fae918ae6" name="ac119a4d6f34f92c1596c767fae918ae6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac119a4d6f34f92c1596c767fae918ae6">&#9670;&#160;</a></span>gx_v_uv()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -103,6 +103,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">real function, dimension(size(pa,1),size(pa,2),size(pa,3)) gx_v_uv </td>
           <td>(</td>
+          <td class="paramtype">logical, intent(in)&#160;</td>
+          <td class="paramname"><em>oflat</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
           <td class="paramname"><em>pa</em>, </td>
         </tr>
@@ -202,8 +208,8 @@ Functions/Subroutines</h2></td></tr>
 
 </div>
 </div>
-<a id="a19ac6c76d88715e4438d2bddfb7e53fe" name="a19ac6c76d88715e4438d2bddfb7e53fe"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a19ac6c76d88715e4438d2bddfb7e53fe">&#9670;&#160;</a></span>gy_v_m()</h2>
+<a id="a027f043b8484f7d05139598d53c5cfe0" name="a027f043b8484f7d05139598d53c5cfe0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a027f043b8484f7d05139598d53c5cfe0">&#9670;&#160;</a></span>gy_v_m()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -211,6 +217,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">real function, dimension(size(pa,1),size(pa,2),size(pa,3)) gy_v_m </td>
           <td>(</td>
+          <td class="paramtype">logical, intent(in)&#160;</td>
+          <td class="paramname"><em>oflat</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
           <td class="paramname"><em>pa</em>, </td>
         </tr>
@@ -262,8 +274,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="gradient__v_8F90_a19ac6c76d88715e4438d2bddfb7e53fe_icgraph.png" border="0" usemap="#agradient__v_8F90_a19ac6c76d88715e4438d2bddfb7e53fe_icgraph" alt=""/></div>
-<map name="agradient__v_8F90_a19ac6c76d88715e4438d2bddfb7e53fe_icgraph" id="agradient__v_8F90_a19ac6c76d88715e4438d2bddfb7e53fe_icgraph">
+<div class="center"><img src="gradient__v_8F90_a027f043b8484f7d05139598d53c5cfe0_icgraph.png" border="0" usemap="#agradient__v_8F90_a027f043b8484f7d05139598d53c5cfe0_icgraph" alt=""/></div>
+<map name="agradient__v_8F90_a027f043b8484f7d05139598d53c5cfe0_icgraph" id="agradient__v_8F90_a027f043b8484f7d05139598d53c5cfe0_icgraph">
 <area shape="rect" title=" " alt="" coords="563,13,636,38"/>
 <area shape="rect" href="namespacemode__turb__ver__dyn__flux.html#a077a54e63ab22b827d3c526c990dd607" title=" " alt="" coords="332,5,515,45"/>
 <area shape="poly" title=" " alt="" coords="549,28,515,28,515,23,549,23"/>

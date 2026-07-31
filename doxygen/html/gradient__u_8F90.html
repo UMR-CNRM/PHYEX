@@ -84,18 +84,18 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:af35c7e159090a20c1947fc4eec1a57c0" id="r_af35c7e159090a20c1947fc4eec1a57c0"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__u_8F90.html#af35c7e159090a20c1947fc4eec1a57c0">gx_u_m</a> (pa, pdxx, pdzz, pdzx, kka, kku, kl)</td></tr>
-<tr class="separator:af35c7e159090a20c1947fc4eec1a57c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad46993699f88b3b25c6d38ab91190b6a" id="r_ad46993699f88b3b25c6d38ab91190b6a"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__u_8F90.html#ad46993699f88b3b25c6d38ab91190b6a">gy_u_uv</a> (pa, pdyy, pdzz, pdzy, kka, kku, kl)</td></tr>
-<tr class="separator:ad46993699f88b3b25c6d38ab91190b6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeeee793b59103aaa71abb1cac9d787bf" id="r_aeeee793b59103aaa71abb1cac9d787bf"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__u_8F90.html#aeeee793b59103aaa71abb1cac9d787bf">gx_u_m</a> (oflat, pa, pdxx, pdzz, pdzx, kka, kku, kl)</td></tr>
+<tr class="separator:aeeee793b59103aaa71abb1cac9d787bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac8ac8c9555b215e60042f079a83cc2be" id="r_ac8ac8c9555b215e60042f079a83cc2be"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__u_8F90.html#ac8ac8c9555b215e60042f079a83cc2be">gy_u_uv</a> (oflat, pa, pdyy, pdzz, pdzy, kka, kku, kl)</td></tr>
+<tr class="separator:ac8ac8c9555b215e60042f079a83cc2be"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aefc4b7fcb432c39c3b044b1e9ec385e0" id="r_aefc4b7fcb432c39c3b044b1e9ec385e0"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__u_8F90.html#aefc4b7fcb432c39c3b044b1e9ec385e0">gy_u_uv_device</a> (pa, pdyy, pdzz, pdzy, pgy_u_uv_device)</td></tr>
 <tr class="separator:aefc4b7fcb432c39c3b044b1e9ec385e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc308949033045e8380f5d3012419466" id="r_acc308949033045e8380f5d3012419466"><td class="memItemLeft" align="right" valign="top">real function, dimension(size(pa, 1), size(pa, 2), size(pa, 3))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gradient__u_8F90.html#acc308949033045e8380f5d3012419466">gz_u_uw</a> (pa, pdzz, kka, kku, kl)</td></tr>
 <tr class="separator:acc308949033045e8380f5d3012419466"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="af35c7e159090a20c1947fc4eec1a57c0" name="af35c7e159090a20c1947fc4eec1a57c0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af35c7e159090a20c1947fc4eec1a57c0">&#9670;&#160;</a></span>gx_u_m()</h2>
+<a id="aeeee793b59103aaa71abb1cac9d787bf" name="aeeee793b59103aaa71abb1cac9d787bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeeee793b59103aaa71abb1cac9d787bf">&#9670;&#160;</a></span>gx_u_m()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -103,6 +103,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">real function, dimension(size(pa,1),size(pa,2),size(pa,3)) gx_u_m </td>
           <td>(</td>
+          <td class="paramtype">logical, intent(in)&#160;</td>
+          <td class="paramname"><em>oflat</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
           <td class="paramname"><em>pa</em>, </td>
         </tr>
@@ -154,8 +160,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="gradient__u_8F90_af35c7e159090a20c1947fc4eec1a57c0_icgraph.png" border="0" usemap="#agradient__u_8F90_af35c7e159090a20c1947fc4eec1a57c0_icgraph" alt=""/></div>
-<map name="agradient__u_8F90_af35c7e159090a20c1947fc4eec1a57c0_icgraph" id="agradient__u_8F90_af35c7e159090a20c1947fc4eec1a57c0_icgraph">
+<div class="center"><img src="gradient__u_8F90_aeeee793b59103aaa71abb1cac9d787bf_icgraph.png" border="0" usemap="#agradient__u_8F90_aeeee793b59103aaa71abb1cac9d787bf_icgraph" alt=""/></div>
+<map name="agradient__u_8F90_aeeee793b59103aaa71abb1cac9d787bf_icgraph" id="agradient__u_8F90_aeeee793b59103aaa71abb1cac9d787bf_icgraph">
 <area shape="rect" title=" " alt="" coords="563,13,636,38"/>
 <area shape="rect" href="namespacemode__turb__ver__dyn__flux.html#a077a54e63ab22b827d3c526c990dd607" title=" " alt="" coords="332,5,515,45"/>
 <area shape="poly" title=" " alt="" coords="549,28,515,28,515,23,549,23"/>
@@ -168,8 +174,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="ad46993699f88b3b25c6d38ab91190b6a" name="ad46993699f88b3b25c6d38ab91190b6a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad46993699f88b3b25c6d38ab91190b6a">&#9670;&#160;</a></span>gy_u_uv()</h2>
+<a id="ac8ac8c9555b215e60042f079a83cc2be" name="ac8ac8c9555b215e60042f079a83cc2be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac8ac8c9555b215e60042f079a83cc2be">&#9670;&#160;</a></span>gy_u_uv()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -177,6 +183,12 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">real function, dimension(size(pa,1),size(pa,2),size(pa,3)) gy_u_uv </td>
           <td>(</td>
+          <td class="paramtype">logical, intent(in)&#160;</td>
+          <td class="paramname"><em>oflat</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
           <td class="paramname"><em>pa</em>, </td>
         </tr>
