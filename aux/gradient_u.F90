@@ -1,5 +1,5 @@
 !     ######spl
-      FUNCTION GX_U_M(PA,PDXX,PDZZ,PDZX, KKA, KKU, KL)      RESULT(PGX_U_M)
+      FUNCTION GX_U_M(OFLAT,PA,PDXX,PDZZ,PDZX, KKA, KKU, KL)      RESULT(PGX_U_M)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
@@ -51,14 +51,13 @@
 !!    MODIFICATIONS
 !!    -------------
 !!      Original    19/07/94
-!!                  18/10/00 (V.Masson) add LFLAT switch
+!!                  18/10/00 (V.Masson) add OFLAT switch
 !-------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !
 !
 USE MODI_SHUMAN, ONLY: DXF, MZF, DZM, MXF
-USE MODD_CONF, ONLY: LFLAT
 !
 IMPLICIT NONE
 !
@@ -67,6 +66,7 @@ IMPLICIT NONE
 !
 INTEGER,                 INTENT(IN),OPTIONAL   :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,                 INTENT(IN),OPTIONAL   :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+LOGICAL,                 INTENT(IN)  ::  OFLAT  ! Logical for zero ororography
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the U point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
@@ -86,7 +86,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_U_M ! result mass point
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_U_M',0,ZHOOK_HANDLE)
-IF (.NOT. LFLAT) THEN
+IF (.NOT. OFLAT) THEN
   PGX_U_M(:,:,:)= ( DXF(PA)        -                 &
                     MZF(MXF(PDZX*DZM(PA, KKA, KKU, KL)) / PDZZ, KKA, KKU, KL)  &
                   ) / MXF(PDXX)
@@ -99,7 +99,7 @@ END IF
 IF (LHOOK) CALL DR_HOOK('GX_U_M',1,ZHOOK_HANDLE)
 END FUNCTION GX_U_M
 !     ######spl
-      FUNCTION GY_U_UV(PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_U_UV)
+      FUNCTION GY_U_UV(OFLAT,PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_U_UV)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #########################################################
 !
@@ -152,14 +152,13 @@ END FUNCTION GX_U_M
 !!    MODIFICATIONS
 !!    -------------
 !!      Original    20/07/94
-!!                  18/10/00 (V.Masson) add LFLAT switch
+!!                  18/10/00 (V.Masson) add OFLAT switch
 !-------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !
 !
 USE MODI_SHUMAN, ONLY: DYM, MZF, DZM, MXM, MYM
-USE MODD_CONF, ONLY: LFLAT
 !
 IMPLICIT NONE
 !
@@ -168,6 +167,7 @@ IMPLICIT NONE
 !
 INTEGER,                 INTENT(IN),OPTIONAL   :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,                 INTENT(IN),OPTIONAL   :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+LOGICAL,                 INTENT(IN)  ::  OFLAT  ! Logical for zero ororography
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the U point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDYY    ! metric coefficient dyy
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
@@ -187,7 +187,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_U_UV ! result UV point
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_U_UV',0,ZHOOK_HANDLE)
-IF (.NOT. LFLAT) THEN
+IF (.NOT. OFLAT) THEN
   PGY_U_UV(:,:,:)=  (DYM(PA)- MZF(MYM(DZM(PA, KKA, KKU, KL)/&
                  MXM(PDZZ)) *MXM(PDZY), KKA, KKU, KL)   ) / MXM(PDYY)
 ELSE

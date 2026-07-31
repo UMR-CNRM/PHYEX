@@ -121,10 +121,6 @@
 !!
 !!       MODD_PARAMETERS : JPVEXT_TURB  number of marginal vertical points
 !!
-!!       MODD_CONF      : CCONF model configuration (start/restart)
-!!                        L1D   switch for 1D model version
-!!                        L2D   switch for 2D model version
-!!
 !!       MODD_CST  : contains physical constants
 !!                    CST%XG   gravity constant
 !!                    CST%XRD  Gas constant for dry air

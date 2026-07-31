@@ -3,7 +3,7 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !     ######spl
-      FUNCTION GX_M_M(PA,PDXX,PDZZ,PDZX,KKA,KKU,KL)      RESULT(PGX_M_M)
+      FUNCTION GX_M_M(OFLAT,PA,PDXX,PDZZ,PDZX,KKA,KKU,KL)      RESULT(PGX_M_M)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
@@ -41,7 +41,6 @@
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      MODD_CONF : LFLAT
 !!
 !!    REFERENCE
 !!    ---------
@@ -63,7 +62,6 @@
 !
 !
 USE MODI_SHUMAN, ONLY: DXF, MZF, DZM, MXF, MXM
-USE MODD_CONF, ONLY:LFLAT
 !
 IMPLICIT NONE
 !
@@ -74,6 +72,7 @@ REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZX    ! metric coefficient dzx
+LOGICAL,                 INTENT(IN)  ::  OFLAT  ! Logical for zero ororography
 !
 INTEGER, INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
 INTEGER, INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)
@@ -91,7 +90,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_M_M ! result mass point
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_M_M',0,ZHOOK_HANDLE)
-IF (.NOT. LFLAT) THEN 
+IF (.NOT. OFLAT) THEN 
   PGX_M_M(:,:,:)= (DXF(MXM(PA(:,:,:)))   -                     &
                    MZF(MXF(PDZX)*DZM(PA(:,:,:), KKA, KKU, KL) &
                   /PDZZ(:,:,:), KKA, KKU, KL) )        /MXF(PDXX(:,:,:))
@@ -106,7 +105,7 @@ END FUNCTION GX_M_M
 !
 !
 !     #######################################################
-      FUNCTION GX_M_U(KKA, KKU, KL,PY,PDXX,PDZZ,PDZX) RESULT(PGX_M_U)
+      FUNCTION GX_M_U(OFLAT,KKA, KKU, KL,PY,PDXX,PDZZ,PDZX) RESULT(PGX_M_U)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##################################################
 !
@@ -146,7 +145,6 @@ END FUNCTION GX_M_M
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      MODD_CONF : LFLAT
 !!
 !!    REFERENCE
 !!    ---------
@@ -169,7 +167,6 @@ END FUNCTION GX_M_M
 !              ------------
 !
 
-USE MODD_CONF, ONLY:LFLAT
 USE MODD_PARAMETERS, ONLY: JPHEXT, JPVEXT_TURB
 !
 IMPLICIT NONE
@@ -182,6 +179,7 @@ INTEGER,                INTENT(IN)  :: KL     ! +1 if grid goes from ground to a
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDXX                   ! d*xx
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDZX                   ! d*zx
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDZZ                   ! d*zz
+LOGICAL,                 INTENT(IN)  ::  OFLAT  ! Logical for zero ororography
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PY       ! variable at mass
                                                               ! localization
@@ -204,7 +202,7 @@ IF (LHOOK) CALL DR_HOOK('GX_M_U',0,ZHOOK_HANDLE)
 IIU=SIZE(PY,1)
 IJU=SIZE(PY,2)
 IKU=SIZE(PY,3)
-IF (.NOT. LFLAT) THEN
+IF (.NOT. OFLAT) THEN
 ! PGX_M_U = (   DXM(PY)  -  MZF (   MXM(  DZM(PY) /PDZZ  ) * PDZX   )   )/PDXX
 !!  DO JK=1+JPVEXT_TURB,IKU-JPVEXT_TURB
 !!    DO JI=1+JPHEXT,IIU
@@ -262,7 +260,7 @@ ENDIF
 IF (LHOOK) CALL DR_HOOK('GX_M_U',1,ZHOOK_HANDLE)
 END FUNCTION GX_M_U
 !     ######spl
-      FUNCTION GY_M_M(PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_M_M)
+      FUNCTION GY_M_M(OFLAT,PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_M_M)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
@@ -299,7 +297,6 @@ END FUNCTION GX_M_U
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      MODD_CONF : LFLAT
 !!
 !!    REFERENCE
 !!    ---------
@@ -319,7 +316,6 @@ END FUNCTION GX_M_U
 !*       0.    DECLARATIONS
 !
 !
-USE MODD_CONF, ONLY: LFLAT
 USE MODI_SHUMAN, ONLY: DYF, MZF, DZM, MYF, MYM
 !
 IMPLICIT NONE
@@ -331,6 +327,7 @@ REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDYY    ! metric coefficient dyy
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZY    ! metric coefficient dzy
+LOGICAL,                 INTENT(IN)  ::  OFLAT  ! Logical for zero ororography
 INTEGER,                 INTENT(IN),OPTIONAL  :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,                 INTENT(IN),OPTIONAL  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 !
@@ -349,7 +346,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_M_M ! result mass point
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_M_M',0,ZHOOK_HANDLE)
-IF (.NOT. LFLAT) THEN 
+IF (.NOT. OFLAT) THEN 
   PGY_M_M(:,:,:)= (DYF(MYM(PA))-MZF(MYF(PDZY)*DZM(PA, KKA, KKU, KL)&
                 /PDZZ, KKA, KKU, KL)) /MYF(PDYY)
 ELSE
@@ -361,7 +358,7 @@ ENDIF
 IF (LHOOK) CALL DR_HOOK('GY_M_M',1,ZHOOK_HANDLE)
 END FUNCTION GY_M_M
 !     ######spl
-      FUNCTION GY_M_V(KKA,KKU,KL,PY,PDYY,PDZZ,PDZY) RESULT(PGY_M_V)
+      FUNCTION GY_M_V(OFLAT,KKA,KKU,KL,PY,PDYY,PDZZ,PDZY) RESULT(PGY_M_V)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##################################################
 !
@@ -402,7 +399,6 @@ END FUNCTION GY_M_M
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      MODD_CONF : LFLAT
 !!
 !!    REFERENCE
 !!    ---------
@@ -424,7 +420,6 @@ END FUNCTION GY_M_M
 !              ------------
 !
 
-USE MODD_CONF, ONLY: LFLAT
 USE MODD_PARAMETERS, ONLY: JPHEXT, JPVEXT_TURB
 !
 IMPLICIT NONE
@@ -435,6 +430,7 @@ IMPLICIT NONE
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDYY                   !d*yy
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDZY                   !d*zy
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDZZ                   !d*zz
+LOGICAL,                 INTENT(IN)  ::  OFLAT  ! Logical for zero ororography
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PY       ! variable at mass
                                                               ! localization
@@ -454,7 +450,7 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_M_V',0,ZHOOK_HANDLE)
 IJU=SIZE(PY,2)
 IKU=SIZE(PY,3)
-IF (.NOT. LFLAT) THEN
+IF (.NOT. OFLAT) THEN
 !  PGY_M_V = (   DYM(PY)  -  MZF (   MYM(  DZM(PY) /PDZZ  ) * PDZY   )   )/PDYY
   DO JK=1+JPVEXT_TURB,IKU-JPVEXT_TURB
     DO JJ=1+JPHEXT,IJU

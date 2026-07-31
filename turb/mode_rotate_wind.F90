@@ -52,9 +52,6 @@ CONTAINS
 !!    IMPLICIT ARGUMENTS 
 !!    ------------------
 !!
-!!       MODD_CONF      : L2D   switch for 2D model version
-!!
-!!
 !!    REFERENCE
 !!    ---------
 !!      Book 1 of documentation (Chapter: Turbulence)

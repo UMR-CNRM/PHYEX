@@ -151,7 +151,6 @@ SUBROUTINE GX_M_M_PHY(D,OFLAT,PA,PDXX,PDZZ,PDZX,PGX_M_M)
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      MODD_CONF : LFLAT
 !!
 !!    REFERENCE
 !!    ---------
@@ -293,7 +292,6 @@ END SUBROUTINE GX_M_M_PHY
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      MODD_CONF : LFLAT
 !!
 !!    REFERENCE
 !!    ---------
@@ -437,7 +435,6 @@ END SUBROUTINE GY_M_M_PHY
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      MODD_CONF : LFLAT
 !!
 !!    REFERENCE
 !!    ---------
@@ -570,7 +567,6 @@ END SUBROUTINE GX_M_U_PHY
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      MODD_CONF : LFLAT
 !!
 !!    REFERENCE
 !!    ---------

@@ -48,8 +48,6 @@
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      Module MODD_CONF :
-!!          CCONF configuration of the model for the first time step
 !!      Module MODD_CST
 !!          XP00               ! Reference pressure
 !!          XRD,XRV            ! Gaz  constant for dry air, vapor

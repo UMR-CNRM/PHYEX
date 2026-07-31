@@ -56,8 +56,6 @@ SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, TNSV, D, CST, NEBN, TURBN, BUCONF, TB
 !!         XLVTT              ! Vaporization heat constant
 !!         XALPW,XBETAW,XGAMW ! Constants for saturation vapor 
 !!                            !  pressure  function 
-!!      Module  MODD_CONF 
-!!         CCONF
 !!      Module MODD_BUDGET:
 !!         NBUMOD 
 !!         CBUTYPE
@@ -94,10 +92,6 @@ SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, TNSV, D, CST, NEBN, TURBN, BUCONF, TB
 USE MODD_BUDGET,   ONLY: TBUDGETCONF_T, NBUDGET_TH, NBUDGET_RV,& 
                          NBUDGET_RC, NBUDGET_RI, NBUDGET_RV, NBUDGET_SV1, TBUDGETDATA_PTR
 USE MODD_CST,            ONLY: CST_T
-!USE MODD_CONF
-!use modd_field,            only: TFIELDDATA, TYPEREAL
-!USE MODD_IO,               ONLY: TFILEDATA
-!USE MODD_LUNIT_n,          ONLY: TLUOUT
 USE MODD_NSV,             ONLY: NSV_T
 USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_T
 USE MODD_PARAM_LIMA_WARM, ONLY : PARAM_LIMA_WARM_T
