@@ -171,6 +171,8 @@ def apply_ilooprm(directory):
         item_path = os.path.join(directory, item)
         if not os.path.isdir(item_path):
             continue
+        if item == '.git':
+            continue
         for root, _, files in os.walk(item_path):
             for f in files:
                 fpath = os.path.join(root, f)
@@ -298,7 +300,7 @@ def prep_code(
 
     # Build branch name for push
     branch = None
-    if checkout_point and model and push:
+    if checkout_point and model:
         branch = f'{model}{SEPARATOR}{checkout_point}'
 
     # -------- WORKING DIRECTORY --------
@@ -327,7 +329,7 @@ def prep_code(
             raise RuntimeError("A repository must be set (use -h option to get help)")
 
         run(['git', 'clone', repository, directory])
-        if branch:
+        if branch and push:
             result = subprocess.run(
                 ['git', 'ls-remote', '--heads', 'origin', 'SR_GPU'],
                 capture_output=True, text=True, check=True,
@@ -415,7 +417,7 @@ def prep_code(
             raise RuntimeError("Coding norms verification failed, see messages above")
 
     # -------- PUSH --------
-    if branch:
+    if branch and push:
         logging.info("commit and push")
         run(['git', 'add', '-A'], cwd=directory)
         commit_msg = (
