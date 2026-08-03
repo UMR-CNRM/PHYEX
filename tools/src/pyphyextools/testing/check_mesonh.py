@@ -26,13 +26,13 @@ class CheckCommitMesonh(CheckCommitBase):
     def __init__(self, prepCodeOpts='', **kwargs):
         super().__init__(**kwargs)
         self.fileFromCase = {
-            "KTEST/007_16janvier": ["008_run2/16JAN.1.12B18.001.nc", "008_run2/16JAN.1.12B18.000.nc"],
-            "INTEGRATION_CASES/LOCAL/ARMCU_1D_CONDSAMP": ["002_mesonh/ARM__.1.CEN4T.001.nc", "002_mesonh/ARM__.1.CEN4T.001.nc"],
-            "INTEGRATION_CASES/HPC/ARMCU_LES/DEAR": ["ARM__.1.CEN4T.001.nc", "ARM__.1.CEN4T.000.nc"],
-            "KTEST/014_LIMA": ["002_mesonh/XPREF.1.SEG01.002.nc", "002_mesonh/XPREF.1.SEG01.000.nc"],
-            "KTEST/012_dust": ["003_run/DUST7.1.SEG01.001.nc", "003_run/DUST7.1.SEG01.000.nc"],
+            "test_cases/007_16janvier": ["008_run2/16JAN.1.12B18.001.nc", "008_run2/16JAN.1.12B18.000.nc"],
+            "integration_cases/local/ARMCU_1D_CONDSAMP": ["002_mesonh/ARM__.1.CEN4T.001.nc", "002_mesonh/ARM__.1.CEN4T.001.nc"],
+            "integration_cases/hpc/ARMCU_LES/DEAR": ["ARM__.1.CEN4T.001.nc", "ARM__.1.CEN4T.000.nc"],
+            "test_cases/014_LIMA": ["002_mesonh/XPREF.1.SEG01.002.nc", "002_mesonh/XPREF.1.SEG01.000.nc"],
+            "test_cases/012_dust": ["003_run/DUST7.1.SEG01.001.nc", "003_run/DUST7.1.SEG01.000.nc"],
         }
-        self.defaultTest = ["KTEST/007_16janvier"]
+        self.defaultTest = ["test_cases/007_16janvier"]
         self.allowedTests = list(self.fileFromCase.keys())
         self.prepCodeOpts = prepCodeOpts
         self.MNHPACK = os.environ.get('MNHPACK', os.path.expanduser('~/MesoNH/PHYEX'))
@@ -213,7 +213,7 @@ class CheckCommitMesonh(CheckCommitBase):
                 if t not in self.allowedTests:
                     continue
                 subprocess.run(['make', 'clean'],
-                               cwd=os.path.join(mnhdir_full, 'MY_RUN', t), check=True)
+                               cwd=os.path.join(mnhdir_full, 'examples', t), check=True)
 
         firstrun = True
         for t in self.tests:
@@ -221,7 +221,7 @@ class CheckCommitMesonh(CheckCommitBase):
                 print(f"The test {t} is not allowed")
                 continue
 
-            full_casedir = os.path.join(mnhdir_full, 'MY_RUN', t)
+            full_casedir = os.path.join(mnhdir_full, 'examples', t)
 
             #We do not enter systematically this part if onlyIfNeeded is True
             resultfile = os.path.join(full_casedir, self.fileFromCase[t][0])
@@ -287,8 +287,8 @@ class CheckCommitMesonh(CheckCommitBase):
             else:
                 refname = f"{self.refversion}-{caseref}"
 
-            path_user = os.path.join(mnhdir_full, 'MY_RUN', t)
-            path_ref = os.path.join(self.MNHPACK, refname, 'MY_RUN', t)
+            path_user = os.path.join(mnhdir_full, 'examples', t)
+            path_ref = os.path.join(self.MNHPACK, refname, 'examples', t)
             file1u = os.path.join(path_user, self.fileFromCase[t][0])
             file1r = os.path.join(path_ref, self.fileFromCase[t][0])
             if len(self.fileFromCase[t]) >= 2:
