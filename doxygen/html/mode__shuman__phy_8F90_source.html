@@ -1405,281 +1405,278 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01288" name="l01288"></a><span class="lineno"> 1288</span><span class="comment">!*       0.    DECLARATIONS</span></div>
 <div class="line"><a id="l01289" name="l01289"></a><span class="lineno"> 1289</span><span class="comment">!              ------------</span></div>
 <div class="line"><a id="l01290" name="l01290"></a><span class="lineno"> 1290</span><span class="comment">!</span></div>
-<div class="line"><a id="l01291" name="l01291"></a><span class="lineno"> 1291</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__parameters.html">modd_parameters</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_variable" href="namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4">jphext</a></div>
-<div class="line"><a id="l01292" name="l01292"></a><span class="lineno"> 1292</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
-<div class="line"><a id="l01293" name="l01293"></a><span class="lineno"> 1293</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__msg.html">mode_msg</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>, nverb_fatal</div>
-<div class="line"><a id="l01294" name="l01294"></a><span class="lineno"> 1294</span><span class="comment">!</span></div>
-<div class="line"><a id="l01295" name="l01295"></a><span class="lineno"> 1295</span><span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l01296" name="l01296"></a><span class="lineno"> 1296</span><span class="comment">!</span></div>
-<div class="line"><a id="l01297" name="l01297"></a><span class="lineno"> 1297</span><span class="comment">!*       0.1   Declarations of argument and result</span></div>
-<div class="line"><a id="l01298" name="l01298"></a><span class="lineno"> 1298</span><span class="comment">!              ------------------------------------</span></div>
-<div class="line"><a id="l01299" name="l01299"></a><span class="lineno"> 1299</span><span class="comment">!</span></div>
-<div class="line"><a id="l01300" name="l01300"></a><span class="lineno"> 1300</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),       <span class="keywordtype">INTENT(IN)</span>  :: D</div>
-<div class="line"><a id="l01301" name="l01301"></a><span class="lineno"> 1301</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,  <span class="keywordtype">INTENT(IN)</span>                :: PA     <span class="comment">! variable at mass</span></div>
-<div class="line"><a id="l01302" name="l01302"></a><span class="lineno"> 1302</span>                                                            <span class="comment">! localization</span></div>
-<div class="line"><a id="l01303" name="l01303"></a><span class="lineno"> 1303</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(OUT)</span> :: PDXM   <span class="comment">! result at flux</span></div>
-<div class="line"><a id="l01304" name="l01304"></a><span class="lineno"> 1304</span>                                                            <span class="comment">! side</span></div>
-<div class="line"><a id="l01305" name="l01305"></a><span class="lineno"> 1305</span><span class="comment">!</span></div>
-<div class="line"><a id="l01306" name="l01306"></a><span class="lineno"> 1306</span><span class="keywordtype">REAL</span>(KIND=jphook) :: zhook_handle</div>
-<div class="line"><a id="l01307" name="l01307"></a><span class="lineno"> 1307</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DXM&#39;</span>,0,zhook_handle)</div>
-<div class="line"><a id="l01308" name="l01308"></a><span class="lineno"> 1308</span><span class="comment">!</span></div>
-<div class="line"><a id="l01309" name="l01309"></a><span class="lineno"> 1309</span><span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;DXM_PHY&#39;</span>, <span class="stringliteral">&#39;AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE&#39;</span>)</div>
-<div class="line"><a id="l01310" name="l01310"></a><span class="lineno"> 1310</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l01311" name="l01311"></a><span class="lineno"> 1311</span><span class="comment">!</span></div>
-<div class="line"><a id="l01312" name="l01312"></a><span class="lineno"> 1312</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DXM&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a id="l01291" name="l01291"></a><span class="lineno"> 1291</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
+<div class="line"><a id="l01292" name="l01292"></a><span class="lineno"> 1292</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__msg.html">mode_msg</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>, nverb_fatal</div>
+<div class="line"><a id="l01293" name="l01293"></a><span class="lineno"> 1293</span><span class="comment">!</span></div>
+<div class="line"><a id="l01294" name="l01294"></a><span class="lineno"> 1294</span><span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a id="l01295" name="l01295"></a><span class="lineno"> 1295</span><span class="comment">!</span></div>
+<div class="line"><a id="l01296" name="l01296"></a><span class="lineno"> 1296</span><span class="comment">!*       0.1   Declarations of argument and result</span></div>
+<div class="line"><a id="l01297" name="l01297"></a><span class="lineno"> 1297</span><span class="comment">!              ------------------------------------</span></div>
+<div class="line"><a id="l01298" name="l01298"></a><span class="lineno"> 1298</span><span class="comment">!</span></div>
+<div class="line"><a id="l01299" name="l01299"></a><span class="lineno"> 1299</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),       <span class="keywordtype">INTENT(IN)</span>  :: D</div>
+<div class="line"><a id="l01300" name="l01300"></a><span class="lineno"> 1300</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,  <span class="keywordtype">INTENT(IN)</span>                :: PA     <span class="comment">! variable at mass</span></div>
+<div class="line"><a id="l01301" name="l01301"></a><span class="lineno"> 1301</span>                                                            <span class="comment">! localization</span></div>
+<div class="line"><a id="l01302" name="l01302"></a><span class="lineno"> 1302</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(OUT)</span> :: PDXM   <span class="comment">! result at flux</span></div>
+<div class="line"><a id="l01303" name="l01303"></a><span class="lineno"> 1303</span>                                                            <span class="comment">! side</span></div>
+<div class="line"><a id="l01304" name="l01304"></a><span class="lineno"> 1304</span><span class="comment">!</span></div>
+<div class="line"><a id="l01305" name="l01305"></a><span class="lineno"> 1305</span><span class="keywordtype">REAL</span>(KIND=jphook) :: zhook_handle</div>
+<div class="line"><a id="l01306" name="l01306"></a><span class="lineno"> 1306</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DXM&#39;</span>,0,zhook_handle)</div>
+<div class="line"><a id="l01307" name="l01307"></a><span class="lineno"> 1307</span><span class="comment">!</span></div>
+<div class="line"><a id="l01308" name="l01308"></a><span class="lineno"> 1308</span><span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;DXM_PHY&#39;</span>, <span class="stringliteral">&#39;AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE&#39;</span>)</div>
+<div class="line"><a id="l01309" name="l01309"></a><span class="lineno"> 1309</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l01310" name="l01310"></a><span class="lineno"> 1310</span><span class="comment">!</span></div>
+<div class="line"><a id="l01311" name="l01311"></a><span class="lineno"> 1311</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DXM&#39;</span>,1,zhook_handle)</div>
 </div>
-<div class="line"><a id="l01313" name="l01313"></a><span class="lineno"> 1313</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#a6c289ab6a361d1385d4b061f32f3902c">dxm_phy</a></div>
-<div class="line"><a id="l01314" name="l01314"></a><span class="lineno"> 1314</span><span class="comment">!     ###############################</span></div>
-<div class="foldopen" id="foldopen01315" data-start="" data-end="">
-<div class="line"><a id="l01315" name="l01315"></a><span class="lineno"><a class="line" href="namespacemode__shuman__phy.html#ad1f46fbcb602580b47426b961da805a8"> 1315</a></span>      <span class="keyword">SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#ad1f46fbcb602580b47426b961da805a8">dxf_phy</a>(D,PA,PDXF)</div>
-<div class="line"><a id="l01316" name="l01316"></a><span class="lineno"> 1316</span>      <span class="keywordtype">USE </span>yomhook , <span class="keywordtype">ONLY</span> : lhook, dr_hook, jphook</div>
-<div class="line"><a id="l01317" name="l01317"></a><span class="lineno"> 1317</span><span class="comment">!     ###############################</span></div>
-<div class="line"><a id="l01318" name="l01318"></a><span class="lineno"> 1318</span><span class="comment">!</span></div>
-<div class="line"><a id="l01319" name="l01319"></a><span class="lineno"> 1319</span><span class="comment">!!****  *DXF* -  Shuman operator : finite difference operator in x direction</span></div>
-<div class="line"><a id="l01320" name="l01320"></a><span class="lineno"> 1320</span><span class="comment">!!                                  for a variable at a flux side</span></div>
-<div class="line"><a id="l01321" name="l01321"></a><span class="lineno"> 1321</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01322" name="l01322"></a><span class="lineno"> 1322</span><span class="comment">!!    PURPOSE</span></div>
-<div class="line"><a id="l01323" name="l01323"></a><span class="lineno"> 1323</span><span class="comment">!!    -------</span></div>
-<div class="line"><a id="l01324" name="l01324"></a><span class="lineno"> 1324</span><span class="comment">!       The purpose of this function  is to compute a finite difference</span></div>
-<div class="line"><a id="l01325" name="l01325"></a><span class="lineno"> 1325</span><span class="comment">!     along the x direction (I index) for a field PA localized at a x-flux</span></div>
-<div class="line"><a id="l01326" name="l01326"></a><span class="lineno"> 1326</span><span class="comment">!     point (u point). The result is localized at a mass point.</span></div>
-<div class="line"><a id="l01327" name="l01327"></a><span class="lineno"> 1327</span><span class="comment">!</span></div>
-<div class="line"><a id="l01328" name="l01328"></a><span class="lineno"> 1328</span><span class="comment">!!**  METHOD</span></div>
-<div class="line"><a id="l01329" name="l01329"></a><span class="lineno"> 1329</span><span class="comment">!!    ------</span></div>
-<div class="line"><a id="l01330" name="l01330"></a><span class="lineno"> 1330</span><span class="comment">!!        The result PDXF(i,:,:) is defined by (PA(i+1,:,:)-PA(i,:,:))</span></div>
-<div class="line"><a id="l01331" name="l01331"></a><span class="lineno"> 1331</span><span class="comment">!!        At i=size(PA,1), PDXF(i,:,:) are replaced by the values of PDXF,</span></div>
-<div class="line"><a id="l01332" name="l01332"></a><span class="lineno"> 1332</span><span class="comment">!!    which are the right values in the x-cyclic case</span></div>
+<div class="line"><a id="l01312" name="l01312"></a><span class="lineno"> 1312</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#a6c289ab6a361d1385d4b061f32f3902c">dxm_phy</a></div>
+<div class="line"><a id="l01313" name="l01313"></a><span class="lineno"> 1313</span><span class="comment">!     ###############################</span></div>
+<div class="foldopen" id="foldopen01314" data-start="" data-end="">
+<div class="line"><a id="l01314" name="l01314"></a><span class="lineno"><a class="line" href="namespacemode__shuman__phy.html#ad1f46fbcb602580b47426b961da805a8"> 1314</a></span>      <span class="keyword">SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#ad1f46fbcb602580b47426b961da805a8">dxf_phy</a>(D,PA,PDXF)</div>
+<div class="line"><a id="l01315" name="l01315"></a><span class="lineno"> 1315</span>      <span class="keywordtype">USE </span>yomhook , <span class="keywordtype">ONLY</span> : lhook, dr_hook, jphook</div>
+<div class="line"><a id="l01316" name="l01316"></a><span class="lineno"> 1316</span><span class="comment">!     ###############################</span></div>
+<div class="line"><a id="l01317" name="l01317"></a><span class="lineno"> 1317</span><span class="comment">!</span></div>
+<div class="line"><a id="l01318" name="l01318"></a><span class="lineno"> 1318</span><span class="comment">!!****  *DXF* -  Shuman operator : finite difference operator in x direction</span></div>
+<div class="line"><a id="l01319" name="l01319"></a><span class="lineno"> 1319</span><span class="comment">!!                                  for a variable at a flux side</span></div>
+<div class="line"><a id="l01320" name="l01320"></a><span class="lineno"> 1320</span><span class="comment">!!</span></div>
+<div class="line"><a id="l01321" name="l01321"></a><span class="lineno"> 1321</span><span class="comment">!!    PURPOSE</span></div>
+<div class="line"><a id="l01322" name="l01322"></a><span class="lineno"> 1322</span><span class="comment">!!    -------</span></div>
+<div class="line"><a id="l01323" name="l01323"></a><span class="lineno"> 1323</span><span class="comment">!       The purpose of this function  is to compute a finite difference</span></div>
+<div class="line"><a id="l01324" name="l01324"></a><span class="lineno"> 1324</span><span class="comment">!     along the x direction (I index) for a field PA localized at a x-flux</span></div>
+<div class="line"><a id="l01325" name="l01325"></a><span class="lineno"> 1325</span><span class="comment">!     point (u point). The result is localized at a mass point.</span></div>
+<div class="line"><a id="l01326" name="l01326"></a><span class="lineno"> 1326</span><span class="comment">!</span></div>
+<div class="line"><a id="l01327" name="l01327"></a><span class="lineno"> 1327</span><span class="comment">!!**  METHOD</span></div>
+<div class="line"><a id="l01328" name="l01328"></a><span class="lineno"> 1328</span><span class="comment">!!    ------</span></div>
+<div class="line"><a id="l01329" name="l01329"></a><span class="lineno"> 1329</span><span class="comment">!!        The result PDXF(i,:,:) is defined by (PA(i+1,:,:)-PA(i,:,:))</span></div>
+<div class="line"><a id="l01330" name="l01330"></a><span class="lineno"> 1330</span><span class="comment">!!        At i=size(PA,1), PDXF(i,:,:) are replaced by the values of PDXF,</span></div>
+<div class="line"><a id="l01331" name="l01331"></a><span class="lineno"> 1331</span><span class="comment">!!    which are the right values in the x-cyclic case</span></div>
+<div class="line"><a id="l01332" name="l01332"></a><span class="lineno"> 1332</span><span class="comment">!!</span></div>
 <div class="line"><a id="l01333" name="l01333"></a><span class="lineno"> 1333</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01334" name="l01334"></a><span class="lineno"> 1334</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01335" name="l01335"></a><span class="lineno"> 1335</span><span class="comment">!!    EXTERNAL</span></div>
-<div class="line"><a id="l01336" name="l01336"></a><span class="lineno"> 1336</span><span class="comment">!!    --------</span></div>
-<div class="line"><a id="l01337" name="l01337"></a><span class="lineno"> 1337</span><span class="comment">!!      NONE</span></div>
-<div class="line"><a id="l01338" name="l01338"></a><span class="lineno"> 1338</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01339" name="l01339"></a><span class="lineno"> 1339</span><span class="comment">!!    IMPLICIT ARGUMENTS</span></div>
-<div class="line"><a id="l01340" name="l01340"></a><span class="lineno"> 1340</span><span class="comment">!!    ------------------</span></div>
-<div class="line"><a id="l01341" name="l01341"></a><span class="lineno"> 1341</span><span class="comment">!!      Module MODD_PARAMETERS: declaration of parameter variables</span></div>
-<div class="line"><a id="l01342" name="l01342"></a><span class="lineno"> 1342</span><span class="comment">!!        JPHEXT: define the number of marginal points out of the</span></div>
-<div class="line"><a id="l01343" name="l01343"></a><span class="lineno"> 1343</span><span class="comment">!!        physical domain along the horizontal directions.</span></div>
-<div class="line"><a id="l01344" name="l01344"></a><span class="lineno"> 1344</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01345" name="l01345"></a><span class="lineno"> 1345</span><span class="comment">!!    REFERENCE</span></div>
-<div class="line"><a id="l01346" name="l01346"></a><span class="lineno"> 1346</span><span class="comment">!!    ---------</span></div>
-<div class="line"><a id="l01347" name="l01347"></a><span class="lineno"> 1347</span><span class="comment">!!      Book2 of documentation of Meso-NH (SHUMAN operators)</span></div>
-<div class="line"><a id="l01348" name="l01348"></a><span class="lineno"> 1348</span><span class="comment">!!      Technical specifications Report of The Meso-NH (chapters 3)</span></div>
+<div class="line"><a id="l01334" name="l01334"></a><span class="lineno"> 1334</span><span class="comment">!!    EXTERNAL</span></div>
+<div class="line"><a id="l01335" name="l01335"></a><span class="lineno"> 1335</span><span class="comment">!!    --------</span></div>
+<div class="line"><a id="l01336" name="l01336"></a><span class="lineno"> 1336</span><span class="comment">!!      NONE</span></div>
+<div class="line"><a id="l01337" name="l01337"></a><span class="lineno"> 1337</span><span class="comment">!!</span></div>
+<div class="line"><a id="l01338" name="l01338"></a><span class="lineno"> 1338</span><span class="comment">!!    IMPLICIT ARGUMENTS</span></div>
+<div class="line"><a id="l01339" name="l01339"></a><span class="lineno"> 1339</span><span class="comment">!!    ------------------</span></div>
+<div class="line"><a id="l01340" name="l01340"></a><span class="lineno"> 1340</span><span class="comment">!!      Module MODD_PARAMETERS: declaration of parameter variables</span></div>
+<div class="line"><a id="l01341" name="l01341"></a><span class="lineno"> 1341</span><span class="comment">!!        JPHEXT: define the number of marginal points out of the</span></div>
+<div class="line"><a id="l01342" name="l01342"></a><span class="lineno"> 1342</span><span class="comment">!!        physical domain along the horizontal directions.</span></div>
+<div class="line"><a id="l01343" name="l01343"></a><span class="lineno"> 1343</span><span class="comment">!!</span></div>
+<div class="line"><a id="l01344" name="l01344"></a><span class="lineno"> 1344</span><span class="comment">!!    REFERENCE</span></div>
+<div class="line"><a id="l01345" name="l01345"></a><span class="lineno"> 1345</span><span class="comment">!!    ---------</span></div>
+<div class="line"><a id="l01346" name="l01346"></a><span class="lineno"> 1346</span><span class="comment">!!      Book2 of documentation of Meso-NH (SHUMAN operators)</span></div>
+<div class="line"><a id="l01347" name="l01347"></a><span class="lineno"> 1347</span><span class="comment">!!      Technical specifications Report of The Meso-NH (chapters 3)</span></div>
+<div class="line"><a id="l01348" name="l01348"></a><span class="lineno"> 1348</span><span class="comment">!!</span></div>
 <div class="line"><a id="l01349" name="l01349"></a><span class="lineno"> 1349</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01350" name="l01350"></a><span class="lineno"> 1350</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01351" name="l01351"></a><span class="lineno"> 1351</span><span class="comment">!!    AUTHOR</span></div>
-<div class="line"><a id="l01352" name="l01352"></a><span class="lineno"> 1352</span><span class="comment">!!    ------</span></div>
-<div class="line"><a id="l01353" name="l01353"></a><span class="lineno"> 1353</span><span class="comment">!!      V. Ducrocq       * Meteo France *</span></div>
-<div class="line"><a id="l01354" name="l01354"></a><span class="lineno"> 1354</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01355" name="l01355"></a><span class="lineno"> 1355</span><span class="comment">!!    MODIFICATIONS</span></div>
-<div class="line"><a id="l01356" name="l01356"></a><span class="lineno"> 1356</span><span class="comment">!!    -------------</span></div>
-<div class="line"><a id="l01357" name="l01357"></a><span class="lineno"> 1357</span><span class="comment">!!      Original    05/07/94</span></div>
-<div class="line"><a id="l01358" name="l01358"></a><span class="lineno"> 1358</span><span class="comment">!!      Modification to include the periodic case 13/10/94 J.Stein</span></div>
-<div class="line"><a id="l01359" name="l01359"></a><span class="lineno"> 1359</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l01360" name="l01360"></a><span class="lineno"> 1360</span><span class="comment">!</span></div>
-<div class="line"><a id="l01361" name="l01361"></a><span class="lineno"> 1361</span><span class="comment">!*       0.    DECLARATIONS</span></div>
-<div class="line"><a id="l01362" name="l01362"></a><span class="lineno"> 1362</span><span class="comment">!              ------------</span></div>
-<div class="line"><a id="l01363" name="l01363"></a><span class="lineno"> 1363</span><span class="comment">!</span></div>
-<div class="line"><a id="l01364" name="l01364"></a><span class="lineno"> 1364</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
-<div class="line"><a id="l01365" name="l01365"></a><span class="lineno"> 1365</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__msg.html">mode_msg</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>, nverb_fatal</div>
-<div class="line"><a id="l01366" name="l01366"></a><span class="lineno"> 1366</span><span class="comment">!</span></div>
-<div class="line"><a id="l01367" name="l01367"></a><span class="lineno"> 1367</span><span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l01368" name="l01368"></a><span class="lineno"> 1368</span><span class="comment">!</span></div>
-<div class="line"><a id="l01369" name="l01369"></a><span class="lineno"> 1369</span><span class="comment">!*       0.1   Declarations of argument and result</span></div>
-<div class="line"><a id="l01370" name="l01370"></a><span class="lineno"> 1370</span><span class="comment">!              ------------------------------------</span></div>
-<div class="line"><a id="l01371" name="l01371"></a><span class="lineno"> 1371</span><span class="comment">!</span></div>
-<div class="line"><a id="l01372" name="l01372"></a><span class="lineno"> 1372</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),       <span class="keywordtype">INTENT(IN)</span>  :: d</div>
-<div class="line"><a id="l01373" name="l01373"></a><span class="lineno"> 1373</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>  :: pa     <span class="comment">! variable at flux</span></div>
-<div class="line"><a id="l01374" name="l01374"></a><span class="lineno"> 1374</span>                                                          <span class="comment">!  side</span></div>
-<div class="line"><a id="l01375" name="l01375"></a><span class="lineno"> 1375</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(OUT)</span> :: pdxf   <span class="comment">! result at mass</span></div>
-<div class="line"><a id="l01376" name="l01376"></a><span class="lineno"> 1376</span>                                                          <span class="comment">! localization</span></div>
+<div class="line"><a id="l01350" name="l01350"></a><span class="lineno"> 1350</span><span class="comment">!!    AUTHOR</span></div>
+<div class="line"><a id="l01351" name="l01351"></a><span class="lineno"> 1351</span><span class="comment">!!    ------</span></div>
+<div class="line"><a id="l01352" name="l01352"></a><span class="lineno"> 1352</span><span class="comment">!!      V. Ducrocq       * Meteo France *</span></div>
+<div class="line"><a id="l01353" name="l01353"></a><span class="lineno"> 1353</span><span class="comment">!!</span></div>
+<div class="line"><a id="l01354" name="l01354"></a><span class="lineno"> 1354</span><span class="comment">!!    MODIFICATIONS</span></div>
+<div class="line"><a id="l01355" name="l01355"></a><span class="lineno"> 1355</span><span class="comment">!!    -------------</span></div>
+<div class="line"><a id="l01356" name="l01356"></a><span class="lineno"> 1356</span><span class="comment">!!      Original    05/07/94</span></div>
+<div class="line"><a id="l01357" name="l01357"></a><span class="lineno"> 1357</span><span class="comment">!!      Modification to include the periodic case 13/10/94 J.Stein</span></div>
+<div class="line"><a id="l01358" name="l01358"></a><span class="lineno"> 1358</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l01359" name="l01359"></a><span class="lineno"> 1359</span><span class="comment">!</span></div>
+<div class="line"><a id="l01360" name="l01360"></a><span class="lineno"> 1360</span><span class="comment">!*       0.    DECLARATIONS</span></div>
+<div class="line"><a id="l01361" name="l01361"></a><span class="lineno"> 1361</span><span class="comment">!              ------------</span></div>
+<div class="line"><a id="l01362" name="l01362"></a><span class="lineno"> 1362</span><span class="comment">!</span></div>
+<div class="line"><a id="l01363" name="l01363"></a><span class="lineno"> 1363</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
+<div class="line"><a id="l01364" name="l01364"></a><span class="lineno"> 1364</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__msg.html">mode_msg</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>, nverb_fatal</div>
+<div class="line"><a id="l01365" name="l01365"></a><span class="lineno"> 1365</span><span class="comment">!</span></div>
+<div class="line"><a id="l01366" name="l01366"></a><span class="lineno"> 1366</span><span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a id="l01367" name="l01367"></a><span class="lineno"> 1367</span><span class="comment">!</span></div>
+<div class="line"><a id="l01368" name="l01368"></a><span class="lineno"> 1368</span><span class="comment">!*       0.1   Declarations of argument and result</span></div>
+<div class="line"><a id="l01369" name="l01369"></a><span class="lineno"> 1369</span><span class="comment">!              ------------------------------------</span></div>
+<div class="line"><a id="l01370" name="l01370"></a><span class="lineno"> 1370</span><span class="comment">!</span></div>
+<div class="line"><a id="l01371" name="l01371"></a><span class="lineno"> 1371</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),       <span class="keywordtype">INTENT(IN)</span>  :: d</div>
+<div class="line"><a id="l01372" name="l01372"></a><span class="lineno"> 1372</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>  :: pa     <span class="comment">! variable at flux</span></div>
+<div class="line"><a id="l01373" name="l01373"></a><span class="lineno"> 1373</span>                                                          <span class="comment">!  side</span></div>
+<div class="line"><a id="l01374" name="l01374"></a><span class="lineno"> 1374</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(OUT)</span> :: pdxf   <span class="comment">! result at mass</span></div>
+<div class="line"><a id="l01375" name="l01375"></a><span class="lineno"> 1375</span>                                                          <span class="comment">! localization</span></div>
+<div class="line"><a id="l01376" name="l01376"></a><span class="lineno"> 1376</span><span class="comment">!</span></div>
 <div class="line"><a id="l01377" name="l01377"></a><span class="lineno"> 1377</span><span class="comment">!</span></div>
-<div class="line"><a id="l01378" name="l01378"></a><span class="lineno"> 1378</span><span class="comment">!</span></div>
-<div class="line"><a id="l01379" name="l01379"></a><span class="lineno"> 1379</span><span class="keywordtype">REAL</span>(kind=jphook) :: zhook_handle</div>
-<div class="line"><a id="l01380" name="l01380"></a><span class="lineno"> 1380</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DXF&#39;</span>,0,zhook_handle)</div>
-<div class="line"><a id="l01381" name="l01381"></a><span class="lineno"> 1381</span><span class="comment">!</span></div>
-<div class="line"><a id="l01382" name="l01382"></a><span class="lineno"> 1382</span><span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;DXF_PHY&#39;</span>, <span class="stringliteral">&#39;AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE&#39;</span>)</div>
-<div class="line"><a id="l01383" name="l01383"></a><span class="lineno"> 1383</span><span class="comment">!</span></div>
-<div class="line"><a id="l01384" name="l01384"></a><span class="lineno"> 1384</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l01385" name="l01385"></a><span class="lineno"> 1385</span><span class="comment">!</span></div>
-<div class="line"><a id="l01386" name="l01386"></a><span class="lineno"> 1386</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DXF&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a id="l01378" name="l01378"></a><span class="lineno"> 1378</span><span class="keywordtype">REAL</span>(kind=jphook) :: zhook_handle</div>
+<div class="line"><a id="l01379" name="l01379"></a><span class="lineno"> 1379</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DXF&#39;</span>,0,zhook_handle)</div>
+<div class="line"><a id="l01380" name="l01380"></a><span class="lineno"> 1380</span><span class="comment">!</span></div>
+<div class="line"><a id="l01381" name="l01381"></a><span class="lineno"> 1381</span><span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;DXF_PHY&#39;</span>, <span class="stringliteral">&#39;AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE&#39;</span>)</div>
+<div class="line"><a id="l01382" name="l01382"></a><span class="lineno"> 1382</span><span class="comment">!</span></div>
+<div class="line"><a id="l01383" name="l01383"></a><span class="lineno"> 1383</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l01384" name="l01384"></a><span class="lineno"> 1384</span><span class="comment">!</span></div>
+<div class="line"><a id="l01385" name="l01385"></a><span class="lineno"> 1385</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DXF&#39;</span>,1,zhook_handle)</div>
 </div>
-<div class="line"><a id="l01387" name="l01387"></a><span class="lineno"> 1387</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#ad1f46fbcb602580b47426b961da805a8">dxf_phy</a></div>
-<div class="line"><a id="l01388" name="l01388"></a><span class="lineno"> 1388</span><span class="comment">!</span></div>
-<div class="line"><a id="l01389" name="l01389"></a><span class="lineno"> 1389</span><span class="comment">!     ###############################</span></div>
-<div class="foldopen" id="foldopen01390" data-start="" data-end="">
-<div class="line"><a id="l01390" name="l01390"></a><span class="lineno"><a class="line" href="namespacemode__shuman__phy.html#a191f841104f424a01825322f617985de"> 1390</a></span>      <span class="keyword">SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#a191f841104f424a01825322f617985de">dyf_phy</a>(D,PA,PDYF)</div>
-<div class="line"><a id="l01391" name="l01391"></a><span class="lineno"> 1391</span>      <span class="keywordtype">USE </span>yomhook , <span class="keywordtype">ONLY</span> : lhook, dr_hook, jphook</div>
-<div class="line"><a id="l01392" name="l01392"></a><span class="lineno"> 1392</span><span class="comment">!     ###############################</span></div>
-<div class="line"><a id="l01393" name="l01393"></a><span class="lineno"> 1393</span><span class="comment">!</span></div>
-<div class="line"><a id="l01394" name="l01394"></a><span class="lineno"> 1394</span><span class="comment">!!****  *DYF* -  Shuman operator : finite difference operator in y direction</span></div>
-<div class="line"><a id="l01395" name="l01395"></a><span class="lineno"> 1395</span><span class="comment">!!                                  for a variable at a flux side</span></div>
-<div class="line"><a id="l01396" name="l01396"></a><span class="lineno"> 1396</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01397" name="l01397"></a><span class="lineno"> 1397</span><span class="comment">!!    PURPOSE</span></div>
-<div class="line"><a id="l01398" name="l01398"></a><span class="lineno"> 1398</span><span class="comment">!!    -------</span></div>
-<div class="line"><a id="l01399" name="l01399"></a><span class="lineno"> 1399</span><span class="comment">!       The purpose of this function  is to compute a finite difference</span></div>
-<div class="line"><a id="l01400" name="l01400"></a><span class="lineno"> 1400</span><span class="comment">!     along the y direction (J index) for a field PA localized at a y-flux</span></div>
-<div class="line"><a id="l01401" name="l01401"></a><span class="lineno"> 1401</span><span class="comment">!     point (v point). The result is localized at a mass point.</span></div>
-<div class="line"><a id="l01402" name="l01402"></a><span class="lineno"> 1402</span><span class="comment">!</span></div>
-<div class="line"><a id="l01403" name="l01403"></a><span class="lineno"> 1403</span><span class="comment">!!**  METHOD</span></div>
-<div class="line"><a id="l01404" name="l01404"></a><span class="lineno"> 1404</span><span class="comment">!!    ------</span></div>
-<div class="line"><a id="l01405" name="l01405"></a><span class="lineno"> 1405</span><span class="comment">!!        The result PDYF(:,j,:) is defined by (PA(:,j+1,:)-PA(:,j,:))</span></div>
-<div class="line"><a id="l01406" name="l01406"></a><span class="lineno"> 1406</span><span class="comment">!!        At j=size(PA,2), PDYF(:,j,:) are replaced by the values of PDYM,</span></div>
-<div class="line"><a id="l01407" name="l01407"></a><span class="lineno"> 1407</span><span class="comment">!!    which are the right values in the y-cyclic case</span></div>
+<div class="line"><a id="l01386" name="l01386"></a><span class="lineno"> 1386</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#ad1f46fbcb602580b47426b961da805a8">dxf_phy</a></div>
+<div class="line"><a id="l01387" name="l01387"></a><span class="lineno"> 1387</span><span class="comment">!</span></div>
+<div class="line"><a id="l01388" name="l01388"></a><span class="lineno"> 1388</span><span class="comment">!     ###############################</span></div>
+<div class="foldopen" id="foldopen01389" data-start="" data-end="">
+<div class="line"><a id="l01389" name="l01389"></a><span class="lineno"><a class="line" href="namespacemode__shuman__phy.html#a191f841104f424a01825322f617985de"> 1389</a></span>      <span class="keyword">SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#a191f841104f424a01825322f617985de">dyf_phy</a>(D,PA,PDYF)</div>
+<div class="line"><a id="l01390" name="l01390"></a><span class="lineno"> 1390</span>      <span class="keywordtype">USE </span>yomhook , <span class="keywordtype">ONLY</span> : lhook, dr_hook, jphook</div>
+<div class="line"><a id="l01391" name="l01391"></a><span class="lineno"> 1391</span><span class="comment">!     ###############################</span></div>
+<div class="line"><a id="l01392" name="l01392"></a><span class="lineno"> 1392</span><span class="comment">!</span></div>
+<div class="line"><a id="l01393" name="l01393"></a><span class="lineno"> 1393</span><span class="comment">!!****  *DYF* -  Shuman operator : finite difference operator in y direction</span></div>
+<div class="line"><a id="l01394" name="l01394"></a><span class="lineno"> 1394</span><span class="comment">!!                                  for a variable at a flux side</span></div>
+<div class="line"><a id="l01395" name="l01395"></a><span class="lineno"> 1395</span><span class="comment">!!</span></div>
+<div class="line"><a id="l01396" name="l01396"></a><span class="lineno"> 1396</span><span class="comment">!!    PURPOSE</span></div>
+<div class="line"><a id="l01397" name="l01397"></a><span class="lineno"> 1397</span><span class="comment">!!    -------</span></div>
+<div class="line"><a id="l01398" name="l01398"></a><span class="lineno"> 1398</span><span class="comment">!       The purpose of this function  is to compute a finite difference</span></div>
+<div class="line"><a id="l01399" name="l01399"></a><span class="lineno"> 1399</span><span class="comment">!     along the y direction (J index) for a field PA localized at a y-flux</span></div>
+<div class="line"><a id="l01400" name="l01400"></a><span class="lineno"> 1400</span><span class="comment">!     point (v point). The result is localized at a mass point.</span></div>
+<div class="line"><a id="l01401" name="l01401"></a><span class="lineno"> 1401</span><span class="comment">!</span></div>
+<div class="line"><a id="l01402" name="l01402"></a><span class="lineno"> 1402</span><span class="comment">!!**  METHOD</span></div>
+<div class="line"><a id="l01403" name="l01403"></a><span class="lineno"> 1403</span><span class="comment">!!    ------</span></div>
+<div class="line"><a id="l01404" name="l01404"></a><span class="lineno"> 1404</span><span class="comment">!!        The result PDYF(:,j,:) is defined by (PA(:,j+1,:)-PA(:,j,:))</span></div>
+<div class="line"><a id="l01405" name="l01405"></a><span class="lineno"> 1405</span><span class="comment">!!        At j=size(PA,2), PDYF(:,j,:) are replaced by the values of PDYM,</span></div>
+<div class="line"><a id="l01406" name="l01406"></a><span class="lineno"> 1406</span><span class="comment">!!    which are the right values in the y-cyclic case</span></div>
+<div class="line"><a id="l01407" name="l01407"></a><span class="lineno"> 1407</span><span class="comment">!!</span></div>
 <div class="line"><a id="l01408" name="l01408"></a><span class="lineno"> 1408</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01409" name="l01409"></a><span class="lineno"> 1409</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01410" name="l01410"></a><span class="lineno"> 1410</span><span class="comment">!!    EXTERNAL</span></div>
-<div class="line"><a id="l01411" name="l01411"></a><span class="lineno"> 1411</span><span class="comment">!!    --------</span></div>
-<div class="line"><a id="l01412" name="l01412"></a><span class="lineno"> 1412</span><span class="comment">!!      NONE</span></div>
-<div class="line"><a id="l01413" name="l01413"></a><span class="lineno"> 1413</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01414" name="l01414"></a><span class="lineno"> 1414</span><span class="comment">!!    IMPLICIT ARGUMENTS</span></div>
-<div class="line"><a id="l01415" name="l01415"></a><span class="lineno"> 1415</span><span class="comment">!!    ------------------</span></div>
-<div class="line"><a id="l01416" name="l01416"></a><span class="lineno"> 1416</span><span class="comment">!!      Module MODD_PARAMETERS: declaration of parameter variables</span></div>
-<div class="line"><a id="l01417" name="l01417"></a><span class="lineno"> 1417</span><span class="comment">!!        JPHEXT: define the number of marginal points out of the</span></div>
-<div class="line"><a id="l01418" name="l01418"></a><span class="lineno"> 1418</span><span class="comment">!!        physical domain along the horizontal directions.</span></div>
-<div class="line"><a id="l01419" name="l01419"></a><span class="lineno"> 1419</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01420" name="l01420"></a><span class="lineno"> 1420</span><span class="comment">!!    REFERENCE</span></div>
-<div class="line"><a id="l01421" name="l01421"></a><span class="lineno"> 1421</span><span class="comment">!!    ---------</span></div>
-<div class="line"><a id="l01422" name="l01422"></a><span class="lineno"> 1422</span><span class="comment">!!      Book2 of documentation of Meso-NH (SHUMAN operators)</span></div>
-<div class="line"><a id="l01423" name="l01423"></a><span class="lineno"> 1423</span><span class="comment">!!      Technical specifications Report of The Meso-NH (chapters 3)</span></div>
+<div class="line"><a id="l01409" name="l01409"></a><span class="lineno"> 1409</span><span class="comment">!!    EXTERNAL</span></div>
+<div class="line"><a id="l01410" name="l01410"></a><span class="lineno"> 1410</span><span class="comment">!!    --------</span></div>
+<div class="line"><a id="l01411" name="l01411"></a><span class="lineno"> 1411</span><span class="comment">!!      NONE</span></div>
+<div class="line"><a id="l01412" name="l01412"></a><span class="lineno"> 1412</span><span class="comment">!!</span></div>
+<div class="line"><a id="l01413" name="l01413"></a><span class="lineno"> 1413</span><span class="comment">!!    IMPLICIT ARGUMENTS</span></div>
+<div class="line"><a id="l01414" name="l01414"></a><span class="lineno"> 1414</span><span class="comment">!!    ------------------</span></div>
+<div class="line"><a id="l01415" name="l01415"></a><span class="lineno"> 1415</span><span class="comment">!!      Module MODD_PARAMETERS: declaration of parameter variables</span></div>
+<div class="line"><a id="l01416" name="l01416"></a><span class="lineno"> 1416</span><span class="comment">!!        JPHEXT: define the number of marginal points out of the</span></div>
+<div class="line"><a id="l01417" name="l01417"></a><span class="lineno"> 1417</span><span class="comment">!!        physical domain along the horizontal directions.</span></div>
+<div class="line"><a id="l01418" name="l01418"></a><span class="lineno"> 1418</span><span class="comment">!!</span></div>
+<div class="line"><a id="l01419" name="l01419"></a><span class="lineno"> 1419</span><span class="comment">!!    REFERENCE</span></div>
+<div class="line"><a id="l01420" name="l01420"></a><span class="lineno"> 1420</span><span class="comment">!!    ---------</span></div>
+<div class="line"><a id="l01421" name="l01421"></a><span class="lineno"> 1421</span><span class="comment">!!      Book2 of documentation of Meso-NH (SHUMAN operators)</span></div>
+<div class="line"><a id="l01422" name="l01422"></a><span class="lineno"> 1422</span><span class="comment">!!      Technical specifications Report of The Meso-NH (chapters 3)</span></div>
+<div class="line"><a id="l01423" name="l01423"></a><span class="lineno"> 1423</span><span class="comment">!!</span></div>
 <div class="line"><a id="l01424" name="l01424"></a><span class="lineno"> 1424</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01425" name="l01425"></a><span class="lineno"> 1425</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01426" name="l01426"></a><span class="lineno"> 1426</span><span class="comment">!!    AUTHOR</span></div>
-<div class="line"><a id="l01427" name="l01427"></a><span class="lineno"> 1427</span><span class="comment">!!    ------</span></div>
-<div class="line"><a id="l01428" name="l01428"></a><span class="lineno"> 1428</span><span class="comment">!!      V. Ducrocq       * Meteo France *</span></div>
-<div class="line"><a id="l01429" name="l01429"></a><span class="lineno"> 1429</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01430" name="l01430"></a><span class="lineno"> 1430</span><span class="comment">!!    MODIFICATIONS</span></div>
-<div class="line"><a id="l01431" name="l01431"></a><span class="lineno"> 1431</span><span class="comment">!!    -------------</span></div>
-<div class="line"><a id="l01432" name="l01432"></a><span class="lineno"> 1432</span><span class="comment">!!      Original    05/07/94</span></div>
-<div class="line"><a id="l01433" name="l01433"></a><span class="lineno"> 1433</span><span class="comment">!!      Modification to include the periodic case 13/10/94 J.Stein</span></div>
-<div class="line"><a id="l01434" name="l01434"></a><span class="lineno"> 1434</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l01435" name="l01435"></a><span class="lineno"> 1435</span><span class="comment">!</span></div>
-<div class="line"><a id="l01436" name="l01436"></a><span class="lineno"> 1436</span><span class="comment">!*       0.    DECLARATIONS</span></div>
-<div class="line"><a id="l01437" name="l01437"></a><span class="lineno"> 1437</span><span class="comment">!              ------------</span></div>
-<div class="line"><a id="l01438" name="l01438"></a><span class="lineno"> 1438</span><span class="comment">!</span></div>
-<div class="line"><a id="l01439" name="l01439"></a><span class="lineno"> 1439</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
-<div class="line"><a id="l01440" name="l01440"></a><span class="lineno"> 1440</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__msg.html">mode_msg</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>, nverb_fatal</div>
-<div class="line"><a id="l01441" name="l01441"></a><span class="lineno"> 1441</span><span class="comment">!</span></div>
-<div class="line"><a id="l01442" name="l01442"></a><span class="lineno"> 1442</span><span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l01443" name="l01443"></a><span class="lineno"> 1443</span><span class="comment">!</span></div>
-<div class="line"><a id="l01444" name="l01444"></a><span class="lineno"> 1444</span><span class="comment">!*       0.1   Declarations of argument and result</span></div>
-<div class="line"><a id="l01445" name="l01445"></a><span class="lineno"> 1445</span><span class="comment">!              ------------------------------------</span></div>
-<div class="line"><a id="l01446" name="l01446"></a><span class="lineno"> 1446</span><span class="comment">!</span></div>
-<div class="line"><a id="l01447" name="l01447"></a><span class="lineno"> 1447</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),       <span class="keywordtype">INTENT(IN)</span>  :: d</div>
-<div class="line"><a id="l01448" name="l01448"></a><span class="lineno"> 1448</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>  :: pa     <span class="comment">! variable at flux</span></div>
-<div class="line"><a id="l01449" name="l01449"></a><span class="lineno"> 1449</span>                                                          <span class="comment">!  side</span></div>
-<div class="line"><a id="l01450" name="l01450"></a><span class="lineno"> 1450</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(OUT)</span> :: pdyf   <span class="comment">! result at mass</span></div>
-<div class="line"><a id="l01451" name="l01451"></a><span class="lineno"> 1451</span>                                                          <span class="comment">! localization</span></div>
-<div class="line"><a id="l01452" name="l01452"></a><span class="lineno"> 1452</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l01453" name="l01453"></a><span class="lineno"> 1453</span><span class="comment">!</span></div>
-<div class="line"><a id="l01454" name="l01454"></a><span class="lineno"> 1454</span><span class="comment">!*       1.    DEFINITION OF DYF</span></div>
-<div class="line"><a id="l01455" name="l01455"></a><span class="lineno"> 1455</span><span class="comment">!              ------------------</span></div>
-<div class="line"><a id="l01456" name="l01456"></a><span class="lineno"> 1456</span><span class="comment">!</span></div>
-<div class="line"><a id="l01457" name="l01457"></a><span class="lineno"> 1457</span><span class="keywordtype">REAL</span>(kind=jphook) :: zhook_handle</div>
-<div class="line"><a id="l01458" name="l01458"></a><span class="lineno"> 1458</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DYF&#39;</span>,0,zhook_handle)</div>
-<div class="line"><a id="l01459" name="l01459"></a><span class="lineno"> 1459</span><span class="comment">!</span></div>
-<div class="line"><a id="l01460" name="l01460"></a><span class="lineno"> 1460</span><span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;DYF_PHY&#39;</span>, <span class="stringliteral">&#39;AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE&#39;</span>)</div>
-<div class="line"><a id="l01461" name="l01461"></a><span class="lineno"> 1461</span><span class="comment">!</span></div>
-<div class="line"><a id="l01462" name="l01462"></a><span class="lineno"> 1462</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l01463" name="l01463"></a><span class="lineno"> 1463</span><span class="comment">!</span></div>
-<div class="line"><a id="l01464" name="l01464"></a><span class="lineno"> 1464</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DYF&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a id="l01425" name="l01425"></a><span class="lineno"> 1425</span><span class="comment">!!    AUTHOR</span></div>
+<div class="line"><a id="l01426" name="l01426"></a><span class="lineno"> 1426</span><span class="comment">!!    ------</span></div>
+<div class="line"><a id="l01427" name="l01427"></a><span class="lineno"> 1427</span><span class="comment">!!      V. Ducrocq       * Meteo France *</span></div>
+<div class="line"><a id="l01428" name="l01428"></a><span class="lineno"> 1428</span><span class="comment">!!</span></div>
+<div class="line"><a id="l01429" name="l01429"></a><span class="lineno"> 1429</span><span class="comment">!!    MODIFICATIONS</span></div>
+<div class="line"><a id="l01430" name="l01430"></a><span class="lineno"> 1430</span><span class="comment">!!    -------------</span></div>
+<div class="line"><a id="l01431" name="l01431"></a><span class="lineno"> 1431</span><span class="comment">!!      Original    05/07/94</span></div>
+<div class="line"><a id="l01432" name="l01432"></a><span class="lineno"> 1432</span><span class="comment">!!      Modification to include the periodic case 13/10/94 J.Stein</span></div>
+<div class="line"><a id="l01433" name="l01433"></a><span class="lineno"> 1433</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l01434" name="l01434"></a><span class="lineno"> 1434</span><span class="comment">!</span></div>
+<div class="line"><a id="l01435" name="l01435"></a><span class="lineno"> 1435</span><span class="comment">!*       0.    DECLARATIONS</span></div>
+<div class="line"><a id="l01436" name="l01436"></a><span class="lineno"> 1436</span><span class="comment">!              ------------</span></div>
+<div class="line"><a id="l01437" name="l01437"></a><span class="lineno"> 1437</span><span class="comment">!</span></div>
+<div class="line"><a id="l01438" name="l01438"></a><span class="lineno"> 1438</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
+<div class="line"><a id="l01439" name="l01439"></a><span class="lineno"> 1439</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__msg.html">mode_msg</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>, nverb_fatal</div>
+<div class="line"><a id="l01440" name="l01440"></a><span class="lineno"> 1440</span><span class="comment">!</span></div>
+<div class="line"><a id="l01441" name="l01441"></a><span class="lineno"> 1441</span><span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a id="l01442" name="l01442"></a><span class="lineno"> 1442</span><span class="comment">!</span></div>
+<div class="line"><a id="l01443" name="l01443"></a><span class="lineno"> 1443</span><span class="comment">!*       0.1   Declarations of argument and result</span></div>
+<div class="line"><a id="l01444" name="l01444"></a><span class="lineno"> 1444</span><span class="comment">!              ------------------------------------</span></div>
+<div class="line"><a id="l01445" name="l01445"></a><span class="lineno"> 1445</span><span class="comment">!</span></div>
+<div class="line"><a id="l01446" name="l01446"></a><span class="lineno"> 1446</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),       <span class="keywordtype">INTENT(IN)</span>  :: d</div>
+<div class="line"><a id="l01447" name="l01447"></a><span class="lineno"> 1447</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>  :: pa     <span class="comment">! variable at flux</span></div>
+<div class="line"><a id="l01448" name="l01448"></a><span class="lineno"> 1448</span>                                                          <span class="comment">!  side</span></div>
+<div class="line"><a id="l01449" name="l01449"></a><span class="lineno"> 1449</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(OUT)</span> :: pdyf   <span class="comment">! result at mass</span></div>
+<div class="line"><a id="l01450" name="l01450"></a><span class="lineno"> 1450</span>                                                          <span class="comment">! localization</span></div>
+<div class="line"><a id="l01451" name="l01451"></a><span class="lineno"> 1451</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l01452" name="l01452"></a><span class="lineno"> 1452</span><span class="comment">!</span></div>
+<div class="line"><a id="l01453" name="l01453"></a><span class="lineno"> 1453</span><span class="comment">!*       1.    DEFINITION OF DYF</span></div>
+<div class="line"><a id="l01454" name="l01454"></a><span class="lineno"> 1454</span><span class="comment">!              ------------------</span></div>
+<div class="line"><a id="l01455" name="l01455"></a><span class="lineno"> 1455</span><span class="comment">!</span></div>
+<div class="line"><a id="l01456" name="l01456"></a><span class="lineno"> 1456</span><span class="keywordtype">REAL</span>(kind=jphook) :: zhook_handle</div>
+<div class="line"><a id="l01457" name="l01457"></a><span class="lineno"> 1457</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DYF&#39;</span>,0,zhook_handle)</div>
+<div class="line"><a id="l01458" name="l01458"></a><span class="lineno"> 1458</span><span class="comment">!</span></div>
+<div class="line"><a id="l01459" name="l01459"></a><span class="lineno"> 1459</span><span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;DYF_PHY&#39;</span>, <span class="stringliteral">&#39;AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE&#39;</span>)</div>
+<div class="line"><a id="l01460" name="l01460"></a><span class="lineno"> 1460</span><span class="comment">!</span></div>
+<div class="line"><a id="l01461" name="l01461"></a><span class="lineno"> 1461</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l01462" name="l01462"></a><span class="lineno"> 1462</span><span class="comment">!</span></div>
+<div class="line"><a id="l01463" name="l01463"></a><span class="lineno"> 1463</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;DYF&#39;</span>,1,zhook_handle)</div>
 </div>
-<div class="line"><a id="l01465" name="l01465"></a><span class="lineno"> 1465</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#a191f841104f424a01825322f617985de">dyf_phy</a></div>
-<div class="line"><a id="l01466" name="l01466"></a><span class="lineno"> 1466</span><span class="comment">!</span></div>
-<div class="line"><a id="l01467" name="l01467"></a><span class="lineno"> 1467</span><span class="comment">!     ###############################</span></div>
-<div class="foldopen" id="foldopen01468" data-start="" data-end="">
-<div class="line"><a id="l01468" name="l01468"></a><span class="lineno"><a class="line" href="namespacemode__shuman__phy.html#a22d9a82113dce4d7f919712fce5a8bc1"> 1468</a></span>      <span class="keyword">SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#a22d9a82113dce4d7f919712fce5a8bc1">dyf2d_phy</a>(D,PA,PDYF)</div>
-<div class="line"><a id="l01469" name="l01469"></a><span class="lineno"> 1469</span><span class="comment">!     ###############################</span></div>
-<div class="line"><a id="l01470" name="l01470"></a><span class="lineno"> 1470</span><span class="comment">!</span></div>
-<div class="line"><a id="l01471" name="l01471"></a><span class="lineno"> 1471</span><span class="comment">!!****  *DYF* -  Shuman operator : finite difference operator in y direction</span></div>
-<div class="line"><a id="l01472" name="l01472"></a><span class="lineno"> 1472</span><span class="comment">!!                                  for a variable at a flux side</span></div>
-<div class="line"><a id="l01473" name="l01473"></a><span class="lineno"> 1473</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01474" name="l01474"></a><span class="lineno"> 1474</span><span class="comment">!!    PURPOSE</span></div>
-<div class="line"><a id="l01475" name="l01475"></a><span class="lineno"> 1475</span><span class="comment">!!    -------</span></div>
-<div class="line"><a id="l01476" name="l01476"></a><span class="lineno"> 1476</span><span class="comment">!       The purpose of this function  is to compute a finite difference </span></div>
-<div class="line"><a id="l01477" name="l01477"></a><span class="lineno"> 1477</span><span class="comment">!     along the y direction (J index) for a field PA localized at a y-flux</span></div>
-<div class="line"><a id="l01478" name="l01478"></a><span class="lineno"> 1478</span><span class="comment">!     point (v point). The result is localized at a mass point.</span></div>
-<div class="line"><a id="l01479" name="l01479"></a><span class="lineno"> 1479</span><span class="comment">!</span></div>
-<div class="line"><a id="l01480" name="l01480"></a><span class="lineno"> 1480</span><span class="comment">!!**  METHOD</span></div>
-<div class="line"><a id="l01481" name="l01481"></a><span class="lineno"> 1481</span><span class="comment">!!    ------ </span></div>
-<div class="line"><a id="l01482" name="l01482"></a><span class="lineno"> 1482</span><span class="comment">!!        The result PDYF(:,j,:) is defined by (PA(:,j+1,:)-PA(:,j,:))</span></div>
-<div class="line"><a id="l01483" name="l01483"></a><span class="lineno"> 1483</span><span class="comment">!!        At j=size(PA,2), PDYF(:,j,:) are replaced by the values of PDYM,</span></div>
-<div class="line"><a id="l01484" name="l01484"></a><span class="lineno"> 1484</span><span class="comment">!!    which are the right values in the y-cyclic case</span></div>
-<div class="line"><a id="l01485" name="l01485"></a><span class="lineno"> 1485</span><span class="comment">!!    </span></div>
-<div class="line"><a id="l01486" name="l01486"></a><span class="lineno"> 1486</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01487" name="l01487"></a><span class="lineno"> 1487</span><span class="comment">!!    EXTERNAL</span></div>
-<div class="line"><a id="l01488" name="l01488"></a><span class="lineno"> 1488</span><span class="comment">!!    --------</span></div>
-<div class="line"><a id="l01489" name="l01489"></a><span class="lineno"> 1489</span><span class="comment">!!      NONE</span></div>
-<div class="line"><a id="l01490" name="l01490"></a><span class="lineno"> 1490</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01491" name="l01491"></a><span class="lineno"> 1491</span><span class="comment">!!    IMPLICIT ARGUMENTS</span></div>
-<div class="line"><a id="l01492" name="l01492"></a><span class="lineno"> 1492</span><span class="comment">!!    ------------------</span></div>
-<div class="line"><a id="l01493" name="l01493"></a><span class="lineno"> 1493</span><span class="comment">!!      Module MODD_PARAMETERS: declaration of parameter variables</span></div>
-<div class="line"><a id="l01494" name="l01494"></a><span class="lineno"> 1494</span><span class="comment">!!        JPHEXT: define the number of marginal points out of the </span></div>
-<div class="line"><a id="l01495" name="l01495"></a><span class="lineno"> 1495</span><span class="comment">!!        physical domain along the horizontal directions.</span></div>
-<div class="line"><a id="l01496" name="l01496"></a><span class="lineno"> 1496</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01497" name="l01497"></a><span class="lineno"> 1497</span><span class="comment">!!    REFERENCE</span></div>
-<div class="line"><a id="l01498" name="l01498"></a><span class="lineno"> 1498</span><span class="comment">!!    ---------</span></div>
-<div class="line"><a id="l01499" name="l01499"></a><span class="lineno"> 1499</span><span class="comment">!!      Book2 of documentation of Meso-NH (SHUMAN operators)</span></div>
-<div class="line"><a id="l01500" name="l01500"></a><span class="lineno"> 1500</span><span class="comment">!!      Technical specifications Report of The Meso-NH (chapters 3)  </span></div>
+<div class="line"><a id="l01464" name="l01464"></a><span class="lineno"> 1464</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#a191f841104f424a01825322f617985de">dyf_phy</a></div>
+<div class="line"><a id="l01465" name="l01465"></a><span class="lineno"> 1465</span><span class="comment">!</span></div>
+<div class="line"><a id="l01466" name="l01466"></a><span class="lineno"> 1466</span><span class="comment">!     ###############################</span></div>
+<div class="foldopen" id="foldopen01467" data-start="" data-end="">
+<div class="line"><a id="l01467" name="l01467"></a><span class="lineno"><a class="line" href="namespacemode__shuman__phy.html#a22d9a82113dce4d7f919712fce5a8bc1"> 1467</a></span>      <span class="keyword">SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#a22d9a82113dce4d7f919712fce5a8bc1">dyf2d_phy</a>(D,PA,PDYF)</div>
+<div class="line"><a id="l01468" name="l01468"></a><span class="lineno"> 1468</span><span class="comment">!     ###############################</span></div>
+<div class="line"><a id="l01469" name="l01469"></a><span class="lineno"> 1469</span><span class="comment">!</span></div>
+<div class="line"><a id="l01470" name="l01470"></a><span class="lineno"> 1470</span><span class="comment">!!****  *DYF* -  Shuman operator : finite difference operator in y direction</span></div>
+<div class="line"><a id="l01471" name="l01471"></a><span class="lineno"> 1471</span><span class="comment">!!                                  for a variable at a flux side</span></div>
+<div class="line"><a id="l01472" name="l01472"></a><span class="lineno"> 1472</span><span class="comment">!!</span></div>
+<div class="line"><a id="l01473" name="l01473"></a><span class="lineno"> 1473</span><span class="comment">!!    PURPOSE</span></div>
+<div class="line"><a id="l01474" name="l01474"></a><span class="lineno"> 1474</span><span class="comment">!!    -------</span></div>
+<div class="line"><a id="l01475" name="l01475"></a><span class="lineno"> 1475</span><span class="comment">!       The purpose of this function  is to compute a finite difference </span></div>
+<div class="line"><a id="l01476" name="l01476"></a><span class="lineno"> 1476</span><span class="comment">!     along the y direction (J index) for a field PA localized at a y-flux</span></div>
+<div class="line"><a id="l01477" name="l01477"></a><span class="lineno"> 1477</span><span class="comment">!     point (v point). The result is localized at a mass point.</span></div>
+<div class="line"><a id="l01478" name="l01478"></a><span class="lineno"> 1478</span><span class="comment">!</span></div>
+<div class="line"><a id="l01479" name="l01479"></a><span class="lineno"> 1479</span><span class="comment">!!**  METHOD</span></div>
+<div class="line"><a id="l01480" name="l01480"></a><span class="lineno"> 1480</span><span class="comment">!!    ------ </span></div>
+<div class="line"><a id="l01481" name="l01481"></a><span class="lineno"> 1481</span><span class="comment">!!        The result PDYF(:,j,:) is defined by (PA(:,j+1,:)-PA(:,j,:))</span></div>
+<div class="line"><a id="l01482" name="l01482"></a><span class="lineno"> 1482</span><span class="comment">!!        At j=size(PA,2), PDYF(:,j,:) are replaced by the values of PDYM,</span></div>
+<div class="line"><a id="l01483" name="l01483"></a><span class="lineno"> 1483</span><span class="comment">!!    which are the right values in the y-cyclic case</span></div>
+<div class="line"><a id="l01484" name="l01484"></a><span class="lineno"> 1484</span><span class="comment">!!    </span></div>
+<div class="line"><a id="l01485" name="l01485"></a><span class="lineno"> 1485</span><span class="comment">!!</span></div>
+<div class="line"><a id="l01486" name="l01486"></a><span class="lineno"> 1486</span><span class="comment">!!    EXTERNAL</span></div>
+<div class="line"><a id="l01487" name="l01487"></a><span class="lineno"> 1487</span><span class="comment">!!    --------</span></div>
+<div class="line"><a id="l01488" name="l01488"></a><span class="lineno"> 1488</span><span class="comment">!!      NONE</span></div>
+<div class="line"><a id="l01489" name="l01489"></a><span class="lineno"> 1489</span><span class="comment">!!</span></div>
+<div class="line"><a id="l01490" name="l01490"></a><span class="lineno"> 1490</span><span class="comment">!!    IMPLICIT ARGUMENTS</span></div>
+<div class="line"><a id="l01491" name="l01491"></a><span class="lineno"> 1491</span><span class="comment">!!    ------------------</span></div>
+<div class="line"><a id="l01492" name="l01492"></a><span class="lineno"> 1492</span><span class="comment">!!      Module MODD_PARAMETERS: declaration of parameter variables</span></div>
+<div class="line"><a id="l01493" name="l01493"></a><span class="lineno"> 1493</span><span class="comment">!!        JPHEXT: define the number of marginal points out of the </span></div>
+<div class="line"><a id="l01494" name="l01494"></a><span class="lineno"> 1494</span><span class="comment">!!        physical domain along the horizontal directions.</span></div>
+<div class="line"><a id="l01495" name="l01495"></a><span class="lineno"> 1495</span><span class="comment">!!</span></div>
+<div class="line"><a id="l01496" name="l01496"></a><span class="lineno"> 1496</span><span class="comment">!!    REFERENCE</span></div>
+<div class="line"><a id="l01497" name="l01497"></a><span class="lineno"> 1497</span><span class="comment">!!    ---------</span></div>
+<div class="line"><a id="l01498" name="l01498"></a><span class="lineno"> 1498</span><span class="comment">!!      Book2 of documentation of Meso-NH (SHUMAN operators)</span></div>
+<div class="line"><a id="l01499" name="l01499"></a><span class="lineno"> 1499</span><span class="comment">!!      Technical specifications Report of The Meso-NH (chapters 3)  </span></div>
+<div class="line"><a id="l01500" name="l01500"></a><span class="lineno"> 1500</span><span class="comment">!!</span></div>
 <div class="line"><a id="l01501" name="l01501"></a><span class="lineno"> 1501</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01502" name="l01502"></a><span class="lineno"> 1502</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01503" name="l01503"></a><span class="lineno"> 1503</span><span class="comment">!!    AUTHOR</span></div>
-<div class="line"><a id="l01504" name="l01504"></a><span class="lineno"> 1504</span><span class="comment">!!    ------</span></div>
-<div class="line"><a id="l01505" name="l01505"></a><span class="lineno"> 1505</span><span class="comment">!!      V. Ducrocq       * Meteo France *</span></div>
-<div class="line"><a id="l01506" name="l01506"></a><span class="lineno"> 1506</span><span class="comment">!!</span></div>
-<div class="line"><a id="l01507" name="l01507"></a><span class="lineno"> 1507</span><span class="comment">!!    MODIFICATIONS</span></div>
-<div class="line"><a id="l01508" name="l01508"></a><span class="lineno"> 1508</span><span class="comment">!!    -------------</span></div>
-<div class="line"><a id="l01509" name="l01509"></a><span class="lineno"> 1509</span><span class="comment">!!      Original    05/07/94 </span></div>
-<div class="line"><a id="l01510" name="l01510"></a><span class="lineno"> 1510</span><span class="comment">!!      Modification to include the periodic case 13/10/94 J.Stein </span></div>
-<div class="line"><a id="l01511" name="l01511"></a><span class="lineno"> 1511</span><span class="comment">!!                   optimisation                 20/08/00 J. Escobar</span></div>
-<div class="line"><a id="l01512" name="l01512"></a><span class="lineno"> 1512</span><span class="comment">!!      correction of in halo/pseudo-cyclic calculation for JPHEXT&lt;&gt; 1 </span></div>
-<div class="line"><a id="l01513" name="l01513"></a><span class="lineno"> 1513</span><span class="comment">!!      J.Escobar : 15/09/2015 : WENO5 &amp; JPHEXT &lt;&gt; 1 </span></div>
-<div class="line"><a id="l01514" name="l01514"></a><span class="lineno"> 1514</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l01515" name="l01515"></a><span class="lineno"> 1515</span><span class="comment">!</span></div>
-<div class="line"><a id="l01516" name="l01516"></a><span class="lineno"> 1516</span><span class="comment">!*       0.    DECLARATIONS</span></div>
-<div class="line"><a id="l01517" name="l01517"></a><span class="lineno"> 1517</span><span class="comment">!              ------------</span></div>
-<div class="line"><a id="l01518" name="l01518"></a><span class="lineno"> 1518</span><span class="comment">!</span></div>
-<div class="line"><a id="l01519" name="l01519"></a><span class="lineno"> 1519</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
-<div class="line"><a id="l01520" name="l01520"></a><span class="lineno"> 1520</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__msg.html">mode_msg</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>, nverb_fatal</div>
-<div class="line"><a id="l01521" name="l01521"></a><span class="lineno"> 1521</span><span class="comment">!</span></div>
-<div class="line"><a id="l01522" name="l01522"></a><span class="lineno"> 1522</span><span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l01523" name="l01523"></a><span class="lineno"> 1523</span><span class="comment">!</span></div>
-<div class="line"><a id="l01524" name="l01524"></a><span class="lineno"> 1524</span><span class="comment">!*       0.1   Declarations of argument and result</span></div>
-<div class="line"><a id="l01525" name="l01525"></a><span class="lineno"> 1525</span><span class="comment">!              ------------------------------------</span></div>
-<div class="line"><a id="l01526" name="l01526"></a><span class="lineno"> 1526</span><span class="comment">!</span></div>
-<div class="line"><a id="l01527" name="l01527"></a><span class="lineno"> 1527</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),       <span class="keywordtype">INTENT(IN)</span>  :: d</div>
-<div class="line"><a id="l01528" name="l01528"></a><span class="lineno"> 1528</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>, <span class="keywordtype">INTENT(IN)</span>                :: pa     <span class="comment">! variable at flux</span></div>
-<div class="line"><a id="l01529" name="l01529"></a><span class="lineno"> 1529</span>                                                            <span class="comment">!  side</span></div>
-<div class="line"><a id="l01530" name="l01530"></a><span class="lineno"> 1530</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>, <span class="keywordtype">INTENT(OUT)</span> :: pdyf   <span class="comment">! result at mass</span></div>
-<div class="line"><a id="l01531" name="l01531"></a><span class="lineno"> 1531</span>                                                            <span class="comment">! localization </span></div>
-<div class="line"><a id="l01532" name="l01532"></a><span class="lineno"> 1532</span><span class="comment">!</span></div>
-<div class="line"><a id="l01533" name="l01533"></a><span class="lineno"> 1533</span><span class="comment">!*       0.2   Declarations of local variables</span></div>
-<div class="line"><a id="l01534" name="l01534"></a><span class="lineno"> 1534</span><span class="comment">!              -------------------------------</span></div>
-<div class="line"><a id="l01535" name="l01535"></a><span class="lineno"> 1535</span><span class="comment">!</span></div>
-<div class="line"><a id="l01536" name="l01536"></a><span class="lineno"> 1536</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l01537" name="l01537"></a><span class="lineno"> 1537</span><span class="comment">!</span></div>
-<div class="line"><a id="l01538" name="l01538"></a><span class="lineno"> 1538</span><span class="comment">!*       1.    DEFINITION OF DYF</span></div>
-<div class="line"><a id="l01539" name="l01539"></a><span class="lineno"> 1539</span><span class="comment">!              ------------------</span></div>
-<div class="line"><a id="l01540" name="l01540"></a><span class="lineno"> 1540</span><span class="comment">!</span></div>
-<div class="line"><a id="l01541" name="l01541"></a><span class="lineno"> 1541</span><span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;DYF2D_PHY&#39;</span>, <span class="stringliteral">&#39;AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE&#39;</span>)</div>
-<div class="line"><a id="l01542" name="l01542"></a><span class="lineno"> 1542</span><span class="comment">!</span></div>
-<div class="line"><a id="l01543" name="l01543"></a><span class="lineno"> 1543</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l01544" name="l01544"></a><span class="lineno"> 1544</span><span class="comment">!</span></div>
+<div class="line"><a id="l01502" name="l01502"></a><span class="lineno"> 1502</span><span class="comment">!!    AUTHOR</span></div>
+<div class="line"><a id="l01503" name="l01503"></a><span class="lineno"> 1503</span><span class="comment">!!    ------</span></div>
+<div class="line"><a id="l01504" name="l01504"></a><span class="lineno"> 1504</span><span class="comment">!!      V. Ducrocq       * Meteo France *</span></div>
+<div class="line"><a id="l01505" name="l01505"></a><span class="lineno"> 1505</span><span class="comment">!!</span></div>
+<div class="line"><a id="l01506" name="l01506"></a><span class="lineno"> 1506</span><span class="comment">!!    MODIFICATIONS</span></div>
+<div class="line"><a id="l01507" name="l01507"></a><span class="lineno"> 1507</span><span class="comment">!!    -------------</span></div>
+<div class="line"><a id="l01508" name="l01508"></a><span class="lineno"> 1508</span><span class="comment">!!      Original    05/07/94 </span></div>
+<div class="line"><a id="l01509" name="l01509"></a><span class="lineno"> 1509</span><span class="comment">!!      Modification to include the periodic case 13/10/94 J.Stein </span></div>
+<div class="line"><a id="l01510" name="l01510"></a><span class="lineno"> 1510</span><span class="comment">!!                   optimisation                 20/08/00 J. Escobar</span></div>
+<div class="line"><a id="l01511" name="l01511"></a><span class="lineno"> 1511</span><span class="comment">!!      correction of in halo/pseudo-cyclic calculation for JPHEXT&lt;&gt; 1 </span></div>
+<div class="line"><a id="l01512" name="l01512"></a><span class="lineno"> 1512</span><span class="comment">!!      J.Escobar : 15/09/2015 : WENO5 &amp; JPHEXT &lt;&gt; 1 </span></div>
+<div class="line"><a id="l01513" name="l01513"></a><span class="lineno"> 1513</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l01514" name="l01514"></a><span class="lineno"> 1514</span><span class="comment">!</span></div>
+<div class="line"><a id="l01515" name="l01515"></a><span class="lineno"> 1515</span><span class="comment">!*       0.    DECLARATIONS</span></div>
+<div class="line"><a id="l01516" name="l01516"></a><span class="lineno"> 1516</span><span class="comment">!              ------------</span></div>
+<div class="line"><a id="l01517" name="l01517"></a><span class="lineno"> 1517</span><span class="comment">!</span></div>
+<div class="line"><a id="l01518" name="l01518"></a><span class="lineno"> 1518</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
+<div class="line"><a id="l01519" name="l01519"></a><span class="lineno"> 1519</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__msg.html">mode_msg</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>, nverb_fatal</div>
+<div class="line"><a id="l01520" name="l01520"></a><span class="lineno"> 1520</span><span class="comment">!</span></div>
+<div class="line"><a id="l01521" name="l01521"></a><span class="lineno"> 1521</span><span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a id="l01522" name="l01522"></a><span class="lineno"> 1522</span><span class="comment">!</span></div>
+<div class="line"><a id="l01523" name="l01523"></a><span class="lineno"> 1523</span><span class="comment">!*       0.1   Declarations of argument and result</span></div>
+<div class="line"><a id="l01524" name="l01524"></a><span class="lineno"> 1524</span><span class="comment">!              ------------------------------------</span></div>
+<div class="line"><a id="l01525" name="l01525"></a><span class="lineno"> 1525</span><span class="comment">!</span></div>
+<div class="line"><a id="l01526" name="l01526"></a><span class="lineno"> 1526</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),       <span class="keywordtype">INTENT(IN)</span>  :: d</div>
+<div class="line"><a id="l01527" name="l01527"></a><span class="lineno"> 1527</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>, <span class="keywordtype">INTENT(IN)</span>                :: pa     <span class="comment">! variable at flux</span></div>
+<div class="line"><a id="l01528" name="l01528"></a><span class="lineno"> 1528</span>                                                            <span class="comment">!  side</span></div>
+<div class="line"><a id="l01529" name="l01529"></a><span class="lineno"> 1529</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>, <span class="keywordtype">INTENT(OUT)</span> :: pdyf   <span class="comment">! result at mass</span></div>
+<div class="line"><a id="l01530" name="l01530"></a><span class="lineno"> 1530</span>                                                            <span class="comment">! localization </span></div>
+<div class="line"><a id="l01531" name="l01531"></a><span class="lineno"> 1531</span><span class="comment">!</span></div>
+<div class="line"><a id="l01532" name="l01532"></a><span class="lineno"> 1532</span><span class="comment">!*       0.2   Declarations of local variables</span></div>
+<div class="line"><a id="l01533" name="l01533"></a><span class="lineno"> 1533</span><span class="comment">!              -------------------------------</span></div>
+<div class="line"><a id="l01534" name="l01534"></a><span class="lineno"> 1534</span><span class="comment">!</span></div>
+<div class="line"><a id="l01535" name="l01535"></a><span class="lineno"> 1535</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l01536" name="l01536"></a><span class="lineno"> 1536</span><span class="comment">!</span></div>
+<div class="line"><a id="l01537" name="l01537"></a><span class="lineno"> 1537</span><span class="comment">!*       1.    DEFINITION OF DYF</span></div>
+<div class="line"><a id="l01538" name="l01538"></a><span class="lineno"> 1538</span><span class="comment">!              ------------------</span></div>
+<div class="line"><a id="l01539" name="l01539"></a><span class="lineno"> 1539</span><span class="comment">!</span></div>
+<div class="line"><a id="l01540" name="l01540"></a><span class="lineno"> 1540</span><span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;DYF2D_PHY&#39;</span>, <span class="stringliteral">&#39;AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE&#39;</span>)</div>
+<div class="line"><a id="l01541" name="l01541"></a><span class="lineno"> 1541</span><span class="comment">!</span></div>
+<div class="line"><a id="l01542" name="l01542"></a><span class="lineno"> 1542</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l01543" name="l01543"></a><span class="lineno"> 1543</span><span class="comment">!</span></div>
 </div>
-<div class="line"><a id="l01545" name="l01545"></a><span class="lineno"> 1545</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#a22d9a82113dce4d7f919712fce5a8bc1">dyf2d_phy</a></div>
-<div class="line"><a id="l01546" name="l01546"></a><span class="lineno"> 1546</span><span class="comment">!</span></div>
-<div class="line"><a id="l01547" name="l01547"></a><span class="lineno"> 1547</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__shuman__phy.html">mode_shuman_phy</a></div>
+<div class="line"><a id="l01544" name="l01544"></a><span class="lineno"> 1544</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__shuman__phy.html#a22d9a82113dce4d7f919712fce5a8bc1">dyf2d_phy</a></div>
+<div class="line"><a id="l01545" name="l01545"></a><span class="lineno"> 1545</span><span class="comment">!</span></div>
+<div class="line"><a id="l01546" name="l01546"></a><span class="lineno"> 1546</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__shuman__phy.html">mode_shuman_phy</a></div>
 <div class="ttc" id="ainterfacemode__msg_1_1print__msg_html"><div class="ttname"><a href="interfacemode__msg_1_1print__msg.html">mode_msg::print_msg</a></div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00018">mode_msg.F90:18</a></div></div>
 <div class="ttc" id="anamespacemodd__dimphyex_html"><div class="ttname"><a href="namespacemodd__dimphyex.html">modd_dimphyex</a></div><div class="ttdef"><b>Definition</b> <a href="modd__dimphyexn_8F90_source.html#l00007">modd_dimphyexn.F90:7</a></div></div>
-<div class="ttc" id="anamespacemodd__parameters_html"><div class="ttname"><a href="namespacemodd__parameters.html">modd_parameters</a></div><div class="ttdef"><b>Definition</b> <a href="modd__parameters_8F90_source.html#l00007">modd_parameters.F90:7</a></div></div>
-<div class="ttc" id="anamespacemodd__parameters_html_adbfa152f873e93b07c0773db26ee31d4"><div class="ttname"><a href="namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4">modd_parameters::jphext</a></div><div class="ttdeci">integer, parameter jphext</div><div class="ttdef"><b>Definition</b> <a href="modd__parameters_8F90_source.html#l00047">modd_parameters.F90:47</a></div></div>
 <div class="ttc" id="anamespacemode__msg_html"><div class="ttname"><a href="namespacemode__msg.html">mode_msg</a></div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00005">mode_msg.F90:5</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html"><div class="ttname"><a href="namespacemode__shuman__phy.html">mode_shuman_phy</a></div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00001">mode_shuman_phy.F90:1</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_a022e15d54f09a2283f66868ffa20e725"><div class="ttname"><a href="namespacemode__shuman__phy.html#a022e15d54f09a2283f66868ffa20e725">mode_shuman_phy::mym_phy</a></div><div class="ttdeci">subroutine mym_phy(d, pa, pmym)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00230">mode_shuman_phy.F90:231</a></div></div>
-<div class="ttc" id="anamespacemode__shuman__phy_html_a191f841104f424a01825322f617985de"><div class="ttname"><a href="namespacemode__shuman__phy.html#a191f841104f424a01825322f617985de">mode_shuman_phy::dyf_phy</a></div><div class="ttdeci">subroutine dyf_phy(d, pa, pdyf)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l01390">mode_shuman_phy.F90:1391</a></div></div>
+<div class="ttc" id="anamespacemode__shuman__phy_html_a191f841104f424a01825322f617985de"><div class="ttname"><a href="namespacemode__shuman__phy.html#a191f841104f424a01825322f617985de">mode_shuman_phy::dyf_phy</a></div><div class="ttdeci">subroutine dyf_phy(d, pa, pdyf)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l01389">mode_shuman_phy.F90:1390</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_a1c4329981fbefbc265709f1515123cf0"><div class="ttname"><a href="namespacemode__shuman__phy.html#a1c4329981fbefbc265709f1515123cf0">mode_shuman_phy::mxf_phy</a></div><div class="ttdeci">subroutine mxf_phy(d, pa, pmxf)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00658">mode_shuman_phy.F90:659</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_a21558529c1139a3f336daa0438bb5569"><div class="ttname"><a href="namespacemode__shuman__phy.html#a21558529c1139a3f336daa0438bb5569">mode_shuman_phy::dym_phy</a></div><div class="ttdeci">subroutine dym_phy(d, pa, pdym)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l01138">mode_shuman_phy.F90:1139</a></div></div>
-<div class="ttc" id="anamespacemode__shuman__phy_html_a22d9a82113dce4d7f919712fce5a8bc1"><div class="ttname"><a href="namespacemode__shuman__phy.html#a22d9a82113dce4d7f919712fce5a8bc1">mode_shuman_phy::dyf2d_phy</a></div><div class="ttdeci">subroutine dyf2d_phy(d, pa, pdyf)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l01468">mode_shuman_phy.F90:1469</a></div></div>
+<div class="ttc" id="anamespacemode__shuman__phy_html_a22d9a82113dce4d7f919712fce5a8bc1"><div class="ttname"><a href="namespacemode__shuman__phy.html#a22d9a82113dce4d7f919712fce5a8bc1">mode_shuman_phy::dyf2d_phy</a></div><div class="ttdeci">subroutine dyf2d_phy(d, pa, pdyf)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l01467">mode_shuman_phy.F90:1468</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_a2d371589a4f7cd4e4938b338e09f987e"><div class="ttname"><a href="namespacemode__shuman__phy.html#a2d371589a4f7cd4e4938b338e09f987e">mode_shuman_phy::dxf2d_phy</a></div><div class="ttdeci">subroutine dxf2d_phy(d, pa, pdxf)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00890">mode_shuman_phy.F90:891</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_a2f055f5b655f5462578da40938f85425"><div class="ttname"><a href="namespacemode__shuman__phy.html#a2f055f5b655f5462578da40938f85425">mode_shuman_phy::mym2d_phy</a></div><div class="ttdeci">subroutine mym2d_phy(d, pa, pmym)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00158">mode_shuman_phy.F90:159</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_a33d3e4511e949ee5c52ca0fdc969e07c"><div class="ttname"><a href="namespacemode__shuman__phy.html#a33d3e4511e949ee5c52ca0fdc969e07c">mode_shuman_phy::mxf2d_phy</a></div><div class="ttdeci">subroutine mxf2d_phy(d, pa, pmxf)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00729">mode_shuman_phy.F90:730</a></div></div>
@@ -1691,7 +1688,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="anamespacemode__shuman__phy_html_a86441e6781603bb2b6b1f30d8c0e39b4"><div class="ttname"><a href="namespacemode__shuman__phy.html#a86441e6781603bb2b6b1f30d8c0e39b4">mode_shuman_phy::mzm_phy</a></div><div class="ttdeci">subroutine mzm_phy(d, pa, pmzm)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00311">mode_shuman_phy.F90:312</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_a960e2dc2b7078cc75ef8e5192c212356"><div class="ttname"><a href="namespacemode__shuman__phy.html#a960e2dc2b7078cc75ef8e5192c212356">mode_shuman_phy::mzf_phy</a></div><div class="ttdeci">subroutine mzf_phy(d, pa, pmzf)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00800">mode_shuman_phy.F90:801</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_ac4f1863a7b2e1f6bdda36585c50334d0"><div class="ttname"><a href="namespacemode__shuman__phy.html#ac4f1863a7b2e1f6bdda36585c50334d0">mode_shuman_phy::myf2d_phy</a></div><div class="ttdeci">subroutine myf2d_phy(d, pa, pmyf)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00083">mode_shuman_phy.F90:84</a></div></div>
-<div class="ttc" id="anamespacemode__shuman__phy_html_ad1f46fbcb602580b47426b961da805a8"><div class="ttname"><a href="namespacemode__shuman__phy.html#ad1f46fbcb602580b47426b961da805a8">mode_shuman_phy::dxf_phy</a></div><div class="ttdeci">subroutine dxf_phy(d, pa, pdxf)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l01315">mode_shuman_phy.F90:1316</a></div></div>
+<div class="ttc" id="anamespacemode__shuman__phy_html_ad1f46fbcb602580b47426b961da805a8"><div class="ttname"><a href="namespacemode__shuman__phy.html#ad1f46fbcb602580b47426b961da805a8">mode_shuman_phy::dxf_phy</a></div><div class="ttdeci">subroutine dxf_phy(d, pa, pdxf)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l01314">mode_shuman_phy.F90:1315</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_ad7e5b1c3c9f74262b10ca07db9ca6893"><div class="ttname"><a href="namespacemode__shuman__phy.html#ad7e5b1c3c9f74262b10ca07db9ca6893">mode_shuman_phy::mxm_phy</a></div><div class="ttdeci">subroutine mxm_phy(d, pa, pmxm)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00494">mode_shuman_phy.F90:495</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_ae651e59d4c09e8187d0292f473eaaf33"><div class="ttname"><a href="namespacemode__shuman__phy.html#ae651e59d4c09e8187d0292f473eaaf33">mode_shuman_phy::myf_phy</a></div><div class="ttdeci">subroutine myf_phy(d, pa, pmyf)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00008">mode_shuman_phy.F90:9</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_ae898ed480a8ca1c64c3bdc70d9819873"><div class="ttname"><a href="namespacemode__shuman__phy.html#ae898ed480a8ca1c64c3bdc70d9819873">mode_shuman_phy::dzf_phy</a></div><div class="ttdeci">subroutine dzf_phy(d, pa, pdzf)</div><div class="ttdef"><b>Definition</b> <a href="mode__shuman__phy_8F90_source.html#l00972">mode_shuman_phy.F90:973</a></div></div>
