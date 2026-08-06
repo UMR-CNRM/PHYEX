@@ -96,6 +96,8 @@ Modules</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
+<tr class="memitem:a17dab874dea662fa569acae2f2dcb595" id="r_a17dab874dea662fa569acae2f2dcb595"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="les__mean__subgrid__phy_8F90.html#a17dab874dea662fa569acae2f2dcb595">les_mean_subgrid_2d_phy</a> (d, tles, pa, pa_mean, osum)</td></tr>
+<tr class="separator:a17dab874dea662fa569acae2f2dcb595"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad4c6dfb41c89e7ab530db3c374d09ce0" id="r_ad4c6dfb41c89e7ab530db3c374d09ce0"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="les__mean__subgrid__phy_8F90.html#ad4c6dfb41c89e7ab530db3c374d09ce0">les_mean_subgrid_3d_phy</a> (d, tles, pa, pa_mean, osum)</td></tr>
 <tr class="separator:ad4c6dfb41c89e7ab530db3c374d09ce0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1a7bc73a1f4c7d9fe2c8692c5197f980" id="r_a1a7bc73a1f4c7d9fe2c8692c5197f980"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="les__mean__subgrid__phy_8F90.html#a1a7bc73a1f4c7d9fe2c8692c5197f980">les_mean_subgrid_surf_phy</a> (d, tles, pa, pa_mean, osum)</td></tr>
@@ -104,14 +106,14 @@ Functions/Subroutines</h2></td></tr>
 <tr class="separator:ad008748b1b2575735ff0fc4e47f9fa31"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="ad4c6dfb41c89e7ab530db3c374d09ce0" name="ad4c6dfb41c89e7ab530db3c374d09ce0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad4c6dfb41c89e7ab530db3c374d09ce0">&#9670;&#160;</a></span>les_mean_subgrid_3d_phy()</h2>
+<a id="a17dab874dea662fa569acae2f2dcb595" name="a17dab874dea662fa569acae2f2dcb595"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a17dab874dea662fa569acae2f2dcb595">&#9670;&#160;</a></span>les_mean_subgrid_2d_phy()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">subroutine les_mean_subgrid_3d_phy </td>
+          <td class="memname">subroutine les_mean_subgrid_2d_phy </td>
           <td>(</td>
           <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>d</em>, </td>
@@ -148,7 +150,55 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="les__mean__subgrid__phy_8F90_source.html#l00067">67</a> of file <a class="el" href="les__mean__subgrid__phy_8F90_source.html">les_mean_subgrid_phy.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="les__mean__subgrid__phy_8F90_source.html#l00081">81</a> of file <a class="el" href="les__mean__subgrid__phy_8F90_source.html">les_mean_subgrid_phy.F90</a>.</p>
+
+</div>
+</div>
+<a id="ad4c6dfb41c89e7ab530db3c374d09ce0" name="ad4c6dfb41c89e7ab530db3c374d09ce0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad4c6dfb41c89e7ab530db3c374d09ce0">&#9670;&#160;</a></span>les_mean_subgrid_3d_phy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine les_mean_subgrid_3d_phy </td>
+          <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__les_1_1tles__t.html">tles_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>tles</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramname"><em>pa</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(:,:,:), intent(inout)&#160;</td>
+          <td class="paramname"><em>pa_mean</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in), optional&#160;</td>
+          <td class="paramname"><em>osum</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="les__mean__subgrid__phy_8F90_source.html#l00100">100</a> of file <a class="el" href="les__mean__subgrid__phy_8F90_source.html">les_mean_subgrid_phy.F90</a>.</p>
 
 </div>
 </div>
@@ -196,7 +246,7 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="les__mean__subgrid__phy_8F90_source.html#l00107">107</a> of file <a class="el" href="les__mean__subgrid__phy_8F90_source.html">les_mean_subgrid_phy.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="les__mean__subgrid__phy_8F90_source.html#l00139">139</a> of file <a class="el" href="les__mean__subgrid__phy_8F90_source.html">les_mean_subgrid_phy.F90</a>.</p>
 
 </div>
 </div>
@@ -244,7 +294,7 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="les__mean__subgrid__phy_8F90_source.html#l00086">86</a> of file <a class="el" href="les__mean__subgrid__phy_8F90_source.html">les_mean_subgrid_phy.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="les__mean__subgrid__phy_8F90_source.html#l00118">118</a> of file <a class="el" href="les__mean__subgrid__phy_8F90_source.html">les_mean_subgrid_phy.F90</a>.</p>
 
 </div>
 </div>
