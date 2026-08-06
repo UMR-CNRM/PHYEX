@@ -41,6 +41,9 @@ aux/mode_thermo.f90
 aux/gamma.f90
 aux/gamma_inc.f90
 aux/general_gamma.f90
+aux/modi_gamma.f90
+aux/modi_gamma_inc.f90
+aux/modi_general_gamma.f90
 aux/mode_shuman_phy.f90
 
 #files not used in Meso-NH

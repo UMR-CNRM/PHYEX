@@ -220,6 +220,7 @@ class CheckCommitLmdz(CheckCommitBase):
             prep_code(
                 directory=os.path.join(packdir, 'PHYEX'),
                 model='lmdz',
+                build_modi=True,
                 mnh_expand=self.useexpand,
                 subs=subs,
                 no_raise_on_coding_norms=True,

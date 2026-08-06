@@ -15,7 +15,7 @@ license = {file = "LICENSE"}
 dependencies = [
     "netCDF4<=1.7.2", # line to be removed completely when belenos is updated
     "matplotlib",
-    "pyfortool>=0.2.17",
+    "pyfortool>=0.2.19",
     "numpy",
     "pandas<=2.3.2", # version constraint to be removed when belenos is updated
     "xarray",
