@@ -147,6 +147,7 @@ class CheckCommitMesonh(CheckCommitBase):
                 subs=['turb', 'micro', 'aux', 'ext', 'conv'],
                 rename_Ff_flag=True,
                 ilooprm=True,
+                build_modi=True,
                 no_raise_on_coding_norms=True,
                 pyfortool_options=['--removeExtraDOinMnhDoConcurrent'],
                 **prep_kwargs)

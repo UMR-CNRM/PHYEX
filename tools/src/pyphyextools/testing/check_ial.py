@@ -208,6 +208,7 @@ class CheckCommitIAL(CheckCommitBase):
             prep_code(
                 directory=os.path.join(phyex_dir, 'PHYEX'),
                 model='arome',
+                build_modi=True,
                 subs=['gmkpack_ignored_files', 'turb', 'micro', 'aux', 'conv',
                       'CMakeLists.txt', 'cmake'],
                 pyfortool_options=['--shumanFUNCtoCALL', '--removeACC', '--mnhExpand'],

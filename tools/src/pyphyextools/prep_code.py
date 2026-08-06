@@ -24,6 +24,36 @@ except ImportError:
 
 SEPARATOR = '_'
 
+DEFAULT_BUILDMODI_FILES = [
+    'gamma',
+    'gamma_inc',
+    'general_gamma',
+    'gradient_m',
+    'gradient_u',
+    'gradient_v',
+    'gradient_w',
+    'ini_phyex',
+    'second_mnh',
+    'shuman',
+    'deep_convection',
+    'shallow_convection',
+    'shallow_convection_part1',
+    'shallow_convection_part2',
+    'shallow_convection_part2_select',
+    'condensation',
+    'ice_adjust',
+    'lima_precip_scavenging',
+    'minpack',
+    'rain_ice_old',
+    'rain_ice_part1',
+    'lima',
+    'lima_adjust_split',
+    'rain_ice',
+    'rain_ice_part3',
+    'shallow_mf',
+    'turb',
+]
+
 
 def parse_args(argv=None):
     """Parse and return command-line arguments."""
@@ -74,6 +104,9 @@ Everything after '--' is passed to pyfortool for source-to-source transformation
                         help='use parallel pyfortool')
     parser.add_argument('--pyfortool_opts_env',
                         help='env var containing per-file pyfortool options')
+    parser.add_argument('--buildModi', action='store_true',
+                        help='apply pyfortool --buildModi on a list of files to '
+                             'generate modi_ interface files')
 
     args = parser.parse_args(argv)
     args.pyfortool_options = pyfortool_options
@@ -222,6 +255,24 @@ def apply_ilooprm(directory):
                     fh.write(content)
 
 
+def apply_buildmodi(directory, model):
+    """Apply pyfortool --buildModi on the default file list to generate modi_ files.
+
+    For each filename in ``DEFAULT_BUILDMODI_FILES``, searches for it under
+    *directory* (recursively) and runs ``pyfortool --wrapH --buildModi <path>``
+    to create the corresponding ``modi_<filename>``.
+    """
+    modi_files_list = [item + '.f90' if model=='mesonh' else item + '.F90' for item in DEFAULT_BUILDMODI_FILES]
+    for fname in modi_files_list:
+        matches = glob.glob(os.path.join(directory, '**', fname), recursive=True)
+        if not matches:
+            logging.warning("buildModi: %s not found, skipping", fname)
+            continue
+        for fpath in matches:
+            logging.info("buildModi: processing %s", fpath)
+            pyfortool.scripting.main(['pyfortool', '--wrapH', '--buildModi', fpath])
+
+
 def prep_code(
     directory,
     checkout_point=None,
@@ -238,6 +289,7 @@ def prep_code(
     use_parallel_pyfortool=False,
     pyfortool_opts_env=None,
     pyfortool_options=None,
+    build_modi=False,
 ):
     """Orchestrate checkout, renaming, merging, transformation, and push.
 
@@ -273,6 +325,9 @@ def prep_code(
         Environment variable name containing per-file pyfortool options.
     pyfortool_options : list of str, optional
         Extra options passed to pyfortool.
+    build_modi : bool
+        Apply pyfortool ``--buildModi`` on ``DEFAULT_BUILDMODI_FILES`` to
+        generate ``modi_`` interface files.
     """
     subs = subs or []
     pyfortool_options = pyfortool_options or []
@@ -411,6 +466,16 @@ def prep_code(
             finally:
                 os.chdir(orig_cwd)
 
+    # -------- BUILDMODI --------
+    if build_modi:
+        logging.info("Applying buildModi")
+        orig_cwd = os.getcwd()
+        os.chdir(directory)
+        try:
+            apply_buildmodi(directory, model)
+        finally:
+            os.chdir(orig_cwd)
+
     # -------- Check coding conventions --------
     if not coding_norms(directory, verbose=True):
         if not no_raise_on_coding_norms:
@@ -454,6 +519,7 @@ def main():
         use_parallel_pyfortool=args.useParallelPyForTool,
         pyfortool_opts_env=args.pyfortool_opts_env,
         pyfortool_options=args.pyfortool_options,
+        build_modi=args.buildModi,
     )
 
 
