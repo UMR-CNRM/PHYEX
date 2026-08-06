@@ -378,9 +378,6 @@ END DO
 !               -----------------------------------------------
 !
 PDTEVRF(:,:) = 0.
-! Reproducibility
-!JKT = MAXVAL( IDDT(:) )
-!DO JK = IKB + 1, JKT
 DO JK = IKB + 1, IKE
 !
        ZPI(:) = ( CST%XP00 / PPRES(:,JK) ) ** ZRDOCP
