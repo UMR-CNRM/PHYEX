@@ -30,7 +30,6 @@ aux/shuman_device.f90
 aux/get_halo.f90
 aux/mode_io_field_write_phy.f90
 aux/shuman.f90
-turb/les_mean_subgrid.f90
 turb/les_mean_subgrid_phy.f90
 aux/tools.f90
 aux/modd_budget.f90
