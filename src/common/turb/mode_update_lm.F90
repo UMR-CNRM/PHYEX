@@ -66,7 +66,7 @@ INTEGER             :: IJB      ! First physical index in y direction
 INTEGER             :: IIE      ! last  physical index in x direction
 INTEGER             :: IJE      ! last  physical index in y direction
 INTEGER             :: JI,JJ,JK    ! loop index
-INTEGER             :: JIU,JJU,JKU ! dime
+INTEGER             :: IIU,IJU,IKU ! dime
 !
 LOGICAL                :: GNORTH, GSOUTH, GWEST, GEAST
 TYPE(LIST_ll), POINTER :: TZLM_ll   ! list of fields to exchange
@@ -82,9 +82,9 @@ IIB = D%NIB
 IIE = D%NIE
 IJB = D%NJB
 IJE = D%NJE
-JIU=D%NIT
-JJU=D%NJT
-JKU=D%NKT
+IIU=D%NIT
+IJU=D%NJT
+IKU=D%NKT
 !
 NULLIFY(TZLM_ll)
 !
@@ -116,8 +116,8 @@ GNORTH = ( HLBCY(2) /= 'CYCL' .AND. LNORTH_ll() )
 
 IF ( GWEST ) THEN
   !$acc kernels async
-  DO JK=1,JKU 
-   DO JJ=1,JJU 
+  DO JK=1,IKU 
+   DO JJ=1,IJU 
   PLM(IIB-1,JJ,JK) = PLM(IIB,JJ,JK)
   PLEPS(IIB-1,JJ,JK) = PLEPS(IIB,JJ,JK)
    ENDDO
@@ -126,8 +126,8 @@ IF ( GWEST ) THEN
 END IF
 IF ( GEAST ) THEN
   !$acc kernels async
-  DO JK=1,JKU 
-   DO JJ=1,JJU 
+  DO JK=1,IKU 
+   DO JJ=1,IJU 
     PLM(IIE+1,JJ,JK) = PLM(IIE,JJ,JK)
     PLEPS(IIE+1,JJ,JK) = PLEPS(IIE,JJ,JK)
    ENDDO
@@ -136,8 +136,8 @@ IF ( GEAST ) THEN
 END IF
 IF ( GSOUTH ) THEN
   !$acc kernels async 
-  DO JK=1,JKU 
-   DO JI=1,JIU 
+  DO JK=1,IKU 
+   DO JI=1,IIU 
      PLM(JI,IJB-1,JK) = PLM(JI,IJB,JK)
      PLEPS(JI,IJB-1,JK) = PLEPS(JI,IJB,JK)
    ENDDO
@@ -146,8 +146,8 @@ IF ( GSOUTH ) THEN
 END IF
 IF ( GNORTH ) THEN
   !$acc kernels async
-  DO JK=1,JKU 
-   DO JI=1,JIU 
+  DO JK=1,IKU 
+   DO JI=1,IIU 
     PLM(JI,IJE+1,JK) = PLM(JI,IJE,JK)
     PLEPS(JI,IJE+1,JK) = PLEPS(JI,IJE,JK)
    ENDDO
