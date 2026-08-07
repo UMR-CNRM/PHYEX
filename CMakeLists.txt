@@ -26,11 +26,10 @@ ecbuild_add_option(FEATURE PHYEX_BUILD_PROGS
 
 ecbuild_add_option(FEATURE OMP
                    DESCRIPTION "Support for OpenMP shared memory parallelism"
-                   REQUIRED_PACKAGES "OpenMP COMPONENTS Fortran")
-
+                   REQUIRED_PACKAGES "OpenMP COMPONENTS Fortran" )
 ecbuild_add_option(FEATURE ACC
                    DESCRIPTION "Support for OpenACC"
-                   REQUIRED_PACKAGES "OpenACC COMPONENTS Fortran")
+                   REQUIRED_PACKAGES "OpenACC COMPONENTS Fortran" )
 
 if(HAVE_DOUBLE_PRECISION)
   list(APPEND precision_list dp) 
@@ -131,6 +130,10 @@ foreach(PRECISION ${precision_list})
     target_link_libraries(phyex_${PRECISION} PRIVATE OpenACC::OpenACC_Fortran)
   endif()
 
+  if( HAVE_ACC )
+    target_link_libraries(phyex_${PRECISION} PRIVATE OpenACC::OpenACC_Fortran )
+  endif()
+
   # Compilation option to use for unqualified REALs
   target_compile_options(phyex_${PRECISION} PUBLIC
     $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
@@ -179,6 +182,10 @@ foreach(PRECISION ${precision_list})
 
       if(HAVE_ACC)
         target_link_libraries(${NAME} PRIVATE OpenACC::OpenACC_Fortran)
+      endif()
+
+      if( HAVE_ACC )
+        target_link_libraries(${NAME} PRIVATE OpenACC::OpenACC_Fortran )
       endif()
 
       if(DEFINED FPP_FLAGS_TESTPROGS)

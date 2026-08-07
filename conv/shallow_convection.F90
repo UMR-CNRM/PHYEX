@@ -156,7 +156,6 @@ REAL, DIMENSION(D%NIJT,D%NKT,KCH1), INTENT(INOUT):: PCH1TEN! species conv. tende
 !
 !*       0.2   Declarations of local fixed memory variables :
 !
-INTEGER  :: ICONV                   ! number of convective columns
 REAL     :: ZRDOCP                  ! R_d/C_p
 !
 REAL, DIMENSION(D%NIJT,D%NKT)         :: ZTHT, ZSTHV, ZSTHES  ! grid scale theta, theta_v
@@ -202,30 +201,15 @@ CALL SHALLOW_CONVECTION_PART1(CVPEXT, CVP_SHAL, CST, D, NSV, CONVPAR, KBDIA, KTD
                               ISDPL, ISPBL, ISLCL, ZSTHLCL, ZSTLCL,&
                               ZSRVLCL, ZSWLCL, ZSZLCL, ZSTHVELCL, GTRIG1)
 
-ICONV = COUNT(GTRIG1(D%NIJB:D%NIJE))
-
-IF(ICONV==0)THEN
-  ! Do nothing if there are no selected columns
-ELSE IF (ICONV < D%NIJT*9/10) THEN
-  CALL SHALLOW_CONVECTION_PART2_SELECT(CVP_SHAL, CVPEXT, CST, D, NSV, CONVPAR, KICE, &
-                                       OSETTADJ, PTADJS, PPABST, PZZ, PTT,  &
-                                       PRVT, PRCT, PRIT, OCH1CONV, KCH1,    &
-                                       PCH1, ZRDOCP, ZTHT, ZSTHV, ZSTHES,   &
-                                       ISDPL, ISPBL, ISLCL, ZSTHLCL, ZSTLCL,&
-                                       ZSRVLCL, ZSWLCL, ZSZLCL, ZSTHVELCL,  &
-                                       GTRIG1, PUMF, PTTEN, PRVTEN, PRCTEN, &
-                                       PRITEN, KCLTOP, KCLBAS, PCH1TEN, ICONV)
-ELSE
-  CALL SHALLOW_CONVECTION_PART2 &
-                             & (CVP_SHAL, CVPEXT, CST, D, NSV, CONVPAR, KICE, &
-                                OSETTADJ, PTADJS, PPABST, PZZ, PTT,  &
-                                PRVT, PRCT, PRIT, OCH1CONV, KCH1,    &
-                                PCH1, ZRDOCP, ZTHT, ZSTHV, ZSTHES,   &
-                                ISDPL, ISPBL, ISLCL, ZSTHLCL, ZSTLCL,&
-                                ZSRVLCL, ZSWLCL, ZSZLCL, ZSTHVELCL,  &
-                                GTRIG1, PUMF, PTTEN, PRVTEN, PRCTEN, &
-                                PRITEN, KCLTOP, KCLBAS, PCH1TEN)
-ENDIF
+CALL SHALLOW_CONVECTION_PART2_SELECT &
+                           & (CVP_SHAL, CVPEXT, CST, D, NSV, CONVPAR, KICE, &
+                              OSETTADJ, PTADJS, PPABST, PZZ, PTT,  &
+                              PRVT, PRCT, PRIT, OCH1CONV, KCH1,    &
+                              PCH1, ZRDOCP, ZTHT, ZSTHV, ZSTHES,   &
+                              ISDPL, ISPBL, ISLCL, ZSTHLCL, ZSTLCL,&
+                              ZSRVLCL, ZSWLCL, ZSZLCL, ZSTHVELCL,  &
+                              GTRIG1, PUMF, PTTEN, PRVTEN, PRCTEN, &
+                              PRITEN, KCLTOP, KCLBAS, PCH1TEN)
 
 IF (LHOOK) CALL DR_HOOK('SHALLOW_CONVECTION',1,ZHOOK_HANDLE)
 END SUBROUTINE SHALLOW_CONVECTION

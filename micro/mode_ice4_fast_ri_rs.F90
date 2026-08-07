@@ -1,12 +1,15 @@
 MODULE MODE_ICE4_FAST_RI_RS
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_FAST_RI_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, &
+SUBROUTINE ICE4_FAST_RI_RS(CST, PARAMI, ICEP, ICED, D, LDSOFT, LDCOMPUTE, &
                        &PRHODREF, PLSFACT, &
                        &PAI, PCIT, PESI, PPRES, &
                        &PSSI, PSSIO, PSSIU, PICLDFR, PIFR, &
                        &PRVT, PRIT, PRST, PT, &
                        &PRILARS, PRVDEPI)
+
+!$ACDC singlecolumn --dummy
+
 !!
 !!**  PURPOSE
 !!    -------
@@ -24,6 +27,7 @@ SUBROUTINE ICE4_FAST_RI_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOM
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
@@ -38,34 +42,34 @@ TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
-INTEGER,                      INTENT(IN)    :: KPROMA,KSIZE
+TYPE(DIMPHYEX_t),             INTENT(IN)    :: D
 LOGICAL,                      INTENT(IN)    :: LDSOFT
-LOGICAL, DIMENSION(KPROMA),   INTENT(IN)    :: LDCOMPUTE
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRHODREF ! Reference density
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLSFACT
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PAI      ! Thermodynamical function
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCIT     ! Pristine ice conc. at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PT       ! Temperature
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRVT     ! Water vapor m.r. at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PSSI     ! Supersaturation over ice
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRIT     ! Pristine ice m.r. at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PESI     ! Saturation pressure over ice
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PPRES    ! Pressure
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PSSIO    ! Super-saturation with respect to ice in the 
+LOGICAL, DIMENSION(D%NIJT),   INTENT(IN)    :: LDCOMPUTE
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRHODREF ! Reference density
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PLSFACT
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PAI      ! Thermodynamical function
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PCIT     ! Pristine ice conc. at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PT       ! Temperature
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRVT     ! Water vapor m.r. at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PSSI     ! Supersaturation over ice
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRIT     ! Pristine ice m.r. at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PESI     ! Saturation pressure over ice
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PPRES    ! Pressure
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PSSIO    ! Super-saturation with respect to ice in the 
                                                         ! supersaturated fraction
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PSSIU    ! Sub-saturation with respect to ice in the 
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PSSIU    ! Sub-saturation with respect to ice in the 
                                                         ! subsaturated fraction
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PICLDFR   ! Ice cloud fraction (fraction with supersat. with respect to ice)
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PICLDFR   ! Ice cloud fraction (fraction with supersat. with respect to ice)
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part
 
-REAL, DIMENSION(KPROMA),      INTENT(OUT)   :: PRVDEPI  ! Conversion vapour to ice, non spherical effect
-REAL, DIMENSION(KPROMA),      INTENT(OUT)   :: PRILARS  ! Conversion of large ice crystals to snow
+REAL, DIMENSION(D%NIJT),      INTENT(OUT)   :: PRVDEPI  ! Conversion vapour to ice, non spherical effect
+REAL, DIMENSION(D%NIJT),      INTENT(OUT)   :: PRILARS  ! Conversion of large ice crystals to snow
 
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(KPROMA) :: ZZW, &
+REAL, DIMENSION(D%NIJT) :: ZZW, &
                            ZZWC, &
                            ZCRYSHA, &
                            ZCI2S, &
@@ -75,7 +79,7 @@ REAL, DIMENSION(KPROMA) :: ZZW, &
                            ZWCITRED23
 REAL :: ZDICRIT, ZTIMESC, ZKVO, ZTC, ZHU, ZQIMAX
 
-INTEGER :: JL
+INTEGER :: JIJ
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
@@ -104,29 +108,29 @@ ENDIF
 PRILARS(:) = 0.
 ZWCITRED(:)= 0.1 ! ratio of ice crystal concentration wet to dry
                   ! part of a gridbox
-DO JL=1, KSIZE
+DO JIJ=D%NIJB, D%NIJE
   IF( .NOT. LDSOFT) THEN
-    ZZW(JL) = 0.
+    ZZW(JIJ) = 0.
     IF(PARAMI%LMODICEDEP .AND. ZTIMESC > 0. )THEN
       ! Turn ice to snow if ice crystal distribution is such that
       ! the ice crystal diameter for the (mass x N_i) maximum 
       ! is larger than a prescribed size, 
       ! (ZDICRIT).
-      ZZWC(JL) = (ICENUMBER3(PRIT(JL),PT(JL))+PCIT(JL))* &
-            PRHODREF(JL)
+      ZZWC(JIJ) = (ICENUMBER3(PRIT(JIJ),PT(JIJ))+PCIT(JIJ))* &
+            PRHODREF(JIJ)
 
-      IF (PRIT(JL)>0.0 .AND. ZZWC(JL)>0.0) THEN   
-        ZZW(JL) = MIN(1.E8,ICED%XLBI*( PRHODREF(JL)*PRIT(JL)/ZZWC(JL) )**ICED%XLBEXI) ! LAMBDA for ICE
-        ZZW(JL) = MIN(0.5, 1. - 0.5**( ZKVO /ZZW(JL)))
-        ZZW(JL) = MIN(0.9*PRIT(JL), ZZW(JL)*PRIT(JL))
-        PRILARS(JL) = ZZW(JL)
+      IF (PRIT(JIJ)>0.0 .AND. ZZWC(JIJ)>0.0) THEN   
+        ZZW(JIJ) = MIN(1.E8,ICED%XLBI*( PRHODREF(JIJ)*PRIT(JIJ)/ZZWC(JIJ) )**ICED%XLBEXI) ! LAMBDA for ICE
+        ZZW(JIJ) = MIN(0.5, 1. - 0.5**( ZKVO /ZZW(JIJ)))
+        ZZW(JIJ) = MIN(0.9*PRIT(JIJ), ZZW(JIJ)*PRIT(JIJ))
+        PRILARS(JIJ) = ZZW(JIJ)
       ENDIF
     ELSE
       ! Turn ice crystals lagrer than a precribed size into snow:
       ! (For the moment sperical ice crystals are assumed)
-      IF (  (PRIT(JL)>0.0) .AND.(PSSI(JL)>0.001) ) THEN
-        ZZW(JL) =   MIN(PRIT(JL),PRIT(JL)/(87.5*(ZDICRIT)**2*PAI(JL)/ PSSI(JL)))
-        PRILARS(JL) =  ZZW(JL)
+      IF (  (PRIT(JIJ)>0.0) .AND.(PSSI(JIJ)>0.001) ) THEN
+        ZZW(JIJ) =   MIN(PRIT(JIJ),PRIT(JIJ)/(87.5*(ZDICRIT)**2*PAI(JIJ)/ PSSI(JIJ)))
+        PRILARS(JIJ) =  ZZW(JIJ)
       ENDIF
     ENDIF
   ENDIF
@@ -136,47 +140,47 @@ PRVDEPI(:) = 0.
 ZZW(:) = 0.
 ZW2D(:) = 1./(PIFR(:)*PICLDFR(:) + 1. -PICLDFR(:))
 ZZWC(:) = 0.
-DO JL=1, KSIZE
+DO JIJ=D%NIJB, D%NIJE
   IF( .NOT. LDSOFT) THEN
     IF(PARAMI%LMODICEDEP)THEN
-      ZZWC(JL) = (ICENUMBER3(PRIT(JL),PT(JL))+PCIT(JL))* &
-                 PRHODREF(JL)
-      IF( (PPRES(JL)*0.5 - PESI(JL))>0. .AND. ZZWC(JL)>0. .AND. LDCOMPUTE(JL)) THEN
-        ZXW2D13(JL)= PIFR(JL)**(-ICED%XLBEXI)
-        ZWCITRED23(JL)=ZWCITRED(JL)**(1.+ ICED%XLBEXI)     
-        ZZW(JL)= ICEP%X0DEPI/(ICED%XLBI*PAI(JL)) *(ZZWC(JL)/PRHODREF(JL))**(1.+ICED%XLBEXI) * &
-              & (MAX(ICED%XRTMIN(4),PRIT(JL))*ZW2D(JL) )**(-ICED%XLBEXI)
-        ZZW(JL)= ZZW(JL)* ( PSSIO(JL)* PICLDFR(JL)* ZXW2D13(JL)  + ZWCITRED23(JL)*PSSIU(JL)* &
-              & (1.-PICLDFR(JL)) )
+      ZZWC(JIJ) = (ICENUMBER3(PRIT(JIJ),PT(JIJ))+PCIT(JIJ))* &
+                 PRHODREF(JIJ)
+      IF( (PPRES(JIJ)*0.5 - PESI(JIJ))>0. .AND. ZZWC(JIJ)>0. .AND. LDCOMPUTE(JIJ)) THEN
+        ZXW2D13(JIJ)= PIFR(JIJ)**(-ICED%XLBEXI)
+        ZWCITRED23(JIJ)=ZWCITRED(JIJ)**(1.+ ICED%XLBEXI)     
+        ZZW(JIJ)= ICEP%X0DEPI/(ICED%XLBI*PAI(JIJ)) *(ZZWC(JIJ)/PRHODREF(JIJ))**(1.+ICED%XLBEXI) * &
+              & (MAX(ICED%XRTMIN(4),PRIT(JIJ))*ZW2D(JIJ) )**(-ICED%XLBEXI)
+        ZZW(JIJ)= ZZW(JIJ)* ( PSSIO(JIJ)* PICLDFR(JIJ)* ZXW2D13(JIJ)  + ZWCITRED23(JIJ)*PSSIU(JIJ)* &
+              & (1.-PICLDFR(JIJ)) )
       ENDIF
-      PRVDEPI(JL) = PRVDEPI(JL) + ZZW(JL)
+      PRVDEPI(JIJ) = PRVDEPI(JIJ) + ZZW(JIJ)
     ELSE
-      IF ( (PPRES(JL)*0.5 - PESI(JL))>0. .AND. PCIT(JL)>0. .AND. LDCOMPUTE(JL) ) THEN
-        ZXW2D13(JL)=PIFR(JL)**0.333
-        ZWCITRED23(JL)=ZWCITRED(JL)**0.667
-        ZTC =  MAX(-18.,MIN(-1.,PT(JL)-CST%XTT))
-        ZHU =  MIN(0.15,MAX(0.,PSSI(JL)))
-        ZCRYSHA(JL)=1.1+ 3.*ZHU*(1.+ SIN(0.64*ZTC -1.3))
+      IF ( (PPRES(JIJ)*0.5 - PESI(JIJ))>0. .AND. PCIT(JIJ)>0. .AND. LDCOMPUTE(JIJ) ) THEN
+        ZXW2D13(JIJ)=PIFR(JIJ)**0.333
+        ZWCITRED23(JIJ)=ZWCITRED(JIJ)**0.667
+        ZTC =  MAX(-18.,MIN(-1.,PT(JIJ)-CST%XTT))
+        ZHU =  MIN(0.15,MAX(0.,PSSI(JIJ)))
+        ZCRYSHA(JIJ)=1.1+ 3.*ZHU*(1.+ SIN(0.64*ZTC -1.3))
         !       icedensity*4/3 *pi /8. =366.5 ; icedensity=700 kg/m3
-        ZQIMAX = 366.5 * ZDICRIT**3 * PCIT(JL)*ZWCITRED(JL)/PRHODREF(JL)
-        ZCI2S(JL) = 0.
-        IF(PRIT(JL) > 1.0e-12 .AND. ZTIMESC > 0. )THEN
-          ZCI2S(JL) = PRIT(JL)*(1. - MIN(1., 0.5*ZQIMAX /PRIT(JL)))* &
-                   &  (1.-PICLDFR(JL))*ZW2D(JL)/(ZTIMESC*0.5)
+        ZQIMAX = 366.5 * ZDICRIT**3 * PCIT(JIJ)*ZWCITRED(JIJ)/PRHODREF(JIJ)
+        ZCI2S(JIJ) = 0.
+        IF(PRIT(JIJ) > 1.0e-12 .AND. ZTIMESC > 0. )THEN
+          ZCI2S(JIJ) = PRIT(JIJ)*(1. - MIN(1., 0.5*ZQIMAX /PRIT(JIJ)))* &
+                   &  (1.-PICLDFR(JIJ))*ZW2D(JIJ)/(ZTIMESC*0.5)
         ENDIF
 
-        ZZWC(JL)=ZCRYSHA(JL)*0.878/PAI(JL)*(PCIT(JL)/PRHODREF(JL))**0.667 &
-              &*(MAX(ICED%XRTMIN(4),PRIT(JL))*ZW2D(JL))**0.333
+        ZZWC(JIJ)=ZCRYSHA(JIJ)*0.878/PAI(JIJ)*(PCIT(JIJ)/PRHODREF(JIJ))**0.667 &
+              &*(MAX(ICED%XRTMIN(4),PRIT(JIJ))*ZW2D(JIJ))**0.333
         !     Ice supersaturated part of grid box:
-        IF( PSSIO(JL)>0. .AND. PICLDFR(JL) > 0.02 ) THEN
-          ZZW(JL) = ZZWC(JL)*ZXW2D13(JL)*PSSIO(JL)*PICLDFR(JL)
-          PRVDEPI(JL) = PRVDEPI(JL) + ZZW(JL)
+        IF( PSSIO(JIJ)>0. .AND. PICLDFR(JIJ) > 0.02 ) THEN
+          ZZW(JIJ) = ZZWC(JIJ)*ZXW2D13(JIJ)*PSSIO(JIJ)*PICLDFR(JIJ)
+          PRVDEPI(JIJ) = PRVDEPI(JIJ) + ZZW(JIJ)
         ENDIF
         !    Ice subsaturated part of grid box:
-        IF ( PSSIU(JL)<0. .AND. PICLDFR(JL) <0.98 ) THEN
-          PRILARS(JL) = PRILARS(JL) + ZCI2S(JL)
-          ZZW(JL) = ZZWC(JL)*ZWCITRED23(JL)*PSSIU(JL)*(1. - PICLDFR(JL))
-          PRVDEPI(JL) = PRVDEPI(JL) + ZZW(JL)
+        IF ( PSSIU(JIJ)<0. .AND. PICLDFR(JIJ) <0.98 ) THEN
+          PRILARS(JIJ) = PRILARS(JIJ) + ZCI2S(JIJ)
+          ZZW(JIJ) = ZZWC(JIJ)*ZWCITRED23(JIJ)*PSSIU(JIJ)*(1. - PICLDFR(JIJ))
+          PRVDEPI(JIJ) = PRVDEPI(JIJ) + ZZW(JIJ)
         ENDIF
       ENDIF
     ENDIF

@@ -6,12 +6,15 @@
 MODULE MODE_ICE4_FAST_RI
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_FAST_RI(ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, &
+SUBROUTINE ICE4_FAST_RI(ICEP, ICED, D, LDSOFT, LDCOMPUTE, &
                        &PRHODREF, PLVFACT, PLSFACT, &
                        &PAI, PCJ, PCIT, &
                        &PSSI, &
                        &PRCT, PRIT, &
                        &PRCBERI)
+
+!$ACDC singlecolumn
+
 !!
 !!**  PURPOSE
 !!    -------
@@ -30,6 +33,7 @@ SUBROUTINE ICE4_FAST_RI(ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, &
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
@@ -40,24 +44,24 @@ IMPLICIT NONE
 !
 TYPE(RAIN_ICE_PARAM_t),       INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),       INTENT(IN)    :: ICED
-INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
+TYPE(DIMPHYEX_t),             INTENT(IN)    :: D
 LOGICAL,                      INTENT(IN)    :: LDSOFT
-LOGICAL, DIMENSION(KPROMA),   INTENT(IN)    :: LDCOMPUTE
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRHODREF ! Reference density
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLVFACT
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PLSFACT
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PAI      ! Thermodynamical function
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCIT     ! Pristine ice conc. at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PSSI     ! Supersaturation over ice
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
-REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRIT     ! Pristine ice m.r. at t
-REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRCBERI  ! Bergeron-Findeisen effect
+LOGICAL, DIMENSION(D%NIJT),   INTENT(IN)    :: LDCOMPUTE
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRHODREF ! Reference density
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PLVFACT
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PLSFACT
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PAI      ! Thermodynamical function
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PCIT     ! Pristine ice conc. at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PSSI     ! Supersaturation over ice
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRIT     ! Pristine ice m.r. at t
+REAL, DIMENSION(D%NIJT),      INTENT(INOUT) :: PRCBERI  ! Bergeron-Findeisen effect
 !
 !*       0.2  declaration of local variables
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER :: JL
+INTEGER :: JIJ
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RI',0,ZHOOK_HANDLE)
@@ -70,17 +74,17 @@ IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RI',0,ZHOOK_HANDLE)
 !*       7.2    Bergeron-Findeisen effect: RCBERI
 !
 
-!$mnh_do_concurrent( JL=1:KSIZE )
-DO JL=1, KSIZE
-  IF(PSSI(JL)>0. .AND. PRCT(JL)>ICED%XRTMIN(2) .AND. PRIT(JL)>ICED%XRTMIN(4) &
-     .AND. PCIT(JL)>1.E-20 .AND. LDCOMPUTE(JL)) THEN
+!$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
+DO JIJ=D%NIJB, D%NIJE
+  IF(PSSI(JIJ)>0. .AND. PRCT(JIJ)>ICED%XRTMIN(2) .AND. PRIT(JIJ)>ICED%XRTMIN(4) &
+     .AND. PCIT(JIJ)>1.E-20 .AND. LDCOMPUTE(JIJ)) THEN
     IF(.NOT. LDSOFT) THEN
-      PRCBERI(JL) = MIN(1.E8, ICED%XLBI*(PRHODREF(JL)*PRIT(JL)/PCIT(JL))**ICED%XLBEXI) ! Lbda_i
-      PRCBERI(JL) = ( PSSI(JL) / (PRHODREF(JL)*PAI(JL)) ) * PCIT(JL) * &
-                    ( ICEP%X0DEPI/PRCBERI(JL) + ICEP%X2DEPI*PCJ(JL)*PCJ(JL)/PRCBERI(JL)**(ICED%XDI+2.0) )
+      PRCBERI(JIJ) = MIN(1.E8, ICED%XLBI*(PRHODREF(JIJ)*PRIT(JIJ)/PCIT(JIJ))**ICED%XLBEXI) ! Lbda_i
+      PRCBERI(JIJ) = ( PSSI(JIJ) / (PRHODREF(JIJ)*PAI(JIJ)) ) * PCIT(JIJ) * &
+                    ( ICEP%X0DEPI/PRCBERI(JIJ) + ICEP%X2DEPI*PCJ(JIJ)*PCJ(JIJ)/PRCBERI(JIJ)**(ICED%XDI+2.0) )
     ENDIF
   ELSE
-    PRCBERI(JL) = 0.
+    PRCBERI(JIJ) = 0.
   ENDIF
 ENDDO
 !$mnh_end_do()
