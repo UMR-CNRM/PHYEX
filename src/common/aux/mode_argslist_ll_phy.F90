@@ -7,9 +7,6 @@
 !!    #######################
 MODULE MODE_ARGSLIST_ll_PHY
 !
- USE MODE_ll, ONLY: ADD3DFIELD_LL
- USE MODD_ARGSLIST_ll, ONLY : LIST_ll
- USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
  IMPLICIT NONE
 !
  CONTAINS
@@ -46,6 +43,9 @@ MODULE MODE_ARGSLIST_ll_PHY
 !     Original    August, 3, 2023
 !
 !-------------------------------------------------------------------------------
+ USE MODE_ll, ONLY: ADD3DFIELD_LL
+ USE MODD_ARGSLIST_ll, ONLY : LIST_ll
+ USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
   IMPLICIT NONE
 !

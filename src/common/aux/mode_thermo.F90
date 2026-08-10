@@ -40,7 +40,6 @@
 !              ------------
 !
 !-------------------------------------------------------------------------------
-USE MODE_MSG, ONLY: NVERB_FATAL, PRINT_MSG
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 IMPLICIT NONE
 
@@ -307,6 +306,8 @@ END FUNCTION SM_FOES_1D
 !              ------------
 !
 USE MODD_CST, ONLY: XEPS_DT, XRD, XRV
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY:NVERB_FATAL
 !
 IMPLICIT NONE
 !
@@ -450,6 +451,8 @@ END FUNCTION SM_PMR_HU_3D
 !              ------------
 !
 USE MODD_CST, ONLY: XRD, XRV
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY:NVERB_FATAL
 !
 IMPLICIT NONE
 !

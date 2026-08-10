@@ -22,7 +22,7 @@
       USE MODD_RAIN_ICE_PARAM_N, ONLY: RAIN_ICE_PARAM_T
       USE MODD_RAIN_ICE_DESCR_N, ONLY: RAIN_ICE_DESCR_T
       USE MODD_LES,              ONLY: TLES_T
-      USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
+      USE MODE_MSG, ONLY: PRINT_MSG 
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -185,6 +185,7 @@ USE MODE_RAIN_ICE_OLD_FAST_RS,             ONLY: RAIN_ICE_OLD_FAST_RS
 USE MODE_RAIN_ICE_OLD_FAST_RG,             ONLY: RAIN_ICE_OLD_FAST_RG
 USE MODE_RAIN_ICE_OLD_FAST_RH,             ONLY: RAIN_ICE_OLD_FAST_RH
 USE MODE_RAIN_ICE_OLD_FAST_RI,             ONLY: RAIN_ICE_OLD_FAST_RI
+USE MODD_IO, ONLY:NVERB_FATAL
 
 
 IMPLICIT NONE

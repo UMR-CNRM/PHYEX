@@ -26,12 +26,12 @@
 !*       0.   DECLARATIONS
 !             ------------
 !
-USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
 IMPLICIT NONE
 
 CONTAINS
 
   PURE REAL FUNCTION ESATW(TIWMX, TT)
+    USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
     !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
@@ -39,6 +39,8 @@ CONTAINS
   END FUNCTION ESATW
 
   REAL FUNCTION DESDTW(TIWMX, TT)
+    USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
+    !$acc routine seq
     !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
@@ -46,6 +48,7 @@ CONTAINS
   END FUNCTION
 
   PURE REAL FUNCTION ESATI(TIWMX, TT)
+    USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
     !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
@@ -53,6 +56,7 @@ CONTAINS
   END FUNCTION
 
   REAL FUNCTION DESDTI(TIWMX, TT)
+    USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
     !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
@@ -61,6 +65,7 @@ CONTAINS
 
 ! Water droplet function:
   REAL FUNCTION AA2W(TIWMX, TT)
+    USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
     !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
@@ -69,6 +74,7 @@ CONTAINS
 
 ! Ice crystal function
   PURE REAL FUNCTION AA2(TIWMX, TT)
+    USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
     !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
@@ -77,6 +83,7 @@ CONTAINS
 
 ! Meyers IN concentration function:
   PURE REAL FUNCTION AM3(TIWMX, TT)
+    USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
     !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
@@ -85,6 +92,7 @@ CONTAINS
 
 ! Fletchers IN concentration function:
   PURE REAL FUNCTION AF3(TIWMX, TT)
+    USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
     !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
@@ -93,6 +101,7 @@ CONTAINS
 
 ! Ice crystal function
   PURE REAL FUNCTION BB3(TIWMX, TT)
+    USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
     !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
@@ -101,6 +110,7 @@ CONTAINS
 
 ! Water droplet function:
   REAL FUNCTION BB3W(TIWMX, TT)
+    USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
     !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 
@@ -109,6 +119,7 @@ CONTAINS
 
 ! Function for IN concentration reduction between 0 and -25 C:
   PURE REAL FUNCTION REDIN(TIWMX, TT)
+    USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
     !$acc routine seq
     TYPE(TIWMX_t),   INTENT(IN) :: TIWMX
     REAL,INTENT(IN) :: TT 

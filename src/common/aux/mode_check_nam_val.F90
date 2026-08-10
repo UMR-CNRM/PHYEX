@@ -3,7 +3,6 @@ MODULE MODE_CHECK_NAM_VAL
 !!      *MODE_CHECK_NAM_VAL" - Module containing the routines to control the different kind of variables
 !!                             read from namelist
 !!
-USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE CHECK_NAM_VAL_CHAR(KLUOUT, HNAME, HVAR, HVALUE1, HVALUE2, HVALUE3, HVALUE4, HVALUE5, &
@@ -28,6 +27,8 @@ SUBROUTINE CHECK_NAM_VAL_CHAR(KLUOUT, HNAME, HVAR, HVALUE1, HVALUE2, HVALUE3, HV
 !-------------------------------------------------------------------------------
 !
 !**       DECLARATIONS
+USE MODE_MSG, ONLY: PRINT_MSG 
+USE MODD_IO, ONLY:NVERB_FATAL
 !
 IMPLICIT NONE
 INTEGER,          INTENT(IN)           :: KLUOUT   !< output listing logical unit
@@ -147,6 +148,8 @@ SUBROUTINE CHECK_NAM_VAL_REAL(KLUOUT, HNAME, PVALUE, CDSIGN1, PVAL1, CDSIGN2, PV
 !-------------------------------------------------------------------------------
 !
 !**       DECLARATIONS
+USE MODE_MSG, ONLY: PRINT_MSG 
+USE MODD_IO, ONLY:NVERB_FATAL
 !
 IMPLICIT NONE
 INTEGER,          INTENT(IN)           :: KLUOUT   !< output listing logical unit
@@ -236,6 +239,8 @@ SUBROUTINE CHECK_NAM_VAL_INT(KLUOUT, HNAME, KVALUE, CDSIGN1, KVAL1, CDSIGN2, KVA
 !-------------------------------------------------------------------------------
 !
 !**       DECLARATIONS
+USE MODE_MSG, ONLY: PRINT_MSG 
+USE MODD_IO, ONLY:NVERB_FATAL
 !
 IMPLICIT NONE
 INTEGER,          INTENT(IN)           :: KLUOUT   !< output listing logical unit
