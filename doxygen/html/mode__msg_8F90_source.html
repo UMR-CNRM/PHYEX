@@ -88,147 +88,146 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment">!-----------------------------------------------------------------</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno"><a class="line" href="namespacemode__msg.html">    5</a></span><span class="keyword">MODULE</span> <a class="code hl_namespace" href="namespacemode__msg.html">mode_msg</a></div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__io.html">modd_io</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_variable" href="namespacemodd__io.html#a09f5ecc44d0713a5a1386030c8b6f257">nverb_fatal</a>, <a class="code hl_variable" href="namespacemodd__io.html#aec08f5d36a5f726951132ae0064308c4">nverb_error</a>, <a class="code hl_variable" href="namespacemodd__io.html#a18fdd167bfb012bed6ebb70eb59a125e">nverb_warning</a>, &amp;</div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>                  &amp;<a class="code hl_variable" href="namespacemodd__io.html#a84d98e6cd8b4e30f07bf141144ed6e42">nverb_info</a>, <a class="code hl_variable" href="namespacemodd__io.html#acde4d22c77fb16f208aa7d4f079f56c9">nverb_debug</a>, <a class="code hl_variable" href="namespacemodd__io.html#a07e27ecde72fe5e8be7670faa7ebfb6c">n_abort_level</a></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="namespacemode__msg.html#a87a2f870ceb529f2022a31c9f5c2493f">   12</a></span><span class="keywordtype">INTEGER</span>, <span class="keywordtype">PARAMETER</span> :: <a class="code hl_variable" href="namespacemode__msg.html#a87a2f870ceb529f2022a31c9f5c2493f">nmsglgtmax</a>   = 100 <span class="comment">! Maximum length for a message</span></div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="namespacemode__msg.html#a0a5904a5edbd5e5f48d8286286638cc0">   13</a></span><span class="keywordtype">INTEGER</span>, <span class="keywordtype">PARAMETER</span> :: <a class="code hl_variable" href="namespacemode__msg.html#a0a5904a5edbd5e5f48d8286286638cc0">nmsgllinemax</a> = 10  <span class="comment">! Maximum number of lines for a message</span></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno"><a class="line" href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">   14</a></span><span class="keywordtype">CHARACTER(LEN=NMSGLGTMAX)</span>, <span class="keywordtype">DIMENSION(NMSGLLINEMAX)</span> :: <a class="code hl_variable" href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">cmnhmsg</a>=<span class="stringliteral">&#39;&#39;</span></div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#include &quot;abor1.intfb.h&quot;</span></div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="preprocessor"></span> </div>
-<div class="foldopen" id="foldopen00018" data-start="" data-end="">
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="interfacemode__msg_1_1print__msg.html">   18</a></span><span class="keyword">INTERFACE</span> <a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a></div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>  <span class="keyword">MODULE PROCEDURE</span> <a class="code hl_function" href="namespacemode__msg.html#a7fd1da6ffa55267b39411ebe4a83c376">print_msg_1line</a>, <a class="code hl_function" href="namespacemode__msg.html#ae96945d2b4bd34d1ac2e64bcc94cded3">print_msg_multi_cmnhmsg</a>, <a class="code hl_function" href="namespacemode__msg.html#ad8e88d27080f198fbc3c2c7c853c984a">print_msg_multi</a></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno"><a class="line" href="namespacemode__msg.html#a87a2f870ceb529f2022a31c9f5c2493f">    9</a></span><span class="keywordtype">INTEGER</span>, <span class="keywordtype">PARAMETER</span> :: <a class="code hl_variable" href="namespacemode__msg.html#a87a2f870ceb529f2022a31c9f5c2493f">nmsglgtmax</a>   = 100 <span class="comment">! Maximum length for a message</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno"><a class="line" href="namespacemode__msg.html#a0a5904a5edbd5e5f48d8286286638cc0">   10</a></span><span class="keywordtype">INTEGER</span>, <span class="keywordtype">PARAMETER</span> :: <a class="code hl_variable" href="namespacemode__msg.html#a0a5904a5edbd5e5f48d8286286638cc0">nmsgllinemax</a> = 10  <span class="comment">! Maximum number of lines for a message</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno"><a class="line" href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">   11</a></span><span class="keywordtype">CHARACTER(LEN=NMSGLGTMAX)</span>, <span class="keywordtype">DIMENSION(NMSGLLINEMAX)</span> :: <a class="code hl_variable" href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">cmnhmsg</a>=<span class="stringliteral">&#39;&#39;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &quot;abor1.intfb.h&quot;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor"></span> </div>
+<div class="foldopen" id="foldopen00015" data-start="" data-end="">
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="interfacemode__msg_1_1print__msg.html">   15</a></span><span class="keyword">INTERFACE</span> <a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>  <span class="keyword">MODULE PROCEDURE</span> <a class="code hl_function" href="namespacemode__msg.html#a7fd1da6ffa55267b39411ebe4a83c376">print_msg_1line</a>, <a class="code hl_function" href="namespacemode__msg.html#ae96945d2b4bd34d1ac2e64bcc94cded3">print_msg_multi_cmnhmsg</a>, <a class="code hl_function" href="namespacemode__msg.html#ad8e88d27080f198fbc3c2c7c853c984a">print_msg_multi</a></div>
 </div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="keyword">ENDINTERFACE </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a></div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="keyword">CONTAINS</span></div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
-<div class="foldopen" id="foldopen00024" data-start="" data-end="">
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno"><a class="line" href="interfacemode__msg_1_1print__msg.html#ad98a387346287c7818a149f8a2680c7a">   24</a></span><span class="keyword">SUBROUTINE </span><a class="code hl_function" href="namespacemode__msg.html#a7fd1da6ffa55267b39411ebe4a83c376">print_msg_1line</a>(KVERB, HDOMAIN, HSUBR, HMSG)</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>  <span class="keywordtype">INTEGER</span>,          <span class="keywordtype">INTENT(IN)</span> :: KVERB   <span class="comment">!Verbosity level</span></div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>  <span class="keywordtype">CHARACTER(LEN=*)</span>, <span class="keywordtype">INTENT(IN)</span> :: HDOMAIN <span class="comment">!Domain/category of message</span></div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>  <span class="keywordtype">CHARACTER(LEN=*)</span>, <span class="keywordtype">INTENT(IN)</span> :: HSUBR   <span class="comment">!Subroutine/function name</span></div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>  <span class="keywordtype">CHARACTER(LEN=*)</span>, <span class="keywordtype">INTENT(IN)</span> :: HMSG    <span class="comment">!Message</span></div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__msg.html#ad8e88d27080f198fbc3c2c7c853c984a">print_msg_multi</a>(kverb, hdomain, hsubr, [hmsg])</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="keyword">ENDINTERFACE </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="keyword">CONTAINS</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
+<div class="foldopen" id="foldopen00021" data-start="" data-end="">
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno"><a class="line" href="interfacemode__msg_1_1print__msg.html#ad98a387346287c7818a149f8a2680c7a">   21</a></span><span class="keyword">SUBROUTINE </span><a class="code hl_function" href="namespacemode__msg.html#a7fd1da6ffa55267b39411ebe4a83c376">print_msg_1line</a>(KVERB, HDOMAIN, HSUBR, HMSG)</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>  <span class="keywordtype">INTEGER</span>,          <span class="keywordtype">INTENT(IN)</span> :: KVERB   <span class="comment">!Verbosity level</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>  <span class="keywordtype">CHARACTER(LEN=*)</span>, <span class="keywordtype">INTENT(IN)</span> :: HDOMAIN <span class="comment">!Domain/category of message</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>  <span class="keywordtype">CHARACTER(LEN=*)</span>, <span class="keywordtype">INTENT(IN)</span> :: HSUBR   <span class="comment">!Subroutine/function name</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>  <span class="keywordtype">CHARACTER(LEN=*)</span>, <span class="keywordtype">INTENT(IN)</span> :: HMSG    <span class="comment">!Message</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__msg.html#ad8e88d27080f198fbc3c2c7c853c984a">print_msg_multi</a>(kverb, hdomain, hsubr, [hmsg])</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
 </div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__msg.html#a7fd1da6ffa55267b39411ebe4a83c376">print_msg_1line</a></div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
-<div class="foldopen" id="foldopen00034" data-start="" data-end="">
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno"><a class="line" href="interfacemode__msg_1_1print__msg.html#afeea15d26595dc89d170d69419954d23">   34</a></span><span class="keyword">SUBROUTINE </span><a class="code hl_function" href="namespacemode__msg.html#ae96945d2b4bd34d1ac2e64bcc94cded3">print_msg_multi_cmnhmsg</a>(KVERB, HDOMAIN, HSUBR)</div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>  <span class="keywordtype">INTEGER</span>,          <span class="keywordtype">INTENT(IN)</span> :: KVERB   <span class="comment">!Verbosity level</span></div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>  <span class="keywordtype">CHARACTER(LEN=*)</span>, <span class="keywordtype">INTENT(IN)</span> :: HDOMAIN <span class="comment">!Domain/category of message</span></div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>  <span class="keywordtype">CHARACTER(LEN=*)</span>, <span class="keywordtype">INTENT(IN)</span> :: HSUBR   <span class="comment">!Subroutine/function name</span></div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>  <span class="keywordtype">INTEGER</span> :: ILINES</div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>  <span class="comment">!Find the last non empty line</span></div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>  ilines=<span class="keyword">SIZE</span>(<a class="code hl_variable" href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">cmnhmsg</a>)</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="preprocessor">#ifndef _OPENACC</span></div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="preprocessor"></span>  <span class="keywordflow">DO</span> <span class="keywordflow">WHILE</span> (len_trim(<a class="code hl_variable" href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">cmnhmsg</a>(ilines))==0)</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    ilines=ilines - 1</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="preprocessor"></span> </div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__msg.html#ad8e88d27080f198fbc3c2c7c853c984a">print_msg_multi</a>(kverb, hdomain, hsubr, <a class="code hl_variable" href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">cmnhmsg</a>(1:ilines))</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>  <span class="comment">!Empty the message buffer</span></div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>  <span class="comment">!This is necessary especially if the next call contain a shorter message</span></div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>  <a class="code hl_variable" href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">cmnhmsg</a>(1:ilines)=<span class="stringliteral">&#39;&#39;</span></div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__msg.html#a7fd1da6ffa55267b39411ebe4a83c376">print_msg_1line</a></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
+<div class="foldopen" id="foldopen00031" data-start="" data-end="">
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno"><a class="line" href="interfacemode__msg_1_1print__msg.html#afeea15d26595dc89d170d69419954d23">   31</a></span><span class="keyword">SUBROUTINE </span><a class="code hl_function" href="namespacemode__msg.html#ae96945d2b4bd34d1ac2e64bcc94cded3">print_msg_multi_cmnhmsg</a>(KVERB, HDOMAIN, HSUBR)</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>  <span class="keywordtype">INTEGER</span>,          <span class="keywordtype">INTENT(IN)</span> :: KVERB   <span class="comment">!Verbosity level</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>  <span class="keywordtype">CHARACTER(LEN=*)</span>, <span class="keywordtype">INTENT(IN)</span> :: HDOMAIN <span class="comment">!Domain/category of message</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>  <span class="keywordtype">CHARACTER(LEN=*)</span>, <span class="keywordtype">INTENT(IN)</span> :: HSUBR   <span class="comment">!Subroutine/function name</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>  <span class="keywordtype">INTEGER</span> :: ILINES</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>  <span class="comment">!Find the last non empty line</span></div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>  ilines=<span class="keyword">SIZE</span>(<a class="code hl_variable" href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">cmnhmsg</a>)</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="preprocessor">#ifndef _OPENACC</span></div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="preprocessor"></span>  <span class="keywordflow">DO</span> <span class="keywordflow">WHILE</span> (len_trim(<a class="code hl_variable" href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">cmnhmsg</a>(ilines))==0)</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    ilines=ilines - 1</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="preprocessor"></span> </div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__msg.html#ad8e88d27080f198fbc3c2c7c853c984a">print_msg_multi</a>(kverb, hdomain, hsubr, <a class="code hl_variable" href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">cmnhmsg</a>(1:ilines))</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>  <span class="comment">!Empty the message buffer</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>  <span class="comment">!This is necessary especially if the next call contain a shorter message</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>  <a class="code hl_variable" href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">cmnhmsg</a>(1:ilines)=<span class="stringliteral">&#39;&#39;</span></div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
 </div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="keyword">ENDSUBROUTINE </span><a class="code hl_function" href="namespacemode__msg.html#ae96945d2b4bd34d1ac2e64bcc94cded3">print_msg_multi_cmnhmsg</a></div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
-<div class="foldopen" id="foldopen00057" data-start="" data-end="">
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="interfacemode__msg_1_1print__msg.html#a47198fe8e33de28dc9fc34cc8f309c59">   57</a></span><span class="keyword">SUBROUTINE </span><a class="code hl_function" href="namespacemode__msg.html#ad8e88d27080f198fbc3c2c7c853c984a">print_msg_multi</a>(KVERB, HDOMAIN, HSUBR, HMSG)</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="comment">!</span></div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="keywordtype">USE </span>ec_lun, <span class="keywordtype">ONLY</span> : nulout</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="keyword">ENDSUBROUTINE </span><a class="code hl_function" href="namespacemode__msg.html#ae96945d2b4bd34d1ac2e64bcc94cded3">print_msg_multi_cmnhmsg</a></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="foldopen" id="foldopen00054" data-start="" data-end="">
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="interfacemode__msg_1_1print__msg.html#a47198fe8e33de28dc9fc34cc8f309c59">   54</a></span><span class="keyword">SUBROUTINE </span><a class="code hl_function" href="namespacemode__msg.html#ad8e88d27080f198fbc3c2c7c853c984a">print_msg_multi</a>(KVERB, HDOMAIN, HSUBR, HMSG)</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="comment">!</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="keywordtype">USE </span>ec_lun, <span class="keywordtype">ONLY</span> : nulout</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__io.html">modd_io</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_variable" href="namespacemodd__io.html#a09f5ecc44d0713a5a1386030c8b6f257">nverb_fatal</a>, <a class="code hl_variable" href="namespacemodd__io.html#aec08f5d36a5f726951132ae0064308c4">nverb_error</a>, <a class="code hl_variable" href="namespacemodd__io.html#a18fdd167bfb012bed6ebb70eb59a125e">nverb_warning</a>, &amp;</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>                  &amp;<a class="code hl_variable" href="namespacemodd__io.html#a84d98e6cd8b4e30f07bf141144ed6e42">nverb_info</a>, <a class="code hl_variable" href="namespacemodd__io.html#acde4d22c77fb16f208aa7d4f079f56c9">nverb_debug</a>, <a class="code hl_variable" href="namespacemodd__io.html#a07e27ecde72fe5e8be7670faa7ebfb6c">n_abort_level</a></div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="comment">!</span></div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="comment">!</span></div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="comment">!</span></div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="keywordtype">INTEGER</span>,                        <span class="keywordtype">INTENT(IN)</span> :: KVERB   <span class="comment">!Verbosity level</span></div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="keywordtype">CHARACTER(LEN=*)</span>,               <span class="keywordtype">INTENT(IN)</span> :: HDOMAIN <span class="comment">!Domain/category of message</span></div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="keywordtype">CHARACTER(LEN=*)</span>,               <span class="keywordtype">INTENT(IN)</span> :: HSUBR   <span class="comment">!Subroutine/function name</span></div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="keywordtype">CHARACTER(LEN=*)</span>, <span class="keywordtype">dimension(:)</span>, <span class="keywordtype">INTENT(IN)</span> :: HMSG    <span class="comment">!Message</span></div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span><span class="comment">!</span></div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="keywordtype">CHARACTER(LEN=2)</span>  :: YSZ</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><span class="keywordtype">CHARACTER(LEN=9)</span>  :: YPRE</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="keywordtype">CHARACTER(LEN=30)</span> :: YSUBR</div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="keywordtype">CHARACTER(LEN=:)</span>, <span class="keywordtype">ALLOCATABLE</span> :: YFORMAT</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keywordtype">INTEGER</span> :: JLINE</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="keywordtype">INTEGER</span> :: ILINES</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="comment">!</span></div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>ilines=<span class="keyword">SIZE</span>(hmsg)</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="keywordflow">SELECT CASE</span>(kverb)</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>  <span class="keywordflow">CASE</span>(<a class="code hl_variable" href="namespacemodd__io.html#a09f5ecc44d0713a5a1386030c8b6f257">nverb_fatal</a>)</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    ypre=<span class="stringliteral">&#39;FATAL:   &#39;</span></div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>  <span class="keywordflow">CASE</span>(<a class="code hl_variable" href="namespacemodd__io.html#aec08f5d36a5f726951132ae0064308c4">nverb_error</a>)</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    ypre=<span class="stringliteral">&#39;ERROR:   &#39;</span></div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>  <span class="keywordflow">CASE</span>(<a class="code hl_variable" href="namespacemodd__io.html#a18fdd167bfb012bed6ebb70eb59a125e">nverb_warning</a>)</div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    ypre=<span class="stringliteral">&#39;WARNING: &#39;</span></div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>  <span class="keywordflow">CASE</span>(<a class="code hl_variable" href="namespacemodd__io.html#a84d98e6cd8b4e30f07bf141144ed6e42">nverb_info</a>)</div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    ypre=<span class="stringliteral">&#39;INFO:    &#39;</span></div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>  <span class="keywordflow">CASE</span>(<a class="code hl_variable" href="namespacemodd__io.html#acde4d22c77fb16f208aa7d4f079f56c9">nverb_debug</a>)</div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    ypre=<span class="stringliteral">&#39;DEBUG:   &#39;</span></div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="keywordflow">  CASE DEFAULT</span></div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <span class="keyword">WRITE</span>(unit=nulout, fmt=*) <span class="stringliteral">&#39;ERROR: PRINT_MSG: wrong verbosity level&#39;</span></div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="keywordflow">END SELECT</span></div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="comment">!</span></div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="preprocessor">#ifdef _OPENACC</span></div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="preprocessor"></span>ysubr=hsubr//<span class="stringliteral">&#39;:&#39;</span></div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="preprocessor">#else</span></div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="preprocessor"></span>ysubr=trim(hsubr)//<span class="stringliteral">&#39;:&#39;</span></div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="preprocessor"></span> </div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="keywordflow">IF</span> (ilines==1) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="preprocessor">#ifdef _OPENACC</span></div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="preprocessor"></span>  <span class="keyword">WRITE</span>(unit=nulout, fmt=*) ypre, ysubr, hmsg(1)</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="preprocessor">#else</span></div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="preprocessor"></span>  <span class="keyword">WRITE</span>(unit=nulout, fmt=<span class="stringliteral">&quot;(A9,A30,A)&quot;</span>) ypre, ysubr, trim(hmsg(1))</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="preprocessor"></span><span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="preprocessor">#ifndef _OPENACC</span></div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="preprocessor"></span> <span class="keywordflow">IF</span> (ilines&lt;10) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    ysz = <span class="stringliteral">&#39;I1&#39;</span></div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>  <span class="keywordflow">ELSEIF</span> (ilines&lt;100) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>    ysz = <span class="stringliteral">&#39;I2&#39;</span></div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>  <span class="keywordflow">ELSEIF</span> (ilines&lt;1000) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    ysz = <span class="stringliteral">&#39;I3&#39;</span></div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>  <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    ysz = <span class="stringliteral">&#39;I4&#39;</span></div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span><span class="keywordflow">  ENDIF</span></div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>  yformat=<span class="stringliteral">&#39;(A9,A30,&#39;</span> // ysz // <span class="stringliteral">&#39;,&#39;</span><span class="stringliteral">&#39;/&#39;</span><span class="stringliteral">&#39;,&#39;</span> // ysz // <span class="stringliteral">&#39;,&#39;</span><span class="stringliteral">&#39;: &#39;</span><span class="stringliteral">&#39;,A)&#39;</span></div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="preprocessor"></span>  <span class="keywordflow">DO</span> jline=1, ilines</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><span class="preprocessor">#ifdef _OPENACC</span></div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="preprocessor"></span>    <span class="keyword">WRITE</span>(unit=nulout, fmt=*) ypre, ysubr, jline, ilines, hmsg(jline)</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span><span class="preprocessor">#else</span></div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="preprocessor"></span>    <span class="keyword">WRITE</span>(unit=nulout, fmt=yformat) ypre, ysubr, jline, ilines, trim(hmsg(jline))</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="preprocessor"></span><span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span><span class="keywordflow">ENDIF</span></div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span><span class="preprocessor">#ifndef _OPENACC</span></div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span><span class="preprocessor"></span><span class="keyword">FLUSH</span>(unit=nulout)</div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span><span class="preprocessor"></span><span class="comment">!</span></div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span><span class="keywordflow">IF</span> (kverb&lt;=<a class="code hl_variable" href="namespacemodd__io.html#a07e27ecde72fe5e8be7670faa7ebfb6c">n_abort_level</a>) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span><span class="preprocessor">#ifdef _OPENACC</span></div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span><span class="preprocessor"></span>  stop 2</div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span><span class="preprocessor">#else</span></div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span><span class="preprocessor"></span>  <span class="keyword">CALL </span>abor1(trim(hmsg(ilines))) <span class="comment">!Last line repeated</span></div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span><span class="preprocessor"></span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span><span class="comment">!</span></div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="keywordtype">INTEGER</span>,                        <span class="keywordtype">INTENT(IN)</span> :: KVERB   <span class="comment">!Verbosity level</span></div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="keywordtype">CHARACTER(LEN=*)</span>,               <span class="keywordtype">INTENT(IN)</span> :: HDOMAIN <span class="comment">!Domain/category of message</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="keywordtype">CHARACTER(LEN=*)</span>,               <span class="keywordtype">INTENT(IN)</span> :: HSUBR   <span class="comment">!Subroutine/function name</span></div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="keywordtype">CHARACTER(LEN=*)</span>, <span class="keywordtype">dimension(:)</span>, <span class="keywordtype">INTENT(IN)</span> :: HMSG    <span class="comment">!Message</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="comment">!</span></div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span><span class="keywordtype">CHARACTER(LEN=2)</span>  :: YSZ</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="keywordtype">CHARACTER(LEN=9)</span>  :: YPRE</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><span class="keywordtype">CHARACTER(LEN=30)</span> :: YSUBR</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="keywordtype">CHARACTER(LEN=:)</span>, <span class="keywordtype">ALLOCATABLE</span> :: YFORMAT</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="keywordtype">INTEGER</span> :: JLINE</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keywordtype">INTEGER</span> :: ILINES</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="comment">!</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>ilines=<span class="keyword">SIZE</span>(hmsg)</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="keywordflow">SELECT CASE</span>(kverb)</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>  <span class="keywordflow">CASE</span>(<a class="code hl_variable" href="namespacemodd__io.html#a09f5ecc44d0713a5a1386030c8b6f257">nverb_fatal</a>)</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    ypre=<span class="stringliteral">&#39;FATAL:   &#39;</span></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>  <span class="keywordflow">CASE</span>(<a class="code hl_variable" href="namespacemodd__io.html#aec08f5d36a5f726951132ae0064308c4">nverb_error</a>)</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    ypre=<span class="stringliteral">&#39;ERROR:   &#39;</span></div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>  <span class="keywordflow">CASE</span>(<a class="code hl_variable" href="namespacemodd__io.html#a18fdd167bfb012bed6ebb70eb59a125e">nverb_warning</a>)</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    ypre=<span class="stringliteral">&#39;WARNING: &#39;</span></div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>  <span class="keywordflow">CASE</span>(<a class="code hl_variable" href="namespacemodd__io.html#a84d98e6cd8b4e30f07bf141144ed6e42">nverb_info</a>)</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    ypre=<span class="stringliteral">&#39;INFO:    &#39;</span></div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>  <span class="keywordflow">CASE</span>(<a class="code hl_variable" href="namespacemodd__io.html#acde4d22c77fb16f208aa7d4f079f56c9">nverb_debug</a>)</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    ypre=<span class="stringliteral">&#39;DEBUG:   &#39;</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="keywordflow">  CASE DEFAULT</span></div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <span class="keyword">WRITE</span>(unit=nulout, fmt=*) <span class="stringliteral">&#39;ERROR: PRINT_MSG: wrong verbosity level&#39;</span></div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="keywordflow">END SELECT</span></div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="comment">!</span></div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="preprocessor">#ifdef _OPENACC</span></div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="preprocessor"></span>ysubr=hsubr//<span class="stringliteral">&#39;:&#39;</span></div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="preprocessor"></span>ysubr=trim(hsubr)//<span class="stringliteral">&#39;:&#39;</span></div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="preprocessor"></span> </div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="keywordflow">IF</span> (ilines==1) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="preprocessor">#ifdef _OPENACC</span></div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="preprocessor"></span>  <span class="keyword">WRITE</span>(unit=nulout, fmt=*) ypre, ysubr, hmsg(1)</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="preprocessor"></span>  <span class="keyword">WRITE</span>(unit=nulout, fmt=<span class="stringliteral">&quot;(A9,A30,A)&quot;</span>) ypre, ysubr, trim(hmsg(1))</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="preprocessor"></span><span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="preprocessor">#ifndef _OPENACC</span></div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="preprocessor"></span> <span class="keywordflow">IF</span> (ilines&lt;10) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>    ysz = <span class="stringliteral">&#39;I1&#39;</span></div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>  <span class="keywordflow">ELSEIF</span> (ilines&lt;100) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    ysz = <span class="stringliteral">&#39;I2&#39;</span></div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>  <span class="keywordflow">ELSEIF</span> (ilines&lt;1000) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    ysz = <span class="stringliteral">&#39;I3&#39;</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>  <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    ysz = <span class="stringliteral">&#39;I4&#39;</span></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="keywordflow">  ENDIF</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>  yformat=<span class="stringliteral">&#39;(A9,A30,&#39;</span> // ysz // <span class="stringliteral">&#39;,&#39;</span><span class="stringliteral">&#39;/&#39;</span><span class="stringliteral">&#39;,&#39;</span> // ysz // <span class="stringliteral">&#39;,&#39;</span><span class="stringliteral">&#39;: &#39;</span><span class="stringliteral">&#39;,A)&#39;</span></div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span><span class="preprocessor"></span>  <span class="keywordflow">DO</span> jline=1, ilines</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="preprocessor">#ifdef _OPENACC</span></div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><span class="preprocessor"></span>    <span class="keyword">WRITE</span>(unit=nulout, fmt=*) ypre, ysubr, jline, ilines, hmsg(jline)</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span><span class="preprocessor"></span>    <span class="keyword">WRITE</span>(unit=nulout, fmt=yformat) ypre, ysubr, jline, ilines, trim(hmsg(jline))</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="preprocessor"></span><span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="keywordflow">ENDIF</span></div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span><span class="preprocessor">#ifndef _OPENACC</span></div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span><span class="preprocessor"></span><span class="keyword">FLUSH</span>(unit=nulout)</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span><span class="preprocessor"></span><span class="comment">!</span></div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span><span class="keywordflow">IF</span> (kverb&lt;=<a class="code hl_variable" href="namespacemodd__io.html#a07e27ecde72fe5e8be7670faa7ebfb6c">n_abort_level</a>) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span><span class="preprocessor">#ifdef _OPENACC</span></div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span><span class="preprocessor"></span>  stop 2</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span><span class="preprocessor"></span>  <span class="keyword">CALL </span>abor1(trim(hmsg(ilines))) <span class="comment">!Last line repeated</span></div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span><span class="preprocessor"></span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span><span class="comment">!</span></div>
 </div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span><span class="keyword">ENDSUBROUTINE </span><a class="code hl_function" href="namespacemode__msg.html#ad8e88d27080f198fbc3c2c7c853c984a">print_msg_multi</a></div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span> </div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span><span class="keyword">ENDMODULE </span><a class="code hl_namespace" href="namespacemode__msg.html">mode_msg</a></div>
-<div class="ttc" id="ainterfacemode__msg_1_1print__msg_html"><div class="ttname"><a href="interfacemode__msg_1_1print__msg.html">mode_msg::print_msg</a></div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00018">mode_msg.F90:18</a></div></div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span><span class="keyword">ENDSUBROUTINE </span><a class="code hl_function" href="namespacemode__msg.html#ad8e88d27080f198fbc3c2c7c853c984a">print_msg_multi</a></div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span><span class="keyword">ENDMODULE </span><a class="code hl_namespace" href="namespacemode__msg.html">mode_msg</a></div>
+<div class="ttc" id="ainterfacemode__msg_1_1print__msg_html"><div class="ttname"><a href="interfacemode__msg_1_1print__msg.html">mode_msg::print_msg</a></div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00015">mode_msg.F90:15</a></div></div>
 <div class="ttc" id="anamespacemodd__io_html"><div class="ttname"><a href="namespacemodd__io.html">modd_io</a></div><div class="ttdef"><b>Definition</b> <a href="modd__io_8F90_source.html#l00001">modd_io.F90:1</a></div></div>
 <div class="ttc" id="anamespacemodd__io_html_a07e27ecde72fe5e8be7670faa7ebfb6c"><div class="ttname"><a href="namespacemodd__io.html#a07e27ecde72fe5e8be7670faa7ebfb6c">modd_io::n_abort_level</a></div><div class="ttdeci">integer, parameter n_abort_level</div><div class="ttdef"><b>Definition</b> <a href="modd__io_8F90_source.html#l00007">modd_io.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__io_html_a09f5ecc44d0713a5a1386030c8b6f257"><div class="ttname"><a href="namespacemodd__io.html#a09f5ecc44d0713a5a1386030c8b6f257">modd_io::nverb_fatal</a></div><div class="ttdeci">integer, parameter nverb_fatal</div><div class="ttdef"><b>Definition</b> <a href="modd__io_8F90_source.html#l00006">modd_io.F90:6</a></div></div>
@@ -237,12 +236,12 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="anamespacemodd__io_html_acde4d22c77fb16f208aa7d4f079f56c9"><div class="ttname"><a href="namespacemodd__io.html#acde4d22c77fb16f208aa7d4f079f56c9">modd_io::nverb_debug</a></div><div class="ttdeci">integer, parameter nverb_debug</div><div class="ttdef"><b>Definition</b> <a href="modd__io_8F90_source.html#l00006">modd_io.F90:6</a></div></div>
 <div class="ttc" id="anamespacemodd__io_html_aec08f5d36a5f726951132ae0064308c4"><div class="ttname"><a href="namespacemodd__io.html#aec08f5d36a5f726951132ae0064308c4">modd_io::nverb_error</a></div><div class="ttdeci">integer, parameter nverb_error</div><div class="ttdef"><b>Definition</b> <a href="modd__io_8F90_source.html#l00006">modd_io.F90:6</a></div></div>
 <div class="ttc" id="anamespacemode__msg_html"><div class="ttname"><a href="namespacemode__msg.html">mode_msg</a></div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00005">mode_msg.F90:5</a></div></div>
-<div class="ttc" id="anamespacemode__msg_html_a0a5904a5edbd5e5f48d8286286638cc0"><div class="ttname"><a href="namespacemode__msg.html#a0a5904a5edbd5e5f48d8286286638cc0">mode_msg::nmsgllinemax</a></div><div class="ttdeci">integer, parameter nmsgllinemax</div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00013">mode_msg.F90:13</a></div></div>
-<div class="ttc" id="anamespacemode__msg_html_a2a4a740a83bac0b3b6f731bf49837935"><div class="ttname"><a href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">mode_msg::cmnhmsg</a></div><div class="ttdeci">character(len=nmsglgtmax), dimension(nmsgllinemax) cmnhmsg</div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00014">mode_msg.F90:14</a></div></div>
-<div class="ttc" id="anamespacemode__msg_html_a7fd1da6ffa55267b39411ebe4a83c376"><div class="ttname"><a href="namespacemode__msg.html#a7fd1da6ffa55267b39411ebe4a83c376">mode_msg::print_msg_1line</a></div><div class="ttdeci">subroutine print_msg_1line(kverb, hdomain, hsubr, hmsg)</div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00024">mode_msg.F90:25</a></div></div>
-<div class="ttc" id="anamespacemode__msg_html_a87a2f870ceb529f2022a31c9f5c2493f"><div class="ttname"><a href="namespacemode__msg.html#a87a2f870ceb529f2022a31c9f5c2493f">mode_msg::nmsglgtmax</a></div><div class="ttdeci">integer, parameter nmsglgtmax</div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00012">mode_msg.F90:12</a></div></div>
-<div class="ttc" id="anamespacemode__msg_html_ad8e88d27080f198fbc3c2c7c853c984a"><div class="ttname"><a href="namespacemode__msg.html#ad8e88d27080f198fbc3c2c7c853c984a">mode_msg::print_msg_multi</a></div><div class="ttdeci">subroutine print_msg_multi(kverb, hdomain, hsubr, hmsg)</div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00057">mode_msg.F90:58</a></div></div>
-<div class="ttc" id="anamespacemode__msg_html_ae96945d2b4bd34d1ac2e64bcc94cded3"><div class="ttname"><a href="namespacemode__msg.html#ae96945d2b4bd34d1ac2e64bcc94cded3">mode_msg::print_msg_multi_cmnhmsg</a></div><div class="ttdeci">subroutine print_msg_multi_cmnhmsg(kverb, hdomain, hsubr)</div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00034">mode_msg.F90:35</a></div></div>
+<div class="ttc" id="anamespacemode__msg_html_a0a5904a5edbd5e5f48d8286286638cc0"><div class="ttname"><a href="namespacemode__msg.html#a0a5904a5edbd5e5f48d8286286638cc0">mode_msg::nmsgllinemax</a></div><div class="ttdeci">integer, parameter nmsgllinemax</div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00010">mode_msg.F90:10</a></div></div>
+<div class="ttc" id="anamespacemode__msg_html_a2a4a740a83bac0b3b6f731bf49837935"><div class="ttname"><a href="namespacemode__msg.html#a2a4a740a83bac0b3b6f731bf49837935">mode_msg::cmnhmsg</a></div><div class="ttdeci">character(len=nmsglgtmax), dimension(nmsgllinemax) cmnhmsg</div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00011">mode_msg.F90:11</a></div></div>
+<div class="ttc" id="anamespacemode__msg_html_a7fd1da6ffa55267b39411ebe4a83c376"><div class="ttname"><a href="namespacemode__msg.html#a7fd1da6ffa55267b39411ebe4a83c376">mode_msg::print_msg_1line</a></div><div class="ttdeci">subroutine print_msg_1line(kverb, hdomain, hsubr, hmsg)</div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00021">mode_msg.F90:22</a></div></div>
+<div class="ttc" id="anamespacemode__msg_html_a87a2f870ceb529f2022a31c9f5c2493f"><div class="ttname"><a href="namespacemode__msg.html#a87a2f870ceb529f2022a31c9f5c2493f">mode_msg::nmsglgtmax</a></div><div class="ttdeci">integer, parameter nmsglgtmax</div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00009">mode_msg.F90:9</a></div></div>
+<div class="ttc" id="anamespacemode__msg_html_ad8e88d27080f198fbc3c2c7c853c984a"><div class="ttname"><a href="namespacemode__msg.html#ad8e88d27080f198fbc3c2c7c853c984a">mode_msg::print_msg_multi</a></div><div class="ttdeci">subroutine print_msg_multi(kverb, hdomain, hsubr, hmsg)</div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00054">mode_msg.F90:55</a></div></div>
+<div class="ttc" id="anamespacemode__msg_html_ae96945d2b4bd34d1ac2e64bcc94cded3"><div class="ttname"><a href="namespacemode__msg.html#ae96945d2b4bd34d1ac2e64bcc94cded3">mode_msg::print_msg_multi_cmnhmsg</a></div><div class="ttdeci">subroutine print_msg_multi_cmnhmsg(kverb, hdomain, hsubr)</div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00031">mode_msg.F90:32</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

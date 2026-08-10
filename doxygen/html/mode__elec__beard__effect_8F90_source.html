@@ -139,240 +139,243 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__param__lima__mixed.html">modd_param_lima_mixed</a>,<span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__param__lima__mixed_1_1param__lima__mixed__t.html">param_lima_mixed_t</a></div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="comment">!</span></div>
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodi__momg.html">modi_momg</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemodi__momg_1_1momg.html">momg</a></div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__msg.html">mode_msg</a>,             <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>, nverb_fatal</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="comment">!</span></div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="comment">!</span></div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="comment">!*       0.1   Declarations of dummy arguments</span></div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="comment">!</span></div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),                 <span class="keywordtype">INTENT(IN)</span>    :: D</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__cst_1_1cst__t.html">cst_t</a>),              <span class="keywordtype">INTENT(IN)</span>    :: CST</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="keywordtype">INTEGER</span>,                          <span class="keywordtype">INTENT(IN)</span>    :: KID         <span class="comment">! Hydrometeor ID</span></div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span><span class="keywordtype">LOGICAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: OSEDIM      <span class="comment">! if T, compute the sedim. proc.</span></div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PRHODREF    <span class="comment">! Reference density</span></div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PT          <span class="comment">! Temperature</span></div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PRX         <span class="comment">! m.r. source</span></div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PQX         <span class="comment">! Elec. charge density source</span></div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PEFIELDW    <span class="comment">! Vertical component of the electric field</span></div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PLBDA       <span class="comment">! Slope param. of the distribution</span></div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(OUT)</span>   :: PBEARDCOEF  <span class="comment">! Beard coefficient</span></div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="keywordtype">CHARACTER (LEN=4)</span>,      <span class="keywordtype">INTENT(IN)</span>   ::  HCLOUD       <span class="comment">! Kind of microphysical scheme</span></div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="comment">!</span></div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="keywordtype">REAL</span>, <span class="keywordtype">INTENT(IN)</span>                :: PTHVREFZIKB <span class="comment">! Reference thv at IKB for electricity</span></div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__rain__ice__descr__n_1_1rain__ice__descr__t.html">rain_ice_descr_t</a>),   <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: ICED</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>),       <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: LIMAP</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima__cold_1_1param__lima__cold__t.html">param_lima_cold_t</a>),  <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: LIMAPC</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima__warm_1_1param__lima__warm__t.html">param_lima_warm_t</a>),  <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: LIMAPW</div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima__mixed_1_1param__lima__mixed__t.html">param_lima_mixed_t</a>), <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: LIMAPM</div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="comment">!*       0.2   Declarations of local variables</span></div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="comment">!</span></div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="keywordtype">INTEGER</span> :: JIJ, JK <span class="comment">! loop indexes</span></div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="keywordtype">INTEGER</span> :: IIJB, IIJE, IKTB, IKTE</div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="keywordtype">REAL</span> :: ZCEXVT, ZBX, ZCX, ZDX, ZALPHAX, ZNUX</div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="keywordtype">REAL</span> :: ZRE0</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="keywordtype">REAL</span> :: ZETA0</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="keywordtype">REAL</span> :: ZVX</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="keywordtype">REAL</span> :: ZK</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="keywordtype">REAL</span> :: ZCOR00, ZRHO00</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="keywordtype">REAL</span> :: ZT   <span class="comment">! Temperature (C)</span></div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="keywordtype">REAL</span> :: ZCOR <span class="comment">! To remove the Foote-duToit correction</span></div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="keywordtype">REAL</span> :: ZF0, ZF1  <span class="comment">! Coef. in Beard&#39;s equation</span></div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="keywordtype">real</span>, <span class="keywordtype">dimension(D%NIJT,D%NKT)</span> :: zreynolds</div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="comment">!</span></div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="comment">!</span></div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="comment">!*       1.    COMPUTE USEFULL PARAMETERS</span></div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="comment">!              --------------------------</span></div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="comment">!</span></div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>iktb = d%NKTB</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>ikte = d%NKTE</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>iijb = d%NIJB</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>iije = d%NIJE</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span><span class="comment">!</span></div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="comment">!*       1.1   Select the right parameters</span></div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="comment">!              --&gt; depend on the microphysics scheme and the hydrometeor species</span></div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span><span class="comment">!</span></div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span><span class="keywordflow">IF</span> (hcloud(1:3) == <span class="stringliteral">&#39;ICE&#39;</span>) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>  <span class="keywordflow">IF</span>(.NOT. <span class="keyword">PRESENT</span>(iced)) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>( nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ELEC_BEARD_EFFECT&#39;</span>, <span class="stringliteral">&#39;ICED mandatory with ICE3/ICE4&#39;</span>)</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="keywordflow">  ENDIF</span></div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>  zcexvt = iced%XCEXVT</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>  <span class="keywordflow">IF</span> (kid == 2) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    zbx     = iced%XBC</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>    zcx     = iced%XCC</div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    zdx     = iced%XDC</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    zalphax = iced%XALPHAC</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    znux    = iced%XNUC</div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 3) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    zbx     = iced%XBR</div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    zcx     = iced%XCR</div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    zdx     = iced%XDR</div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    zalphax = iced%XALPHAR</div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    znux    = iced%XNUR</div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 4) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>    <span class="comment">! values for columns are used to be consistent with the McF&amp;H formula</span></div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>    zbx     = 1.7</div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    zcx     = 2.1e5</div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    zdx     = 1.585</div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>    zalphax = iced%XALPHAI</div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>    znux    = iced%XNUI</div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 5) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>    zbx     = iced%XBS</div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    zcx     = iced%XCS</div>
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>    zdx     = iced%XDS</div>
-<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>    zalphax = iced%XALPHAS</div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    znux    = iced%XNUS</div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 6) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>    zbx     = iced%XBG</div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>    zcx     = iced%XCG</div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    zdx     = iced%XDG</div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>    zalphax = iced%XALPHAG</div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>    znux    = iced%XNUG</div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 7) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    zbx     = iced%XBH</div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>    zcx     = iced%XCH</div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>    zdx     = iced%XDH</div>
-<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    zalphax = iced%XALPHAH</div>
-<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>    znux    = iced%XNUH</div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span><span class="keywordflow">  END IF</span></div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span><span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (hcloud == <span class="stringliteral">&#39;LIMA&#39;</span>) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>  <span class="keywordflow">IF</span>(.NOT. <span class="keyword">PRESENT</span>(limap)) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>( nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ELEC_BEARD_EFFECT&#39;</span>, <span class="stringliteral">&#39;LIMAP mandatory with ICE3/ICE4&#39;</span>)</div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span><span class="keywordflow">  ENDIF</span></div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>  <span class="keywordflow">IF</span>(.NOT. <span class="keyword">PRESENT</span>(limapc)) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>( nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ELEC_BEARD_EFFECT&#39;</span>, <span class="stringliteral">&#39;LIMAPC mandatory with ICE3/ICE4&#39;</span>)</div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span><span class="keywordflow">  ENDIF</span></div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>  <span class="keywordflow">IF</span>(.NOT. <span class="keyword">PRESENT</span>(limapw)) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>( nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ELEC_BEARD_EFFECT&#39;</span>, <span class="stringliteral">&#39;LIMAPW mandatory with ICE3/ICE4&#39;</span>)</div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span><span class="keywordflow">  ENDIF</span></div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>  <span class="keywordflow">IF</span>(.NOT. <span class="keyword">PRESENT</span>(limapm)) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>( nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ELEC_BEARD_EFFECT&#39;</span>, <span class="stringliteral">&#39;LIMAPM mandatory with ICE3/ICE4&#39;</span>)</div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span><span class="keywordflow">  ENDIF</span></div>
-<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span> </div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>  zcexvt = limap%XCEXVT</div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>  <span class="keywordflow">IF</span> (kid == 2) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>    zbx     = limapw%XBC</div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    zcx     = limapw%XCC</div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>    zdx     = limapw%XDC</div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    zalphax = limap%XALPHAC</div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>    znux    = limap%XNUC</div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 3) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>    zbx     = limapw%XBR</div>
-<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>    zcx     = limapw%XCR</div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>    zdx     = limapw%XDR</div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>    zalphax = limap%XALPHAR</div>
-<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>    znux    = limap%XNUR</div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 4) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>    zbx     = 1.7</div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>    zcx     = 2.1e5</div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>    zdx     = 1.585</div>
-<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    zalphax = limap%XALPHAI</div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>    znux    = limap%XNUI</div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 5) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>    zbx     = limapc%XBS</div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>    zcx     = limapc%XCS</div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>    zdx     = limapc%XDS</div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>    zalphax = limap%XALPHAS</div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>    znux    = limap%XNUS</div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 6) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    zbx     = limapm%XBG</div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>    zcx     = limapm%XCG</div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>    zdx     = limapm%XDG</div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>    zalphax = limap%XALPHAG</div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>    znux    = limap%XNUG</div>
-<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 7) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>    zbx     = limapm%XBH</div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    zcx     = limapm%XCH</div>
-<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>    zdx     = limapm%XDH</div>
-<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    zalphax = limapm%XALPHAH</div>
-<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>    znux    = limapm%XNUH</div>
-<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span><span class="keywordflow">  END IF</span></div>
-<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span><span class="keywordflow">END IF</span>  </div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span><span class="comment">!</span></div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span><span class="comment">!*       1.2   Parameters from Table 1 in Beard (1980)</span></div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span><span class="comment">!</span></div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span><span class="comment">! Reference value of the dynamic viscosity of air</span></div>
-<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>zeta0 = (1.718e-5 + 0.0049e-5 * (pthvrefzikb - cst%XTT))</div>
-<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span><span class="comment">!</span></div>
-<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>zrho00 = cst%XP00 / (cst%XRD * pthvrefzikb)</div>
-<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>zcor00 = zrho00**zcexvt</div>
-<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span><span class="comment">!</span></div>
-<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span><span class="comment">! (rho_0 / eta_0) * (v * lambda^d)</span></div>
-<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>zvx = (zrho00 / zeta0) * zcx * <a class="code hl_interface" href="interfacemodi__momg_1_1momg.html">momg</a>(zalphax,znux,zbx+zdx) / <a class="code hl_interface" href="interfacemodi__momg_1_1momg.html">momg</a>(zalphax,znux,zbx)</div>
-<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span><span class="comment">!</span></div>
-<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span><span class="comment">!</span></div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span><span class="comment">!*       2.    COMPUTE THE VELOCITY ADJUSTMENT FACTOR</span></div>
-<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span><span class="comment">!              --------------------------------------</span></div>
-<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span><span class="comment">!</span></div>
-<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>zreynolds(:,:) = 0.</div>
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>pbeardcoef(:,:) = 1.0</div>
-<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span><span class="comment">!</span></div>
-<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span><span class="keywordflow">DO</span> jk = iktb, ikte</div>
-<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>  <span class="keywordflow">DO</span> jij = iijb, iije</div>
-<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span><span class="comment">!++cb++ 09/06/23 on n&#39;applique l&#39;effet Beard que pour les points ou le rapport de melange est</span></div>
-<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span><span class="comment">! suffisamment eleve pour eviter que qE &gt;&gt; mg =&gt; coef de Beard tres eleve !</span></div>
-<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span><span class="comment">! Ce pb intervient avec ICE3 pour lequel xrtmin est tres bas par rapport a LIMA.</span></div>
-<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>    <span class="keywordflow">IF</span> (osedim(jij,jk) .AND. prx(jij,jk) .GT. <a class="code hl_variable" href="namespacemodd__elec__descr.html#afb24e806053e6055160cb58e05143011">xrtmin_elec</a>(kid) .AND. plbda(jij,jk) .GT. 0.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span><span class="comment">!--cb--</span></div>
-<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>      <span class="comment">! Temperature K --&gt; C</span></div>
-<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>      zt = pt(jij,jk) - cst%XTT</div>
-<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>      <span class="comment">!</span></div>
-<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>      <span class="comment">! Pre-factor of f_0</span></div>
-<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>      <span class="keywordflow">IF</span> (zt &gt;= 0.0) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>        zf0 = zeta0 / (1.718e-5 + 0.0049e-5 * zt)</div>
-<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>      <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>        zf0 = zeta0 / (1.718e-5 + 0.0049e-5 * zt - 1.2e-10 * zt * zt)</div>
-<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span><span class="keywordflow">      END IF</span></div>
-<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>      <span class="comment">!</span></div>
-<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>      <span class="comment">! Pre-factor of f_infty</span></div>
-<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>      zf1 = sqrt(zrho00/prhodref(jij,jk))</div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>      <span class="comment">!</span></div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>      <span class="comment">! compute (1 - K) = 1 - qE/mg</span></div>
-<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>      zk = 1. - pqx(jij,jk) * pefieldw(jij,jk) / (prx(jij,jk) * cst%XG)</div>
-<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>      <span class="comment">!</span></div>
-<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>      <span class="comment">! Hyp : K_0 ~ 0</span></div>
-<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>      <span class="comment">! Hyp : si qE &gt; mg, K &gt; 1</span></div>
-<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>      <span class="keywordflow">IF</span> (zk &lt;= 0.0) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>        pbeardcoef(jij,jk) = 0.  <span class="comment">! levitation</span></div>
-<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>      <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>        <span class="comment">! Reynolds number</span></div>
-<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>        zre0 = zvx / plbda(jij,jk)**(1.+zdx)</div>
-<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>        zreynolds(jij,jk) = zre0</div>
-<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>        <span class="keywordflow">IF</span> (zre0 &lt;= 0.2) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>          pbeardcoef(jij,jk) = zf0 * zk</div>
-<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>        <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (zre0 &gt;= 1000.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>          pbeardcoef(jij,jk) = zf1 * sqrt(zk)</div>
-<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>        <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>          pbeardcoef(jij,jk) = zf0 * zk +                   &amp;</div>
-<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>                              (zf1 * sqrt(zk) - zf0 * zk) * &amp;</div>
-<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>                              (1.61 + log(zre0)) / 8.52</div>
-<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span><span class="keywordflow">        END IF</span></div>
-<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>        <span class="comment">! remove the Foote-duToit correction</span></div>
-<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>        zcor = (prhodref(jij,jk) / zrho00)**zcexvt</div>
-<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>        pbeardcoef(jij,jk) = pbeardcoef(jij,jk) * zcor</div>
-<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span><span class="keywordflow">      END IF</span></div>
-<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>    <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>      pbeardcoef(jij,jk) = 1.0 <span class="comment">! No &quot;Beard&quot; effect</span></div>
-<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span><span class="keywordflow">    END IF</span></div>
-<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span><span class="keywordflow">  END DO</span></div>
-<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span><span class="keywordflow">END DO</span></div>
-<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span><span class="comment">!</span></div>
-<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span><span class="comment">!</span></div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__msg.html">mode_msg</a>,             <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a> </div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__io.html">modd_io</a>, <span class="keywordtype">ONLY</span>:<a class="code hl_variable" href="namespacemodd__io.html#a09f5ecc44d0713a5a1386030c8b6f257">nverb_fatal</a></div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="comment">!</span></div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="comment">!</span></div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="comment">!*       0.1   Declarations of dummy arguments</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="comment">!</span></div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),                 <span class="keywordtype">INTENT(IN)</span>    :: D</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__cst_1_1cst__t.html">cst_t</a>),              <span class="keywordtype">INTENT(IN)</span>    :: CST</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span><span class="keywordtype">INTEGER</span>,                          <span class="keywordtype">INTENT(IN)</span>    :: KID         <span class="comment">! Hydrometeor ID</span></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="keywordtype">LOGICAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: OSEDIM      <span class="comment">! if T, compute the sedim. proc.</span></div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PRHODREF    <span class="comment">! Reference density</span></div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PT          <span class="comment">! Temperature</span></div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PRX         <span class="comment">! m.r. source</span></div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PQX         <span class="comment">! Elec. charge density source</span></div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PEFIELDW    <span class="comment">! Vertical component of the electric field</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PLBDA       <span class="comment">! Slope param. of the distribution</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(OUT)</span>   :: PBEARDCOEF  <span class="comment">! Beard coefficient</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="keywordtype">CHARACTER (LEN=4)</span>,      <span class="keywordtype">INTENT(IN)</span>   ::  HCLOUD       <span class="comment">! Kind of microphysical scheme</span></div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="comment">!</span></div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="keywordtype">REAL</span>, <span class="keywordtype">INTENT(IN)</span>                :: PTHVREFZIKB <span class="comment">! Reference thv at IKB for electricity</span></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__rain__ice__descr__n_1_1rain__ice__descr__t.html">rain_ice_descr_t</a>),   <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: ICED</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima_1_1param__lima__t.html">param_lima_t</a>),       <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: LIMAP</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima__cold_1_1param__lima__cold__t.html">param_lima_cold_t</a>),  <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: LIMAPC</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima__warm_1_1param__lima__warm__t.html">param_lima_warm_t</a>),  <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: LIMAPW</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima__mixed_1_1param__lima__mixed__t.html">param_lima_mixed_t</a>), <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: LIMAPM</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="comment">!*       0.2   Declarations of local variables</span></div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="comment">!</span></div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="keywordtype">INTEGER</span> :: JIJ, JK <span class="comment">! loop indexes</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="keywordtype">INTEGER</span> :: IIJB, IIJE, IKTB, IKTE</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="keywordtype">REAL</span> :: ZCEXVT, ZBX, ZCX, ZDX, ZALPHAX, ZNUX</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="keywordtype">REAL</span> :: ZRE0</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="keywordtype">REAL</span> :: ZETA0</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="keywordtype">REAL</span> :: ZVX</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="keywordtype">REAL</span> :: ZK</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="keywordtype">REAL</span> :: ZCOR00, ZRHO00</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="keywordtype">REAL</span> :: ZT   <span class="comment">! Temperature (C)</span></div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="keywordtype">REAL</span> :: ZCOR <span class="comment">! To remove the Foote-duToit correction</span></div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="keywordtype">REAL</span> :: ZF0, ZF1  <span class="comment">! Coef. in Beard&#39;s equation</span></div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="keywordtype">real</span>, <span class="keywordtype">dimension(D%NIJT,D%NKT)</span> :: zreynolds</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="comment">!</span></div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="comment">!</span></div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="comment">!*       1.    COMPUTE USEFULL PARAMETERS</span></div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="comment">!              --------------------------</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="comment">!</span></div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>iktb = d%NKTB</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>ikte = d%NKTE</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>iijb = d%NIJB</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>iije = d%NIJE</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="comment">!</span></div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="comment">!*       1.1   Select the right parameters</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span><span class="comment">!              --&gt; depend on the microphysics scheme and the hydrometeor species</span></div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span><span class="comment">!</span></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="keywordflow">IF</span> (hcloud(1:3) == <span class="stringliteral">&#39;ICE&#39;</span>) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>  <span class="keywordflow">IF</span>(.NOT. <span class="keyword">PRESENT</span>(iced)) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>( <a class="code hl_variable" href="namespacemodd__io.html#a09f5ecc44d0713a5a1386030c8b6f257">nverb_fatal</a>, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ELEC_BEARD_EFFECT&#39;</span>, <span class="stringliteral">&#39;ICED mandatory with ICE3/ICE4&#39;</span>)</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span><span class="keywordflow">  ENDIF</span></div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>  zcexvt = iced%XCEXVT</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>  <span class="keywordflow">IF</span> (kid == 2) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>    zbx     = iced%XBC</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    zcx     = iced%XCC</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    zdx     = iced%XDC</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    zalphax = iced%XALPHAC</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    znux    = iced%XNUC</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 3) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    zbx     = iced%XBR</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    zcx     = iced%XCR</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    zdx     = iced%XDR</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    zalphax = iced%XALPHAR</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    znux    = iced%XNUR</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 4) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>    <span class="comment">! values for columns are used to be consistent with the McF&amp;H formula</span></div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    zbx     = 1.7</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    zcx     = 2.1e5</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>    zdx     = 1.585</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>    zalphax = iced%XALPHAI</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>    znux    = iced%XNUI</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 5) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    zbx     = iced%XBS</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>    zcx     = iced%XCS</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>    zdx     = iced%XDS</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    zalphax = iced%XALPHAS</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>    znux    = iced%XNUS</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 6) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>    zbx     = iced%XBG</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    zcx     = iced%XCG</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>    zdx     = iced%XDG</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>    zalphax = iced%XALPHAG</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>    znux    = iced%XNUG</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 7) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>    zbx     = iced%XBH</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>    zcx     = iced%XCH</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>    zdx     = iced%XDH</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>    zalphax = iced%XALPHAH</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>    znux    = iced%XNUH</div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span><span class="keywordflow">  END IF</span></div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (hcloud == <span class="stringliteral">&#39;LIMA&#39;</span>) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>  <span class="keywordflow">IF</span>(.NOT. <span class="keyword">PRESENT</span>(limap)) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>( <a class="code hl_variable" href="namespacemodd__io.html#a09f5ecc44d0713a5a1386030c8b6f257">nverb_fatal</a>, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ELEC_BEARD_EFFECT&#39;</span>, <span class="stringliteral">&#39;LIMAP mandatory with ICE3/ICE4&#39;</span>)</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span><span class="keywordflow">  ENDIF</span></div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>  <span class="keywordflow">IF</span>(.NOT. <span class="keyword">PRESENT</span>(limapc)) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>( <a class="code hl_variable" href="namespacemodd__io.html#a09f5ecc44d0713a5a1386030c8b6f257">nverb_fatal</a>, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ELEC_BEARD_EFFECT&#39;</span>, <span class="stringliteral">&#39;LIMAPC mandatory with ICE3/ICE4&#39;</span>)</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="keywordflow">  ENDIF</span></div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>  <span class="keywordflow">IF</span>(.NOT. <span class="keyword">PRESENT</span>(limapw)) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>( <a class="code hl_variable" href="namespacemodd__io.html#a09f5ecc44d0713a5a1386030c8b6f257">nverb_fatal</a>, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ELEC_BEARD_EFFECT&#39;</span>, <span class="stringliteral">&#39;LIMAPW mandatory with ICE3/ICE4&#39;</span>)</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span><span class="keywordflow">  ENDIF</span></div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>  <span class="keywordflow">IF</span>(.NOT. <span class="keyword">PRESENT</span>(limapm)) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>    <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemode__msg_1_1print__msg.html">print_msg</a>( <a class="code hl_variable" href="namespacemodd__io.html#a09f5ecc44d0713a5a1386030c8b6f257">nverb_fatal</a>, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ELEC_BEARD_EFFECT&#39;</span>, <span class="stringliteral">&#39;LIMAPM mandatory with ICE3/ICE4&#39;</span>)</div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="keywordflow">  ENDIF</span></div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span> </div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>  zcexvt = limap%XCEXVT</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>  <span class="keywordflow">IF</span> (kid == 2) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    zbx     = limapw%XBC</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>    zcx     = limapw%XCC</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    zdx     = limapw%XDC</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>    zalphax = limap%XALPHAC</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>    znux    = limap%XNUC</div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 3) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>    zbx     = limapw%XBR</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>    zcx     = limapw%XCR</div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>    zdx     = limapw%XDR</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>    zalphax = limap%XALPHAR</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>    znux    = limap%XNUR</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 4) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>    zbx     = 1.7</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>    zcx     = 2.1e5</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    zdx     = 1.585</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>    zalphax = limap%XALPHAI</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>    znux    = limap%XNUI</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 5) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>    zbx     = limapc%XBS</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>    zcx     = limapc%XCS</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>    zdx     = limapc%XDS</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>    zalphax = limap%XALPHAS</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>    znux    = limap%XNUS</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 6) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>    zbx     = limapm%XBG</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>    zcx     = limapm%XCG</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>    zdx     = limapm%XDG</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>    zalphax = limap%XALPHAG</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>    znux    = limap%XNUG</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>  <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (kid == 7) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    zbx     = limapm%XBH</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>    zcx     = limapm%XCH</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    zdx     = limapm%XDH</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>    zalphax = limapm%XALPHAH</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>    znux    = limapm%XNUH</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span><span class="keywordflow">  END IF</span></div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span><span class="keywordflow">END IF</span>  </div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span><span class="comment">!</span></div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span><span class="comment">!*       1.2   Parameters from Table 1 in Beard (1980)</span></div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span><span class="comment">!</span></div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span><span class="comment">! Reference value of the dynamic viscosity of air</span></div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>zeta0 = (1.718e-5 + 0.0049e-5 * (pthvrefzikb - cst%XTT))</div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span><span class="comment">!</span></div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>zrho00 = cst%XP00 / (cst%XRD * pthvrefzikb)</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>zcor00 = zrho00**zcexvt</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span><span class="comment">!</span></div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span><span class="comment">! (rho_0 / eta_0) * (v * lambda^d)</span></div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>zvx = (zrho00 / zeta0) * zcx * <a class="code hl_interface" href="interfacemodi__momg_1_1momg.html">momg</a>(zalphax,znux,zbx+zdx) / <a class="code hl_interface" href="interfacemodi__momg_1_1momg.html">momg</a>(zalphax,znux,zbx)</div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span><span class="comment">!</span></div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span><span class="comment">!</span></div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span><span class="comment">!*       2.    COMPUTE THE VELOCITY ADJUSTMENT FACTOR</span></div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span><span class="comment">!              --------------------------------------</span></div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span><span class="comment">!</span></div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>zreynolds(:,:) = 0.</div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>pbeardcoef(:,:) = 1.0</div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span><span class="comment">!</span></div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span><span class="keywordflow">DO</span> jk = iktb, ikte</div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>  <span class="keywordflow">DO</span> jij = iijb, iije</div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span><span class="comment">!++cb++ 09/06/23 on n&#39;applique l&#39;effet Beard que pour les points ou le rapport de melange est</span></div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span><span class="comment">! suffisamment eleve pour eviter que qE &gt;&gt; mg =&gt; coef de Beard tres eleve !</span></div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span><span class="comment">! Ce pb intervient avec ICE3 pour lequel xrtmin est tres bas par rapport a LIMA.</span></div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>    <span class="keywordflow">IF</span> (osedim(jij,jk) .AND. prx(jij,jk) .GT. <a class="code hl_variable" href="namespacemodd__elec__descr.html#afb24e806053e6055160cb58e05143011">xrtmin_elec</a>(kid) .AND. plbda(jij,jk) .GT. 0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span><span class="comment">!--cb--</span></div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>      <span class="comment">! Temperature K --&gt; C</span></div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>      zt = pt(jij,jk) - cst%XTT</div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>      <span class="comment">!</span></div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>      <span class="comment">! Pre-factor of f_0</span></div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>      <span class="keywordflow">IF</span> (zt &gt;= 0.0) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>        zf0 = zeta0 / (1.718e-5 + 0.0049e-5 * zt)</div>
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>      <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>        zf0 = zeta0 / (1.718e-5 + 0.0049e-5 * zt - 1.2e-10 * zt * zt)</div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span><span class="keywordflow">      END IF</span></div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>      <span class="comment">!</span></div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>      <span class="comment">! Pre-factor of f_infty</span></div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>      zf1 = sqrt(zrho00/prhodref(jij,jk))</div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>      <span class="comment">!</span></div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>      <span class="comment">! compute (1 - K) = 1 - qE/mg</span></div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>      zk = 1. - pqx(jij,jk) * pefieldw(jij,jk) / (prx(jij,jk) * cst%XG)</div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>      <span class="comment">!</span></div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>      <span class="comment">! Hyp : K_0 ~ 0</span></div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>      <span class="comment">! Hyp : si qE &gt; mg, K &gt; 1</span></div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>      <span class="keywordflow">IF</span> (zk &lt;= 0.0) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>        pbeardcoef(jij,jk) = 0.  <span class="comment">! levitation</span></div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>      <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>        <span class="comment">! Reynolds number</span></div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>        zre0 = zvx / plbda(jij,jk)**(1.+zdx)</div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>        zreynolds(jij,jk) = zre0</div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>        <span class="keywordflow">IF</span> (zre0 &lt;= 0.2) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>          pbeardcoef(jij,jk) = zf0 * zk</div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>        <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (zre0 &gt;= 1000.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>          pbeardcoef(jij,jk) = zf1 * sqrt(zk)</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>        <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>          pbeardcoef(jij,jk) = zf0 * zk +                   &amp;</div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>                              (zf1 * sqrt(zk) - zf0 * zk) * &amp;</div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>                              (1.61 + log(zre0)) / 8.52</div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span><span class="keywordflow">        END IF</span></div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>        <span class="comment">! remove the Foote-duToit correction</span></div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>        zcor = (prhodref(jij,jk) / zrho00)**zcexvt</div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>        pbeardcoef(jij,jk) = pbeardcoef(jij,jk) * zcor</div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span><span class="keywordflow">      END IF</span></div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>    <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>      pbeardcoef(jij,jk) = 1.0 <span class="comment">! No &quot;Beard&quot; effect</span></div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span><span class="keywordflow">    END IF</span></div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span><span class="keywordflow">  END DO</span></div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span><span class="keywordflow">END DO</span></div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span><span class="comment">!</span></div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span><span class="comment">!</span></div>
 </div>
-<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__elec__beard__effect.html#a1294ed60c5f7fc904f054eb043ed03a5">elec_beard_effect</a></div>
-<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__elec__beard__effect.html">mode_elec_beard_effect</a></div>
-<div class="ttc" id="ainterfacemode__msg_1_1print__msg_html"><div class="ttname"><a href="interfacemode__msg_1_1print__msg.html">mode_msg::print_msg</a></div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00018">mode_msg.F90:18</a></div></div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__elec__beard__effect.html#a1294ed60c5f7fc904f054eb043ed03a5">elec_beard_effect</a></div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__elec__beard__effect.html">mode_elec_beard_effect</a></div>
+<div class="ttc" id="ainterfacemode__msg_1_1print__msg_html"><div class="ttname"><a href="interfacemode__msg_1_1print__msg.html">mode_msg::print_msg</a></div><div class="ttdef"><b>Definition</b> <a href="mode__msg_8F90_source.html#l00015">mode_msg.F90:15</a></div></div>
 <div class="ttc" id="ainterfacemodi__momg_1_1momg_html"><div class="ttname"><a href="interfacemodi__momg_1_1momg.html">modi_momg::momg</a></div><div class="ttdef"><b>Definition</b> <a href="momg_8F90_source.html#l00010">momg.F90:10</a></div></div>
 <div class="ttc" id="anamespacemodd__cst_html"><div class="ttname"><a href="namespacemodd__cst.html">modd_cst</a></div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00007">modd_cst.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__dimphyex_html"><div class="ttname"><a href="namespacemodd__dimphyex.html">modd_dimphyex</a></div><div class="ttdef"><b>Definition</b> <a href="modd__dimphyexn_8F90_source.html#l00007">modd_dimphyexn.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__elec__descr_html"><div class="ttname"><a href="namespacemodd__elec__descr.html">modd_elec_descr</a></div><div class="ttdef"><b>Definition</b> <a href="modd__elec__descr_8F90_source.html#l00007">modd_elec_descr.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__elec__descr_html_afb24e806053e6055160cb58e05143011"><div class="ttname"><a href="namespacemodd__elec__descr.html#afb24e806053e6055160cb58e05143011">modd_elec_descr::xrtmin_elec</a></div><div class="ttdeci">real, dimension(:), allocatable xrtmin_elec</div><div class="ttdef"><b>Definition</b> <a href="modd__elec__descr_8F90_source.html#l00096">modd_elec_descr.F90:96</a></div></div>
+<div class="ttc" id="anamespacemodd__io_html"><div class="ttname"><a href="namespacemodd__io.html">modd_io</a></div><div class="ttdef"><b>Definition</b> <a href="modd__io_8F90_source.html#l00001">modd_io.F90:1</a></div></div>
+<div class="ttc" id="anamespacemodd__io_html_a09f5ecc44d0713a5a1386030c8b6f257"><div class="ttname"><a href="namespacemodd__io.html#a09f5ecc44d0713a5a1386030c8b6f257">modd_io::nverb_fatal</a></div><div class="ttdeci">integer, parameter nverb_fatal</div><div class="ttdef"><b>Definition</b> <a href="modd__io_8F90_source.html#l00006">modd_io.F90:6</a></div></div>
 <div class="ttc" id="anamespacemodd__param__lima__cold_html"><div class="ttname"><a href="namespacemodd__param__lima__cold.html">modd_param_lima_cold</a></div><div class="ttdef"><b>Definition</b> <a href="modd__param__lima__cold_8F90_source.html#l00007">modd_param_lima_cold.F90:7</a></div></div>
 <div class="ttc" id="anamespacemodd__param__lima__mixed_html"><div class="ttname"><a href="namespacemodd__param__lima__mixed.html">modd_param_lima_mixed</a></div><div class="ttdef"><b>Definition</b> <a href="modd__param__lima__mixed_8F90_source.html#l00002">modd_param_lima_mixed.F90:2</a></div></div>
 <div class="ttc" id="anamespacemodd__param__lima__warm_html"><div class="ttname"><a href="namespacemodd__param__lima__warm.html">modd_param_lima_warm</a></div><div class="ttdef"><b>Definition</b> <a href="modd__param__lima__warm_8F90_source.html#l00007">modd_param_lima_warm.F90:7</a></div></div>
