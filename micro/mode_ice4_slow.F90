@@ -79,7 +79,7 @@ REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRVDEPG  ! Deposition on r_g
 !
 REAL, DIMENSION(KPROMA) :: ZCRIAUTI
 INTEGER                 :: JL
-REAL            :: ZREDGR,ZREDSN
+REAL            :: ZREDGR,ZREDSN,MAX_EXP_ARG
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
@@ -92,6 +92,7 @@ IF (LHOOK) CALL DR_HOOK('ICE4_SLOW', 0, ZHOOK_HANDLE)
 ZREDGR  = 1.      ! Tuning of the deposition of graupel, 1. is ref. value 
 ZREDSN  = 1.      ! Tuning of the deposition of snow, 1. is ref. value
 
+MAX_EXP_ARG = 100.0
 IF(PARAMI%LOCND2) THEN
   IF(.NOT. PARAMI%LMODICEDEP) THEN
     ZREDGR  = ICEP%XFRMIN(39)  ! Tuning factor, may be /= 1. 
@@ -110,7 +111,7 @@ DO JL=1, KSIZE
   IF(PT(JL)<CST%XTT-35.0 .AND. PRCT(JL)>ICED%XRTMIN(2) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
       PRCHONI(JL) = MIN(1000.,ICEP%XHON*PRHODREF(JL)*PRCT(JL)       &
-                                 *EXP( ICEP%XALPHA3*(PT(JL)-CST%XTT)-ICEP%XBETA3 ))
+                                  *EXP( MIN(MAX_EXP_ARG,ICEP%XALPHA3*(PT(JL)-CST%XTT)-ICEP%XBETA3) ))
     ENDIF
   ELSE
     PRCHONI(JL) = 0.
