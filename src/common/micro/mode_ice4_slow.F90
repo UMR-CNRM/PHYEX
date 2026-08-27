@@ -40,6 +40,7 @@ SUBROUTINE ICE4_SLOW(CST, PARAMI, ICEP, ICED, D, LDSOFT, OELEC, LDCOMPUTE, PRHOD
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
+USE MODD_PRECISION,         ONLY: MNHREAL, MNHREAL64
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
@@ -83,7 +84,7 @@ REAL, DIMENSION(D%NIJT),      INTENT(INOUT) :: PRVDEPG  ! Deposition on r_g
 !
 REAL, DIMENSION(D%NIJT) :: ZCRIAUTI
 INTEGER                 :: JIJ
-REAL            :: ZREDGR,ZREDSN
+REAL            :: ZREDGR,ZREDSN,ZMAXEXPARG
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
@@ -95,6 +96,12 @@ IF (LHOOK) CALL DR_HOOK('ICE4_SLOW', 0, ZHOOK_HANDLE)
 
 ZREDGR  = 1.      ! Tuning of the deposition of graupel, 1. is ref. value 
 ZREDSN  = 1.      ! Tuning of the deposition of snow, 1. is ref. value
+
+IF(MNHREAL == MNHREAL64) THEN
+  ZMAXEXPARG = 700 ! LOG(HUGE(1.0_MNHREAL64)) minus a safety margin of 8 (Max double prec argument for EXP -8) 
+ELSE
+  ZMAXEXPARG = 80 ! LOG(HUGE(1.0_MNHREAL32)) minus a safety margin of 8 (Max double prec argument for EXP -8)
+ENDIF
 
 IF(PARAMI%LOCND2) THEN
   IF(.NOT. PARAMI%LMODICEDEP) THEN
@@ -114,7 +121,7 @@ DO JIJ=D%NIJB, D%NIJE
   IF(PT(JIJ)<CST%XTT-35.0 .AND. PRCT(JIJ)>ICED%XRTMIN(2) .AND. LDCOMPUTE(JIJ)) THEN
     IF(.NOT. LDSOFT) THEN
       PRCHONI(JIJ) = MIN(1000.,ICEP%XHON*PRHODREF(JIJ)*PRCT(JIJ)       &
-                                 *EXP( ICEP%XALPHA3*(PT(JIJ)-CST%XTT)-ICEP%XBETA3 ))
+                                 *EXP( MIN(ZMAXEXPARG,ICEP%XALPHA3*(PT(JIJ)-CST%XTT)-ICEP%XBETA3 )))
     ENDIF
   ELSE
     PRCHONI(JIJ) = 0.
