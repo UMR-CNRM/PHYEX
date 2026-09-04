@@ -123,6 +123,7 @@ INTEGER, DIMENSION(D%NIJT),  INTENT(INOUT):: KPBL    ! contains index of source 
 !
 !*       0.2   Declarations of local variables :
 !
+INTEGER :: JKP, JKT
 INTEGER :: JKK, JK, JKM, JL, JT! vertical loop index
 INTEGER :: JI                  ! horizontal loop index
 INTEGER :: IKB, IKE            ! horizontal + vertical loop bounds
@@ -218,7 +219,14 @@ JT = IKE - 2
 !*       2.     Enter loop for convection test
 !               ------------------------------
 !
-DO JKK = IKB + 1, IKE - 2
+#ifdef PHYEX_MESONH
+JKP = MINVAL( IDPL(:) ) + 1
+JKT = JKP ! do not allow for looping anymore, test only for surface mixed layer
+#else
+JKP = IKB + 1
+JKT = IKE - 2
+#endif
+DO JKK = JKP, JKT
 !
      DO JI=D%NIJB, D%NIJE
        GWORK1(JI) = ZZDPL(JI) - PZ(JI,IKB) < CVP_SHAL%XZLCL
