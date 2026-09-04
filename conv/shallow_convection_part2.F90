@@ -358,11 +358,22 @@ IF ( OCH1CONV ) THEN
             ZCH1C(JI,JK,JN) = ZCH1C(JI,JK,JN) -   &
                               ZWORK3(JI,JN)*ABS(ZCH1C(JI,JK,JN))/MAX(1.E-30,ZWORK2(JI))
           END IF
+#ifndef PHYEX_MESONH
           PPCH1TEN(JI,JK,JN) = (ZCH1C(JI,JK,JN)-PCH1(JI,JK,JN) ) / ZTIMEC(JI)
           IF(.NOT. GTRIG1(JI)) PPCH1TEN(JI,JK,JN) = 0.
+#endif
         END DO
       END DO
     END IF
+    !
+#ifdef PHYEX_MESONH
+    DO JK = IKB, IKE
+      DO JI = D%NIJB,D%NIJE
+        PPCH1TEN(JI,JK,JN) = (ZCH1C(JI,JK,JN)-PCH1(JI,JK,JN) ) / ZTIMEC(JI)
+        IF(.NOT. GTRIG1(JI)) PPCH1TEN(JI,JK,JN) = 0.
+      ENDDO
+    ENDDO
+#endif
   END DO
 END IF
 
