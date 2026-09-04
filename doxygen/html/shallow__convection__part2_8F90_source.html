@@ -443,58 +443,69 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span>            zch1c(ji,jk,jn) = zch1c(ji,jk,jn) -   &amp;</div>
 <div class="line"><a id="l00359" name="l00359"></a><span class="lineno">  359</span>                              zwork3(ji,jn)*abs(zch1c(ji,jk,jn))/max(1.e-30,zwork2(ji))</div>
 <div class="line"><a id="l00360" name="l00360"></a><span class="lineno">  360</span><span class="keywordflow">          END IF</span></div>
-<div class="line"><a id="l00361" name="l00361"></a><span class="lineno">  361</span>          ppch1ten(ji,jk,jn) = (zch1c(ji,jk,jn)-pch1(ji,jk,jn) ) / ztimec(ji)</div>
-<div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span>          <span class="keywordflow">IF</span>(.NOT. gtrig1(ji)) ppch1ten(ji,jk,jn) = 0.</div>
-<div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span><span class="keywordflow">        END DO</span></div>
-<div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span><span class="keywordflow">      END DO</span></div>
-<div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span><span class="keywordflow">    END IF</span></div>
-<div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span><span class="keywordflow">  END DO</span></div>
-<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span> </div>
-<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span><span class="keywordflow">DO</span> jk = ikb, ike</div>
-<div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span>  <span class="keywordflow">DO</span> ji=d%NIJB, d%NIJE</div>
-<div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span>    <span class="keywordflow">IF</span> (ictl(ji) &lt;= ikb+1) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span>      pumf(ji,jk) = 0.</div>
-<div class="line"><a id="l00373" name="l00373"></a><span class="lineno">  373</span>    <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span>      pumf(ji,jk)  = pumf(ji,jk) / cvp_shal%XA25 <span class="comment">! Mass flux per unit area</span></div>
-<div class="line"><a id="l00375" name="l00375"></a><span class="lineno">  375</span><span class="keywordflow">    ENDIF</span></div>
-<div class="line"><a id="l00376" name="l00376"></a><span class="lineno">  376</span><span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span><span class="keywordflow">END DO</span></div>
-<div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span> </div>
-<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span><span class="keywordflow">DO</span> ji=d%NIJB, d%NIJE</div>
-<div class="line"><a id="l00380" name="l00380"></a><span class="lineno">  380</span>  iminctl(ji) = min(islcl(ji), ictl(ji))</div>
-<div class="line"><a id="l00381" name="l00381"></a><span class="lineno">  381</span><span class="keywordflow">ENDDO</span></div>
-<div class="line"><a id="l00382" name="l00382"></a><span class="lineno">  382</span> </div>
-<div class="line"><a id="l00383" name="l00383"></a><span class="lineno">  383</span><span class="keywordflow">DO</span> jk = ikb, ike</div>
-<div class="line"><a id="l00384" name="l00384"></a><span class="lineno">  384</span>  <span class="keywordflow">DO</span> ji = d%NIJB,d%NIJE</div>
-<div class="line"><a id="l00385" name="l00385"></a><span class="lineno">  385</span>    <span class="keywordflow">IF</span>(.NOT. gtrig1(ji))<span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00386" name="l00386"></a><span class="lineno">  386</span>      pthc(ji, jk) = 0.</div>
-<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span>      prvc(ji, jk) = 0.</div>
-<div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span>      prcc(ji, jk) = 0.</div>
-<div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span>      pric(ji, jk) = 0.</div>
-<div class="line"><a id="l00390" name="l00390"></a><span class="lineno">  390</span><span class="keywordflow">    ENDIF</span></div>
-<div class="line"><a id="l00391" name="l00391"></a><span class="lineno">  391</span><span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a id="l00361" name="l00361"></a><span class="lineno">  361</span><span class="preprocessor">#ifndef PHYEX_MESONH</span></div>
+<div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span><span class="preprocessor"></span>          ppch1ten(ji,jk,jn) = (zch1c(ji,jk,jn)-pch1(ji,jk,jn) ) / ztimec(ji)</div>
+<div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span>          <span class="keywordflow">IF</span>(.NOT. gtrig1(ji)) ppch1ten(ji,jk,jn) = 0.</div>
+<div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span><span class="preprocessor"></span><span class="keywordflow">        END DO</span></div>
+<div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span><span class="keywordflow">      END DO</span></div>
+<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span><span class="keywordflow">    END IF</span></div>
+<div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span>    <span class="comment">!</span></div>
+<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span><span class="preprocessor">#ifdef PHYEX_MESONH</span></div>
+<div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span><span class="preprocessor"></span>    <span class="keywordflow">DO</span> jk = ikb, ike</div>
+<div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span>      <span class="keywordflow">DO</span> ji = d%NIJB,d%NIJE</div>
+<div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span>        ppch1ten(ji,jk,jn) = (zch1c(ji,jk,jn)-pch1(ji,jk,jn) ) / ztimec(ji)</div>
+<div class="line"><a id="l00373" name="l00373"></a><span class="lineno">  373</span>        <span class="keywordflow">IF</span>(.NOT. gtrig1(ji)) ppch1ten(ji,jk,jn) = 0.</div>
+<div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span><span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a id="l00375" name="l00375"></a><span class="lineno">  375</span><span class="keywordflow">    ENDDO</span></div>
+<div class="line"><a id="l00376" name="l00376"></a><span class="lineno">  376</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span><span class="preprocessor"></span><span class="keywordflow">  END DO</span></div>
+<div class="line"><a id="l00378" name="l00378"></a><span class="lineno">  378</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00379" name="l00379"></a><span class="lineno">  379</span> </div>
+<div class="line"><a id="l00380" name="l00380"></a><span class="lineno">  380</span><span class="keywordflow">DO</span> jk = ikb, ike</div>
+<div class="line"><a id="l00381" name="l00381"></a><span class="lineno">  381</span>  <span class="keywordflow">DO</span> ji=d%NIJB, d%NIJE</div>
+<div class="line"><a id="l00382" name="l00382"></a><span class="lineno">  382</span>    <span class="keywordflow">IF</span> (ictl(ji) &lt;= ikb+1) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00383" name="l00383"></a><span class="lineno">  383</span>      pumf(ji,jk) = 0.</div>
+<div class="line"><a id="l00384" name="l00384"></a><span class="lineno">  384</span>    <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00385" name="l00385"></a><span class="lineno">  385</span>      pumf(ji,jk)  = pumf(ji,jk) / cvp_shal%XA25 <span class="comment">! Mass flux per unit area</span></div>
+<div class="line"><a id="l00386" name="l00386"></a><span class="lineno">  386</span><span class="keywordflow">    ENDIF</span></div>
+<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span><span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span><span class="keywordflow">END DO</span></div>
+<div class="line"><a id="l00389" name="l00389"></a><span class="lineno">  389</span> </div>
+<div class="line"><a id="l00390" name="l00390"></a><span class="lineno">  390</span><span class="keywordflow">DO</span> ji=d%NIJB, d%NIJE</div>
+<div class="line"><a id="l00391" name="l00391"></a><span class="lineno">  391</span>  iminctl(ji) = min(islcl(ji), ictl(ji))</div>
 <div class="line"><a id="l00392" name="l00392"></a><span class="lineno">  392</span><span class="keywordflow">ENDDO</span></div>
-<div class="line"><a id="l00393" name="l00393"></a><span class="lineno">  393</span><span class="keywordflow">DO</span> ji = d%NIJB,d%NIJE</div>
-<div class="line"><a id="l00394" name="l00394"></a><span class="lineno">  394</span>  <span class="keywordflow">IF</span>(.NOT. gtrig1(ji))<span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span>    ictl(ji) = 0.</div>
-<div class="line"><a id="l00396" name="l00396"></a><span class="lineno">  396</span>    iminctl(ji) = 0.</div>
-<div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span><span class="keywordflow">  ENDIF</span></div>
-<div class="line"><a id="l00398" name="l00398"></a><span class="lineno">  398</span><span class="keywordflow">ENDDO</span></div>
-<div class="line"><a id="l00399" name="l00399"></a><span class="lineno">  399</span> </div>
-<div class="line"><a id="l00400" name="l00400"></a><span class="lineno">  400</span><span class="comment">! Apparently, this level is left undefined </span></div>
-<div class="line"><a id="l00401" name="l00401"></a><span class="lineno">  401</span> </div>
-<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span>pumf(:,d%NKT) = 0.    </div>
-<div class="line"><a id="l00403" name="l00403"></a><span class="lineno">  403</span>pthc(:,d%NKT) = 0.    </div>
-<div class="line"><a id="l00404" name="l00404"></a><span class="lineno">  404</span>prvc(:,d%NKT) = 0.    </div>
-<div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span>prcc(:,d%NKT) = 0.    </div>
-<div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span>pric(:,d%NKT) = 0.    </div>
-<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span>ppch1ten(:,d%NKT,:) = 0.</div>
-<div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span> </div>
-<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;SHALLOW_CONVECTION_PART2&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a id="l00393" name="l00393"></a><span class="lineno">  393</span> </div>
+<div class="line"><a id="l00394" name="l00394"></a><span class="lineno">  394</span><span class="keywordflow">DO</span> jk = ikb, ike</div>
+<div class="line"><a id="l00395" name="l00395"></a><span class="lineno">  395</span>  <span class="keywordflow">DO</span> ji = d%NIJB,d%NIJE</div>
+<div class="line"><a id="l00396" name="l00396"></a><span class="lineno">  396</span>    <span class="keywordflow">IF</span>(.NOT. gtrig1(ji))<span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00397" name="l00397"></a><span class="lineno">  397</span>      pthc(ji, jk) = 0.</div>
+<div class="line"><a id="l00398" name="l00398"></a><span class="lineno">  398</span>      prvc(ji, jk) = 0.</div>
+<div class="line"><a id="l00399" name="l00399"></a><span class="lineno">  399</span>      prcc(ji, jk) = 0.</div>
+<div class="line"><a id="l00400" name="l00400"></a><span class="lineno">  400</span>      pric(ji, jk) = 0.</div>
+<div class="line"><a id="l00401" name="l00401"></a><span class="lineno">  401</span><span class="keywordflow">    ENDIF</span></div>
+<div class="line"><a id="l00402" name="l00402"></a><span class="lineno">  402</span><span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a id="l00403" name="l00403"></a><span class="lineno">  403</span><span class="keywordflow">ENDDO</span></div>
+<div class="line"><a id="l00404" name="l00404"></a><span class="lineno">  404</span><span class="keywordflow">DO</span> ji = d%NIJB,d%NIJE</div>
+<div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span>  <span class="keywordflow">IF</span>(.NOT. gtrig1(ji))<span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span>    ictl(ji) = 0.</div>
+<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span>    iminctl(ji) = 0.</div>
+<div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span><span class="keywordflow">  ENDIF</span></div>
+<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span><span class="keywordflow">ENDDO</span></div>
+<div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span> </div>
+<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span><span class="comment">! Apparently, this level is left undefined </span></div>
+<div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span> </div>
+<div class="line"><a id="l00413" name="l00413"></a><span class="lineno">  413</span>pumf(:,d%NKT) = 0.    </div>
+<div class="line"><a id="l00414" name="l00414"></a><span class="lineno">  414</span>pthc(:,d%NKT) = 0.    </div>
+<div class="line"><a id="l00415" name="l00415"></a><span class="lineno">  415</span>prvc(:,d%NKT) = 0.    </div>
+<div class="line"><a id="l00416" name="l00416"></a><span class="lineno">  416</span>prcc(:,d%NKT) = 0.    </div>
+<div class="line"><a id="l00417" name="l00417"></a><span class="lineno">  417</span>pric(:,d%NKT) = 0.    </div>
+<div class="line"><a id="l00418" name="l00418"></a><span class="lineno">  418</span>ppch1ten(:,d%NKT,:) = 0.</div>
+<div class="line"><a id="l00419" name="l00419"></a><span class="lineno">  419</span> </div>
+<div class="line"><a id="l00420" name="l00420"></a><span class="lineno">  420</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;SHALLOW_CONVECTION_PART2&#39;</span>,1,zhook_handle)</div>
 </div>
-<div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="shallow__convection__part2_8F90.html#ace478ecdcbafde546ec657d13ada9b32">shallow_convection_part2</a></div>
-<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span> </div>
+<div class="line"><a id="l00421" name="l00421"></a><span class="lineno">  421</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="shallow__convection__part2_8F90.html#ace478ecdcbafde546ec657d13ada9b32">shallow_convection_part2</a></div>
+<div class="line"><a id="l00422" name="l00422"></a><span class="lineno">  422</span> </div>
 <div class="ttc" id="anamespacemodd__convpar__shal_html"><div class="ttname"><a href="namespacemodd__convpar__shal.html">modd_convpar_shal</a></div><div class="ttdef"><b>Definition</b> <a href="modd__convpar__shal_8F90_source.html#l00012">modd_convpar_shal.F90:12</a></div></div>
 <div class="ttc" id="anamespacemodd__convpar_html"><div class="ttname"><a href="namespacemodd__convpar.html">modd_convpar</a></div><div class="ttdef"><b>Definition</b> <a href="modd__convpar_8F90_source.html#l00012">modd_convpar.F90:12</a></div></div>
 <div class="ttc" id="anamespacemodd__convparext_html"><div class="ttname"><a href="namespacemodd__convparext.html">modd_convparext</a></div><div class="ttdef"><b>Definition</b> <a href="modd__convparext_8F90_source.html#l00005">modd_convparext.F90:5</a></div></div>

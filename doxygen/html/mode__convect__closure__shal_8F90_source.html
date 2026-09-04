@@ -779,28 +779,25 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span>                                   pumf, zumf, puer, zuer, pudr, zudr    )</div>
 <div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span>  <span class="comment">!</span></div>
 <div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span>  <span class="comment">!IF ( COUNT( GWORK1(:) ) == 0 ) EXIT ! exit big adjustment iteration loop</span></div>
-<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span>  <span class="comment">!                                    ! when all columns have reached</span></div>
-<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span>  <span class="comment">!                                    ! desired degree of stabilization.</span></div>
-<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>  <span class="comment">!</span></div>
-<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span><span class="keywordflow">END DO</span>  <span class="comment">! end of big adjustment iteration loop</span></div>
-<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span><span class="comment">!</span></div>
-<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span><span class="comment">!</span></div>
-<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span><span class="comment">! skip adj. total water array  to water vapor</span></div>
-<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span><span class="keywordflow">DO</span> jk = ikb, ike</div>
-<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span>  <span class="keywordflow">DO</span> ji=d%NIJB,d%NIJE</div>
-<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>    prwc(ji,jk) = max( 0., prwc(ji,jk) - prcc(ji,jk) - pric(ji,jk) )</div>
-<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span><span class="keywordflow">  END DO</span></div>
-<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span><span class="keywordflow">END DO</span></div>
-<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span><span class="comment">!</span></div>
-<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span><span class="comment">!</span></div>
-<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;CONVECT_CLOSURE_SHAL&#39;</span>,1,zhook_handle)</div>
-<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span><span class="keyword">CONTAINS</span></div>
-<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span>include <span class="stringliteral">&quot;convect_satmixratio.h&quot;</span></div>
-<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span><span class="comment">!</span></div>
+<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span>  <span class="comment">!</span></div>
+<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span><span class="keywordflow">END DO</span>  <span class="comment">! end of big adjustment iteration loop</span></div>
+<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span><span class="comment">!</span></div>
+<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span><span class="comment">!</span></div>
+<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span><span class="comment">! skip adj. total water array  to water vapor</span></div>
+<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span><span class="keywordflow">DO</span> jk = ikb, ike</div>
+<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>  <span class="keywordflow">DO</span> ji=d%NIJB,d%NIJE</div>
+<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>    prwc(ji,jk) = max( 0., prwc(ji,jk) - prcc(ji,jk) - pric(ji,jk) )</div>
+<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span><span class="keywordflow">  END DO</span></div>
+<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span><span class="keywordflow">END DO</span></div>
+<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span><span class="comment">!</span></div>
+<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span><span class="comment">!</span></div>
+<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;CONVECT_CLOSURE_SHAL&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span><span class="keyword">CONTAINS</span></div>
+<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span>include <span class="stringliteral">&quot;convect_satmixratio.h&quot;</span></div>
+<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span><span class="comment">!</span></div>
 </div>
-<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__convect__closure__shal.html#a2869adbeb66c87c2227b2390da0be6c3">convect_closure_shal</a></div>
-<div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__convect__closure__shal.html">mode_convect_closure_shal</a></div>
+<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__convect__closure__shal.html#a2869adbeb66c87c2227b2390da0be6c3">convect_closure_shal</a></div>
+<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__convect__closure__shal.html">mode_convect_closure_shal</a></div>
 <div class="ttc" id="aconvect__satmixratio_8h_html_a7856b9fd651d884061acb2e16cb14bb4"><div class="ttname"><a href="convect__satmixratio_8h.html#a7856b9fd651d884061acb2e16cb14bb4">convect_satmixratio</a></div><div class="ttdeci">elemental subroutine convect_satmixratio(ppres, pt, peps, pew, plv, pls, pcph)</div><div class="ttdef"><b>Definition</b> <a href="convect__satmixratio_8h_source.html#l00001">convect_satmixratio.h:2</a></div></div>
 <div class="ttc" id="anamespacemodd__convpar__shal_html"><div class="ttname"><a href="namespacemodd__convpar__shal.html">modd_convpar_shal</a></div><div class="ttdef"><b>Definition</b> <a href="modd__convpar__shal_8F90_source.html#l00012">modd_convpar_shal.F90:12</a></div></div>
 <div class="ttc" id="anamespacemodd__convparext_html"><div class="ttname"><a href="namespacemodd__convparext.html">modd_convparext</a></div><div class="ttdef"><b>Definition</b> <a href="modd__convparext_8F90_source.html#l00005">modd_convparext.F90:5</a></div></div>
