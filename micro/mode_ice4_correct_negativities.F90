@@ -8,6 +8,9 @@ IMPLICIT NONE
 CONTAINS
        SUBROUTINE ICE4_CORRECT_NEGATIVITIES(D, ICED, KRR, PR, &
                                     &PTH, PLVFACT, PLSFACT)
+
+!$ACDC singlecolumn
+
         !SUBROUTINE ICE4_CORRECT_NEGATIVITIES(D, ICED, KRR, OELEC, PR, &
 !                                    &PTH, PLVFACT, PLSFACT, &
 !                                    &PQPI, PQC, PQR, PQI, PQS, PQG, PQNI, &

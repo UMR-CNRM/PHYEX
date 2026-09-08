@@ -36,6 +36,9 @@ CONTAINS
                                   PRCDRYH, PRIDRYH, PRSDRYH, PRRDRYH, PRGDRYH,                & !|  parameters
                                   PRHMLTR, PRDRYHG,                                           & !|     for
                                   PRHT, PCHT, PQHT, PQHS)                                 !--    hail
+
+!$ACDC singlecolumn --dummy
+
 !     ##########################################################################################
 !
 !!****  * - compute the explicit cloud electrification sources

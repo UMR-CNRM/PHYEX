@@ -16,6 +16,9 @@ SUBROUTINE ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, BUCONF, 
                              &PSEA, PTOWN,  &
                              &PINPRH, PFPR, &
                              &PQHT, PQHS)
+
+!$ACDC singlecolumn
+
 !!
 !!**  PURPOSE
 !!    -------
