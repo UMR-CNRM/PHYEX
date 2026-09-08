@@ -11,7 +11,7 @@ SUBROUTINE ICE4_SLOW(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, OELEC, LDCO
                      &PLBDAS, PLBDAG, &
                      &PAI, PCJ, PHLI_HCF, PHLI_HRI,&
                      &PLATHAM_IAGGS, &
-                     &PRCHONI, PRVDEPS, PRIAGGS, PRIAUTS, PRVDEPG, PRCRIAUTI)
+                     &PRCHONI, PRVDEPS, PRIAGGS, PRIAUTS, PRVDEPG, PRCRIAUTI, PRDEPSRED, PRDEPGRED)
 !!
 !!**  PURPOSE
 !!    -------
@@ -75,6 +75,8 @@ REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRIAGGS  ! Aggregation on r_s
 REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRIAUTS  ! Autoconversion of r_i for r_s production
 REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRVDEPG  ! Deposition on r_g
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRCRIAUTI! SPP for microphysics
+REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRDEPSRED! SPP for microphysics
+REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRDEPGRED! SPP for microphysics
 !
 !*       0.2  declaration of local variables
 !
@@ -157,14 +159,14 @@ DO JL=1, KSIZE
       IF(.NOT. ICEP%LNEWCOEFF) THEN
         PRVDEPS(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
                    ( ICEP%X0DEPS*PLBDAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS )
-        PRVDEPS(JL) = PRVDEPS(JL)*ZREDSN
+        PRVDEPS(JL) = PRVDEPS(JL)*PRDEPSRED(JL)
       ELSE
         PRVDEPS(JL) = ( PRST(JL)*(PSSI(JL)/PAI(JL)) ) *                               &
                       ( ICEP%X0DEPS*PLBDAS(JL)**(ICED%XBS+ICEP%XEX0DEPS) + ICEP%X1DEPS*PCJ(JL) * &
                       (1+0.5*(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS) &
                        *(PLBDAS(JL))**(ICED%XBS+ICEP%XEX1DEPS) )
       ENDIF
-      PRVDEPS(JL) = PRVDEPS(JL)*ZREDSN      
+      PRVDEPS(JL) = PRVDEPS(JL)*PRDEPSRED(JL)
     ENDIF
   ELSE
     PRVDEPS(JL) = 0.
@@ -231,12 +233,12 @@ DO JL=1, KSIZE
     IF(.NOT. LDSOFT) THEN
       PRVDEPG(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
                  ( ICEP%X0DEPG*PLBDAG(JL)**ICEP%XEX0DEPG + ICEP%X1DEPG*PCJ(JL)*PLBDAG(JL)**ICEP%XEX1DEPG )
-      PRVDEPG(JL) = PRVDEPG(JL)*ZREDGR
+      PRVDEPG(JL) = PRVDEPG(JL)*PRDEPGRED(JL)
     ENDIF
   ELSE
     PRVDEPG(JL) = 0.
   ENDIF
-  PRVDEPG(JL) = PRVDEPG(JL)*ZREDGR
+  PRVDEPG(JL) = PRVDEPG(JL)*PRDEPGRED(JL)
 ENDDO
 !$mnh_end_do()
 

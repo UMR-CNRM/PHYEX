@@ -13,6 +13,7 @@ INTERFACE
                                    PTHT, PRT, PTHS, PRS,                                 &
                                    PINPRC, PINPRR, PEVAP3D,                              &
                                    PINPRS, PINPRG, PRAINFR, PSIGS,               &
+                                   PRCRIAUTI, PRCRIAUTC,                                   &
                                    TBUDGETS, KBUDGETS,                                   &
                                    PQCT, PQRT, PQIT, PQST, PQGT,           &
                                    PQCS, PQRS, PQIS, PQSS, PQGS,           &
@@ -76,6 +77,8 @@ REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRS
 REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRG
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) :: PRAINFR
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS
+REAL, DIMENSION(D%NIJT),   INTENT(IN)    :: PRCRIAUTI
+REAL, DIMENSION(D%NIJT),   INTENT(IN)    :: PRCRIAUTC
 !
 TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS

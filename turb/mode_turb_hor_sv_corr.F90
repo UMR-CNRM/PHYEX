@@ -114,7 +114,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT)       &
                                      :: ZFLX, ZA, ZWKLES, ZCSV, ZCSV2
 !
 INTEGER             :: JSV          ! loop counter
-INTEGER             :: IKU, IIT, IJT, IKT, JJ, ZZ
+INTEGER             :: IKU, IIT, IJT, IKT, ZZ
 !
 REAL :: ZTIME1, ZTIME2
 !

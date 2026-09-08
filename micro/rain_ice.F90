@@ -18,7 +18,8 @@
                              PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &
                              PEFIELDW, PLATHAM_IAGGS,                              &
                              PSEA, PTOWN, PCONC3D,                                 &
-                             PINPRH, PFPR, PQHT, PQHS, PRCRIAUTI, PRCRIAUTC        )
+                             PINPRH, PFPR, PQHT, PQHS, PRCRIAUTI, PRCRIAUTC,       &
+                             PRDEPSRED, PRDEPGRED        )
 !     #############################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -259,7 +260,10 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-ai
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHT ! Hail electric charge at t
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHS ! Hail electric charge source
 !
-REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRCRIAUTI,PRCRIAUTC
+REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRCRIAUTI
+REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRCRIAUTC
+REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRDEPSRED
+REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRDEPGRED
 !
 !*       0.2   Local variable declarations
 !
@@ -294,6 +298,7 @@ CALL RAIN_ICE_PART1 ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
                       PTHT, PRT, PTHS, PRS,                                 &
                       PINPRC, PINPRR, PEVAP3D,                              &
                       PINPRS, PINPRG, PRAINFR, PSIGS,               &
+                      PRCRIAUTI, PRCRIAUTC,                                 &
                       TBUDGETS, KBUDGETS,                                   &
                        PQCT, PQRT, PQIT, PQST, PQGT,           &
                        PQCS, PQRS, PQIS, PQSS, PQGS,           &
@@ -344,7 +349,8 @@ CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,               &
                PRAINFR, PSIGS, ZWTH, ZWR,                            &
                PICLDFR, ZZZZ, ZCONC3D,                               &
                PSSIO, PSSIU, PIFR,                                   &
-               ZBUDGETS, PLATHAM_IAGGS, PRCRIAUTI, PRCRIAUTC         )
+               ZBUDGETS, PLATHAM_IAGGS, PRCRIAUTI, PRCRIAUTC,        &
+               PRDEPSRED, PRDEPGRED  )
 !
 CALL RAIN_ICE_PART3 ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
                       OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &

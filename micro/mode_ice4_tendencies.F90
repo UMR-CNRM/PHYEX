@@ -20,7 +20,7 @@ SUBROUTINE ICE4_TENDENCIES(CST, PARAMI, ICEP, ICED, BUCONF, KPROMA, KSIZE, &
                           &PA, PB, PATH, PBTH, &
                           &PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
                           &PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, &
-                          &PRAINFR, PRCRIAUTI, PRCRIAUTC)
+                          &PRAINFR, PRCRIAUTI, PRCRIAUTC, PRDEPSRED, PRDEPGRED)
 !!
 !!**  PURPOSE
 !!    -------
@@ -123,6 +123,8 @@ REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PHLI_LRI
 REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRAINFR   ! Rain fraction
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRCRIAUTI
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRCRIAUTC
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRDEPSRED
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRDEPGRED
 !
 !*       0.2  declaration of local variables
 !
@@ -444,7 +446,7 @@ CALL ICE4_SLOW(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, OELEC, LDCOMPUTE,
               &ZAI, ZCJ, PHLI_HCF, PHLI_HRI, &
               &PLATHAM_IAGGS, &
               &PBU_INST(:, IRCHONI), PBU_INST(:, IRVDEPS), PBU_INST(:, IRIAGGS), PBU_INST(:, IRIAUTS), PBU_INST(:, IRVDEPG), &
-              &PRCRIAUTI)
+              &PRCRIAUTI, PRDEPSRED, PRDEPGRED)
 !
 ZDEPG_S(:)=0.0
 ZNODEPG_S(:)=1.0
