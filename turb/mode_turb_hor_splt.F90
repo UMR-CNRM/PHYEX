@@ -292,8 +292,8 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMZM3D_WORK1
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMXM3D_WORK1
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMYM3D_WORK1
 INTEGER :: JK
-INTEGER :: JJ
 INTEGER :: JI
+INTEGER :: JJ
 TYPE(LIST_ll), POINTER, SAVE :: TZFIELDS_ll
 !
 ! ---------------------------------------------------------------------------
