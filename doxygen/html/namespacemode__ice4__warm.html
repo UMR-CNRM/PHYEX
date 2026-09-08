@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a52049192d390c9d215ef153c553ef5a8" id="r_a52049192d390c9d215ef153c553ef5a8"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__ice4__warm.html#a52049192d390c9d215ef153c553ef5a8">ice4_warm</a> (cst, parami, icep, iced, kproma, ksize, ldsoft, ldcompute, hsubg_rc_rr_accr, hsubg_rr_evap, prhodref, plvfact, pt, ppres, ptht, plbdar, plbdar_rf, pka, pdv, pcj, phlc_lcf, phlc_hcf, phlc_lrc, phlc_hrc, pcf, prf, prvt, prct, prrt, pconc, pacrf, prcautr, prcaccr, prrevav)</td></tr>
-<tr class="separator:a52049192d390c9d215ef153c553ef5a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9602ae8e2b055f4a86eff2bebfdca90" id="r_ad9602ae8e2b055f4a86eff2bebfdca90"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__ice4__warm.html#ad9602ae8e2b055f4a86eff2bebfdca90">ice4_warm</a> (cst, parami, icep, iced, d, ldsoft, ldcompute, hsubg_rc_rr_accr, hsubg_rr_evap, prhodref, plvfact, pt, ppres, ptht, plbdar, plbdar_rf, pka, pdv, pcj, phlc_lcf, phlc_hcf, phlc_lrc, phlc_hrc, pcf, prf, prvt, prct, prrt, pconc, pacrf, prcautr, prcaccr, prrevav)</td></tr>
+<tr class="separator:ad9602ae8e2b055f4a86eff2bebfdca90"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a52049192d390c9d215ef153c553ef5a8" name="a52049192d390c9d215ef153c553ef5a8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a52049192d390c9d215ef153c553ef5a8">&#9670;&#160;</a></span>ice4_warm()</h2>
+<a id="ad9602ae8e2b055f4a86eff2bebfdca90" name="ad9602ae8e2b055f4a86eff2bebfdca90"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad9602ae8e2b055f4a86eff2bebfdca90">&#9670;&#160;</a></span>ice4_warm()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -115,14 +115,8 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer, intent(in)&#160;</td>
-          <td class="paramname"><em>kproma</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">integer, intent(in)&#160;</td>
-          <td class="paramname"><em>ksize</em>, </td>
+          <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>d</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -133,7 +127,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">logical, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">logical, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>ldcompute</em>, </td>
         </tr>
         <tr>
@@ -151,145 +145,145 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>prhodref</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>plvfact</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>pt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>ppres</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>ptht</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>plbdar</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>plbdar_rf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>pka</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>pdv</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>pcj</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>phlc_lcf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>phlc_hcf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>phlc_lrc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>phlc_hrc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>pcf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>prf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>prvt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>prct</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>prrt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>pconc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(in)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)&#160;</td>
           <td class="paramname"><em>pacrf</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(inout)&#160;</td>
           <td class="paramname"><em>prcautr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(inout)&#160;</td>
           <td class="paramname"><em>prcaccr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(kproma), intent(inout)&#160;</td>
+          <td class="paramtype">real, dimension(d%nijt), intent(inout)&#160;</td>
           <td class="paramname"><em>prrevav</em>&#160;</td>
         </tr>
         <tr>
@@ -304,17 +298,13 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__ice4__warm_a52049192d390c9d215ef153c553ef5a8_icgraph.png" border="0" usemap="#anamespacemode__ice4__warm_a52049192d390c9d215ef153c553ef5a8_icgraph" alt=""/></div>
-<map name="anamespacemode__ice4__warm_a52049192d390c9d215ef153c553ef5a8_icgraph" id="anamespacemode__ice4__warm_a52049192d390c9d215ef153c553ef5a8_icgraph">
-<area shape="rect" title=" " alt="" coords="801,13,1017,38"/>
-<area shape="rect" href="namespacemode__ice4__tendencies.html#a9b12df5d00f1b11d1bd9f72dfe77765a" title=" " alt="" coords="583,5,753,45"/>
-<area shape="poly" title=" " alt="" coords="788,28,753,28,753,23,788,23"/>
-<area shape="rect" href="namespacemode__ice4__stepping.html#a6fa5bb04b47ffc9149e2cd467ca46033" title=" " alt="" coords="379,5,535,45"/>
-<area shape="poly" title=" " alt="" coords="569,28,535,28,535,23,569,23"/>
-<area shape="rect" href="namespacemode__ice4__pack.html#ac318661e53ff44aa8a137809d213174a" title=" " alt="" coords="127,13,331,38"/>
-<area shape="poly" title=" " alt="" coords="365,28,331,28,331,23,365,23"/>
-<area shape="rect" href="rain__ice_8F90.html#a3fb8f0e1ffc8aec9460b0b326935c6f1" title=" " alt="" coords="5,13,79,38"/>
-<area shape="poly" title=" " alt="" coords="113,28,79,28,79,23,113,23"/>
+<div class="center"><img src="namespacemode__ice4__warm_ad9602ae8e2b055f4a86eff2bebfdca90_icgraph.png" border="0" usemap="#anamespacemode__ice4__warm_ad9602ae8e2b055f4a86eff2bebfdca90_icgraph" alt=""/></div>
+<map name="anamespacemode__ice4__warm_ad9602ae8e2b055f4a86eff2bebfdca90_icgraph" id="anamespacemode__ice4__warm_ad9602ae8e2b055f4a86eff2bebfdca90_icgraph">
+<area shape="rect" title=" " alt="" coords="384,13,600,38"/>
+<area shape="rect" href="namespacemode__ice4__tendencies.html#acfc3a15e2b30dc84416b1e1caa77c534" title=" " alt="" coords="165,5,336,45"/>
+<area shape="poly" title=" " alt="" coords="370,28,336,28,336,23,370,23"/>
+<area shape="rect" href="ice4__stepping_8F90.html#aac617e00711b1f228ad05964d1220850" title=" " alt="" coords="5,13,117,38"/>
+<area shape="poly" title=" " alt="" coords="152,28,117,28,117,23,152,23"/>
 </map>
 </div>
 
