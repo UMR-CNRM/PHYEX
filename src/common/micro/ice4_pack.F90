@@ -54,10 +54,7 @@ USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & IBUNUM_EXTRA
 ! Number of extra tendency terms
 !
-USE MODE_MSG,            ONLY: PRINT_MSG
-
 USE MODI_ICE4_STEPPING, ONLY: ICE4_STEPPING
-USE MODD_IO, ONLY:NVERB_FATAL
 !
 IMPLICIT NONE
 

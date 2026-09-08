@@ -351,7 +351,6 @@ ELSE
 !$acc end kernels
 ENDIF
 
-<<<<<<< HEAD:src/common/micro/mode_ice4_fast_rh.F90
 !$acc kernels
 !$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
 DO JIJ=D%NIJB, D%NIJE

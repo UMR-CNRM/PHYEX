@@ -25,15 +25,8 @@ USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
-      & IRV,     & ! Water vapor
-      & IRC,     & ! Cloud water
-      & IRR,     & ! Rain water
-      & IRI,     & ! Pristine ice
       & IBUNUM,       & ! Number of tendency terms
-      & IBUNUM_MR,    & ! Number of tendency terms expressed as mixing ratio changes
-      & IBUNUM_EXTRA, & ! Number of extra tendency terms
-      & IRREVAV,      & ! Index for the evaporation tendency
-      & IBUEXTRAIND
+      & IBUNUM_EXTRA    ! Number of extra tendency terms
 !
 IMPLICIT NONE
 !

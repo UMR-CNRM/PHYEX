@@ -282,7 +282,6 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OELEC .OR. BUCONF%LBU_ENABLE), &
                 MERGE(D%NKT,0,OELEC .OR. BUCONF%LBU_ENABLE), &
                 MERGE(IBUNUM-IBUNUM_EXTRA,0,OELEC .OR. BUCONF%LBU_ENABLE)) :: &
            ZBUDGETS
-INTEGER :: JIJ, JK
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 0, ZHOOK_HANDLE)

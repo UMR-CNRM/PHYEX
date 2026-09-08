@@ -104,7 +104,7 @@ IF (LHOOK) CALL DR_HOOK('ICE4_WARM', 0, ZHOOK_HANDLE)
 !*       4.2    compute the autoconversion of r_c for r_r production: RCAUTR
 !
 !$acc kernels
-!$mnh_do_concurrent( JIJ=D%NIJB, D%NIJE )
+!$mnh_do_concurrent( JIJ=D%NIJB:D%NIJE )
 DO JIJ=D%NIJB, D%NIJE
   IF(LDCOMPUTE(JIJ)) THEN
     IF(PARAMI%LKOGAN .AND. .NOT. LDSOFT) THEN
