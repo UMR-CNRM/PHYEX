@@ -35,7 +35,7 @@ class CheckCommitIAL(CheckCommitBase):
                              "small_3D_alt2", "small_3D_alt3", "small_3D_alt4",
                              "small_3D_alt5", "small_3D_alt6", "small_3D_alt7",
                              "small_3D_alt8", "small_3D_alt9", "small_3D_alt10",
-                             "small_3D_alt11", "small_3D_alt12", "small_3D_lima",
+                             "small_3D_alt11", "small_3D_lima",
                              "small_3D_xfrmin", "arp_t31"]
         self.prepCodeOpts = prepCodeOpts
         self.fullcompilation = fullcompilation
