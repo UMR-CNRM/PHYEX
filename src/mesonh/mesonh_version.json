@@ -3,10 +3,10 @@
 "MESONHcommit":"aeac509e602e3caa5b9f0fa4ae71b33af9426b03",
 "refversion":"MNH-dev-74-PHYEX-cycle-update",
 "testing": {
-            "KTEST/007_16janvier":"9d5becb",
-            "INTEGRATION_CASES/LOCAL/ARMCU_1D_CONDSAMP":"9d5becb",
-            "KTEST/014_LIMA":"d4a3ffb",
-            "INTEGRATION_CASES/HPC/ARMCU_LES/DEAR":"9d5becb",
-            "KTEST/012_dust":"9d5becb"
+            "test_cases/007_16janvier":"75bdbf0",
+            "integration_cases/local/ARMCU_1D_CONDSAMP":"75bdbf0",
+            "test_cases/014_LIMA":"75bdbf0",
+            "integration_cases/hpc/ARMCU_LES/DEAR":"75bdbf0",
+            "test_cases/012_dust":"75bdbf0"
            }
 }
