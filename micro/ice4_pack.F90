@@ -155,89 +155,27 @@ IIJE=D%NIJE
 LLSIGMA_RC=(PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')
 LL_AUCV_ADJU=(PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')
 !
-IF(PARAMI%LPACK_MICRO) THEN
-  ISIZE=0
+ISIZE=0
 
-  DO JK=1,D%NKT
-    DO JIJ=1,D%NIJT
-      IF(LDMICRO(JIJ,JK)) ISIZE=ISIZE+1 ! Number of points with active microphysics
-    END DO
+DO JK=1,D%NKT
+  DO JIJ=1,D%NIJT
+    IF(LDMICRO(JIJ,JK)) ISIZE=ISIZE+1 ! Number of points with active microphysics
   END DO
-  !PARAMI%NPROMICRO is the requested size for cache_blocking loop
-  !IPROMA is the effective size
-  !This parameter must be computed here because it is used for array dimensioning in ice4_pack
-  IF (PARAMI%NPROMICRO > 0 .AND. ISIZE > 0) THEN
-    ! Cache-blocking is active
-    ! number of chunks :
-    IGPBLKS = (ISIZE-1)/MIN(PARAMI%NPROMICRO,ISIZE)+1
-    ! Adjust IPROMA to limit the number of small chunks
-    IPROMA=(ISIZE-1)/IGPBLKS+1
-  ELSE
-    IPROMA=ISIZE ! no cache-blocking
-  ENDIF
+END DO
+!PARAMI%NPROMICRO is the requested size for cache_blocking loop
+!IPROMA is the effective size
+!This parameter must be computed here because it is used for array dimensioning in ice4_pack
+IF (PARAMI%NPROMICRO > 0 .AND. ISIZE > 0) THEN
+  ! Cache-blocking is active
+  ! number of chunks :
+  IGPBLKS = (ISIZE-1)/MIN(PARAMI%NPROMICRO,ISIZE)+1
+  ! Adjust IPROMA to limit the number of small chunks
+  IPROMA=(ISIZE-1)/IGPBLKS+1
+ELSE
+  IPROMA=ISIZE ! no cache-blocking
+ENDIF
 
-  CALL ICE4_PACK_LOOP
-
-ELSE ! PARAMI%LPACK_MICRO
-  !We assume, here, that points outside the physical domain of the model (extral levels,
-  !horizontal points in the halo) contain valid values, sufficiently valid to be used in tests
-  !such as "PTHT(JL)>ZTHRESHOLD .AND. LLMICRO(JL)". In these tests, LLMICRO(JL) will be evaluated
-  !to .FALSE. on these kind of points but valid values for PTHT are needed to prevent crash.
-  !
-  IPROMA=0
-  ISIZE = D%NIJT*D%NKT
-  !
-  !When PARAMI%LPACK_MICRO=T, values on the extra levels are not given to ice4_stepping,
-  !so there was not filled in rain_ice.
-  !When PARAMI%LPACK_MICRO=F, we need to complement the work done in rain_ice to provide
-  !valid values on these levels.
-  !The same applies for the first points and last points on the horizontal dimension.
-  IF (IKTB /= 1) THEN
-    DO JK=1, IKTB-1
-      PRT(:, JK, :)=PRT(:, IKTB, :)
-    ENDDO
-  ENDIF
-  IF (IKTE /= IKT) THEN
-    DO JK=IKTE+1, IKT
-      PRT(:, JK, :)=PRT(:, IKTE, :)
-    ENDDO
-  ENDIF
-  IF (IIJB /= 1) THEN
-    DO JIJ=1, IIJB-1
-      PRT(JIJ, :, :)=PRT(IIJB, :, :)
-    ENDDO
-  ENDIF
-  IF (IIJE /= IIJT) THEN
-    DO JIJ=IIJE+1, IIJT
-      PRT(JIJ, :, :)=PRT(IIJE, :, :) 
-    ENDDO
-  ENDIF
-  !
-  !*       5bis.  TENDENCIES COMPUTATION
-  !               ----------------------
-  !
-
-
-  DD = D 
-  DD%NIJT = ISIZE
-  DD%NIJB = 1 
-  DD%NIJE = ISIZE
-
-  CALL ICE4_STEPPING(DD, CST, PARAMI, ICEP, ICED, BUCONF, PTSTEP, &
-                    &KRR, OSAVE_MICRO, LDMICRO, OELEC, &
-                    &PEXN, PRHODREF, &
-                    &PPABST, PCIT, PCLDFR, &
-                    &PHLC_HCF, PHLC_HRC, &
-                    &PHLI_HCF, PHLI_HRI,  &
-                    &PTHS, PRS, PRREVAV, &
-                    &PRAINFR, PSIGS, &
-                    &PTHT, PRT, &
-                    &PICLDFR, PZZZ, PCONC3D, &
-                    &PSSIO, PSSIU, PIFR, &
-                    &PBUDGETS, &
-                    &PLATHAM_IAGGS)
-
-ENDIF ! PARAMI%LPACK_MICRO
+CALL ICE4_PACK_LOOP
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_PACK', 1, ZHOOK_HANDLE)
 
