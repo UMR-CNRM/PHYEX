@@ -20,7 +20,7 @@ SUBROUTINE ICE4_TENDENCIES(CST, PARAMI, ICEP, ICED, BUCONF, KPROMA, KSIZE, &
                           &PA, PB, PATH, PBTH, &
                           &PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
                           &PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, &
-                          &PRAINFR, PRCRIAUTI, PRCRIAUTC, PRDEPSRED, PRDEPGRED)
+                          &PRAINFR, PRCRIAUTI, PRCRIAUTC, PRDEPSRED, PRDEPGRED, PICENU)
 !!
 !!**  PURPOSE
 !!    -------
@@ -125,6 +125,7 @@ REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRCRIAUTI
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRCRIAUTC
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRDEPSRED
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRDEPGRED
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PICENU
 !
 !*       0.2  declaration of local variables
 !
@@ -184,7 +185,7 @@ ELSE
     CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LDCOMPUTE(JL), &
                      ZTH(JL), PPRES(JL), PRHODREF(JL), PEXN(JL), PLSFACT(JL), ZT(JL), &
                      ZVART(JL,IRV), PICLDFR(JL), PZZZ(JL), &
-                     PCIT(JL), PBU_INST(JL, IRVHENI_MR))
+                     PCIT(JL), PBU_INST(JL, IRVHENI_MR), PICENU(JL))
   ENDDO
   !$mnh_end_do()
   !$mnh_do_concurrent( JL=1:KSIZE )

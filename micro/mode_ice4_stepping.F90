@@ -14,7 +14,7 @@ SUBROUTINE ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
                         &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
                         &PICLDFR, PZZZ, PCONC3D, PSSIO, PSSIU, PIFR, &
                         &PBUDGETS, PLATHAM_IAGGS,PRCRIAUTI,PRCRIAUTC, &
-                        &PRDEPSRED, PRDEPGRED)
+                        &PRDEPSRED, PRDEPGRED, PICENU)
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -111,6 +111,7 @@ REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PRCRIAUTI
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PRCRIAUTC
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PRDEPSRED
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PRDEPGRED
+REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PICENU
 !
 !
 !*       0.2   Declarations of local variables :
@@ -315,7 +316,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
                         &ZA, ZB, ZATH, ZBTH, &
                         &PHLC_HCF, ZHLC_LCF, PHLC_HRC, ZHLC_LRC, &
                         &PHLI_HCF, ZHLI_LCF, PHLI_HRI, ZHLI_LRI, PRAINFR, &
-                        &PRCRIAUTI, PRCRIAUTC, PRDEPSRED, PRDEPGRED)
+                        &PRCRIAUTI, PRCRIAUTC, PRDEPSRED, PRDEPGRED, PICENU)
 
     ! External tendencies
     IF(PARAMI%LEXT_TEND) THEN

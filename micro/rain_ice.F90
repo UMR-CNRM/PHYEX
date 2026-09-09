@@ -356,7 +356,7 @@ CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,               &
                PICLDFR, ZZZZ, ZCONC3D,                               &
                PSSIO, PSSIU, PIFR,                                   &
                ZBUDGETS, PLATHAM_IAGGS, PRCRIAUTI, PRCRIAUTC,        &
-               PRDEPSRED, PRDEPGRED  )
+               PRDEPSRED, PRDEPGRED, PICENU  )
 !
 CALL RAIN_ICE_PART3 ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
                       OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &

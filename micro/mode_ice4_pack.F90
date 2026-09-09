@@ -14,7 +14,7 @@ SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                     &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
                     &PICLDFR, PZZZ, PCONC3D, PSSIO, PSSIU, PIFR, &
                     &PBUDGETS, PLATHAM_IAGGS,  PRCRIAUTI, PRCRIAUTC, &
-                    &PRDEPSRED, PRDEPGRED)
+                    &PRDEPSRED, PRDEPGRED, PICENU)
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -132,6 +132,7 @@ REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRCRIAUTI   !SPP for microphys
 REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRCRIAUTC   !SPP for microphysics
 REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRDEPSRED   !SPP for microphysics
 REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRDEPGRED   !SPP for microphysics
+REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PICENU      !SPP for microphysics
                                                                           !
 !
 !*       0.2   Declarations of local variables :
@@ -169,7 +170,8 @@ REAL, DIMENSION(KPROMA) :: &
                         & ZRCRIAUTI,&
                         & ZRCRIAUTC,&
                         & ZRDEPSRED,&
-                        & ZRDEPGRED
+                        & ZRDEPGRED,&
+                        & ZICENU
 LOGICAL, DIMENSION(KPROMA) :: LLMICRO
 !
 !Output packed tendencies (for budgets only)
@@ -279,6 +281,7 @@ IF(PARAMI%LPACK_MICRO) THEN
               ZRCRIAUTC  (IC)=PRCRIAUTC(JIJ)
               ZRDEPSRED  (IC)=PRDEPSRED(JIJ)
               ZRDEPGRED  (IC)=PRDEPGRED(JIJ)
+              ZICNEU     (IC)=PICENU(JIJ)
               ZICLDFR    (IC)=PICLDFR (JIJ, JK)
               ZZZZ       (IC)=PZZZ    (JIJ, JK)
               ZCONC3D    (IC)=PCONC3D (JIJ, JK)
@@ -349,7 +352,7 @@ IF(PARAMI%LPACK_MICRO) THEN
                         &ZSSIO, ZSSIU, ZIFR, &
                         &ZBUDGETS, &
                         &ZLATHAM_IAGGS,ZRCRIAUTI, ZRCRIAUTC,&
-                        &ZRDEPSRED, ZRDEPGRED)
+                        &ZRDEPSRED, ZRDEPGRED, ZICENU)
       !
       !*       6.     UNPACKING
       !               ---------
@@ -439,7 +442,7 @@ ELSE ! PARAMI%LPACK_MICRO
                     &PSSIO, PSSIU, PIFR, &
                     &PBUDGETS, &
                     &PLATHAM_IAGGS, PRCRIAUTI, PRCRIAUTC, &
-                    &PRDEPSRED, PRDEPGRED)
+                    &PRDEPSRED, PRDEPGRED, PICENU)
 
 ENDIF ! PARAMI%LPACK_MICRO
 !

@@ -6,7 +6,7 @@
 ELEMENTAL SUBROUTINE ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, ODCOMPUTE, &
                            PTHT, PPABST, PRHODREF, PEXN, PLSFACT, PT, &
                            PRVT, PICLDFR, PZZZ, &
-                           PCIT, PRVHENI_MR)
+                           PCIT, PRVHENI_MR, PICENU)
 !!
 !!**  PURPOSE
 !!    -------
@@ -103,7 +103,7 @@ IF (.NOT. PARAMI%LOCND2 ) THEN
     ENDIF
   ENDIF
   IF (GNEGT) THEN
-    ZZW=ZZW-PCIT
+    ZZW=ZZW*PICENU-PCIT
     ZZW=MIN(ZZW, 50.E3) ! limitation provisoire a 50 l^-1
   END IF
 
