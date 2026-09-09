@@ -132,7 +132,7 @@ foreach(PRECISION ${precision_list})
   endif()
 
   # Compilation option to use for unqualified REALs
-  target_compile_options(phyex_${PRECISION} PUBLIC
+  target_compile_options(phyex_${PRECISION} PRIVATE
     $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
 
   if(HAVE_IFS_FLAGS)
@@ -186,7 +186,7 @@ foreach(PRECISION ${precision_list})
       endif()
 
       # Compilation option to use for unqualified REALs
-      target_compile_options(${NAME}_${PRECISION} PUBLIC
+      target_compile_options(${NAME}_${PRECISION} PRIVATE
         $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
     endforeach()
   endif()
