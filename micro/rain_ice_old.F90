@@ -12,9 +12,12 @@
                                PINPRS, PINPRG, PSIGS, PSEA, PTOWN,                    &
                                OAERONRT, OAEIFN, PCLDROP, PIFNNC,                     &
                                TBUDGETS, KBUDGETS,                                    &
-                               PICENU, PKGN_ACON, PKGN_SBGR,                          &
-                               PRCRIAUTI,PRCRIAUTC,PRDEPSRED,PRDEPGRED,               &
-                               PRHT, PRHS, PINPRH, PFPR)
+                               PRHT, PRHS, PINPRH, PFPR,                              &
+                               LALPHAC2, LRZNUC,                                      &
+                               PICENU, PALPHAC2, PRZNUC, PRXCS,                       &
+                               PKGN_ACON, PKGN_SBGR,                                  &
+                               PRCRIAUTI,PRCRIAUTC,PRDEPSRED,PRDEPGRED)
+
 
       USE YOMHOOK,             ONLY: LHOOK, DR_HOOK, JPHOOK
       USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_T
@@ -274,7 +277,11 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PIFNNC   ! Ice freezing nuclei con
 !
 TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
-REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PICENU, PKGN_ACON, PKGN_SBGR, PRCRIAUTI, PRCRIAUTC, PRDEPSRED, PRDEPGRED
+! SPP variables
+LOGICAL,                       INTENT(IN)  :: LALPHAC2, LRZNUC ! Switch for ALPHAC2 and LRZNUC perturbations
+REAL, DIMENSION(D%NIJT),       INTENT(IN)  :: PICENU, PALPHAC2, PRZNUC, PRXCS, &
+                                            & PKGN_ACON, PKGN_SBGR, &
+                                            & PRCRIAUTI, PRCRIAUTC, PRDEPSRED, PRDEPGRED
 REAL, DIMENSION(D%NIJT,D%NKT),   OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
 REAL, DIMENSION(D%NIJT),         OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip

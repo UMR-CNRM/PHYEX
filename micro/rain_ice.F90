@@ -19,7 +19,7 @@
                              PEFIELDW, PLATHAM_IAGGS,                              &
                              PSEA, PTOWN, PCONC3D,                                 &
                              PINPRH, PFPR, PQHT, PQHS,                             &
-                             PICENU, PKGN_ACON, PGKN_SBGR, PALPHAC2, PRZNUC,       &
+                             PICENU, PKGN_ACON, PKGN_SBGR, PALPHAC2, PRZNUC,       &
                              PRCRIAUTI, PRCRIAUTC, PRDEPSRED, PRDEPGRED        )
 !     #############################################################################
 !
@@ -263,7 +263,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(IN
 !
 REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PICENU
 REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PKGN_ACON
-REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PGKN_SBGR
+REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PKGN_SBGR
 REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PALPHAC2
 REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRZNUC
 REAL, DIMENSION(D%NIJT), INTENT(IN)            :: PRCRIAUTI
