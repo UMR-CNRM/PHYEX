@@ -184,8 +184,8 @@ ELSE
 !NEC$ noinline
     CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LDCOMPUTE(JL), &
                      ZTH(JL), PPRES(JL), PRHODREF(JL), PEXN(JL), PLSFACT(JL), ZT(JL), &
-                     ZVART(JL,IRV), PICLDFR(JL), PZZZ(JL), &
-                     PCIT(JL), PBU_INST(JL, IRVHENI_MR), PICENU(JL))
+                     ZVART(JL,IRV), PICLDFR(JL), PZZZ(JL), PICENU(JL), &
+                     PCIT(JL), PBU_INST(JL, IRVHENI_MR))
   ENDDO
   !$mnh_end_do()
   !$mnh_do_concurrent( JL=1:KSIZE )

@@ -5,8 +5,8 @@
 !-----------------------------------------------------------------
 ELEMENTAL SUBROUTINE ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, ODCOMPUTE, &
                            PTHT, PPABST, PRHODREF, PEXN, PLSFACT, PT, &
-                           PRVT, PICLDFR, PZZZ, &
-                           PCIT, PRVHENI_MR, PICENU)
+                           PRVT, PICLDFR, PZZZ, PICENU, &
+                           PCIT, PRVHENI_MR)
 !!
 !!**  PURPOSE
 !!    -------
@@ -51,6 +51,7 @@ REAL,    INTENT(IN)    :: PICLDFR ! Subgrid fraction of
                                   ! supersaturation with
                                   ! respect to ice at t
 REAL,    INTENT(IN)    :: PZZZ    ! Model level height at t
+REAL,    INTENT(IN)    :: PICENU  ! Nucleation perturbation
 REAL,    INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
 REAL,    INTENT(OUT)   :: PRVHENI_MR ! Mixing ratio change due to the heterogeneous nucleation
 !

@@ -281,6 +281,7 @@ REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LCF
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LRI
 !
 REAL :: ZINV_TSTEP ! Inverse ov PTSTEP
+REAL :: ZICENU ! Perturbation placeholder
 REAL, DIMENSION(KRR) :: ZICEDRTMIN
 !
 REAL :: ZDEVIDE, ZRICE, ZZSUM
@@ -304,6 +305,8 @@ IIJB=D%NIJB
 IIJE=D%NIJE
 IIJT=D%NIJT
 ZICEDRTMIN(1:KRR)=ICED%XRTMIN(1:KRR)
+
+ZICENU=1.0
 !-------------------------------------------------------------------------------
 !
 
@@ -504,7 +507,7 @@ DO JK=IKTB,IKTE
     CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(JIJ, JK), &
                          PTHT(JIJ, JK), PPABST(JIJ, JK), PRHODREF(JIJ, JK), &
                          PEXN(JIJ, JK), ZW3D(JIJ, JK), PT(JIJ, JK), &
-                         PRT(JIJ, JK, IRV), PICLDFR(JIJ, JK), PZZZZ(JIJ, JK), &
+                         PRT(JIJ, JK, IRV), PICLDFR(JIJ, JK), PZZZZ(JIJ, JK), ZICENU, &
                          PCIT(JIJ, JK), PRVHENI(JIJ, JK))
   ENDDO
 ENDDO

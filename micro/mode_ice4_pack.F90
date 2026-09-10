@@ -281,7 +281,7 @@ IF(PARAMI%LPACK_MICRO) THEN
               ZRCRIAUTC  (IC)=PRCRIAUTC(JIJ)
               ZRDEPSRED  (IC)=PRDEPSRED(JIJ)
               ZRDEPGRED  (IC)=PRDEPGRED(JIJ)
-              ZICNEU     (IC)=PICENU(JIJ)
+              ZICENU     (IC)=PICENU(JIJ)
               ZICLDFR    (IC)=PICLDFR (JIJ, JK)
               ZZZZ       (IC)=PZZZ    (JIJ, JK)
               ZCONC3D    (IC)=PCONC3D (JIJ, JK)
