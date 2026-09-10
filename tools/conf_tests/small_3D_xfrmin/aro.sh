@@ -4,7 +4,7 @@
 #SBATCH --export=MYLIB,HOME,HOMEPACK,TMPDIR,OUTPUTDIR,TESTDIR
 #SBATCH -t 00:10:00
 #SBATCH -N 1
-#SBATCH -p normal256
+#SBATCH -p shared
 
 #The MYLIB variable must contain the gmkpack pack name
 #The TESTDIR variable must contain the test directory

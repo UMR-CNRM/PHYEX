@@ -150,6 +150,7 @@ class CheckCommitTestprogs(CheckCommitBase):
                 f.write('#SBATCH -n 1\n')
                 f.write('#SBATCH -N 1\n')
                 f.write('#SBATCH -t 10\n')
+                f.write('#SBATCH -p shared\n')
                 f.write(f'#SBATCH --export={self.varToExport}\n')
                 if subprocess.run(['ldd', cmd_args[0]],
                                   capture_output=True, check=True).stdout.count(b'libcuda') > 0:
