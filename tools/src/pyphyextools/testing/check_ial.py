@@ -205,12 +205,15 @@ class CheckCommitIAL(CheckCommitBase):
             prep_kwargs = self._parse_prep_code_opts(self.prepCodeOpts)
             # We do not use the mnh_expand option of prep_code because expansion
             # must be done after all other transformations
+            pyfortool_options = ['--shumanFUNCtoCALL', '--removeACC']
+            if self.useexpand:
+                pyfortool_options.append('--mnhExpand')
             prep_code(
                 directory=os.path.join(phyex_dir, 'PHYEX'),
                 model='arome',
                 subs=['gmkpack_ignored_files', 'turb', 'micro', 'aux', 'conv',
                       'CMakeLists.txt', 'cmake'],
-                pyfortool_options=['--shumanFUNCtoCALL', '--removeACC', '--mnhExpand'],
+                pyfortool_options=pyfortool_options,
                 **prep_kwargs)
         else:
             print("model ready")
