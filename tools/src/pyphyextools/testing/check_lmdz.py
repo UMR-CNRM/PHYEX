@@ -8,11 +8,11 @@ import glob as glob_mod
 import json
 import os
 import shutil
-import subprocess
 import time
 
 from pyphyextools.testing.check_common import (
     CheckCommitBase, CheckCommitError, escape_commit, mvdiff, run_tool)
+from pyphyextools import run_command
 from pyphyextools.prep_code import prep_code
 
 
@@ -162,10 +162,10 @@ class CheckCommitLmdz(CheckCommitBase):
             f.write('INCA_LIBDIR="-L$LMDGCM/../INCA/build/lib"\n')
             f.write('INCA_LIB="-lchimie"\n')
 
-        subprocess.run([
+        run_command([
             'wget', 'https://lmdz.lmd.jussieu.fr/pub/install_lmdz.sh',
-            '-O', 'install_lmdz.sh'], cwd=packdir, check=True)
-        subprocess.run([
+            '-O', 'install_lmdz.sh'], cwd=packdir)
+        run_command([
             'bash', 'install_lmdz.sh',
             '-v', self.version,
             *(self.install_arg.split() if self.install_arg else []),
@@ -173,11 +173,11 @@ class CheckCommitLmdz(CheckCommitBase):
             '-rad', self.rad,
             '-name', 'LMDZ',
             '-arch_dir', packdir,
-            '-arch', 'mylocal'], cwd=packdir, check=True)
+            '-arch', 'mylocal'], cwd=packdir)
 
-        subprocess.run([
-            'wget', 'https://lmdz.lmd.jussieu.fr/pub/1D/1D.tar.gz'], cwd=self.lmdzdir, check=True)
-        subprocess.run(['tar', 'xf', '1D.tar.gz'], cwd=self.lmdzdir, check=True)
+        run_command([
+            'wget', 'https://lmdz.lmd.jussieu.fr/pub/1D/1D.tar.gz'], cwd=self.lmdzdir)
+        run_command(['tar', 'xf', '1D.tar.gz'], cwd=self.lmdzdir)
 
     def pack_update(self):
         """Copy and prepare source files with *prep_code*."""
@@ -213,8 +213,8 @@ class CheckCommitLmdz(CheckCommitBase):
 
             print(f"Copy {self.commit}")
             os.makedirs(os.path.join(packdir, 'PHYEX'), exist_ok=True)
-            subprocess.run(['scp', '-q', '-r', os.path.join(self.commit, 'src'),
-                            os.path.join(packdir, 'PHYEX')], check=True)
+            run_command(['scp', '-q', '-r', os.path.join(self.commit, 'src'),
+                         os.path.join(packdir, 'PHYEX')])
 
             prep_kwargs = self._parse_prep_code_opts(self.prepCodeOpts)
             prep_code(
@@ -227,10 +227,10 @@ class CheckCommitLmdz(CheckCommitBase):
                 **prep_kwargs)
             repo_url = self.json_content.get('phyex-lmdz-repo',
                                              'https://github.com/SebastienRietteMTO/phyex-lmdz.git')
-            subprocess.run(['git', 'clone', repo_url, 'phyex-lmdz'], cwd=packdir, check=True)
+            run_command(['git', 'clone', repo_url, 'phyex-lmdz'], cwd=packdir)
             repo_commit = self.json_content.get('phyex-lmdz-commit', 'main')
-            subprocess.run(['git', 'checkout', repo_commit],
-                           cwd=os.path.join(packdir, 'phyex-lmdz'), check=True)
+            run_command(['git', 'checkout', repo_commit],
+                        cwd=os.path.join(packdir, 'phyex-lmdz'))
             if self.packupdate:
                 #Update only modified files
                 phyex_dir = os.path.join(packdir, 'PHYEX')
@@ -280,10 +280,10 @@ class CheckCommitLmdz(CheckCommitBase):
             if os.path.isfile(os.path.join(target, 'modd_dimphyexn.F90')):
                 mvdiff(os.path.join(target, 'modd_dimphyexn.F90'),
                        os.path.join(target, 'modd_dimphyex.F90'))
-            result = subprocess.run(
+            result = run_command(
                 ['grep', '-i', 'END MODULE'] + [f for f in os.listdir(target)
                                                  if f.endswith('n.F90')],
-                capture_output=True, text=True, cwd=target, check=True)
+                cwd=target)
             for line in result.stdout.split('\n'):
                 parts = line.split(':')
                 if len(parts) >= 1:
@@ -343,9 +343,9 @@ class CheckCommitLmdz(CheckCommitBase):
                     f.write(content)
 
             compile_cmd = self.compilecmd.split()
-            with open(os.path.join(self.lmdzdir, 'compilation.log'), 'w', encoding='utf-8') as out:
-                subprocess.run(compile_cmd, cwd=bin_dir, stdout=out, stderr=subprocess.STDOUT,
-                               check=False)
+            run_command(compile_cmd, cwd=bin_dir,
+                        out_path=os.path.join(self.lmdzdir, 'compilation.log'),
+                        display='never', check=False)
 
             if self.buildSys == 'fcm':
                 print("Using fcm, compilation exits with error even if everything is OK")
@@ -385,7 +385,7 @@ class CheckCommitLmdz(CheckCommitBase):
                                           f'physiq.def_{DEF}'), os.path.join(d, 'physiq.def'))
 
                 if self.rad == 'oldrad':
-                    subprocess.run(
+                    run_command(
                         ['sed', '-i', '-e', 's/iflag_rrtm=.*$/iflag_rrtm=0/',
                          '-e', 's/NSW=.*$/NSW=2/', 'physiq.def'],
                         cwd=d, check=False)
@@ -398,9 +398,9 @@ class CheckCommitLmdz(CheckCommitBase):
                     if os.path.isdir(data_dir):
                         shutil.copytree(data_dir, os.path.join(d, 'data'),
                                         dirs_exist_ok=True, symlinks=True)
-                    subprocess.run(
+                    run_command(
                         ['sed', '-i', '-e', 's@iflag_rrtm=1@iflag_rrtm=2@', 'physiq.def'],
-                        cwd=d, check=True)
+                        cwd=d)
 
                 vert_dir = os.path.join(self.lmdzdir, '1D', 'INPUT', 'VERT', f'L{self.L}')
                 for item in os.listdir(vert_dir):
@@ -450,9 +450,9 @@ class CheckCommitLmdz(CheckCommitBase):
                             f.write(content)
 
                 t1_us = time.time_ns() // 1000
-                with open(os.path.join(d, 'execution.log'), 'w', encoding='utf-8') as out:
-                    subprocess.run(['./lmdz1d.e'], cwd=d, stdout=out, stderr=subprocess.STDOUT,
-                                   check=False)
+                run_command(['./lmdz1d.e'], cwd=d,
+                            out_path=os.path.join(d, 'execution.log'),
+                            display='never', check=False)
                 t2_us = time.time_ns() // 1000
                 elapsed_ms = (t2_us - t1_us) // 1000
 

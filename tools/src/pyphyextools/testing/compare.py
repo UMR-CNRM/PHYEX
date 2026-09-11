@@ -7,7 +7,6 @@ import difflib
 import os
 import re
 import shutil
-import subprocess
 import sys
 
 import matplotlib
@@ -15,6 +14,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy
 import xarray as xr
+
+from pyphyextools import run_command
 
 os.environ['NUMEXPR_MAX_THREADS'] = '1'
 
@@ -397,7 +398,7 @@ def comp_binary(f1, f2, offset):
     """Compare two binary files using the cmp command with an optional offset."""
     # Python filecmp does not allow to specify an offset
     offset = [str(offset), str(offset)] if offset != 0 else []
-    p = subprocess.run(['cmp', f1, f2] + offset, capture_output=True, encoding='UTF8', check=False)
+    p = run_command(['cmp', f1, f2] + offset, check=False)
     if p.returncode != 0:
         print(p.stdout)
     return p.returncode
@@ -405,9 +406,7 @@ def comp_binary(f1, f2, offset):
 
 def comp_ncdump(f1, f2):
     """Compare the ncdump output from two NetCDF files."""
-    ncdumps = [subprocess.run(['ncdump', f], capture_output=True,
-                              encoding='UTF8', check=True).stdout
-               for f in (f1, f2)]
+    ncdumps = [run_command(['ncdump', f]).stdout for f in (f1, f2)]
     ncdumps = ['\n'.join(l for l in d.splitlines() if not re.match(r'^\s+:history = .*;$', l))
                for d in ncdumps]
     diff = ''.join(difflib.unified_diff(

@@ -12,11 +12,12 @@ Check coding norms in PHYEX Fortran sources:
 
 import argparse
 import os
-import subprocess
 import sys
 import tempfile
 
 import pyfortool
+
+from pyphyextools import run_command
 
 
 def _args_from_file(filename):
@@ -65,9 +66,8 @@ def coding_norms(sourcedir, verbose=False):
             "--checkEmptyParensInCall", "Warn",
         ]
 
-        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
-            out, err = proc.communicate()
-            captured = (out + err).decode()
+        result = run_command(cmd, check=False)
+        captured = result.stdout
         if captured.strip():
             results.append(captured.rstrip())
             check = False

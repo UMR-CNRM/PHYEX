@@ -11,6 +11,8 @@ import subprocess
 import sys
 import tempfile
 
+from pyphyextools import run_command
+
 SEPARATOR = '_'
 PHYEXCONF_DEFAULT = os.path.expanduser('~/.phyex')
 
@@ -58,25 +60,6 @@ class CheckCommitBase:
     """
 
     default_expand = None
-
-    @staticmethod
-    def _run_with_tee(cmd, cwd, out_path, mode='w', env=None,
-                      input_string=None):
-        """Run *cmd* in *cwd*, teeing output to both terminal and *out_path*."""
-        with open(out_path, mode, encoding='utf-8') as out:
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, bufsize=1, text=True,
-                                    cwd=cwd, env=env,
-                                    stdin=subprocess.PIPE if input_string is not None else None)
-            if input_string is not None:
-                proc.stdin.write(input_string)
-                proc.stdin.close()
-            for line in proc.stdout:
-                print(line, end='')
-                out.write(line)
-            proc.wait()
-        if proc.returncode != 0:
-            raise subprocess.CalledProcessError(proc.returncode, cmd)
 
     def __init__(self, packcreation, packupdate, compilation, run_tests, check,
                  remove, suppress, onlyIfNeeded, computeRefIfNeeded, perffile,
@@ -229,34 +212,33 @@ class CheckCommitBase:
             else:
                 repo_url = f'git@github.com:{self.repo_user}/PHYEX.git'
 
-            subprocess.run(['git', 'clone', repo_url], cwd=tmpdir, check=True)
+            run_command(['git', 'clone', repo_url], cwd=tmpdir)
             phyex_dir = os.path.join(tmpdir, 'PHYEX')
-            subprocess.run(['git', 'checkout', self.commit], cwd=phyex_dir, check=True)
+            run_command(['git', 'checkout', self.commit], cwd=phyex_dir)
 
             if not os.path.isdir(os.path.join(phyex_dir, 'docs')):
-                result = subprocess.run(
+                result = run_command(
                     ['git', 'log', '--all', '--full-history', '--', 'tools'],
-                    cwd=phyex_dir, capture_output=True, text=True, check=True)
+                    cwd=phyex_dir)
                 toolscommit = result.stdout.strip().split('\n')[0].split()[1]
-                parents = subprocess.run(
+                parents = run_command(
                     ['git', 'rev-parse', f'{toolscommit}^@'],
-                    cwd=phyex_dir, capture_output=True, text=True, check=True)
+                    cwd=phyex_dir)
                 for parent in parents.stdout.strip().split():
-                    nfiles = subprocess.run(
+                    nfiles = run_command(
                         ['git', 'ls-tree', '-r', parent, '--', 'tools'],
-                        cwd=phyex_dir, capture_output=True, text=True, check=True)
+                        cwd=phyex_dir)
                     if nfiles.stdout.count('\n') != 0:
                         toolscommit = parent
                         break
                 for path in ('tools', 'pyproject.toml', 'src/pyphyex'):
-                    subprocess.run(['git', 'checkout', toolscommit, '--', path],
-                                   cwd=phyex_dir, check=True)
+                    run_command(['git', 'checkout', toolscommit, '--', path],
+                                cwd=phyex_dir)
 
-            subprocess.run([sys.executable, '-m', 'venv', 'venv'],
-                           cwd=phyex_dir, check=True)
+            run_command([sys.executable, '-m', 'venv', 'venv'], cwd=phyex_dir)
             pip_path = os.path.join(phyex_dir, 'venv', 'bin', 'pip')
-            subprocess.run([pip_path, 'install', '--prefer-binary', '-e', 'tools/'],
-                           cwd=phyex_dir, check=True)
+            run_command([pip_path, 'install', '--prefer-binary', '-e', 'tools/'],
+                        cwd=phyex_dir)
 
             python_path = os.path.join(phyex_dir, 'venv', 'bin', 'python')
             # Use the explicit module name stored by run_tool, or fall back

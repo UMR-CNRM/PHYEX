@@ -10,7 +10,6 @@ import json
 import os
 import re
 import shutil
-import subprocess
 import sys
 import tempfile
 import time
@@ -19,6 +18,7 @@ import pandas
 
 from pyphyextools.testing.check_common import (
     CheckCommitBase, CheckCommitError, escape_commit, mvdiff, run_tool)
+from pyphyextools import run_command
 from pyphyextools.prep_code import prep_code
 from pyphyextools.testing.compare import comp_binary, comp_NODE
 
@@ -107,12 +107,12 @@ class CheckCommitIAL(CheckCommitBase):
     def submit(self, output, script_args, cwd=None, env=None):
         """Run a script, either through SLURM or directly."""
         if self.HPC:
-            subprocess.run(['sbatch', '--wait', '-o', output, ' '.join(script_args)],
-                           cwd=cwd, env=env, check=True)
+            run_command(['sbatch', '--wait', '-o', output, ' '.join(script_args)],
+                        cwd=cwd, env=env)
             with open(output, encoding='utf-8') as f:
                 print(f.read(), end='')
         else:
-            self._run_with_tee(script_args, cwd, output, env=env)
+            run_command(script_args, cwd, output, env=env, display='always')
 
     def pack_creation(self):
         """Create the IAL pack via *ial-to_pack*."""
@@ -134,17 +134,17 @@ class CheckCommitIAL(CheckCommitBase):
         print(f"### Pack creation for commit {self.commit}")
         os.environ['GMKTMP'] = '/dev/shm'
 
-        result = subprocess.run(['which', 'ial-to_pack'], capture_output=True, text=True, check=False)
+        result = run_command(['which', 'ial-to_pack'], check=False)
         if result.returncode != 0:
             raise CheckCommitError("ial-to_pack not found, please install it", 7)
 
         tmpbuilddir = tempfile.mkdtemp()
         try:
             repo_url = self.json_content.get('IALrepo', 'git@github.com:ACCORD-NWP/IAL.git')
-            subprocess.run(['git', 'clone', repo_url], cwd=tmpbuilddir, check=True)
+            run_command(['git', 'clone', repo_url], cwd=tmpbuilddir)
             ial_repo = os.path.join(tmpbuilddir, 'IAL')
             ial_commit = self.json_content.get('IALcommit', 'XXXXXXX')
-            subprocess.run(['git', 'checkout', ial_commit], cwd=ial_repo, check=True)
+            run_command(['git', 'checkout', ial_commit], cwd=ial_repo)
 
             IALbundle_tag = self.json_content.get('IALbundle_tag', '')
             bundle_args = ['--hub_bundle_tag', IALbundle_tag] if IALbundle_tag else []
@@ -163,7 +163,7 @@ class CheckCommitIAL(CheckCommitBase):
                    '--homepack', pack_dir] + rootpack_opt + bundle_args
             env = os.environ.copy()
             env['LANG'] = 'C'
-            subprocess.run(cmd, cwd=tmpbuilddir, check=True, input='y\n', text=True, env=env)
+            run_command(cmd, cwd=tmpbuilddir, input_string='y\n', env=env)
 
             oldname = os.listdir(pack_dir)[0]
             old_path = os.path.join(pack_dir, oldname)
@@ -182,8 +182,8 @@ class CheckCommitIAL(CheckCommitBase):
                 falfilfa_dir = os.path.join(
                     ialdir_full, 'hub', 'local', 'src', 'FALFILFA', 'falfilfa')
                 if os.path.isdir(falfilfa_dir):
-                    subprocess.run(['git', 'cherry-pick', '15359c1'],
-                                   cwd=falfilfa_dir, check=False)
+                    run_command(['git', 'cherry-pick', '15359c1'],
+                                cwd=falfilfa_dir, check=False)
 
             phyex_dir = os.path.join(ialdir_full, 'hub', 'local', 'src', 'PHYEX', 'phyex')
             shutil.rmtree(phyex_dir, ignore_errors=True)
@@ -200,8 +200,8 @@ class CheckCommitIAL(CheckCommitBase):
         os.makedirs(os.path.join(phyex_dir, 'PHYEX'), exist_ok=True)
 
         if not self.model_ready:
-            subprocess.run(['scp', '-q', '-r', os.path.join(self.commit, 'src'), 'PHYEX/'],
-                           cwd=phyex_dir, check=True)
+            run_command(['scp', '-q', '-r', os.path.join(self.commit, 'src'), 'PHYEX/'],
+                        cwd=phyex_dir)
             prep_kwargs = self._parse_prep_code_opts(self.prepCodeOpts)
             # We do not use the mnh_expand option of prep_code because expansion
             # must be done after all other transformations
@@ -217,8 +217,8 @@ class CheckCommitIAL(CheckCommitBase):
                 **prep_kwargs)
         else:
             print("model ready")
-            subprocess.run(['scp', '-q', '-r', os.path.join(self.commit, '*'), 'PHYEX/'],
-                           cwd=phyex_dir, check=True)
+            run_command(['scp', '-q', '-r', os.path.join(self.commit, '*'), 'PHYEX/'],
+                        cwd=phyex_dir)
             prep_kwargs = self._parse_prep_code_opts(self.prepCodeOpts)
             prep_code(directory=os.path.join(phyex_dir, 'PHYEX'), **prep_kwargs)
 
@@ -461,11 +461,10 @@ class CheckCommitIAL(CheckCommitBase):
         # Between parts: compute missing references in batch (one per caseref)
         if self.computeRefIfNeeded:
             for caseref, tests_list in missing_by_ref.items():
-                subprocess.run(
+                run_command(
                     [sys.executable, '-m', 'pyphyextools.testing.check_ial',
                      '-p', '-c', '-r', '-t', ','.join(tests_list),
-                     '--onlyIfNeeded', caseref],
-                    check=True)
+                     '--onlyIfNeeded', caseref])
                 # Re-resolve file2 for the newly computed refs
                 for t in tests_list:
                     info = test_info[t]

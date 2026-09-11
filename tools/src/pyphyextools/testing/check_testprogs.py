@@ -14,6 +14,7 @@ import tempfile
 
 from pyphyextools.testing.check_common import (
     CheckCommitBase, CheckCommitError, escape_commit, PHYEXCONF_DEFAULT, run_tool)
+from pyphyextools import run_command
 from pyphyextools.testing.compare import comp_testprogs
 
 
@@ -152,8 +153,7 @@ class CheckCommitTestprogs(CheckCommitBase):
                 f.write('#SBATCH -t 10\n')
                 f.write('#SBATCH -p shared\n')
                 f.write(f'#SBATCH --export={self.varToExport}\n')
-                if subprocess.run(['ldd', cmd_args[0]],
-                                  capture_output=True, check=True).stdout.count(b'libcuda') > 0:
+                if run_command(['ldd', cmd_args[0]]).stdout.count('libcuda') > 0:
                     f.write('#SBATCH -p ndl\n')
                 f.write(f'\ncd {cwd or os.getcwd()}\n')
                 f.write(' '.join(cmd_args) + '\n')
@@ -161,8 +161,7 @@ class CheckCommitTestprogs(CheckCommitBase):
                 os.chmod(f.name, 0o755)
 
             outtmp = tempfile.mktemp()
-            subprocess.run(['sbatch', '--wait', '-o', outtmp, '-e', error, f.name],
-                           check=True)
+            run_command(['sbatch', '--wait', '-o', outtmp, '-e', error, f.name])
             with open(outtmp, encoding='utf-8') as fh:
                 content = fh.read()
             sep = '#' * 41
@@ -198,9 +197,9 @@ class CheckCommitTestprogs(CheckCommitBase):
             basename_noext = os.path.splitext(os.path.splitext(basefile)[0])[0]
             data_file = os.path.join(self.dirdata, basename_noext, '00000000.dat')
             if not os.path.isfile(data_file):
-                subprocess.run(['wget', '--no-check-certificate', url, '-O', basefile],
-                               cwd=self.dirdata, check=True)
-                subprocess.run(['tar', 'xf', basefile], cwd=self.dirdata, check=True)
+                run_command(['wget', '--no-check-certificate', url, '-O', basefile],
+                            cwd=self.dirdata)
+                run_command(['tar', 'xf', basefile], cwd=self.dirdata)
                 os.remove(os.path.join(self.dirdata, basefile))
 
     def pack_creation(self):
@@ -253,7 +252,7 @@ class CheckCommitTestprogs(CheckCommitBase):
         if not self.useexpand:
             makeargs.append('--noexpand')
         out_path = os.path.join(build_dir, 'Output_compilation_step1')
-        self._run_with_tee(makeargs, build_dir, out_path)
+        run_command(makeargs, build_dir, out_path, display='always')
 
     def compilation_step(self):
         testdir = os.path.join(self.TESTDIR, self.name)
@@ -265,7 +264,7 @@ class CheckCommitTestprogs(CheckCommitBase):
             makeargs = ['./make_' + self.buildSys + '.sh', '-c', '--jobs=10',
                         '--commit', self.commit, '--arch', self.archfile]
             out_path = os.path.join(build_dir, 'Output_compilation_step2')
-            self._run_with_tee(makeargs, build_dir, out_path)
+            run_command(makeargs, build_dir, out_path, display='always')
 
     def execution(self):
         testdir = os.path.join(self.TESTDIR, self.name)
@@ -353,7 +352,7 @@ class CheckCommitTestprogs(CheckCommitBase):
                             first_line = i + 1
                             break
                     if first_line is not None:
-                        subprocess.run([sys.executable, '-c', """
+                        run_command([sys.executable, '-c', """
 import numpy, pandas, re
 d = {'time': ('<f4', ('mean',)), 'self': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
      'total': ('<f4', ('mean', 'max', 'min', 'std', 'sum')), 'calls': ('<i4', ('sum',)),
@@ -370,7 +369,7 @@ df = pandas.DataFrame(arraynp).groupby('routine').agg(
 df.index.name += ' ordered by self_sum'
 with open('drhook.prof.agg', 'w', encoding='utf-8') as f:
     f.write(df.to_string())
-"""], env=env, cwd=test_out, check=True)
+"""], env=env, cwd=test_out)
 
     def performance_evaluation(self):
         testdir = os.path.join(self.TESTDIR, self.name)
@@ -446,11 +445,11 @@ with open('drhook.prof.agg', 'w', encoding='utf-8') as f:
             env_perf['NTIMES'] = str(NTIMES)
             env_perf['OMP_NUM_THREADS'] = str(OMP_NUM_THREADS)
 
-            subprocess.run(
+            run_command(
                 [sys.executable, '-m', 'pyphyextools.testing.check_testprogs',
                  '-r', '-t', t, '-a', self.archfile, '--no-check', '--no-perf',
                  '-e', '4', '--name', self.name, '--prec', self.precision, self.commit],
-                env=env_perf, check=True)
+                env=env_perf)
 
             output_file = os.path.join(
                 testdir, 'tests', f'with_{self.buildSys}',
@@ -530,13 +529,12 @@ with open('drhook.prof.agg', 'w', encoding='utf-8') as f:
             for caseref, tests_list in missing_by_ref.items():
                 # We cannot use directly a python instance because clone_and_run
                 # use arguments received on sys.argv to build the command to execute
-                subprocess.run(
+                run_command(
                     [sys.executable, '-m', 'pyphyextools.testing.check_testprogs',
                      '-p', '-c', '-r', '-t', ','.join(tests_list),
                      '-a', self.refarchfile, '--onlyIfNeeded',
                      '-e', str(self.extrapolation), '--no-perf',
-                     '--prec', self.precision, caseref],
-                    check=True)
+                     '--prec', self.precision, caseref])
 
         # Second part: compare each test
         alltests = 0

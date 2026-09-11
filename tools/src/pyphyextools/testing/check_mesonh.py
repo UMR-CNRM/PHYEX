@@ -8,12 +8,12 @@ import glob
 import json
 import os
 import shutil
-import subprocess
 import sys
 import time
 
 from pyphyextools.testing.check_common import (
     CheckCommitBase, CheckCommitError, escape_commit, mvdiff, run_tool)
+from pyphyextools import run_command
 from pyphyextools.prep_code import prep_code
 from pyphyextools.testing.compare import compareBACKUPFiles, compareTSERIESFiles, comp_ncdump
 
@@ -108,11 +108,11 @@ class CheckCommitMesonh(CheckCommitBase):
         url = self.json_content.get(
             'MESONHrepo', 'https://src.koda.cnrs.fr/mesonh/mesonh-code')
         url += f"/-/archive/{mesonh_commit}/mesonh-code-{mesonh_commit}.tar.gz"
-        subprocess.run(['wget', '--no-check-certificate',
+        run_command(['wget', '--no-check-certificate',
                         '-O', f"mesonh-code-{mesonh_commit}.tar.gz", url],
-                       cwd=self.MNHPACK, check=True)
-        subprocess.run(['tar', 'xf', f"mesonh-code-{mesonh_commit}.tar.gz"],
-                       cwd=self.MNHPACK, check=True)
+                       cwd=self.MNHPACK)
+        run_command(['tar', 'xf', f"mesonh-code-{mesonh_commit}.tar.gz"],
+                    cwd=self.MNHPACK)
         os.unlink(os.path.join(self.MNHPACK, f"mesonh-code-{mesonh_commit}.tar.gz"))
         shutil.move(os.path.join(self.MNHPACK, f"mesonh-code-{mesonh_commit}"), mnhdir_full)
 
@@ -137,9 +137,8 @@ class CheckCommitMesonh(CheckCommitBase):
         os.makedirs(os.path.join(src_base, 'PHYEX'), exist_ok=True)
 
         if not self.model_ready:
-            subprocess.run(['scp', '-q', '-r', os.path.join(self.commit, 'src'),
-                            os.path.join(src_base, 'PHYEX') + '/'],
-                           check=True)
+            run_command(['scp', '-q', '-r', os.path.join(self.commit, 'src'),
+                         os.path.join(src_base, 'PHYEX') + '/'])
             prep_kwargs = self._parse_prep_code_opts(self.prepCodeOpts)
             pyfortool_options = ['--removeExtraDOinMnhDoConcurrent']
             if self.useexpand:
@@ -160,8 +159,8 @@ class CheckCommitMesonh(CheckCommitBase):
             if os.path.isdir(git_dir):
                 shutil.rmtree(git_dir)
 
-        subprocess.run(['find', 'PHYEX', '-type', 'f', '-exec', 'touch', '{}', ';'],
-                       cwd=src_base, check=True)
+        run_command(['find', 'PHYEX', '-type', 'f', '-exec', 'touch', '{}', ';'],
+                    cwd=src_base)
 
         if self.packupdate:
             phyex_dir = os.path.join(src_base, 'PHYEX')
@@ -195,7 +194,7 @@ class CheckCommitMesonh(CheckCommitBase):
             print(f"### Compilation of commit {self.commit}")
             src_dir = os.path.join(mnhdir_full, 'src')
 
-            subprocess.run(['./configure'], cwd=src_dir, check=True)
+            run_command(['./configure'], cwd=src_dir)
 
             for f in os.listdir(exe_dir):
                 os.remove(os.path.join(exe_dir, f))
@@ -203,9 +202,10 @@ class CheckCommitMesonh(CheckCommitBase):
                 f". {mnhdir_full}/conf/profile_mesonh-* 2>/dev/null; "
                 f"make -j 8 && make installmaster"
             )
-            self._run_with_tee(['bash', '-c', shell_cmd],
-                               os.path.join(mnhdir_full, 'src'),
-                               os.path.join(mnhdir_full, 'Output_compilation'))
+            run_command(['bash', '-c', shell_cmd],
+                        os.path.join(mnhdir_full, 'src'),
+                        os.path.join(mnhdir_full, 'Output_compilation'),
+                        display='always')
 
     def execution(self):
         """Run each test case."""
@@ -215,8 +215,8 @@ class CheckCommitMesonh(CheckCommitBase):
             for t in self.tests:
                 if t not in self.allowedTests:
                     continue
-                subprocess.run(['make', 'clean'],
-                               cwd=os.path.join(mnhdir_full, 'examples', t), check=True)
+                run_command(['make', 'clean'],
+                            cwd=os.path.join(mnhdir_full, 'examples', t))
 
         firstrun = True
         for t in self.tests:
@@ -252,10 +252,11 @@ class CheckCommitMesonh(CheckCommitBase):
             env = os.environ.copy()
             env.update({'POSTRUN': 'echo',
                         'PHYEX_TEST_MODE': 'yes'})
-            self._run_with_tee(['bash', '-c', shell_cmd], full_casedir,
-                               os.path.join(full_casedir, 'Output_run'),
-                               env=env,
-                               input_string='yes')
+            run_command(['bash', '-c', shell_cmd], full_casedir,
+                        os.path.join(full_casedir, 'Output_run'),
+                        env=env,
+                        input_string='yes',
+                        display='always')
             t2_us = time.time_ns() // 1000
             elapsed_ms = (t2_us - t1_us) // 1000
 
@@ -269,10 +270,10 @@ class CheckCommitMesonh(CheckCommitBase):
         print(f"### Check commit {self.commit} against commit {self.reference}")
         refByTest = self.resolve_ref_per_test(self.json_content)
 
-        result = subprocess.run(
+        result = run_command(
             ['bash', '-c',
              f'. {mnhdir_full}/conf/profile_mesonh-* 2>/dev/null; echo $HDF5_PLUGIN_PATH'],
-            capture_output=True, text=True, check=False)
+            check=False)
         hdf5_path = result.stdout.strip()
         if hdf5_path:
             os.environ['HDF5_PLUGIN_PATH'] = hdf5_path
@@ -314,11 +315,11 @@ class CheckCommitMesonh(CheckCommitBase):
                 env['MNHPACK'] = self.MNHPACK
                 env['PHYEXREPOuser'] = self.repo_user
                 env['PHYEXREPOprotocol'] = self.repo_protocol
-                subprocess.run(
+                run_command(
                     [sys.executable, '-m', 'pyphyextools.testing.check_mesonh',
                      '-p', '-c', '-r', '-t', ','.join(tests_list),
                      '--onlyIfNeeded', caseref],
-                    env=env, check=True)
+                    env=env)
 
         # Second part: compare each test
         allt = 0
@@ -329,14 +330,6 @@ class CheckCommitMesonh(CheckCommitBase):
             file1r = info['file1r']
             file2u = info['file2u']
             file2r = info['file2r']
-
-            if not os.path.isdir(path_user):
-                raise CheckCommitError(
-                    f"{path_user} is missing, please run the simulation", 7)
-
-            if not os.path.isdir(path_ref):
-                raise CheckCommitError(
-                    f"{path_ref} is missing, please run the reference simulation", 8)
 
             if os.path.isfile(file1u) and os.path.isfile(file1r):
                 print(f"Comparison for case {t}...")
