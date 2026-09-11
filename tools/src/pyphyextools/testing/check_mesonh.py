@@ -108,7 +108,8 @@ class CheckCommitMesonh(CheckCommitBase):
         url = self.json_content.get(
             'MESONHrepo', 'https://src.koda.cnrs.fr/mesonh/mesonh-code')
         url += f"/-/archive/{mesonh_commit}/mesonh-code-{mesonh_commit}.tar.gz"
-        subprocess.run(['wget', '--no-check-certificate', url],
+        subprocess.run(['wget', '--no-check-certificate',
+                        '-O', f"mesonh-code-{mesonh_commit}.tar.gz", url],
                        cwd=self.MNHPACK, check=True)
         subprocess.run(['tar', 'xf', f"mesonh-code-{mesonh_commit}.tar.gz"],
                        cwd=self.MNHPACK, check=True)
@@ -140,15 +141,17 @@ class CheckCommitMesonh(CheckCommitBase):
                             os.path.join(src_base, 'PHYEX') + '/'],
                            check=True)
             prep_kwargs = self._parse_prep_code_opts(self.prepCodeOpts)
+            pyfortool_options = ['--removeExtraDOinMnhDoConcurrent']
+            if self.useexpand:
+                pyfortool_options.append('--mnhExpand')
             prep_code(
                 directory=os.path.join(src_base, 'PHYEX'),
                 model='mesonh',
-                mnh_expand=self.useexpand,
                 subs=['turb', 'micro', 'aux', 'ext', 'conv'],
                 rename_Ff_flag=True,
                 ilooprm=True,
                 no_raise_on_coding_norms=True,
-                pyfortool_options=['--removeExtraDOinMnhDoConcurrent'],
+                pyfortool_options=pyfortool_options,
                 **prep_kwargs)
         else:
             prep_kwargs = self._parse_prep_code_opts(self.prepCodeOpts)

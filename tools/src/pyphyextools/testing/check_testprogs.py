@@ -20,7 +20,7 @@ from pyphyextools.testing.compare import comp_testprogs
 class CheckCommitTestprogs(CheckCommitBase):
     """Check a commit against the offline testprogs reference."""
 
-    default_expand = True
+    default_expand = False
     default_precision = 'dp'
 
     @staticmethod
@@ -250,6 +250,8 @@ class CheckCommitTestprogs(CheckCommitBase):
         if self.packcreation:
             makeargs.append('-p')
         makeargs.extend(['--commit', self.commit, '--arch', self.archfile])
+        if not self.useexpand:
+            makeargs.append('--noexpand')
         out_path = os.path.join(build_dir, 'Output_compilation_step1')
         self._run_with_tee(makeargs, build_dir, out_path)
 
@@ -262,8 +264,6 @@ class CheckCommitTestprogs(CheckCommitBase):
             print(f"### Compilation of commit {self.commit}")
             makeargs = ['./make_' + self.buildSys + '.sh', '-c', '--jobs=10',
                         '--commit', self.commit, '--arch', self.archfile]
-            if not self.useexpand:
-                makeargs.append('--noexpand')
             out_path = os.path.join(build_dir, 'Output_compilation_step2')
             self._run_with_tee(makeargs, build_dir, out_path)
 

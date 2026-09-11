@@ -213,15 +213,17 @@ function main() {
         #This commit is ready for inclusion
         phyex-prep_code -c $commit src
       else
-        phyex-prep_code --pyfortool_opts_env PYFT_OPTS -c $commit $expand_options $subs \
-                        -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
+        phyex-prep_code --pyfortool_opts_env PYFT_OPTS -c $commit $subs \
+                        -m offline src --useParallelPyForTool \
+                        -- --tree . --descTree $descTree --shumanFUNCtoCALL $expand_options
       fi
     else
       echo "Copy $fromdir"
       mkdir src
       scp -q -r $fromdir/src src/
-      phyex-prep_code --pyfortool_opts_env PYFT_OPTS $expand_options $subs \
-                      -m offline src --useParallelPyForTool -- --tree . --descTree $descTree --shumanFUNCtoCALL
+      phyex-prep_code --pyfortool_opts_env PYFT_OPTS $subs \
+                      -m offline src --useParallelPyForTool \
+                      -- --tree . --descTree $descTree --shumanFUNCtoCALL $expand_options
     fi
     
     # Add some code

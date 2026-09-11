@@ -44,7 +44,7 @@ def parse_args(argv=None):
 If -c is not provided, DIRECTORY must already contain files and directories
 as if it was the result of a git checkout.
 If -m is used, directory tree is modified, only relevant code is kept.
-If none of --mnhExpand, --removeACC, --pyfortool_opts_env or PYFORTOOL_OPTIONS
+If none of --pyfortool_opts_env or PYFORTOOL_OPTIONS
 is used, pyfortool is not called at all.
 -s options are mandatory for -m, -D and -p options.
 -p option is allowed only if -c and -m options are provided.
@@ -55,8 +55,6 @@ Everything after '--' is passed to pyfortool for source-to-source transformation
     parser.add_argument('-c', dest='checkout_point',
                         help='git object to checkout (commit or tags/TAG)')
     parser.add_argument('-m', dest='model', help='merge common code with code specific to MODEL')
-    parser.add_argument('--mnhExpand', action='store_true', help='option passed to pyfortool')
-    parser.add_argument('--removeACC', action='store_true', help='option passed to pyfortool')
     parser.add_argument('-s', dest='subs', action='append', default=[],
                         help='subdirectory or file (under src) to consider')
     parser.add_argument('-p', dest='push', action='store_true',
@@ -226,8 +224,6 @@ def prep_code(
     directory,
     checkout_point=None,
     model=None,
-    mnh_expand=False,
-    remove_acc=False,
     subs=None,
     push=False,
     rename_Ff_flag=False,
@@ -249,10 +245,6 @@ def prep_code(
         Git object to checkout (commit hash or ``tags/TAG``).
     model : str, optional
         Model name for merging common + model-specific code.
-    mnh_expand : bool
-        Pass ``--mnhExpand`` to pyfortool.
-    remove_acc : bool
-        Pass ``--removeACC`` to pyfortool.
     subs : list of str, optional
         Subdirectories or files (under ``src``) to consider.
     push : bool
@@ -286,14 +278,6 @@ def prep_code(
 
     # Get full directory path
     directory = os.path.abspath(directory)
-
-    # Build pyfortool options list
-    pyfortool_opts = []
-    if mnh_expand:
-        pyfortool_opts.append('--mnhExpand')
-    if remove_acc:
-        pyfortool_opts.append('--removeACC')
-    pyfortool_opts.extend(pyfortool_options)
 
     # Determine repository URL
     repository = repo if repo else get_repository()
@@ -362,7 +346,7 @@ def prep_code(
         apply_ilooprm(directory)
 
     # -------- PyForTool --------
-    if pyfortool_opts_env or pyfortool_opts:
+    if pyfortool_opts_env or pyfortool_options:
         logging.info("Applying pyfortool")
 
         if model:
@@ -376,7 +360,7 @@ def prep_code(
         if pyfortool_opts_env:
             extra_opts = ['--optsByEnv', pyfortool_opts_env]
 
-        if extra_opts or pyfortool_opts:
+        if extra_opts or pyfortool_options:
             orig_cwd = os.getcwd()
             os.chdir(directory)
             try:
@@ -386,7 +370,7 @@ def prep_code(
                         os.remove(gitkeep)
 
                 if use_parallel_pyfortool:
-                    cmd = (['pyfortool_parallel', '--wrapH'] + pyfortool_opts +
+                    cmd = (['pyfortool_parallel', '--wrapH'] + pyfortool_options +
                            extra_opts + ['--nbPar', '8'])
                     logging.debug(' '.join(cmd))
                     pyfortool.scripting.mainParallel(cmd)
@@ -404,7 +388,7 @@ def prep_code(
                                     continue
                                 if not ext:
                                     continue
-                                cmd = (['pyfortool', '--wrapH'] + pyfortool_opts +
+                                cmd = (['pyfortool', '--wrapH'] + pyfortool_options +
                                        extra_opts + [fpath])
                                 logging.debug(' '.join(cmd))
                                 pyfortool.scripting.main(cmd)
@@ -442,8 +426,6 @@ def main():
         directory=args.directory,
         checkout_point=args.checkout_point,
         model=args.model,
-        mnh_expand=args.mnhExpand,
-        remove_acc=args.removeACC,
         subs=args.subs,
         push=args.push,
         rename_Ff_flag=args.renameFf,
