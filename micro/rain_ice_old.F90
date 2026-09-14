@@ -302,6 +302,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZT        ! Temperature
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRAY      ! Cloud Mean radius
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZLBC      ! XLBC weighted by sea fraction
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZFSEDC
+REAL, DIMENSION(D%NIJT)       :: ZZFSEDC1, ZZFSEDC2   ! work arrays for SPP perturbations
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZCONC3D   ! droplet concentration m-3
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZZZZ      ! geometric height
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZZZT      ! tempoary value for geometric height
@@ -501,8 +502,8 @@ IF (OSEDIC.OR.OCND2) THEN
     DO JK = D%NKTB,D%NKTE
       DO JIJ = D%NIJB,D%NIJE
         ZLBC(JIJ,JK)   = 0.5* (ZXLBC2(JIJ)+ZXLBC1(JIJ)) 
-        ZFSEDC(JIJ,JK) = 0.5* (ZXFSEDC2(JIJ)+ZXFSEDC1(JIJ))
-        ZFSEDC(JIJ,JK) = MAX(MIN(ZXFSEDC!(JIJ),ZXFSEDC2(JIJ)),ZFSEDC(JIJ,JK))
+        ZFSEDC(JIJ,JK) = 0.5* (ZZFSEDC2(JIJ)+ZZFSEDC1(JIJ))
+        ZFSEDC(JIJ,JK) = MAX(MIN(ZZFSEDC1(JIJ),ZZFSEDC2(JIJ)),ZFSEDC(JIJ,JK))
         ZRAY(JIJ,JK)   = 0.5*( 0.5*GAMMA(PRZNUC(JIJ)+1.0/ICED%XALPHAC)/(GAMMA(PRZNUC(JIJ))) + &
           0.5*GAMMA(ICED%XNUC2+1.0/PALPHAC2(JIJ))/(GAMMA(ICED%XNUC2)))
       ENDDO
