@@ -15,7 +15,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
                                               PTHT, PRCT, PRRT, PRST, PRGT, &
                                               PRCS, PRRS, PRIS, PRSS, PRGS, &
                                               PINPRC, PINPRR, PINPRS, PINPRG, &
-                                              ZRAY, ZLBC, ZFSEDC, ZCONC3D,  &
+                                              ZRAY, ZLBC, ZFSEDC, ZCONC3D, PRXCS, &
                                               PRHT, PRHS, PINPRH, PFPR)
 
     USE YOMHOOK ,             ONLY: LHOOK, DR_HOOK, JPHOOK
@@ -68,6 +68,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
     REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZLBC    ! XLBC weighted by sea fraction
     REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZFSEDC
     REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZCONC3D !  droplet concentration m-3
+    REAL, DIMENSION(D%NIJT), INTENT(IN) :: PRXCS ! Extra variables for VTERM
 
     REAL, DIMENSION(D%NIT,D%NKT),     OPTIONAL, INTENT(IN)    :: PRHT   ! Hail m.r. at t
     REAL, DIMENSION(D%NIT,D%NKT),     OPTIONAL, INTENT(INOUT) :: PRHS   ! Hail m.r. source
@@ -318,7 +319,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 
         DO JM = 1, ILISTLENR
           JL = ILISTR(JM)
-          ZWSED(IR1(JL),IR2(JL))= ICEP%XFSEDR  * ZRRS(JL)**ICEP%XEXSEDR *   &
+          ZWSED(IR1(JL),IR2(JL))= (PRXCS(IR1(JL))/ICED%XCS)*ICEP%XFSEDR  * ZRRS(JL)**ICEP%XEXSEDR *   &
                                    ZRHODREFR(JL)**(ICEP%XEXSEDR-ICED%XCEXVT)
         END DO
       END IF ! ISEDIMR
@@ -404,7 +405,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 
         DO JM = 1, ILISTLENS
           JL = ILISTS(JM)
-          ZWSED(IS1(JL),IS2(JL))= ICEP%XFSEDS * ZRSS(JL)**ICEP%XEXSEDS *  &
+          ZWSED(IS1(JL),IS2(JL))= (PRXCS(IS1(JL))/ICED%XCS)*ICEP%XFSEDS * ZRSS(JL)**ICEP%XEXSEDS *  &
                                    ZRHODREFS(JL)**(ICEP%XEXSEDS-ICED%XCEXVT)
         END DO
       END IF !ISEDIMS
@@ -446,7 +447,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 
         DO JM = 1, ILISTLENG
           JL = ILISTG(JM)
-          ZWSED(IG1(JL),IG2(JL)) = ICEP%XFSEDG  * ZRGS(JL)**ICEP%XEXSEDG *   &
+          ZWSED(IG1(JL),IG2(JL)) = (PRXCS(IG1(JL))/ICED%XCS)*ICEP%XFSEDG  * ZRGS(JL)**ICEP%XEXSEDG *   &
                                   ZRHODREFG(JL)**(ICEP%XEXSEDG-ICED%XCEXVT)
         END DO
       END IF !ISEDIMG
