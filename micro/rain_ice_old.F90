@@ -1382,7 +1382,7 @@ IF (HSEDIM == 'STAT') THEN
                                        PTHT, PRCT, PRRT, PRST, PRGT, &
                                        PRCS, PRRS, PRIS, PRSS, PRGS, &
                                        PINPRC, PINPRR, PINPRS, PINPRG, &
-                                       ZRAY, ZLBC, ZFSEDC, ZCONC3D, &
+                                       ZRAY, ZLBC, ZFSEDC, ZCONC3D, ZRXCS, &
                                        PRHT, PRHS, PINPRH, PFPR)
 
   IF(BUCONF%LBU_ENABLE) THEN
