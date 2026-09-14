@@ -86,7 +86,12 @@ class CheckCommitTestprogs(CheckCommitBase):
         tag = self.conf_extra_tag.get(self.extrapolation, '')
         self.extrapolation_tag = os.path.expandvars(tag) if tag else ''
         opts = self.conf_extra_opts.get(self.extrapolation, '')
-        self.extrapolation_opts = os.path.expandvars(opts) if opts else ''
+        if opts:
+            self.extrapolation_opts = os.path.expandvars(opts)
+            self.partition = 'normal256'  # job can be memory-intensive
+        else:
+            self.extrapolation_opts = ''
+            self.partition = 'shared'  # job is small
 
         if os.path.isdir(os.path.join(self.commit, 'src')):
             self.model_ready = False
@@ -151,7 +156,7 @@ class CheckCommitTestprogs(CheckCommitBase):
                 f.write('#SBATCH -n 1\n')
                 f.write('#SBATCH -N 1\n')
                 f.write('#SBATCH -t 10\n')
-                f.write('#SBATCH -p shared\n')
+                f.write(f'#SBATCH -p {self.partition}\n')
                 f.write(f'#SBATCH --export={self.varToExport}\n')
                 if run_command(['ldd', cmd_args[0]]).stdout.count('libcuda') > 0:
                     f.write('#SBATCH -p ndl\n')
