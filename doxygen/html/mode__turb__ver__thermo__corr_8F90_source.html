@@ -492,7 +492,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span>  <span class="keywordflow">ELSE</span></div>
 <div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
-<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span>    plepsf(:,:)=plmf(:,:)</div>
+<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span>    plepsf(iijb:iije,1:ikt)=plmf(iijb:iije,1:ikt)</div>
 <div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
 <div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span><span class="keywordflow">  END IF</span></div>

@@ -272,7 +272,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span> </div>
 <div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="comment">!$acc kernels ! async </span></div>
 <div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span><span class="comment">!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)</span></div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>   zrhodj_dfddwdz_o_dz2(:,:,:) = prhodj(:,:,:)*pdfddwdz(:,:,:)/pmzf_dzz(:,:,:)**2</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>   zrhodj_dfddwdz_o_dz2(1:iit,1:ijt,1:ikt) = prhodj(1:iit,1:ijt,1:ikt)*pdfddwdz(1:iit,1:ijt,1:ikt)/pmzf_dzz(1:iit,1:ijt,1:ikt)**2</div>
 <div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="comment">!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)</span></div>
 <div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span><span class="comment">!</span></div>

@@ -251,12 +251,12 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span><span class="comment">!  ground</span></div>
 <div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="comment">!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)</span></div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>zcoeff(:,:,ikb+2)= - pdzz(:,:,ikb+1) /      &amp;</div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>       ( (pdzz(:,:,ikb+2)+pdzz(:,:,ikb+1)) * pdzz(:,:,ikb+2) )</div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>zcoeff(:,:,ikb+1)=   (pdzz(:,:,ikb+2)+pdzz(:,:,ikb+1)) /      &amp;</div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>       ( pdzz(:,:,ikb+1) * pdzz(:,:,ikb+2) )</div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>zcoeff(:,:,ikb)= - (pdzz(:,:,ikb+2)+2.*pdzz(:,:,ikb+1)) /      &amp;</div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>       ( (pdzz(:,:,ikb+2)+pdzz(:,:,ikb+1)) * pdzz(:,:,ikb+1) )</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>zcoeff(1:iit,1:ijt,ikb+2)= - pdzz(1:iit,1:ijt,ikb+1) /      &amp;</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>       ( (pdzz(1:iit,1:ijt,ikb+2)+pdzz(1:iit,1:ijt,ikb+1)) * pdzz(1:iit,1:ijt,ikb+2) )</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>zcoeff(1:iit,1:ijt,ikb+1)=   (pdzz(1:iit,1:ijt,ikb+2)+pdzz(1:iit,1:ijt,ikb+1)) /      &amp;</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>       ( pdzz(1:iit,1:ijt,ikb+1) * pdzz(1:iit,1:ijt,ikb+2) )</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>zcoeff(1:iit,1:ijt,ikb)= - (pdzz(1:iit,1:ijt,ikb+2)+2.*pdzz(1:iit,1:ijt,ikb+1)) /      &amp;</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>       ( (pdzz(1:iit,1:ijt,ikb+2)+pdzz(1:iit,1:ijt,ikb+1)) * pdzz(1:iit,1:ijt,ikb+1) )</div>
 <div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span><span class="comment">!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)</span></div>
 <div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span><span class="comment">!</span></div>
@@ -277,7 +277,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span> </div>
 <div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span><span class="comment">!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)</span></div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>  zflxx(:,:,ike+1) = zflxx(:,:,ike)</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>  zflxx(1:iit,1:ijt,ike+1) = zflxx(1:iit,1:ijt,ike)</div>
 <div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span><span class="comment">!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)</span></div>
 <div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span><span class="comment">!</span></div>
@@ -295,7 +295,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span><span class="comment">! the IKB flux gives the ground value</span></div>
 <div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span><span class="comment">!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)</span></div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>  zwork2d(:,:)=psfsvm(:,:,jsv) * pdircosxw(:,:)</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>  zwork2d(1:iit,1:ijt)=psfsvm(1:iit,1:ijt,jsv) * pdircosxw(1:iit,1:ijt)</div>
 <div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span><span class="comment">!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)</span></div>
 <div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>  zflxx(:,:,ikb-1) = 2. * <a class="code hl_interface" href="interfacemodi__shuman_1_1mxm.html">mxm</a>( zwork2d(:,:) ) - zflxx(:,:,ikb)</div>
@@ -338,7 +338,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>    zflxy(:,:,:)=-zcsv * <a class="code hl_interface" href="interfacemodi__shuman_1_1mym.html">mym</a>(pk) * <a class="code hl_interface" href="interfacemodi__gradient__m_1_1gy__m__v.html">gy_m_v</a>(oflat,psvm(:,:,:,jsv),pdyy,pdzz,pdzy)</div>
 <div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span><span class="comment">!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)</span></div>
-<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>    zflxy(:,:,ike+1) = zflxy(:,:,ike)</div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>    zflxy(1:iit,1:ijt,ike+1) = zflxy(1:iit,1:ijt,ike)</div>
 <div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span><span class="comment">!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)</span></div>
 <div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span><span class="comment">!</span></div>
@@ -357,7 +357,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span><span class="comment">! the IKB flux gives the ground value</span></div>
 <div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span><span class="comment">!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)</span></div>
-<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>    zwork2d(:,:)=psfsvm(:,:,jsv) * pdircosyw(:,:)</div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>    zwork2d(1:iit,1:ijt)=psfsvm(1:iit,1:ijt,jsv) * pdircosyw(1:iit,1:ijt)</div>
 <div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span><span class="comment">!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)</span></div>
 <div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>    zflxy(:,:,ikb-1) = 2. * <a class="code hl_interface" href="interfacemodi__shuman_1_1mym.html">mym</a>( zwork2d(:,:) ) - zflxy(:,:,ikb)</div>
@@ -383,7 +383,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>  <span class="keywordflow">ELSE</span></div>
 <div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span>    <span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>    <span class="comment">!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)</span></div>
-<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span>    zflxy(:,:,:)=0.</div>
+<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span>    zflxy(1:iit,1:ijt,1:ikt)=0.</div>
 <div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>    <span class="comment">!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)</span></div>
 <div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>    <span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span><span class="keywordflow">  END IF</span></div>

@@ -597,7 +597,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00512" name="l00512"></a><span class="lineno">  512</span>      <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__shuman__mf.html#a2efaa0c7e5021f0270072720bccd9cb9">mzf_mf</a>(d, pthv_up, zwk)</div>
 <div class="line"><a id="l00513" name="l00513"></a><span class="lineno">  513</span>      <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__compute__bl89__ml.html#ae2ee2d797185b7dc0c6900ed8a6bb881">compute_bl89_ml</a>(d, cst, csturb, pdzz, ztkem_f(:,jk), zg_o_thvref_up(:,jk), zwk, jk, .true., .true., zshear, zlup)</div>
 <div class="line"><a id="l00514" name="l00514"></a><span class="lineno">  514</span>      <span class="comment">!$mnh_expand_where(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00515" name="l00515"></a><span class="lineno">  515</span>      zlup(:) = max(zlup(:), 1.)</div>
+<div class="line"><a id="l00515" name="l00515"></a><span class="lineno">  515</span>      zlup(iijb:iije) = max(zlup(iijb:iije), 1.)</div>
 <div class="line"><a id="l00516" name="l00516"></a><span class="lineno">  516</span>      <span class="comment">!$mnh_end_expand_where(JIJ=IIJB:IIJE)</span></div>
 <div class="line"><a id="l00517" name="l00517"></a><span class="lineno">  517</span><span class="keywordflow">    ENDIF</span></div>
 <div class="line"><a id="l00518" name="l00518"></a><span class="lineno">  518</span>    <span class="keywordflow">IF</span> (parammf%CWET_MIXING == <span class="stringliteral">&#39;LR01&#39;</span>) <span class="keywordflow">THEN</span></div>
@@ -606,7 +606,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00521" name="l00521"></a><span class="lineno">  521</span>      zwk(:,jk) = zwk2(:,jk)</div>
 <div class="line"><a id="l00522" name="l00522"></a><span class="lineno">  522</span>      <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__compute__bl89__ml.html#ae2ee2d797185b7dc0c6900ed8a6bb881">compute_bl89_ml</a>(d, cst, csturb, pdzz, ztkem_f(:,jk), zg_o_thvref_up(:,jk), zwk, jk, .false., .false., zshear, zldown)</div>
 <div class="line"><a id="l00523" name="l00523"></a><span class="lineno">  523</span>      <span class="comment">!$mnh_expand_where(JIJ=IIJB:IIJE)</span></div>
-<div class="line"><a id="l00524" name="l00524"></a><span class="lineno">  524</span>      zldown(:) = max(zldown(:), 1.)</div>
+<div class="line"><a id="l00524" name="l00524"></a><span class="lineno">  524</span>      zldown(iijb:iije) = max(zldown(iijb:iije), 1.)</div>
 <div class="line"><a id="l00525" name="l00525"></a><span class="lineno">  525</span>      <span class="comment">!$mnh_end_expand_where(JIJ=IIJB:IIJE)</span></div>
 <div class="line"><a id="l00526" name="l00526"></a><span class="lineno">  526</span><span class="keywordflow">    ENDIF</span></div>
 <div class="line"><a id="l00527" name="l00527"></a><span class="lineno">  527</span>    <span class="keyword">CALL </span><a class="code hl_function" href="mode__compute__updraft_8F90.html#ad51c7463d7e27633f9c032c22bd725cf">compute_entr_detr</a>(d, cst, nebn, parammf, jk,ikb,ike,ikl,gtest,gtestlcl,pfrac_ice_up(:,jk),&amp;</div>

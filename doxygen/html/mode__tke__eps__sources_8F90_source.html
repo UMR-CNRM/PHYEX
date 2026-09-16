@@ -398,7 +398,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span><span class="comment">!</span></div>
 <div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span><span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
-<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>zflx_ptstep(:,:) = ptstep*zflx(:,:)</div>
+<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>zflx_ptstep(iijb:iije,1:ikt) = ptstep*zflx(iijb:iije,1:ikt)</div>
 <div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span><span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
 <div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span><span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__tridiag__tke.html#a7c2b147475a5a8c8025462c332fedd5f">tridiag_tke</a>(d,ptkem,za,ptstep,pexpl,turbn%XIMPL,prhodj,zsource,zflx_ptstep ,zres)</div>
@@ -544,7 +544,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00459" name="l00459"></a><span class="lineno">  459</span><span class="keywordflow">IF</span>(<span class="keyword">PRESENT</span>(ptr)) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00460" name="l00460"></a><span class="lineno">  460</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00461" name="l00461"></a><span class="lineno">  461</span>  <span class="comment">!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
-<div class="line"><a id="l00462" name="l00462"></a><span class="lineno">  462</span>  ptr(:,:)=ztr(:,:)</div>
+<div class="line"><a id="l00462" name="l00462"></a><span class="lineno">  462</span>  ptr(iijb:iije,1:ikt)=ztr(iijb:iije,1:ikt)</div>
 <div class="line"><a id="l00463" name="l00463"></a><span class="lineno">  463</span>  <span class="comment">!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
 <div class="line"><a id="l00464" name="l00464"></a><span class="lineno">  464</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00465" name="l00465"></a><span class="lineno">  465</span><span class="keywordflow">END IF</span></div>

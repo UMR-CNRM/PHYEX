@@ -320,7 +320,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>  <span class="comment">! dynamic production computation</span></div>
 <div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>  <span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>  <span class="comment">!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)</span></div>
-<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>  pdp(:,:,:) = pdp(:,:,:) +  zwork(:,:,:)  </div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>  pdp(1:iit,1:ijt,1:ikt) = pdp(1:iit,1:ijt,1:ikt) +  zwork(1:iit,1:ijt,1:ikt)  </div>
 <div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>  <span class="comment">!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)</span></div>
 <div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>  <span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>  <span class="comment">!</span></div>

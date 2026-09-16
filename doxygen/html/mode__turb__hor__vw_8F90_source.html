@@ -252,7 +252,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span><span class="keywordflow">ELSE</span></div>
 <div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span><span class="comment">!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)</span></div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>  zflx(:,:,:) = 0.</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>  zflx(1:iit,1:ijt,1:ikt) = 0.</div>
 <div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span><span class="comment">!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)</span></div>
 <div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span><span class="keywordflow">END IF</span></div>
@@ -328,7 +328,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>  <span class="keywordflow">IF</span> (.NOT. o2d) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>    <span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>    <span class="comment">!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)</span></div>
-<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>    pdp(:,:,:) = pdp(:,:,:) + zwork(:,:,:)  </div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>    pdp(1:iit,1:ijt,1:ikt) = pdp(1:iit,1:ijt,1:ikt) + zwork(1:iit,1:ijt,1:ikt)  </div>
 <div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>    <span class="comment">!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)</span></div>
 <div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>    <span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span><span class="keywordflow">  ENDIF</span></div>

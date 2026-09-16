@@ -201,7 +201,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        <span class="keywordflow">IF</span> (o2d) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><span class="comment">!$acc kernels present_cr( PLM )</span></div>
 <div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="comment">!$mnh_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )</span></div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>          plm(:, :) = zwork1(:, :)</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>          plm(iijb:iije, 1:ikt) = zwork1(iijb:iije, 1:ikt)</div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="comment">!$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )</span></div>
 <div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>        <span class="keywordflow">ELSE</span></div>
