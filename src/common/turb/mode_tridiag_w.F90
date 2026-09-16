@@ -187,7 +187,7 @@ CALL MZM_PHY(D,PRHODJ,ZMZM_RHODJ)
 
 !$acc kernels ! async 
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-   ZRHODJ_DFDDWDZ_O_DZ2(:,:,:) = PRHODJ(:,:,:)*PDFDDWDZ(:,:,:)/PMZF_DZZ(:,:,:)**2
+   ZRHODJ_DFDDWDZ_O_DZ2(1:IIT,1:IJT,1:IKT) = PRHODJ(1:IIT,1:IJT,1:IKT)*PDFDDWDZ(1:IIT,1:IJT,1:IKT)/PMZF_DZZ(1:IIT,1:IJT,1:IKT)**2
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
 !$acc end kernels
 !

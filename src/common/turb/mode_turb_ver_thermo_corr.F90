@@ -407,7 +407,7 @@ IF (TURBN%LHARAT) THEN
   ELSE
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    PLEPSF(:,:)=PLMF(:,:)
+    PLEPSF(IIJB:IIJE,1:IKT)=PLMF(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
   END IF

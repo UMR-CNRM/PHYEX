@@ -313,7 +313,7 @@ ZA(:,:) = - PTSTEP * CSTURB%XCET * MZM(ZKEFF) * MZM(PRHODJ) / PDZZ(:,:)**2
 !
 !$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZFLX_PTSTEP(:,:) = PTSTEP*ZFLX(:,:)
+ZFLX_PTSTEP(IIJB:IIJE,1:IKT) = PTSTEP*ZFLX(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
 CALL TRIDIAG_TKE(D,PTKEM,ZA,PTSTEP,PEXPL,TURBN%XIMPL,PRHODJ,ZSOURCE,ZFLX_PTSTEP ,ZRES)
@@ -459,7 +459,7 @@ PRTHLS(IIJB:IIJE,1:IKT) = PRTHLS(IIJB:IIJE,1:IKT) + &
 IF(PRESENT(PTR)) THEN
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  PTR(:,:)=ZTR(:,:)
+  PTR(IIJB:IIJE,1:IKT)=ZTR(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
 END IF

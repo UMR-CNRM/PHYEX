@@ -8,6 +8,7 @@ Check coding norms in PHYEX Fortran sources:
 - matching interfaces for mode_ice4_pack / mode_ice4_stepping
 - ONLY clause in USE statements
 - no operations in CALL statements
+- no empty parens in mnh_expand blocks
 """
 
 import argparse
@@ -64,6 +65,7 @@ def coding_norms(sourcedir, verbose=False):
             "--checkPHYEXUnusedLocalVar", "Warn",
             "--checkOpInCall", "Warn",
             "--checkEmptyParensInCall", "Warn",
+            "--checkEmptyParensInMnhExpand", "Warn",
         ]
 
         result = run_command(cmd, check=False)

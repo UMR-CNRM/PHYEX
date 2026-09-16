@@ -979,8 +979,8 @@ END IF
 !
 ! relative wind over ocean
 !$mnh_expand_array(JIJ=IIJB:IIJE)
-ZUSLOPE(:)=ZUSLOPE(:)-PSEA_UCU(:)
-ZVSLOPE(:)=ZVSLOPE(:)-PSEA_VCU(:)
+ZUSLOPE(IIJB:IIJE)=ZUSLOPE(IIJB:IIJE)-PSEA_UCU(IIJB:IIJE)
+ZVSLOPE(IIJB:IIJE)=ZVSLOPE(IIJB:IIJE)-PSEA_VCU(IIJB:IIJE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
 !
@@ -1062,14 +1062,15 @@ IF( BUCONF%LBUDGET_TH ) THEN
   IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZTEMP_BUD(:,:) =  PRTHLS(:,:) + ZLVOCPEXNM(:,:) * PRRS(:,:, 2) + ZLSOCPEXNM(:,:) * PRRS(:,:, 4) 
+    ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRTHLS(IIJB:IIJE,1:IKT) + ZLVOCPEXNM(IIJB:IIJE,1:IKT) * &
+                               & PRRS(IIJB:IIJE,1:IKT, 2) + ZLSOCPEXNM(IIJB:IIJE,1:IKT) * PRRS(IIJB:IIJE,1:IKT, 4) 
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
     CALL TBUDGETS(NBUDGET_TH)%PTR%INIT_PHY(D, 'VTURB', ZTEMP_BUD )
   ELSE IF( KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD, ZLOCPEXNM)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZTEMP_BUD(:,:) =  PRTHLS(:,:) + ZLOCPEXNM(:,:) * PRRS(:,:, 2)
+    ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRTHLS(IIJB:IIJE,1:IKT) + ZLOCPEXNM(IIJB:IIJE,1:IKT) * PRRS(IIJB:IIJE,1:IKT, 2)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
     CALL TBUDGETS(NBUDGET_TH)%PTR%INIT_PHY(D, 'VTURB', ZTEMP_BUD )
@@ -1082,14 +1083,14 @@ IF( BUCONF%LBUDGET_RV ) THEN
   IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZTEMP_BUD(:,:) =  PRRS(:,:, 1) - PRRS(:,:, 2) - PRRS(:,:, 4) 
+    ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRRS(IIJB:IIJE,1:IKT, 1) - PRRS(IIJB:IIJE,1:IKT, 2) - PRRS(IIJB:IIJE,1:IKT, 4) 
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
     CALL TBUDGETS(NBUDGET_RV)%PTR%INIT_PHY(D, 'VTURB', ZTEMP_BUD )
   ELSE IF( KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZTEMP_BUD(:,:) =  PRRS(:,:, 1) - PRRS(:,:, 2)
+    ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRRS(IIJB:IIJE,1:IKT, 1) - PRRS(IIJB:IIJE,1:IKT, 2)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
     CALL TBUDGETS(NBUDGET_RV)%PTR%INIT_PHY(D, 'VTURB', ZTEMP_BUD )
@@ -1142,10 +1143,10 @@ CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
 !   IF (KSV_LIMA_NH.GT.0) PRSVS(:,:,KSV_LIMA_NH) = ZRSVS(:,:,KSV_LIMA_NH)
 !END IF
 IF (TURBN%LTURB_PRECIP) THEN
-   IF (KRR.GE.3) PRRS(:,:,3)=ZWORKS(:,:,KSV+3)
-   IF (KRR.GE.5) PRRS(:,:,5)=ZWORKS(:,:,KSV+5)
-   IF (KRR.GE.6) PRRS(:,:,6)=ZWORKS(:,:,KSV+6)
-   IF (KRR.GE.7) PRRS(:,:,7)=ZWORKS(:,:,KSV+7)
+   IF (KRR.GE.3) PRRS(IIJB:IIJE,1:IKT,3)=ZWORKS(IIJB:IIJE,1:IKT,KSV+3)
+   IF (KRR.GE.5) PRRS(IIJB:IIJE,1:IKT,5)=ZWORKS(IIJB:IIJE,1:IKT,KSV+5)
+   IF (KRR.GE.6) PRRS(IIJB:IIJE,1:IKT,6)=ZWORKS(IIJB:IIJE,1:IKT,KSV+6)
+   IF (KRR.GE.7) PRRS(IIJB:IIJE,1:IKT,7)=ZWORKS(IIJB:IIJE,1:IKT,KSV+7)
 END IF
 
 IF (TURBN%LTURB_PRECIP) THEN
@@ -1153,10 +1154,10 @@ IF (TURBN%LTURB_PRECIP) THEN
   IF( BUCONF%LBUDGET_RS ) CALL TBUDGETS(NBUDGET_RS)%PTR%INIT_PHY(D, 'VTURB', PRRS(:,:, 5) )
   IF( BUCONF%LBUDGET_RG ) CALL TBUDGETS(NBUDGET_RG)%PTR%INIT_PHY(D, 'VTURB', PRRS(:,:, 6) )
   IF( BUCONF%LBUDGET_RH .AND. KRR ==7) CALL TBUDGETS(NBUDGET_RH)%PTR%INIT_PHY(D, 'VTURB', PRRS(:,:, 7) )
-  IF (KRR.GE.3) PRRS(:,:,3)=ZWORKS(:,:,KSV+3)
-  IF (KRR.GE.5) PRRS(:,:,5)=ZWORKS(:,:,KSV+5)
-  IF (KRR.GE.6) PRRS(:,:,6)=ZWORKS(:,:,KSV+6)
-  IF (KRR.GE.7) PRRS(:,:,7)=ZWORKS(:,:,KSV+7)
+  IF (KRR.GE.3) PRRS(IIJB:IIJE,1:IKT,3)=ZWORKS(IIJB:IIJE,1:IKT,KSV+3)
+  IF (KRR.GE.5) PRRS(IIJB:IIJE,1:IKT,5)=ZWORKS(IIJB:IIJE,1:IKT,KSV+5)
+  IF (KRR.GE.6) PRRS(IIJB:IIJE,1:IKT,6)=ZWORKS(IIJB:IIJE,1:IKT,KSV+6)
+  IF (KRR.GE.7) PRRS(IIJB:IIJE,1:IKT,7)=ZWORKS(IIJB:IIJE,1:IKT,KSV+7)
   IF( BUCONF%LBUDGET_RR ) CALL TBUDGETS(NBUDGET_RR)%PTR%END_PHY(D, 'VTURB', PRRS(:,:, 3) )
   IF( BUCONF%LBUDGET_RS ) CALL TBUDGETS(NBUDGET_RS)%PTR%END_PHY(D, 'VTURB', PRRS(:,:, 5) )
   IF( BUCONF%LBUDGET_RG ) CALL TBUDGETS(NBUDGET_RG)%PTR%END_PHY(D, 'VTURB', PRRS(:,:, 6) )
@@ -1171,14 +1172,15 @@ IF( BUCONF%LBUDGET_TH ) THEN
   IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZTEMP_BUD(:,:) =  PRTHLS(:,:) + ZLVOCPEXNM(:,:) * PRRS(:,:, 2) + ZLSOCPEXNM(:,:) * PRRS(:,:, 4) 
+    ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRTHLS(IIJB:IIJE,1:IKT) + ZLVOCPEXNM(IIJB:IIJE,1:IKT) * &
+                               &  PRRS(IIJB:IIJE,1:IKT, 2) + ZLSOCPEXNM(IIJB:IIJE,1:IKT) * PRRS(IIJB:IIJE,1:IKT, 4) 
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
     CALL TBUDGETS(NBUDGET_TH)%PTR%END_PHY(D, 'VTURB', ZTEMP_BUD )
   ELSE IF( KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD, ZLOCPEXNM)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZTEMP_BUD(:,:) =  PRTHLS(:,:) + ZLOCPEXNM(:,:) * PRRS(:,:, 2)
+    ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRTHLS(IIJB:IIJE,1:IKT) + ZLOCPEXNM(IIJB:IIJE,1:IKT) * PRRS(IIJB:IIJE,1:IKT, 2)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
     CALL TBUDGETS(NBUDGET_TH)%PTR%END_PHY(D, 'VTURB', ZTEMP_BUD )
@@ -1191,14 +1193,14 @@ IF( BUCONF%LBUDGET_RV ) THEN
   IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZTEMP_BUD(:,:) =  PRRS(:,:, 1) - PRRS(:,:, 2) - PRRS(:,:, 4) 
+    ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRRS(IIJB:IIJE,1:IKT, 1) - PRRS(IIJB:IIJE,1:IKT, 2) - PRRS(IIJB:IIJE,1:IKT, 4) 
      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
     CALL TBUDGETS(NBUDGET_RV)%PTR%END_PHY(D, 'VTURB', ZTEMP_BUD )
   ELSE IF( KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZTEMP_BUD(:,:) =  PRRS(:,:, 1) - PRRS(:,:, 2) 
+    ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRRS(IIJB:IIJE,1:IKT, 1) - PRRS(IIJB:IIJE,1:IKT, 2) 
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
     CALL TBUDGETS(NBUDGET_RV)%PTR%END_PHY(D, 'VTURB', ZTEMP_BUD)
@@ -1229,14 +1231,15 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
     IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZTEMP_BUD(:,:) =  PRTHLS(:,:) + ZLVOCPEXNM(:,:) * PRRS(:,:, 2) + ZLSOCPEXNM(:,:) * PRRS(:,:, 4)
+    ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRTHLS(IIJB:IIJE,1:IKT) + ZLVOCPEXNM(IIJB:IIJE,1:IKT) * &
+                               &  PRRS(IIJB:IIJE,1:IKT, 2) + ZLSOCPEXNM(IIJB:IIJE,1:IKT) * PRRS(IIJB:IIJE,1:IKT, 4)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
       CALL TBUDGETS(NBUDGET_TH)%PTR%INIT_PHY(D, 'HTURB', ZTEMP_BUD )
     ELSE IF( KRRL >= 1 ) THEN
       !$acc kernels present_cr(ZTEMP_BUD)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZTEMP_BUD(:,:) =  PRTHLS(:,:) + ZLOCPEXNM(:,:) * PRRS(:,:, 2)
+      ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRTHLS(IIJB:IIJE,1:IKT) + ZLOCPEXNM(IIJB:IIJE,1:IKT) * PRRS(IIJB:IIJE,1:IKT, 2)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !$acc end kernels
       CALL TBUDGETS(NBUDGET_TH)%PTR%INIT_PHY(D, 'HTURB', ZTEMP_BUD  )
@@ -1249,14 +1252,14 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
     IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
       !$acc kernels present_cr(ZTEMP_BUD)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZTEMP_BUD(:,:) =  PRRS(:,:, 1) - PRRS(:,:, 2) - PRRS(:,:, 4)
+      ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRRS(IIJB:IIJE,1:IKT, 1) - PRRS(IIJB:IIJE,1:IKT, 2) - PRRS(IIJB:IIJE,1:IKT, 4)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !$acc end kernels
       CALL TBUDGETS(NBUDGET_RV)%PTR%INIT_PHY(D, 'HTURB', ZTEMP_BUD )
     ELSE IF( KRRL >= 1 ) THEN
       !$acc kernels present_cr(ZTEMP_BUD)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZTEMP_BUD(:,:) =  PRRS(:,:, 1) - PRRS(:,:, 2)
+      ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRRS(IIJB:IIJE,1:IKT, 1) - PRRS(IIJB:IIJE,1:IKT, 2)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !$acc end kernels
       CALL TBUDGETS(NBUDGET_RV)%PTR%INIT_PHY(D, 'HTURB', ZTEMP_BUD )
@@ -1307,10 +1310,10 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
     IF( BUCONF%LBUDGET_RS ) CALL TBUDGETS(NBUDGET_RS)%PTR%INIT_PHY(D, 'HTURB', PRRS(:,:, 5) )
     IF( BUCONF%LBUDGET_RG ) CALL TBUDGETS(NBUDGET_RG)%PTR%INIT_PHY(D, 'HTURB', PRRS(:,:, 6) )
     IF( BUCONF%LBUDGET_RH .AND. KRR==7) CALL TBUDGETS(NBUDGET_RH)%PTR%INIT_PHY(D, 'HTURB', PRRS(:,:, 7) )
-    IF (KRR.GE.3) PRRS(:,:,3)=ZWORKS(:,:,KSV+3)
-    IF (KRR.GE.5) PRRS(:,:,5)=ZWORKS(:,:,KSV+5)
-    IF (KRR.GE.6) PRRS(:,:,6)=ZWORKS(:,:,KSV+6)
-    IF (KRR.GE.7) PRRS(:,:,7)=ZWORKS(:,:,KSV+7)
+    IF (KRR.GE.3) PRRS(IIJB:IIJE,1:IKT,3)=ZWORKS(IIJB:IIJE,1:IKT,KSV+3)
+    IF (KRR.GE.5) PRRS(IIJB:IIJE,1:IKT,5)=ZWORKS(IIJB:IIJE,1:IKT,KSV+5)
+    IF (KRR.GE.6) PRRS(IIJB:IIJE,1:IKT,6)=ZWORKS(IIJB:IIJE,1:IKT,KSV+6)
+    IF (KRR.GE.7) PRRS(IIJB:IIJE,1:IKT,7)=ZWORKS(IIJB:IIJE,1:IKT,KSV+7)
     IF( BUCONF%LBUDGET_RR ) CALL TBUDGETS(NBUDGET_RR)%PTR%END_PHY(D, 'HTURB', PRRS(:,:, 3) )
     IF( BUCONF%LBUDGET_RS ) CALL TBUDGETS(NBUDGET_RS)%PTR%END_PHY(D, 'HTURB', PRRS(:,:, 5) )
     IF( BUCONF%LBUDGET_RG ) CALL TBUDGETS(NBUDGET_RG)%PTR%END_PHY(D, 'HTURB', PRRS(:,:, 6) )
@@ -1325,14 +1328,15 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
     IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
       !$acc kernels present_cr(ZTEMP_BUD)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZTEMP_BUD(:,:) =  PRTHLS(:,:) + ZLVOCPEXNM(:,:) * PRRS(:,:, 2) + ZLSOCPEXNM(:,:) * PRRS(:,:, 4)
+      ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRTHLS(IIJB:IIJE,1:IKT) + ZLVOCPEXNM(IIJB:IIJE,1:IKT) * &
+                                 &  PRRS(IIJB:IIJE,1:IKT, 2) + ZLSOCPEXNM(IIJB:IIJE,1:IKT) * PRRS(IIJB:IIJE,1:IKT, 4)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !$acc end kernels
       CALL TBUDGETS(NBUDGET_TH)%PTR%END_PHY(D, 'HTURB', ZTEMP_BUD )
     ELSE IF( KRRL >= 1 ) THEN
       !$acc kernels present_cr(ZTEMP_BUD)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZTEMP_BUD(:,:) =  PRTHLS(:,:) + ZLOCPEXNM(:,:) * PRRS(:,:, 2)
+      ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRTHLS(IIJB:IIJE,1:IKT) + ZLOCPEXNM(IIJB:IIJE,1:IKT) * PRRS(IIJB:IIJE,1:IKT, 2)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !$acc end kernels
       CALL TBUDGETS(NBUDGET_TH)%PTR%END_PHY(D, 'HTURB', ZTEMP_BUD )
@@ -1345,14 +1349,14 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
     IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
       !$acc kernels present_cr(ZTEMP_BUD)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZTEMP_BUD(:,:) =  PRRS(:,:, 1) - PRRS(:,:, 2) - PRRS(:,:, 4)
+      ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRRS(IIJB:IIJE,1:IKT, 1) - PRRS(IIJB:IIJE,1:IKT, 2) - PRRS(IIJB:IIJE,1:IKT, 4)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !$acc end kernels
       CALL TBUDGETS(NBUDGET_RV)%PTR%END_PHY(D, 'HTURB', ZTEMP_BUD )
     ELSE IF( KRRL >= 1 ) THEN
       !$acc kernels present_cr(ZTEMP_BUD)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZTEMP_BUD(:,:) =  PRRS(:,:, 1) - PRRS(:,:, 2)
+      ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRRS(IIJB:IIJE,1:IKT, 1) - PRRS(IIJB:IIJE,1:IKT, 2)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !$acc end kernels
       CALL TBUDGETS(NBUDGET_RV)%PTR%END_PHY(D, 'HTURB', ZTEMP_BUD )
@@ -1481,14 +1485,15 @@ IF (BUCONF%LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZTEMP_BUD(:,:) =  PRTHLS(:,:)+ ZLVOCPEXNM(:,:) * PRRS(:,:,2) + ZLSOCPEXNM(:,:) * PRRS(:,:,4)
+    ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRTHLS(IIJB:IIJE,1:IKT)+ ZLVOCPEXNM(IIJB:IIJE,1:IKT) * &
+                               &  PRRS(IIJB:IIJE,1:IKT,2) + ZLSOCPEXNM(IIJB:IIJE,1:IKT) * PRRS(IIJB:IIJE,1:IKT,4)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
     CALL TBUDGETS(NBUDGET_TH)%PTR%INIT_PHY(D, 'DISSH', ZTEMP_BUD )
   ELSE IF ( KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZTEMP_BUD(:,:) =  PRTHLS(:,:) + ZLOCPEXNM(:,:) * PRRS(:,:,2)
+    ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRTHLS(IIJB:IIJE,1:IKT) + ZLOCPEXNM(IIJB:IIJE,1:IKT) * PRRS(IIJB:IIJE,1:IKT,2)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
     CALL TBUDGETS(NBUDGET_TH)%PTR%INIT_PHY(D, 'DISSH', ZTEMP_BUD )
@@ -1525,14 +1530,15 @@ IF (BUCONF%LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZTEMP_BUD(:,:) =  PRTHLS(:,:)+ ZLVOCPEXNM(:,:) * PRRS(:,:,2) + ZLSOCPEXNM(:,:) * PRRS(:,:,4)
+    ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRTHLS(IIJB:IIJE,1:IKT)+ ZLVOCPEXNM(IIJB:IIJE,1:IKT) * &
+                               &  PRRS(IIJB:IIJE,1:IKT,2) + ZLSOCPEXNM(IIJB:IIJE,1:IKT) * PRRS(IIJB:IIJE,1:IKT,4)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
     CALL TBUDGETS(NBUDGET_TH)%PTR%END_PHY(D, 'DISSH', ZTEMP_BUD )
   ELSE IF ( KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZTEMP_BUD(:,:) =  PRTHLS(:,:) + ZLOCPEXNM(:,:) * PRRS(:,:,2)
+    ZTEMP_BUD(IIJB:IIJE,1:IKT) =  PRTHLS(IIJB:IIJE,1:IKT) + ZLOCPEXNM(IIJB:IIJE,1:IKT) * PRRS(IIJB:IIJE,1:IKT,2)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !$acc end kernels
     CALL TBUDGETS(NBUDGET_TH)%PTR%END_PHY(D, 'DISSH', ZTEMP_BUD )

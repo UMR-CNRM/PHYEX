@@ -217,13 +217,15 @@ class CheckCommitLmdz(CheckCommitBase):
                          os.path.join(packdir, 'PHYEX')])
 
             prep_kwargs = self._parse_prep_code_opts(self.prepCodeOpts)
+            pyfortool_options = ['--shumanFUNCtoCALL', '--removeACC']
+            if self.useexpand:
+                pyfortool_options.append('--mnhExpand')
             prep_code(
                 directory=os.path.join(packdir, 'PHYEX'),
                 model='lmdz',
-                mnh_expand=self.useexpand,
                 subs=subs,
                 no_raise_on_coding_norms=True,
-                pyfortool_options=['--shumanFUNCtoCALL', '--removeACC'],
+                pyfortool_options=pyfortool_options,
                 **prep_kwargs)
             repo_url = self.json_content.get('phyex-lmdz-repo',
                                              'https://github.com/SebastienRietteMTO/phyex-lmdz.git')

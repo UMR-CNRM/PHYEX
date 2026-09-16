@@ -166,7 +166,7 @@ IKT=D%NKT
 !
 !$acc kernels
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZDIRSINZW(:,:) = SQRT( 1. - PDIRCOSZW(:,:)**2 )
+ZDIRSINZW(1:IIT,1:IJT) = SQRT( 1. - PDIRCOSZW(1:IIT,1:IJT)**2 )
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
 !$acc end kernels
 !
@@ -188,7 +188,7 @@ END IF
 !
 !$acc kernels
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZFLX(:,:,IKE+1)= ZFLX(:,:,IKE)
+ZFLX(1:IIT,1:IJT,IKE+1)= ZFLX(1:IIT,1:IJT,IKE)
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
 !$acc end kernels
 !
@@ -210,16 +210,16 @@ ZFLX(:,:,IKB)   = - XCMFS * MYM(MXM(PK(:,:,IKB))) *  (     &
 ! extrapolates this flux under the ground with the surface flux
 !$acc kernels present_cr(ZFLX,ZDIRSINZW)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZFLX(:,:,IKB-1) =                                                           &
-   PTAU11M(:,:) * PCOSSLOPE(:,:) * PSINSLOPE(:,:) * PDIRCOSZW(:,:)**2         &
-  +PTAU12M(:,:) * (PCOSSLOPE(:,:)**2 - PSINSLOPE(:,:)**2) *                   &
-                  PDIRCOSZW(:,:)**2                                           &
-  -PTAU22M(:,:) * PCOSSLOPE(:,:) * PSINSLOPE(:,:)                             &
-  +PTAU33M(:,:) * PCOSSLOPE(:,:) * PSINSLOPE(:,:) * ZDIRSINZW(:,:)**2         &
-  -PCDUEFF(:,:) * (                                                           &
-    2. * PUSLOPEM(:,:) * PCOSSLOPE(:,:) * PSINSLOPE(:,:) *                    &
-          PDIRCOSZW(:,:) * ZDIRSINZW(:,:)                                     &
-    +PVSLOPEM(:,:) * (PCOSSLOPE(:,:)**2 - PSINSLOPE(:,:)**2) * ZDIRSINZW(:,:) &
+ZFLX(1:IIT,1:IJT,IKB-1) =                                                           &
+   PTAU11M(1:IIT,1:IJT) * PCOSSLOPE(1:IIT,1:IJT) * PSINSLOPE(1:IIT,1:IJT) * PDIRCOSZW(1:IIT,1:IJT)**2         &
+  +PTAU12M(1:IIT,1:IJT) * (PCOSSLOPE(1:IIT,1:IJT)**2 - PSINSLOPE(1:IIT,1:IJT)**2) *                   &
+                  PDIRCOSZW(1:IIT,1:IJT)**2                                           &
+  -PTAU22M(1:IIT,1:IJT) * PCOSSLOPE(1:IIT,1:IJT) * PSINSLOPE(1:IIT,1:IJT)                             &
+  +PTAU33M(1:IIT,1:IJT) * PCOSSLOPE(1:IIT,1:IJT) * PSINSLOPE(1:IIT,1:IJT) * ZDIRSINZW(1:IIT,1:IJT)**2         &
+  -PCDUEFF(1:IIT,1:IJT) * (                                                           &
+    2. * PUSLOPEM(1:IIT,1:IJT) * PCOSSLOPE(1:IIT,1:IJT) * PSINSLOPE(1:IIT,1:IJT) *                    &
+          PDIRCOSZW(1:IIT,1:IJT) * ZDIRSINZW(1:IIT,1:IJT)                                     &
+    +PVSLOPEM(1:IIT,1:IJT) * (PCOSSLOPE(1:IIT,1:IJT)**2 - PSINSLOPE(1:IIT,1:IJT)**2) * ZDIRSINZW(1:IIT,1:IJT) &
                    )
 !
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
@@ -300,7 +300,7 @@ IF (KSPLT==1) THEN
   ! dynamic production 
   !$acc kernels present_crm(PDP)
   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-  PDP(:,:,:) = PDP(:,:,:) + ZWORK(:,:,:)
+  PDP(1:IIT,1:IJT,1:IKT) = PDP(1:IIT,1:IJT,1:IKT) + ZWORK(1:IIT,1:IJT,1:IKT)
   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
   !$acc end kernels
   ! 

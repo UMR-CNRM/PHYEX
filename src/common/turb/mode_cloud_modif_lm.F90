@@ -175,7 +175,7 @@ CONTAINS
     IF (HTURBLEN_CL == TURBN%CTURBLEN) THEN
 !$acc kernels
 !$mnh_expand_array( JIJ=IIJB:IIJE,JK=1:IKT )
-      PLM_CLOUD(:, :) = PLM(:, :)
+      PLM_CLOUD(IIJB:IIJE, 1:IKT) = PLM(IIJB:IIJE, 1:IKT)
 !$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
 !$acc end kernels
     ELSE
@@ -186,7 +186,7 @@ CONTAINS
       CASE ('BL89', 'RM17', 'HM21')
 !$acc kernels
 !$mnh_expand_array( JIJ=IIJB:IIJE,JK=1:IKT )
-        ZSHEAR(:, :) = 0.
+        ZSHEAR(IIJB:IIJE, 1:IKT) = 0.
 !$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
 !$acc end kernels
         CALL BL89(D, CST, CSTURB, TURBN, PZZ, PDZZ, PTHVREF, PTHLM, KRR, PRM, PTKET, ZSHEAR, PLM_CLOUD, OOCEAN)

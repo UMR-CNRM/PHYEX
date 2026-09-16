@@ -85,10 +85,10 @@ IF (LHOOK) CALL DR_HOOK('LIMA_COMPUTE_PDF', 0, ZHOOK_HANDLE)!
 !Cloud water split between high and low content part is done according to autoconversion option
 !$acc kernels
 !$mnh_expand_where(JL=1:KSIZE)
-WHERE (LDMICRO(:))
-  ZRCRAUTC(:)=LIMAP%XCRIAUTC/PRHODREF(:) ! Autoconversion rc threshold
+WHERE (LDMICRO(1:KSIZE))
+  ZRCRAUTC(1:KSIZE)=LIMAP%XCRIAUTC/PRHODREF(1:KSIZE) ! Autoconversion rc threshold
 ELSEWHERE
-  ZRCRAUTC(:)=0.
+  ZRCRAUTC(1:KSIZE)=0.
 END WHERE
 !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
@@ -96,21 +96,21 @@ IF(HSUBG_AUCV_RC=='NONE') THEN
   !Cloud water is entirely in low or high part
 !$acc kernels
  !$mnh_expand_where(JL=1:KSIZE)
-  WHERE(PRCT(:)>ZRCRAUTC(:) .AND. LDMICRO(:))
-    PHLC_HCF(:)=1.
-    PHLC_LCF(:)=0.
-    PHLC_HRC(:)=PRCT(:)
-    PHLC_LRC(:)=0.
-  ELSEWHERE(PRCT(:)>LIMAP%XRTMIN(2) .AND. LDMICRO(:))
-    PHLC_HCF(:)=0.
-    PHLC_LCF(:)=1.
-    PHLC_HRC(:)=0.
-    PHLC_LRC(:)=PRCT(:)
+  WHERE(PRCT(1:KSIZE)>ZRCRAUTC(1:KSIZE) .AND. LDMICRO(1:KSIZE))
+    PHLC_HCF(1:KSIZE)=1.
+    PHLC_LCF(1:KSIZE)=0.
+    PHLC_HRC(1:KSIZE)=PRCT(1:KSIZE)
+    PHLC_LRC(1:KSIZE)=0.
+  ELSEWHERE(PRCT(1:KSIZE)>LIMAP%XRTMIN(2) .AND. LDMICRO(1:KSIZE))
+    PHLC_HCF(1:KSIZE)=0.
+    PHLC_LCF(1:KSIZE)=1.
+    PHLC_HRC(1:KSIZE)=0.
+    PHLC_LRC(1:KSIZE)=PRCT(1:KSIZE)
   ELSEWHERE
-    PHLC_HCF(:)=0.
-    PHLC_LCF(:)=0.
-    PHLC_HRC(:)=0.
-    PHLC_LRC(:)=0.
+    PHLC_HCF(1:KSIZE)=0.
+    PHLC_LCF(1:KSIZE)=0.
+    PHLC_HRC(1:KSIZE)=0.
+    PHLC_LRC(1:KSIZE)=0.
   END WHERE
   !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
@@ -118,38 +118,38 @@ ELSEIF(HSUBG_AUCV_RC=='CLFR') THEN
   !Cloud water is only in the cloudy part and entirely in low or high part
 !$acc kernels
  !$mnh_expand_where(JL=1:KSIZE)
-  WHERE(PCF(:)>0. .AND. PRCT(:)>ZRCRAUTC(:)*PCF(:) .AND. LDMICRO(:))
-    PHLC_HCF(:)=PCF(:)
-    PHLC_LCF(:)=0.
-    PHLC_HRC(:)=PRCT(:)
-    PHLC_LRC(:)=0.
-  ELSEWHERE(PCF(:)>0. .AND. PRCT(:)>LIMAP%XRTMIN(2) .AND. LDMICRO(:))
-    PHLC_HCF(:)=0.
-    PHLC_LCF(:)=PCF(:)
-    PHLC_HRC(:)=0.0
-    PHLC_LRC(:)=PRCT(:)
+  WHERE(PCF(1:KSIZE)>0. .AND. PRCT(1:KSIZE)>ZRCRAUTC(1:KSIZE)*PCF(1:KSIZE) .AND. LDMICRO(1:KSIZE))
+    PHLC_HCF(1:KSIZE)=PCF(1:KSIZE)
+    PHLC_LCF(1:KSIZE)=0.
+    PHLC_HRC(1:KSIZE)=PRCT(1:KSIZE)
+    PHLC_LRC(1:KSIZE)=0.
+  ELSEWHERE(PCF(1:KSIZE)>0. .AND. PRCT(1:KSIZE)>LIMAP%XRTMIN(2) .AND. LDMICRO(1:KSIZE))
+    PHLC_HCF(1:KSIZE)=0.
+    PHLC_LCF(1:KSIZE)=PCF(1:KSIZE)
+    PHLC_HRC(1:KSIZE)=0.0
+    PHLC_LRC(1:KSIZE)=PRCT(1:KSIZE)
   ELSEWHERE
-    PHLC_HCF(:)=0.
-    PHLC_LCF(:)=0.
-    PHLC_HRC(:)=0.
-    PHLC_LRC(:)=0.
+    PHLC_HCF(1:KSIZE)=0.
+    PHLC_LCF(1:KSIZE)=0.
+    PHLC_HRC(1:KSIZE)=0.
+    PHLC_LRC(1:KSIZE)=0.
   END WHERE
   !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
 ELSEIF(HSUBG_AUCV_RC=='ADJU') THEN
 !$acc kernels
   !$mnh_expand_where(JL=1:KSIZE)
-  WHERE(LDMICRO(:))
-    ZSUMRC(:)=PHLC_LRC(:)+PHLC_HRC(:)
+  WHERE(LDMICRO(1:KSIZE))
+    ZSUMRC(1:KSIZE)=PHLC_LRC(1:KSIZE)+PHLC_HRC(1:KSIZE)
   ELSEWHERE
-    ZSUMRC(:)=0.
+    ZSUMRC(1:KSIZE)=0.
   ENDWHERE
-  WHERE(ZSUMRC(:) .GT. 1.E-20 .AND. LDMICRO(:))
-    PHLC_LRC(:)=PHLC_LRC(:)*PRCT(:)/ZSUMRC(:)
-    PHLC_HRC(:)=PHLC_HRC(:)*PRCT(:)/ZSUMRC(:)
+  WHERE(ZSUMRC(1:KSIZE) .GT. 1.E-20 .AND. LDMICRO(1:KSIZE))
+    PHLC_LRC(1:KSIZE)=PHLC_LRC(1:KSIZE)*PRCT(1:KSIZE)/ZSUMRC(1:KSIZE)
+    PHLC_HRC(1:KSIZE)=PHLC_HRC(1:KSIZE)*PRCT(1:KSIZE)/ZSUMRC(1:KSIZE)
   ELSEWHERE
-    PHLC_LRC(:)=0.
-    PHLC_HRC(:)=0.
+    PHLC_LRC(1:KSIZE)=0.
+    PHLC_HRC(1:KSIZE)=0.
   ENDWHERE
   !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
@@ -164,29 +164,30 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
     ! Redelsperger and Sommeria (1986) but organised according to Turner (2011, 2012)
 !$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
-    WHERE (PRCT(:)>ZRCRAUTC(:)+PSIGMA_RC(:) .AND. LDMICRO(:))
-      PHLC_HCF(:)=1.
-      PHLC_LCF(:)=0.
-      PHLC_HRC(:)=PRCT(:)
-      PHLC_LRC(:)=0.
-    ELSEWHERE(PRCT(:)> (ZRCRAUTC(:)-PSIGMA_RC(:)) .AND. PRCT(:)<=(ZRCRAUTC(:)+PSIGMA_RC(:)) .AND. LDMICRO(:))
-      PHLC_HCF(:)=(PRCT(:)+PSIGMA_RC(:)-ZRCRAUTC(:))/ &
-                  &(2.*PSIGMA_RC(:))
-      PHLC_LCF(:)=MAX(0., PCF(:)-PHLC_HCF(:))
-      PHLC_HRC(:)=(PRCT(:)+PSIGMA_RC(:)-ZRCRAUTC(:))* &
-                  &(PRCT(:)+PSIGMA_RC(:)+ZRCRAUTC(:))/ &
-                  &(4.*PSIGMA_RC(:))
-      PHLC_LRC(:)=MAX(0., PRCT(:)-PHLC_HRC(:))
-    ELSEWHERE(PRCT(:)>LIMAP%XRTMIN(2) .AND. PCF(:)>0. .AND. LDMICRO(:))
-      PHLC_HCF(:)=0.
-      PHLC_LCF(:)=PCF(:)
-      PHLC_HRC(:)=0.
-      PHLC_LRC(:)=PRCT(:)
+    WHERE (PRCT(1:KSIZE)>ZRCRAUTC(1:KSIZE)+PSIGMA_RC(1:KSIZE) .AND. LDMICRO(1:KSIZE))
+      PHLC_HCF(1:KSIZE)=1.
+      PHLC_LCF(1:KSIZE)=0.
+      PHLC_HRC(1:KSIZE)=PRCT(1:KSIZE)
+      PHLC_LRC(1:KSIZE)=0.
+    ELSEWHERE(PRCT(1:KSIZE)> (ZRCRAUTC(1:KSIZE)-PSIGMA_RC(1:KSIZE)) .AND. &
+             &PRCT(1:KSIZE)<=(ZRCRAUTC(1:KSIZE)+PSIGMA_RC(1:KSIZE)) .AND. LDMICRO(1:KSIZE))
+      PHLC_HCF(1:KSIZE)=(PRCT(1:KSIZE)+PSIGMA_RC(1:KSIZE)-ZRCRAUTC(1:KSIZE))/ &
+                  &(2.*PSIGMA_RC(1:KSIZE))
+      PHLC_LCF(1:KSIZE)=MAX(0., PCF(1:KSIZE)-PHLC_HCF(1:KSIZE))
+      PHLC_HRC(1:KSIZE)=(PRCT(1:KSIZE)+PSIGMA_RC(1:KSIZE)-ZRCRAUTC(1:KSIZE))* &
+                  &(PRCT(1:KSIZE)+PSIGMA_RC(1:KSIZE)+ZRCRAUTC(1:KSIZE))/ &
+                  &(4.*PSIGMA_RC(1:KSIZE))
+      PHLC_LRC(1:KSIZE)=MAX(0., PRCT(1:KSIZE)-PHLC_HRC(1:KSIZE))
+    ELSEWHERE(PRCT(1:KSIZE)>LIMAP%XRTMIN(2) .AND. PCF(1:KSIZE)>0. .AND. LDMICRO(1:KSIZE))
+      PHLC_HCF(1:KSIZE)=0.
+      PHLC_LCF(1:KSIZE)=PCF(1:KSIZE)
+      PHLC_HRC(1:KSIZE)=0.
+      PHLC_LRC(1:KSIZE)=PRCT(1:KSIZE)
     ELSEWHERE
-      PHLC_HCF(:)=0.
-      PHLC_LCF(:)=0.
-      PHLC_HRC(:)=0.
-      PHLC_LRC(:)=0.
+      PHLC_HCF(1:KSIZE)=0.
+      PHLC_LCF(1:KSIZE)=0.
+      PHLC_HRC(1:KSIZE)=0.
+      PHLC_LRC(1:KSIZE)=0.
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
@@ -203,10 +204,10 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
     END IF
 !$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
-    WHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. LDMICRO(:))
-      ZHLC_RCMAX(:)=ZCOEFFRCM*PRCT(:)/PCF(:)
+    WHERE(PRCT(1:KSIZE).GT.0. .AND. PCF(1:KSIZE).GT.0. .AND. LDMICRO(1:KSIZE))
+      ZHLC_RCMAX(1:KSIZE)=ZCOEFFRCM*PRCT(1:KSIZE)/PCF(1:KSIZE)
     ELSEWHERE
-      ZHLC_RCMAX(:)=0.
+      ZHLC_RCMAX(1:KSIZE)=0.
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
 
@@ -214,85 +215,85 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
     ! Calculate local mean values int he low and high parts for the 3 PDF forms:
     IF(HSUBG_PR_PDF=='HLCRECTPDF') THEN
       !$mnh_expand_where(JL=1:KSIZE)
-      WHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
-        ZHLC_LRCLOCAL(:)=0.5*ZRCRAUTC(:)
-        ZHLC_HRCLOCAL(:)=( ZHLC_RCMAX(:) + ZRCRAUTC(:))/2.0
+      WHERE(PRCT(1:KSIZE).GT.0. .AND. PCF(1:KSIZE).GT.0. .AND. ZHLC_RCMAX(1:KSIZE).GT.ZRCRAUTC(1:KSIZE) .AND. LDMICRO(1:KSIZE))
+        ZHLC_LRCLOCAL(1:KSIZE)=0.5*ZRCRAUTC(1:KSIZE)
+        ZHLC_HRCLOCAL(1:KSIZE)=( ZHLC_RCMAX(1:KSIZE) + ZRCRAUTC(1:KSIZE))/2.0
       ELSEWHERE
-        ZHLC_LRCLOCAL(:)=0.
-        ZHLC_HRCLOCAL(:)=0.
+        ZHLC_LRCLOCAL(1:KSIZE)=0.
+        ZHLC_HRCLOCAL(1:KSIZE)=0.
       END WHERE
       !$mnh_end_expand_where(JL=1:KSIZE)
     ELSE IF(HSUBG_PR_PDF=='HLCTRIANGPDF') THEN
       !$mnh_expand_where(JL=1:KSIZE)
-      WHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
-        ZHLC_LRCLOCAL(:)=( ZRCRAUTC(:) *(3.0 * ZHLC_RCMAX(:) - 2.0 * ZRCRAUTC(:) ) ) &
-                        / (3.0 * (2.0 * ZHLC_RCMAX(:) - ZRCRAUTC(:)  ) )
-        ZHLC_HRCLOCAL(:)=(ZHLC_RCMAX(:) + 2.0*ZRCRAUTC(:)) / 3.0
+      WHERE(PRCT(1:KSIZE).GT.0. .AND. PCF(1:KSIZE).GT.0. .AND. ZHLC_RCMAX(1:KSIZE).GT.ZRCRAUTC(1:KSIZE) .AND. LDMICRO(1:KSIZE))
+        ZHLC_LRCLOCAL(1:KSIZE)=( ZRCRAUTC(1:KSIZE) *(3.0 * ZHLC_RCMAX(1:KSIZE) - 2.0 * ZRCRAUTC(1:KSIZE) ) ) &
+                        / (3.0 * (2.0 * ZHLC_RCMAX(1:KSIZE) - ZRCRAUTC(1:KSIZE)  ) )
+        ZHLC_HRCLOCAL(1:KSIZE)=(ZHLC_RCMAX(1:KSIZE) + 2.0*ZRCRAUTC(1:KSIZE)) / 3.0
       ELSEWHERE
-        ZHLC_LRCLOCAL(:)=0.
-        ZHLC_HRCLOCAL(:)=0.
+        ZHLC_LRCLOCAL(1:KSIZE)=0.
+        ZHLC_HRCLOCAL(1:KSIZE)=0.
       END WHERE
       !$mnh_end_expand_where(JL=1:KSIZE)
     ELSE IF(HSUBG_PR_PDF=='HLCQUADRAPDF') THEN
       !$mnh_expand_where(JL=1:KSIZE)
-      WHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
-        ZHLC_LRCLOCAL(:)=(3.0 *ZRCRAUTC(:)**3 - 8.0 *ZRCRAUTC(:)**2 * ZHLC_RCMAX(:) &
-                        + 6.0*ZRCRAUTC(:) *ZHLC_RCMAX(:)**2 ) &
+      WHERE(PRCT(1:KSIZE).GT.0. .AND. PCF(1:KSIZE).GT.0. .AND. ZHLC_RCMAX(1:KSIZE).GT.ZRCRAUTC(1:KSIZE) .AND. LDMICRO(1:KSIZE))
+        ZHLC_LRCLOCAL(1:KSIZE)=(3.0 *ZRCRAUTC(1:KSIZE)**3 - 8.0 *ZRCRAUTC(1:KSIZE)**2 * ZHLC_RCMAX(1:KSIZE) &
+                        + 6.0*ZRCRAUTC(1:KSIZE) *ZHLC_RCMAX(1:KSIZE)**2 ) &
                         / &
-                        (4.0* ZRCRAUTC(:)**2 -12.0*ZRCRAUTC(:) *ZHLC_RCMAX(:) &
-                        + 12.0 * ZHLC_RCMAX(:)**2 )
-        ZHLC_HRCLOCAL(:)=(ZHLC_RCMAX(:) + 3.0*ZRCRAUTC(:))/4.0
+                        (4.0* ZRCRAUTC(1:KSIZE)**2 -12.0*ZRCRAUTC(1:KSIZE) *ZHLC_RCMAX(1:KSIZE) &
+                        + 12.0 * ZHLC_RCMAX(1:KSIZE)**2 )
+        ZHLC_HRCLOCAL(1:KSIZE)=(ZHLC_RCMAX(1:KSIZE) + 3.0*ZRCRAUTC(1:KSIZE))/4.0
       ELSEWHERE
-        ZHLC_LRCLOCAL(:)=0.
-        ZHLC_HRCLOCAL(:)=0.
+        ZHLC_LRCLOCAL(1:KSIZE)=0.
+        ZHLC_HRCLOCAL(1:KSIZE)=0.
       END WHERE
       !$mnh_end_expand_where(JL=1:KSIZE)
     ELSE IF(HSUBG_PR_PDF=='HLCISOTRIPDF') THEN
       !$mnh_expand_where(JL=1:KSIZE)
-      WHERE (PRCT(:).LE.ZRCRAUTC(:)*PCF(:) .AND. &
-            &PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. &
-            &ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
-        ZHLC_LRCLOCAL(:)=( (ZHLC_RCMAX(:))**3 &
-                        -(12.0 * (ZHLC_RCMAX(:))*(ZRCRAUTC(:))**2) &
-                        +(8.0 * ZRCRAUTC(:)**3) ) &
-                        /( (6.0 * (ZHLC_RCMAX(:))**2) &
-                        -(24.0 * (ZHLC_RCMAX(:)) * ZRCRAUTC(:)) &
-                        +(12.0 * ZRCRAUTC(:)**2) )
-        ZHLC_HRCLOCAL(:)=( ZHLC_RCMAX(:) + 2.0 * ZRCRAUTC(:) )/3.0
-      ELSEWHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
-        ZHLC_LRCLOCAL(:)=(2.0/3.0) * ZRCRAUTC(:)
-        ZHLC_HRCLOCAL(:)=(3.0*ZHLC_RCMAX(:)**3 - 8.0*ZRCRAUTC(:)**3) &
-                        / (6.0 * ZHLC_RCMAX(:)**2 - 12.0*ZRCRAUTC(:)**2)
+      WHERE (PRCT(1:KSIZE).LE.ZRCRAUTC(1:KSIZE)*PCF(1:KSIZE) .AND. &
+            &PRCT(1:KSIZE).GT.0. .AND. PCF(1:KSIZE).GT.0. .AND. &
+            &ZHLC_RCMAX(1:KSIZE).GT.ZRCRAUTC(1:KSIZE) .AND. LDMICRO(1:KSIZE))
+        ZHLC_LRCLOCAL(1:KSIZE)=( (ZHLC_RCMAX(1:KSIZE))**3 &
+                        -(12.0 * (ZHLC_RCMAX(1:KSIZE))*(ZRCRAUTC(1:KSIZE))**2) &
+                        +(8.0 * ZRCRAUTC(1:KSIZE)**3) ) &
+                        /( (6.0 * (ZHLC_RCMAX(1:KSIZE))**2) &
+                        -(24.0 * (ZHLC_RCMAX(1:KSIZE)) * ZRCRAUTC(1:KSIZE)) &
+                        +(12.0 * ZRCRAUTC(1:KSIZE)**2) )
+        ZHLC_HRCLOCAL(1:KSIZE)=( ZHLC_RCMAX(1:KSIZE) + 2.0 * ZRCRAUTC(1:KSIZE) )/3.0
+      ELSEWHERE(PRCT(1:KSIZE).GT.0. .AND. PCF(1:KSIZE).GT.0. .AND. ZHLC_RCMAX(1:KSIZE).GT.ZRCRAUTC(1:KSIZE) .AND. LDMICRO(1:KSIZE))
+        ZHLC_LRCLOCAL(1:KSIZE)=(2.0/3.0) * ZRCRAUTC(1:KSIZE)
+        ZHLC_HRCLOCAL(1:KSIZE)=(3.0*ZHLC_RCMAX(1:KSIZE)**3 - 8.0*ZRCRAUTC(1:KSIZE)**3) &
+                        / (6.0 * ZHLC_RCMAX(1:KSIZE)**2 - 12.0*ZRCRAUTC(1:KSIZE)**2)
       ELSEWHERE
-        ZHLC_LRCLOCAL(:)=0.
-        ZHLC_HRCLOCAL(:)=0.
+        ZHLC_LRCLOCAL(1:KSIZE)=0.
+        ZHLC_HRCLOCAL(1:KSIZE)=0.
       END WHERE
       !$mnh_end_expand_where(JL=1:KSIZE)
     END IF
     ! Compare r_cM  to r_cR to know if cloud water content is high enough to split in two parts or not
     !$mnh_expand_where(JL=1:KSIZE)
-    WHERE (PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:) .AND. LDMICRO(:))
+    WHERE (PRCT(1:KSIZE).GT.0. .AND. PCF(1:KSIZE).GT.0. .AND. ZHLC_RCMAX(1:KSIZE).GT.ZRCRAUTC(1:KSIZE) .AND. LDMICRO(1:KSIZE))
       ! Calculate final values for LCF and HCF:
-      PHLC_LCF(:)=PCF(:) &
-                    *(ZHLC_HRCLOCAL(:)- &
-                    (PRCT(:) / PCF(:))) &
-                    / (ZHLC_HRCLOCAL(:)-ZHLC_LRCLOCAL(:))
-      PHLC_HCF(:)=MAX(0., PCF(:)-PHLC_LCF(:))
+      PHLC_LCF(1:KSIZE)=PCF(1:KSIZE) &
+                    *(ZHLC_HRCLOCAL(1:KSIZE)- &
+                    (PRCT(1:KSIZE) / PCF(1:KSIZE))) &
+                    / (ZHLC_HRCLOCAL(1:KSIZE)-ZHLC_LRCLOCAL(1:KSIZE))
+      PHLC_HCF(1:KSIZE)=MAX(0., PCF(1:KSIZE)-PHLC_LCF(1:KSIZE))
       !
       ! Calculate final values for LRC and HRC:
-      PHLC_LRC(:)=ZHLC_LRCLOCAL(:)*PHLC_LCF(:)
-      PHLC_HRC(:)=MAX(0., PRCT(:)-PHLC_LRC(:))
-    ELSEWHERE (PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).LE.ZRCRAUTC(:) .AND. LDMICRO(:))
+      PHLC_LRC(1:KSIZE)=ZHLC_LRCLOCAL(1:KSIZE)*PHLC_LCF(1:KSIZE)
+      PHLC_HRC(1:KSIZE)=MAX(0., PRCT(1:KSIZE)-PHLC_LRC(1:KSIZE))
+    ELSEWHERE (PRCT(1:KSIZE).GT.0. .AND. PCF(1:KSIZE).GT.0. .AND. ZHLC_RCMAX(1:KSIZE).LE.ZRCRAUTC(1:KSIZE) .AND. LDMICRO(1:KSIZE))
       ! Put all available cloud water and his fraction in the low part
-      PHLC_LCF(:)=PCF(:)
-      PHLC_HCF(:)=0.
-      PHLC_LRC(:)=PRCT(:)
-      PHLC_HRC(:)=0.
+      PHLC_LCF(1:KSIZE)=PCF(1:KSIZE)
+      PHLC_HCF(1:KSIZE)=0.
+      PHLC_LRC(1:KSIZE)=PRCT(1:KSIZE)
+      PHLC_HRC(1:KSIZE)=0.
     ELSEWHERE
-      PHLC_LCF(:)=0.
-      PHLC_HCF(:)=0.
-      PHLC_LRC(:)=0.
-      PHLC_HRC(:)=0.
+      PHLC_LCF(1:KSIZE)=0.
+      PHLC_HCF(1:KSIZE)=0.
+      PHLC_LRC(1:KSIZE)=0.
+      PHLC_HRC(1:KSIZE)=0.
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
@@ -306,10 +307,10 @@ ENDIF
 !Ice water split between high and low content part is done according to autoconversion option
 !$acc kernels
 !$mnh_expand_where(JL=1:KSIZE)
-WHERE(LDMICRO(:))
-  ZCRIAUTI(:)=MIN(LIMAP%XCRIAUTI,10**(LIMAP%XACRIAUTI*(PT(:)-CST%XTT)+LIMAP%XBCRIAUTI)) ! Autoconversion ri threshold
+WHERE(LDMICRO(1:KSIZE))
+  ZCRIAUTI(1:KSIZE)=MIN(LIMAP%XCRIAUTI,10**(LIMAP%XACRIAUTI*(PT(1:KSIZE)-CST%XTT)+LIMAP%XBCRIAUTI)) ! Autoconversion ri threshold
 ELSEWHERE
-  ZCRIAUTI(:)=0.
+  ZCRIAUTI(1:KSIZE)=0.
 ENDWHERE
 !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
@@ -317,21 +318,21 @@ IF(HSUBG_AUCV_RI=='NONE') THEN
   !Cloud water is entirely in low or high part
 !$acc kernels
   !$mnh_expand_where(JL=1:KSIZE)
-  WHERE(PRIT(:)>ZCRIAUTI(:) .AND. LDMICRO(:))
-    PHLI_HCF(:)=1.
-    PHLI_LCF(:)=0.
-    PHLI_HRI(:)=PRIT(:)
-    PHLI_LRI(:)=0.
-  ELSEWHERE(PRIT(:)>LIMAP%XRTMIN(4) .AND. LDMICRO(:))
-    PHLI_HCF(:)=0.
-    PHLI_LCF(:)=1.
-    PHLI_HRI(:)=0.
-    PHLI_LRI(:)=PRIT(:)
+  WHERE(PRIT(1:KSIZE)>ZCRIAUTI(1:KSIZE) .AND. LDMICRO(1:KSIZE))
+    PHLI_HCF(1:KSIZE)=1.
+    PHLI_LCF(1:KSIZE)=0.
+    PHLI_HRI(1:KSIZE)=PRIT(1:KSIZE)
+    PHLI_LRI(1:KSIZE)=0.
+  ELSEWHERE(PRIT(1:KSIZE)>LIMAP%XRTMIN(4) .AND. LDMICRO(1:KSIZE))
+    PHLI_HCF(1:KSIZE)=0.
+    PHLI_LCF(1:KSIZE)=1.
+    PHLI_HRI(1:KSIZE)=0.
+    PHLI_LRI(1:KSIZE)=PRIT(1:KSIZE)
   ELSEWHERE
-    PHLI_HCF(:)=0.
-    PHLI_LCF(:)=0.
-    PHLI_HRI(:)=0.
-    PHLI_LRI(:)=0.
+    PHLI_HCF(1:KSIZE)=0.
+    PHLI_LCF(1:KSIZE)=0.
+    PHLI_HRI(1:KSIZE)=0.
+    PHLI_LRI(1:KSIZE)=0.
   END WHERE
   !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
@@ -339,38 +340,38 @@ ELSEIF(HSUBG_AUCV_RI=='CLFR') THEN
   !Cloud water is only in the cloudy part and entirely in low or high part
 !$acc kernels
   !$mnh_expand_where(JL=1:KSIZE)
-  WHERE(PCF(:)>0. .AND. PRIT(:)>ZCRIAUTI(:)*PCF(:) .AND. LDMICRO(:))
-    PHLI_HCF(:)=PCF(:)
-    PHLI_LCF(:)=0.
-    PHLI_HRI(:)=PRIT(:)
-    PHLI_LRI(:)=0.
-  ELSEWHERE(PCF(:)>0. .AND. PRIT(:)>LIMAP%XRTMIN(4) .AND. LDMICRO(:))
-    PHLI_HCF(:)=0.
-    PHLI_LCF(:)=PCF(:)
-    PHLI_HRI(:)=0.0
-    PHLI_LRI(:)=PRIT(:)
+  WHERE(PCF(1:KSIZE)>0. .AND. PRIT(1:KSIZE)>ZCRIAUTI(1:KSIZE)*PCF(1:KSIZE) .AND. LDMICRO(1:KSIZE))
+    PHLI_HCF(1:KSIZE)=PCF(1:KSIZE)
+    PHLI_LCF(1:KSIZE)=0.
+    PHLI_HRI(1:KSIZE)=PRIT(1:KSIZE)
+    PHLI_LRI(1:KSIZE)=0.
+  ELSEWHERE(PCF(1:KSIZE)>0. .AND. PRIT(1:KSIZE)>LIMAP%XRTMIN(4) .AND. LDMICRO(1:KSIZE))
+    PHLI_HCF(1:KSIZE)=0.
+    PHLI_LCF(1:KSIZE)=PCF(1:KSIZE)
+    PHLI_HRI(1:KSIZE)=0.0
+    PHLI_LRI(1:KSIZE)=PRIT(1:KSIZE)
   ELSEWHERE
-    PHLI_HCF(:)=0.
-    PHLI_LCF(:)=0.
-    PHLI_HRI(:)=0.
-    PHLI_LRI(:)=0.
+    PHLI_HCF(1:KSIZE)=0.
+    PHLI_LCF(1:KSIZE)=0.
+    PHLI_HRI(1:KSIZE)=0.
+    PHLI_LRI(1:KSIZE)=0.
   END WHERE
   !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
 ELSEIF(HSUBG_AUCV_RI=='ADJU') THEN
 !$acc kernels
   !$mnh_expand_where(JL=1:KSIZE)
-  WHERE(LDMICRO(:))
-    ZSUMRI(:)=PHLI_LRI(:)+PHLI_HRI(:)
+  WHERE(LDMICRO(1:KSIZE))
+    ZSUMRI(1:KSIZE)=PHLI_LRI(1:KSIZE)+PHLI_HRI(1:KSIZE)
   ELSEWHERE
-    ZSUMRI(:)=0.
+    ZSUMRI(1:KSIZE)=0.
   ENDWHERE
-  WHERE(ZSUMRI(:) .GT. 1.E-20 .AND. LDMICRO(:))
-    PHLI_LRI(:)=PHLI_LRI(:)*PRIT(:)/ZSUMRI(:)
-    PHLI_HRI(:)=PHLI_HRI(:)*PRIT(:)/ZSUMRI(:)
+  WHERE(ZSUMRI(1:KSIZE) .GT. 1.E-20 .AND. LDMICRO(1:KSIZE))
+    PHLI_LRI(1:KSIZE)=PHLI_LRI(1:KSIZE)*PRIT(1:KSIZE)/ZSUMRI(1:KSIZE)
+    PHLI_HRI(1:KSIZE)=PHLI_HRI(1:KSIZE)*PRIT(1:KSIZE)/ZSUMRI(1:KSIZE)
   ELSEWHERE
-    PHLI_LRI(:)=0.
-    PHLI_HRI(:)=0.
+    PHLI_LRI(1:KSIZE)=0.
+    PHLI_HRI(1:KSIZE)=0.
   ENDWHERE
   !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels
@@ -381,10 +382,10 @@ ENDIF
 !
 !$acc kernels
 !$mnh_expand_where(JL=1:KSIZE)
-WHERE(LDMICRO(:))
-  PRF(:)=MAX(PHLC_HCF(:),PHLI_HCF(:))
+WHERE(LDMICRO(1:KSIZE))
+  PRF(1:KSIZE)=MAX(PHLC_HCF(1:KSIZE),PHLI_HCF(1:KSIZE))
 ELSEWHERE
-  PRF(:)=0.
+  PRF(1:KSIZE)=0.
 ENDWHERE
 !$mnh_end_expand_where(JL=1:KSIZE)
 !$acc end kernels

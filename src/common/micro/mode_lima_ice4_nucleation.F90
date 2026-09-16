@@ -65,34 +65,34 @@ INTEGER :: II
 IF (LHOOK) CALL DR_HOOK('LIMA_ICE4_NUCLEATION', 0, ZHOOK_HANDLE)!
 !
 !$mnh_expand_where(II=1:KSIZE)
-GNEGT(:)=PT(:)<CST%XTT .AND. PRVT(:)>LIMAP%XRTMIN(1)
+GNEGT(1:KSIZE)=PT(1:KSIZE)<CST%XTT .AND. PRVT(1:KSIZE)>LIMAP%XRTMIN(1)
 !$mnh_end_expand_where(II=1:KSIZE)
 
 ZUSW(:)=0.
 ZZW(:)=0.
 !$mnh_expand_where(II=1:KSIZE)
-WHERE(GNEGT(:))
-  ZZW(:)=LOG(PT(:))
-  ZUSW(:)=EXP(CST%XALPW - CST%XBETAW/PT(:) - CST%XGAMW*ZZW(:))          ! es_w
-  ZZW(:)=EXP(CST%XALPI - CST%XBETAI/PT(:) - CST%XGAMI*ZZW(:))           ! es_i
+WHERE(GNEGT(1:KSIZE))
+  ZZW(1:KSIZE)=LOG(PT(1:KSIZE))
+  ZUSW(1:KSIZE)=EXP(CST%XALPW - CST%XBETAW/PT(1:KSIZE) - CST%XGAMW*ZZW(1:KSIZE))          ! es_w
+  ZZW(1:KSIZE)=EXP(CST%XALPI - CST%XBETAI/PT(1:KSIZE) - CST%XGAMI*ZZW(1:KSIZE))           ! es_i
 END WHERE
 !$mnh_end_expand_where(II=1:KSIZE)
 
 ZSSI(:)=0.
 !$mnh_expand_where(II=1:KSIZE)
-WHERE(GNEGT(:))
-  ZZW(:)=MIN(PPABST(:)/2., ZZW(:))             ! safety limitation
-  ZSSI(:)=PRVT(:)*(PPABST(:)-ZZW(:)) / (CST%XEPSILO*ZZW(:)) - 1.0
+WHERE(GNEGT(1:KSIZE))
+  ZZW(1:KSIZE)=MIN(PPABST(1:KSIZE)/2., ZZW(1:KSIZE))             ! safety limitation
+  ZSSI(1:KSIZE)=PRVT(1:KSIZE)*(PPABST(1:KSIZE)-ZZW(1:KSIZE)) / (CST%XEPSILO*ZZW(1:KSIZE)) - 1.0
                                                ! Supersaturation over ice
-  ZUSW(:)=MIN(PPABST(:)/2., ZUSW(:))            ! safety limitation
-  ZUSW(:)=(ZUSW(:)/ZZW(:))*((PPABST(:)-ZZW(:))/(PPABST(:)-ZUSW(:))) - 1.0
+  ZUSW(1:KSIZE)=MIN(PPABST(1:KSIZE)/2., ZUSW(1:KSIZE))            ! safety limitation
+  ZUSW(1:KSIZE)=(ZUSW(1:KSIZE)/ZZW(1:KSIZE))*((PPABST(1:KSIZE)-ZZW(1:KSIZE))/(PPABST(1:KSIZE)-ZUSW(1:KSIZE))) - 1.0
                              ! Supersaturation of saturated water vapor over ice
   !
   !*       3.1     compute the heterogeneous nucleation source RVHENI
   !
   !*       3.1.1   compute the cloud ice concentration
   !
-  ZSSI(:)=MIN(ZSSI(:), ZUSW(:)) ! limitation of SSi according to SSw=0
+  ZSSI(1:KSIZE)=MIN(ZSSI(1:KSIZE), ZUSW(1:KSIZE)) ! limitation of SSi according to SSw=0
 END WHERE
 !$mnh_end_expand_where(II=1:KSIZE)
 
@@ -108,40 +108,40 @@ DO II=1,KSIZE
   ENDIF
 ENDDO
 !$mnh_expand_where(II=1:KSIZE)
-WHERE(GNEGT(:))
+WHERE(GNEGT(1:KSIZE))
   ! convert between m-3 (ICE3) and kg-1 (LIMA)
-  ZZW(:)=ZZW(:)-PCIT(:)*PRHODREF(:)
-  ZZW(:)=MIN(ZZW(:), 50.E3) ! limitation provisoire a 50 l^-1
+  ZZW(1:KSIZE)=ZZW(1:KSIZE)-PCIT(1:KSIZE)*PRHODREF(1:KSIZE)
+  ZZW(1:KSIZE)=MIN(ZZW(1:KSIZE), 50.E3) ! limitation provisoire a 50 l^-1
 END WHERE
 !$mnh_end_expand_where(II=1:KSIZE)
 
 PRVHENI_MR(:)=0.
 !$mnh_expand_where(II=1:KSIZE)
-WHERE(GNEGT(:))
+WHERE(GNEGT(1:KSIZE))
   !
   !*       3.1.2   update the r_i and r_v mixing ratios
   !
-  PRVHENI_MR(:)=MAX(ZZW(:), 0.0)*LIMAC%XMNU0/PRHODREF(:)
-  PRVHENI_MR(:)=MIN(PRVT(:), PRVHENI_MR(:))
+  PRVHENI_MR(1:KSIZE)=MAX(ZZW(1:KSIZE), 0.0)*LIMAC%XMNU0/PRHODREF(1:KSIZE)
+  PRVHENI_MR(1:KSIZE)=MIN(PRVT(1:KSIZE), PRVHENI_MR(1:KSIZE))
 END WHERE
 !$mnh_end_expand_where(II=1:KSIZE)
 !Limitation due to 0 crossing of temperature
 IF(LIMAP%LFEEDBACKT) THEN
   ZW(:)=0.
   !$mnh_expand_where(II=1:KSIZE)
-  WHERE(GNEGT(:))
-    ZW(:)=MIN(PRVHENI_MR(:), &
-              MAX(0., (CST%XTT/PEXN(:)-PTHT(:))/PLSFACT(:))) / &
-              MAX(PRVHENI_MR(:), 1.E-20)
+  WHERE(GNEGT(1:KSIZE))
+    ZW(1:KSIZE)=MIN(PRVHENI_MR(1:KSIZE), &
+              MAX(0., (CST%XTT/PEXN(1:KSIZE)-PTHT(1:KSIZE))/PLSFACT(1:KSIZE))) / &
+              MAX(PRVHENI_MR(1:KSIZE), 1.E-20)
   END WHERE
-  PRVHENI_MR(:)=PRVHENI_MR(:)*ZW(:)
-  ZZW(:)=ZZW(:)*ZW(:)
+  PRVHENI_MR(1:KSIZE)=PRVHENI_MR(1:KSIZE)*ZW(1:KSIZE)
+  ZZW(1:KSIZE)=ZZW(1:KSIZE)*ZW(1:KSIZE)
   !$mnh_end_expand_where(II=1:KSIZE)
 ENDIF
 !$mnh_expand_where(II=1:KSIZE)
-WHERE(GNEGT(:))
+WHERE(GNEGT(1:KSIZE))
   ! convert from m-3 (ICE3) to kg-1 (LIMA)
-  PCIT(:)=MAX(ZZW(:)/PRHODREF(:)+PCIT(:), PCIT(:))
+  PCIT(1:KSIZE)=MAX(ZZW(1:KSIZE)/PRHODREF(1:KSIZE)+PCIT(1:KSIZE), PCIT(1:KSIZE))
 END WHERE
 !$mnh_end_expand_where(II=1:KSIZE)
 !

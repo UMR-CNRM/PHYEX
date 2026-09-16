@@ -166,12 +166,12 @@ ENDIF
 !  ground
 !$acc kernels
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZCOEFF(:,:,IKB+2)= - PDZZ(:,:,IKB+1) /      &
-       ( (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) * PDZZ(:,:,IKB+2) )
-ZCOEFF(:,:,IKB+1)=   (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) /      &
-       ( PDZZ(:,:,IKB+1) * PDZZ(:,:,IKB+2) )
-ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
-       ( (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) * PDZZ(:,:,IKB+1) )
+ZCOEFF(1:IIT,1:IJT,IKB+2)= - PDZZ(1:IIT,1:IJT,IKB+1) /      &
+       ( (PDZZ(1:IIT,1:IJT,IKB+2)+PDZZ(1:IIT,1:IJT,IKB+1)) * PDZZ(1:IIT,1:IJT,IKB+2) )
+ZCOEFF(1:IIT,1:IJT,IKB+1)=   (PDZZ(1:IIT,1:IJT,IKB+2)+PDZZ(1:IIT,1:IJT,IKB+1)) /      &
+       ( PDZZ(1:IIT,1:IJT,IKB+1) * PDZZ(1:IIT,1:IJT,IKB+2) )
+ZCOEFF(1:IIT,1:IJT,IKB)= - (PDZZ(1:IIT,1:IJT,IKB+2)+2.*PDZZ(1:IIT,1:IJT,IKB+1)) /      &
+       ( (PDZZ(1:IIT,1:IJT,IKB+2)+PDZZ(1:IIT,1:IJT,IKB+1)) * PDZZ(1:IIT,1:IJT,IKB+1) )
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
 !$acc end kernels
 !
@@ -192,7 +192,7 @@ DO JSV=1,ISV
 
 !$acc kernels
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-  ZFLXX(:,:,IKE+1) = ZFLXX(:,:,IKE)
+  ZFLXX(1:IIT,1:IJT,IKE+1) = ZFLXX(1:IIT,1:IJT,IKE)
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
 !$acc end kernels
 !
@@ -210,7 +210,7 @@ DO JSV=1,ISV
 ! the IKB flux gives the ground value
 !$acc kernels
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-  ZWORK2D(:,:)=PSFSVM(:,:,JSV) * PDIRCOSXW(:,:)
+  ZWORK2D(1:IIT,1:IJT)=PSFSVM(1:IIT,1:IJT,JSV) * PDIRCOSXW(1:IIT,1:IJT)
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
 !$acc end kernels
   ZFLXX(:,:,IKB-1) = 2. * MXM( ZWORK2D(:,:) ) - ZFLXX(:,:,IKB)
@@ -253,7 +253,7 @@ DO JSV=1,ISV
     ZFLXY(:,:,:)=-ZCSV * MYM(PK) * GY_M_V(OFLAT,PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)
 !$acc kernels
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-    ZFLXY(:,:,IKE+1) = ZFLXY(:,:,IKE)
+    ZFLXY(1:IIT,1:IJT,IKE+1) = ZFLXY(1:IIT,1:IJT,IKE)
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
 !$acc end kernels
 !
@@ -272,7 +272,7 @@ DO JSV=1,ISV
 ! the IKB flux gives the ground value
 !$acc kernels
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-    ZWORK2D(:,:)=PSFSVM(:,:,JSV) * PDIRCOSYW(:,:)
+    ZWORK2D(1:IIT,1:IJT)=PSFSVM(1:IIT,1:IJT,JSV) * PDIRCOSYW(1:IIT,1:IJT)
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
 !$acc end kernels
     ZFLXY(:,:,IKB-1) = 2. * MYM( ZWORK2D(:,:) ) - ZFLXY(:,:,IKB)
@@ -298,7 +298,7 @@ DO JSV=1,ISV
   ELSE
     !$acc kernels
     !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-    ZFLXY(:,:,:)=0.
+    ZFLXY(1:IIT,1:IJT,1:IKT)=0.
     !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
     !$acc end kernels
   END IF

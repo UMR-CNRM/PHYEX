@@ -141,16 +141,16 @@ IKB = D%NKB
 !$acc present (zwint,zwground,zvfin,puslope,pdircoszw,zuint,psinslope,pw,pcosslope) &
 !$acc present (pdyy,pu,pv,pvslope,zwground,zuint,jloc,zwint,pdzz,iloc)
 !$mnh_expand_array(JI=1:IIU,JJ=1:IJU)
-PUSLOPE(:,:)=0.
-PVSLOPE(:,:)=0.
+PUSLOPE(:IIU,1:IJU)=0.
+PVSLOPE(:IIU,1:IJU)=0.
 !
-ZWGROUND(:,:) = PW(:,:,IKB)
+ZWGROUND(:IIU,1:IJU) = PW(:IIU,1:IJU,IKB)
 !
 !*      2.    INTERPOLATE THE CARTESIAN COMPONENTS
 !             ------------------------------------
 !
-ILOC(:,:)=NINT(SIGN(1.,-PCOSSLOPE(:,:)))
-JLOC(:,:)=NINT(SIGN(1.,-PSINSLOPE(:,:)))
+ILOC(:IIU,1:IJU)=NINT(SIGN(1.,-PCOSSLOPE(:IIU,1:IJU)))
+JLOC(:IIU,1:IJU)=NINT(SIGN(1.,-PSINSLOPE(:IIU,1:IJU)))
 !$mnh_end_expand_array(JI=1:IIU,JJ=1:IJU)
 !
 ! interpolation in x direction

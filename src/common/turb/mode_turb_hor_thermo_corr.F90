@@ -209,12 +209,12 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
   !
 !$acc kernels present_cr(ZFLX)
   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-  ZFLX(:,:,IKB-1) = ZFLX(:,:,IKB)
+  ZFLX(1:IIT,1:IJT,IKB-1) = ZFLX(1:IIT,1:IJT,IKB)
   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
   !
   IF ( KRRL > 0 ) THEN
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-    ZWORK(:,:,:) = ZFLX(:,:,:) * PATHETA(:,:,:) * PATHETA(:,:,:)
+    ZWORK(1:IIT,1:IJT,1:IKT) = ZFLX(1:IIT,1:IJT,1:IKT) * PATHETA(1:IIT,1:IJT,1:IKT) * PATHETA(1:IIT,1:IJT,1:IKT)
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
   END IF
 !$acc end kernels
@@ -308,13 +308,13 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
     !
 !$acc kernels present_cr(ZFLX)
     !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-    ZFLX(:,:,IKB-1) = ZFLX(:,:,IKB)
+    ZFLX(1:IIT,1:IJT,IKB-1) = ZFLX(1:IIT,1:IJT,IKB)
     !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
     !
     IF ( KRRL > 0 )  THEN
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-      ZWORK(:,:,:) = ZWORK(:,:,:) +       &
-                     2. * PATHETA(:,:,:) * PAMOIST(:,:,:) * ZFLX(:,:,:)    
+      ZWORK(1:IIT,1:IJT,1:IKT) = ZWORK(1:IIT,1:IJT,1:IKT) +       &
+                     2. * PATHETA(1:IIT,1:IJT,1:IKT) * PAMOIST(1:IIT,1:IJT,1:IKT) * ZFLX(1:IIT,1:IJT,1:IKT)    
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
     END IF
 !$acc end kernels
@@ -389,12 +389,13 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
 !
 !$acc kernels present_cr(ZFLX)
     !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-    ZFLX(:,:,IKB-1) = ZFLX(:,:,IKB)
+    ZFLX(1:IIT,1:IJT,IKB-1) = ZFLX(1:IIT,1:IJT,IKB)
     !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
     !
     IF ( KRRL > 0 ) THEN       
     !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-      ZWORK(:,:,:) = ZWORK(:,:,:)+ PAMOIST(:,:,:) * PAMOIST(:,:,:) * ZFLX(:,:,:)
+      ZWORK(1:IIT,1:IJT,1:IKT) = ZWORK(1:IIT,1:IJT,1:IKT)+ PAMOIST(1:IIT,1:IJT,1:IKT) * &
+                                 PAMOIST(1:IIT,1:IJT,1:IKT) * ZFLX(1:IIT,1:IJT,1:IKT)
     !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
     END IF
 !$acc end kernels

@@ -235,7 +235,7 @@ IF (KSPLT==1) THEN
   ! dynamic production computation
   !$acc kernels
   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-  PDP(:,:,:) = PDP(:,:,:) +  ZWORK(:,:,:)  
+  PDP(1:IIT,1:IJT,1:IKT) = PDP(1:IIT,1:IJT,1:IKT) +  ZWORK(1:IIT,1:IJT,1:IKT)  
   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
   !$acc end kernels
   !
