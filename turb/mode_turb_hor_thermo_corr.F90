@@ -629,7 +629,8 @@ END DO
     DO JK=1, IKT
         DO JJ=1, IJT
           DO JI=1, IIT
-            ZWORK(JI, JJ, JK) = ZWORK(JI, JJ, JK)+ PAMOIST(JI, JJ, JK) * PAMOIST(JI, JJ, JK) * ZFLX(JI, JJ, JK)
+            ZWORK(JI, JJ, JK) = ZWORK(JI, JJ, JK)+ PAMOIST(JI, JJ, JK) * &
+                                       PAMOIST(JI, JJ, JK) * ZFLX(JI, JJ, JK)
         END DO
         END DO
       END DO

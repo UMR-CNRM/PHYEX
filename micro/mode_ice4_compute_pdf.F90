@@ -140,7 +140,8 @@ ELSEIF(HSUBG_AUCV_RC=='CLFR') THEN
       PHLC_LCF(JIJ)=0.
       PHLC_HRC(JIJ)=0.
       PHLC_LRC(JIJ)=0.
-    ELSE IF (PCF(JIJ)>0. .AND. PRCT(JIJ)>ZRCRAUTC(JIJ)*PCF(JIJ) .AND. LDMICRO(JIJ)) THEN
+    ELSE IF (PCF(JIJ)>0. .AND. PRCT(JIJ)>ZRCRAUTC(JIJ)*PCF(JIJ) &
+             &.AND. LDMICRO(JIJ)) THEN
       PHLC_HCF(JIJ)=PCF(JIJ)
       PHLC_LCF(JIJ)=0.
       PHLC_HRC(JIJ)=PRCT(JIJ)
@@ -197,7 +198,8 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
         PHLC_LCF(JIJ)=0.
         PHLC_HRC(JIJ)=PRCT(JIJ)
         PHLC_LRC(JIJ)=0.
-      ELSE IF (PRCT(JIJ)> (ZRCRAUTC(JIJ)-PSIGMA_RC(JIJ)) .AND. PRCT(JIJ)<=(ZRCRAUTC(JIJ)+PSIGMA_RC(JIJ)) .AND. LDMICRO(JIJ)) THEN
+      ELSE IF (PRCT(JIJ)> (ZRCRAUTC(JIJ)-PSIGMA_RC(JIJ)) .AND. &
+               &PRCT(JIJ)<=(ZRCRAUTC(JIJ)+PSIGMA_RC(JIJ)) .AND. LDMICRO(JIJ)) THEN
         PHLC_HCF(JIJ)=(PRCT(JIJ)+PSIGMA_RC(JIJ)-ZRCRAUTC(JIJ))/ &
                     &(2.*PSIGMA_RC(JIJ))
         PHLC_LCF(JIJ)=MAX(0., PCF(JIJ)-PHLC_HCF(JIJ))
@@ -249,7 +251,8 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
           ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
           ZHLC_LRCLOCAL(JIJ)=0.
           ZHLC_HRCLOCAL(JIJ)=0
-        ELSE IF (PRCT(JIJ).GT.0. .AND. PCF(JIJ).GT.0. .AND. ZHLC_RCMAX(JIJ).GT.ZRCRAUTC(JIJ) .AND. LDMICRO(JIJ)) THEN
+        ELSE IF (PRCT(JIJ).GT.0. .AND. PCF(JIJ).GT.0. .AND. &
+                 &ZHLC_RCMAX(JIJ).GT.ZRCRAUTC(JIJ) .AND. LDMICRO(JIJ)) THEN
           ZHLC_LRCLOCAL(JIJ)=0.5*ZRCRAUTC(JIJ)
           ZHLC_HRCLOCAL(JIJ)=( ZHLC_RCMAX(JIJ) + ZRCRAUTC(JIJ))/2.0
         ELSE
@@ -263,8 +266,9 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
           ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
           ZHLC_LRCLOCAL(JIJ)=0.
           ZHLC_HRCLOCAL(JIJ)=0
-        ELSE IF (PRCT(JIJ).GT.0. .AND. PCF(JIJ).GT.0. .AND. ZHLC_RCMAX(JIJ).GT.ZRCRAUTC(JIJ) .AND. LDMICRO(JIJ)) THEN
-          ZHLC_LRCLOCAL(JIJ)=( ZRCRAUTC(JIJ) *(3.0 * ZHLC_RCMAX(JIJ) - 2.0 * ZRCRAUTC(JIJ) ) ) &
+        ELSE IF (PRCT(JIJ).GT.0. .AND. PCF(JIJ).GT.0. .AND. &
+                 &ZHLC_RCMAX(JIJ).GT.ZRCRAUTC(JIJ) .AND. LDMICRO(JIJ)) THEN
+          ZHLC_LRCLOCAL(JIJ)=(ZRCRAUTC(JIJ) *(3.0 * ZHLC_RCMAX(JIJ) - 2.0 * ZRCRAUTC(JIJ))) &
                           / (3.0 * (2.0 * ZHLC_RCMAX(JIJ) - ZRCRAUTC(JIJ)  ) )
           ZHLC_HRCLOCAL(JIJ)=(ZHLC_RCMAX(JIJ) + 2.0*ZRCRAUTC(JIJ)) / 3.0
         ELSE
@@ -278,8 +282,10 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
           ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
           ZHLC_LRCLOCAL(JIJ)=0.
           ZHLC_HRCLOCAL(JIJ)=0
-        ELSE IF (PRCT(JIJ).GT.0. .AND. PCF(JIJ).GT.0. .AND. ZHLC_RCMAX(JIJ).GT.ZRCRAUTC(JIJ) .AND. LDMICRO(JIJ)) THEN
-          ZHLC_LRCLOCAL(JIJ)=(3.0 *ZRCRAUTC(JIJ)**3 - 8.0 *ZRCRAUTC(JIJ)**2 * ZHLC_RCMAX(JIJ) &
+        ELSE IF (PRCT(JIJ).GT.0. .AND. PCF(JIJ).GT.0. .AND. &
+                 &ZHLC_RCMAX(JIJ).GT.ZRCRAUTC(JIJ) .AND. LDMICRO(JIJ)) THEN
+          ZHLC_LRCLOCAL(JIJ)=(3.0 *ZRCRAUTC(JIJ)**3 &
+                          - 8.0 *ZRCRAUTC(JIJ)**2 * ZHLC_RCMAX(JIJ) &
                           + 6.0*ZRCRAUTC(JIJ) *ZHLC_RCMAX(JIJ)**2 ) &
                           / &
                           (4.0* ZRCRAUTC(JIJ)**2 -12.0*ZRCRAUTC(JIJ) *ZHLC_RCMAX(JIJ) &
@@ -306,7 +312,8 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
                           -(24.0 * (ZHLC_RCMAX(JIJ)) * ZRCRAUTC(JIJ)) &
                           +(12.0 * ZRCRAUTC(JIJ)**2) )
           ZHLC_HRCLOCAL(JIJ)=( ZHLC_RCMAX(JIJ) + 2.0 * ZRCRAUTC(JIJ) )/3.0
-        ELSE IF (PRCT(JIJ).GT.0. .AND. PCF(JIJ).GT.0. .AND. ZHLC_RCMAX(JIJ).GT.ZRCRAUTC(JIJ) .AND. LDMICRO(JIJ)) THEN
+        ELSE IF (PRCT(JIJ).GT.0. .AND. PCF(JIJ).GT.0. .AND. &
+                 &ZHLC_RCMAX(JIJ).GT.ZRCRAUTC(JIJ) .AND. LDMICRO(JIJ)) THEN
           ZHLC_LRCLOCAL(JIJ)=(2.0/3.0) * ZRCRAUTC(JIJ)
           ZHLC_HRCLOCAL(JIJ)=(3.0*ZHLC_RCMAX(JIJ)**3 - 8.0*ZRCRAUTC(JIJ)**3) &
                           / (6.0 * ZHLC_RCMAX(JIJ)**2 - 12.0*ZRCRAUTC(JIJ)**2)
@@ -324,7 +331,8 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
         PHLC_LCF(JIJ)=0.
         PHLC_HRC(JIJ)=0.
         PHLC_LRC(JIJ)=0.
-      ELSE IF (PRCT(JIJ).GT.0. .AND. PCF(JIJ).GT.0. .AND. ZHLC_RCMAX(JIJ).GT.ZRCRAUTC(JIJ) .AND. LDMICRO(JIJ)) THEN
+      ELSE IF (PRCT(JIJ).GT.0. .AND. PCF(JIJ).GT.0. .AND. &
+                &ZHLC_RCMAX(JIJ).GT.ZRCRAUTC(JIJ) .AND. LDMICRO(JIJ)) THEN
         ! Calculate final values for LCF and HCF:
         PHLC_LCF(JIJ)=PCF(JIJ) &
                       *(ZHLC_HRCLOCAL(JIJ)- &
@@ -335,7 +343,8 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
         ! Calculate final values for LRC and HRC:
         PHLC_LRC(JIJ)=ZHLC_LRCLOCAL(JIJ)*PHLC_LCF(JIJ)
         PHLC_HRC(JIJ)=MAX(0., PRCT(JIJ)-PHLC_LRC(JIJ))
-      ELSE IF (PRCT(JIJ).GT.0. .AND. PCF(JIJ).GT.0. .AND. ZHLC_RCMAX(JIJ).LE.ZRCRAUTC(JIJ) .AND. LDMICRO(JIJ)) THEN
+      ELSE IF (PRCT(JIJ).GT.0. .AND. PCF(JIJ).GT.0. .AND. &
+                &ZHLC_RCMAX(JIJ).LE.ZRCRAUTC(JIJ) .AND. LDMICRO(JIJ)) THEN
         ! Put all available cloud water and his fraction in the low part
         PHLC_LCF(JIJ)=PCF(JIJ)
         PHLC_HCF(JIJ)=0.
@@ -360,7 +369,8 @@ ENDIF
 
 DO JIJ=D%NIJB, D%NIJE
   IF (LDMICRO(JIJ)) THEN
-    ZCRIAUTI(JIJ)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JIJ)-CST%XTT)+ICEP%XBCRIAUTI)) ! Autoconversion ri threshold
+    ! Autoconversion ri threshold
+    ZCRIAUTI(JIJ)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JIJ)-CST%XTT)+ICEP%XBCRIAUTI))
   ELSE
     ZCRIAUTI(JIJ)=0.
   END IF
@@ -404,7 +414,8 @@ ELSEIF(HSUBG_AUCV_RI=='CLFR') THEN
       PHLI_LCF(JIJ)=0.
       PHLI_HRI(JIJ)=0.
       PHLI_LRI(JIJ)=0.
-    ELSE IF (PCF(JIJ)>0. .AND. PRIT(JIJ)>ZCRIAUTI(JIJ)*PCF(JIJ) .AND. LDMICRO(JIJ)) THEN
+    ELSE IF (PCF(JIJ)>0. .AND. PRIT(JIJ)>ZCRIAUTI(JIJ)*PCF(JIJ) &
+             &.AND. LDMICRO(JIJ)) THEN
       PHLI_HCF(JIJ)=PCF(JIJ)
       PHLI_LCF(JIJ)=0.
       PHLI_HRI(JIJ)=PRIT(JIJ)
