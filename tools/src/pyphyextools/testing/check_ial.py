@@ -41,7 +41,7 @@ class CheckCommitIAL(CheckCommitBase):
         self.fullcompilation = fullcompilation
         self.HOMEPACK = os.environ.get('HOMEPACK', os.path.expanduser('~/pack'))
         self.HPC = 0
-        self.gmkpack_l = 'PHYEX50T2gfort'
+        self.gmkpack_l = 'BOMPI5GFORT141DP50T2'
         self.gmkpack_o = 'dp'
         self.ialdir = None
         self.cycle = None
@@ -51,7 +51,7 @@ class CheckCommitIAL(CheckCommitBase):
         hostname = os.uname().nodename
         if hostname[:7] in ('belenos', 'taranis'):
             self.HPC = 1
-            self.gmkpack_l = 'PHYEX50T2ifort'
+            self.gmkpack_l = 'BIMPIIFCI2302SP50T2'
             self.gmkpack_o = 'sp'
             self.allowedTests.append('big_3D')
 
@@ -177,13 +177,6 @@ class CheckCommitIAL(CheckCommitBase):
                     content = content.replace(old_path, ialdir_full)
                     with open(fpath, 'w', encoding='utf-8') as fh:
                         fh.write(content)
-
-            if kind == 'main':
-                falfilfa_dir = os.path.join(
-                    ialdir_full, 'hub', 'local', 'src', 'FALFILFA', 'falfilfa')
-                if os.path.isdir(falfilfa_dir):
-                    run_command(['git', 'cherry-pick', '15359c1'],
-                                cwd=falfilfa_dir, check=False)
 
             phyex_dir = os.path.join(ialdir_full, 'hub', 'local', 'src', 'PHYEX', 'phyex')
             shutil.rmtree(phyex_dir, ignore_errors=True)
