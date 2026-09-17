@@ -733,7 +733,7 @@ DO WHILE (GANYREMAINT)
 !$acc end kernels
 !$acc kernels
     !$acc_cr loop independent
-    !$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE,OPENACC=' private(ZEXT)' )
+    !$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE,OPENACC=' private(ZEXTT)' )
     DO JK = IKTB,IKTE
       DO JIJ = IIJB,IIJE
         IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
