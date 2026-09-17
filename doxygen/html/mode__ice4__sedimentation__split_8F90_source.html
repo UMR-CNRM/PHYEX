@@ -820,7 +820,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span><span class="comment">!$acc kernels</span></div>
 <div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span>    <span class="comment">!$acc_cr loop independent</span></div>
-<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span>    <span class="comment">!$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE,OPENACC=&#39; private(ZEXT)&#39; )</span></div>
+<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span>    <span class="comment">!$mnh_do_concurrent(JIJ=IIJB:IIJE , JK=IKTB:IKTE,OPENACC=&#39; private(ZEXTT)&#39; )</span></div>
 <div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span>    <span class="keywordflow">DO</span> jk = iktb,ikte</div>
 <div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span>      <span class="keywordflow">DO</span> jij = iijb,iije</div>
 <div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span>        <span class="keywordflow">IF</span>(prxt(jij,jk)&gt;iced%XRTMIN(kspe) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
