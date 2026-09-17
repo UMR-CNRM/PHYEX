@@ -127,8 +127,8 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMZF3D_WORK1
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZGX_M_M3D_WORK2
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZGY_M_M3D_WORK2
 INTEGER :: JJ
-INTEGER :: JK
 INTEGER :: JI
+INTEGER :: JK
 REAL :: ZCSV          !constant for the scalar flux 
 ! ---------------------------------------------------------------------------
 !
