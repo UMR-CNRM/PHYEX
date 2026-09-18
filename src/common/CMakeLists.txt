@@ -30,7 +30,8 @@ ecbuild_add_option(FEATURE OMP
 
 ecbuild_add_option(FEATURE ACC
                    DESCRIPTION "Support for OpenACC"
-                   REQUIRED_PACKAGES "OpenACC COMPONENTS Fortran")
+                   REQUIRED_PACKAGES "OpenACC COMPONENTS Fortran"
+                   DEFAULT OFF)
 
 if(HAVE_DOUBLE_PRECISION)
   list(APPEND precision_list dp) 
