@@ -7,6 +7,6 @@
             "integration_cases/local/ARMCU_1D_CONDSAMP":"75bdbf0",
             "test_cases/014_LIMA":"75bdbf0",
             "integration_cases/hpc/ARMCU_LES/DEAR":"75bdbf0",
-            "test_cases/012_dust":"75bdbf0"
+            "test_cases/012_dust":"a68e567"
            }
 }
