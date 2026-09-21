@@ -45,11 +45,11 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
     LOGICAL, INTENT(IN) :: OCND2
     LOGICAL, INTENT(IN) :: LTIW
 
-    LOGICAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
+    LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PTHS    ! Theta source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PTHS    ! Theta source
 
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRVT     ! Water vapor m.r. at t
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
@@ -104,7 +104,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
 
     REAL, DIMENSION(KSIZE)      :: ZZW  ! Work array
     REAL, DIMENSION(KSIZE, KRR) :: ZZW1 ! Work array
-    REAL, DIMENSION(D%NIT,D%NKT) :: ZWKBUD
+    REAL, DIMENSION(D%NIJT,D%NKT) :: ZWKBUD
 
     INTEGER :: IGDRY
     INTEGER, DIMENSION(KSIZE) :: I1

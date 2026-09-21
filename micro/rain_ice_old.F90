@@ -246,7 +246,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PSSIO   ! Super-saturation with 
                                                  ! supersaturated fraction
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the
                                                  ! subsaturated fraction
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part
 ! input from aro_adjust / condensation with OCND2 END.
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PTHS    ! Theta source
@@ -494,8 +494,8 @@ ENDIF !OSEDIC
 !         (Do it already here, since also used with OCND2=T )
 
 IF (OSEDIC.OR.OCND2.OR.LKOGAN) THEN
-  ZZZZ(:,D%NKTE)   = PDZZ(:,D%NKTE)*0.5
-  ZZZT(:,D%NKTE)   = PDZZ(:,D%NKTE)
+  ZZZZ(D%NIJB:D%NIJE,D%NKTE)   = PDZZ(D%NIJB:D%NIJE,D%NKTE)*0.5
+  ZZZT(D%NIJB:D%NIJE,D%NKTE)   = PDZZ(D%NIJB:D%NIJE,D%NKTE)
   DO JK=D%NKTE-1,D%NKTB,-1
     DO JIJ = D%NIJB, D%NIJE
       ZZZT(JIJ,JK) = ZZZT(JIJ,JK+1) + PDZZ(JIJ,JK)

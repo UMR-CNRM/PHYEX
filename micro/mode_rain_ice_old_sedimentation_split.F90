@@ -42,87 +42,87 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
     INTEGER, INTENT(IN) :: IKB
     INTEGER, INTENT(IN) :: KSPLITR ! Number of small time step
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PDZZ     ! Layer thickness (m)
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODJ   ! Dry density * Jacobian
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODREF ! Reference density
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PPABST  ! absolute pressure at t
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PDZZ     ! Layer thickness (m)
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODJ   ! Dry density * Jacobian
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODREF ! Reference density
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PPABST  ! absolute pressure at t
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PTHT ! Theta at time t
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRCT ! Cloud water m.r. at t
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRRT ! Rain water m.r. at t
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRST ! Snow/aggregate m.r. at t
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRGT ! Graupel/hail m.r. at t
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PTHT ! Theta at time t
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRCT ! Cloud water m.r. at t
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRRT ! Rain water m.r. at t
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRST ! Snow/aggregate m.r. at t
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRGT ! Graupel/hail m.r. at t
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRCS ! Cloud water m.r. source
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRRS ! Rain water m.r. source
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRIS ! Pristine ice m.r. source
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRSS ! Snow/aggregate m.r. source
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRGS ! Graupel m.r. source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRCS ! Cloud water m.r. source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRRS ! Rain water m.r. source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRIS ! Pristine ice m.r. source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRSS ! Snow/aggregate m.r. source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRGS ! Graupel m.r. source
 
-    REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRC ! Cloud instant precip
-    REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRR ! Rain instant precip
-    REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRS ! Snow instant precip
-    REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRG ! Graupel instant precip
+    REAL, DIMENSION(D%NIJT),       INTENT(OUT) :: PINPRC ! Cloud instant precip
+    REAL, DIMENSION(D%NIJT),       INTENT(OUT) :: PINPRR ! Rain instant precip
+    REAL, DIMENSION(D%NIJT),       INTENT(OUT) :: PINPRS ! Snow instant precip
+    REAL, DIMENSION(D%NIJT),       INTENT(OUT) :: PINPRG ! Graupel instant precip
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZRAY    ! Cloud Mean radius
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZLBC    ! XLBC weighted by sea fraction
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZFSEDC
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZCONC3D !  droplet concentration m-3
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: ZRAY    ! Cloud Mean radius
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: ZLBC    ! XLBC weighted by sea fraction
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: ZFSEDC
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: ZCONC3D !  droplet concentration m-3
 
-    REAL, DIMENSION(D%NIT,D%NKT),     OPTIONAL, INTENT(IN)    :: PRHT   ! Hail m.r. at t
-    REAL, DIMENSION(D%NIT,D%NKT),     OPTIONAL, INTENT(INOUT) :: PRHS   ! Hail m.r. source
-    REAL, DIMENSION(D%NIT),           OPTIONAL, INTENT(OUT)   :: PINPRH ! Hail instant precip
-    REAL, DIMENSION(D%NIT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR   ! upper-air precipitation fluxes
+    REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(IN)    :: PRHT   ! Hail m.r. at t
+    REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(INOUT) :: PRHS   ! Hail m.r. source
+    REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(OUT)   :: PINPRH ! Hail instant precip
+    REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR   ! upper-air precipitation fluxes
 
-    REAL, DIMENSION(D%NIT,D%NKT) :: ZPRCS,ZPRRS,ZPRSS,ZPRGS,ZPRHS ! Mixing ratios created during the time step
+    REAL, DIMENSION(D%NIJT,D%NKT) :: ZPRCS,ZPRRS,ZPRSS,ZPRGS,ZPRHS ! Mixing ratios created during the time step
     INTEGER :: ISEDIMR, ISEDIMC, ISEDIMI, ISEDIMS, ISEDIMG, ISEDIMH
 
-    REAL, DIMENSION(D%NIT, 0:D%NKT+1) :: ZWSED ! sedimentation fluxes
+    REAL, DIMENSION(D%NIJT, 0:D%NKT+1) :: ZWSED ! sedimentation fluxes
 
-    LOGICAL, DIMENSION(D%NIT,D%NKT) :: GSEDIMR,GSEDIMC, GSEDIMI, GSEDIMS, GSEDIMG, GSEDIMH ! Test where to compute the SED processes
-    INTEGER, DIMENSION(D%NIT*D%NKT) :: IC1, IC2
-    INTEGER, DIMENSION(D%NIT*D%NKT) :: IR1, IR2
-    INTEGER, DIMENSION(D%NIT*D%NKT) :: IS1, IS2
-    INTEGER, DIMENSION(D%NIT*D%NKT) :: II1, II2
-    INTEGER, DIMENSION(D%NIT*D%NKT) :: IG1, IG2
-    INTEGER, DIMENSION(D%NIT*D%NKT) :: IH1, IH2
+    LOGICAL, DIMENSION(D%NIJT,D%NKT) :: GSEDIMR,GSEDIMC, GSEDIMI, GSEDIMS, GSEDIMG, GSEDIMH ! Test where to compute the SED processes
+    INTEGER, DIMENSION(D%NIJT*D%NKT) :: IC1, IC2
+    INTEGER, DIMENSION(D%NIJT*D%NKT) :: IR1, IR2
+    INTEGER, DIMENSION(D%NIJT*D%NKT) :: IS1, IS2
+    INTEGER, DIMENSION(D%NIJT*D%NKT) :: II1, II2
+    INTEGER, DIMENSION(D%NIJT*D%NKT) :: IG1, IG2
+    INTEGER, DIMENSION(D%NIJT*D%NKT) :: IH1, IH2
 
     INTEGER :: ILISTLENC, ILISTLENR, ILISTLENI, ILISTLENS, ILISTLENG, ILISTLENH
 
-    INTEGER, DIMENSION(KSIZE) :: ILISTR
-    INTEGER, DIMENSION(KSIZE) :: ILISTC
-    INTEGER, DIMENSION(KSIZE) :: ILISTI
-    INTEGER, DIMENSION(KSIZE) :: ILISTS
-    INTEGER, DIMENSION(KSIZE) :: ILISTG
-    INTEGER, DIMENSION(KSIZE) :: ILISTH
+    INTEGER, DIMENSION(D%NIJT*D%NKT) :: ILISTR
+    INTEGER, DIMENSION(D%NIJT*D%NKT) :: ILISTC
+    INTEGER, DIMENSION(D%NIJT*D%NKT) :: ILISTI
+    INTEGER, DIMENSION(D%NIJT*D%NKT) :: ILISTS
+    INTEGER, DIMENSION(D%NIJT*D%NKT) :: ILISTG
+    INTEGER, DIMENSION(D%NIJT*D%NKT) :: ILISTH
 
-    REAL, DIMENSION(KSIZE) :: ZRCT    ! Cloud water m.r. at t
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRCT    ! Cloud water m.r. at t
 
-    REAL, DIMENSION(KSIZE) :: ZRCS    ! Cloud water m.r. source
-    REAL, DIMENSION(KSIZE) :: ZRRS    ! Rain water m.r. source
-    REAL, DIMENSION(KSIZE) :: ZRIS    ! Pristine ice m.r. source
-    REAL, DIMENSION(KSIZE) :: ZRSS    ! Snow/aggregate m.r. source
-    REAL, DIMENSION(KSIZE) :: ZRGS    ! Graupel m.r. source
-    REAL, DIMENSION(KSIZE) :: ZRHS    ! Hail m.r. source
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRCS    ! Cloud water m.r. source
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRRS    ! Rain water m.r. source
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRIS    ! Pristine ice m.r. source
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRSS    ! Snow/aggregate m.r. source
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRGS    ! Graupel m.r. source
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRHS    ! Hail m.r. source
 
-    REAL, DIMENSION(KSIZE) :: ZRHODREFC ! RHO Dry REFerence
-    REAL, DIMENSION(KSIZE) :: ZRHODREFR ! RHO Dry REFerence
-    REAL, DIMENSION(KSIZE) :: ZRHODREFI ! RHO Dry REFerence
-    REAL, DIMENSION(KSIZE) :: ZRHODREFS ! RHO Dry REFerence
-    REAL, DIMENSION(KSIZE) :: ZRHODREFG ! RHO Dry REFerence
-    REAL, DIMENSION(KSIZE) :: ZRHODREFH ! RHO Dry REFerence
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRHODREFC ! RHO Dry REFerence
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRHODREFR ! RHO Dry REFerence
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRHODREFI ! RHO Dry REFerence
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRHODREFS ! RHO Dry REFerence
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRHODREFG ! RHO Dry REFerence
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRHODREFH ! RHO Dry REFerence
 
-    REAL, DIMENSION(KSIZE) :: ZCC       ! terminal velocity
-    REAL, DIMENSION(KSIZE) :: ZFSEDC1D  ! For cloud sedimentation
-    REAL, DIMENSION(KSIZE) :: ZCONC     ! Concentration des aerosols
-    REAL, DIMENSION(KSIZE) :: ZRAY1D    ! Mean radius
-    REAL, DIMENSION(KSIZE) :: ZWLBDA    ! Libre parcours moyen
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZCC       ! terminal velocity
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZFSEDC1D  ! For cloud sedimentation
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZCONC     ! Concentration des aerosols
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZRAY1D    ! Mean radius
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZWLBDA    ! Libre parcours moyen
 
-    REAL, DIMENSION(D%NIT, D%NKT) :: ZW ! work array
+    REAL, DIMENSION(D%NIJT, D%NKT) :: ZW ! work array
 
-    REAL, DIMENSION(KSIZE) :: ZZT       ! Temperature
-    REAL, DIMENSION(KSIZE) :: ZPRES     ! Pressure
-    REAL, DIMENSION(KSIZE) :: ZWLBDC    ! Slope parameter of the droplet  distribution
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZZT       ! Temperature
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZPRES     ! Pressure
+    REAL, DIMENSION(D%NIJT*D%NKT) :: ZWLBDC    ! Slope parameter of the droplet  distribution
 
     REAL, DIMENSION(SIZE(ICED%XRTMIN)) :: ZRTMIN
 
@@ -171,60 +171,60 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 ! PRiS = Source of the previous time step
 !
     IF (OSEDIC) THEN
-      ZPRCS(D%NIB:D%NIE,:) = 0.0
-      ZPRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:)-PRCT(D%NIB:D%NIE,:)* ZINVTSTEP
-      PRCS(D%NIB:D%NIE,:)  = PRCT(D%NIB:D%NIE,:)* ZINVTSTEP
+      ZPRCS(D%NIJB:D%NIJE,:) = 0.0
+      ZPRCS(D%NIJB:D%NIJE,:) = PRCS(D%NIJB:D%NIJE,:)-PRCT(D%NIJB:D%NIJE,:)* ZINVTSTEP
+      PRCS(D%NIJB:D%NIJE,:)  = PRCT(D%NIJB:D%NIJE,:)* ZINVTSTEP
     END IF
 
-    ZPRRS(D%NIB:D%NIE,:) = 0.0
-    ZPRSS(D%NIB:D%NIE,:) = 0.0
-    ZPRGS(D%NIB:D%NIE,:) = 0.0
-    IF ( KRR == 7 ) ZPRHS(D%NIB:D%NIE,:) = 0.0
+    ZPRRS(D%NIJB:D%NIJE,:) = 0.0
+    ZPRSS(D%NIJB:D%NIJE,:) = 0.0
+    ZPRGS(D%NIJB:D%NIJE,:) = 0.0
+    IF ( KRR == 7 ) ZPRHS(D%NIJB:D%NIJE,:) = 0.0
 !
-    ZPRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:)-PRRT(D%NIB:D%NIE,:)* ZINVTSTEP
-    ZPRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:)-PRST(D%NIB:D%NIE,:)* ZINVTSTEP
-    ZPRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:)-PRGT(D%NIB:D%NIE,:)* ZINVTSTEP
-    IF ( KRR == 7 ) ZPRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:)-PRHT(D%NIB:D%NIE,:)* ZINVTSTEP
-    PRRS(D%NIB:D%NIE,:)  = PRRT(D%NIB:D%NIE,:)* ZINVTSTEP
-    PRSS(D%NIB:D%NIE,:)  = PRST(D%NIB:D%NIE,:)* ZINVTSTEP
-    PRGS(D%NIB:D%NIE,:)  = PRGT(D%NIB:D%NIE,:)* ZINVTSTEP
-    IF ( KRR == 7 ) PRHS(D%NIB:D%NIE,:)  = PRHT(D%NIB:D%NIE,:)* ZINVTSTEP
+    ZPRRS(D%NIJB:D%NIJE,:) = PRRS(D%NIJB:D%NIJE,:)-PRRT(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    ZPRSS(D%NIJB:D%NIJE,:) = PRSS(D%NIJB:D%NIJE,:)-PRST(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    ZPRGS(D%NIJB:D%NIJE,:) = PRGS(D%NIJB:D%NIJE,:)-PRGT(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    IF ( KRR == 7 ) ZPRHS(D%NIJB:D%NIJE,:) = PRHS(D%NIJB:D%NIJE,:)-PRHT(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    PRRS(D%NIJB:D%NIJE,:)  = PRRT(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    PRSS(D%NIJB:D%NIJE,:)  = PRST(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    PRGS(D%NIJB:D%NIJE,:)  = PRGT(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    IF ( KRR == 7 ) PRHS(D%NIJB:D%NIJE,:)  = PRHT(D%NIJB:D%NIJE,:)* ZINVTSTEP
 !
 ! PRiS = Source of the previous time step + source created during the subtime
 ! step
 !
     DO JN = 1, KSPLITR
       IF( JN==1 ) THEN
-        IF (OSEDIC) PRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:) + ZPRCS(D%NIB:D%NIE,:)/KSPLITR
-          PRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:) + ZPRRS(D%NIB:D%NIE,:)/KSPLITR
-          PRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:) + ZPRSS(D%NIB:D%NIE,:)/KSPLITR
-          PRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:) + ZPRGS(D%NIB:D%NIE,:)/KSPLITR
-        IF ( KRR == 7 ) PRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:) + ZPRHS(D%NIB:D%NIE,:)/KSPLITR
+        IF (OSEDIC) PRCS(D%NIJB:D%NIJE,:) = PRCS(D%NIJB:D%NIJE,:) + ZPRCS(D%NIJB:D%NIJE,:)/KSPLITR
+          PRRS(D%NIJB:D%NIJE,:) = PRRS(D%NIJB:D%NIJE,:) + ZPRRS(D%NIJB:D%NIJE,:)/KSPLITR
+          PRSS(D%NIJB:D%NIJE,:) = PRSS(D%NIJB:D%NIJE,:) + ZPRSS(D%NIJB:D%NIJE,:)/KSPLITR
+          PRGS(D%NIJB:D%NIJE,:) = PRGS(D%NIJB:D%NIJE,:) + ZPRGS(D%NIJB:D%NIJE,:)/KSPLITR
+        IF ( KRR == 7 ) PRHS(D%NIJB:D%NIJE,:) = PRHS(D%NIJB:D%NIJE,:) + ZPRHS(D%NIJB:D%NIJE,:)/KSPLITR
         DO JK = D%NKTB , D%NKTE
-          DO JI = D%NIB , D%NIE
+          DO JI = D%NIJB , D%NIJE
             ZW(JI,JK) =ZTSPLITR/(PRHODREF(JI,JK)* PDZZ(JI,JK))
           END DO
         END DO
       ELSE
-        IF (OSEDIC) PRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:) + ZPRCS(D%NIB:D%NIE,:)*ZTSPLITR
-        PRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:) + ZPRRS(D%NIB:D%NIE,:)*ZTSPLITR
-        PRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:) + ZPRSS(D%NIB:D%NIE,:)*ZTSPLITR
-        PRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:) + ZPRGS(D%NIB:D%NIE,:)*ZTSPLITR
-        IF ( KRR == 7 ) PRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:) + ZPRHS(D%NIB:D%NIE,:)*ZTSPLITR
+        IF (OSEDIC) PRCS(D%NIJB:D%NIJE,:) = PRCS(D%NIJB:D%NIJE,:) + ZPRCS(D%NIJB:D%NIJE,:)*ZTSPLITR
+        PRRS(D%NIJB:D%NIJE,:) = PRRS(D%NIJB:D%NIJE,:) + ZPRRS(D%NIJB:D%NIJE,:)*ZTSPLITR
+        PRSS(D%NIJB:D%NIJE,:) = PRSS(D%NIJB:D%NIJE,:) + ZPRSS(D%NIJB:D%NIJE,:)*ZTSPLITR
+        PRGS(D%NIJB:D%NIJE,:) = PRGS(D%NIJB:D%NIJE,:) + ZPRGS(D%NIJB:D%NIJE,:)*ZTSPLITR
+        IF ( KRR == 7 ) PRHS(D%NIJB:D%NIJE,:) = PRHS(D%NIJB:D%NIJE,:) + ZPRHS(D%NIJB:D%NIJE,:)*ZTSPLITR
       END IF
  !
-      IF (OSEDIC) GSEDIMC(D%NIB:D%NIE,D%NKTB:D%NKTE) =                &
-                      PRCS(D%NIB:D%NIE,D%NKTB:D%NKTE)>ZRTMIN(2)
-      GSEDIMR(D%NIB:D%NIE,D%NKTB:D%NKTE) =                            &
-          PRRS(D%NIB:D%NIE,D%NKTB:D%NKTE)>ZRTMIN(3)
-      GSEDIMI(D%NIB:D%NIE,D%NKTB:D%NKTE) =                            &
-          PRIS(D%NIB:D%NIE,D%NKTB:D%NKTE)>ZRTMIN(4)
-      GSEDIMS(D%NIB:D%NIE,D%NKTB:D%NKTE) =                            &
-          PRSS(D%NIB:D%NIE,D%NKTB:D%NKTE)>ZRTMIN(5)
-      GSEDIMG(D%NIB:D%NIE,D%NKTB:D%NKTE) =                            &
-          PRGS(D%NIB:D%NIE,D%NKTB:D%NKTE)>ZRTMIN(6)
-      IF ( KRR == 7 ) GSEDIMH(D%NIB:D%NIE,D%NKTB:D%NKTE) =            &
-                          PRHS(D%NIB:D%NIE,D%NKTB:D%NKTE)>ZRTMIN(7)
+      IF (OSEDIC) GSEDIMC(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =                &
+                      PRCS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>ZRTMIN(2)
+      GSEDIMR(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =                            &
+          PRRS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>ZRTMIN(3)
+      GSEDIMI(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =                            &
+          PRIS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>ZRTMIN(4)
+      GSEDIMS(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =                            &
+          PRSS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>ZRTMIN(5)
+      GSEDIMG(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =                            &
+          PRGS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>ZRTMIN(6)
+      IF ( KRR == 7 ) GSEDIMH(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =            &
+                          PRHS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>ZRTMIN(7)
 !
       IF (OSEDIC) CALL  COUNTJV(ISEDIMC, GSEDIMC,IC1,IC2)
       CALL COUNTJV(ISEDIMR, GSEDIMR,IR1,IR2)
@@ -237,8 +237,8 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 !
       IF (OSEDIC) THEN
 
-        ZWSED(D%NIB:D%NIE,:) = 0.
-        IF( JN==1 ) PRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:) * PTSTEP
+        ZWSED(D%NIJB:D%NIJE,:) = 0.
+        IF( JN==1 ) PRCS(D%NIJB:D%NIJE,:) = PRCS(D%NIJB:D%NIJE,:) * PTSTEP
 
         IF( ISEDIMC >= 1 ) THEN
 
@@ -279,27 +279,27 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
         END IF
 
         DO JK = D%NKTB , D%NKTE
-          PRCS(D%NIB:D%NIE,JK) = PRCS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
+          PRCS(D%NIJB:D%NIJE,JK)=PRCS(D%NIJB:D%NIJE,JK) + ZW(D%NIJB:D%NIJE,JK)*(ZWSED(D%NIJB:D%NIJE,JK+KKL)-ZWSED(D%NIJB:D%NIJE,JK))
         END DO
 
         IF (PRESENT(PFPR)) THEN
           DO JK = D%NKTB , D%NKTE
-            PFPR(D%NIB:D%NIE,JK,2)=ZWSED(D%NIB:D%NIE,JK)
+            PFPR(D%NIJB:D%NIJE,JK,2)=ZWSED(D%NIJB:D%NIJE,JK)
           ENDDO
         ENDIF
 
-        PINPRC(D%NIB:D%NIE) = PINPRC(D%NIB:D%NIE) + ZWSED(D%NIB:D%NIE,IKB) / CST%XRHOLW / KSPLITR
+        PINPRC(D%NIJB:D%NIJE) = PINPRC(D%NIJB:D%NIJE) + ZWSED(D%NIJB:D%NIJE,IKB) / CST%XRHOLW / KSPLITR
 
         IF( JN==KSPLITR ) THEN
-          PRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:) * ZINVTSTEP
+          PRCS(D%NIJB:D%NIJE,:) = PRCS(D%NIJB:D%NIJE,:) * ZINVTSTEP
         END IF
 
       END IF !OSEDIC
 !
 !*       2.2   for rain
 !
-      IF( JN==1 ) PRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:) * PTSTEP
-      ZWSED(D%NIB:D%NIE,:) = 0.
+      IF( JN==1 ) PRRS(D%NIJB:D%NIJE,:) = PRRS(D%NIJB:D%NIJE,:) * PTSTEP
+      ZWSED(D%NIJB:D%NIJE,:) = 0.
 
       IF( ISEDIMR >= 1 ) THEN
 !
@@ -324,26 +324,26 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
       END IF ! ISEDIMR
 
       DO JK = D%NKTB , D%NKTE
-        PRRS(D%NIB:D%NIE,JK) = PRRS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
+        PRRS(D%NIJB:D%NIJE,JK) = PRRS(D%NIJB:D%NIJE,JK) + ZW(D%NIJB:D%NIJE,JK)*(ZWSED(D%NIJB:D%NIJE,JK+KKL)-ZWSED(D%NIJB:D%NIJE,JK))
       END DO
 
       IF (PRESENT(PFPR)) THEN
         DO JK = D%NKTB , D%NKTE
-          PFPR(D%NIB:D%NIE,JK,3)=ZWSED(D%NIB:D%NIE,JK)
+          PFPR(D%NIJB:D%NIJE,JK,3)=ZWSED(D%NIJB:D%NIJE,JK)
         ENDDO
       ENDIF
 
-      PINPRR(D%NIB:D%NIE) = PINPRR(D%NIB:D%NIE) + ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW/KSPLITR
+      PINPRR(D%NIJB:D%NIJE) = PINPRR(D%NIJB:D%NIJE) + ZWSED(D%NIJB:D%NIJE,IKB)/CST%XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
-        PRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:) * ZINVTSTEP
+        PRRS(D%NIJB:D%NIJE,:) = PRRS(D%NIJB:D%NIJE,:) * ZINVTSTEP
       END IF
 !
 !*       2.3   for pristine ice
 !
 
-      IF( JN==1 ) PRIS(D%NIB:D%NIE,:) = PRIS(D%NIB:D%NIE,:) * PTSTEP
+      IF( JN==1 ) PRIS(D%NIJB:D%NIJE,:) = PRIS(D%NIJB:D%NIJE,:) * PTSTEP
 
-      ZWSED(D%NIB:D%NIE,:) = 0.
+      ZWSED(D%NIJB:D%NIJE,:) = 0.
       IF( ISEDIMI >= 1 ) THEN
 
         DO JL=1,ISEDIMI
@@ -369,24 +369,24 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
       END IF !ISEDIMI
 
       DO JK = D%NKTB , D%NKTE
-        PRIS(D%NIB:D%NIE,JK) = PRIS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
+        PRIS(D%NIJB:D%NIJE,JK) = PRIS(D%NIJB:D%NIJE,JK) + ZW(D%NIJB:D%NIJE,JK)*(ZWSED(D%NIJB:D%NIJE,JK+KKL)-ZWSED(D%NIJB:D%NIJE,JK))
       END DO
 
       IF (PRESENT(PFPR)) THEN
         DO JK = D%NKTB , D%NKTE
-          PFPR(D%NIB:D%NIE,JK,4)=ZWSED(D%NIB:D%NIE,JK)
+          PFPR(D%NIJB:D%NIJE,JK,4)=ZWSED(D%NIJB:D%NIJE,JK)
         ENDDO
       ENDIF
 
       IF( JN==KSPLITR ) THEN
-        PRIS(D%NIB:D%NIE,:) = PRIS(D%NIB:D%NIE,:) * ZINVTSTEP
+        PRIS(D%NIJB:D%NIJE,:) = PRIS(D%NIJB:D%NIJE,:) * ZINVTSTEP
       END IF
 !
 !*       2.4   for aggregates/snow
 !
-      IF( JN==1 ) PRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:) * PTSTEP
+      IF( JN==1 ) PRSS(D%NIJB:D%NIJE,:) = PRSS(D%NIJB:D%NIJE,:) * PTSTEP
 
-      ZWSED(D%NIB:D%NIE,:) = 0.
+      ZWSED(D%NIJB:D%NIJE,:) = 0.
       IF( ISEDIMS >= 1 ) THEN
 !
         DO JL=1,ISEDIMS
@@ -410,24 +410,24 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
       END IF !ISEDIMS
 
       DO JK = D%NKTB , D%NKTE
-        PRSS(D%NIB:D%NIE,JK) = PRSS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
+        PRSS(D%NIJB:D%NIJE,JK) = PRSS(D%NIJB:D%NIJE,JK) + ZW(D%NIJB:D%NIJE,JK)*(ZWSED(D%NIJB:D%NIJE,JK+KKL)-ZWSED(D%NIJB:D%NIJE,JK))
       END DO
 
       IF (PRESENT(PFPR)) THEN
         DO JK = D%NKTB , D%NKTE
-          PFPR(D%NIB:D%NIE,JK,5)=ZWSED(D%NIB:D%NIE,JK)
+          PFPR(D%NIJB:D%NIJE,JK,5)=ZWSED(D%NIJB:D%NIJE,JK)
         ENDDO
       ENDIF
 
-      PINPRS(D%NIB:D%NIE) = PINPRS(D%NIB:D%NIE) + ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW/KSPLITR
+      PINPRS(D%NIJB:D%NIJE) = PINPRS(D%NIJB:D%NIJE) + ZWSED(D%NIJB:D%NIJE,IKB)/CST%XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
-        PRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:) * ZINVTSTEP
+        PRSS(D%NIJB:D%NIJE,:) = PRSS(D%NIJB:D%NIJE,:) * ZINVTSTEP
       END IF
 !
 !*       2.5   for graupeln
 !
-      ZWSED(D%NIB:D%NIE,:) = 0.
-      IF( JN==1 ) PRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:) * PTSTEP
+      ZWSED(D%NIJB:D%NIJE,:) = 0.
+      IF( JN==1 ) PRGS(D%NIJB:D%NIJE,:) = PRGS(D%NIJB:D%NIJE,:) * PTSTEP
 
       IF( ISEDIMG >= 1 ) THEN
 !
@@ -452,25 +452,25 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
       END IF !ISEDIMG
 
       DO JK = D%NKTB , D%NKTE
-        PRGS(D%NIB:D%NIE,JK) = PRGS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
+        PRGS(D%NIJB:D%NIJE,JK) = PRGS(D%NIJB:D%NIJE,JK) + ZW(D%NIJB:D%NIJE,JK)*(ZWSED(D%NIJB:D%NIJE,JK+KKL)-ZWSED(D%NIJB:D%NIJE,JK))
       END DO
 
       IF (PRESENT(PFPR)) THEN
         DO JK = D%NKTB , D%NKTE
-          PFPR(D%NIB:D%NIE,JK,6)=ZWSED(D%NIB:D%NIE,JK)
+          PFPR(D%NIJB:D%NIJE,JK,6)=ZWSED(D%NIJB:D%NIJE,JK)
         ENDDO
       ENDIF
 
-      PINPRG(D%NIB:D%NIE) = PINPRG(D%NIB:D%NIE) + ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW/KSPLITR
+      PINPRG(D%NIJB:D%NIJE) = PINPRG(D%NIJB:D%NIJE) + ZWSED(D%NIJB:D%NIJE,IKB)/CST%XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
-        PRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:) * ZINVTSTEP
+        PRGS(D%NIJB:D%NIJE,:) = PRGS(D%NIJB:D%NIJE,:) * ZINVTSTEP
       END IF
 !
 !*       2.6   for hail
 !
       IF ( KRR == 7 ) THEN
-        IF( JN==1 ) PRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:) * PTSTEP
-        ZWSED(D%NIB:D%NIE,:) = 0.
+        IF( JN==1 ) PRHS(D%NIJB:D%NIJE,:) = PRHS(D%NIJB:D%NIJE,:) * PTSTEP
+        ZWSED(D%NIJB:D%NIJE,:) = 0.
 
         IF( ISEDIMH >= 1 ) THEN
 
@@ -496,18 +496,18 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
         END IF !ISEDIMH
 
         DO JK = D%NKTB , D%NKTE
-          PRHS(D%NIB:D%NIE,JK) = PRHS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
+          PRHS(D%NIJB:D%NIJE,JK)=PRHS(D%NIJB:D%NIJE,JK) + ZW(D%NIJB:D%NIJE,JK)*(ZWSED(D%NIJB:D%NIJE,JK+KKL)-ZWSED(D%NIJB:D%NIJE,JK))
         END DO
 
         IF (PRESENT(PFPR)) THEN
           DO JK = D%NKTB , D%NKTE
-            PFPR(D%NIB:D%NIE,JK,7)=ZWSED(D%NIB:D%NIE,JK)
+            PFPR(D%NIJB:D%NIJE,JK,7)=ZWSED(D%NIJB:D%NIJE,JK)
           ENDDO
         ENDIF
 
-        PINPRH(D%NIB:D%NIE) = PINPRH(D%NIB:D%NIE) + ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW/KSPLITR
+        PINPRH(D%NIJB:D%NIJE) = PINPRH(D%NIJB:D%NIJE) + ZWSED(D%NIJB:D%NIJE,IKB)/CST%XRHOLW/KSPLITR
         IF( JN==KSPLITR ) THEN
-          PRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:) * ZINVTSTEP
+          PRHS(D%NIJB:D%NIJE,:) = PRHS(D%NIJB:D%NIJE,:) * ZINVTSTEP
         END IF
       END IF !KRR == 7
 

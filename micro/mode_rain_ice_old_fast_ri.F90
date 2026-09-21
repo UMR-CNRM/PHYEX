@@ -50,10 +50,10 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
     LOGICAL, INTENT(IN) :: OCND2
     LOGICAL, INTENT(IN) :: LMODICEDEP
 
-    LOGICAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
+    LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODJ ! Dry density * Jacobian
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PTHS   ! Theta source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODJ ! Dry density * Jacobian
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PTHS   ! Theta source
 
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRIT     ! Pristine ice m.r. at t
     REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PCIT     ! Pristine ice conc. at t
@@ -97,7 +97,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
     REAL, DIMENSION(KSIZE) :: ZCI2S   ! factor to turn cloud ice with few lagre crystals into snow
     REAL, DIMENSION(KSIZE) :: ZZW     ! Work array
     REAL, DIMENSION(KSIZE) :: ZZWC    ! Work array
-    REAL, DIMENSION(D%NIT,D%NKT) :: ZWKBUD
+    REAL, DIMENSION(D%NIJT,D%NKT) :: ZWKBUD
     REAL, DIMENSION(KSIZE) :: ZZW2    ! Work array
 
     REAL :: ZTC

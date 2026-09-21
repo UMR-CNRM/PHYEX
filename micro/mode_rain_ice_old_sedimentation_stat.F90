@@ -42,52 +42,52 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
     INTEGER, INTENT(IN) :: IKB
     INTEGER, INTENT(IN) :: IKE
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PDZZ     ! Layer thickness (m)
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODJ   ! Dry density * Jacobian
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODREF ! Reference density
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PPABST   ! absolute pressure at t
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PDZZ     ! Layer thickness (m)
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODJ   ! Dry density * Jacobian
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODREF ! Reference density
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PPABST   ! absolute pressure at t
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PTHT ! Theta at time t
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRCT ! Cloud water m.r. at t
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRRT ! Rain water m.r. at t
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRST ! Snow/aggregate m.r. at t
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRGT ! Graupel/hail m.r. at t
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PTHT ! Theta at time t
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRCT ! Cloud water m.r. at t
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRRT ! Rain water m.r. at t
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRST ! Snow/aggregate m.r. at t
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRGT ! Graupel/hail m.r. at t
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRCS ! Cloud water m.r. source
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRRS ! Rain water m.r. source
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRIS ! Pristine ice m.r. source
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRSS ! Snow/aggregate m.r. source
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRGS ! Graupel m.r. source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRCS ! Cloud water m.r. source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRRS ! Rain water m.r. source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRIS ! Pristine ice m.r. source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRSS ! Snow/aggregate m.r. source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRGS ! Graupel m.r. source
 
-    REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRC ! Cloud instant precip
-    REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRR ! Rain instant precip
-    REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRS ! Snow instant precip
-    REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRG ! Graupel instant precip
+    REAL, DIMENSION(D%NIJT),       INTENT(OUT) :: PINPRC ! Cloud instant precip
+    REAL, DIMENSION(D%NIJT),       INTENT(OUT) :: PINPRR ! Rain instant precip
+    REAL, DIMENSION(D%NIJT),       INTENT(OUT) :: PINPRS ! Snow instant precip
+    REAL, DIMENSION(D%NIJT),       INTENT(OUT) :: PINPRG ! Graupel instant precip
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZRAY    ! Cloud Mean radius
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZLBC    ! XLBC weighted by sea fraction
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZFSEDC
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZCONC3D !  droplet concentration m-3
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: ZRAY    ! Cloud Mean radius
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: ZLBC    ! XLBC weighted by sea fraction
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: ZFSEDC
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: ZCONC3D !  droplet concentration m-3
 
-    REAL, DIMENSION(D%NIT,D%NKT),     OPTIONAL, INTENT(IN)    :: PRHT   ! Hail m.r. at t
-    REAL, DIMENSION(D%NIT,D%NKT),     OPTIONAL, INTENT(INOUT) :: PRHS   ! Hail m.r. source
-    REAL, DIMENSION(D%NIT),           OPTIONAL, INTENT(OUT)   :: PINPRH ! Hail instant precip
-    REAL, DIMENSION(D%NIT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR   ! upper-air precipitation fluxes
+    REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(IN)    :: PRHT   ! Hail m.r. at t
+    REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(INOUT) :: PRHS   ! Hail m.r. source
+    REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(OUT)   :: PINPRH ! Hail instant precip
+    REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR   ! upper-air precipitation fluxes
 
-    REAL, DIMENSION(D%NIT, 0:D%NKT+1) :: ZWSED   ! sedimentation fluxes
-    REAL, DIMENSION(D%NIT, 0:D%NKT+1) :: ZWSEDW1 ! sedimentation speed
-    REAL, DIMENSION(D%NIT, 0:D%NKT+1) :: ZWSEDW2 ! sedimentation speed
+    REAL, DIMENSION(D%NIJT, 0:D%NKT+1) :: ZWSED   ! sedimentation fluxes
+    REAL, DIMENSION(D%NIJT, 0:D%NKT+1) :: ZWSEDW1 ! sedimentation speed
+    REAL, DIMENSION(D%NIJT, 0:D%NKT+1) :: ZWSEDW2 ! sedimentation speed
 
-    REAL, DIMENSION(D%NIT, D%NKT)     :: ZW ! work array
+    REAL, DIMENSION(D%NIJT, D%NKT)     :: ZW ! work array
 
     REAL :: ZP1,ZP2,ZH,ZZWLBDA,ZZWLBDC,ZZCC
-    REAL, DIMENSION(D%NIT) :: ZQP
+    REAL, DIMENSION(D%NIJT) :: ZQP
     INTEGER :: JI,JK
     INTEGER :: JCOUNT, JL
-    INTEGER, DIMENSION(D%NIT) :: I1
-    LOGICAL, DIMENSION(D%NIT) :: GMASK
+    INTEGER, DIMENSION(D%NIJT) :: I1
+    LOGICAL, DIMENSION(D%NIJT) :: GMASK
 
-    REAL, DIMENSION(D%NIT,D%NKT) :: ZPRCS, ZPRRS, ZPRSS, ZPRGS, ZPRHS ! Mixing ratios created during the time step
+    REAL, DIMENSION(D%NIJT,D%NKT) :: ZPRCS, ZPRRS, ZPRSS, ZPRGS, ZPRHS ! Mixing ratios created during the time step
 
     REAL, DIMENSION(SIZE(ICED%XRTMIN)) :: ZRTMIN
 
@@ -105,31 +105,31 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
     ZRTMIN(:) = ICED%XRTMIN(:) * ZINVTSTEP
 !
     IF (OSEDIC) THEN
-      ZPRCS(D%NIB:D%NIE,:) = 0.0
-      ZPRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:) - PRCT(D%NIB:D%NIE,:) * ZINVTSTEP
-      PRCS(D%NIB:D%NIE,:)  = PRCT(D%NIB:D%NIE,:) * ZINVTSTEP
+      ZPRCS(D%NIJB:D%NIJE,:) = 0.0
+      ZPRCS(D%NIJB:D%NIJE,:) = PRCS(D%NIJB:D%NIJE,:) - PRCT(D%NIJB:D%NIJE,:) * ZINVTSTEP
+      PRCS(D%NIJB:D%NIJE,:)  = PRCT(D%NIJB:D%NIJE,:) * ZINVTSTEP
     END IF
-    ZPRRS(D%NIB:D%NIE,:) = 0.0
-    ZPRSS(D%NIB:D%NIE,:) = 0.0
-    ZPRGS(D%NIB:D%NIE,:) = 0.0
-    IF (KRR == 7) ZPRHS(D%NIB:D%NIE,:) = 0.0
+    ZPRRS(D%NIJB:D%NIJE,:) = 0.0
+    ZPRSS(D%NIJB:D%NIJE,:) = 0.0
+    ZPRGS(D%NIJB:D%NIJE,:) = 0.0
+    IF (KRR == 7) ZPRHS(D%NIJB:D%NIJE,:) = 0.0
 !
-    ZPRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:)-PRRT(D%NIB:D%NIE,:)* ZINVTSTEP
-    ZPRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:)-PRST(D%NIB:D%NIE,:)* ZINVTSTEP
-    ZPRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:)-PRGT(D%NIB:D%NIE,:)* ZINVTSTEP
-    IF (KRR == 7) ZPRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:)-PRHT(D%NIB:D%NIE,:)* ZINVTSTEP
-    PRRS(D%NIB:D%NIE,:)  = PRRT(D%NIB:D%NIE,:)* ZINVTSTEP
-    PRSS(D%NIB:D%NIE,:)  = PRST(D%NIB:D%NIE,:)* ZINVTSTEP
-    PRGS(D%NIB:D%NIE,:)  = PRGT(D%NIB:D%NIE,:)* ZINVTSTEP
-    IF (KRR == 7) PRHS(D%NIB:D%NIE,:)  = PRHT(D%NIB:D%NIE,:)* ZINVTSTEP
+    ZPRRS(D%NIJB:D%NIJE,:) = PRRS(D%NIJB:D%NIJE,:)-PRRT(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    ZPRSS(D%NIJB:D%NIJE,:) = PRSS(D%NIJB:D%NIJE,:)-PRST(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    ZPRGS(D%NIJB:D%NIJE,:) = PRGS(D%NIJB:D%NIJE,:)-PRGT(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    IF (KRR == 7) ZPRHS(D%NIJB:D%NIJE,:) = PRHS(D%NIJB:D%NIJE,:)-PRHT(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    PRRS(D%NIJB:D%NIJE,:)  = PRRT(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    PRSS(D%NIJB:D%NIJE,:)  = PRST(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    PRGS(D%NIJB:D%NIJE,:)  = PRGT(D%NIJB:D%NIJE,:)* ZINVTSTEP
+    IF (KRR == 7) PRHS(D%NIJB:D%NIJE,:)  = PRHT(D%NIJB:D%NIJE,:)* ZINVTSTEP
 !
-    IF (OSEDIC) PRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:) + ZPRCS(D%NIB:D%NIE,:)
-    PRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:) + ZPRRS(D%NIB:D%NIE,:)
-    PRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:) + ZPRSS(D%NIB:D%NIE,:)
-    PRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:) + ZPRGS(D%NIB:D%NIE,:)
-    IF ( KRR == 7 ) PRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:) + ZPRHS(D%NIB:D%NIE,:)
+    IF (OSEDIC) PRCS(D%NIJB:D%NIJE,:) = PRCS(D%NIJB:D%NIJE,:) + ZPRCS(D%NIJB:D%NIJE,:)
+    PRRS(D%NIJB:D%NIJE,:) = PRRS(D%NIJB:D%NIJE,:) + ZPRRS(D%NIJB:D%NIJE,:)
+    PRSS(D%NIJB:D%NIJE,:) = PRSS(D%NIJB:D%NIJE,:) + ZPRSS(D%NIJB:D%NIJE,:)
+    PRGS(D%NIJB:D%NIJE,:) = PRGS(D%NIJB:D%NIJE,:) + ZPRGS(D%NIJB:D%NIJE,:)
+    IF ( KRR == 7 ) PRHS(D%NIJB:D%NIJE,:) = PRHS(D%NIJB:D%NIJE,:) + ZPRHS(D%NIJB:D%NIJE,:)
     DO JK = D%NKTB , D%NKTE
-      DO JI = D%NIB , D%NIE
+      DO JI = D%NIJB , D%NIJE
         ZW(JI,JK) =PTSTEP/(PRHODREF(JI,JK)* PDZZ(JI,JK) )
       END DO
     END DO
@@ -137,21 +137,21 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
 !*       2.1   for cloud
 !
     IF (OSEDIC) THEN
-      PRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:) * PTSTEP
-      ZWSED(D%NIB:D%NIE,:) = 0.
-      ZWSEDW1(D%NIB:D%NIE,:) = 0.
-      ZWSEDW2(D%NIB:D%NIE,:) = 0.
+      PRCS(D%NIJB:D%NIJE,:) = PRCS(D%NIJB:D%NIJE,:) * PTSTEP
+      ZWSED(D%NIJB:D%NIJE,:) = 0.
+      ZWSEDW1(D%NIJB:D%NIJE,:) = 0.
+      ZWSEDW2(D%NIJB:D%NIJE,:) = 0.
 
       ! calculation of P1, P2 and sedimentation flux
       DO JK = IKE , IKB, -1*KKL
         !estimation of q' taking into account incomming ZWSED
-        DO JI = D%NIB , D%NIE
+        DO JI = D%NIJB , D%NIJE
           ZQP(JI)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
         END DO
 
         GMASK(:)=.FALSE.
-        GMASK(D%NIB:D%NIE)=(PRCS(D%NIB:D%NIE,JK) > ZRTMIN(2) .AND. PRCT(D%NIB:D%NIE,JK) > ZRTMIN(2)) .OR. &
-                          &ZQP(D%NIB:D%NIE) > ZRTMIN(2)
+        GMASK(D%NIJB:D%NIJE)=(PRCS(D%NIJB:D%NIJE,JK) > ZRTMIN(2) .AND. PRCT(D%NIJB:D%NIJE,JK) > ZRTMIN(2)) .OR. &
+                          &ZQP(D%NIJB:D%NIJE) > ZRTMIN(2)
         CALL COUNTJV2(D, JCOUNT, GMASK, I1)
 
         DO JL=1, JCOUNT
@@ -176,7 +176,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
           ENDIF
         ENDDO
 
-        DO JI = D%NIB, D%NIE
+        DO JI = D%NIJB, D%NIJE
           ZH=PDZZ(JI,JK)
           ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH)
           ! mars 2009 : correction : ZWSEDW1 =>  ZWSEDW2
@@ -193,35 +193,35 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
       ENDDO
 
       DO JK = D%NKTB , D%NKTE
-        PRCS(D%NIB:D%NIE,JK) = PRCS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
+        PRCS(D%NIJB:D%NIJE,JK) = PRCS(D%NIJB:D%NIJE,JK) + ZW(D%NIJB:D%NIJE,JK)*(ZWSED(D%NIJB:D%NIJE,JK+KKL)-ZWSED(D%NIJB:D%NIJE,JK))
       END DO
 
       IF (PRESENT(PFPR)) THEN
         DO JK = D%NKTB , D%NKTE
-          PFPR(D%NIB:D%NIE,JK,2)=ZWSED(D%NIB:D%NIE,JK)
+          PFPR(D%NIJB:D%NIJE,JK,2)=ZWSED(D%NIJB:D%NIJE,JK)
         ENDDO
       ENDIF
 
-      PINPRC(D%NIB:D%NIE) = ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW ! in m/s
-      PRCS(D%NIB:D%NIE,:) = PRCS(D%NIB:D%NIE,:) * ZINVTSTEP
+      PINPRC(D%NIJB:D%NIJE) = ZWSED(D%NIJB:D%NIJE,IKB)/CST%XRHOLW ! in m/s
+      PRCS(D%NIJB:D%NIJE,:) = PRCS(D%NIJB:D%NIJE,:) * ZINVTSTEP
     ENDIF
 !
 !*       2.2   for rain
 !
-    PRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:) * PTSTEP
-    ZWSED(D%NIB:D%NIE,:) = 0.
-    ZWSEDW1(D%NIB:D%NIE,:) = 0.
-    ZWSEDW2(D%NIB:D%NIE,:) = 0.
+    PRRS(D%NIJB:D%NIJE,:) = PRRS(D%NIJB:D%NIJE,:) * PTSTEP
+    ZWSED(D%NIJB:D%NIJE,:) = 0.
+    ZWSEDW1(D%NIJB:D%NIJE,:) = 0.
+    ZWSEDW2(D%NIJB:D%NIJE,:) = 0.
 
     ! calculation of ZP1, ZP2 and sedimentation flux
     DO JK = IKE , IKB, -1*KKL
       !estimation of q' taking into account incomming ZWSED
-      DO JI = D%NIB, D%NIE
+      DO JI = D%NIJB, D%NIJE
         ZQP(JI)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
       END DO
 
       GMASK(:)=.FALSE.
-      GMASK(D%NIB:D%NIE)=PRRS(D%NIB:D%NIE,JK) > ZRTMIN(3) .OR. ZQP(D%NIB:D%NIE) > ZRTMIN(3)
+      GMASK(D%NIJB:D%NIJE)=PRRS(D%NIJB:D%NIJE,JK) > ZRTMIN(3) .OR. ZQP(D%NIJB:D%NIJE) > ZRTMIN(3)
       CALL COUNTJV2(D, JCOUNT, GMASK, I1)
       DO JL=1, JCOUNT
         JI=I1(JL)
@@ -238,7 +238,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
         ENDIF
       ENDDO
 
-      DO JI = D%NIB, D%NIE
+      DO JI = D%NIJB, D%NIJE
         ZH=PDZZ(JI,JK)
         ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
         IF (ZWSEDW2(JI,JK) /= 0.) THEN
@@ -251,32 +251,32 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
     ENDDO
 
     DO JK = D%NKTB , D%NKTE
-      PRRS(D%NIB:D%NIE,JK) = PRRS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
+      PRRS(D%NIJB:D%NIJE,JK) = PRRS(D%NIJB:D%NIJE,JK) + ZW(D%NIJB:D%NIJE,JK)*(ZWSED(D%NIJB:D%NIJE,JK+KKL)-ZWSED(D%NIJB:D%NIJE,JK))
     ENDDO
     IF (PRESENT(PFPR)) THEN
       DO JK = D%NKTB , D%NKTE
-        PFPR(D%NIB:D%NIE,JK,3)=ZWSED(D%NIB:D%NIE,JK)
+        PFPR(D%NIJB:D%NIJE,JK,3)=ZWSED(D%NIJB:D%NIJE,JK)
       ENDDO
     ENDIF
-    PINPRR(D%NIB:D%NIE) = ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW ! in m/s
-    PRRS(D%NIB:D%NIE,:) = PRRS(D%NIB:D%NIE,:) * ZINVTSTEP
+    PINPRR(D%NIJB:D%NIJE) = ZWSED(D%NIJB:D%NIJE,IKB)/CST%XRHOLW ! in m/s
+    PRRS(D%NIJB:D%NIJE,:) = PRRS(D%NIJB:D%NIJE,:) * ZINVTSTEP
 !
 !*       2.3   for pristine ice
 !
-    PRIS(D%NIB:D%NIE,:) = PRIS(D%NIB:D%NIE,:) * PTSTEP
-    ZWSED(D%NIB:D%NIE,:) = 0.
-    ZWSEDW1(D%NIB:D%NIE,:) = 0.
-    ZWSEDW2(D%NIB:D%NIE,:) = 0.
+    PRIS(D%NIJB:D%NIJE,:) = PRIS(D%NIJB:D%NIJE,:) * PTSTEP
+    ZWSED(D%NIJB:D%NIJE,:) = 0.
+    ZWSEDW1(D%NIJB:D%NIJE,:) = 0.
+    ZWSEDW2(D%NIJB:D%NIJE,:) = 0.
 
     ! calculation of ZP1, ZP2 and sedimentation flux
     DO JK = IKE , IKB, -1*KKL
       !estimation of q' taking into account incomming ZWSED
-      DO JI = D%NIB, D%NIE
+      DO JI = D%NIJB, D%NIJE
         ZQP(JI)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
       ENDDO
 
       GMASK(:)=.FALSE.
-      GMASK(D%NIB:D%NIE)=PRIS(D%NIB:D%NIE,JK) > MAX(ZRTMIN(4), 1.0E-7) .OR. ZQP(D%NIB:D%NIE) > MAX(ZRTMIN(4), 1.0E-7)
+      GMASK(D%NIJB:D%NIJE)=PRIS(D%NIJB:D%NIJE,JK) > MAX(ZRTMIN(4), 1.0E-7) .OR. ZQP(D%NIJB:D%NIJE) > MAX(ZRTMIN(4), 1.0E-7)
       CALL COUNTJV2(D, JCOUNT, GMASK, I1)
 
       DO JL=1, JCOUNT
@@ -298,7 +298,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
         ENDIF
       ENDDO
 
-      DO JI = D%NIB, D%NIE
+      DO JI = D%NIJB, D%NIJE
         ZH=PDZZ(JI,JK)
         ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
 
@@ -313,33 +313,33 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
     ENDDO
 
     DO JK = D%NKTB , D%NKTE
-      PRIS(D%NIB:D%NIE,JK) = PRIS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
+      PRIS(D%NIJB:D%NIJE,JK) = PRIS(D%NIJB:D%NIJE,JK) + ZW(D%NIJB:D%NIJE,JK)*(ZWSED(D%NIJB:D%NIJE,JK+KKL)-ZWSED(D%NIJB:D%NIJE,JK))
     ENDDO
 
     IF (PRESENT(PFPR)) THEN
       DO JK = D%NKTB , D%NKTE
-        PFPR(D%NIB:D%NIE,JK,4)=ZWSED(D%NIB:D%NIE,JK)
+        PFPR(D%NIJB:D%NIJE,JK,4)=ZWSED(D%NIJB:D%NIJE,JK)
       ENDDO
     ENDIF
 
-    PRIS(D%NIB:D%NIE,:) = PRIS(D%NIB:D%NIE,:) * ZINVTSTEP
+    PRIS(D%NIJB:D%NIJE,:) = PRIS(D%NIJB:D%NIJE,:) * ZINVTSTEP
 
-    PINPRS(D%NIB:D%NIE) = ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW
+    PINPRS(D%NIJB:D%NIJE) = ZWSED(D%NIJB:D%NIJE,IKB)/CST%XRHOLW
 !
 !*       2.4   for aggregates/snow
 !
-    PRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:) * PTSTEP
-    ZWSED(D%NIB:D%NIE,:) = 0.
-    ZWSEDW1(D%NIB:D%NIE,:) = 0.
-    ZWSEDW2(D%NIB:D%NIE,:) = 0.
+    PRSS(D%NIJB:D%NIJE,:) = PRSS(D%NIJB:D%NIJE,:) * PTSTEP
+    ZWSED(D%NIJB:D%NIJE,:) = 0.
+    ZWSEDW1(D%NIJB:D%NIJE,:) = 0.
+    ZWSEDW2(D%NIJB:D%NIJE,:) = 0.
 
     ! calculation of ZP1, ZP2 and sedimentation flux
     DO JK = IKE , IKB, -1*KKL
       !estimation of q' taking into account incomming ZWSED
-      ZQP(D%NIB:D%NIE)=ZWSED(D%NIB:D%NIE,JK+KKL)*ZW(D%NIB:D%NIE,JK)
+      ZQP(D%NIJB:D%NIJE)=ZWSED(D%NIJB:D%NIJE,JK+KKL)*ZW(D%NIJB:D%NIJE,JK)
 
       GMASK(:)=.FALSE.
-      GMASK(D%NIB:D%NIE)=PRSS(D%NIB:D%NIE,JK) > ZRTMIN(5) .OR. ZQP(D%NIB:D%NIE) > ZRTMIN(5)
+      GMASK(D%NIJB:D%NIJE)=PRSS(D%NIJB:D%NIJE,JK) > ZRTMIN(5) .OR. ZQP(D%NIJB:D%NIJE) > ZRTMIN(5)
       CALL COUNTJV2(D, JCOUNT, GMASK, I1)
       DO JL=1, JCOUNT
         JI=I1(JL)
@@ -356,7 +356,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
         ENDIF
       ENDDO
 
-      DO JI = D%NIB, D%NIE
+      DO JI = D%NIJB, D%NIJE
         ZH=PDZZ(JI,JK)
         ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
         IF (ZWSEDW2(JI,JK) /= 0.) THEN
@@ -370,33 +370,33 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
     ENDDO
 
     DO JK = D%NKTB , D%NKTE
-      PRSS(D%NIB:D%NIE,JK) = PRSS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
+      PRSS(D%NIJB:D%NIJE,JK) = PRSS(D%NIJB:D%NIJE,JK) + ZW(D%NIJB:D%NIJE,JK)*(ZWSED(D%NIJB:D%NIJE,JK+KKL)-ZWSED(D%NIJB:D%NIJE,JK))
     ENDDO
 
     IF (PRESENT(PFPR)) THEN
       DO JK = D%NKTB , D%NKTE
-        PFPR(D%NIB:D%NIE,JK,5)=ZWSED(D%NIB:D%NIE,JK)
+        PFPR(D%NIJB:D%NIJE,JK,5)=ZWSED(D%NIJB:D%NIJE,JK)
       ENDDO
     ENDIF
 
-    PINPRS(D%NIB:D%NIE) = ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW + PINPRS(D%NIB:D%NIE)    ! in m/s (add ice fall)
+    PINPRS(D%NIJB:D%NIJE) = ZWSED(D%NIJB:D%NIJE,IKB)/CST%XRHOLW + PINPRS(D%NIJB:D%NIJE)    ! in m/s (add ice fall)
 
-    PRSS(D%NIB:D%NIE,:) = PRSS(D%NIB:D%NIE,:) * ZINVTSTEP
+    PRSS(D%NIJB:D%NIJE,:) = PRSS(D%NIJB:D%NIJE,:) * ZINVTSTEP
 !
 !*       2.5   for graupeln
 !
-    PRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:) * PTSTEP
-    ZWSED(D%NIB:D%NIE,:) = 0.
-    ZWSEDW1(D%NIB:D%NIE,:) = 0.
-    ZWSEDW2(D%NIB:D%NIE,:) = 0.
+    PRGS(D%NIJB:D%NIJE,:) = PRGS(D%NIJB:D%NIJE,:) * PTSTEP
+    ZWSED(D%NIJB:D%NIJE,:) = 0.
+    ZWSEDW1(D%NIJB:D%NIJE,:) = 0.
+    ZWSEDW2(D%NIJB:D%NIJE,:) = 0.
 
     ! calculation of ZP1, ZP2 and sedimentation flux
     DO JK = IKE,  IKB, -1*KKL
       !estimation of q' taking into account incomming ZWSED
-      ZQP(D%NIB:D%NIE)=ZWSED(D%NIB:D%NIE,JK+KKL)*ZW(D%NIB:D%NIE,JK)
+      ZQP(D%NIJB:D%NIJE)=ZWSED(D%NIJB:D%NIJE,JK+KKL)*ZW(D%NIJB:D%NIJE,JK)
 
       GMASK(:)=.FALSE.
-      GMASK(D%NIB:D%NIE)=PRGS(D%NIB:D%NIE,JK) > ZRTMIN(6) .OR. ZQP(D%NIB:D%NIE) > ZRTMIN(6)
+      GMASK(D%NIJB:D%NIJE)=PRGS(D%NIJB:D%NIJE,JK) > ZRTMIN(6) .OR. ZQP(D%NIJB:D%NIJE) > ZRTMIN(6)
       CALL COUNTJV2(D, JCOUNT, GMASK, I1)
 
       DO JL = 1,JCOUNT
@@ -414,7 +414,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
         ENDIF
       ENDDO
 
-      DO JI = D%NIB, D%NIE
+      DO JI = D%NIJB, D%NIJE
         ZH=PDZZ(JI,JK)
         ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
         IF (ZWSEDW2(JI,JK) /= 0.) THEN
@@ -427,34 +427,34 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
     ENDDO
 
     DO JK = D%NKTB , D%NKTE
-      PRGS(D%NIB:D%NIE,JK) = PRGS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
+      PRGS(D%NIJB:D%NIJE,JK) = PRGS(D%NIJB:D%NIJE,JK) + ZW(D%NIJB:D%NIJE,JK)*(ZWSED(D%NIJB:D%NIJE,JK+KKL)-ZWSED(D%NIJB:D%NIJE,JK))
     ENDDO
 
     IF (PRESENT(PFPR)) THEN
       DO JK = D%NKTB , D%NKTE
-        PFPR(D%NIB:D%NIE,JK,6)=ZWSED(D%NIB:D%NIE,JK)
+        PFPR(D%NIJB:D%NIJE,JK,6)=ZWSED(D%NIJB:D%NIJE,JK)
       ENDDO
     ENDIF
 
-    PINPRG(D%NIB:D%NIE) = ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW ! in m/s
+    PINPRG(D%NIJB:D%NIJE) = ZWSED(D%NIJB:D%NIJE,IKB)/CST%XRHOLW ! in m/s
 
-    PRGS(D%NIB:D%NIE,:) = PRGS(D%NIB:D%NIE,:) * ZINVTSTEP
+    PRGS(D%NIJB:D%NIJE,:) = PRGS(D%NIJB:D%NIJE,:) * ZINVTSTEP
 !
 !*       2.6   for hail
 !
     IF ( KRR == 7 ) THEN
-      PRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:) * PTSTEP
-      ZWSED(D%NIB:D%NIE,:) = 0.
-      ZWSEDW1(D%NIB:D%NIE,:) = 0.
-      ZWSEDW2(D%NIB:D%NIE,:) = 0.
+      PRHS(D%NIJB:D%NIJE,:) = PRHS(D%NIJB:D%NIJE,:) * PTSTEP
+      ZWSED(D%NIJB:D%NIJE,:) = 0.
+      ZWSEDW1(D%NIJB:D%NIJE,:) = 0.
+      ZWSEDW2(D%NIJB:D%NIJE,:) = 0.
 
       ! calculation of ZP1, ZP2 and sedimentation flux
       DO JK = IKE, IKB, -1*KKL
         !estimation of q' taking into account incomming ZWSED
-        ZQP(D%NIB:D%NIE)=ZWSED(D%NIB:D%NIE,JK+KKL)*ZW(D%NIB:D%NIE,JK)
+        ZQP(D%NIJB:D%NIJE)=ZWSED(D%NIJB:D%NIJE,JK+KKL)*ZW(D%NIJB:D%NIJE,JK)
 
         GMASK(:)=.FALSE.
-        GMASK(D%NIB:D%NIE)=PRHS(D%NIB:D%NIE,JK)+ZQP(:) > ZRTMIN(7) .OR. ZQP(D%NIB:D%NIE) > ZRTMIN(7)
+        GMASK(D%NIJB:D%NIJE)=PRHS(D%NIJB:D%NIJE,JK)+ZQP(:) > ZRTMIN(7) .OR. ZQP(D%NIJB:D%NIJE) > ZRTMIN(7)
         CALL COUNTJV2(D, JCOUNT, GMASK, I1)
 
         DO JL=1, JCOUNT
@@ -472,7 +472,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
           ENDIF
         ENDDO
 
-        DO JI = D%NIB, D%NIE
+        DO JI = D%NIJB, D%NIJE
           ZH=PDZZ(JI,JK)
           ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP/ZH)
           IF (ZWSEDW2(JI,JK) /= 0.) THEN
@@ -486,18 +486,18 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
       ENDDO
 
       DO JK = D%NKTB , D%NKTE
-        PRHS(D%NIB:D%NIE,JK) = PRHS(D%NIB:D%NIE,JK) + ZW(D%NIB:D%NIE,JK)*(ZWSED(D%NIB:D%NIE,JK+KKL)-ZWSED(D%NIB:D%NIE,JK))
+        PRHS(D%NIJB:D%NIJE,JK) = PRHS(D%NIJB:D%NIJE,JK) + ZW(D%NIJB:D%NIJE,JK)*(ZWSED(D%NIJB:D%NIJE,JK+KKL)-ZWSED(D%NIJB:D%NIJE,JK))
       ENDDO
 
       IF (PRESENT(PFPR)) THEN
         DO JK = D%NKTB , D%NKTE
-          PFPR(D%NIB:D%NIE,JK,7)=ZWSED(D%NIB:D%NIE,JK)
+          PFPR(D%NIJB:D%NIJE,JK,7)=ZWSED(D%NIJB:D%NIJE,JK)
         ENDDO
       ENDIF
 
-      PINPRH(D%NIB:D%NIE) = ZWSED(D%NIB:D%NIE,IKB)/CST%XRHOLW ! in m/s
+      PINPRH(D%NIJB:D%NIJE) = ZWSED(D%NIJB:D%NIJE,IKB)/CST%XRHOLW ! in m/s
 
-      PRHS(D%NIB:D%NIE,:) = PRHS(D%NIB:D%NIE,:) * ZINVTSTEP
+      PRHS(D%NIJB:D%NIJE,:) = PRHS(D%NIJB:D%NIJE,:) * ZINVTSTEP
 
     ENDIF
 
@@ -511,12 +511,12 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
 
     TYPE(DIMPHYEX_T),       INTENT(IN) :: D
     INTEGER, INTENT(OUT) :: IC
-    LOGICAL, DIMENSION(D%NIT), INTENT(IN)  :: LTAB ! Mask
-    INTEGER, DIMENSION(D%NIT), INTENT(OUT) :: I1   ! Used to replace the COUNT and PACK
+    LOGICAL, DIMENSION(D%NIJT), INTENT(IN)  :: LTAB ! Mask
+    INTEGER, DIMENSION(D%NIJT), INTENT(OUT) :: I1   ! Used to replace the COUNT and PACK
     INTEGER :: JI
 
     IC = 0
-    DO JI = D%NIB, D%NIE
+    DO JI = D%NIJB, D%NIJE
       IF(LTAB(JI)) THEN
         IC = IC +1
         I1(IC) = JI
