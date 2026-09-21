@@ -1319,7 +1319,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01220" name="l01220"></a><span class="lineno"> 1220</span><span class="comment">!</span></div>
 <div class="line"><a id="l01221" name="l01221"></a><span class="lineno"> 1221</span><span class="comment">!* smoothing</span></div>
 <div class="line"><a id="l01222" name="l01222"></a><span class="lineno"> 1222</span><span class="comment">!$acc kernels</span></div>
-<div class="line"><a id="l01223" name="l01223"></a><span class="lineno"> 1223</span>zphi3(:,:) = pphi3(:,:)*2.*pdtdz(:,:)</div>
+<div class="line"><a id="l01223" name="l01223"></a><span class="lineno"> 1223</span>zphi3(iijb:iije,1:ikt) = pphi3(iijb:iije,1:ikt)*2.*pdtdz(iijb:iije,1:ikt)</div>
 <div class="line"><a id="l01224" name="l01224"></a><span class="lineno"> 1224</span><span class="comment">!$acc end kernels</span></div>
 <div class="line"><a id="l01225" name="l01225"></a><span class="lineno"> 1225</span><span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__prandtl.html#afc4a63d8845434ac6af8f964c8d013fb">smooth_turb_funct</a>(d,<a class="code hl_variable" href="namespacemodd__cturb.html#ab0abf86555ea82d1f03f3fdfaa8a7f71">csturb</a>,turbn,pphi3,zphi3,pd_phi3dtdz2_o_ddtdz)</div>
 <div class="line"><a id="l01226" name="l01226"></a><span class="lineno"> 1226</span><span class="comment">!</span></div>

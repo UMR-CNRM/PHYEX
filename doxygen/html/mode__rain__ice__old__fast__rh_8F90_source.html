@@ -126,11 +126,11 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <span class="keywordtype">INTEGER</span>, <span class="keywordtype">INTENT(IN)</span> :: KSIZE</div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <span class="keywordtype">INTEGER</span>, <span class="keywordtype">INTENT(IN)</span> :: KRR</div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="keywordtype">LOGICAL</span>, <span class="keywordtype">DIMENSION(D%NIT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span> :: GMICRO <span class="comment">! Layer thickness (m)</span></div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="keywordtype">LOGICAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span> :: GMICRO <span class="comment">! Layer thickness (m)</span></div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">DIMENSION(D%NIT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PRHODJ <span class="comment">! Dry density * Jacobian</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PRHODJ <span class="comment">! Dry density * Jacobian</span></div>
 <div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">DIMENSION(D%NIT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PTHS   <span class="comment">! Theta source</span></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PTHS   <span class="comment">! Theta source</span></div>
 <div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
 <div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">DIMENSION(KSIZE)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PRVT     <span class="comment">! Water vapor m.r. at t</span></div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">DIMENSION(KSIZE)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PRCT     <span class="comment">! Cloud water m.r. at t</span></div>
@@ -180,7 +180,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
 <div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">DIMENSION(KSIZE)</span>      :: ZZW  <span class="comment">! Work array</span></div>
 <div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">DIMENSION(KSIZE, KRR)</span> :: ZZW1 <span class="comment">! Work array</span></div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">DIMENSION(D%NIT,D%NKT)</span> :: ZWKBUD</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span> :: ZWKBUD</div>
 <div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
 <div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    <span class="keywordtype">INTEGER</span> :: IGWET, IHAIL</div>
 <div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    <span class="keywordtype">INTEGER</span>, <span class="keywordtype">DIMENSION(KSIZE)</span> :: I1</div>

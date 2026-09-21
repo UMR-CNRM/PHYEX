@@ -331,7 +331,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>                                                 <span class="comment">! supersaturated fraction</span></div>
 <div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PSSIU   <span class="comment">! Sub-saturation with respect to ice in the</span></div>
 <div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>                                                 <span class="comment">! subsaturated fraction</span></div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PIFR    <span class="comment">! Ratio cloud ice moist part to dry part</span></div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PIFR    <span class="comment">! Ratio cloud ice moist part to dry part</span></div>
 <div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span><span class="comment">! input from aro_adjust / condensation with OCND2 END.</span></div>
 <div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span><span class="comment">!</span></div>
 <div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>, <span class="keywordtype">INTENT(INOUT)</span> :: PTHS    <span class="comment">! Theta source</span></div>
@@ -579,8 +579,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00494" name="l00494"></a><span class="lineno">  494</span><span class="comment">!         (Do it already here, since also used with OCND2=T )</span></div>
 <div class="line"><a id="l00495" name="l00495"></a><span class="lineno">  495</span> </div>
 <div class="line"><a id="l00496" name="l00496"></a><span class="lineno">  496</span><span class="keywordflow">IF</span> (osedic.OR.ocnd2.OR.lkogan) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00497" name="l00497"></a><span class="lineno">  497</span>  zzzz(:,d%NKTE)   = pdzz(:,d%NKTE)*0.5</div>
-<div class="line"><a id="l00498" name="l00498"></a><span class="lineno">  498</span>  zzzt(:,d%NKTE)   = pdzz(:,d%NKTE)</div>
+<div class="line"><a id="l00497" name="l00497"></a><span class="lineno">  497</span>  zzzz(d%NIJB:d%NIJE,d%NKTE)   = pdzz(d%NIJB:d%NIJE,d%NKTE)*0.5</div>
+<div class="line"><a id="l00498" name="l00498"></a><span class="lineno">  498</span>  zzzt(d%NIJB:d%NIJE,d%NKTE)   = pdzz(d%NIJB:d%NIJE,d%NKTE)</div>
 <div class="line"><a id="l00499" name="l00499"></a><span class="lineno">  499</span>  <span class="keywordflow">DO</span> jk=d%NKTE-1,d%NKTB,-1</div>
 <div class="line"><a id="l00500" name="l00500"></a><span class="lineno">  500</span>    <span class="keywordflow">DO</span> jij = d%NIJB, d%NIJE</div>
 <div class="line"><a id="l00501" name="l00501"></a><span class="lineno">  501</span>      zzzt(jij,jk) = zzzt(jij,jk+1) + pdzz(jij,jk)</div>
