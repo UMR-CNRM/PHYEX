@@ -116,6 +116,9 @@ done
 #stdout and stderr redirection
 logfile="${WORKDIR}/logfile_${contextHostname}"
 if [ -f "${logfile}" ]; then
+  if [ -f "${logfile}.old" ]; then
+    mv "${logfile}.old" "${logfile}.old2"
+  fi
   mv "${logfile}" "${logfile}.old"
 fi
 exec > "${logfile}" 2>&1
