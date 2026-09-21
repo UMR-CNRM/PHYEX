@@ -51,11 +51,11 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
     REAL, INTENT(IN) :: ZREDSN
 
-    LOGICAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
+    LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: PRHODJ  ! Dry density * Jacobian
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: PTHS    ! Theta source
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: PRVS    ! Water vapor m.r. source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PRHODJ  ! Dry density * Jacobian
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PTHS    ! Theta source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PRVS    ! Water vapor m.r. source
 
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRCT  ! Cloud water m.r. at t
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRRT  ! Rain water m.r. at t
@@ -104,7 +104,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
     REAL, DIMENSION(KSIZE) :: ZZW      ! Work array
     REAL, DIMENSION(KSIZE) :: ZZW2     ! Work array
-    REAL, DIMENSION(D%NIT,D%NKT) :: ZWKBUD
+    REAL, DIMENSION(D%NIJT,D%NKT) :: ZWKBUD
 
     INTEGER :: JL
     REAL    :: ZINVTSTEP

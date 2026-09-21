@@ -51,13 +51,13 @@ USE MODD_IO, ONLY:NVERB_FATAL
 
     LOGICAL, INTENT(IN) :: OCND2  ! Logical switch to separate liquid and ice
     LOGICAL, INTENT(IN) :: LKOGAN ! Logical switch for using Kogan autoconversion of liquid.
-    LOGICAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
+    LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PEVAP3D ! Rain evap profile
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PEVAP3D ! Rain evap profile
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: PTHS    ! Theta source
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: PRVS    ! Water vapor m.r. source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PTHS    ! Theta source
+    REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PRVS    ! Water vapor m.r. source
 
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRVT   ! Water vapor m.r. at t
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRCT   ! Cloud water m.r. at t
@@ -109,7 +109,7 @@ USE MODD_IO, ONLY:NVERB_FATAL
 
     REAL, DIMENSION(KSIZE) :: ZZW      ! Work array
     REAL, DIMENSION(KSIZE) :: ZZW2     ! Work array
-    REAL, DIMENSION(D%NIT,D%NKT) :: ZWKBUD
+    REAL, DIMENSION(D%NIJT,D%NKT) :: ZWKBUD
     REAL, DIMENSION(KSIZE) :: ZZW3     ! Work array
     REAL, DIMENSION(KSIZE) :: ZZW4     ! Work array
     REAL, DIMENSION(KSIZE) :: ZARTMP   ! temporary work array
