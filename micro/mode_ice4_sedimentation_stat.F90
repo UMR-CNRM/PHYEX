@@ -14,6 +14,8 @@ SUBROUTINE ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, PARAMI, &
                                   &PSEA, PTOWN, &
                                   &PINPRH, PFPR)
 
+!$ACDC singlecolumn
+
 !!
 !!**  PURPOSE
 !!    -------

@@ -21,6 +21,8 @@ INTERFACE
                                    PINPRH, PFPR, PQHT, PQHS,                             &
                                    PT, PLVFACT, PLSFACT, PWR, PWTH, PZCONC3D, OMICRO,    &
                                    PRVHENI, PZZZZ )
+!$ACDC singlecolumn
+
 !
 USE MODD_BUDGET,         ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t

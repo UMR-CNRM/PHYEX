@@ -20,6 +20,9 @@
                                    PINPRH, PFPR, PQHT, PQHS,                             &
                                    PT, PLVFACT, PLSFACT, PWR, PWTH, PCONC3D, PRVHENI,   &
                                    ZBUDGETS )
+
+!$ACDC singlecolumn --nocreate-interface
+
 !     #############################################################################
 !!!****  * -  compute the explicit microphysical sources
 !!

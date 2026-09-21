@@ -341,6 +341,7 @@ REAL, DIMENSION(:,:),ALLOCATABLE   :: ZWORK4, ZWORK4C
 REAL, DIMENSION(:,:),ALLOCATABLE   :: ZZZ, ZRHODREF
 REAL, DIMENSION(:),ALLOCATABLE     :: ZIC_RATE,ZCG_RATE
 !
+TYPE(DIMPHYEX_T) :: D_
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
@@ -1125,7 +1126,11 @@ IF ( ICONV1 > 0 )  THEN
 !
     ELSE
 !
-      CALL CONVECT_CHEM_TRANSPORT( CVPEXT, D, TNSV, CST, KCH1, ZCH1, ZCH1C,      &
+      D_=D
+      D_%NIJT=ICONV
+      D_%NIJB=1
+      D_%NIJE=ICONV
+      CALL CONVECT_CHEM_TRANSPORT( CVPEXT, D_, TNSV, CST, KCH1, ZCH1, ZCH1C,      &
                                    IDPL, IPBL, ILCL, ICTL, ILFS, IDBL,  &
                                    ZUMF, ZUER, ZUDR, ZDMF, ZDER, ZDDR,  &
                                    ZTIMEC, ZDXDY, ZMIXF, ZLMASS, ZWSUB, &

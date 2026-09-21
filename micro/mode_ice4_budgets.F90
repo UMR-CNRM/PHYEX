@@ -13,6 +13,9 @@ SUBROUTINE ICE4_BUDGETS(D, PARAMI, BUCONF, KRR, &
                         PLVFACT, PLSFACT, PRHODJ, PEXNREF, &
                         PRVHENI, PBUDGETS, &
                         TBUDGETS, KBUDGETS)
+
+!$ACDC singlecolumn --dummy
+
 !
 !*       0.    DECLARATIONS
 !              ------------

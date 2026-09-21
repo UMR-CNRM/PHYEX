@@ -21,6 +21,9 @@
                                    PINPRH, PFPR, PQHT, PQHS,                             &
                                    PT, PLVFACT, PLSFACT, PWR, PWTH, PZCONC3D, OMICRO,    &
                                    PRVHENI, PZZZZ )
+
+!$ACDC singlecolumn --nocreate-interface
+
 !     #############################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -286,6 +289,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZW3D
 REAL, DIMENSION(D%NIJT) :: ZCONC_TMP
 
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLW3D
+TYPE(DIMPHYEX_t) :: DD
 INTEGER :: ISIZE
 !
 !-------------------------------------------------------------------------------
@@ -532,6 +536,9 @@ ENDDO
 !ICE4_RAINFR_VERT needs the output of ICE4_COMPUTE_PDF; thus this routine
 !is called here but it's still called from within ice4_tendencies.
 IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
+
+!$ACDC ABORT {
+
   IF (PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM') THEN
     DO JK = IKTB, IKTE
       DO JIJ=IIJB, IIJE
@@ -559,7 +566,13 @@ IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
   ENDIF
   !We cannot use PWR(:,IKTB:IKTE,IRC) which is not contiguous
   ISIZE=IIJT*(IKTE-IKTB+1)
-  CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, ISIZE, PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF,&
+
+  DD = D
+  DD%NIJT = ISIZE
+  DD%NIJB = 1
+  DD%NIJE = ISIZE
+
+  CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, DD, PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF,&
                         OMICRO(:,IKTB:IKTE), PRHODREF(:,IKTB:IKTE), PRT(:,IKTB:IKTE,IRC), PRT(:,IKTB:IKTE,IRI), &
                         PCLDFR(:,IKTB:IKTE), PT(:,IKTB:IKTE), ZSIGMA_RC(:,IKTB:IKTE), &
                         PHLC_HCF(:,IKTB:IKTE), ZHLC_LCF(:,IKTB:IKTE), PHLC_HRC(:,IKTB:IKTE), ZHLC_LRC(:,IKTB:IKTE), &
@@ -572,6 +585,9 @@ IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
     CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, PWR(:,:,IRR), &
                          &PWR(:,:,IRS), PWR(:,:,IRG))
   ENDIF
+
+!$ACDC }
+
 ELSE
   PRAINFR(:,:)=1.
 ENDIF

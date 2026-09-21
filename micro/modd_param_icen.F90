@@ -87,7 +87,6 @@ REAL :: XSPLIT_MAXCFL   !< Maximum CFL number allowed for SPLIT scheme
 LOGICAL :: LSNOW_T      !< Snow parameterization from Wurtz (2021)
 !
 LOGICAL :: LPACK_INTERP !< To pack arrays before computing the different interpolations (kernels and other)
-LOGICAL :: LPACK_MICRO  !< To pack arrays before computing the process tendencies
 !
 INTEGER :: NPROMICRO    !< Size of cache-blocking bloc (0 to deactivate)
 !
@@ -131,7 +130,6 @@ LOGICAL, POINTER :: LWARM => NULL(), &
                     LSEDIM_AFTER => NULL(), &
                     LSNOW_T => NULL(), &
                     LPACK_INTERP => NULL(), &
-                    LPACK_MICRO => NULL(), &
                     LCRIAUTI => NULL(), &
                     LOCND2 => NULL(), &
                     LKOGAN => NULL(), &
@@ -171,7 +169,7 @@ NAMELIST/NAM_PARAM_ICEn/LWARM,LSEDIC,LCONVHG,CPRISTINE_ICE,CSEDIM,LDEPOSC,XVDEPO
                        CSNOWRIMING,XFRACM90,NMAXITER_MICRO,XMRSTEP,XTSTEP_TS, &
                        LADJ_BEFORE, LADJ_AFTER, LCRFLIMIT, &
                        XSPLIT_MAXCFL, LSEDIM_AFTER, LSNOW_T, &
-                       LPACK_INTERP, LPACK_MICRO, NPROMICRO, CSUBG_RC_RR_ACCR, &
+                       LPACK_INTERP, NPROMICRO, CSUBG_RC_RR_ACCR, &
                        CSUBG_RR_EVAP, CSUBG_PR_PDF, CSUBG_AUCV_RC, CSUBG_AUCV_RI, &
                        LCRIAUTI, XCRIAUTI_NAM, XT0CRIAUTI_NAM, XBCRIAUTI_NAM, &
                        XACRIAUTI_NAM, XCRIAUTC_NAM, XRDEPSRED_NAM, XRDEPGRED_NAM, &
@@ -209,7 +207,6 @@ IF(.NOT. ASSOCIATED(PARAM_ICEN, PARAM_ICE_MODEL(KTO))) THEN
   LSEDIM_AFTER => PARAM_ICEN%LSEDIM_AFTER
   LSNOW_T => PARAM_ICEN%LSNOW_T
   LPACK_INTERP => PARAM_ICEN%LPACK_INTERP
-  LPACK_MICRO => PARAM_ICEN%LPACK_MICRO
   LCRIAUTI => PARAM_ICEN%LCRIAUTI
   LOCND2 => PARAM_ICEN%LOCND2
   LKOGAN => PARAM_ICEN%LKOGAN
@@ -351,7 +348,6 @@ IF(LLDEFAULTVAL) THEN
   XSPLIT_MAXCFL=0.8
   LSNOW_T=.FALSE.
   LPACK_INTERP=.TRUE.
-  LPACK_MICRO=.TRUE.
   NPROMICRO=0
   LCRIAUTI=.FALSE.
   !!XCRIAUTIi_NAM = 0.25E-3 !  Critical ice content for the autoconversion to occur

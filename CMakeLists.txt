@@ -30,7 +30,8 @@ ecbuild_add_option(FEATURE OMP
 
 ecbuild_add_option(FEATURE ACC
                    DESCRIPTION "Support for OpenACC"
-                   REQUIRED_PACKAGES "OpenACC COMPONENTS Fortran")
+                   REQUIRED_PACKAGES "OpenACC COMPONENTS Fortran"
+                   DEFAULT OFF)
 
 if(HAVE_DOUBLE_PRECISION)
   list(APPEND precision_list dp) 
@@ -132,7 +133,7 @@ foreach(PRECISION ${precision_list})
   endif()
 
   # Compilation option to use for unqualified REALs
-  target_compile_options(phyex_${PRECISION} PUBLIC
+  target_compile_options(phyex_${PRECISION} PRIVATE
     $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
 
   if(HAVE_IFS_FLAGS)
@@ -186,7 +187,7 @@ foreach(PRECISION ${precision_list})
       endif()
 
       # Compilation option to use for unqualified REALs
-      target_compile_options(${NAME}_${PRECISION} PUBLIC
+      target_compile_options(${NAME}_${PRECISION} PRIVATE
         $<$<COMPILE_LANGUAGE:Fortran>:${PHYEX_COMPILE_OPTIONS_REAL}>)
     endforeach()
   endif()
