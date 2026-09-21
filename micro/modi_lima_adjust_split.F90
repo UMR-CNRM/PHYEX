@@ -15,10 +15,10 @@ INTERFACE
                              HACTCCN, PAERO,PSOLORG, PMI,                       &
                              PTHS, OCOMPUTE_SRC, PSRCS, PCLDFR, PICEFR,         &
                              PRC_MF, PRI_MF, PCF_MF,                            &
+                             PRCRIAUTI, PRCRIAUTC,                              &
                              PICE_CLD_WGT, PWEIGHT_MF_CLOUD,                    &
                              PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,            &
-                             PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,& 
-                             PRCRIAUTI, PRCRIAUTC)
+                             PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF)
 !
 !USE MODD_IO,    ONLY: TFILEDATA
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_T
@@ -96,6 +96,8 @@ REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(OUT) :: PICEFR    ! Cloud fraction
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(IN)  :: PRC_MF! Convective Mass Flux liquid mixing ratio
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(IN)  :: PRI_MF! Convective Mass Flux ice mixing ratio
 REAL, DIMENSION(D%NIJT, D%NKT),     INTENT(IN)  :: PCF_MF! Convective Mass Flux Cloud fraction 
+REAL, DIMENSION(D%NIJT),            INTENT(IN)  :: PRCRIAUTI ! SPP for microphysic
+REAL, DIMENSION(D%NIJT),            INTENT(IN)  :: PRCRIAUTC ! SPP for microphysic
 !
 REAL, DIMENSION(D%NIJT),       OPTIONAL, INTENT(IN)   ::  PICE_CLD_WGT
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)    :: PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
@@ -107,8 +109,6 @@ REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLC_HRC_MF
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLC_HCF_MF
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLI_HRI_MF
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLI_HCF_MF
-REAL, DIMENSION(:),       INTENT(IN)   ::  PRCRIAUTI ! SPP for microphysic
-REAL, DIMENSION(:),       INTENT(IN)   ::  PRCRIAUTC ! SPP for microphysic
 !
 END SUBROUTINE LIMA_ADJUST_SPLIT
 END INTERFACE
