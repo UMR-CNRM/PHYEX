@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import sys
+import warnings
 
 import matplotlib
 matplotlib.use('Agg')
@@ -18,6 +19,7 @@ import xarray as xr
 from pyphyextools import run_command
 
 os.environ['NUMEXPR_MAX_THREADS'] = '1'
+warnings.filterwarnings("ignore", message="Duplicate dimension names present")
 
 # List of budgets groups to compare
 avail_groups = [
@@ -51,36 +53,33 @@ def compareBACKUPFiles(file_user, file_ref):
     nk = len(da['level'])
     variables = list(da.keys())
     for var in [var for var in variables if da[var].dtype.char != 'S']:
-        try:
-            if da[var].ndim == 4:  # Variables time, level, nj, ni
-                s = (0, slice(JPVEXT, nk - JPVEXT),
-                     slice(JPHEXT, nj - JPHEXT),
-                     slice(JPHEXT, ni - JPHEXT))
-                ecart_min = float(da2[var][s].min()) - float(da[var][s].min())
-                ecart_moy = float(da2[var][s].mean()) - float(da[var][s].mean())
-                ecart_max = float(da2[var][s].max()) - float(da[var][s].max())
-            elif da[var].ndim == 3 and da['L2D'] == 0:  # Variables time, nj, ni
-                s = (0, slice(JPHEXT, nj - JPHEXT),
-                     slice(JPHEXT, ni - JPHEXT))
-                ecart_min = float(da2[var][s].min()) - float(da[var][s].min())
-                ecart_moy = float(da2[var][s].mean()) - float(da[var][s].mean())
-                ecart_max = float(da2[var][s].max()) - float(da[var][s].max())
-            elif da[var].ndim == 3 and da['L2D'] == 1:  # Variables time, level, nj or ni (2D simulation)
-                nij = len(da['ni']) if len(da['ni']) > len(da['nj']) else len(da['nj'])
-                s = (0, slice(JPVEXT, nk - JPVEXT),
-                     slice(JPHEXT, nij - JPHEXT))
-                ecart_min = float(da2[var][s].min()) - float(da[var][s].min())
-                ecart_moy = float(da2[var][s].mean()) - float(da[var][s].mean())
-                ecart_max = float(da2[var][s].max()) - float(da[var][s].max())
-            else:
-                ecart_min = float(da2[var].min()) - float(da[var].min())
-                ecart_moy = float(da2[var].mean()) - float(da[var].mean())
-                ecart_max = float(da2[var].max()) - float(da[var].max())
-            if ecart_min != 0 or ecart_moy != 0 or ecart_max != 0:
-                status += 1
-                print(var, ecart_min, ecart_moy, ecart_max)
-        except:
-            pass
+        if da[var].ndim == 4:  # Variables time, level, nj, ni
+            s = (0, slice(JPVEXT, nk - JPVEXT),
+                 slice(JPHEXT, nj - JPHEXT),
+                 slice(JPHEXT, ni - JPHEXT))
+            ecart_min = float(da2[var][s].min()) - float(da[var][s].min())
+            ecart_moy = float(da2[var][s].mean()) - float(da[var][s].mean())
+            ecart_max = float(da2[var][s].max()) - float(da[var][s].max())
+        elif da[var].ndim == 3 and da['L2D'] == 0:  # Variables time, nj, ni
+            s = (0, slice(JPHEXT, nj - JPHEXT),
+                 slice(JPHEXT, ni - JPHEXT))
+            ecart_min = float(da2[var][s].min()) - float(da[var][s].min())
+            ecart_moy = float(da2[var][s].mean()) - float(da[var][s].mean())
+            ecart_max = float(da2[var][s].max()) - float(da[var][s].max())
+        elif da[var].ndim == 3 and da['L2D'] == 1:  # Variables time, level, nj or ni (2D simulation)
+            nij = len(da['ni']) if len(da['ni']) > len(da['nj']) else len(da['nj'])
+            s = (0, slice(JPVEXT, nk - JPVEXT),
+                 slice(JPHEXT, nij - JPHEXT))
+            ecart_min = float(da2[var][s].min()) - float(da[var][s].min())
+            ecart_moy = float(da2[var][s].mean()) - float(da[var][s].mean())
+            ecart_max = float(da2[var][s].max()) - float(da[var][s].max())
+        else:
+            ecart_min = float(da2[var].min()) - float(da[var].min())
+            ecart_moy = float(da2[var].mean()) - float(da[var].mean())
+            ecart_max = float(da2[var].max()) - float(da[var].max())
+        if ecart_min != 0 or ecart_moy != 0 or ecart_max != 0:
+            status += 1
+            print(var, ecart_min, ecart_moy, ecart_max)
     return status
 
 
@@ -92,27 +91,22 @@ def compareTSERIESFiles(file_user, file_ref, tol_ad=1E-12):
     da2 = xr.open_dataset(file_ref)
     variables = list(da.keys())
     JPVEXT = 1
-    try:
-        nk = len(da['level_les'])
-    except:
-        pass
     for var in variables:
-        try:
+        if isinstance(da2[var], str) and not da2[var].dtype.startswith('|S'):
             ecart_min = float(da2[var].min()) - float(da[var].min())
             ecart_moy = float(da2[var].mean()) - float(da[var].mean())
             ecart_max = float(da2[var].max()) - float(da[var].max())
             if ecart_min != 0 or ecart_moy != 0 or ecart_max != 0:
                 status += 1
                 print(var, ecart_min, ecart_moy, ecart_max)
-        except:
-            pass
     for grp in avail_groups:
         try:
             da = xr.open_dataset(file_user, group=grp)
             da2 = xr.open_dataset(file_ref, group=grp)
             variables = list(da.keys())
             for var in variables:
-                try:
+                if 'level_les' in da:
+                    nk = len(da['level_les'])
                     s = (slice(None), slice(None, nk - JPVEXT))
                     ecart_min = float(da2[var][s].min()) - float(da[var][s].min())
                     ecart_moy = float(da2[var][s].mean()) - float(da[var][s].mean())
@@ -120,18 +114,15 @@ def compareTSERIESFiles(file_user, file_ref, tol_ad=1E-12):
                     if ecart_min != 0 or ecart_moy != 0 or ecart_max != 0:
                         status += 1
                         print(var, ecart_min, ecart_moy, ecart_max)
-                except:
-                    try:
-                        ecart_min = float(da2[var][:].min()) - float(da[var][:].min())
-                        ecart_moy = float(da2[var][:].mean()) - float(da[var][:].mean())
-                        ecart_max = float(da2[var][:].max()) - float(da[var][:].max())
-                        if (abs(ecart_min) >= tol_ad or abs(ecart_moy) >= tol_ad
-                                or abs(ecart_max) >= tol_ad):
-                            status += 1
-                            print(grp, var, ecart_min, ecart_moy, ecart_max)
-                    except:
-                        pass
-        except:
+                else:
+                    ecart_min = float(da2[var][:].min()) - float(da[var][:].min())
+                    ecart_moy = float(da2[var][:].mean()) - float(da[var][:].mean())
+                    ecart_max = float(da2[var][:].max()) - float(da[var][:].max())
+                    if (abs(ecart_min) >= tol_ad or abs(ecart_moy) >= tol_ad
+                            or abs(ecart_max) >= tol_ad):
+                        status += 1
+                        print(grp, var, ecart_min, ecart_moy, ecart_max)
+        except OSError:  # Missing group
             pass
     return status
 
