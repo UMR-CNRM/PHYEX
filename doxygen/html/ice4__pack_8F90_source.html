@@ -202,7 +202,7 @@ $(document).ready(function() { init_codefold(0); });
                 MERGE(IBUNUM-IBUNUM_EXTRA,0,OSAVE_MICRO .OR. BUCONF%LBU_ENABLE))</span>, &amp;</div>
 <div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>                                          <span class="keywordtype">INTENT(OUT)</span> :: PBUDGETS  <span class="comment">! Microphysical tendencies</span></div>
 <div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC))</span>, &amp;</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>                                          <span class="keywordtype">INTENT(IN)</span>    :: PLATHAM_IAGGS  <span class="comment">! E Function to simulate</span></div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>                                          <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: PLATHAM_IAGGS  <span class="comment">! E Function to simulate</span></div>
 <div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>                                                                          <span class="comment">! enhancement of IAGGS</span></div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="comment">!</span></div>
 <div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="comment">!</span></div>
