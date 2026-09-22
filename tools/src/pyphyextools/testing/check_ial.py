@@ -81,8 +81,6 @@ class CheckCommitIAL(CheckCommitBase):
             for t in self.tests:
                 expanded.extend(all_tests if t == 'ALL' else [t])
             self.tests = expanded
-        if not self.name:
-            self.name = escape_commit(self.commit)
 
         self.cycle = self.json_content.get('cycle', '')
         self.ialdir = f"PHYEX/{self.cycle}_{self.name}.01.{self.gmkpack_l}.{self.gmkpack_o}"
@@ -377,7 +375,7 @@ class CheckCommitIAL(CheckCommitBase):
 
             if self.perffile:
                 with open(self.perffile, 'a', encoding='utf-8') as pf:
-                    pf.write(f"{self.commit} ial {t} {elapsed_ms}\n")
+                    pf.write(f"{self.name} ial {t} {elapsed_ms}\n")
 
             prof_files = [f for f in os.listdir(test_dir) if f.startswith('drhook.prof.')]
             if prof_files:

@@ -65,8 +65,6 @@ class CheckCommitMesonh(CheckCommitBase):
             for t in self.tests:
                 expanded.extend(all_tests if t == 'ALL' else [t])
             self.tests = expanded
-        if not self.name:
-            self.name = escape_commit(self.commit)
 
         self.refversion = self.json_content.get('refversion', '')
         self.mnhdir = f"{self.refversion}-{self.name}"
@@ -262,7 +260,7 @@ class CheckCommitMesonh(CheckCommitBase):
 
             if self.perffile:
                 with open(self.perffile, 'a', encoding='utf-8') as pf:
-                    pf.write(f"{self.commit} mesonh {t} {elapsed_ms}\n")
+                    pf.write(f"{self.name} mesonh {t} {elapsed_ms}\n")
 
     def comparison(self):
         """Compare NetCDF output files against the reference."""

@@ -75,11 +75,11 @@ class CheckCommitBase:
         self.onlyIfNeeded = onlyIfNeeded
         self.computeRefIfNeeded = computeRefIfNeeded
         self.perffile = perffile
-        self.name = name
         self.repo_user = repo_user
         self.repo_protocol = repo_protocol
         self.tests = tests
         self.commit = commit
+        self.name = escape_commit(self.commit) if not name else name
         self.reference = reference
 
         if self.default_expand is True:

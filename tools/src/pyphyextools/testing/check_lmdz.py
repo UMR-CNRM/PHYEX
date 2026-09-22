@@ -11,7 +11,7 @@ import shutil
 import time
 
 from pyphyextools.testing.check_common import (
-    CheckCommitBase, CheckCommitError, escape_commit, mvdiff, run_tool)
+    CheckCommitBase, CheckCommitError, mvdiff, run_tool)
 from pyphyextools import run_command
 from pyphyextools.prep_code import prep_code
 
@@ -66,8 +66,6 @@ class CheckCommitLmdz(CheckCommitBase):
             for t in self.tests:
                 expanded.extend(all_tests if t == 'ALL' else [t])
             self.tests = expanded
-        if not self.name:
-            self.name = escape_commit(self.commit)
 
         self.version = self.json_content.get('version', '')
         self.rad = self.json_content.get('rad', '')
@@ -460,7 +458,7 @@ class CheckCommitLmdz(CheckCommitBase):
 
                 if self.perffile:
                     with open(self.perffile, 'a', encoding='utf-8') as pf:
-                        pf.write(f"{self.commit} lmdz {t} {elapsed_ms}\n")
+                        pf.write(f"{self.name} lmdz {t} {elapsed_ms}\n")
 
     def comparison(self):
         """Comparison is not yet implemented for LMDZ."""

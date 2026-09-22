@@ -119,8 +119,6 @@ class CheckCommitTestprogs(CheckCommitBase):
             for t in self.tests:
                 expanded.extend(all_tests if t == 'ALL' else [t])
             self.tests = expanded
-        if not self.name:
-            self.name = escape_commit(self.commit)
 
     @classmethod
     def parse_arguments(cls):
@@ -493,10 +491,10 @@ with open('drhook.prof.agg', 'w', encoding='utf-8') as f:
                 ZTC_sum = -999.0
 
             with open(self.perffile, 'a', encoding='utf-8') as pf:
-                pf.write(f"{self.commit} testprogs {t} {ZTD} {ZTC}\n")
+                pf.write(f"{self.name} testprogs {t} {ZTD} {ZTC}\n")
 
         with open(self.perffile, 'a', encoding='utf-8') as pf:
-            pf.write(f"{self.commit} testprogs ALL {ZTD_sum} {ZTC_sum}\n")
+            pf.write(f"{self.name} testprogs ALL {ZTD_sum} {ZTC_sum}\n")
 
     def comparison(self):
         testdir = os.path.join(self.TESTDIR, self.name)
