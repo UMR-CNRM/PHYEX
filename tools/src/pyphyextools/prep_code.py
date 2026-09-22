@@ -148,9 +148,13 @@ def merge_code(directory, model, subs, mv_func, rm_func):
         with open(suppress_file, encoding='UTF-8') as fh:
             for line in fh:
                 filename = line.strip()
-                full_path = os.path.join(directory, filename)
-                if os.path.isfile(full_path):
-                    rm_func(full_path)
+                if filename != "" and not filename.startswith('#'):
+                    full_path = os.path.join(directory, filename)
+                    if os.path.isfile(full_path):
+                        rm_func(full_path)
+                    else:
+                        raise IOError(f"file {full_path} is already absent, we cannot delete it. " +
+                                      f"Please update the {suppress_file} file.")
 
     # Clean unrelevant files
     logging.info("Cleaning unrelevant files")
