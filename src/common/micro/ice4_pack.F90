@@ -117,7 +117,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OSAVE_MICRO .OR. BUCONF%LBU_ENABLE), &
                 MERGE(IBUNUM-IBUNUM_EXTRA,0,OSAVE_MICRO .OR. BUCONF%LBU_ENABLE)), &
                                           INTENT(OUT) :: PBUDGETS  ! Microphysical tendencies
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), &
-                                          INTENT(IN)    :: PLATHAM_IAGGS  ! E Function to simulate
+                                          OPTIONAL, INTENT(IN)    :: PLATHAM_IAGGS  ! E Function to simulate
                                                                           ! enhancement of IAGGS
 !
 !
