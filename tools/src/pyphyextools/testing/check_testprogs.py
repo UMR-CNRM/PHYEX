@@ -11,6 +11,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import re
+
+import numpy
+import pandas
 
 from pyphyextools.testing.check_common import (
     CheckCommitBase, CheckCommitError, escape_commit, PHYEXCONF_DEFAULT, run_tool)
@@ -146,7 +150,7 @@ class CheckCommitTestprogs(CheckCommitBase):
         args = parser.parse_args()
         return vars(args), cls._build_commitcmd(parser)
 
-    def submit(self, output, error, cmd_args, cwd=None):
+    def submit(self, output, error, cmd_args, cwd=None, env=None):
         """Run a command, either through SLURM or directly."""
         if self.submit_method == 'slurm_belenos':
             with tempfile.NamedTemporaryFile(mode='w', suffix='.sh', delete=False) as f:
@@ -164,7 +168,7 @@ class CheckCommitTestprogs(CheckCommitBase):
                 os.chmod(f.name, 0o755)
 
             outtmp = tempfile.mktemp()
-            run_command(['sbatch', '--wait', '-o', outtmp, '-e', error, f.name])
+            run_command(['sbatch', '--wait', '-o', outtmp, '-e', error, f.name], env=env)
             with open(outtmp, encoding='utf-8') as fh:
                 content = fh.read()
             sep = '#' * 41
@@ -180,8 +184,9 @@ class CheckCommitTestprogs(CheckCommitBase):
             os.unlink(f.name)
             os.unlink(outtmp)
         else:
-            with open(output, 'w', encoding='utf-8') as out, open(error, 'w', encoding='utf-8') as err:
-                subprocess.run(cmd_args, stdout=out, stderr=err, cwd=cwd, check=False)
+            with (open(output, 'w', encoding='utf-8') as out,
+                  open(error, 'w', encoding='utf-8') as err):
+                subprocess.run(cmd_args, stdout=out, stderr=err, cwd=cwd, check=False, env=env)
 
     def fill_dirdata(self):
         """Download and extract test data if not already present."""
@@ -336,7 +341,8 @@ class CheckCommitTestprogs(CheckCommitBase):
                 cmd.extend(self.extrapolation_opts.split())
 
             self.submit(os.path.join(test_out, 'Output_run'),
-                        os.path.join(test_out, 'Stderr_run'), cmd, cwd=test_out)
+                        os.path.join(test_out, 'Stderr_run'), cmd,
+                        cwd=test_out, env=env)
             stderr_run = os.path.join(test_out, 'Stderr_run')
             if os.path.isfile(stderr_run):
                 with open(stderr_run, encoding='utf-8') as f:
@@ -346,33 +352,33 @@ class CheckCommitTestprogs(CheckCommitBase):
 
             if self.perf:
                 prof0 = os.path.join(test_out, 'drhook.prof.1')
-                if os.path.isfile(prof0):
-                    with open(prof0, encoding='utf-8') as f:
-                        content = f.read()
-                    first_line = None
-                    for i, line in enumerate(content.split('\n')):
-                        if re.match(r'^\s*1', line):
-                            first_line = i + 1
-                            break
-                    if first_line is not None:
-                        run_command([sys.executable, '-c', """
-import numpy, pandas, re
-d = {'time': ('<f4', ('mean',)), 'self': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
-     'total': ('<f4', ('mean', 'max', 'min', 'std', 'sum')), 'calls': ('<i4', ('sum',)),
-     'self_per_call': ('<f4', ('mean',)), 'total_per_call': ('<f4', ('mean',)), 'routine': ('U256', '')}
-first_line = """ + str(first_line) + """
-arraynp = numpy.loadtxt('drhook.prof.1',
-    dtype=[(k, v[0]) for (k, v) in d.items()],
-    converters={8: lambda s: s.split(b'@')[0].lstrip(b'*')},
-    skiprows=first_line - 1, usecols=[1, 3, 4, 5, 6, 7, 8], encoding='bytes')
-df = pandas.DataFrame(arraynp).groupby('routine').agg(
-    **{k + '_' + agg: pandas.NamedAgg(column=k, aggfunc=agg)
-       for k in d.keys() for agg in d[k][1]
-       if k != 'routine'}).sort_values('self_sum', ascending=False)
-df.index.name += ' ordered by self_sum'
-with open('drhook.prof.agg', 'w', encoding='utf-8') as f:
-    f.write(df.to_string())
-"""], env=env, cwd=test_out)
+                with open(prof0, encoding='utf-8') as f:
+                    content = f.read()
+                first_line = None
+                for i, line in enumerate(content.split('\n')):
+                    if re.match(r'^\s*1', line):
+                        first_line = i
+                        break
+                d = {'time': ('<f4', ('mean',)),
+                     'self': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
+                     'total': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
+                     'calls': ('<i4', ('sum',)),
+                     'self_per_call': ('<f4', ('mean',)),
+                     'total_per_call': ('<f4', ('mean',)),
+                     'routine': ('U256', '')}
+                arraynp = numpy.loadtxt(prof0,
+                                        dtype=[(k, v[0]) for (k, v) in d.items()],
+                                        converters={8: lambda s: s.split(b'@')[0].lstrip(b'*')},
+                                        skiprows=first_line, usecols=[1, 3, 4, 5, 6, 7, 8],
+                                        encoding='bytes')
+                df = pandas.DataFrame(arraynp).groupby('routine').agg(
+                    **{k + '_' + agg: pandas.NamedAgg(column=k, aggfunc=agg)
+                       for k in d.keys() for agg in d[k][1]
+                       if k != 'routine'}).sort_values('self_sum', ascending=False)
+                df.index.name += ' ordered by self_sum'
+                with open(os.path.join(test_out, 'drhook.prof.agg'),
+                          'w', encoding='utf-8') as f:
+                    f.write(df.to_string())
 
     def performance_evaluation(self):
         testdir = os.path.join(self.TESTDIR, self.name)
