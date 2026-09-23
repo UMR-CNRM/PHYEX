@@ -25,8 +25,6 @@ aux/gradient_v.f90
 aux/gradient_w.f90
 aux/mode_io_field_write.f90
 aux/ch_aer_activation.f90
-aux/mode_openacc_set_device.f90
-aux/shuman_device.f90
 aux/get_halo.f90
 aux/mode_io_field_write_phy.f90
 aux/shuman.f90
