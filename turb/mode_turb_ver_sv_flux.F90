@@ -223,7 +223,7 @@ USE MODD_FIELD,            ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,               ONLY: TFILEDATA
 USE MODD_LES,              ONLY: TLES_t
 USE MODD_PARAMETERS,       ONLY: NMNHNAMELGTMAX
-USE MODD_TURB_n,           ONLY: TURB_t
+USE MODD_TURB_n,           ONLY: TURB_t, NCED, NTURB_S
 !
 USE MODE_IO_FIELD_WRITE_PHY, ONLY: IO_FIELD_WRITE_PHY
 USE MODE_TRIDIAG,        ONLY: TRIDIAG
@@ -279,7 +279,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PWM          ! vertical wind
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.for scalars
-REAL, DIMENSION(D%NIJT,TURBN%ZTURB_S), INTENT(IN) ::  PTURB_SPP      ! SPP for turbulence
+REAL, DIMENSION(D%NIJT,NTURB_S), INTENT(IN) ::  PTURB_SPP      ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS
                             ! cumulated sources for the prognostic variables
@@ -360,9 +360,9 @@ ENDIF
 !
 IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
-   ZCSV=PTURB_SPP(:,TURBN%ZCED)/PRSNOW
+   ZCSV=PTURB_SPP(:,NCED)/PRSNOW
 ELSE
-   ZCSV=PTURB_SPP(:,TURBN%ZCED)
+   ZCSV=PTURB_SPP(:,NCED)
 ENDIF
 !----------------------------------------------------------------------------
 !

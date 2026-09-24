@@ -58,7 +58,7 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NCMFS
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
 USE MODD_CTURB,          ONLY: CTURB_XCMFS => XCMFS
@@ -232,7 +232,7 @@ END DO
 
 DO ZZ=1,SIZE(PUM,3)
    DO JJ=1,SIZE(PUM,2)
-      ZCMFSF(:,JJ,ZZ)=PTURB_SPP(:,TURBN%ZCMFS)
+      ZCMFSF(:,JJ,ZZ)=PTURB_SPP(:, NCMFS)
    ENDDO                                     
 ENDDO     
 !

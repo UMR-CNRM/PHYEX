@@ -51,7 +51,7 @@ CONTAINS
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY : CSTURB_t
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NCED
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
 !
@@ -142,11 +142,11 @@ DO JJ=1,SIZE(PSVM,2)
    DO ZZ=1,SIZE(PSVM,3)
       IF(OBLOWSNOW) THEN
       ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
-         ZCSV(:,JJ,ZZ)=PTURB_SPP(:,TURBN%ZCED)/PRSNOW
+         ZCSV(:,JJ,ZZ)=PTURB_SPP(:,NCED)/PRSNOW
       ELSE
-         ZCSV(:,JJ,ZZ)=PTURB_SPP(:,TURBN%ZCED)
+         ZCSV(:,JJ,ZZ)=PTURB_SPP(:,NCED)
       ENDIF
-         ZCSV2(:,JJ,ZZ)=PTURB_SPP(:,TURBN%ZCED)
+         ZCSV2(:,JJ,ZZ)=PTURB_SPP(:,NCED)
    ENDDO
 ENDDO
 
