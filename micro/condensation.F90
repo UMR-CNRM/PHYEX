@@ -9,8 +9,9 @@
                            &PPABS, PZZ, PRHODREF, PT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT,    &
                            &PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, PSIGRC, OUSERI,                 &
                            &OSIGMAS, OCND2,                                                                 &
-                           &PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, PSIGQSAT,PRCRIAUTI, PRCRIAUTC,            &
-                           &ZXACRIAUTI, ZXBCRIAUTI,PLV, PLS, PCPH,                                          &
+                           &PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, PSIGQSAT,                                 &
+                           &PRCRIAUTI, PRCRIAUTC, PXACRIAUTI, PXBCRIAUTI,                                   &
+                           &PLV, PLS, PCPH,                                                                 &
                            &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                                         &
                            &PICE_CLD_WGT)
 
@@ -149,10 +150,10 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PSSIU    ! Sub-saturation with r
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PIFR     ! Ratio cloud ice moist part
 REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PSIGQSAT ! use an extra "qsat" variance contribution (OSIGMAS case)
                                                               ! multiplied by PSIGQSAT
-REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRCRIAUTI ! SPP for microphysics
-REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRCRIAUTC ! SPP for microphysics
-REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: ZXACRIAUTI! SPP for microphysics
-REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: ZXBCRIAUTI! SPP for microphysics
+REAL, DIMENSION(D%NIJT),       OPTIONAL, INTENT(IN)    :: PRCRIAUTI ! SPP for microphysics
+REAL, DIMENSION(D%NIJT),       OPTIONAL, INTENT(IN)    :: PRCRIAUTC ! SPP for microphysics
+REAL, DIMENSION(D%NIJT),       OPTIONAL, INTENT(IN)    :: PXACRIAUTI! SPP for microphysics
+REAL, DIMENSION(D%NIJT),       OPTIONAL, INTENT(IN)    :: PXBCRIAUTI! SPP for microphysics
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)    :: PLV    ! Latent heat L_v
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)    :: PLS    ! Latent heat L_s
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)    :: PCPH   ! Specific heat C_ph
@@ -531,7 +532,7 @@ DO JK=IKTB,IKTE
 
     IF(PRESENT(PHLI_HCF) .AND. PRESENT(PHLI_HRI))THEN
         IF(ZFRAC(JIJ,JK) > 1.E-20)THEN
-          ZCRIAUTI(JIJ,JK)=MIN(PRCRIAUTI(JIJ),10**(ZXACRIAUTI(JIJ)*(PT(JIJ,JK)-CST%XTT)+ZXBCRIAUTI(JIJ)))
+          ZCRIAUTI(JIJ,JK)=MIN(PRCRIAUTI(JIJ),10**(PXACRIAUTI(JIJ)*(PT(JIJ,JK)-CST%XTT)+PXBCRIAUTI(JIJ)))
           ZAUTI(JIJ,JK) = (ZSBAR(JIJ,JK) - ZCRIAUTI(JIJ,JK)/ZFRAC(JIJ,JK))/ZSIGMA(JIJ,JK)
           ZGAUTI(JIJ,JK) = -ZAUTI(JIJ,JK)/SQRT(2.)
           ZGAUI(JIJ,JK) = 1 + ERF(-ZGAUTI(JIJ,JK))
