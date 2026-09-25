@@ -114,7 +114,7 @@ DO JL=1, KSIZE
       IF(PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0. ) THEN
         IF (.NOT. LDSOFT)THEN
           !HCF*autoconv(HRC/HCF) with simplification
-          PRCAUTR(JL) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JL) - PHLC_HCF(JL)*ICEP%XCRIAUTC/PRHODREF(JL), 0.0)
+          PRCAUTR(JL) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JL) - PHLC_HCF(JL)*PRCRIAUTC(JL)/PRHODREF(JL), 0.0)
         ENDIF
       ELSE
         !HCF*autoconv(HRC/HCF) with simplification

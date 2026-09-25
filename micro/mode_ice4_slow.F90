@@ -96,16 +96,11 @@ ZREDGR  = 1.      ! Tuning of the deposition of graupel, 1. is ref. value
 ZREDSN  = 1.      ! Tuning of the deposition of snow, 1. is ref. value
 
 !Cloud water split between high and low content part is done according to autoconversion option
-IF(LCRIAUTI) THEN
-   !second point to determine 10**(aT+b) law
-   ZTCRI0=-40.0
-   ZCRI0=1.25E-6
-   ZXBCRIAUTI(:)=-( LOG10(PRCRIAUTI(:)) - LOG10(ZCRI0)*ICEP%XT0CRIAUTI/ZTCRI0 )&
-           *ZTCRI0/(ICEP%XT0CRIAUTI-ZTCRI0)
-   ZXACRIAUTI(:)=(LOG10(ZCRI0)-ZXBCRIAUTI(:))/ZTCRI0
+IF(PARAMI%LCRIAUTI) THEN
+   CALL CRIAUTI(ZRCRIAUTI, ICEP%XT0CRIAUTI, ZXACRIAUTI, ZXBCRIAUTI)
 ELSE
-   ZXACRIAUTI(:)=XACRIAUTI_NAM
-   ZXBCRIAUTI(:)=XBCRIAUTI_NAM
+   ZXACRIAUTI(:)=PARAMI%XACRIAUTI_NAM
+   ZXBCRIAUTI(:)=PARAMI%XBCRIAUTI_NAM
 ENDIF
 
 IF(PARAMI%LOCND2) THEN
@@ -166,7 +161,6 @@ DO JL=1, KSIZE
                       (1+0.5*(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS) &
                        *(PLBDAS(JL))**(ICED%XBS+ICEP%XEX1DEPS) )
       ENDIF
-      PRVDEPS(JL) = PRVDEPS(JL)*PRDEPSRED(JL)
     ENDIF
   ELSE
     PRVDEPS(JL) = 0.
