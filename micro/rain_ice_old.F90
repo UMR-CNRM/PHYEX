@@ -975,7 +975,7 @@ IF (KSIZE >= 0) THEN
     ZRF(JL)=ZRAINFR(I1(JL),I2(JL))
   END DO
 !
-  CALL RAIN_ICE_OLD_SLOW(D, CST, ICED, ICEP, BUCONF, &
+  CALL RAIN_ICE_OLD_SLOW(D, CST, ICED, ICEP, PARAMI, BUCONF, &
                          KSIZE, OCND2, LMODICEDEP, &
                          PTSTEP, ZREDSN, &
                          GMICRO, PRHODJ, PTHS, PRVS, &

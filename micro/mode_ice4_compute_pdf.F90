@@ -6,7 +6,7 @@
 MODULE MODE_ICE4_COMPUTE_PDF
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_COMPUTE_PDF(CST, ICEP, ICED, PARAMI, KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
+SUBROUTINE ICE4_COMPUTE_PDF(CST, ICEP, ICED, PARAMI, KSIZE, &
                             LDMICRO, PRHODREF, PRCT, PRIT, PCF, PT, PSIGMA_RC,&
                             PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
                             PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, PRF, PRCRIAUTI, PRCRIAUTC)
@@ -45,9 +45,6 @@ TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 INTEGER,                INTENT(IN)  :: KSIZE
-CHARACTER(LEN=4),       INTENT(IN)  :: HSUBG_AUCV_RC     ! Kind of Subgrid autoconversion method for cloud water
-CHARACTER(LEN=80),      INTENT(IN)  :: HSUBG_AUCV_RI     ! Kind of Subgrid autoconversion method for cloud ice
-CHARACTER(LEN=80),      INTENT(IN)  :: HSUBG_PR_PDF   ! pdf for subgrid precipitation
 LOGICAL, DIMENSION(KSIZE), INTENT(IN)  :: LDMICRO    ! Computation mask
 REAL, DIMENSION(KSIZE), INTENT(IN)  :: PRHODREF   ! Reference density
 REAL, DIMENSION(KSIZE), INTENT(IN)  :: PRCT       ! Cloud water m.r. at t
@@ -94,7 +91,7 @@ IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 0, ZHOOK_HANDLE)
 !
 !Cloud water split between high and low content part is done according to autoconversion option
 IF(PARAMI%LCRIAUTI) THEN
-   CALL CRIAUTI(ZRCRIAUTI, ICEP%XT0CRIAUTI, ZXACRIAUTI, ZXBCRIAUTI)
+   CALL CRIAUTI(PRCRIAUTI, ICEP%XT0CRIAUTI, ZXACRIAUTI, ZXBCRIAUTI)
 ELSE
    ZXACRIAUTI(:)=PARAMI%XACRIAUTI_NAM
    ZXBCRIAUTI(:)=PARAMI%XBCRIAUTI_NAM
@@ -110,7 +107,7 @@ DO JL=1, KSIZE
   END IF
 END DO
 
-IF(HSUBG_AUCV_RC=='NONE') THEN
+IF(PARAMI%CSUBG_AUCV_RC=='NONE') THEN
   !Cloud water is entirely in low or high part
 
  DO JL=1, KSIZE
@@ -138,7 +135,7 @@ IF(HSUBG_AUCV_RC=='NONE') THEN
     END IF
   END DO
 
-ELSEIF(HSUBG_AUCV_RC=='CLFR') THEN
+ELSEIF(PARAMI%CSUBG_AUCV_RC=='CLFR') THEN
   !Cloud water is only in the cloudy part and entirely in low or high part
 
  DO JL=1, KSIZE
@@ -166,7 +163,7 @@ ELSEIF(HSUBG_AUCV_RC=='CLFR') THEN
     END IF
   END DO
 
-ELSEIF(HSUBG_AUCV_RC=='ADJU') THEN
+ELSEIF(PARAMI%CSUBG_AUCV_RC=='ADJU') THEN
 
   DO JL=1, KSIZE
     IF (LDMICRO(JL)) THEN
@@ -183,14 +180,14 @@ ELSEIF(HSUBG_AUCV_RC=='ADJU') THEN
     END IF
   END DO
 
-ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
+ELSEIF(PARAMI%CSUBG_AUCV_RC=='PDF') THEN
   !Cloud water is split between high and low part according to a PDF
   !    'HLCRECTPDF'    : rectangular PDF form
   !    'HLCTRIANGPDF'  : triangular PDF form
   !    'HLCQUADRAPDF'  : second order quadratic PDF form
   !    'HLCISOTRIPDF'  : isocele triangular PDF
   !    'SIGM'          : Redelsperger and Sommeria (1986)
-  IF(HSUBG_PR_PDF=='SIGM') THEN
+  IF(PARAMI%CSUBG_PR_PDF=='SIGM') THEN
     ! Redelsperger and Sommeria (1986) but organised according to Turner (2011, 2012)
 
     DO JL=1, KSIZE
@@ -226,15 +223,15 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
       END IF
     END DO
 
-  ELSEIF(HSUBG_PR_PDF=='HLCRECTPDF' .OR. HSUBG_PR_PDF=='HLCISOTRIPDF' .OR. &
-         &HSUBG_PR_PDF=='HLCTRIANGPDF' .OR. HSUBG_PR_PDF=='HLCQUADRAPDF') THEN
+  ELSEIF(PARAMI%CSUBG_PR_PDF=='HLCRECTPDF' .OR. PARAMI%CSUBG_PR_PDF=='HLCISOTRIPDF' .OR. &
+         &PARAMI%CSUBG_PR_PDF=='HLCTRIANGPDF' .OR. PARAMI%CSUBG_PR_PDF=='HLCQUADRAPDF') THEN
     ! Turner (2011, 2012)
     ! Calculate maximum value r_cM from PDF forms
-    IF(HSUBG_PR_PDF=='HLCRECTPDF' .OR. HSUBG_PR_PDF=='HLCISOTRIPDF') THEN
+    IF(PARAMI%CSUBG_PR_PDF=='HLCRECTPDF' .OR. PARAMI%CSUBG_PR_PDF=='HLCISOTRIPDF') THEN
       ZCOEFFRCM=2.
-    ELSE IF(HSUBG_PR_PDF=='HLCTRIANGPDF') THEN
+    ELSE IF(PARAMI%CSUBG_PR_PDF=='HLCTRIANGPDF') THEN
       ZCOEFFRCM=3.
-    ELSE IF(HSUBG_PR_PDF=='HLCQUADRAPDF') THEN
+    ELSE IF(PARAMI%CSUBG_PR_PDF=='HLCQUADRAPDF') THEN
       ZCOEFFRCM=4.
     END IF
 
@@ -251,7 +248,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
 
     ! Split available water and cloud fraction in two parts
     ! Calculate local mean values int he low and high parts for the 3 PDF forms:
-    IF(HSUBG_PR_PDF=='HLCRECTPDF') THEN
+    IF(PARAMI%CSUBG_PR_PDF=='HLCRECTPDF') THEN
       DO JL=1, KSIZE
         IF (.NOT. LDMICRO(JL)) THEN
           ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
@@ -265,7 +262,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
           ZHLC_HRCLOCAL(JL)=0.
         END IF
       END DO
-    ELSE IF(HSUBG_PR_PDF=='HLCTRIANGPDF') THEN
+    ELSE IF(PARAMI%CSUBG_PR_PDF=='HLCTRIANGPDF') THEN
       DO JL=1, KSIZE
         IF (.NOT. LDMICRO(JL)) THEN
           ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
@@ -280,7 +277,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
           ZHLC_HRCLOCAL(JL)=0.
         END IF
       END DO
-    ELSE IF(HSUBG_PR_PDF=='HLCQUADRAPDF') THEN
+    ELSE IF(PARAMI%CSUBG_PR_PDF=='HLCQUADRAPDF') THEN
       DO JL=1, KSIZE
         IF (.NOT. LDMICRO(JL)) THEN
           ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
@@ -298,7 +295,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
           ZHLC_HRCLOCAL(JL)=0.
         END IF
       END DO
-    ELSE IF(HSUBG_PR_PDF=='HLCISOTRIPDF') THEN
+    ELSE IF(PARAMI%CSUBG_PR_PDF=='HLCISOTRIPDF') THEN
       DO JL=1, KSIZE
         IF (.NOT. LDMICRO(JL)) THEN
           ! Needed to prevent evaluation, in AROME, of the next elseif (after mnh_expand transformation) condition
@@ -358,10 +355,10 @@ ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
     END DO
 
   ELSE
-    CALL PRINT_MSG(NVERB_FATAL,'GEN','ICE4_COMPUTE_PDF','wrong HSUBG_PR_PDF case')
+    CALL PRINT_MSG(NVERB_FATAL,'GEN','ICE4_COMPUTE_PDF','wrong CSUBG_PR_PDF case')
   ENDIF
 ELSE
-  CALL PRINT_MSG(NVERB_FATAL,'GEN','ICE4_COMPUTE_PDF','wrong HSUBG_AUCV case')
+  CALL PRINT_MSG(NVERB_FATAL,'GEN','ICE4_COMPUTE_PDF','wrong CSUBG_AUCV case')
 ENDIF
 !
 !Ice water split between high and low content part is done according to autoconversion option
@@ -374,7 +371,7 @@ DO JL=1, KSIZE
   END IF
 END DO
 
-IF(HSUBG_AUCV_RI=='NONE') THEN
+IF(PARAMI%CSUBG_AUCV_RI=='NONE') THEN
   !Cloud water is entirely in low or high part
 
   DO JL=1, KSIZE
@@ -402,7 +399,7 @@ IF(HSUBG_AUCV_RI=='NONE') THEN
     END IF
   END DO
 
-ELSEIF(HSUBG_AUCV_RI=='CLFR') THEN
+ELSEIF(PARAMI%CSUBG_AUCV_RI=='CLFR') THEN
   !Cloud water is only in the cloudy part and entirely in low or high part
 
   DO JL=1, KSIZE
@@ -430,7 +427,7 @@ ELSEIF(HSUBG_AUCV_RI=='CLFR') THEN
     END IF
   END DO
 
-ELSEIF(HSUBG_AUCV_RI=='ADJU') THEN
+ELSEIF(PARAMI%CSUBG_AUCV_RI=='ADJU') THEN
 
   DO JL=1, KSIZE
     IF (LDMICRO(JL)) THEN
@@ -448,8 +445,8 @@ ELSEIF(HSUBG_AUCV_RI=='ADJU') THEN
   END DO
 
 ELSE
-  !wrong HSUBG_AUCV_RI case
-  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'ICE4_COMPUTE_PDF', 'wrong HSUBG_AUCV_RI case' )
+  !wrong CSUBG_AUCV_RI case
+  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'ICE4_COMPUTE_PDF', 'wrong CSUBG_AUCV_RI case' )
 ENDIF
 !
 
@@ -464,5 +461,7 @@ END DO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 1, ZHOOK_HANDLE)
 END SUBROUTINE ICE4_COMPUTE_PDF
+
+INCLUDE "criauti.func.h"
 
 END MODULE MODE_ICE4_COMPUTE_PDF
