@@ -4,6 +4,142 @@ MODULE MODE_GRADIENT_U_PHY
 
 IMPLICIT NONE
 CONTAINS
+
+!     #######################################################        
+      SUBROUTINE GY_U_UV_PHY(D,OFLAT,PA,PDYY,PDZZ,PDZY,PGY_U_UV)
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
+!     #########################################################
+!
+!!****  *GY_U_UV* - Cartesian Gradient operator: 
+!!                          computes the gradient in the cartesian Y
+!!                          direction for a variable placed at the 
+!!                          U point and the result is placed at
+!!                          the UV vorticity point.
+!!    PURPOSE
+!!    -------
+!       The purpose of this function is to compute the discrete gradient 
+!     along the Y cartesian direction for a field PA placed at the 
+!     U point. The result is placed at the UV vorticity point.
+!
+!
+!
+!                       (          _________________z )
+!                       (          (___x _________y ) )
+!                    1  (          (d*zy (dzm(PA))) ) )
+!      PGY_U_UV=   ---- (dym(PA) - (     (------  ) ) )
+!                  ___x (          (     ( ___x   ) ) )
+!                  d*yy (          (     ( d*zz   ) ) )    
+!
+!       
+!
+!!**  METHOD
+!!    ------
+!!      The Chain rule of differencing is applied to variables expressed
+!!    in the Gal-Chen & Somerville coordinates to obtain the gradient in
+!!    the cartesian system
+!!        
+!!    EXTERNAL
+!!    --------
+!!      MXM,MYM,MZF     : Shuman functions (mean operators)
+!!      DYM,DZM         : Shuman functions (finite difference operators)
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      NONE
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (GRAD_CAR operators)
+!!      A Turbulence scheme for the Meso-NH model (Chapter 6)
+!!
+!!    AUTHOR
+!!    ------
+!!      Joan Cuxart        *INM and Meteo-France*
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    20/07/94
+!!                  18/10/00 (V.Masson) add OFLAT switch
+!-------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!
+!
+USE MODE_SHUMAN_PHY, ONLY: DYM_PHY, MZF_PHY, DZM_PHY, MXM_PHY, MYM_PHY
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+!
+IMPLICIT NONE
+!
+!
+!*       0.1   declarations of arguments and result
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+LOGICAL,                 INTENT(IN)  ::  OFLAT  ! Logical for zero ororography
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the U point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDYY    ! metric coefficient dyy
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZY    ! metric coefficient dzy
+!
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT) :: PGY_U_UV ! result UV point
+!
+!
+!*       0.2   declaration of local variables
+!
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5
+INTEGER :: IIB,IJB,IIE,IJE,IKT
+INTEGER :: JI,JJ,JK
+!
+!----------------------------------------------------------------------------
+!
+!*       1.    DEFINITION of GY_U_UV
+!              ---------------------
+!
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('GY_U_UV',0,ZHOOK_HANDLE)
+IIE=D%NIEC
+IIB=D%NIBC
+IJE=D%NJEC
+IJB=D%NJBC
+IKT=D%NKT
+!
+CALL DYM_PHY(D,PA,ZWORK1)
+CALL MXM_PHY(D,PDYY,ZWORK2)
+
+IF (.NOT. OFLAT) THEN
+  CALL DZM_PHY(D,PA,ZWORK3)
+  CALL MXM_PHY(D,PDZZ,ZWORK5)
+  !$acc kernels 
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  ZWORK3(IIB:IIE,IJB:IJE,1:IKT) = ZWORK3(IIB:IIE,IJB:IJE,1:IKT) / ZWORK5(IIB:IIE,IJB:IJE,1:IKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels 
+  CALL MYM_PHY(D,ZWORK3,ZWORK4)
+  CALL MXM_PHY(D,PDZY,ZWORK5)
+  !$acc kernels 
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  ZWORK4(IIB:IIE,IJB:IJE,1:IKT) = ZWORK4(IIB:IIE,IJB:IJE,1:IKT) * ZWORK5(IIB:IIE,IJB:IJE,1:IKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels 
+  CALL MZF_PHY(D,ZWORK4,ZWORK3)
+  !$acc kernels 
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  PGY_U_UV(IIB:IIE,IJB:IJE,1:IKT) = ( ZWORK1(IIB:IIE,IJB:IJE,1:IKT) - ZWORK3(IIB:IIE,IJB:IJE,1:IKT)) &
+                                     / ZWORK2(IIB:IIE,IJB:IJE,1:IKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels 
+ELSE
+  !$acc kernels 
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  PGY_U_UV(IIB:IIE,IJB:IJE,1:IKT)= ZWORK1(IIB:IIE,IJB:IJE,1:IKT) / ZWORK2(IIB:IIE,IJB:IJE,1:IKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels 
+END IF
+!
+!----------------------------------------------------------------------------
+!
+IF (LHOOK) CALL DR_HOOK('GY_U_UV',1,ZHOOK_HANDLE)
+END SUBROUTINE GY_U_UV_PHY
+
 !     #######################################################
       SUBROUTINE GZ_U_UW_PHY(D,PA,PDZZ,PGZ_U_UW)
 !     #######################################################

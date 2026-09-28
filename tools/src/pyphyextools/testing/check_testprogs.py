@@ -26,6 +26,7 @@ class CheckCommitTestprogs(CheckCommitBase):
     """Check a commit against the offline testprogs reference."""
 
     default_expand = False
+    default_shuman_trans = False
     default_precision = 'dp'
 
     @staticmethod
@@ -259,6 +260,8 @@ class CheckCommitTestprogs(CheckCommitBase):
         makeargs.extend(['--commit', self.commit, '--arch', self.archfile])
         if not self.useexpand:
             makeargs.append('--noexpand')
+        if not self.useshumantrans:
+            makeargs.append('--noshumantrans')
         out_path = os.path.join(build_dir, 'Output_compilation_step1')
         run_command(makeargs, build_dir, out_path, display='always')
 

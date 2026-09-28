@@ -11,6 +11,7 @@ function parse_args() {
   ARCH_PATH=$PWD/arch
   ARCH=
   useexpand=1
+  useshumantrans=1
   commit=""
   packcreation=0
   packupdate=0
@@ -33,6 +34,7 @@ $0 [options]
                       In your case PHYEXCONF=${PHYEXCONF}
 --arch ARCH  	        build using arch file [gnu]
 --noexpand            do not use mnh_expand (code will be in array-syntax)"
+--noshumantrans       do not transform shuman functions into subroutines
 --commit              commit hash (or a directory) to test; do not use this option from within a repository
 -p                    creates 'pack' (compilation directory)
 -u                    updates 'pack'
@@ -58,6 +60,7 @@ EOF
       "--arch-path")
         ARCH_PATH=$1 ; shift ;; 
       '--noexpand') useexpand=0;;
+      '--noshumantrans') useshumantrans=0;;
       '--commit') commit=$1; shift;;
       '-p') packcreation=1;;
       '-u') packupdate=1;;
@@ -201,7 +204,12 @@ function main() {
     else
       expand_options=""
     fi
-  
+    #Shuman trans option
+    if [ $useshumantrans == 1 ]; then
+      shuman_option="--shumanFUNCtoCALL"
+    else
+      shuman_option=""
+    fi
     #Temporary file for the description tree
     descTree=${TMPDIR:-/tmp}/descTree_$$
     trap "\rm -f $descTree" EXIT
@@ -215,7 +223,7 @@ function main() {
       else
         phyex-prep_code --pyfortool_opts_env PYFT_OPTS -c $commit $subs \
                         -m offline src --useParallelPyForTool \
-                        -- --tree . --descTree $descTree --shumanFUNCtoCALL $expand_options
+                        -- --tree . --descTree $descTree $shuman_option $expand_options
       fi
     else
       echo "Copy $fromdir"
@@ -223,7 +231,7 @@ function main() {
       scp -q -r $fromdir/src src/
       phyex-prep_code --pyfortool_opts_env PYFT_OPTS $subs \
                       -m offline src --useParallelPyForTool \
-                      -- --tree . --descTree $descTree --shumanFUNCtoCALL $expand_options
+                      -- --tree . --descTree $descTree $shuman_option $expand_options
     fi
     
     # Add some code

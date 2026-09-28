@@ -377,7 +377,7 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
         +ZCOEFF(:,:,IKB+1)*PRM(:,:,IKB+1,1)          &
         +ZCOEFF(:,:,IKB)*PRM(:,:,IKB,1)          &
        ) * 0.5 * ( PDZX(:,:,IKB+1)+PDZX(:,:,IKB) )     &
-       / MXF(PDXX(:,:,IKB:))                                  &
+       / MXF(PDXX(:,:,IKB))                                  &
     ) ** 2 +                                                     &
     ( MYF(DYM(PRM(:,:,IKB,1)) * PINV_PDYY(:,:,IKB))           &
      - ( ZCOEFF(:,:,IKB+2)*PRM(:,:,IKB+2,1)          &

@@ -27,6 +27,7 @@ class CheckCommitIAL(CheckCommitBase):
     """Check a commit against the IAL / AROME reference."""
 
     default_expand = True
+    default_shuman_trans = True
 
     def __init__(self, prepCodeOpts='', fullcompilation=False, **kwargs):
         super().__init__(**kwargs)
@@ -196,8 +197,12 @@ class CheckCommitIAL(CheckCommitBase):
             prep_kwargs = self._parse_prep_code_opts(self.prepCodeOpts)
             # We do not use the mnh_expand option of prep_code because expansion
             # must be done after all other transformations
-            pyfortool_options = ['--shumanFUNCtoCALL', '--removeACC']
+            pyfortool_options = ['--removeACC']
+            if self.useshumantrans:
+                pyfortool_options.append('--shumanFUNCtoCALL')
             if self.useexpand:
+                # --mnhExpand after --shumanFUNCtoCALL to deal with the directives
+                # added during the transformation
                 pyfortool_options.append('--mnhExpand')
             prep_code(
                 directory=os.path.join(phyex_dir, 'PHYEX'),

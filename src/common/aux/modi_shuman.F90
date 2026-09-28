@@ -2,104 +2,230 @@
       MODULE MODI_SHUMAN
 !     ##################
 !
+! Dummy interfaces for horizontal turbulence
+
 IMPLICIT NONE
-INTERFACE
 !
-FUNCTION DXF(PA)  RESULT(PDXF)
-IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXF   ! result at mass
-                                                            ! localization 
-END FUNCTION DXF
+INTERFACE DXF
+  MODULE PROCEDURE DXF3D, DXF2D
+END INTERFACE
 !
-FUNCTION DXM(PA)  RESULT(PDXM)
-IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass
-                                                            ! localization
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXM   ! result at flux
-                                                            ! side
-END FUNCTION DXM
+INTERFACE DXM
+  MODULE PROCEDURE DXM3D, DXM2D
+END INTERFACE
 !
-FUNCTION DYF(PA)  RESULT(PDYF)
-IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYF   ! result at mass
-                                                            ! localization 
-END FUNCTION DYF
+INTERFACE DYF
+  MODULE PROCEDURE DYF3D, DYF2D
+END INTERFACE
 !
-FUNCTION DYM(PA)  RESULT(PDYM)
-IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass
-                                                            ! localization
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYM   ! result at flux
-                                                            ! side
-END FUNCTION DYM
+INTERFACE DYM
+  MODULE PROCEDURE DYM3D, DYM2D
+END INTERFACE
 !
-FUNCTION DZF(PA,KKA,KKU,KL)  RESULT(PDZF)
+INTERFACE DZF
+  MODULE PROCEDURE DZF3D
+END INTERFACE
+!
+INTERFACE DZM
+  MODULE PROCEDURE DZM3D
+END INTERFACE
+!
+INTERFACE MXF
+  MODULE PROCEDURE MXF3D, MXF2D
+END INTERFACE
+
+INTERFACE MXM
+  MODULE PROCEDURE MXM3D, MXM2D
+END INTERFACE
+
+INTERFACE MYF
+  MODULE PROCEDURE MYF3D, MYF2D
+END INTERFACE
+
+INTERFACE MYM
+  MODULE PROCEDURE MYM3D, MYM2D
+END INTERFACE
+
+INTERFACE MZF
+  MODULE PROCEDURE MZM3D
+END INTERFACE MZF
+
+INTERFACE MZM
+  MODULE PROCEDURE MZM3D
+END INTERFACE MZM
+!
+CONTAINS
+!
+FUNCTION DXF3D(PA)  RESULT(PDXF)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-INTEGER,              INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXF   ! result at mass localization 
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION DXF3D
+FUNCTION DXF2D(PA)  RESULT(PDXF)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
+IMPLICIT NONE
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PDXF   ! result at mass localization 
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION DXF2D
+!
+FUNCTION DXM3D(PA)  RESULT(PDXM)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
+IMPLICIT NONE
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXM   ! result at flux side
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION DXM3D
+FUNCTION DXM2D(PA)  RESULT(PDXM)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
+IMPLICIT NONE
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PDXM   ! result at flux side
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION DXM2D
+!
+FUNCTION DYF3D(PA)  RESULT(PDYF)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
+IMPLICIT NONE
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYF   ! result at mass localization 
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION DYF3D
+FUNCTION DYF2D(PA)  RESULT(PDYF)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
+IMPLICIT NONE
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PDYF   ! result at mass localization 
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION DYF2D
+!
+FUNCTION DYM3D(PA)  RESULT(PDYM)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
+IMPLICIT NONE
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYM   ! result at flux side
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION DYM3D
+FUNCTION DYM2D(PA)  RESULT(PDYM)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
+IMPLICIT NONE
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PDYM   ! result at flux side
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION DYM2D
+!
+FUNCTION DZF3D(PA)  RESULT(PDZF)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
+IMPLICIT NONE
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZF   ! result at mass localization 
-END FUNCTION DZF
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION DZF3D
 !
-FUNCTION DZM(PA,KKA,KKU,KL)  RESULT(PDZM)
+FUNCTION DZM3D(PA)  RESULT(PDZM)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass
-                                                            ! localization
-INTEGER,              INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZM   ! result at flux side
-END FUNCTION DZM
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION DZM3D
 !
-FUNCTION MXF(PA)  RESULT(PMXF)
+FUNCTION MXF3D(PA)  RESULT(PMXF)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXF   ! result at mass
-                                                            ! localization 
-END FUNCTION MXF
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXF   ! result at mass localization 
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION MXF3D
+FUNCTION MXF2D(PA)  RESULT(PMXF)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
+IMPLICIT NONE
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMXF   ! result at mass localization 
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION MXF2D
 !
-FUNCTION MXM(PA)  RESULT(PMXM)
+FUNCTION MXM3D(PA)  RESULT(PMXM)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXM   ! result at flux localization 
-END FUNCTION MXM
-!
-FUNCTION MYF(PA)  RESULT(PMYF)
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION MXM3D
+FUNCTION MXM2D(PA)  RESULT(PMXM)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !   side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYF   ! result at mass 
-                                                            ! localization 
-END FUNCTION MYF
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMXM   ! result at flux localization 
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION MXM2D
 !
-FUNCTION MYM(PA)  RESULT(PMYM)
+FUNCTION MYF3D(PA)  RESULT(PMYF)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
+IMPLICIT NONE
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYF   ! result at mass localization 
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION MYF3D
+FUNCTION MYF2D(PA)  RESULT(PMYF)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
+IMPLICIT NONE
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMYF   ! result at mass localization 
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION MYF2D
+!
+FUNCTION MYM3D(PA)  RESULT(PMYM)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYM   ! result at flux localization 
-END  FUNCTION MYM
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END  FUNCTION MYM3D
+FUNCTION MYM2D(PA)  RESULT(PMYM)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
+IMPLICIT NONE
+REAL, DIMENSION(:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMYM   ! result at flux localization 
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END  FUNCTION MYM2D
 !
-FUNCTION MZF(PA,KKA,KKU,KL)  RESULT(PMZF)
+FUNCTION MZF3D(PA)  RESULT(PMZF)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
-INTEGER,              INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMZF   ! result at mass
-                                                            ! localization 
-END FUNCTION MZF
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMZF   ! result at mass localization 
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION MZF3D
 !
-FUNCTION MZM(PA,KKA,KKU,KL)  RESULT(PMZM)
+FUNCTION MZM3D(PA)  RESULT(PMZM)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
-INTEGER,              INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMZM   ! result at flux localization 
-END FUNCTION MZM
-!
-END INTERFACE
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_SHUMAN', 'Prohibited call')
+END FUNCTION MZM3D
 !
 END MODULE MODI_SHUMAN

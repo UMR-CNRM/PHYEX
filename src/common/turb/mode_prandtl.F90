@@ -75,7 +75,6 @@ CONTAINS
 !!      MZM : Shuman function (mean operator in the z direction)
 !!      Module MODI_ETHETA    : interface module for ETHETA
 !!      Module MODI_EMOIST    : interface module for EMOIST
-!!      Module MODI_SHUMAN    : interface module for Shuman operators
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------

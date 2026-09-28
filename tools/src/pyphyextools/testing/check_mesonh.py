@@ -22,6 +22,7 @@ class CheckCommitMesonh(CheckCommitBase):
     """Check a commit against the MesoNH reference."""
 
     default_expand = False
+    default_shuman_trans = False
 
     def __init__(self, prepCodeOpts='', **kwargs):
         super().__init__(**kwargs)
@@ -139,7 +140,11 @@ class CheckCommitMesonh(CheckCommitBase):
                          os.path.join(src_base, 'PHYEX') + '/'])
             prep_kwargs = self._parse_prep_code_opts(self.prepCodeOpts)
             pyfortool_options = ['--removeExtraDOinMnhDoConcurrent']
+            if self.useshumantrans:
+                pyfortool_options.append('--shumanFUNCtoCALL')
             if self.useexpand:
+                # --mnhExpand after --shumanFUNCtoCALL to deal with the directives
+                # added during the transformation
                 pyfortool_options.append('--mnhExpand')
             prep_code(
                 directory=os.path.join(src_base, 'PHYEX'),

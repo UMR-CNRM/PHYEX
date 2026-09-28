@@ -20,6 +20,7 @@ class CheckCommitLmdz(CheckCommitBase):
     """Check a commit against the LMDZ reference."""
 
     default_expand = False
+    default_shuman_trans = False
     default_buildSystem = 'fcm'
     alternative_buildSystem = 'make'
 
@@ -215,9 +216,11 @@ class CheckCommitLmdz(CheckCommitBase):
                          os.path.join(packdir, 'PHYEX')])
 
             prep_kwargs = self._parse_prep_code_opts(self.prepCodeOpts)
-            pyfortool_options = ['--shumanFUNCtoCALL', '--removeACC']
+            pyfortool_options = ['--removeACC']
             if self.useexpand:
                 pyfortool_options.append('--mnhExpand')
+            if self.useshumantrans:
+                pyfortool_options.append('--shumanFUNCtoCALL')
             prep_code(
                 directory=os.path.join(packdir, 'PHYEX'),
                 model='lmdz',

@@ -6,102 +6,83 @@
 !     ######################
       MODULE MODI_GRADIENT_M
 !     ###################### 
+
+! Dummy interfaces for horizontal turbulence
+
 !
 IMPLICIT NONE
-INTERFACE
+CONTAINS
 !
-!
-FUNCTION GX_M_M(PA,PDXX,PDZZ,PDZX,KKA,KKU,KL)      RESULT(PGX_M_M)
+FUNCTION GX_M_M(OFLAT,PA,PDXX,PDZZ,PDZX)      RESULT(PGX_M_M)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
-!
+LOGICAL, INTENT(IN) :: OFLAT
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZX    ! metric coefficient dzx
-INTEGER, INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
-INTEGER, INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)
-!
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_M_M ! result mass point
-!
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_GRADIENT_M', 'Prohibited call')
 END FUNCTION GX_M_M
 !
-!
-FUNCTION GY_M_M(PA,PDYY,PDZZ,PDZY,KKA,KKU,KL)      RESULT(PGY_M_M)
+FUNCTION GY_M_M(OFLAT,PA,PDYY,PDZZ,PDZY)      RESULT(PGY_M_M)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
-!
+LOGICAL, INTENT(IN) :: OFLAT
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDYY    ! metric coefficient dyy
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZY    ! metric coefficient dzy
-!
-INTEGER, INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
-INTEGER, INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_M_M ! result mass point
-!
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_GRADIENT_M', 'Prohibited call')
 END FUNCTION GY_M_M
 !
-!
-FUNCTION GZ_M_M(PA,PDZZ,KKA,KKU,KL)      RESULT(PGZ_M_M)
+FUNCTION GZ_M_M(PA,PDZZ)      RESULT(PGZ_M_M)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
-!
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
-!
-INTEGER, INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
-INTEGER, INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGZ_M_M ! result mass point
-!
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_GRADIENT_M', 'Prohibited call')
 END FUNCTION GZ_M_M
 !
-      FUNCTION GX_M_U(KKA,KKU,KL,PY,PDXX,PDZZ,PDZX) RESULT(PGX_M_U)
-!  
+FUNCTION GX_M_U(OFLAT,PY,PDXX,PDZZ,PDZX) RESULT(PGX_M_U)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
-!
-INTEGER,              INTENT(IN)     :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+LOGICAL, INTENT(IN) :: OFLAT
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDXX                   ! d*xx
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDZX                   ! d*zx 
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDZZ                   ! d*zz
-!
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PY       ! variable at mass
-                                                              ! localization
-REAL, DIMENSION(SIZE(PY,1),SIZE(PY,2),SIZE(PY,3)) :: PGX_M_U  ! result at flux
-                                                              ! side
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PY       ! variable at mass localization
+REAL, DIMENSION(SIZE(PY,1),SIZE(PY,2),SIZE(PY,3)) :: PGX_M_U  ! result at flux side
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_GRADIENT_M', 'Prohibited call')
 END FUNCTION GX_M_U
 !
-!
-      FUNCTION GY_M_V(KKA,KKU,KL,PY,PDYY,PDZZ,PDZY) RESULT(PGY_M_V)
-!
+FUNCTION GY_M_V(OFLAT,PY,PDYY,PDZZ,PDZY) RESULT(PGY_M_V)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
-!
-INTEGER,              INTENT(IN)     :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+LOGICAL, INTENT(IN) :: OFLAT
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDYY                   !d*yy
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDZY                   !d*zy 
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDZZ                   !d*zz
-!
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PY       ! variable at mass
-                                                              ! localization
-REAL, DIMENSION(SIZE(PY,1),SIZE(PY,2),SIZE(PY,3)) :: PGY_M_V  ! result at flux
-                                                              ! side
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PY       ! variable at mass localization
+REAL, DIMENSION(SIZE(PY,1),SIZE(PY,2),SIZE(PY,3)) :: PGY_M_V  ! result at flux side
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_GRADIENT_M', 'Prohibited call')
 END FUNCTION GY_M_V
 !
-      FUNCTION GZ_M_W(KKA, KKU, KL,PY,PDZZ) RESULT(PGZ_M_W)
-!  
+FUNCTION GZ_M_W(PY,PDZZ) RESULT(PGZ_M_W)
+USE MODE_MSG, ONLY: PRINT_MSG
+USE MODD_IO, ONLY: NVERB_FATAL
 IMPLICIT NONE
-!
-                                                          ! Metric coefficient:
-INTEGER,              INTENT(IN)     :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDZZ                   !d*zz
-!
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PY       ! variable at mass
-                                                              ! localization
-REAL, DIMENSION(SIZE(PY,1),SIZE(PY,2),SIZE(PY,3)) :: PGZ_M_W  ! result at flux
-                                                              ! side
-!
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PY       ! variable at mass localization
+REAL, DIMENSION(SIZE(PY,1),SIZE(PY,2),SIZE(PY,3)) :: PGZ_M_W  ! result at flux side
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODI_GRADIENT_M', 'Prohibited call')
 END FUNCTION GZ_M_W
-!
-END INTERFACE
 !
 END MODULE MODI_GRADIENT_M

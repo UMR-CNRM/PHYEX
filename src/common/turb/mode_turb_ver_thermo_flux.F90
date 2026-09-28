@@ -1306,5 +1306,7 @@ END IF !end of <w Rc>
 !
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_FLUX',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "shugrad.h"
 END SUBROUTINE TURB_VER_THERMO_FLUX
 END MODULE MODE_TURB_VER_THERMO_FLUX

@@ -48,8 +48,8 @@ CONTAINS
 !!      GX_U_M,GY_V_M,GZ_W_M
 !!      GX_M_U,GY_M_V          :  Cartesian vertical gradient operators
 !!
-!!      MXF,MXM.MYF,MYM,MZF,MZM:  Shuman functions (mean operators)
-!!      DZF                    :  Shuman functions (difference operators)     
+!!      MZF,MZM                :  Shuman functions (mean operators)
+!!      DZF,DZM                :  Shuman functions (difference operators)     
 !!
 !!      SUBROUTINE TRIDIAG     :  to solve an implicit temporal scheme
 !!      
@@ -553,5 +553,7 @@ END IF
 !----------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('TKE_EPS_SOURCES',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "shugrad.h"
 END SUBROUTINE TKE_EPS_SOURCES
 END MODULE MODE_TKE_EPS_SOURCES

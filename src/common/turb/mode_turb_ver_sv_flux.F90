@@ -510,5 +510,7 @@ END DO   ! end of scalar loop
 !----------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_FLUX',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "shugrad.h"
 END SUBROUTINE TURB_VER_SV_FLUX
 END MODULE MODE_TURB_VER_SV_FLUX

@@ -4,6 +4,140 @@ MODULE MODE_GRADIENT_V_PHY
 
 IMPLICIT NONE
 CONTAINS
+!     ######spl
+      SUBROUTINE GX_V_UV_PHY(D,OFLAT,PA,PDXX,PDZZ,PDZX,PGX_V_UV)
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
+!     #########################################################
+!
+!!****  *GX_V_UV* - Cartesian Gradient operator: 
+!!                          computes the gradient in the cartesian X
+!!                          direction for a variable placed at the 
+!!                          V point and the result is placed at
+!!                          the UV vorticity point.
+!!    PURPOSE
+!!    -------
+!       The purpose of this function is to compute the discrete gradient 
+!     along the X cartesian direction for a field PA placed at the 
+!     V point. The result is placed at the UV vorticity point.
+!
+!
+!                       (          _________________z )
+!                       (          (___y _________x ) )
+!                    1  (          (d*zx (dzm(PA))) ) )
+!      PGX_V_UV=   ---- (dxm(PA) - (     (------  ) ) )
+!                  ___y (          (     ( ___y   ) ) )
+!                  d*xx (          (     ( d*zz   ) ) )    
+!
+!       
+!
+!!**  METHOD
+!!    ------
+!!      The Chain rule of differencing is applied to variables expressed
+!!    in the Gal-Chen & Somerville coordinates to obtain the gradient in
+!!    the cartesian system
+!!        
+!!    EXTERNAL
+!!    --------
+!!      MXM,MZF,MYM     : Shuman functions (mean operators)
+!!      DXM,DZM         : Shuman functions (finite difference operators)
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      NONE
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (GRAD_CAR operators)
+!!      A Turbulence scheme for the Meso-NH model (Chapter 6)
+!!
+!!    AUTHOR
+!!    ------
+!!      Joan Cuxart        *INM and Meteo-France*
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    20/07/94
+!!                  18/10/00 (V.Masson) add OFLAT switch
+!-------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!
+!
+USE MODE_SHUMAN_PHY, ONLY: DXM_PHY, MZF_PHY, DZM_PHY, MYM_PHY, MXM_PHY
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+!
+IMPLICIT NONE
+!
+!
+!*       0.1   declarations of arguments and result
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+LOGICAL,                 INTENT(IN)  ::  OFLAT  ! Logical for zero ororography
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the V point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZX    ! metric coefficient dzx
+!
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT) :: PGX_V_UV ! result UV point
+!
+!
+!*       0.2   declaration of local variables
+!
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5
+INTEGER :: IIB,IJB,IIE,IJE,IKT
+INTEGER :: JI,JJ,JK
+!
+!----------------------------------------------------------------------------
+!
+!*       1.    DEFINITION of GX_V_UV
+!              ---------------------
+!
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('GX_V_UV',0,ZHOOK_HANDLE)
+IIE=D%NIEC
+IIB=D%NIBC
+IJE=D%NJEC
+IJB=D%NJBC
+IKT=D%NKT
+
+CALL DXM_PHY(D,PA,ZWORK1)
+CALL MYM_PHY(D,PDXX,ZWORK2)
+!
+IF (.NOT. OFLAT) THEN
+  CALL DZM_PHY(D,PA,ZWORK3)
+  CALL MYM_PHY(D,PDZZ,ZWORK5)
+  !$acc kernels 
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  ZWORK3(IIB:IIE,IJB:IJE,1:IKT) = ZWORK3(IIB:IIE,IJB:IJE,1:IKT) / ZWORK5(IIB:IIE,IJB:IJE,1:IKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels 
+  CALL MXM_PHY(D,ZWORK3,ZWORK4)
+  CALL MYM_PHY(D,PDZX,ZWORK5)
+  !$acc kernels 
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  ZWORK4(IIB:IIE,IJB:IJE,1:IKT) = ZWORK4(IIB:IIE,IJB:IJE,1:IKT) * ZWORK5(IIB:IIE,IJB:IJE,1:IKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels 
+  CALL MZF_PHY(D,ZWORK4,ZWORK3)
+  !$acc kernels 
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  PGX_V_UV(IIB:IIE,IJB:IJE,1:IKT) = ( ZWORK1(IIB:IIE,IJB:IJE,1:IKT) - ZWORK3(IIB:IIE,IJB:IJE,1:IKT)) &
+                                     / ZWORK2(IIB:IIE,IJB:IJE,1:IKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)                  
+  !$acc end kernels 
+ELSE
+  !$acc kernels 
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  PGX_V_UV(IIB:IIE,IJB:IJE,1:IKT)= ZWORK1(IIB:IIE,IJB:IJE,1:IKT) / ZWORK2(IIB:IIE,IJB:IJE,1:IKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels 
+END IF
+!
+!----------------------------------------------------------------------------
+!
+IF (LHOOK) CALL DR_HOOK('GX_V_UV',1,ZHOOK_HANDLE)
+END SUBROUTINE GX_V_UV_PHY
+
      !     #######################################################
       SUBROUTINE GZ_V_VW_PHY(D,PA,PDZZ,PGZ_V_VW)
 !     #######################################################

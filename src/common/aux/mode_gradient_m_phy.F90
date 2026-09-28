@@ -35,7 +35,6 @@ CONTAINS
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------  
-!!      Module MODI_SHUMAN : interface for the Shuman functions
 !!
 !!    REFERENCE
 !!    ---------
@@ -357,6 +356,109 @@ ENDIF
 !
 IF (LHOOK) CALL DR_HOOK('GY_M_M',1,ZHOOK_HANDLE)
 END SUBROUTINE GY_M_M_PHY
+!
+!     #######################################################
+      SUBROUTINE GZ_M_M_PHY(D, PA,PDZZ, PGZ_M_M)
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
+!     #######################################################
+!
+!!****  *GZ_M_M* - Cartesian Gradient operator:
+!!                          computes the gradient in the cartesian Z
+!!                          direction for a variable placed at the
+!!                          mass point and the result is placed at
+!!                          the mass point.
+!!    PURPOSE
+!!    -------
+!       The purpose of this function is to compute the discrete gradient
+!     along the Z cartesian direction for a field PA placed at the
+!     mass point. The result is placed at the mass point.
+!
+!                 _________z
+!                 (dzm(PA))
+!      PGZ_M_M =  (------ )
+!                 ( d*zz  )
+!
+!
+!!**  METHOD
+!!    ------
+!!      The Chain rule of differencing is applied to variables expressed
+!!    in the Gal-Chen & Somerville coordinates to obtain the gradient in
+!!    the cartesian system
+!!
+!!    EXTERNAL
+!!    --------
+!!      MZF     : Shuman functions (mean operators)
+!!      DZM     : Shuman functions (finite difference operators)
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      NONE
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (GRAD_CAR operators)
+!!      A Turbulence scheme for the Meso-NH model (Chapter 6)
+!!
+!!    AUTHOR
+!!    ------
+!!      Joan Cuxart        *INM and Meteo-France*
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    18/07/94
+!-------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!
+!
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+USE MODE_SHUMAN_PHY, ONLY: MZF_PHY, DZM_PHY
+!
+IMPLICIT NONE
+!
+!
+!*       0.1   declarations of arguments and result
+!
+TYPE(DIMPHYEX_t),        INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the mass point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+!
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT) :: PGZ_M_M ! result mass point
+!
+!
+!*       0.2   declaration of local variables
+!
+INTEGER :: JI,JJ,JK, IIB, IIE, IJB, IJE,IKT
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: PA_WORK, ZWORK
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+!
+!----------------------------------------------------------------------------
+!
+!*       1.    DEFINITION of GZ_M_M
+!              --------------------
+!
+IF (LHOOK) CALL DR_HOOK('GZ_M_M_PHY',0,ZHOOK_HANDLE)
+IIE=D%NIEC
+IIB=D%NIBC
+IJE=D%NJEC
+IJB=D%NJBC
+IKT=D%NKT
+!
+CALL DZM_PHY(D,PA,PA_WORK)
+!
+!$acc kernels
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+ZWORK(IIB:IIE,IJB:IJE,1:IKT)= PA_WORK(IIB:IIE,IJB:IJE,1:IKT) &
+                                               / PDZZ(IIB:IIE,IJB:IJE,1:IKT)
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+!$acc end kernels
+!
+CALL MZF_PHY(D, ZWORK, PGZ_M_M)
+!
+!----------------------------------------------------------------------------
+!
+IF (LHOOK) CALL DR_HOOK('GZ_M_M_PHY',1,ZHOOK_HANDLE)
+END SUBROUTINE GZ_M_M_PHY
 !
 !     #######################################################
       SUBROUTINE GX_M_U_PHY(D,OFLAT,PY,PDXX,PDZZ,PDZX,PGX_M_U)

@@ -116,9 +116,9 @@ SUBROUTINE TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,NEBN,TLES,       &
 !!                               field  derivated
 !!
 !!
-!!      MXM,MXF,MYM,MYF,MZM,MZF
+!!      MZM,MZF
 !!                             :  Shuman functions (mean operators)
-!!      DXF,DYF,DZF,DZM
+!!      DZM
 !!                             :  Shuman functions (difference operators)
 !!
 !!      FUNCTIONs ETHETA and EMOIST  :
@@ -1256,5 +1256,7 @@ ENDIF
 !
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_CORR',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "shugrad.h"
 END SUBROUTINE TURB_VER_THERMO_CORR
 END MODULE MODE_TURB_VER_THERMO_CORR

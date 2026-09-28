@@ -59,12 +59,13 @@ class CheckCommitBase:
     :meth:`cleaning` to provide model-specific behaviour.
     """
 
-    default_expand = None
+    default_expand = True
+    default_shuman_trans = None
 
     def __init__(self, packcreation, packupdate, compilation, run_tests, check,
                  remove, suppress, onlyIfNeeded, computeRefIfNeeded, perffile,
                  name, repo_user, repo_protocol, tests, commit, reference,
-                 useexpand=None, module_name=None, commitcmd=None, **kwargs):
+                 useexpand=None, useshumantrans=None, module_name=None, commitcmd=None, **kwargs):
         self.packcreation = packcreation
         self.packupdate = packupdate
         self.compilation = compilation
@@ -81,13 +82,9 @@ class CheckCommitBase:
         self.commit = commit
         self.name = escape_commit(self.commit) if not name else name
         self.reference = reference
-
-        if self.default_expand is True:
-            self.useexpand = useexpand if useexpand is not None else True
-        elif self.default_expand is False:
-            self.useexpand = useexpand if useexpand is not None else False
-        else:
-            self.useexpand = True
+        self.useexpand = useexpand if useexpand is not None else self.default_expand
+        self.useshumantrans = useshumantrans if useshumantrans is not None \
+                              else self.default_shuman_trans
 
         if not any([self.packcreation, self.packupdate,
                      self.compilation, self.run_tests, self.check, self.remove]):
@@ -162,6 +159,12 @@ class CheckCommitBase:
         elif cls.default_expand is False:
             parser.add_argument('--expand', action='store_true', dest='useexpand',
                                 help='expand mnh_expand blocks')
+        if cls.default_shuman_trans is True:
+            parser.add_argument('--noshumantrans', action='store_false', dest='useshumantrans',
+                                help='do not transform shuman functions into subroutines')
+        elif cls.default_shuman_trans is False:
+            parser.add_argument('--shumantrans', action='store_true', dest='useshumantrans',
+                                help='transform shuman functions into subroutines')
         parser.add_argument('commit', nargs='?', default=None,
                             help='commit hash or a directory to test')
         parser.add_argument('reference', nargs='?', default=None,
