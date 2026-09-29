@@ -406,7 +406,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRVS_TURB   ! evolu
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRTHLS_TURB ! evolution of rhoJ*thl by turbulence only
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRRTS_TURB  ! evolution of rhoJ*rt  by turbulence only
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT),OPTIONAL ::  PDRSVS_TURB  ! evolution of rhoJ*Sv  by turbulence only
-REAL, DIMENSION(D%NIJT,NTURB_S), INTENT(IN)      ::  PTURB_SPP
+REAL, DIMENSION(D%NIJT,NTURB_S), INTENT(IN),OPTIONAL    ::  PTURB_SPP
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PFLXZTHVMF
 !                                           MF contribution for vert. turb. transport
 !                                           used in the buoy. prod. of TKE

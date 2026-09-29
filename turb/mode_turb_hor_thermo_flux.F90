@@ -61,7 +61,7 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_TURB_n, ONLY: TURB_t, NCSHF
+USE MODD_TURB_n, ONLY: TURB_t, NCSHF, NTURB_S
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
@@ -143,7 +143,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PSRCM
                                   ! s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PFRAC_ICE    ! ri fraction of rc+ri
-REAL, DIMENSION(:,:),   INTENT(IN)      ::  PTURB_SPP    ! SPP for turbulence
+REAL, DIMENSION(D%NIJT,NTURB_S),   INTENT(IN)      ::  PTURB_SPP    ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRTHLS
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS         ! var. at t+1 -split-

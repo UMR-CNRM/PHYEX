@@ -114,7 +114,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT)       &
                                      :: ZFLX, ZA, ZWKLES, ZCSV, ZCSV2
 !
 INTEGER             :: JSV          ! loop counter
-INTEGER             :: IKU, IIT, IJT, IKT, ZZ
+INTEGER             :: IKU, IIT, IJT, IKT
 !
 REAL :: ZTIME1, ZTIME2
 !
@@ -139,14 +139,14 @@ IKT=D%NKT
 CALL SECOND_MNH(ZTIME1)
 !
 DO JJ=1,SIZE(PSVM,2)
-   DO ZZ=1,SIZE(PSVM,3)
+   DO JK=1,SIZE(PSVM,3)
       IF(OBLOWSNOW) THEN
       ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
-         ZCSV(:,JJ,ZZ)=PTURB_SPP(:,NCED)/PRSNOW
+         ZCSV(:,JJ,JK)=PTURB_SPP(:,NCED)/PRSNOW
       ELSE
-         ZCSV(:,JJ,ZZ)=PTURB_SPP(:,NCED)
+         ZCSV(:,JJ,JK)=PTURB_SPP(:,NCED)
       ENDIF
-         ZCSV2(:,JJ,ZZ)=PTURB_SPP(:,NCED)
+         ZCSV2(:,JJ,JK)=PTURB_SPP(:,NCED)
    ENDDO
 ENDDO
 

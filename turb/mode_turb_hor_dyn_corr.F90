@@ -174,7 +174,7 @@ REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PVSLOPEM     ! wind componen
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
-REAL, DIMENSION(:,:),     INTENT(IN)    ::  PTURB_SPP    ! Turb. SPP
+REAL, DIMENSION(D%NIJT,NTURB_S),     INTENT(IN)    ::  PTURB_SPP    ! Turb. SPP
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS, PRWS
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP,PTP      ! TKE production terms
@@ -192,7 +192,7 @@ INTEGER             :: IKB,IKE
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain  
 INTEGER             :: IKU,IKT,IIT,IJT                                   
-INTEGER             :: JSV,JI,JJ,JK,ZZ      ! scalar loop counter
+INTEGER             :: JSV,JI,JJ,JK      ! scalar loop counter
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GX_U_M_PUM
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GY_V_M_PVM
@@ -264,9 +264,9 @@ IJT=D%NJT
 IKT=D%NKT
 !
 !
-DO ZZ=1,SIZE(PUM,3)
+DO JK=1,SIZE(PUM,3)
    DO JJ=1,SIZE(PUM,2)
-      ZCMFSF(:,JJ,ZZ)=PTURB_SPP(:,NTURB_S)
+      ZCMFSF(:,JJ,JK)=PTURB_SPP(:,NTURB_S)
    ENDDO
 ENDDO
 

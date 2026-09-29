@@ -58,7 +58,7 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_TURB_n, ONLY: TURB_t, NCMFS
+USE MODD_TURB_n, ONLY: TURB_t, NCMFS, NTURB_S
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
 USE MODD_CTURB,          ONLY: CTURB_XCMFS => XCMFS
@@ -143,7 +143,7 @@ REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PUSLOPEM     ! wind componen
 REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
                                      ! direction normal to the maximum slope one
 !
-REAL, DIMENSION(:,:),     INTENT(IN) ::  PTURB_SPP    ! SPP for turbulence 
+REAL, DIMENSION(D%NIJT,NTURB_s),     INTENT(IN) ::  PTURB_SPP    ! SPP for turbulence 
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS   ! var. at t+1 -split-
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE production terms

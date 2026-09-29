@@ -63,7 +63,7 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_TURB_n, ONLY: TURB_t, NCMFS
+USE MODD_TURB_n, ONLY: TURB_t, NCMFS,  NTURB_S
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
 USE MODD_CTURB,          ONLY: CTURB_XCMFS => XCMFS
@@ -129,7 +129,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
-REAL, DIMENSION(:,:),     INTENT(IN)    ::  PTURB_SPP    ! SPP for turbulence
+REAL, DIMENSION(D%NIJT,NTURB_S),     INTENT(IN)    ::  PTURB_SPP    ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRWS
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE production terms

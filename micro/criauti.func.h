@@ -18,10 +18,10 @@ ELEMENTAL SUBROUTINE CRIAUTI(PRCRIAUTI, PT0CRIAUTI, PBCRIAUTI, PACRIAUTI)
 !
 IMPLICIT NONE
 !
-REAL,    INTENT(IN)    :: PRCRIAUTI   ! Explanation
-REAL,    INTENT(IN)    :: PT0CRIAUTI  ! Explanation
-REAL,    INTENT(OUT)   :: PACRIAUTI   ! Explanation
-REAL,    INTENT(OUT)   :: PBCRIAUTI   ! Explanation
+REAL,    INTENT(IN)    :: PRCRIAUTI   ! Constants for pristine ice autoconversion
+REAL,    INTENT(IN)    :: PT0CRIAUTI  ! Temp degC at which cirrus law starts to be used
+REAL,    INTENT(OUT)   :: PACRIAUTI   ! A Coef. for cirrus law 
+REAL,    INTENT(OUT)   :: PBCRIAUTI   ! B Coef. for cirrus law 
 !
 REAL :: ZTCRI0, ZCRI0
 !
