@@ -53,8 +53,6 @@ USE MODD_TURB_n, ONLY: TURB_t
 USE MODE_UPDATE_IIJU_PHY, ONLY: UPDATE_IIJU_PHY
 USE MODE_SBL_PHY, ONLY: BUSINGER_PHIM, BUSINGER_PHIE
 !
-USE MODE_SHUMAN_PHY, ONLY: MZF_PHY, MYF_PHY, MXF_PHY
-!
 IMPLICIT NONE
 !
 !*       0.1   Declaration of arguments
@@ -117,7 +115,7 @@ IKU=D%NKU
 IKL=D%NKL
 !
 ! altitude of mass points
-CALL MZF_PHY(D,PZZ,ZZZ)
+ZZZ=MZF(PZZ)
 ! replace by height of mass points
 DO JK=1,IKT
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -169,8 +167,8 @@ SELECT CASE (TURBN%CTURBLEN)
 !  same law as in the neutral case (i.e. with Phim = 1).
 !
   CASE ('DELT','DEAR')
-    CALL MXF_PHY(D,PDXX,ZWORK1)
-    CALL MYF_PHY(D,PDYY,ZWORK2)
+    ZWORK1=MXF(PDXX)
+    ZWORK2=MYF(PDYY)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZDH(IIJB:IIJE,1:IKT) = SQRT(ZWORK1(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -291,5 +289,7 @@ PLEPS(IIJB:IIJE,IKU) = PLEPS(IIJB:IIJE,IKE)
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('RMC01',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "shugrad.h"
 END SUBROUTINE RMC01
 END MODULE MODE_RMC01

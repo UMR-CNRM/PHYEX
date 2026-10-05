@@ -227,7 +227,6 @@ USE MODD_LES,            ONLY: TLES_t
 USE MODD_TURB_n,         ONLY: TURB_t
 USE MODD_NEB_n,          ONLY: NEB_t
 !
-USE MODE_GRADIENT_M_PHY,       ONLY: GZ_M_W_PHY
 USE MODE_IO_FIELD_WRITE_PHY,   ONLY: IO_FIELD_WRITE_PHY
 USE MODE_PRANDTL,              ONLY: PSI_SV, PSI3, PHI3, PRANDTL
 USE MODE_SBL_DEPTH,            ONLY: SBL_DEPTH
@@ -448,11 +447,11 @@ ZSQRT_TKE(IIJB:IIJE,1:IKT) = SQRT(PTKEM(IIJB:IIJE,1:IKT))
 !
 ! gradients of mean quantities at previous time-step
 !
-CALL GZ_M_W_PHY(D,PTHLM,PDZZ,ZDTH_DZ)
+ZDTH_DZ=GZ_M_W(PTHLM,PDZZ)
 !$acc kernels
 ZDR_DZ(:,:)  = 0.
 !$acc end kernels
-IF (KRR>0) CALL GZ_M_W_PHY(D,PRM(:,:,1),PDZZ,ZDR_DZ)
+IF (KRR>0) ZDR_DZ=GZ_M_W(PRM(:,:,1),PDZZ)
 !
 !
 ! Denominator factor in 3rd order terms
@@ -689,5 +688,7 @@ END IF
 !
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TURB_VER',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "shugrad.h"
 END SUBROUTINE TURB_VER
 END MODULE MODE_TURB_VER 

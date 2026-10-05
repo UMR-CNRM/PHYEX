@@ -36,7 +36,6 @@ CONTAINS
     USE MODD_CST,        ONLY: CST_t
     USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
     USE MODD_TURB_n,     ONLY: TURB_t
-    USE MODE_SHUMAN_PHY, ONLY: MXF_PHY,MYF_PHY
     USE MODE_ETHETA,     ONLY: ETHETA
     USE MODE_EMOIST,     ONLY: EMOIST
     ! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
@@ -99,9 +98,9 @@ CONTAINS
     IIJE = D%NIJE
     IIJB = D%NIJB
     IF (TURBN%CTURBDIM /= '1DIM') THEN
-      CALL MXF_PHY(D, PDXX, PWORK1)
+      PWORK1=MXF(PDXX)
       IF (.not.O2D) THEN
-        CALL MYF_PHY(D, PDYY, PWORK2)
+        PWORK2=MYF(PDYY)
       END IF
     END IF
     ! 1D turbulence scheme
@@ -261,5 +260,7 @@ CONTAINS
     !
 !$acc end kernels
     IF (LHOOK) CALL DR_HOOK('TURB:DEAR', 1, ZHOOK_HANDLE2)
+    CONTAINS
+    INCLUDE "shugrad.h"
 END SUBROUTINE DEAR
 END MODULE MODE_DEAR
