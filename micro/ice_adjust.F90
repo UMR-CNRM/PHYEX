@@ -401,18 +401,18 @@ ELSE !NEBN%LSUBG_COND case
         ELSEIF(LLTRIANGLE)THEN
           !ZHCF is the precipitating part of the *cloud* and not of the grid cell
           IF(ZW1*PTSTEP>PCF_MF(JIJ,JK)*ZCRIAUT) THEN
-            ZHCF=1.-.5*(ZCRIAUT*PCF_MF(JIJ,JK) / MAX(1.E-20, ZW1*PTSTEP))**2
+            ZHCF=1.-.5*(ZCRIAUT*PCF_MF(JIJ,JK))**2 / MAX(1.E-20, (ZW1*PTSTEP)**2)
             ZHR=ZW1*PTSTEP-(ZCRIAUT*PCF_MF(JIJ,JK))**3 / &
-                                        &(3*MAX(1.E-20, ZW1*PTSTEP)**2)
+                                        &MAX(1.E-20, 3.*(ZW1*PTSTEP)**2)
           ELSEIF(2.*ZW1*PTSTEP<=PCF_MF(JIJ,JK) * ZCRIAUT) THEN
             ZHCF=0.
             ZHR=0.
           ELSE
             ZHCF=(2.*ZW1*PTSTEP-ZCRIAUT*PCF_MF(JIJ,JK))**2 / &
-                       &(2.*MAX(1.E-20, ZW1*PTSTEP)**2)
+                       &MAX(1.E-20, 2.*(ZW1*PTSTEP)**2)
             ZHR=(4.*(ZW1*PTSTEP)**3-3.*ZW1*PTSTEP*(ZCRIAUT*PCF_MF(JIJ,JK))**2+&
                         (ZCRIAUT*PCF_MF(JIJ,JK))**3) / &
-                      &(3*MAX(1.E-20, ZW1*PTSTEP)**2)
+                      &MAX(1.E-20, 3.*(ZW1*PTSTEP)**2)
           ENDIF
           ZHCF=ZHCF*PCF_MF(JIJ,JK) !to retrieve the part of the grid cell
           PHLC_HCF(JIJ,JK)=MIN(1.,PHLC_HCF(JIJ,JK)+ZHCF) !total part of the grid cell that is precipitating
