@@ -492,18 +492,18 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00404" name="l00404"></a><span class="lineno">  404</span>        <span class="keywordflow">ELSEIF</span>(lltriangle)<span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span>          <span class="comment">!ZHCF is the precipitating part of the *cloud* and not of the grid cell</span></div>
 <div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span>          <span class="keywordflow">IF</span>(zw1*ptstep&gt;pcf_mf(jij,jk)*zcriaut) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span>            zhcf=1.-.5*(zcriaut*pcf_mf(jij,jk) / max(1.e-20, zw1*ptstep))**2</div>
+<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span>            zhcf=1.-.5*(zcriaut*pcf_mf(jij,jk))**2 / max(1.e-20, (zw1*ptstep)**2)</div>
 <div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span>            zhr=zw1*ptstep-(zcriaut*pcf_mf(jij,jk))**3 / &amp;</div>
-<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span>                                        &amp;(3*max(1.e-20, zw1*ptstep)**2)</div>
+<div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span>                                        &amp;max(1.e-20, 3.*(zw1*ptstep)**2)</div>
 <div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span>          <span class="keywordflow">ELSEIF</span>(2.*zw1*ptstep&lt;=pcf_mf(jij,jk) * zcriaut) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span>            zhcf=0.</div>
 <div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span>            zhr=0.</div>
 <div class="line"><a id="l00413" name="l00413"></a><span class="lineno">  413</span>          <span class="keywordflow">ELSE</span></div>
 <div class="line"><a id="l00414" name="l00414"></a><span class="lineno">  414</span>            zhcf=(2.*zw1*ptstep-zcriaut*pcf_mf(jij,jk))**2 / &amp;</div>
-<div class="line"><a id="l00415" name="l00415"></a><span class="lineno">  415</span>                       &amp;(2.*max(1.e-20, zw1*ptstep)**2)</div>
+<div class="line"><a id="l00415" name="l00415"></a><span class="lineno">  415</span>                       &amp;max(1.e-20, 2.*(zw1*ptstep)**2)</div>
 <div class="line"><a id="l00416" name="l00416"></a><span class="lineno">  416</span>            zhr=(4.*(zw1*ptstep)**3-3.*zw1*ptstep*(zcriaut*pcf_mf(jij,jk))**2+&amp;</div>
 <div class="line"><a id="l00417" name="l00417"></a><span class="lineno">  417</span>                        (zcriaut*pcf_mf(jij,jk))**3) / &amp;</div>
-<div class="line"><a id="l00418" name="l00418"></a><span class="lineno">  418</span>                      &amp;(3*max(1.e-20, zw1*ptstep)**2)</div>
+<div class="line"><a id="l00418" name="l00418"></a><span class="lineno">  418</span>                      &amp;max(1.e-20, 3.*(zw1*ptstep)**2)</div>
 <div class="line"><a id="l00419" name="l00419"></a><span class="lineno">  419</span><span class="keywordflow">          ENDIF</span></div>
 <div class="line"><a id="l00420" name="l00420"></a><span class="lineno">  420</span>          zhcf=zhcf*pcf_mf(jij,jk) <span class="comment">!to retrieve the part of the grid cell</span></div>
 <div class="line"><a id="l00421" name="l00421"></a><span class="lineno">  421</span>          phlc_hcf(jij,jk)=min(1.,phlc_hcf(jij,jk)+zhcf) <span class="comment">!total part of the grid cell that is precipitating</span></div>
