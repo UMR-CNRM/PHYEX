@@ -578,7 +578,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
 !   auxiliary routine used to compute the Pth moment order of the generalized
 !   gamma law
 !
-    USE MODI_GAMMA
+    USE MODI_GAMMA, ONLY: GAMMA
 !
     IMPLICIT NONE
 !

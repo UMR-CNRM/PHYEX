@@ -400,15 +400,11 @@ REAL            :: ZKVO  ! factor used for caluclate maximum mass in the ice
 
 !**************** ICE-T Declarations ***********************************
 REAL, DIMENSION(KSIZE)                 :: ZNT_C
-REAL, DIMENSION(KSIZE)                 :: ZEF_RW, ZMVD_C, ZMVD_R
-REAL, DIMENSION(KSIZE)                 :: ZCCR_V, ZLBR_V, ZFCACCR_V
-REAL, DIMENSION(KSIZE)                 :: ZFSACCRG_V
-REAL(KIND=MNHREAL64), DIMENSION(KSIZE) :: ZVISCO
-REAL(KIND=MNHREAL64), DIMENSION(KSIZE) :: ZPRG_GCW, ZPRS_SDE
+REAL, DIMENSION(KSIZE)                 :: ZMVD_C, ZMVD_R
+REAL, DIMENSION(KSIZE)                 :: ZCCR_V, ZLBR_V
+REAL(KIND=MNHREAL64), DIMENSION(KSIZE) :: ZPRS_SDE
 REAL(KIND=MNHREAL64), DIMENSION(KSIZE) :: ZRHOF
-REAL, DIMENSION(KSIZE)                 :: ZVTS, ZVTR, ZRATIO, ZRATIO_GR, ZEF_SR
-REAL                                   :: ZSTOKE_G
-REAL                                   :: ZTC0, ZEF_SW
+REAL, DIMENSION(KSIZE)                 :: ZVTR
 !**************** End ICE-T declarations *******************************
 
 ! SPP arrays
@@ -1486,7 +1482,7 @@ CONTAINS
 ! auxiliary routine used to compute the Pth moment order of the generalized
 ! gamma law
 !
-    USE MODI_GAMMA
+    USE MODI_GAMMA, ONLY: GAMMA
 !
     IMPLICIT NONE
 !

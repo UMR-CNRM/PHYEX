@@ -146,7 +146,6 @@ USE MODD_IO, ONLY:NVERB_FATAL
     REAL :: ZFCACCR_V
     REAL :: ZRHO00
 
-    REAL, DIMENSION(D%NIJT,D%NKT) :: ZW
     LOGICAL :: LTEST ! Only for test !
 !
 !-------------------------------------------------------------------------------
@@ -485,7 +484,7 @@ USE MODD_IO, ONLY:NVERB_FATAL
 !   auxiliary routine used to compute the Pth moment order of the generalized
 !   gamma law
 !
-    USE MODI_GAMMA
+    USE MODI_GAMMA, ONLY: GAMMA
 !
     IMPLICIT NONE
 !

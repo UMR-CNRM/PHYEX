@@ -23,7 +23,6 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
                                ZDICRIT, ZREDGR, ZKVO, PNT_C, PPRS_SDE,       &
                                TBUDGETS, KBUDGETS)
 
-    USE PARKIND1,             ONLY: JPRB
     USE YOMHOOK,              ONLY: LHOOK, DR_HOOK, JPHOOK
     USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
     USE MODD_CST,             ONLY: CST_T
