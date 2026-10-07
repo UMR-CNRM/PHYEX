@@ -106,9 +106,9 @@ CONTAINS
 
     !..Freeze water (smallest drops become cloud ice, otherwise graupel).
     DO JM = 1, NTB_IN
-      ZT_ADJUST = MAX(-3.0, MIN(3.0 - ALOG10(XNT_IN(JM)), 3.0))
+      ZT_ADJUST = MAX(-3.0, MIN(3.0 - LOG10(XNT_IN(JM)), 3.0))
       DO JK = 1, 45
-        ZTEXP = DEXP( DFLOAT(JK) - ZT_ADJUST*1.0D0 ) - 1.0D0
+        ZTEXP = EXP( DFLOAT(JK) - ZT_ADJUST*1.0D0 ) - 1.0D0
         DO JJ = 1, NTB_R1
           DO JI = 1, NTB_R
             ZLAM_EXP = (XN0R_EXP(JJ)*RAIN_ICE_DESCRN%XAR*ICE_T_PARAMETERS%XCR_GM(1)/XR_R(JI))**ICE_T_PARAMETERS%XORE1
@@ -120,10 +120,10 @@ CONTAINS
             ZSUMN1 = 0.0D0
             ZSUMN2 = 0.0D0
             DO JN2 = NBR, 1, -1
-              ZN_R(JN2) = ZN0_R*ICE_T_PARAMETERS%XITDR(JN2)**XMU_R*DEXP(-ZLAM_R*ICE_T_PARAMETERS%XITDR(JN2))&
+              ZN_R(JN2) = ZN0_R*ICE_T_PARAMETERS%XITDR(JN2)**XMU_R*EXP(-ZLAM_R*ICE_T_PARAMETERS%XITDR(JN2))&
                       & * ICE_T_PARAMETERS%XITDTR(JN2)
               ZVOL = ZMASSR(JN2)*ZORHO_W
-              ZPROB = 1.0D0 - DEXP(-120.0D0*ZVOL*5.2D-4 * ZTEXP)
+              ZPROB = 1.0D0 - EXP(-120.0D0*ZVOL*5.2D-4 * ZTEXP)
               IF (ZMASSR(JN2) .LT. ICE_T_PARAMETERS%XM0G) THEN
                 ZSUMN1 = ZSUMN1 + ZPROB*ZN_R(JN2)
                 ZSUM1 = ZSUM1 + ZPROB*ZN_R(JN2)*ZMASSR(JN2)
@@ -148,7 +148,7 @@ CONTAINS
             ZSUMN2 = 0.0d0
             DO JN = NBC, 1, -1
               ZVOL = ZMASSC(JN)*ZORHO_W
-              ZPROB = 1.0D0 - DEXP(-120.0D0*ZVOL*5.2D-4 * ZTEXP)
+              ZPROB = 1.0D0 - EXP(-120.0D0*ZVOL*5.2D-4 * ZTEXP)
               ZN_C(JN) = ZN0_C*ICE_T_PARAMETERS%XITDC(JN)**INU_C&
                      & * EXP(-ZLAM_C*ICE_T_PARAMETERS%XITDC(JN))*ICE_T_PARAMETERS%XITDTC(JN)
               ZSUM1 = ZSUM1 + ZPROB*ZN_C(JN)*ZMASSC(JN)

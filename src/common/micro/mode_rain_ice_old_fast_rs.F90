@@ -207,9 +207,9 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
         IF (PRST(JK)>0.0) ZX_DS(JK) = ZSMOC / ZSMOB
 !       Add conditions for snow collecting cloud water
         IF (ZX_DS(JK) > XD0S .AND. PRCT(JK) > 0.0 .AND. PMVD_C(JK) > XD0C .AND. PRCS(JK) > 0.0) THEN
-          IDX = 1 + INT(NBS*DLOG(ZX_DS(JK) &
+          IDX = 1 + INT(NBS*LOG(ZX_DS(JK) &
                     & / ICE_T_PARAMETERS%XITDS(1)) &
-                    & / DLOG(ICE_T_PARAMETERS%XITDS(NBS) &
+                    & / LOG(ICE_T_PARAMETERS%XITDS(NBS) &
                     & / ICE_T_PARAMETERS%XITDS(1)))
           IDX = MIN(IDX, NBS)
           ZEF_SW = ICE_T_PARAMETERS%XT_EFSW(IDX, INT(PMVD_C(JK)*1.E6))

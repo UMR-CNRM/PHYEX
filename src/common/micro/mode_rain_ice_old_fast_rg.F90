@@ -208,12 +208,12 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
             ZVISCO = (1.718 + 0.0049*ZTEMPC - 1.2E-5*ZTEMPC*ZTEMPC)*1.0E-5
           ENDIF
           IF (PZT(JK) < 270.65 .AND. PRRT(JK) > 0.0 .AND. PMVD_R(JK) > 100.E-6) THEN
-            ZSLW1 = 4.01 + ALOG10(PMVD_R(JK))
+            ZSLW1 = 4.01 + LOG10(PMVD_R(JK))
           ELSE
             ZSLW1 = 0.01
           ENDIF
 
-          ZYGRA1 = 4.31 + ALOG10(max(5.E-5, PRGT(JK)))
+          ZYGRA1 = 4.31 + LOG10(max(5.E-5, PRGT(JK)))
           ZZANS1 = 3.1 + (100./(300.*ZSLW1*ZYGRA1/(10./ZSLW1 + 1. + 0.25*ZYGRA1)+30. + 10.*ZYGRA1))
           ZN0_EXP = 10.**(ZZANS1)
           ZN0_EXP = MAX(DBLE(XGONV_MIN), MIN(ZN0_EXP, DBLE(XGONV_MAX)))
@@ -232,7 +232,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
             ZSTOKE_G = PMVD_C(JK)*PMVD_C(JK)*ZVTG(JK)*XRHOLW/(9.*ZVISCO*ZX_DG)
             IF (ZX_DG > XD0G) THEN
                 IF (ZSTOKE_G>0.4 .AND. ZSTOKE_G<10.) THEN
-                  ZEF_GW = 0.55*ALOG10(2.51*ZSTOKE_G)
+                  ZEF_GW = 0.55*LOG10(2.51*ZSTOKE_G)
                 ELSEIF (ZSTOKE_G<0.4) THEN
                   ZEF_GW = 0.0
                 ELSEIF (ZSTOKE_G>10) THEN

@@ -152,7 +152,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
         ZNI = 1.0 *1000.
         !..Ice nuclei lookup table index.
         IF (ZNI .GT. XNT_IN(1)) THEN
-          II = NINT(ALOG10(ZNI))
+          II = NINT(LOG10(ZNI))
           DO J = II-1, II+1
             IX = J
             IF ((ZNI/10.**J) .GE. 1.0 .AND. (ZNI/10.**J) .LT. 10.0) EXIT
@@ -165,7 +165,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
         IF( (PRRT(JL) .GT. XR_R(1)) .AND. (PRRS(JL)>0.)) THEN
           ! Calculate rain drop number concentration
           ZLAM_R = SQRT(SQRT(XPI*XRHOLW*ICED%XCCR/(PRRT(JL)*PRHODREF(JL))))
-          IR = NINT(ALOG10(PRRT(JL)))
+          IR = NINT(LOG10(PRRT(JL)))
           DO J = IR-1, IR+1
             IX = J
             IF ((PRRT(JL)/10.**J) .GE. 1.0 .AND. (PRRT(JL)/10.**J) .LT. 10.0) EXIT
@@ -175,7 +175,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
           ZLAM_EXP = ZLAM_R * (ICE_T_PARAMETERS%XCR_GM(3)*ICE_T_PARAMETERS%XORG2*ICE_T_PARAMETERS%XORG1)**ICED%XBR
           ZN0_EXP = ICE_T_PARAMETERS%XORG1*PRRT(JL)/ICED%XAR * ZLAM_EXP**ICE_T_PARAMETERS%XCR_EX(1)
-          IR = NINT(DLOG10(ZN0_EXP))
+          IR = NINT(LOG10(ZN0_EXP))
           DO J = IR-1, IR+1
             IX = J
             IF ((ZN0_EXP/10.**J) .GE. 1.0 .AND. (ZN0_EXP/10.**J) .LT. 10.0) EXIT
@@ -202,7 +202,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
         ENDIF
         !..Cloud water lookup table index.
         IF (PRCT(JL) .GT. XR_C(1).AND. (PRCS(JL)>0.)) THEN
-          IC = NINT(ALOG10(PRCT(JL)))
+          IC = NINT(LOG10(PRCT(JL)))
           DO J = IC-1, IC+1
             IX = J
             IF ( (PRCT(JL)/10.**J).GE.1.0 .AND. &
@@ -214,7 +214,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
           IDX_C = 1
         ENDIF
         !..Cloud droplet number lookup table index.
-        IDX_N = NINT(1.0 + FLOAT(NBC) * DLOG(PNT_C(JL)/ICE_T_PARAMETERS%XT_NC(1)) / ICE_T_PARAMETERS%NIC1)
+        IDX_N = NINT(1.0 + FLOAT(NBC) * LOG(PNT_C(JL)/ICE_T_PARAMETERS%XT_NC(1)) / ICE_T_PARAMETERS%NIC1)
         IDX_N = MAX(1, MIN(IDX_N, NBC))
 
         IF((PRCT(JL) .GT. XR_C(1)) .AND. (PRCS(JL) > 0.)) THEN

@@ -128,13 +128,17 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             moduleList.append('USE MODD_' + vartype[5:-3] + ', ONLY: T' + vartype[5:-3])
             declList.append('INTEGER, INTENT(IN) :: NSV')
             argList1.append(('NSV', 'INTEGER', False, 'IN', None))
-            docstringIN.append(f"    NSV (IN) to replace the FORTRAN TNSV structure")
+            docstringIN.append("    NSV (IN) to replace the FORTRAN TNSV structure")
             copyList.append('TNSV%NSV=NSV')
             argList2.append('T'+vartype[5:-3])
         elif vartype in ['TYPE(CST_T)', 'TYPE(ELEC_PARAM_T)', 'TYPE(ELEC_DESCR_T)',
-                         'TYPE(PARAM_LIMA_T)','TYPE(PARAM_LIMA_WARM_T)','TYPE(PARAM_LIMA_COLD_T)','TYPE(PARAM_LIMA_MIXED_T)',]:
+                         'TYPE(PARAM_LIMA_T)', 'TYPE(PARAM_LIMA_WARM_T)', 'TYPE(PARAM_LIMA_COLD_T)',
+                         'TYPE(PARAM_LIMA_MIXED_T)']:
             moduleList.append('USE MODD_' + vartype[5:-3] + ', ONLY: ' + vartype[5:-3])
             argList2.append(vartype[5:-3])
+        elif vartype == 'TYPE(ICET_PARAM_T)':
+            moduleList.append('USE MODD_ICET_PARAM, ONLY: ICE_T_PARAMETERS')
+            argList2.append('ICE_T_PARAMETERS')
         elif vartype in ['TYPE(NEB_T)', 'TYPE(RAIN_ICE_PARAM_T)', 'TYPE(PARAM_ICE_T)',
                          'TYPE(RAIN_ICE_DESCR_T)', 'TYPE(TURB_T)', 'TYPE(PARAM_MFSHALL_T)']:
             moduleList.append('USE MODD_' + vartype[5:-3] + '_N, ONLY: ' + vartype[5:-3] + 'N')
@@ -182,7 +186,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
         elif vartype == 'TYPE(PHYEX_T)':
             pass
         elif vartype.startswith('TYPE('):
-            raise NotImplementedError('Does not know how to deal with' +
+            raise NotImplementedError('Does not know how to deal with ' +
                                       f'argument of type {vartype} ' +
                                       f'in {fortran_in}')
         elif var['n'] == 'KSPLITR':
