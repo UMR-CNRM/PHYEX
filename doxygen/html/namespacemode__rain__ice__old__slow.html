@@ -78,12 +78,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:aa42ffcc929e24cc64740101af62e0d62" id="r_aa42ffcc929e24cc64740101af62e0d62"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__rain__ice__old__slow.html#aa42ffcc929e24cc64740101af62e0d62">rain_ice_old_slow</a> (d, cst, iced, icep, buconf, ksize, ocnd2, lmodicedep, ptstep, zredsn, gmicro, prhodj, pths, prvs, prct, prrt, prit, prrs, prgs, prst, prgt, pcit, prhodref, pzrhodj, pldbas, pzt, plsfact, plvfact, ppres, pssi, pzrvs, prcs, pris, prss, pzths, plbdag, pka, pdv, pai, pcj, paa2, pbb3, zdicrit, zredgr, zkvo, tbudgets, kbudgets)</td></tr>
-<tr class="separator:aa42ffcc929e24cc64740101af62e0d62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac38d5a4bce236aac5048b9ddb1d5d0df" id="r_ac38d5a4bce236aac5048b9ddb1d5d0df"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__rain__ice__old__slow.html#ac38d5a4bce236aac5048b9ddb1d5d0df">rain_ice_old_slow</a> (d, cst, iced, icep, ice_t_parameters, buconf, ksize, ocnd2, oice_t, lmodicedep, ptstep, zredsn, gmicro, prhodj, pths, prvs, prct, prrt, prit, prrs, prgs, prst, prgt, pcit, prhodref, pzrhodj, pldbas, pzt, plsfact, plvfact, ppres, pssi, pzrvs, prcs, pris, prss, pzths, plbdag, pka, pdv, pai, pcj, paa2, pbb3, zdicrit, zredgr, zkvo, pnt_c, pprs_sde, tbudgets, kbudgets)</td></tr>
+<tr class="separator:ac38d5a4bce236aac5048b9ddb1d5d0df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="aa42ffcc929e24cc64740101af62e0d62" name="aa42ffcc929e24cc64740101af62e0d62"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa42ffcc929e24cc64740101af62e0d62">&#9670;&#160;</a></span>rain_ice_old_slow()</h2>
+<a id="ac38d5a4bce236aac5048b9ddb1d5d0df" name="ac38d5a4bce236aac5048b9ddb1d5d0df"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac38d5a4bce236aac5048b9ddb1d5d0df">&#9670;&#160;</a></span>rain_ice_old_slow()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -115,6 +115,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__icet__param_1_1icet__param__t.html">icet_param_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>ice_t_parameters</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__budget_1_1tbudgetconf__t.html">tbudgetconf_t</a>), intent(in)&#160;</td>
           <td class="paramname"><em>buconf</em>, </td>
         </tr>
@@ -129,6 +135,12 @@ Functions/Subroutines</h2></td></tr>
           <td></td>
           <td class="paramtype">logical, intent(in)&#160;</td>
           <td class="paramname"><em>ocnd2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in)&#160;</td>
+          <td class="paramname"><em>oice_t</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -361,6 +373,18 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real, dimension(ksize), intent(in)&#160;</td>
+          <td class="paramname"><em>pnt_c</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=mnhreal64), dimension(ksize), intent(out)&#160;</td>
+          <td class="paramname"><em>pprs_sde</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">type(<a class="el" href="structmodd__budget_1_1tbudgetdata__ptr.html">tbudgetdata_ptr</a>), dimension(kbudgets), intent(inout)&#160;</td>
           <td class="paramname"><em>tbudgets</em>, </td>
         </tr>
@@ -382,8 +406,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__rain__ice__old__slow_aa42ffcc929e24cc64740101af62e0d62_cgraph.png" border="0" usemap="#anamespacemode__rain__ice__old__slow_aa42ffcc929e24cc64740101af62e0d62_cgraph" alt=""/></div>
-<map name="anamespacemode__rain__ice__old__slow_aa42ffcc929e24cc64740101af62e0d62_cgraph" id="anamespacemode__rain__ice__old__slow_aa42ffcc929e24cc64740101af62e0d62_cgraph">
+<div class="center"><img src="namespacemode__rain__ice__old__slow_ac38d5a4bce236aac5048b9ddb1d5d0df_cgraph.png" border="0" usemap="#anamespacemode__rain__ice__old__slow_ac38d5a4bce236aac5048b9ddb1d5d0df_cgraph" alt=""/></div>
+<map name="anamespacemode__rain__ice__old__slow_ac38d5a4bce236aac5048b9ddb1d5d0df_cgraph" id="anamespacemode__rain__ice__old__slow_ac38d5a4bce236aac5048b9ddb1d5d0df_cgraph">
 <area shape="rect" title=" " alt="" coords="5,5,187,45"/>
 <area shape="rect" href="namespacemode__rain__ice__old__icenumber2.html#a9d50236b5bccd5d43890edc74bee2dc1" title=" " alt="" coords="235,5,463,45"/>
 <area shape="poly" title=" " alt="" coords="187,23,221,23,221,28,187,28"/>
@@ -392,10 +416,10 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__rain__ice__old__slow_aa42ffcc929e24cc64740101af62e0d62_icgraph.png" border="0" usemap="#anamespacemode__rain__ice__old__slow_aa42ffcc929e24cc64740101af62e0d62_icgraph" alt=""/></div>
-<map name="anamespacemode__rain__ice__old__slow_aa42ffcc929e24cc64740101af62e0d62_icgraph" id="anamespacemode__rain__ice__old__slow_aa42ffcc929e24cc64740101af62e0d62_icgraph">
+<div class="center"><img src="namespacemode__rain__ice__old__slow_ac38d5a4bce236aac5048b9ddb1d5d0df_icgraph.png" border="0" usemap="#anamespacemode__rain__ice__old__slow_ac38d5a4bce236aac5048b9ddb1d5d0df_icgraph" alt=""/></div>
+<map name="anamespacemode__rain__ice__old__slow_ac38d5a4bce236aac5048b9ddb1d5d0df_icgraph" id="anamespacemode__rain__ice__old__slow_ac38d5a4bce236aac5048b9ddb1d5d0df_icgraph">
 <area shape="rect" title=" " alt="" coords="153,5,335,45"/>
-<area shape="rect" href="rain__ice__old_8F90.html#adf4e515ca269f0cda01808d8d487e856" title=" " alt="" coords="5,13,105,38"/>
+<area shape="rect" href="rain__ice__old_8F90.html#a0c639d07d0bee1abe17b33f43d3bc893" title=" " alt="" coords="5,13,105,38"/>
 <area shape="poly" title=" " alt="" coords="140,28,106,28,106,23,140,23"/>
 </map>
 </div>
