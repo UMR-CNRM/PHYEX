@@ -9,7 +9,7 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
 
   CONTAINS
 
-  SUBROUTINE RAIN_ICE_OLD_NUCLEATION(D, CST, ICEP, KSIZE, OCND2, LMODICEDEP, KRR, PTSTEP, &
+  SUBROUTINE RAIN_ICE_OLD_NUCLEATION(D, CST, ICEP, KSIZE, OCND2, OICE_T, LMODICEDEP, KRR, PTSTEP, &
                                      PTHT, PPABST, PEXNREF, PICLDFR, PRHODJ, PRHODREF, &
                                      PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                      OAERONRT, OAEIFN, PIFNNC, &
@@ -17,11 +17,12 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
                                      PICENU, PT, PZZZ, &
                                      PRHT)
 !
-    USE YOMHOOK ,             ONLY: LHOOK, DR_HOOK, JPHOOK
-    USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
-    USE MODD_CST,             ONLY: CST_T
-    USE MODE_TIWMX,           ONLY: ESATI, ESATW, AM3, REDIN
-    USE MODD_RAIN_ICE_PARAM_N,ONLY: RAIN_ICE_PARAM_T
+    USE YOMHOOK ,              ONLY: LHOOK, DR_HOOK, JPHOOK
+    USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_T
+    USE MODD_CST,              ONLY: CST_T
+    USE MODE_TIWMX,            ONLY: ESATI, ESATW, AM3, REDIN
+    USE MODD_RAIN_ICE_PARAM_N, ONLY: RAIN_ICE_PARAM_T
+    USE MODD_ICET_PARAM,       ONLY: XTNO, XATO
 !
 !*      0. DECLARATIONS
 !          ------------
@@ -29,12 +30,13 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
     IMPLICIT NONE
 
     TYPE(DIMPHYEX_T), INTENT(IN)       :: D
-    TYPE(CST_T), INTENT(IN)            :: CST 
+    TYPE(CST_T), INTENT(IN)            :: CST
     TYPE(RAIN_ICE_PARAM_T), INTENT(IN) :: ICEP
 
     INTEGER, INTENT(IN) :: KSIZE
 
     LOGICAL, INTENT(IN) :: OCND2      ! Logical switch to separate liquid and ice
+    LOGICAL, INTENT(IN) :: OICE_T     ! Switch for ICE_T
     LOGICAL, INTENT(IN) :: LMODICEDEP ! Logical switch for alternative dep/evap of ice
 
     INTEGER, INTENT(IN) :: KRR        ! Number of moist variable
@@ -89,9 +91,10 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
     REAL, DIMENSION(KSIZE) :: ZESW    ! saturation pressure over water
     REAL, DIMENSION(KSIZE) :: ZUSW    ! Undersaturation over water
     REAL, DIMENSION(KSIZE) :: ZSSI    ! Supersaturation over ice
-    REAL, DIMENSION(KSIZE) :: ZSIFRC  ! subgridscale fraction with supersaturation with
-                                               ! respect to ice.
+    REAL, DIMENSION(KSIZE) :: ZSIFRC  ! subgridscale fraction with supersaturation with respect to ice.
+    REAL, DIMENSION(KSIZE) :: ZXNC
     REAL, DIMENSION(KSIZE) :: ZZW     ! Work array
+    REAL, DIMENSION(KSIZE) :: ZSSW    ! Work array
     REAL, DIMENSION(D%NIJT,D%NKT) :: ZW      ! work array
 !
 !   compute the temperature and the pressure
@@ -150,7 +153,14 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
           ZUSW(JL) = MIN(ZPRES(JL)/2.,ZESW(JL))            ! safety limitation   es_w
           ZUSW(JL) = (ZUSW(JL)/ZZW(JL))*((ZPRES(JL)-ZZW(JL))/(ZPRES(JL)-ZUSW(JL))) - 1.0
         ENDDO
-                             ! Supersaturation of saturated water vapor over ice
+
+        IF(OICE_T)THEN
+          DO JL = 1, KSIZE
+            ZZW(JL) = MIN(ZPRES(JL)*0.15, ZESW(JL)) !safetly limitation es_w
+            ZSSW(JL) = ZRVT(JL)*(ZPRES(JL) - ZZW(JL)) / (CST%XEPSILO * ZZW(JL)) - 1.0
+          ENDDO
+        ENDIF
+
       ELSE
 
         DO JL = 1, KSIZE
@@ -178,15 +188,27 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
 
       IF(OCND2)THEN
 
-        IF (LMODICEDEP) THEN
+        IF(OICE_T)THEN
+
           DO JL = 1, KSIZE
-            ZZW(JL) = 5.*EXP(0.304*(CST%XTT-ZZT(JL)))
+            IF (((ZZT(JL) < 261.15) .AND. (ZSSW(JL) > 0.0)) .OR. ZSSI(JL) .GT. 0.25) THEN
+              ! Cooper (1986) ice number conc. (as fcn. of temperature)
+              ZXNC(JL) = MIN(250.E3, XTNO*EXP(XATO*(CST%XTT - ZZT(JL))))
+              ZZW(JL) = 0.5*(ZXNC(JL) + ABS(ZXNC(JL)))
+            ENDIF
+          ENDDO
+
+        ELSEIF (LMODICEDEP) THEN
+
+          DO JL = 1, KSIZE
+            ZZW(JL) = 5.*EXP(0.304*(CST%XTT - ZZT(JL)))
             ZZW(JL) = MIN(1.,MAX(ZSSI(JL)*10.,0.01))*ZZW(JL)
           ENDDO
+
         ELSE
 
           DO JL = 1, KSIZE
-            ZZW(JL) = ZREDIN(JL)* MAX(0.1,((20000.- MIN(20000.,ZZZ(JL)))/20000.)**4) &
+            ZZW(JL) = ZREDIN(JL)*MAX(0.1,((20000.- MIN(20000., ZZZ(JL)))/20000.)**4) &
                 &   *ZAM3(JL)*(0.0001 + 0.9999*ZSIFRC(JL))
           ENDDO
 
@@ -195,7 +217,7 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
       ELSE
 
         DO JL = 1, KSIZE
-          IF ((ZZT(JL)<CST%XTT-5.0) .AND. (ZSSI(JL)>0.0)) THEN
+          IF ((ZZT(JL) < CST%XTT-5.0) .AND. (ZSSI(JL) > 0.0)) THEN
             ZZW(JL) = ICEP%XNU20 * EXP( ICEP%XALPHA2*ZSSI(JL)-ICEP%XBETA2 )
           END IF
         ENDDO
@@ -214,7 +236,9 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
 !
 !*       3.1.2   update the r_i and r_v mixing ratios
 !
-        ZZW(:) = MIN( ZZW(:),50.E3 ) ! limitation provisoire a 50 l^-1
+        IF(.NOT. OICE_T) THEN
+          ZZW(:) = MIN(ZZW(:), 50.E3) ! limitation provisoire a 50 l^-1
+        ENDIF
 
         IF(.NOT.OCND2)THEN
 

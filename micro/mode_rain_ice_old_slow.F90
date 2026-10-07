@@ -9,24 +9,27 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
   CONTAINS
 
-  SUBROUTINE RAIN_ICE_OLD_SLOW(D, CST, ICED, ICEP, BUCONF,         &
-                               KSIZE, OCND2, LMODICEDEP,           &
-                               PTSTEP, ZREDSN,                     &
-                               GMICRO, PRHODJ, PTHS, PRVS,         &
-                               PRCT, PRRT, PRIT, PRRS,             &
-                               PRGS, PRST, PRGT, PCIT,             &
-                               PRHODREF, PZRHODJ, PLDBAS,           &
-                               PZT, PLSFACT, PLVFACT, PPRES, PSSI, &
-                               PZRVS, PRCS, PRIS, PRSS, PZTHS,       &
-                               PLBDAG, PKA, PDV,                   &
-                               PAI, PCJ, PAA2, PBB3,               &
-                               ZDICRIT, ZREDGR, ZKVO,              &
+  SUBROUTINE RAIN_ICE_OLD_SLOW(D, CST, ICED, ICEP, ICE_T_PARAMETERS, BUCONF, &
+                               KSIZE, OCND2, OICE_T, LMODICEDEP,             &
+                               PTSTEP, ZREDSN,                               &
+                               GMICRO, PRHODJ, PTHS, PRVS,                   &
+                               PRCT, PRRT, PRIT, PRRS,                       &
+                               PRGS, PRST, PRGT, PCIT,                       &
+                               PRHODREF, PZRHODJ, PLDBAS,                    &
+                               PZT, PLSFACT, PLVFACT, PPRES, PSSI,           &
+                               PZRVS, PRCS, PRIS, PRSS, PZTHS,               &
+                               PLBDAG, PKA, PDV,                             &
+                               PAI, PCJ, PAA2, PBB3,                         &
+                               ZDICRIT, ZREDGR, ZKVO, PNT_C, PPRS_SDE,       &
                                TBUDGETS, KBUDGETS)
 
-    USE PARKIND1,             ONLY: JPRB
     USE YOMHOOK,              ONLY: LHOOK, DR_HOOK, JPHOOK
     USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
     USE MODD_CST,             ONLY: CST_T
+    USE MODD_CST,             ONLY: XPI, XRHOLW
+    USE MODD_PRECISION,        ONLY: MNHREAL64
+    USE MODD_ICET_PARAM,       ONLY: XNT_IN, ICET_PARAM_t
+    USE MODD_ICET_PARAM,       ONLY: NTB_IN, NBC, NTB_C, NTB_R, NTB_R1, XR_R, XR_C
     USE MODD_RAIN_ICE_PARAM_n,  ONLY: RAIN_ICE_PARAM_T
     USE MODD_RAIN_ICE_DESCR_n,  ONLY: RAIN_ICE_DESCR_T
 
@@ -41,10 +44,12 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     TYPE(CST_T), INTENT(IN)            :: CST
     TYPE(RAIN_ICE_PARAM_T), INTENT(IN) :: ICEP
     TYPE(RAIN_ICE_DESCR_T), INTENT(IN) :: ICED
-    TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+    TYPE(ICET_PARAM_t),     INTENT(IN) :: ICE_T_PARAMETERS
+    TYPE(TBUDGETCONF_t),    INTENT(IN) :: BUCONF
 
     INTEGER, INTENT(IN) :: KSIZE
     LOGICAL, INTENT(IN) :: OCND2
+    LOGICAL, INTENT(IN) :: OICE_T
     LOGICAL, INTENT(IN) :: LMODICEDEP ! Logical switch for alternative dep/evap of ice
 
     REAL, INTENT(IN) :: PTSTEP ! Double Time step (single if cold start)
@@ -90,15 +95,15 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     REAL, DIMENSION(KSIZE), INTENT(OUT)   :: PCJ  ! Function to compute the ventilation coefficient
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PAA2 ! Part of PAI used for optimized code
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PBB3 ! Part of PAI used for optimized code
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PNT_C
+
+    REAL(KIND=MNHREAL64), DIMENSION(KSIZE), INTENT(OUT) :: PPRS_SDE
 
     REAL, INTENT(IN) :: ZDICRIT, ZREDGR ! Possible reduction of the rate of graupel,snow growth
     REAL, INTENT(IN) :: ZKVO ! factor used for caluclate maximum mass in the ice distubution.
 
     TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
     INTEGER, INTENT(IN) :: KBUDGETS
-!
-!*       3.2     compute the homogeneous nucleation source: RCHONI
-!
     REAL, DIMENSION(KSIZE) :: ZBFT ! Mean time for a pristine ice crystal to reach
                                    ! size of an snow/graupel particle (ZDICRIT)
     REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
@@ -106,10 +111,21 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     REAL, DIMENSION(KSIZE) :: ZZW2     ! Work array
     REAL, DIMENSION(D%NIJT,D%NKT) :: ZWKBUD
 
+    REAL(KIND=MNHREAL64), DIMENSION(KSIZE) :: ZPRG_RFZ, ZPRI_RFZ, ZPRI_WFZ
+    REAL(KIND=MNHREAL64) :: ZLAM_R, ZLAM_EXP, ZN0_EXP
+    REAL :: ZHOMFRZ
+    REAL :: ZTEMPC
+    REAL :: ZNI
+    INTEGER :: IDX_TC, IDX_IN, IDX_C, IDX_N, IDX_R, IDX_R1
+    INTEGER :: II, IC, IR, IX
+    INTEGER :: J
+
     INTEGER :: JL
     REAL    :: ZINVTSTEP
 
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+
+!*       3.2     compute the homogeneous nucleation source: RCHONI
 
     IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_SLOW',0,ZHOOK_HANDLE)
 
@@ -122,6 +138,96 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     IF (BUCONF%LBUDGET_RC) CALL TBUDGETS(NBUDGET_RC)%PTR%INIT_PHY(D, 'HON', ZWKBUD)
     IF (BUCONF%LBUDGET_RI) ZWKBUD(:,:) = UNPACK(PRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0)
     IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%INIT_PHY(D, 'HON', ZWKBUD)
+
+!*********************BJKE begin**********************************
+! Added Bigg (1953) freezing as in Thompson et al. (2008), yet with
+! diagnosed number concentration for rain. This is a new process in addition
+! to the ones we already have.
+    IF (OICE_T) THEN
+      ZHOMFRZ=-38.
+      DO JL=1, KSIZE
+        ZTEMPC = PZT(JL) - 273.15
+        IDX_TC = MAX(1, MIN(NINT(-ZTEMPC), 45) )
+
+        ZNI = 1.0 *1000.
+        !..Ice nuclei lookup table index.
+        IF (ZNI .GT. XNT_IN(1)) THEN
+          II = NINT(LOG10(ZNI))
+          DO J = II-1, II+1
+            IX = J
+            IF ((ZNI/10.**J) .GE. 1.0 .AND. (ZNI/10.**J) .LT. 10.0) EXIT
+          ENDDO
+          IDX_IN = INT(ZNI/10.**IX) + 10*(IX - ICE_T_PARAMETERS%NIIN2) - (IX-ICE_T_PARAMETERS%NIIN2)
+          IDX_IN = MAX(1, MIN(IDX_IN, NTB_IN))
+        ELSE
+          IDX_IN = 1
+        ENDIF
+        IF( (PRRT(JL) .GT. XR_R(1)) .AND. (PRRS(JL)>0.)) THEN
+          ! Calculate rain drop number concentration
+          ZLAM_R = SQRT(SQRT(XPI*XRHOLW*ICED%XCCR/(PRRT(JL)*PRHODREF(JL))))
+          IR = NINT(LOG10(PRRT(JL)))
+          DO J = IR-1, IR+1
+            IX = J
+            IF ((PRRT(JL)/10.**J) .GE. 1.0 .AND. (PRRT(JL)/10.**J) .LT. 10.0) EXIT
+          ENDDO
+          IDX_R = INT(PRRT(JL)/10.**IX) + 10*(IX - ICE_T_PARAMETERS%NIR2) - (IX - ICE_T_PARAMETERS%NIR2)
+          IDX_R = MAX(1, MIN(IDX_R, NTB_R))
+
+          ZLAM_EXP = ZLAM_R * (ICE_T_PARAMETERS%XCR_GM(3)*ICE_T_PARAMETERS%XORG2*ICE_T_PARAMETERS%XORG1)**ICED%XBR
+          ZN0_EXP = ICE_T_PARAMETERS%XORG1*PRRT(JL)/ICED%XAR * ZLAM_EXP**ICE_T_PARAMETERS%XCR_EX(1)
+          IR = NINT(LOG10(ZN0_EXP))
+          DO J = IR-1, IR+1
+            IX = J
+            IF ((ZN0_EXP/10.**J) .GE. 1.0 .AND. (ZN0_EXP/10.**J) .LT. 10.0) EXIT
+          ENDDO
+          IDX_R1 = INT(ZN0_EXP/10.**IX) + 10*(IX - ICE_T_PARAMETERS%NIR3) - (IX - ICE_T_PARAMETERS%NIR3)
+          IDX_R1 = MAX(1, MIN(IDX_R1, NTB_R1))
+        ELSE
+          IDX_R = 1
+          IDX_R1 = NTB_R1
+        ENDIF
+
+        IF( (PRRT(JL) .GT. XR_R(1)) .AND. (PRRS(JL)>0.)) THEN
+          ZPRG_RFZ(JL) = ICE_T_PARAMETERS%XTPG_QRFZ(IDX_R,IDX_R1, IDX_TC, IDX_IN)*ICE_T_PARAMETERS%XODTS
+          ZPRI_RFZ(JL) = ICE_T_PARAMETERS%XTPI_QRFZ(IDX_R,IDX_R1, IDX_TC, IDX_IN)*ICE_T_PARAMETERS%XODTS
+          ! Budget: Ice is created from rain
+          PRIS(JL) = PRIS(JL) + ZPRI_RFZ(JL)
+          PRRS(JL) = PRRS(JL) - ZPRI_RFZ(JL)
+          ! Budget: Graupel is created from rain
+          PRGS(JL) = PRGS(JL) + ZPRG_RFZ(JL)
+          PRRS(JL) = PRRS(JL) - ZPRG_RFZ(JL)
+          ! Budget: Latent heat release
+          PZTHS(JL) = PZTHS(JL) + ZPRI_RFZ(JL)*(PLSFACT(JL) - PLVFACT(JL))
+          PZTHS(JL) = PZTHS(JL) + ZPRG_RFZ(JL)*(PLSFACT(JL) - PLVFACT(JL))
+        ENDIF
+        !..Cloud water lookup table index.
+        IF (PRCT(JL) .GT. XR_C(1).AND. (PRCS(JL)>0.)) THEN
+          IC = NINT(LOG10(PRCT(JL)))
+          DO J = IC-1, IC+1
+            IX = J
+            IF ( (PRCT(JL)/10.**J).GE.1.0 .AND. &
+                 (PRCT(JL)/10.**J).LT.10.0) EXIT
+          ENDDO
+          IDX_C = INT(PRCT(JL)/10.**IX) + 10*(IX - ICE_T_PARAMETERS%NIC2) - (IX - ICE_T_PARAMETERS%NIC2)
+          IDX_C = MAX(1, MIN(IDX_C, NTB_C))
+        ELSE
+          IDX_C = 1
+        ENDIF
+        !..Cloud droplet number lookup table index.
+        IDX_N = NINT(1.0 + FLOAT(NBC) * LOG(PNT_C(JL)/ICE_T_PARAMETERS%XT_NC(1)) / ICE_T_PARAMETERS%NIC1)
+        IDX_N = MAX(1, MIN(IDX_N, NBC))
+
+        IF((PRCT(JL) .GT. XR_C(1)) .AND. (PRCS(JL) > 0.)) THEN
+          ZPRI_WFZ(JL) = ICE_T_PARAMETERS%XTPI_QCFZ(IDX_C, IDX_N, IDX_TC, IDX_IN)*ICE_T_PARAMETERS%XODTS
+          ZPRI_WFZ(JL) = MIN(DBLE(PRCT(JL)*ICE_T_PARAMETERS%XODTS), ZPRI_WFZ(JL))
+          ! Budget: Ice is created by cloud water
+          PRIS(JL) = PRIS(JL) + ZPRI_WFZ(JL)
+          PRCS(JL) = PRCS(JL) - ZPRI_WFZ(JL)
+          PZTHS(JL) = PZTHS(JL) + ZPRI_WFZ(JL)*(PLSFACT(JL) - PLVFACT(JL))
+        ENDIF
+      ENDDO
+    ENDIF
+!*************************BJKE out*********************************
 
     DO JL = 1, KSIZE
       IF ((PZT(JL)<CST%XTT-35.0) .AND. (PRCT(JL)>ICED%XRTMIN(2)) .AND. (PRCS(JL)>0.)) THEN
@@ -231,6 +337,13 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
       END DO
     ENDIF
 
+    IF(OICE_T)THEN
+      DO JL = 1, KSIZE
+        ! needed for Thompson snow collecting cloud water
+        PPRS_SDE(JL) = ZZW(JL)
+      ENDDO
+    ENDIF
+
     IF (BUCONF%LBUDGET_TH) ZWKBUD(:,:) = UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:)
     IF (BUCONF%LBUDGET_TH) CALL TBUDGETS(NBUDGET_TH)%PTR%END_PHY(D, 'DEPS', ZWKBUD)
     IF (BUCONF%LBUDGET_RV) ZWKBUD(:,:) = UNPACK(PZRVS(:),MASK=GMICRO(:,:),FIELD=PRVS)*PRHODJ(:,:)
@@ -285,9 +398,9 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
       ! (For the moment sperical ice crystals are assumed)
 
       DO JL = 1, KSIZE
-        IF ((PRIS(JL)>0.0_JPRB) .AND. (PSSI(JL)>0.001_JPRB)) THEN
-          ZBFT(JL) = 0.5_JPRB*87.5_JPRB*(ZDICRIT)**2*PAI(JL)/ PSSI(JL)
-          ZBFT(JL) = PTSTEP/ MAX(PTSTEP,ZBFT(JL)*2._JPRB)
+        IF ((PRIS(JL)>0.0) .AND. (PSSI(JL)>0.001)) THEN
+          ZBFT(JL) = 0.5*87.5*(ZDICRIT)**2*PAI(JL)/ PSSI(JL)
+          ZBFT(JL) = PTSTEP/ MAX(PTSTEP,ZBFT(JL)*2.)
           PRSS(JL) = PRSS(JL) + ZBFT(JL)*PRIS(JL)
           PRIS(JL) = PRIS(JL) - ZBFT(JL)*PRIS(JL)
         END IF

@@ -101,6 +101,7 @@ REAL :: XRDEPSRED_NAM   !< Tuning factor of sublimation of snow
 REAL :: XRDEPGRED_NAM   !< Tuning factor of sublimation of graupel
 !
 LOGICAL :: LOCND2       !< Logical switch to separate liquid and ice
+LOGICAL :: LICE_T       !< Logical switch for ICE-T scheme
 LOGICAL :: LKOGAN       !< Use Kogan autocoversion of liquid
 LOGICAL :: LMODICEDEP   !< Logical switch for alternative dep/evap of ice
 LOGICAL :: LEXCLDROP    !< Logical switch for use of external Cloud droplet (as from NRT aerosols) in microphysics
@@ -132,6 +133,7 @@ LOGICAL, POINTER :: LWARM => NULL(), &
                     LPACK_INTERP => NULL(), &
                     LCRIAUTI => NULL(), &
                     LOCND2 => NULL(), &
+                    LICE_T => NULL(), &
                     LKOGAN => NULL(), &
                     LMODICEDEP => NULL(), &
                     LEXCLDROP => NULL()
@@ -173,7 +175,7 @@ NAMELIST/NAM_PARAM_ICEn/LWARM,LSEDIC,LCONVHG,CPRISTINE_ICE,CSEDIM,LDEPOSC,XVDEPO
                        CSUBG_RR_EVAP, CSUBG_PR_PDF, CSUBG_AUCV_RC, CSUBG_AUCV_RI, &
                        LCRIAUTI, XCRIAUTI_NAM, XT0CRIAUTI_NAM, XBCRIAUTI_NAM, &
                        XACRIAUTI_NAM, XCRIAUTC_NAM, XRDEPSRED_NAM, XRDEPGRED_NAM, &
-                       LOCND2, LKOGAN, LMODICEDEP, LEXCLDROP, &
+                       LICE_T, LOCND2, LKOGAN, LMODICEDEP, LEXCLDROP, &
                        XFRMIN_NAM, CSUBG_MF_PDF
 !
 !-------------------------------------------------------------------------------
@@ -208,6 +210,7 @@ IF(.NOT. ASSOCIATED(PARAM_ICEN, PARAM_ICE_MODEL(KTO))) THEN
   LSNOW_T => PARAM_ICEN%LSNOW_T
   LPACK_INTERP => PARAM_ICEN%LPACK_INTERP
   LCRIAUTI => PARAM_ICEN%LCRIAUTI
+  LICE_T => PARAM_ICEN%LICE_T
   LOCND2 => PARAM_ICEN%LOCND2
   LKOGAN => PARAM_ICEN%LKOGAN
   LMODICEDEP => PARAM_ICEN%LMODICEDEP
@@ -358,6 +361,7 @@ IF(LLDEFAULTVAL) THEN
   XCRIAUTC_NAM=0.5E-3
   XRDEPSRED_NAM=1.
   XRDEPGRED_NAM=1.
+  LICE_T=.FALSE.
   LOCND2=.FALSE.
   LKOGAN=.FALSE.
   LMODICEDEP=.FALSE.
@@ -451,6 +455,10 @@ IF(LLCHECK) THEN
 
   IF (LOCND2 .AND. (XRDEPSRED_NAM /= 1 .OR. XRDEPGRED_NAM /= 1)) THEN
     CALL ABOR1 ("XRDESRED_NAM and XRDEGRED_NAM must not be activated together with LOCND2")
+  ENDIF
+
+  IF (LSNOW_T .AND. LICE_T) THEN
+    CALL ABOR1 ("LSNOW_T and LICE_T can not be activated simultaneously")
   ENDIF
 
   IF(HPROGRAM=='AROME' .OR. HPROGRAM=='LMDZ') THEN
