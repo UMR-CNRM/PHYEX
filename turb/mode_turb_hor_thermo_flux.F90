@@ -143,7 +143,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PSRCM
                                   ! s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PFRAC_ICE    ! ri fraction of rc+ri
-REAL, DIMENSION(D%NIJT,NTURB_S),   INTENT(IN)      ::  PTURB_SPP    ! SPP for turbulence
+REAL, DIMENSION(D%NIT,D%NJT,NTURB_S),   INTENT(IN)      ::  PTURB_SPP    ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRTHLS
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS         ! var. at t+1 -split-
@@ -154,7 +154,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS         ! var. at
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZFLX,ZFLXC,ZCSHF,ZWKLES ! work arrays
 !
-INTEGER             :: IKB,IKE,IKU, IKT, IIT, IJT, ZZ
+INTEGER             :: IKB,IKE,IKU, IKT, IIT, IJT
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain  
 REAL, DIMENSION(D%NIT,D%NJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF 
@@ -202,11 +202,13 @@ TYPE(TFIELDMETADATA) :: TZFIELD
 IKB = 1+JPVEXT               
 IKE = SIZE(PTHLM,3)-JPVEXT    
 IKU = SIZE(PTHLM,3)
-DO ZZ=1,SIZE(PTHLM,3)
-   DO JJ=1,SIZE(PTHLM,2)
-      ZCSHF(:,JJ,ZZ)=PTURB_SPP(:,NCSHF)
-   ENDDO
-ENDDO 
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZCSHF(JI,JJ,JK)=PTURB_SPP(JI,JJ,NCSHF)
+    END DO
+  END DO
+END DO
 IIT=D%NIT
 IJT=D%NJT
 IKT=D%NKT

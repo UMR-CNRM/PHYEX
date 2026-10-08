@@ -174,7 +174,7 @@ REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PVSLOPEM     ! wind componen
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
-REAL, DIMENSION(D%NIJT,NTURB_S),     INTENT(IN)    ::  PTURB_SPP    ! Turb. SPP
+REAL, DIMENSION(D%NIT,D%NJT,NTURB_S),     INTENT(IN)    ::  PTURB_SPP    ! Turb. SPP
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS, PRWS
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP,PTP      ! TKE production terms
@@ -183,7 +183,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP,PTP      ! TKE produ
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZFLX,ZWORK,ZWKLES,ZCMFSF
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZFLX,ZWORK,ZWKLES,ZCMFS
     ! work arrays, PK is the turb. mixing coef.
 !   
 REAL, DIMENSION(D%NIT,D%NJT) ::ZDIRSINZW 
@@ -264,11 +264,13 @@ IJT=D%NJT
 IKT=D%NKT
 !
 !
-DO JK=1,SIZE(PUM,3)
-   DO JJ=1,SIZE(PUM,2)
-      ZCMFSF(:,JJ,JK)=PTURB_SPP(:,NTURB_S)
-   ENDDO
-ENDDO
+DO JK=1,IKT
+   DO JJ=1,IJT
+      DO JI=1,IIT
+         ZCMFS(JI,JJ,JK)=PTURB_SPP(JI,JJ,NTURB_S)
+      END DO
+   END DO
+END DO
 
 DO JJ=1, IJT
   DO JI=1, IIT
@@ -341,7 +343,7 @@ IF (.NOT. O2D) THEN
         DO JJ=1, IJT
           DO JI=1, IIT
             ZFLX(JI, JJ, JK)= (2./3.) * PTKEM(JI, JJ, JK)                            &
-                 - ZCMFSF(JI,JJ,JK) * PK(JI, JJ, JK) *( (4./3.) * GX_U_M_PUM(JI, JJ, JK)        &
+                 - ZCMFS(JI,JJ,JK) * PK(JI, JJ, JK) *( (4./3.) * GX_U_M_PUM(JI, JJ, JK)        &
                  -(2./3.) * ( GY_V_M_PVM(JI, JJ, JK)                     &
                  +GZ_W_M_PWM(JI, JJ, JK)                ) )
        END DO
@@ -356,7 +358,7 @@ ELSE
     DO JJ=1, IJT
       DO JI=1, IIT
         ZFLX(JI, JJ, JK)= (2./3.) * PTKEM(JI, JJ, JK)                                  &
-          - ZCMFSF(JI,JJ,JK) * PK(JI, JJ, JK) *( (4./3.) * GX_U_M_PUM(JI, JJ, JK)                 &
+          - ZCMFS(JI,JJ,JK) * PK(JI, JJ, JK) *( (4./3.) * GX_U_M_PUM(JI, JJ, JK)                 &
                          -(2./3.) * ( GZ_W_M_PWM(JI, JJ, JK)             ) ) 
       END DO
     END DO
@@ -579,7 +581,7 @@ END DO
 DO JJ=1, IJT
      DO JI=1, IIT
        ZFLX(JI, JJ, IKB)   = (2./3.) * PTKEM(JI, JJ, IKB)                           &
-            - ZCMFSF(JI,JJ,IKB) * PK(JI, JJ, IKB) * 2. * ZDU_DX(JI, JJ)
+            - ZCMFS(JI,JJ,IKB) * PK(JI, JJ, IKB) * 2. * ZDU_DX(JI, JJ)
   END DO
    END DO
 
@@ -801,7 +803,7 @@ IF (.NOT. O2D) THEN
         DO JJ=1, IJT
           DO JI=1, IIT
             ZFLX(JI, JJ, JK)= (2./3.) * PTKEM(JI, JJ, JK)                                  &
-                 - ZCMFSF(JI,JJ,JK) * PK(JI, JJ, JK) *( (4./3.) * GY_V_M_PVM(JI, JJ, JK)                        &
+                 - ZCMFS(JI,JJ,JK) * PK(JI, JJ, JK) *( (4./3.) * GY_V_M_PVM(JI, JJ, JK)                        &
                  -(2./3.) * ( GX_U_M_PUM(JI, JJ, JK)                      &
                  +GZ_W_M_PWM(JI, JJ, JK)                ) )
        END DO
@@ -817,7 +819,7 @@ ELSE
         DO JJ=1, IJT
           DO JI=1, IIT
             ZFLX(JI, JJ, JK)= (2./3.) * PTKEM(JI, JJ, JK)                           &
-                 - ZCMFSF(JI,JJ,JK) * PK(JI, JJ, JK) *(-(2./3.) * ( GX_U_M_PUM(JI, JJ, JK)        &
+                 - ZCMFS(JI,JJ,JK) * PK(JI, JJ, JK) *(-(2./3.) * ( GX_U_M_PUM(JI, JJ, JK)        &
                                             +GZ_W_M_PWM(JI, JJ, JK)     ) )  
        END DO
         END DO
@@ -844,7 +846,7 @@ END DO
 DO JJ=1, IJT
      DO JI=1, IIT
        ZFLX(JI, JJ, IKB)   = (2./3.) * PTKEM(JI, JJ, IKB)                           &
-            - ZCMFSF(JI,JJ,IKB) * PK(JI, JJ, IKB) * 2. * ZDV_DY(JI, JJ)
+            - ZCMFS(JI,JJ,IKB) * PK(JI, JJ, IKB) * 2. * ZDV_DY(JI, JJ)
   END DO
    END DO
 
@@ -1065,7 +1067,7 @@ IF (.NOT. O2D) THEN
         DO JJ=1, IJT
           DO JI=1, IIT
             ZFLX(JI, JJ, JK) = (2./3.) * PTKEM(JI, JJ, JK)                                  &
-                 - ZCMFSF(JI,JJ,JK) * PK(JI, JJ, JK) *( (4./3.) * GZ_W_M_PWM(JI, JJ, JK)                        &
+                 - ZCMFS(JI,JJ,JK) * PK(JI, JJ, JK) *( (4./3.) * GZ_W_M_PWM(JI, JJ, JK)                        &
                  -(2./3.) * ( GX_U_M_PUM(JI, JJ, JK)                      &
                  +GY_V_M_PVM(JI, JJ, JK)                ) )
        END DO
@@ -1080,7 +1082,7 @@ ELSE
         DO JJ=1, IJT
           DO JI=1, IIT
             ZFLX(JI, JJ, JK)= (2./3.) * PTKEM(JI, JJ, JK)                           &
-                 - ZCMFSF(JI,JJ,JK) * PK(JI, JJ, JK) *( (4./3.) * GZ_W_M_PWM(JI, JJ, JK)          &
+                 - ZCMFS(JI,JJ,JK) * PK(JI, JJ, JK) *( (4./3.) * GZ_W_M_PWM(JI, JJ, JK)          &
                  -(2./3.) * ( GX_U_M_PUM(JI, JJ, JK)           ) ) 
        END DO
         END DO
@@ -1105,7 +1107,7 @@ END DO
 DO JJ=1, IJT
      DO JI=1, IIT
        ZFLX(JI, JJ, IKB)   = (2./3.) * PTKEM(JI, JJ, IKB)                           &
-            - ZCMFSF(JI,JJ,IKB) * PK(JI, JJ, IKB) * 2. * ZDW_DZ(JI, JJ)
+            - ZCMFS(JI,JJ,IKB) * PK(JI, JJ, IKB) * 2. * ZDW_DZ(JI, JJ)
   END DO
    END DO
 
@@ -1170,7 +1172,7 @@ END IF
 DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
-      ZDFDDWDZ(JI, JJ, JK)    = - ZCMFSF(JI,JJ,JK) * PK(JI, JJ, JK) * (4./3.)
+      ZDFDDWDZ(JI, JJ, JK)    = - ZCMFS(JI,JJ,JK) * PK(JI, JJ, JK) * (4./3.)
     END DO
   END DO
 END DO
@@ -1221,7 +1223,7 @@ DO JK=IKB+1, IKT
      DO JJ=1, IJT
        DO JI=1, IIT
          ZFLX(JI, JJ, JK)=ZFLX(JI, JJ, JK) &
-              - ZCMFSF(JI,JJ,JK) * PK(JI, JJ, JK) * (4./3.) * (GZ_W_M_ZWP(JI, JJ, JK) - GZ_W_M_PWM(JI, JJ, JK))
+              - ZCMFS(JI,JJ,JK) * PK(JI, JJ, JK) * (4./3.) * (GZ_W_M_ZWP(JI, JJ, JK) - GZ_W_M_PWM(JI, JJ, JK))
     END DO
      END DO
    END DO

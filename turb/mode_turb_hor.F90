@@ -236,7 +236,7 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PSRCM
                                   ! s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PFRAC_ICE    ! ri fraction of rc+ri
-REAL, DIMENSION(:,:),     INTENT(IN)    ::  PTURB_SPP    ! SPP for turbuelence
+REAL, DIMENSION(:,:,:),     INTENT(IN)    ::  PTURB_SPP    ! SPP for turbuelence
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRUS, PRVS, PRWS, PRTHLS
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS,PRRS   ! var. at t+1 -split-

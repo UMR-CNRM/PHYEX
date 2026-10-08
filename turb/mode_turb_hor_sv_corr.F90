@@ -51,7 +51,7 @@ CONTAINS
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY : CSTURB_t
-USE MODD_TURB_n, ONLY: TURB_t, NCED
+USE MODD_TURB_n, ONLY: TURB_t, NCED, NTURB_S
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
 !
@@ -104,7 +104,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PSRCM        ! normalize
                   ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PWM          ! w at t-1
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
-REAL, DIMENSION(:,:), INTENT(IN)        ::  PTURB_SPP    ! SPP for turbulence 
+REAL, DIMENSION(D%NIT,D%NJT,NTURB_S), INTENT(IN)        ::  PTURB_SPP    ! SPP for turbulence 
 !
 !
 !
@@ -138,15 +138,17 @@ IJT=D%NJT
 IKT=D%NKT
 CALL SECOND_MNH(ZTIME1)
 !
-DO JJ=1,SIZE(PSVM,2)
-   DO JK=1,SIZE(PSVM,3)
-      IF(OBLOWSNOW) THEN
-      ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
-         ZCSV(:,JJ,JK)=PTURB_SPP(:,NCED)/PRSNOW
-      ELSE
-         ZCSV(:,JJ,JK)=PTURB_SPP(:,NCED)
-      ENDIF
-         ZCSV2(:,JJ,JK)=PTURB_SPP(:,NCED)
+DO JK=1,IKT
+   DO JJ=1,IJT
+      DO JI=1,IIT
+         IF(OBLOWSNOW) THEN
+         ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
+            ZCSV(JI,JJ,JK)=PTURB_SPP(JI,JJ,NCED)/PRSNOW
+         ELSE
+            ZCSV(JI,JJ,JK)=PTURB_SPP(JI,JJ,NCED)
+         ENDIF
+            ZCSV2(JI,JJ,JK)=PTURB_SPP(JI,JJ,NCED)
+      ENDDO
    ENDDO
 ENDDO
 

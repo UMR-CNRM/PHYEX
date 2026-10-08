@@ -129,7 +129,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
-REAL, DIMENSION(D%NIJT,NTURB_S),     INTENT(IN)    ::  PTURB_SPP    ! SPP for turbulence
+REAL, DIMENSION(D%NIT,D%NJT,NTURB_S), INTENT(IN)    ::  PTURB_SPP    ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRWS
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE production terms
@@ -139,7 +139,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE produ
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZFLX,ZWORK,ZCMFSF
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZFLX,ZWORK,ZCMFS
     ! work arrays
 !   
 INTEGER             :: IKB,IKE,IKU, IIT, IJT, IKT
@@ -188,12 +188,13 @@ IKU = SIZE(PWM,3)
 IIT=D%NIT
 IJT=D%NJT
 IKT=D%NKT 
-DO ZZ=1,SIZE(PWM,3)
-   DO JJ=1,SIZE(PWM,2)
-      ZCMFSF(:,JJ,ZZ)=PTURB_SPP(:,NCMFS)
-   ENDDO
-ENDDO
-
+DO JK=1, IKT
+  DO JJ=1, IJT
+    DO JI=1, IIT
+      ZCMFS(JI,JJ,JK)=PTURB_SPP(JI,JJ,NCMFS)
+    END DO
+  END DO
+END DO
 !
 !
 CALL GX_W_UW_PHY(D, OFLAT,PWM,PDXX,PDZZ,PDZX, ZGX_W_UW3D_WORK1)
@@ -221,7 +222,7 @@ DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
       ZFLX(JI, JJ, JK) =                                                      &
-        - ZCMFSF(JI,JJ,JK) * ZMXM3D_WORK1(JI, JJ, JK) * GX_W_UW_PWM(JI, JJ, JK)
+        - ZCMFS(JI,JJ,JK) * ZMXM3D_WORK1(JI, JJ, JK) * GX_W_UW_PWM(JI, JJ, JK)
     END DO
   END DO
 END DO
