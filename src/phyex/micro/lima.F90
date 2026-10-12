@@ -11,7 +11,7 @@ SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV, D, CST, NEBN,         &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
                   KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,                &
-                  ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PCIT, PW_NU,         &
+                  PDTHRAD, PTHT, PRT, PSVT, PCIT, PW_NU,                  &
                   PAERO,PSOLORG, PMI, PTHS, PRS, PSVS,                    &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
                   PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
@@ -118,9 +118,8 @@ REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PPABST     ! absolute pressur
 INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
 LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 !
-LOGICAL,                                 INTENT(IN)   :: ODTHRAD    ! Use radiative temperature tendency
-REAL, DIMENSION(MERGE(D%NIJT,0,ODTHRAD), &
-                MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! dT/dt due to radiation
+REAL, DIMENSION(MERGE(D%NIJT,0,LIMAP%LACTIT),  &
+                MERGE(D%NKT, 0,LIMAP%LACTIT)), INTENT(IN) :: PDTHRAD   ! dT/dt due to radiation
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
 REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_LIMA), INTENT(IN) :: PSVT       ! Concentrations at time t
@@ -138,14 +137,14 @@ REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT)    :: PTHS       ! Theta source
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(INOUT) :: PRS        ! Mixing ratios sources
 REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV_LIMA), INTENT(INOUT) :: PSVS       ! Concentration sources
 !
-REAL, DIMENSION(D%NIJT),     INTENT(OUT)        :: PINPRC     ! Cloud instant precip
-REAL, DIMENSION(D%NIJT),     INTENT(OUT)        :: PINDEP     ! Cloud droplets deposition
-REAL, DIMENSION(D%NIJT),     INTENT(OUT)        :: PINPRR     ! Rain instant precip
-REAL, DIMENSION(D%NIJT),     INTENT(OUT)        :: PINPRI     ! Rain instant precip
-REAL, DIMENSION(D%NIJT),     INTENT(OUT)        :: PINPRS     ! Snow instant precip
-REAL, DIMENSION(D%NIJT),     INTENT(OUT)        :: PINPRG     ! Graupel instant precip
-REAL, DIMENSION(D%NIJT),     INTENT(OUT)        :: PINPRH     ! Rain instant precip
-REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(OUT)   :: PEVAP3D    ! Rain evap profile
+REAL, DIMENSION(MERGE(D%NIJT,0,LIMAP%LSEDC)),  INTENT(OUT) :: PINPRC     ! Cloud instant precip
+REAL, DIMENSION(MERGE(D%NIJT,0,LIMAP%LDEPOC)), INTENT(OUT) :: PINDEP     ! Cloud droplets deposition
+REAL, DIMENSION(D%NIJT),                       INTENT(OUT) :: PINPRR     ! Rain instant precip
+REAL, DIMENSION(MERGE(D%NIJT,0,LIMAP%LSEDI)),  INTENT(OUT) :: PINPRI     ! Rain instant precip
+REAL, DIMENSION(D%NIJT),                       INTENT(OUT) :: PINPRS     ! Snow instant precip
+REAL, DIMENSION(D%NIJT),                       INTENT(OUT) :: PINPRG     ! Graupel instant precip
+REAL, DIMENSION(D%NIJT),                       INTENT(OUT) :: PINPRH     ! Rain instant precip
+REAL, DIMENSION(D%NIJT, D%NKT),                INTENT(OUT) :: PEVAP3D    ! Rain evap profile
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT) :: PICEFR     ! Cloud fraction
@@ -843,13 +842,6 @@ IF (OELEC) THEN
   END IF
 END IF
 !
-PINPRC=0.
-PINDEP=0.
-PINPRR=0.
-PINPRI=0.
-PINPRS=0.
-PINPRG=0.
-PINPRH=0.
 PEVAP3D(:,:)=0.
 !
 !-------------------------------------------------------------------------------
@@ -1007,6 +999,7 @@ ZCPT(D%NIJB:D%NIJE,:)    = CST%XCPD + (CST%XCPV * ZRVS(D%NIJB:D%NIJE,:) + &
                                      CST%XCI * (ZRIS(D%NIJB:D%NIJE,:) + ZRSS(D%NIJB:D%NIJE,:) + &
                                                 ZRGS(D%NIJB:D%NIJE,:) + ZRHS(D%NIJB:D%NIJE,:)))*PTSTEP
 IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%LSEDC) THEN
+  PINPRC=0.
   IF (OELEC) THEN
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
          'L', 2, 2, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
@@ -1028,6 +1021,7 @@ ZCPT(D%NIJB:D%NIJE,:)    = CST%XCPD + (CST%XCPV * ZRVS(D%NIJB:D%NIJE,:) + &
                                      CST%XCI * (ZRIS(D%NIJB:D%NIJE,:) + ZRSS(D%NIJB:D%NIJE,:) + &
                                                 ZRGS(D%NIJB:D%NIJE,:) + ZRHS(D%NIJB:D%NIJE,:)))*PTSTEP
 IF (LIMAP%NMOM_R.GE.1) THEN
+PINPRR=0.
   IF (OELEC) THEN
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
          'L', LIMAP%NMOM_R, 3, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
@@ -1049,6 +1043,7 @@ ZCPT(D%NIJB:D%NIJE,:)    = CST%XCPD + (CST%XCPV * ZRVS(D%NIJB:D%NIJE,:) + &
                                      CST%XCI * (ZRIS(D%NIJB:D%NIJE,:) + ZRSS(D%NIJB:D%NIJE,:) + &
                                                 ZRGS(D%NIJB:D%NIJE,:) + ZRHS(D%NIJB:D%NIJE,:)))*PTSTEP
 IF (LIMAP%NMOM_I.GE.1 .AND. LIMAP%LSEDI) THEN
+PINPRI=0.
   IF (OELEC) THEN
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
          'I', LIMAP%NMOM_I, 4, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
@@ -1085,6 +1080,7 @@ ZCPT(D%NIJB:D%NIJE,:)    = CST%XCPD + (CST%XCPV * ZRVS(D%NIJB:D%NIJE,:) + &
                                      CST%XCI * (ZRIS(D%NIJB:D%NIJE,:) + ZRSS(D%NIJB:D%NIJE,:) + &
                                                 ZRGS(D%NIJB:D%NIJE,:) + ZRHS(D%NIJB:D%NIJE,:)))*PTSTEP
 IF (LIMAP%NMOM_S.GE.1) THEN
+PINPRS=0.
   IF (OELEC) THEN
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
          'I', LIMAP%NMOM_S, 5, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
@@ -1106,6 +1102,7 @@ ZCPT(D%NIJB:D%NIJE,:)    = CST%XCPD + (CST%XCPV * ZRVS(D%NIJB:D%NIJE,:) + &
                                      CST%XCI * (ZRIS(D%NIJB:D%NIJE,:) + ZRSS(D%NIJB:D%NIJE,:) + &
                                                 ZRGS(D%NIJB:D%NIJE,:) + ZRHS(D%NIJB:D%NIJE,:)))*PTSTEP
 IF (LIMAP%NMOM_G.GE.1) THEN
+PINPRG=0.
   IF (OELEC) THEN
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
          'I', LIMAP%NMOM_G, 6, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
@@ -1127,6 +1124,7 @@ ZCPT(D%NIJB:D%NIJE,:)    = CST%XCPD + (CST%XCPV * ZRVS(D%NIJB:D%NIJE,:) + &
                                      CST%XCI * (ZRIS(D%NIJB:D%NIJE,:) + ZRSS(D%NIJB:D%NIJE,:) + &
                                                 ZRGS(D%NIJB:D%NIJE,:) + ZRHS(D%NIJB:D%NIJE,:)))*PTSTEP
 IF (LIMAP%NMOM_H.GE.1) THEN
+PINPRH=0.
   IF (OELEC) THEN
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
          'I', LIMAP%NMOM_H, 7, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
@@ -1217,6 +1215,8 @@ END IF
 ! 1.bis Deposition at 1st level above ground
 !
 IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%LDEPOC) THEN
+   PINDEP=0.
+IF (.NOT. LIMAP%LSEDC) PINPRC=0.
   IF ( BUCONF%LBUDGET_RC ) ZWKBUD(:,:) = ZRCS(:,:) * PRHODJ(:,:)
   IF ( BUCONF%LBUDGET_RC ) CALL TBUDGETS(NBUDGET_RC)%PTR%INIT_PHY(D, 'DEPO', ZWKBUD )
   IF ( BUCONF%LBUDGET_SV .AND. LIMAP%NMOM_C.GE.2) ZWKBUD(:,:) = ZCCS(:,:) * PRHODJ(:,:)

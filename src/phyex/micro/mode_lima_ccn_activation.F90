@@ -101,7 +101,8 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF   ! Reference density
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PT         ! Temperature
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDTHRAD    ! Radiative temperature tendency
+REAL, DIMENSION(MERGE(D%NIJT,0,LIMAP%LACTIT),  &
+                MERGE(D%NKT, 0,LIMAP%LACTIT)), INTENT(IN) :: PDTHRAD   ! Radiative temperature tendency
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
                                                       ! the nucleation param.
@@ -187,7 +188,7 @@ ZEPS= CST%XMV / CST%XMD
 ZRVSAT(D%NIJB:D%NIJE,:) = ZEPS / (PPABST(D%NIJB:D%NIJE,:)*EXP(-CST%XALPW+CST%XBETAW/PT(D%NIJB:D%NIJE,:)&
                                                           +CST%XGAMW*LOG(PT(D%NIJB:D%NIJE,:))) - 1.0)
 ZTDT(D%NIJB:D%NIJE,:)   = 0.
-IF (LIMAP%LACTIT .AND. SIZE(PDTHRAD).GT.0) ZTDT(D%NIJB:D%NIJE,:)   = PDTHRAD(D%NIJB:D%NIJE,:) * PEXNREF(D%NIJB:D%NIJE,:)
+IF (LIMAP%LACTIT) ZTDT(D%NIJB:D%NIJE,:)   = PDTHRAD(D%NIJB:D%NIJE,:) * PEXNREF(D%NIJB:D%NIJE,:)
 !
 !  find locations where CCN are available
 !
