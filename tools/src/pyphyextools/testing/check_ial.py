@@ -199,9 +199,9 @@ class CheckCommitIAL(CheckCommitBase):
             # must be done after all other transformations
             pyfortool_options = ['--removeACC']
             if self.useshumantrans:
-                pyfortool_options.append('--shumanFUNCtoCALL')
+                pyfortool_options.append('--shugradTransfo')
             if self.useexpand:
-                # --mnhExpand after --shumanFUNCtoCALL to deal with the directives
+                # --mnhExpand after --shugradTransfo to deal with the directives
                 # added during the transformation
                 pyfortool_options.append('--mnhExpand')
             prep_code(

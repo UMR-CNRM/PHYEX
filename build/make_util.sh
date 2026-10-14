@@ -206,7 +206,7 @@ function main() {
     fi
     #Shuman trans option
     if [ $useshumantrans == 1 ]; then
-      shuman_option="--shumanFUNCtoCALL"
+      shuman_option="--shugradTransfo"
     else
       shuman_option=""
     fi

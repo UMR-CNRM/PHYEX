@@ -141,9 +141,9 @@ class CheckCommitMesonh(CheckCommitBase):
             prep_kwargs = self._parse_prep_code_opts(self.prepCodeOpts)
             pyfortool_options = ['--removeExtraDOinMnhDoConcurrent']
             if self.useshumantrans:
-                pyfortool_options.append('--shumanFUNCtoCALL')
+                pyfortool_options.append('--shugradTransfo')
             if self.useexpand:
-                # --mnhExpand after --shumanFUNCtoCALL to deal with the directives
+                # --mnhExpand after --shugradTransfo to deal with the directives
                 # added during the transformation
                 pyfortool_options.append('--mnhExpand')
             prep_code(

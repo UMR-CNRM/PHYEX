@@ -306,7 +306,7 @@ END IF
 ! matrix inverted in TRIDIAG 
 !
 !
-ZA(:,:) = - PTSTEP * CSTURB%XCET * MZM(ZKEFF) * MZM(PRHODJ) / PDZZ(:,:)**2
+ZA(IIJB:IIJE,:) = - PTSTEP * CSTURB%XCET * MZM(ZKEFF(IIJB:IIJE,:)) * MZM(PRHODJ(IIJB:IIJE,:)) / PDZZ(IIJB:IIJE,:)**2
 !
 ! Compute TKE at time t+deltat: ( stored in ZRES )
 !
@@ -355,8 +355,8 @@ IF ( TLES%LLES_CALL .OR.                         &
 !
 ! Compute the cartesian vertical flux of TKE in ZFLX
 !
-    ZFLX(:,:)   = - CSTURB%XCET * MZM(ZKEFF(:,:)) *   &
-                  DZM(TURBN%XIMPL * ZRES(:,:) + PEXPL * PTKEM(:,:) ) / PDZZ(:,:)
+    ZFLX(IIJB:IIJE,:)   = - CSTURB%XCET * MZM(ZKEFF(IIJB:IIJE,:)) *   &
+                  DZM(TURBN%XIMPL * ZRES(IIJB:IIJE,:) + PEXPL * PTKEM(IIJB:IIJE,:) ) / PDZZ(IIJB:IIJE,:)
 !
 !$acc kernels
   ZFLX(IIJB:IIJE,IKB) = 0.
@@ -365,7 +365,7 @@ IF ( TLES%LLES_CALL .OR.                         &
 !
 ! Compute the whole turbulent TRansport of TKE:
 !
-  PTR(:,:)= PTR(:,:) - DZF( MZM(PRHODJ(:,:)) * ZFLX(:,:) / PDZZ(:,:) ) /PRHODJ(:,:)
+  PTR(IIJB:IIJE,:)= PTR(IIJB:IIJE,:) - DZF( MZM(PRHODJ(IIJB:IIJE,:)) * ZFLX(IIJB:IIJE,:) / PDZZ(IIJB:IIJE,:) ) /PRHODJ(IIJB:IIJE,:)
 !
 ! Storage in the LES configuration
 !

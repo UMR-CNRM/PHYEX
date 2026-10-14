@@ -587,8 +587,8 @@ END IF
 
   END IF
   !
-    ZFLXZ(:,:)   = ZF(:,:) + TURBN%XIMPL * ZDFDDTDZ(:,:) &
-    * MZF(DZM(PTHLP(:,:) - PTHLM(:,:)) / PDZZ(:,:) )
+    ZFLXZ(IIJB:IIJE,:)   = ZF(IIJB:IIJE,:) + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,:) &
+    * MZF(DZM(PTHLP(IIJB:IIJE,:) - PTHLM(IIJB:IIJE,:)) / PDZZ(IIJB:IIJE,:) )
   !
   ! special case near the ground ( uncentred gradient )
   IF (TURBN%LHARAT) THEN
@@ -726,8 +726,8 @@ END IF
 !$acc end kernels
     END IF
   ELSE
-    ZF(:,:) = TURBN%XCTV*PLM(:,:)*PLEPS(:,:)* &
-    MZF(0.5*(PPHI3(:,:)+PPSI3(:,:))*PDTH_DZ(:,:)*PDR_DZ(:,:))
+    ZF(IIJB:IIJE,:) = TURBN%XCTV*PLM(IIJB:IIJE,:)*PLEPS(IIJB:IIJE,:)* &
+    MZF(0.5*(PPHI3(IIJB:IIJE,:)+PPSI3(IIJB:IIJE,:))*PDTH_DZ(IIJB:IIJE,:)*PDR_DZ(IIJB:IIJE,:))
   ENDIF
 !$acc kernels present_cr(ZDFDDTDZ,ZDFDDRDZ)  
     ZDFDDTDZ(:,:) = 0.     ! this term, because of discretization, is treated separately
@@ -840,12 +840,12 @@ END IF
     END IF
     !
     IF (TURBN%LHARAT) THEN
-      ZFLXZ(:,:)   = ZF(:,:)                  &
-        + TURBN%XIMPL * PLMF(:,:)*PLEPSF(:,:)*0.5   &
-        * (2. *PDR_DZ(:,:)  *DZM(PTHLP(:,:) - PTHLM(:,:)) / PDZZ(:,:)                 &
-               + 2. *PDTH_DZ(:,:) *DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:))            &
-        + TURBN%XIMPL * ZDFDDTDZ(:,:) * MZF(DZM(PTHLP(:,:) - PTHLM(:,:)) / PDZZ(:,:)) &
-        + TURBN%XIMPL * ZDFDDRDZ(:,:) * MZF(DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:))
+      ZFLXZ(IIJB:IIJE,:)   = ZF(IIJB:IIJE,:)                  &
+        + TURBN%XIMPL * PLMF(IIJB:IIJE,:)*PLEPSF(IIJB:IIJE,:)*0.5   &
+        * (2. *PDR_DZ(IIJB:IIJE,:)  *DZM(PTHLP(IIJB:IIJE,:) - PTHLM(IIJB:IIJE,:)) / PDZZ(IIJB:IIJE,:)                 &
+               + 2. *PDTH_DZ(IIJB:IIJE,:) *DZM(PRP(IIJB:IIJE,:) - PRM(IIJB:IIJE,:,1)) / PDZZ(IIJB:IIJE,:))            &
+        + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,:) * MZF(DZM(PTHLP(IIJB:IIJE,:) - PTHLM(IIJB:IIJE,:)) / PDZZ(IIJB:IIJE,:)) &
+        + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,:) * MZF(DZM(PRP(IIJB:IIJE,:) - PRM(IIJB:IIJE,:,1)) / PDZZ(IIJB:IIJE,:))
       IF (NEBN%LSTATNW) THEN    
 !$acc kernels
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -863,14 +863,14 @@ END IF
       CALL D_PSI3DRDZ_O_DDRDZ(D,CSTURB,TURBN,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,TURBN%CTURBDIM,GUSERV,ZWKPHIPSI4)
       ! d(psi3*drdz )/ddrdz term  
       !
-      ZFLXZ(:,:)   = ZF(:,:)                          &
-        + TURBN%XIMPL * TURBN%XCTV*PLM(:,:)*PLEPS(:,:)*0.5 &
-        * MZF((ZWKPHIPSI1(:,:)+ZWKPHIPSI2(:,:))& 
-        * PDR_DZ(:,:)*DZM(PTHLP(:,:) - PTHLM(:,:)) /PDZZ(:,:) &
-                    + (ZWKPHIPSI3(:,:) + ZWKPHIPSI4(:,:)) & 
-                    *PDTH_DZ(:,:)*DZM(PRP(:,:) - PRM(:,:,1))/PDZZ(:,:))    &
-        + TURBN%XIMPL * ZDFDDTDZ(:,:) * MZF(DZM(PTHLP(:,:) - PTHLM(:,:)) / PDZZ(:,:))         &
-        + TURBN%XIMPL * ZDFDDRDZ(:,:) * MZF(DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:))
+      ZFLXZ(IIJB:IIJE,:)   = ZF(IIJB:IIJE,:)                          &
+        + TURBN%XIMPL * TURBN%XCTV*PLM(IIJB:IIJE,:)*PLEPS(IIJB:IIJE,:)*0.5 &
+        * MZF((ZWKPHIPSI1(IIJB:IIJE,:)+ZWKPHIPSI2(IIJB:IIJE,:))& 
+        * PDR_DZ(IIJB:IIJE,:)*DZM(PTHLP(IIJB:IIJE,:) - PTHLM(IIJB:IIJE,:)) /PDZZ(IIJB:IIJE,:) &
+                    + (ZWKPHIPSI3(IIJB:IIJE,:) + ZWKPHIPSI4(IIJB:IIJE,:)) & 
+                    *PDTH_DZ(IIJB:IIJE,:)*DZM(PRP(IIJB:IIJE,:) - PRM(IIJB:IIJE,:,1))/PDZZ(IIJB:IIJE,:))    &
+        + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,:) * MZF(DZM(PTHLP(IIJB:IIJE,:) - PTHLM(IIJB:IIJE,:)) / PDZZ(IIJB:IIJE,:))         &
+        + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,:) * MZF(DZM(PRP(IIJB:IIJE,:) - PRM(IIJB:IIJE,:,1)) / PDZZ(IIJB:IIJE,:))
     ENDIF
     !
     ! special case near the ground ( uncentred gradient )
@@ -1003,7 +1003,7 @@ END IF
 !
     ! Compute the turbulent variance F and F' at time t-dt.
 IF (TURBN%LHARAT) THEN
-  ZF(:,:) = PLMF(:,:)*PLEPSF(:,:)*MZF(PDR_DZ(:,:)**2)
+  ZF(IIJB:IIJE,:) = PLMF(IIJB:IIJE,:)*PLEPSF(IIJB:IIJE,:)*MZF(PDR_DZ(IIJB:IIJE,:)**2)
   IF (NEBN%LSTATNW) THEN
 !$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -1012,8 +1012,8 @@ IF (TURBN%LHARAT) THEN
 !$acc end kernels
   END IF
 ELSE
-  ZF(:,:) = TURBN%XCTV*PLM(:,:)*PLEPS(:,:)& 
-                                *MZF(PPSI3(:,:)*PDR_DZ(:,:)**2)
+  ZF(IIJB:IIJE,:) = TURBN%XCTV*PLM(IIJB:IIJE,:)*PLEPS(IIJB:IIJE,:)& 
+                                *MZF(PPSI3(IIJB:IIJE,:)*PDR_DZ(IIJB:IIJE,:)**2)
 ENDIF
 !$acc kernels
     ZDFDDRDZ(:,:) = 0.     ! this term, because of discretization, is treated separately
@@ -1113,10 +1113,10 @@ ENDIF
 !$acc end kernels
   ZWORK2=DZM(ZWORK1)
   IF (TURBN%LHARAT) THEN
-    ZFLXZ(:,:) = ZF(:,:)                   &
-          + TURBN%XIMPL * PLMF(:,:) *PLEPSF(:,:) &
-            * MZF(2.*PDR_DZ(:,:)* DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:)) &
-          + TURBN%XIMPL * ZDFDDRDZ(:,:) * MZF(DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:))
+    ZFLXZ(IIJB:IIJE,:) = ZF(IIJB:IIJE,:)                   &
+          + TURBN%XIMPL * PLMF(IIJB:IIJE,:) *PLEPSF(IIJB:IIJE,:) &
+            * MZF(2.*PDR_DZ(IIJB:IIJE,:)* DZM(PRP(IIJB:IIJE,:) - PRM(IIJB:IIJE,:,1)) / PDZZ(IIJB:IIJE,:)) &
+          + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,:) * MZF(DZM(PRP(IIJB:IIJE,:) - PRM(IIJB:IIJE,:,1)) / PDZZ(IIJB:IIJE,:))
     IF (NEBN%LSTATNW) THEN
 !$acc kernels
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -1127,10 +1127,10 @@ ENDIF
   ELSE
     CALL D_PSI3DRDZ2_O_DDRDZ(D,CSTURB,TURBN,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,PDR_DZ,TURBN%CTURBDIM,GUSERV,ZWKPHIPSI1)
     !
-    ZFLXZ(:,:) = ZF(:,:)                             &
-          + TURBN%XIMPL * TURBN%XCTV*PLM(:,:) *PLEPS(:,:) &
-            * MZF(ZWKPHIPSI1(:,:)*DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:)) &
-          + TURBN%XIMPL * ZDFDDRDZ(:,:) * MZF(DZM(PRP(:,:) - PRM(:,:,1)) / PDZZ(:,:))
+    ZFLXZ(IIJB:IIJE,:) = ZF(IIJB:IIJE,:)                             &
+          + TURBN%XIMPL * TURBN%XCTV*PLM(IIJB:IIJE,:) *PLEPS(IIJB:IIJE,:) &
+            * MZF(ZWKPHIPSI1(IIJB:IIJE,:)*DZM(PRP(IIJB:IIJE,:) - PRM(IIJB:IIJE,:,1)) / PDZZ(IIJB:IIJE,:)) &
+          + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,:) * MZF(DZM(PRP(IIJB:IIJE,:) - PRM(IIJB:IIJE,:,1)) / PDZZ(IIJB:IIJE,:))
   ENDIF
     !
     ! special case near the ground ( uncentred gradient )

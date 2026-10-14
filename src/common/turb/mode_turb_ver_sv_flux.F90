@@ -422,8 +422,8 @@ DO JSV=1,KSV
   IF ( (TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. TLES%LLES_CALL .OR. OFLYER ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
-     ZFLXZ(:,:) = -ZCSV * PPSI_SV(:,:,JSV) * MZM(PLM*SQRT(PTKEM)) / PDZZ * &
-                  DZM( TURBN%XIMPL*ZRES(:,:) + PEXPL*PSVM(:,:,JSV) )
+     ZFLXZ(IIJB:IIJE,:) = -ZCSV * PPSI_SV(IIJB:IIJE,:,JSV) * MZM(PLM(IIJB:IIJE,:)*SQRT(PTKEM(IIJB:IIJE,:))) / PDZZ(IIJB:IIJE,:) * &
+                  DZM( TURBN%XIMPL*ZRES(IIJB:IIJE,:) + PEXPL*PSVM(IIJB:IIJE,:,JSV) )
     ! surface flux
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
     ! (in presence of slopes)

@@ -745,10 +745,10 @@ END IF
 !
 ! Contribution of the conservative temperature flux to the buoyancy flux
 IF (OOCEAN) THEN
-  PTP(:,:)= CST%XG*CST%XALPHAOC * MZF(ZFLXZ(:,:))
+  PTP(IIJB:IIJE,:)= CST%XG*CST%XALPHAOC * MZF(ZFLXZ(IIJB:IIJE,:))
 ELSE
   IF (KRR /= 0) THEN
-    PTP(:,:)  =  PBETA(:,:) * MZF( MZM(PETHETA) * ZFLXZ(:,:) )
+    PTP(IIJB:IIJE,:)  =  PBETA(IIJB:IIJE,:) * MZF( MZM(PETHETA(IIJB:IIJE,:)) * ZFLXZ(IIJB:IIJE,:) )
 !$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     PTP(IIJB:IIJE,IKB)=  PBETA(IIJB:IIJE,IKB) * PETHETA(IIJB:IIJE,IKB) *   &
@@ -756,13 +756,13 @@ ELSE
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
   ELSE
-    PTP(:,:)=  PBETA(:,:) * MZF(ZFLXZ(:,:))
+    PTP(IIJB:IIJE,:)=  PBETA(IIJB:IIJE,:) * MZF(ZFLXZ(IIJB:IIJE,:))
   END IF
 END IF
 !
 ! Buoyancy flux at flux points
 !
-PWTHV(:,:) = MZM(PETHETA) * ZFLXZ(:,:)
+PWTHV(IIJB:IIJE,:) = MZM(PETHETA(IIJB:IIJE,:)) * ZFLXZ(IIJB:IIJE,:)
 
 !$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -1138,9 +1138,9 @@ IF (KRR /= 0) THEN
   !
   ! Contribution of the conservative water flux to the Buoyancy flux
   IF (OOCEAN) THEN
-    ZA(:,:)=  -CST%XG * CST%XBETAOC * MZF(ZFLXZ )
+    ZA(IIJB:IIJE,:)=  -CST%XG * CST%XBETAOC * MZF(ZFLXZ(IIJB:IIJE,:))
   ELSE
-    ZA(:,:)   =  PBETA(:,:) * MZF( MZM(PEMOIST) * ZFLXZ )
+    ZA(IIJB:IIJE,:)   =  PBETA(IIJB:IIJE,:) * MZF( MZM(PEMOIST(IIJB:IIJE,:)) * ZFLXZ(IIJB:IIJE,:) )
 !$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZA(IIJB:IIJE,IKB) =  PBETA(IIJB:IIJE,IKB) * PEMOIST(IIJB:IIJE,IKB) *   &
@@ -1154,7 +1154,7 @@ IF (KRR /= 0) THEN
   !
   ! Buoyancy flux at flux points
   !
-  PWTHV(:,:) = PWTHV(:,:) + MZM(PEMOIST) * ZFLXZ(:,:)
+  PWTHV(IIJB:IIJE,:) = PWTHV(IIJB:IIJE,:) + MZM(PEMOIST(IIJB:IIJE,:)) * ZFLXZ(IIJB:IIJE,:)
   !
 !$acc kernels 
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -1276,8 +1276,8 @@ IF ( ((TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. TLES%LLES_CALL) .AND. (KRRL > 
 !$acc end kernels
   !  
   ! compute <w Rc>
-  ZFLXZ(:,:) = MZM( PAMOIST(:,:) * 2.* PSRCM(:,:) ) * ZFLXZ(:,:) + &
-                 MZM( PATHETA(:,:) * 2.* PSRCM(:,:) ) * ZA(:,:)
+  ZFLXZ(IIJB:IIJE,1:IKT) = MZM( PAMOIST(IIJB:IIJE,1:IKT) * 2.* PSRCM(IIJB:IIJE,1:IKT) ) * ZFLXZ(IIJB:IIJE,1:IKT) + &
+                 MZM( PATHETA(IIJB:IIJE,1:IKT) * 2.* PSRCM(IIJB:IIJE,1:IKT) ) * ZA(IIJB:IIJE,1:IKT)
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZFLXZ(IIJB:IIJE,IKA) = ZFLXZ(IIJB:IIJE,IKB)
