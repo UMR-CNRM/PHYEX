@@ -1,10 +1,26 @@
-!MNH_LIC Copyright 2007-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2007-2026 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-------------------------------------------------------------------------------
 MODULE MODE_LIMA_INIT_CCN_ACTIVATION_SPECTRUM
   IMPLICIT NONE
+
+  PRIVATE
+
+  PUBLIC :: LIMA_INIT_CCN_ACTIVATION_SPECTRUM
+
+  ! NM, NN, XS and XNCCN are declared at MODULE scope (instead of being local to the
+  ! subroutine below) as a workaround for nvfortran bug 6927287 (impacts NVHPC at least up to 26.9):
+  ! a contained procedure with host association (DISTANCE) passed as an EXTERNAL argument
+  ! (to LMDIF1) reads its host link from an uninitialised register at -O0/-O1 and crashes.
+  ! No crash at -O2 and more because the compiler inlines the contained procedure.
+  ! Keeping the data out of the host scope removes the host association.
+  INTEGER(KIND=4), PARAMETER :: NM = 1000      ! Number of points (S,Nccn) used to fit the spectra
+  INTEGER(KIND=4), PARAMETER :: NN = 3         ! Number of parameters to adjust
+  REAL, DIMENSION(NM)        :: XS             ! saturation ratio (S=1.01 for a 1% supersaturation)
+  REAL, DIMENSION(NM)        :: XNCCN          ! fraction of the aerosols larger than ZDCRIT (ie activable)
+
 CONTAINS
 !     #############################################################
   SUBROUTINE LIMA_INIT_CCN_ACTIVATION_SPECTRUM (CST, HTYPE_CCN,PD,PSIGMA,PLIMIT_FACTOR,PK,PMU,PBETA,PKAPPA)
@@ -58,10 +74,8 @@ REAL,             INTENT(OUT) :: PKAPPA         ! kappa
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER(KIND=4), PARAMETER            :: IM = 1000        ! Number of points (S,Nccn) used to fit the spectra
-INTEGER(KIND=4), PARAMETER            :: IN = 3          ! Number of parameters to adjust
-REAL(KIND=MNHREAL64), DIMENSION(IN)   :: ZPARAMS         ! Parameters to adjust by the LM algorithm (k, mu, beta)
-REAL(KIND=MNHREAL64), DIMENSION(IM)   :: ZFVEC           ! Array to store the distance between theoretical and fitted spectra
+REAL(KIND=MNHREAL64), DIMENSION(NN)   :: ZPARAMS         ! Parameters to adjust by the LM algorithm (k, mu, beta)
+REAL(KIND=MNHREAL64), DIMENSION(NM)   :: ZFVEC           ! Array to store the distance between theoretical and fitted spectra
 INTEGER                               :: IFLAG          ! 
 INTEGER(KIND=4)                       :: IINFO           ! 
 REAL(KIND=MNHREAL64)                  :: ZTOL = 1.E-16   ! Fit precision required
@@ -75,9 +89,7 @@ REAL(KIND=MNHREAL64)          :: ZMIN  = 0.1E-6_MNHREAL64 ! minimum diameter for
 REAL(KIND=MNHREAL64)          :: ZMAX  = 10.E-6_MNHREAL64 ! maximum diameter for root search (m)
 REAL                          :: ZPREC = 1.E-8  ! precision wanted for root (m)
 !
-REAL, DIMENSION(IM), SAVE     :: ZS             ! saturation ratio (S=1.01 for a 1% supersaturation)
-REAL, DIMENSION(IM)           :: ZDCRIT         ! critical diameters (m) for the chosen S values
-REAL, DIMENSION(IM), SAVE     :: ZNCCN          ! fraction of the aerosols larger than ZDCRIT (ie activable)
+REAL, DIMENSION(NM)           :: ZDCRIT         ! critical diameters (m) for the chosen S values
 REAL, DIMENSION(1)            :: ZT             ! temperature
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -119,8 +131,8 @@ ZT = (/ 280. /)
 !
 ! Initialize supersaturation values (in %)
 !
-DO II=1, SIZE(ZS)
-   ZS(II)=EXP( LOG(10.**(-3.)) + REAL(II) / REAL(SIZE(ZS)) * (LOG(10.**2.)-LOG(10.**(-3.))) )
+DO II=1, SIZE(XS)
+   XS(II)=EXP( LOG(10.**(-3.)) + REAL(II) / REAL(SIZE(XS)) * (LOG(10.**2.)-LOG(10.**(-3.))) )
 END DO
 
 DO IJ=1, SIZE(ZT)
@@ -143,12 +155,12 @@ DO IJ=1, SIZE(ZT)
 ! ln(100*(Sw))~Dcrit^(-3/2) where Sw is in % (Sw=1 for a 1% supersaturation)
 !
    ZW = ZDDRY * ZSCRIT**0.66             ! "a" factor in Ddry_crit = a*S**-0.66
-   ZDCRIT(:) = ZW * ZS(:)**(-0.66)       ! Ddry_crit for each value of S
+   ZDCRIT(:) = ZW * XS(:)**(-0.66)       ! Ddry_crit for each value of S
 !
 ! Compute Nccn(S) as the incomplete integral of n(D) from 0 to Ddry_crit(S)
 !
-   DO II=1, SIZE(ZS)
-      ZNCCN(II) = 1- ( 0.5 + SIGN(0.5,ZDCRIT(II)-PD) * GAMMA_INC(0.5,(LOG(ZDCRIT(II)/PD)/SQRT(2.)/LOG(PSIGMA))**2) )
+   DO II=1, SIZE(XS)
+      XNCCN(II) = 1- ( 0.5 + SIGN(0.5,ZDCRIT(II)-PD) * GAMMA_INC(0.5,(LOG(ZDCRIT(II)/PD)/SQRT(2.)/LOG(PSIGMA))**2) )
    END DO
 !
 !-------------------------------------------------------------------------------
@@ -158,7 +170,7 @@ DO IJ=1, SIZE(ZT)
 !
    ZPARAMS(1:3) = (/ 1._MNHREAL64, 1._MNHREAL64, 1000._MNHREAL64 /)
    IFLAG = 1
-   CALL LMDIF1 ( DISTANCE, IM, IN, ZPARAMS, ZFVEC, ZTOL, IINFO )
+   CALL LMDIF1 ( DISTANCE, NM, NN, ZPARAMS, ZFVEC, ZTOL, IINFO )
 !
    PLIMIT_FACTOR = GAMMA(ZPARAMS(2))*ZPARAMS(3)**(ZPARAMS(1)/2)/GAMMA(1+ZPARAMS(1)/2)/GAMMA(ZPARAMS(2)-ZPARAMS(1)/2)
    PK            = ZPARAMS(1)
@@ -436,7 +448,7 @@ USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
        DO II=1, KM
           ! ZS in "no units", ie ZS=0.01 for a 1% suersaturation
           !       ZW= C * (ZS(I)/100)**X(1) * HYPGEO(X(2),X(1)/2,X(1)/2+1,X(3),ZS(I)/100)
-          ZW= REAL(ZC * (ZS(II))**PX(1) * HYPGEO(REAL(PX(2)),REAL(PX(1)/2),REAL(PX(1)/2+1),REAL(PX(3)),REAL(ZS(II))))
+          ZW= REAL(ZC * (XS(II))**PX(1) * HYPGEO(REAL(PX(2)),REAL(PX(1)/2),REAL(PX(1)/2+1),REAL(PX(3)),REAL(XS(II))))
 !!$       IF (X(3)*(ZS(I)/100)**2 .LT. 0.98) THEN
 !!$          CALL HYPSER(X(2),X(1)/2,X(1)/2+1,-X(3)*(ZS(I)/100)**2,ZW2)
 !!$          print *, "args= ", X(2), X(1)/2, X(1)/2+1, -X(3)*(ZS(I)/100)**2, " hypser = ", ZW2
@@ -444,8 +456,8 @@ USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !!$          print *, "args= ", 27.288, 0.82/2, 0.82/2+1, -38726*(0.5/100)**2, " hypser = ", ZW2
 !!$       END IF
           !       print *, I, ZS(I), C, ZW, ZNCCN(I)
-          IF ( ZW.GT.0. .AND. ZNCCN(II).GT.0.) THEN
-             PFVEC(II) = LOG(ZW) - LOG(ZNCCN(II))
+          IF ( ZW.GT.0. .AND. XNCCN(II).GT.0.) THEN
+             PFVEC(II) = LOG(ZW) - LOG(XNCCN(II))
           ELSE
              PFVEC(II) = 0._MNHREAL64
           END IF
