@@ -57,7 +57,7 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
-USE MODD_TURB_n, ONLY: TURB_t, NTURB_S, NCED
+USE MODD_TURB_n, ONLY: TURB_t, NTURB_S, NCSHF, NCSV
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
 !
@@ -145,12 +145,12 @@ IKT=D%NKT
 !
 CALL SECOND_MNH(ZTIME1)
 !
-DO JSV=1,KSV
+DO JIJ=IIJB, IIJE
    IF(OBLOWSNOW) THEN
       ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for |
-      ZCSV(:)= PTURB_SPP(:,NCED)/PRSNOW
+      ZCSV(JIJ)= PTURB_SPP(JIJ,NCSV)/PRSNOW
    ELSE
-      ZCSV(:)= PTURB_SPP(:,NCED)
+      ZCSV(JIJ)= PTURB_SPP(JIJ,NCSV)
    ENDIF
 ENDDO
 DO JSV=1,KSV
@@ -203,7 +203,7 @@ CALL GZ_M_W_PHY(D, PSVM(:,:,JSV),PDZZ, ZGZ_M_W2D_WORK2)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    ZFLXZ(JIJ, JK)= ( PTURB_SPP(JIJ,NCED) * PPHI3(JIJ, JK) + ZCSV(JIJ) * PPSI_SV(JIJ, JK, JSV) )              &
+    ZFLXZ(JIJ, JK)= ( PTURB_SPP(JIJ,NCSHF) * PPHI3(JIJ, JK) + ZCSV(JIJ) * PPSI_SV(JIJ, JK, JSV) )              &
                       *  ZGZ_M_W2D_WORK1(JIJ, JK)                          &
                       *  ZGZ_M_W2D_WORK2(JIJ, JK)    
   END DO

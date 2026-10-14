@@ -68,7 +68,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
     REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZLBC    ! XLBC weighted by sea fraction
     REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZFSEDC
     REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: ZCONC3D !  droplet concentration m-3
-    REAL, DIMENSION(D%NIT),       INTENT(IN) :: PRXCS   ! ?
+    REAL, DIMENSION(D%NIT),       INTENT(IN) :: PRXCS   ! Extra variables for VTERM
 
     REAL, DIMENSION(D%NIT,D%NKT),     OPTIONAL, INTENT(IN)    :: PRHT   ! Hail m.r. at t
     REAL, DIMENSION(D%NIT,D%NKT),     OPTIONAL, INTENT(INOUT) :: PRHS   ! Hail m.r. source

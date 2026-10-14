@@ -11,16 +11,16 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
   SUBROUTINE RAIN_ICE_OLD_SLOW(D, CST, ICED, ICEP, PARAMI, BUCONF, &
                                KSIZE, OCND2, LMODICEDEP,           &
-                               PTSTEP, ZREDSN,                     &
+                               PTSTEP,                             &
                                GMICRO, PRHODJ, PTHS, PRVS,         &
                                PRCT, PRRT, PRIT, PRRS,             &
                                PRGS, PRST, PRGT, PCIT,             &
-                               PRHODREF, PZRHODJ, PLDBAS,           &
+                               PRHODREF, PZRHODJ, PLDBAS,          &
                                PZT, PLSFACT, PLVFACT, PPRES, PSSI, &
-                               PZRVS, PRCS, PRIS, PRSS, PZTHS,       &
+                               PZRVS, PRCS, PRIS, PRSS, PZTHS,     &
                                PLBDAG, PKA, PDV,                   &
                                PAI, PCJ, PAA2, PBB3,               &
-                               ZDICRIT, ZREDGR, ZKVO,              &
+                               ZDICRIT,  ZKVO,                     &
                                TBUDGETS, KBUDGETS, ZZRCRIAUTI,     &
                                ZZRDEPSRED, ZZRDEPGRED)
 
@@ -51,8 +51,6 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     LOGICAL, INTENT(IN) :: LMODICEDEP ! Logical switch for alternative dep/evap of ice
 
     REAL, INTENT(IN) :: PTSTEP ! Double Time step (single if cold start)
-
-    REAL, INTENT(IN) :: ZREDSN
 
     LOGICAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
 
@@ -94,7 +92,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PAA2 ! Part of PAI used for optimized code
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PBB3 ! Part of PAI used for optimized code
 
-    REAL, INTENT(IN) :: ZDICRIT, ZREDGR ! Possible reduction of the rate of graupel,snow growth
+    REAL, INTENT(IN) :: ZDICRIT ! Possible reduction of the rate of graupel,snow growth
     REAL, INTENT(IN) :: ZKVO ! factor used for caluclate maximum mass in the ice distubution.
 
     TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
@@ -223,7 +221,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
           ZZW(JL) = (PSSI(JL)/(PRHODREF(JL)*PAI(JL))) *  &
                     (ICEP%X0DEPS*PLDBAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*PCJ(JL)*PLDBAS(JL)**ICEP%XEX1DEPS)
           ZZW(JL) = MIN( PZRVS(JL),MAX(-PRSS(JL),ZZW(JL)))  ! Simpler
-          ZZW(JL) = ZZW(JL)*ZZRDEPSRED(JL) ! Possible tuning by using ZREDSN /=  1
+          ZZW(JL) = ZZW(JL)*ZZRDEPSRED(JL) ! Possible tuning
           PRSS(JL) = PRSS(JL) + ZZW(JL)
           PZRVS(JL) = PZRVS(JL) - ZZW(JL)
           PZTHS(JL) = PZTHS(JL) + ZZW(JL)*PLSFACT(JL)

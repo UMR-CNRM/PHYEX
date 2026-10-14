@@ -82,7 +82,7 @@ REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRDEPGRED! SPP for microphysics
 !
 REAL, DIMENSION(KPROMA) :: ZCRIAUTI, ZXACRIAUTI, ZXBCRIAUTI 
 INTEGER                 :: JL
-REAL            :: ZTCRI0,ZCRI0,ZREDGR,ZREDSN
+REAL            :: ZTCRI0,ZCRI0
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
@@ -92,9 +92,6 @@ IF (LHOOK) CALL DR_HOOK('ICE4_SLOW', 0, ZHOOK_HANDLE)
 !
 !*       3.1  Tuning possibilties (only for OCND2)
 
-ZREDGR  = 1.      ! Tuning of the deposition of graupel, 1. is ref. value 
-ZREDSN  = 1.      ! Tuning of the deposition of snow, 1. is ref. value
-
 !Cloud water split between high and low content part is done according to autoconversion option
 IF(PARAMI%LCRIAUTI) THEN
    CALL CRIAUTI(PRCRIAUTI, ICEP%XT0CRIAUTI, ZXACRIAUTI, ZXBCRIAUTI)
@@ -103,12 +100,6 @@ ELSE
    ZXBCRIAUTI(:)=PARAMI%XBCRIAUTI_NAM
 ENDIF
 
-IF(PARAMI%LOCND2) THEN
-  IF(.NOT. PARAMI%LMODICEDEP) THEN
-    ZREDGR  = ICEP%XFRMIN(39)  ! Tuning factor, may be /= 1. 
-    ZREDSN  = ICEP%XFRMIN(40)  ! Tuning factor, may be /= 1.
-  ENDIF
-ENDIF
 #ifdef MNH_COMPILER_CCE
 !$mnh_undef(LOOP)
 #endif

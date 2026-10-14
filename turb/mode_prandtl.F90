@@ -17,7 +17,7 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !               06/2023   S. Riette add the LSMOOTH_PRANDTL key
 !
 USE MODD_CTURB,      ONLY : CSTURB_t
-USE MODD_TURB_n,     ONLY : TURB_t, NCEP, NCED, NTURB_S
+USE MODD_TURB_n,     ONLY : TURB_t, NCTV, NCSHF, NTURB_S
 USE MODD_DIMPHYEX,   ONLY : DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY : JPVEXT_TURB
 !
@@ -312,7 +312,7 @@ IF (OOCEAN) THEN
 
   DO JK=1, IKT
     DO JIJ=IIJB, IIJE
-      PREDTH1(JIJ, JK)= PTURB_SPP(JIJ,NCEP)*PBLL_O_E(JIJ, JK)*ZWORK1(JIJ, JK)
+      PREDTH1(JIJ, JK)= PTURB_SPP(JIJ,NCTV)*PBLL_O_E(JIJ, JK)*ZWORK1(JIJ, JK)
     END DO
   END DO
   PREDR1(IIJB:IIJE,1:IKT) = 0.
@@ -323,9 +323,9 @@ ELSE
 
     DO JK=1, IKT
       DO JIJ=IIJB, IIJE
-        PREDTH1(JIJ, JK)= PTURB_SPP(JIJ,NCEP)*PBLL_O_E(JIJ, JK) * PETHETA(JIJ, JK) &
+        PREDTH1(JIJ, JK)= PTURB_SPP(JIJ,NCTV)*PBLL_O_E(JIJ, JK) * PETHETA(JIJ, JK) &
                                           * ZWORK1(JIJ, JK)
-        PREDR1(JIJ, JK) = PTURB_SPP(JIJ,NCEP)*PBLL_O_E(JIJ, JK) * PEMOIST(JIJ, JK) &
+        PREDR1(JIJ, JK) = PTURB_SPP(JIJ,NCTV)*PBLL_O_E(JIJ, JK) * PEMOIST(JIJ, JK) &
                                           * ZWORK2(JIJ, JK)
       END DO
     END DO
@@ -335,7 +335,7 @@ ELSE
 
     DO JK=1, IKT
       DO JIJ=IIJB, IIJE
-        PREDTH1(JIJ, JK)= PTURB_SPP(JIJ,NCEP)*PBLL_O_E(JIJ, JK)  * ZWORK1(JIJ, JK)
+        PREDTH1(JIJ, JK)= PTURB_SPP(JIJ,NCTV)*PBLL_O_E(JIJ, JK)  * ZWORK1(JIJ, JK)
         PREDR1(JIJ, JK) = 0.
       END DO
     END DO
@@ -408,7 +408,7 @@ DO JSV=1,KSV
 
   DO JK=1, IKT
     DO JIJ=IIJB, IIJE
-      PREDS1(JIJ, JK, JSV)=PTURB_SPP(JIJ,NCEP)*PBLL_O_E(JIJ, JK)*ZWORK1(JIJ, JK)
+      PREDS1(JIJ, JK, JSV)=PTURB_SPP(JIJ,NCTV)*PBLL_O_E(JIJ, JK)*ZWORK1(JIJ, JK)
     END DO
   END DO
 
@@ -484,13 +484,13 @@ ELSE IF (O2D) THEN                      ! 3D case in a 2D model
 
     DO JK=1, IKT
       DO JIJ=IIJB, IIJE
-        PRED2TH3(JIJ, JK)= PREDTH1(JIJ, JK)**2+(PTURB_SPP(JIJ,NCEP)*PBLL_O_E(JIJ, JK) &
+        PRED2TH3(JIJ, JK)= PREDTH1(JIJ, JK)**2+(PTURB_SPP(JIJ,NCTV)*PBLL_O_E(JIJ, JK) &
                                            *PETHETA(JIJ, JK) )**2 * ZWORK2(JIJ, JK)
     !
-        PRED2R3(JIJ, JK)= PREDR1(JIJ, JK)**2 + (PTURB_SPP(JIJ,NCEP)*PBLL_O_E(JIJ, JK) &
+        PRED2R3(JIJ, JK)= PREDR1(JIJ, JK)**2 + (PTURB_SPP(JIJ,NCTV)*PBLL_O_E(JIJ, JK) &
                                          * PEMOIST(JIJ, JK))**2 * ZWORK3(JIJ, JK)
     !
-        PRED2THR3(JIJ, JK)= PREDR1(JIJ, JK) * PREDTH1(JIJ, JK) +  PTURB_SPP(JIJ,NCEP)**2 &
+        PRED2THR3(JIJ, JK)= PREDR1(JIJ, JK) * PREDTH1(JIJ, JK) +  PTURB_SPP(JIJ,NCTV)**2 &
                                             * PBLL_O_E(JIJ, JK)**2   &
                                             * PEMOIST(JIJ, JK) * PETHETA(JIJ, JK) &
                                             * ZWORK4(JIJ, JK)
@@ -506,7 +506,7 @@ ELSE IF (O2D) THEN                      ! 3D case in a 2D model
 
     DO JK=1, IKT
       DO JIJ=IIJB, IIJE
-        PRED2TH3(JIJ, JK) = PREDTH1(JIJ, JK)**2 +  PTURB_SPP(JIJ,NCEP)**2 & 
+        PRED2TH3(JIJ, JK) = PREDTH1(JIJ, JK)**2 +  PTURB_SPP(JIJ,NCTV)**2 & 
                                            * PBLL_O_E(JIJ, JK)**2 * ZWORK2(JIJ, JK)      
       END DO
     END DO
@@ -557,13 +557,13 @@ ELSE                                 ! 3D case in a 3D model
 
     DO JK=1, IKT
       DO JIJ=IIJB, IIJE
-        PRED2TH3(JIJ, JK)= PREDTH1(JIJ, JK)**2 +  ( PTURB_SPP(JIJ,NCEP)*PBLL_O_E(JIJ, JK) &
+        PRED2TH3(JIJ, JK)= PREDTH1(JIJ, JK)**2 +  ( PTURB_SPP(JIJ,NCTV)*PBLL_O_E(JIJ, JK) &
                                           * PETHETA(JIJ, JK) )**2 * ZWORK2(JIJ, JK)      
     !
-        PRED2R3(JIJ, JK)= PREDR1(JIJ, JK)**2 + (PTURB_SPP(JIJ,NCEP)*PBLL_O_E(JIJ, JK) &
+        PRED2R3(JIJ, JK)= PREDR1(JIJ, JK)**2 + (PTURB_SPP(JIJ,NCTV)*PBLL_O_E(JIJ, JK) &
                                          * PEMOIST(JIJ, JK))**2 * ZWORK3(JIJ, JK)
     !
-        PRED2THR3(JIJ, JK)= PREDR1(JIJ, JK) * PREDTH1(JIJ, JK) + PTURB_SPP(JIJ,NCEP)**2 &
+        PRED2THR3(JIJ, JK)= PREDR1(JIJ, JK) * PREDTH1(JIJ, JK) + PTURB_SPP(JIJ,NCTV)**2 &
                                            * PBLL_O_E(JIJ, JK)**2 *   &
                                 PEMOIST(JIJ, JK) * PETHETA(JIJ, JK) * ZWORK4(JIJ, JK)
 
@@ -579,7 +579,7 @@ ELSE                                 ! 3D case in a 3D model
 
     DO JK=1, IKT
       DO JIJ=IIJB, IIJE
-        PRED2TH3(JIJ, JK) = PREDTH1(JIJ, JK)**2 + PTURB_SPP(JIJ,NCEP)**2 &
+        PRED2TH3(JIJ, JK) = PREDTH1(JIJ, JK)**2 + PTURB_SPP(JIJ,NCTV)**2 &
                                             * PBLL_O_E(JIJ, JK)**2 * ZWORK2(JIJ, JK)
       END DO
     END DO
@@ -1045,14 +1045,14 @@ DO JSV=1,KSV
   DO JK=1, IKT
     DO JIJ=IIJB, IIJE
       PPSI_SV(JIJ, JK, JSV) = ( 1.                                             &
-        - (PTURB_SPP(JIJ,NCEP)/2+PTURB_SPP(JIJ,NCEP)/2) * &
+        - (PTURB_SPP(JIJ,NCTV)/2+PTURB_SPP(JIJ,NCTV)/2) * &
         (PRED2THS(JIJ, JK, JSV)/PREDS1(JIJ, JK, JSV)-PREDTH1(JIJ, JK)) &
-        - (PTURB_SPP(JIJ,NCEP)/2+PTURB_SPP(JIJ,NCEP)/2) * &     
+        - (PTURB_SPP(JIJ,NCTV)/2+PTURB_SPP(JIJ,NCTV)/2) * &     
         (PRED2RS(JIJ, JK, JSV)/PREDS1(JIJ, JK, JSV)-PREDR1(JIJ, JK)) &
-        - PTURB_SPP(JIJ,NCEP)/2 * &              
+        - PTURB_SPP(JIJ,NCTV)/2 * &              
         PREDTH1(JIJ, JK) * PPHI3(JIJ, JK) &
-        - PTURB_SPP(JIJ,NCEP)/2 * PREDR1(JIJ, JK) * PPSI3(JIJ, JK)                 &
-                    ) / (  1. + PTURB_SPP(JIJ,NCEP)/2 * ( PREDTH1(JIJ, JK) + PREDR1(JIJ, JK) ) )           
+        - PTURB_SPP(JIJ,NCTV)/2 * PREDR1(JIJ, JK) * PPSI3(JIJ, JK)                 &
+                    ) / (  1. + PTURB_SPP(JIJ,NCTV)/2 * ( PREDTH1(JIJ, JK) + PREDR1(JIJ, JK) ) )           
   
     END DO
   END DO
@@ -1342,7 +1342,7 @@ IKT=D%NKT
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    PM3_WTH_WTH2(JIJ, JK) = PTURB_SPP(JIJ,NCED)*PBLL_O_E(JIJ, JK)&
+    PM3_WTH_WTH2(JIJ, JK) = PTURB_SPP(JIJ,NCSHF)*PBLL_O_E(JIJ, JK)&
                        * PETHETA(JIJ, JK)*0.5/CSTURB%XCTD        &
                        * (1.+0.5*PREDTH1(JIJ, JK)+PREDR1(JIJ, JK)) / PD(JIJ, JK)
   END DO
@@ -1380,10 +1380,10 @@ IKT=D%NKT
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PD_M3_WTH_WTH2_O_DDTDZ(JIJ, JK) = &
-    (0.5*PTURB_SPP(JIJ,NCED)*PBLL_O_E(JIJ, JK)*PETHETA(JIJ, JK)*0.5/CSTURB%XCTD/PD(JIJ, JK) &
+    (0.5*PTURB_SPP(JIJ,NCSHF)*PBLL_O_E(JIJ, JK)*PETHETA(JIJ, JK)*0.5/CSTURB%XCTD/PD(JIJ, JK) &
     - PM3_WTH_WTH2(JIJ, JK)/PD(JIJ, JK)&
     *(1.5+PREDTH1(JIJ, JK)+PREDR1(JIJ, JK))  )&
-    * PBLL_O_E(JIJ, JK) * PETHETA(JIJ, JK) * PTURB_SPP(JIJ,NCEP)
+    * PBLL_O_E(JIJ, JK) * PETHETA(JIJ, JK) * PTURB_SPP(JIJ,NCTV)
   END DO
 END DO
 !
@@ -1421,7 +1421,7 @@ CALL MZM_PHY(D,PTKE,ZWORK1)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    PM3_WTH_W2TH(JIJ, JK) = PTURB_SPP(JIJ,NCED)*PKEFF(JIJ, JK)*1.5/ZWORK1(JIJ, JK) &
+    PM3_WTH_W2TH(JIJ, JK) = PTURB_SPP(JIJ,NCSHF)*PKEFF(JIJ, JK)*1.5/ZWORK1(JIJ, JK) &
       * (1. - 0.5*PREDR1(JIJ, JK)*(1.+PREDR1(JIJ, JK))/PD(JIJ, JK) ) &
       / (1.+PREDTH1(JIJ, JK))
   END DO
@@ -1464,8 +1464,8 @@ CALL MZM_PHY(D,PTKE,ZWORK1)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PD_M3_WTH_W2TH_O_DDTDZ(JIJ, JK) = &
-     - PTURB_SPP(JIJ,NCED)*PKEFF(JIJ, JK)*1.5/ZWORK1(JIJ, JK)/(1.+PREDTH1(JIJ, JK))**2 &
-     * PTURB_SPP(JIJ,NCEP)*PBLL_O_E(JIJ, JK)*PETHETA(JIJ, JK)  &
+     - PTURB_SPP(JIJ,NCSHF)*PKEFF(JIJ, JK)*1.5/ZWORK1(JIJ, JK)/(1.+PREDTH1(JIJ, JK))**2 &
+     * PTURB_SPP(JIJ,NCTV)*PBLL_O_E(JIJ, JK)*PETHETA(JIJ, JK)  &
      * (1. - 0.5*PREDR1(JIJ, JK)*(1.+PREDR1(JIJ, JK))/PD(JIJ, JK)* &
        ( 1.+(1.+PREDTH1(JIJ, JK))*(1.5+PREDR1(JIJ, JK)+PREDTH1(JIJ, JK))&
        /PD(JIJ, JK)) )
@@ -1508,7 +1508,7 @@ CALL MZM_PHY(D,PTKE,ZWORK1)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PM3_WTH_W2R(JIJ, JK) = &
-      - PTURB_SPP(JIJ,NCED)*PKEFF(JIJ, JK)*0.75*PTURB_SPP(JIJ,NCEP)*PBLL_O_E(JIJ, JK) &
+      - PTURB_SPP(JIJ,NCSHF)*PKEFF(JIJ, JK)*0.75*PTURB_SPP(JIJ,NCTV)*PBLL_O_E(JIJ, JK) &
       /ZWORK1(JIJ, JK)*PEMOIST(JIJ, JK)*PDTDZ(JIJ, JK)/PD(JIJ, JK)
   END DO
 END DO
@@ -1550,7 +1550,7 @@ CALL MZM_PHY(D,PTKE,ZWORK1)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PD_M3_WTH_W2R_O_DDTDZ(JIJ, JK) = &
-    - PTURB_SPP(JIJ,NCED)*PKEFF(JIJ, JK)*0.75*PTURB_SPP(JIJ,NCEP)*PBLL_O_E(JIJ, JK) &
+    - PTURB_SPP(JIJ,NCSHF)*PKEFF(JIJ, JK)*0.75*PTURB_SPP(JIJ,NCTV)*PBLL_O_E(JIJ, JK) &
                                    /ZWORK1(JIJ, JK)*PEMOIST(JIJ, JK)/PD(JIJ, JK) &
                                          * (1. -  PREDTH1(JIJ, JK)*(1.5+PREDTH1(JIJ, JK)& 
                                          +PREDR1(JIJ, JK))/PD(JIJ, JK))
@@ -1603,8 +1603,8 @@ CALL MZM_PHY(D,ZWORK1,ZWORK2)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    PM3_WTH_WR2(JIJ, JK) = - PTURB_SPP(JIJ,NCED)*PKEFF(JIJ, JK)& 
-                               *0.25*PBLL_O_E(JIJ, JK)*PTURB_SPP(JIJ,NCEP)*PEMOIST(JIJ, JK)**2 &
+    PM3_WTH_WR2(JIJ, JK) = - PTURB_SPP(JIJ,NCSHF)*PKEFF(JIJ, JK)& 
+                               *0.25*PBLL_O_E(JIJ, JK)*PTURB_SPP(JIJ,NCTV)*PEMOIST(JIJ, JK)**2 &
                                *ZWORK2(JIJ, JK)/CSTURB%XCTD*PDTDZ(JIJ, JK)/PD(JIJ, JK)
   END DO
 END DO
@@ -1657,8 +1657,8 @@ CALL MZM_PHY(D,ZWORK1,ZWORK2)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    PD_M3_WTH_WR2_O_DDTDZ(JIJ, JK) = - PTURB_SPP(JIJ,NCED)*PKEFF(JIJ, JK)& 
-                               *0.25*PBLL_O_E(JIJ, JK)*PTURB_SPP(JIJ,NCEP)*PEMOIST(JIJ, JK)**2 &
+    PD_M3_WTH_WR2_O_DDTDZ(JIJ, JK) = - PTURB_SPP(JIJ,NCSHF)*PKEFF(JIJ, JK)& 
+                               *0.25*PBLL_O_E(JIJ, JK)*PTURB_SPP(JIJ,NCTV)*PEMOIST(JIJ, JK)**2 &
                                *ZWORK2(JIJ, JK)/CSTURB%XCTD/PD(JIJ, JK)     &
                                * (1. -  PREDTH1(JIJ, JK)* &
                                (1.5+PREDTH1(JIJ, JK)+PREDR1(JIJ, JK))/PD(JIJ, JK))
@@ -1711,7 +1711,7 @@ CALL MZM_PHY(D,ZWORK1,ZWORK2)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PM3_WTH_WTHR(JIJ, JK) = &
-                       PTURB_SPP(JIJ,NCED)*PKEFF(JIJ, JK)*PEMOIST(JIJ, JK)*ZWORK2(JIJ, JK) &
+                       PTURB_SPP(JIJ,NCSHF)*PKEFF(JIJ, JK)*PEMOIST(JIJ, JK)*ZWORK2(JIJ, JK) &
                        *0.5*PLEPS(JIJ, JK)/CSTURB%XCTD*(1+PREDR1(JIJ, JK))/PD(JIJ, JK)
   END DO
 END DO
@@ -1750,7 +1750,7 @@ DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PD_M3_WTH_WTHR_O_DDTDZ(JIJ, JK) = &
                     - PM3_WTH_WTHR(JIJ, JK) * (1.5+PREDTH1(JIJ, JK)+PREDR1(JIJ, JK))&
-                    /PD(JIJ, JK)*PTURB_SPP(JIJ,NCEP)*PBLL_O_E(JIJ, JK)*PETHETA(JIJ, JK)
+                    /PD(JIJ, JK)*PTURB_SPP(JIJ,NCTV)*PBLL_O_E(JIJ, JK)*PETHETA(JIJ, JK)
   END DO
 END DO
 !
@@ -1799,7 +1799,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PM3_TH2_W2TH(JIJ, JK) = - ZWORK2(JIJ, JK) &
-                           * 1.5*PLM(JIJ, JK)*PLEPS(JIJ, JK)/PTKE(JIJ, JK)*PTURB_SPP(JIJ,NCEP)
+                           * 1.5*PLM(JIJ, JK)*PLEPS(JIJ, JK)/PTKE(JIJ, JK)*PTURB_SPP(JIJ,NCTV)
   END DO
 END DO
 !
@@ -1854,7 +1854,7 @@ IF (OUSERV) THEN
   DO JK=1, IKT
     DO JIJ=IIJB, IIJE
       PD_M3_TH2_W2TH_O_DDTDZ(JIJ, JK) = - 1.5*PLM(JIJ, JK)*PLEPS(JIJ, JK) &
-                                                       /PTKE(JIJ, JK)*PTURB_SPP(JIJ,NCEP) * ZWORK2(JIJ, JK)
+                                                       /PTKE(JIJ, JK)*PTURB_SPP(JIJ,NCTV) * ZWORK2(JIJ, JK)
     END DO
   END DO
 
@@ -1871,7 +1871,7 @@ ELSE
   DO JK=1, IKT
     DO JIJ=IIJB, IIJE
       PD_M3_TH2_W2TH_O_DDTDZ(JIJ, JK) = - 1.5*PLM(JIJ, JK)*PLEPS(JIJ, JK) & 
-                                                       /PTKE(JIJ, JK)*PTURB_SPP(JIJ,NCEP) * ZWORK2(JIJ, JK)
+                                                       /PTKE(JIJ, JK)*PTURB_SPP(JIJ,NCTV) * ZWORK2(JIJ, JK)
     END DO
   END DO
 
@@ -1971,7 +1971,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PD_M3_TH2_WTH2_O_DDTDZ(JIJ, JK) = PLEPS(JIJ, JK) & 
-                                     *0.5/CSTURB%XCTD/PSQRT_TKE(JIJ, JK)*PTURB_SPP(JIJ,NCEP) * ZWORK2(JIJ, JK)
+                                     *0.5/CSTURB%XCTD/PSQRT_TKE(JIJ, JK)*PTURB_SPP(JIJ,NCTV) * ZWORK2(JIJ, JK)
   END DO
 END DO
 !
@@ -2019,7 +2019,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    PM3_TH2_W2R(JIJ, JK) = 0.75*PTURB_SPP(JIJ,NCEP)**2*ZWORK2(JIJ, JK) &
+    PM3_TH2_W2R(JIJ, JK) = 0.75*PTURB_SPP(JIJ,NCTV)**2*ZWORK2(JIJ, JK) &
                         *PLM(JIJ, JK)*PLEPS(JIJ, JK)/PTKE(JIJ, JK)
   END DO
 END DO
@@ -2071,7 +2071,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    PD_M3_TH2_W2R_O_DDTDZ(JIJ, JK) = 0.75*PTURB_SPP(JIJ,NCEP)**2*PLM(JIJ, JK) *PLEPS(JIJ, JK) &
+    PD_M3_TH2_W2R_O_DDTDZ(JIJ, JK) = 0.75*PTURB_SPP(JIJ,NCTV)**2*PLM(JIJ, JK) *PLEPS(JIJ, JK) &
                                                     /PTKE(JIJ, JK) * ZWORK2(JIJ, JK)
   END DO
 END DO
@@ -2119,7 +2119,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    PM3_TH2_WR2(JIJ, JK) = 0.25*PTURB_SPP(JIJ,NCEP)**2*ZWORK2(JIJ, JK)&
+    PM3_TH2_WR2(JIJ, JK) = 0.25*PTURB_SPP(JIJ,NCTV)**2*ZWORK2(JIJ, JK)&
                         *PLEPS(JIJ, JK)/PSQRT_TKE(JIJ, JK)/CSTURB%XCTD
   END DO
 END DO
@@ -2170,7 +2170,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    PD_M3_TH2_WR2_O_DDTDZ(JIJ, JK) = 0.25*PTURB_SPP(JIJ,NCEP)**2*PLEPS(JIJ, JK) & 
+    PD_M3_TH2_WR2_O_DDTDZ(JIJ, JK) = 0.25*PTURB_SPP(JIJ,NCTV)**2*PLEPS(JIJ, JK) & 
                                                    / PSQRT_TKE(JIJ, JK)/CSTURB%XCTD * ZWORK2(JIJ, JK)
   END DO
 END DO
@@ -2219,7 +2219,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    PM3_TH2_WTHR(JIJ, JK) = - 0.5*PTURB_SPP(JIJ,NCEP)*PLEPS(JIJ, JK) & 
+    PM3_TH2_WTHR(JIJ, JK) = - 0.5*PTURB_SPP(JIJ,NCTV)*PLEPS(JIJ, JK) & 
                                            / PSQRT_TKE(JIJ, JK)/CSTURB%XCTD * ZWORK2(JIJ, JK)
   END DO
 END DO
@@ -2270,7 +2270,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    PD_M3_TH2_WTHR_O_DDTDZ(JIJ, JK) = - 0.5*PTURB_SPP(JIJ,NCEP)*PLEPS(JIJ, JK) & 
+    PD_M3_TH2_WTHR_O_DDTDZ(JIJ, JK) = - 0.5*PTURB_SPP(JIJ,NCTV)*PLEPS(JIJ, JK) & 
                                                     / PSQRT_TKE(JIJ, JK)/CSTURB%XCTD * ZWORK2(JIJ, JK) 
   END DO
 END DO
@@ -2367,7 +2367,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PD_M3_THR_WTHR_O_DDTDZ(JIJ, JK) = 0.5*PLEPS(JIJ, JK)/PSQRT_TKE(JIJ, JK) & 
-                                                    / CSTURB%XCTD * PTURB_SPP(JIJ,NCEP) * ZWORK2(JIJ, JK)
+                                                    / CSTURB%XCTD * PTURB_SPP(JIJ,NCTV) * ZWORK2(JIJ, JK)
   END DO
 END DO
 !
@@ -2416,7 +2416,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PM3_THR_WTH2(JIJ, JK) = - 0.25*PLEPS(JIJ, JK) & 
-                                        / PSQRT_TKE(JIJ, JK)/CSTURB%XCTD*PTURB_SPP(JIJ,NCEP) * ZWORK2(JIJ, JK)
+                                        / PSQRT_TKE(JIJ, JK)/CSTURB%XCTD*PTURB_SPP(JIJ,NCTV) * ZWORK2(JIJ, JK)
   END DO
 END DO
 !
@@ -2468,7 +2468,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PD_M3_THR_WTH2_O_DDTDZ(JIJ, JK) = - 0.25*PLEPS(JIJ, JK) &
-                                     /PSQRT_TKE(JIJ, JK)/CSTURB%XCTD*PTURB_SPP(JIJ,NCEP)**2 * ZWORK2(JIJ, JK) 
+                                     /PSQRT_TKE(JIJ, JK)/CSTURB%XCTD*PTURB_SPP(JIJ,NCTV)**2 * ZWORK2(JIJ, JK) 
   END DO
 END DO
 !
@@ -2518,7 +2518,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PD_M3_THR_WTH2_O_DDRDZ(JIJ, JK) = - 0.25*PLEPS(JIJ, JK)/PSQRT_TKE(JIJ, JK)& 
-                                                    / CSTURB%XCTD*PTURB_SPP(JIJ,NCEP) * ZWORK2(JIJ, JK)
+                                                    / CSTURB%XCTD*PTURB_SPP(JIJ,NCTV) * ZWORK2(JIJ, JK)
   END DO
 END DO
 !
@@ -2565,7 +2565,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PM3_THR_W2TH(JIJ, JK) = - 0.75*PLM(JIJ, JK)*PLEPS(JIJ, JK)& 
-                                          / PTKE(JIJ, JK) * PTURB_SPP(JIJ,NCEP) * ZWORK2(JIJ, JK)
+                                          / PTKE(JIJ, JK) * PTURB_SPP(JIJ,NCTV) * ZWORK2(JIJ, JK)
   END DO
 END DO
 !
@@ -2617,7 +2617,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PD_M3_THR_W2TH_O_DDTDZ(JIJ, JK) = - 0.75*PLM(JIJ, JK)*PLEPS(JIJ, JK)&
-                                                    / PTKE(JIJ, JK) * PTURB_SPP(JIJ,NCEP)**2 * ZWORK1(JIJ, JK)
+                                                    / PTKE(JIJ, JK) * PTURB_SPP(JIJ,NCTV)**2 * ZWORK1(JIJ, JK)
   END DO
 END DO
 !
@@ -2666,7 +2666,7 @@ CALL MZF_PHY(D,ZWORK1,ZWORK2)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     PD_M3_THR_W2TH_O_DDRDZ(JIJ, JK) = - 0.75*PLM(JIJ, JK)*PLEPS(JIJ, JK)&
-                                                    / PTKE(JIJ, JK) * PTURB_SPP(JIJ,NCEP) * ZWORK2(JIJ, JK)
+                                                    / PTKE(JIJ, JK) * PTURB_SPP(JIJ,NCTV) * ZWORK2(JIJ, JK)
   END DO
 END DO
 !

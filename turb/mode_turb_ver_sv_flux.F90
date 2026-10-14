@@ -223,7 +223,7 @@ USE MODD_FIELD,            ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,               ONLY: TFILEDATA
 USE MODD_LES,              ONLY: TLES_t
 USE MODD_PARAMETERS,       ONLY: NMNHNAMELGTMAX
-USE MODD_TURB_n,           ONLY: TURB_t, NCED, NTURB_S
+USE MODD_TURB_n,           ONLY: TURB_t, NCSV, NTURB_S
 !
 USE MODE_IO_FIELD_WRITE_PHY, ONLY: IO_FIELD_WRITE_PHY
 USE MODE_TRIDIAG,        ONLY: TRIDIAG
@@ -358,12 +358,14 @@ ELSE
   CALL MZM_PHY(D,ZWORK1,ZKEFF)
 ENDIF
 !
-IF(OBLOWSNOW) THEN
-! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
-   ZCSV=PTURB_SPP(:,NCED)/PRSNOW
-ELSE
-   ZCSV=PTURB_SPP(:,NCED)
-ENDIF
+DO JIJ=IIJB, IIJE
+   IF(OBLOWSNOW) THEN
+   ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
+      ZCSV(JIJ)=PTURB_SPP(JIJ,NCSV)/PRSNOW
+   ELSE
+      ZCSV(JIJ)=PTURB_SPP(JIJ,NCSV)
+   ENDIF
+END DO
 !----------------------------------------------------------------------------
 !
 !*       8.   SOURCES OF PASSIVE SCALAR VARIABLES

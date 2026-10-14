@@ -399,7 +399,6 @@ REAL            :: ZRVSOLD, ZTSP
 REAL            :: ZRSP, ZRISOLD, ZRSSOLD, ZRGSOLD ! Function,old ice
 REAL            :: ZRISFRC, ZRSSFRC, ZRGSFRC, ZRFRAC, ZRSA, ZRSTS, ZRSB, ZRSDIF, ZR20
 REAL            :: ZRSI, ZRSW, ZDICRIT, ZCITRED23, ZCITRED, ZRCW, ZVT, ZST
-REAL            :: ZREDGR, ZREDSN    ! Possible reduction of the rate of graupel,snow growth
 REAL            :: ZKVO  ! factor used for caluclate maximum mass in the ice
                          ! distubution.
 !    *******  end logical switch OCND2 *******
@@ -447,17 +446,6 @@ IF (LMODICEDEP) THEN
   ZCITRED23 = ZCITRED**(1.+ ICED%XLBEXI)
   ZKVO      = ((ICED%XALPHAI*ICED%XNUI + ICED%XBI -1.)/ICED%XALPHAI)**(1./ICED%XALPHAI)
   ZKVO =  ZKVO/ZDICRIT/ICEP%XFRMIN(14)
-ENDIF
-
-ZREDGR  = 1.      ! Tuning of the deposition of graupel, 1. is ref. value
-
-ZREDSN  = 1.      ! Tuning of the deposition of snow, 1. is ref. value
-
-IF(OCND2) THEN
-  IF (.NOT. LMODICEDEP) THEN
-    ZREDGR  = ICEP%XFRMIN(39)  ! Tuning factor, may be /= 1.
-    ZREDSN  = ICEP%XFRMIN(40)  ! Tuning factor, may be /= 1.
-  ENDIF
 ENDIF
 
 LTIW=.FALSE.
@@ -977,7 +965,7 @@ IF (KSIZE >= 0) THEN
 !
   CALL RAIN_ICE_OLD_SLOW(D, CST, ICED, ICEP, PARAMI, BUCONF, &
                          KSIZE, OCND2, LMODICEDEP, &
-                         PTSTEP, ZREDSN, &
+                         PTSTEP, &
                          GMICRO, PRHODJ, PTHS, PRVS, &
                          ZRCT, ZRRT, ZRIT, ZRRS, &
                          ZRGS, ZRST, ZRGT, ZCIT, &
@@ -986,7 +974,7 @@ IF (KSIZE >= 0) THEN
                          ZRVS, ZRCS, ZRIS, ZRSS, ZTHS, &
                          ZLBDAG, ZKA, ZDV, &
                          ZAI, ZCJ, ZAA2, ZBB3, &
-                         ZDICRIT, ZREDGR, ZKVO, &
+                         ZDICRIT,  ZKVO, &
                          TBUDGETS, KBUDGETS, ZZRCRIAUTI, ZZRDEPSRED, ZZRDEPGRED)
 !
 !-------------------------------------------------------------------------------
