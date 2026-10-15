@@ -145,7 +145,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZFLX,ZWORK,ZCMFS
 INTEGER             :: IKB,IKE,IKU, IIT, IJT, IKT
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain  
-INTEGER             :: JSV,JI,JJ,JK,ZZ          ! scalar loop counter
+INTEGER             :: JSV,JI,JJ,JK          ! scalar loop counter
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GX_W_UW_PWM
 !
