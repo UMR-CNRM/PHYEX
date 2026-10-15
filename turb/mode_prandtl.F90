@@ -17,7 +17,7 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !               06/2023   S. Riette add the LSMOOTH_PRANDTL key
 !
 USE MODD_CTURB,      ONLY : CSTURB_t
-USE MODD_TURB_n,     ONLY : TURB_t, NCTV, NCSHF, NTURB_S
+USE MODD_TURB_n,     ONLY : TURB_t, NCTV, NCSHF, NCPR3, NCPR4, NCPR5, NTURB_S
 USE MODD_DIMPHYEX,   ONLY : DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY : JPVEXT_TURB
 !
@@ -1045,14 +1045,14 @@ DO JSV=1,KSV
   DO JK=1, IKT
     DO JIJ=IIJB, IIJE
       PPSI_SV(JIJ, JK, JSV) = ( 1.                                             &
-        - (PTURB_SPP(JIJ,NCTV)/2+PTURB_SPP(JIJ,NCTV)/2) * &
+        - (PTURB_SPP(JIJ,NCPR3)/2+PTURB_SPP(JIJ,NCTV)/2) * &
         (PRED2THS(JIJ, JK, JSV)/PREDS1(JIJ, JK, JSV)-PREDTH1(JIJ, JK)) &
-        - (PTURB_SPP(JIJ,NCTV)/2+PTURB_SPP(JIJ,NCTV)/2) * &     
+        - (PTURB_SPP(JIJ,NCPR4)/2+PTURB_SPP(JIJ,NCTV)/2) * &     
         (PRED2RS(JIJ, JK, JSV)/PREDS1(JIJ, JK, JSV)-PREDR1(JIJ, JK)) &
-        - PTURB_SPP(JIJ,NCTV)/2 * &              
+        - PTURB_SPP(JIJ,NCPR3)/2 * &              
         PREDTH1(JIJ, JK) * PPHI3(JIJ, JK) &
-        - PTURB_SPP(JIJ,NCTV)/2 * PREDR1(JIJ, JK) * PPSI3(JIJ, JK)                 &
-                    ) / (  1. + PTURB_SPP(JIJ,NCTV)/2 * ( PREDTH1(JIJ, JK) + PREDR1(JIJ, JK) ) )           
+        - PTURB_SPP(JIJ,NCPR4)/2 * PREDR1(JIJ, JK) * PPSI3(JIJ, JK)                 &
+                    ) / (  1. + PTURB_SPP(JIJ,NCPR5)/2 * ( PREDTH1(JIJ, JK) + PREDR1(JIJ, JK) ) )           
   
     END DO
   END DO

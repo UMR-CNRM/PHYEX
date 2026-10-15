@@ -156,7 +156,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZFLX,ZWORK, ZCMFS ! work arrays
 !   
 REAL, DIMENSION(D%NIT,D%NJT) :: ZDIRSINZW 
       ! sinus of the angle between the vertical and the normal to the orography
-INTEGER             :: IKB,IKE,IIT,IJT,IKT, JI,JJ,JK,ZZ
+INTEGER             :: IKB,IKE,IIT,IJT,IKT, JI,JJ,JK
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain  
 !
