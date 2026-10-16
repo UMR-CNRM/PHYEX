@@ -276,7 +276,7 @@ ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
                        PTHM,PRM(:,:,1),ZTHLM,ZRTM,PSVM,          &
                        ZTH_UP,PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,&
                        PTHV_UP, PW_UP, PU_UP, PV_UP, ZSV_UP,     &
-                       PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
+                       PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PTKE_UP,PEMF,PDETR,&
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH )
 ELSEIF (PARAMMF%CMF_UPDRAFT == 'RAHA') THEN
    CALL COMPUTE_UPDRAFT_RAHA(D, CST, NEBN, PARAMMF,              &
@@ -289,7 +289,7 @@ ELSEIF (PARAMMF%CMF_UPDRAFT == 'RAHA') THEN
                        PSVM,ZTH_UP,PTHL_UP,PRT_UP,               &
                        PRV_UP,PRC_UP,PRI_UP, PTHV_UP,            &
                        PW_UP, PU_UP, PV_UP, ZSV_UP,              &
-                       PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,           &
+                       PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PTKE_UP,   &
                        PEMF,PDETR,PENTR,                         &
                        ZBUO_INTEG,KKLCL,KKETL,KKCTL,             &
                        ZDEPTH )

@@ -21,7 +21,7 @@ SUBROUTINE COMPUTE_UPDRAFT_RHCJ10(D,CST,NEBN,PARAMMF,TURBN,CSTURB,&
                                  PSVM,PTH_UP,PTHL_UP,PRT_UP,      &
                                  PRV_UP,PRC_UP,PRI_UP,PTHV_UP,    &
                                  PW_UP,PU_UP, PV_UP, PSV_UP,      &
-                                 PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,  &
+                                 PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,PTKE_UP, &
                                  PEMF,PDETR,PENTR,                &
                                  PBUO_INTEG,KKLCL,KKETL,KKCTL,    &
                                  PDEPTH     )
@@ -57,6 +57,7 @@ SUBROUTINE COMPUTE_UPDRAFT_RHCJ10(D,CST,NEBN,PARAMMF,TURBN,CSTURB,&
 !!     R. Honert Janv 2013 ==> corection of some bugs
 !!     R. El Khatib 15-Oct-2014 Optimization
 !!     Q.Rodier  01/2019 : support RM17 mixing length
+!!     S. Riette Oct 2026: TKE mixing
 !! --------------------------------------------------------------------------
 
 ! WARNING ==>  This updraft is not yet ready to use scalar variables
@@ -114,6 +115,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)   ::  PSVM           ! scalar var.
 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTH_UP,PTHL_UP,PRT_UP   ! updraft properties
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PU_UP, PV_UP     ! updraft wind components
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTKE_UP          ! updraft TKE
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PRV_UP,PRC_UP    ! updraft rv, rc
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PRI_UP           ! updraft ri
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PTHV_UP          ! updraft THv
@@ -266,6 +268,7 @@ PTHL_UP(IIJB:IIJE,1:IKT)=ZTHLM_F(IIJB:IIJE,1:IKT)
 PRT_UP(IIJB:IIJE,1:IKT)=ZRTM_F(IIJB:IIJE,1:IKT)
 PU_UP(IIJB:IIJE,1:IKT)=ZUM_F(IIJB:IIJE,1:IKT)
 PV_UP(IIJB:IIJE,1:IKT)=ZVM_F(IIJB:IIJE,1:IKT)
+PTKE_UP(IIJB:IIJE,1:IKT)=ZTKEM_F(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 PSV_UP(IIJB:IIJE,1:IKT,:)=0.
 
@@ -504,6 +507,15 @@ DO JK=IKB,IKE-IKL,IKL
         ENDIF
       ENDDO
     ENDIF
+  ENDIF
+
+  IF(PARAMMF%LMIXTKE) THEN
+    DO JIJ=IIJB,IIJE
+      IF(GTEST(JIJ)) THEN
+        PTKE_UP(JIJ,JK+IKL) = (PTKE_UP(JIJ,JK)*(1-0.5*ZMIX2(JIJ)) + ZTKEM_F(JIJ,JK)*ZMIX2(JIJ)) &
+                            /(1+0.5*ZMIX2(JIJ))
+      ENDIF
+    ENDDO
   ENDIF
 
 ! This updraft is not yet ready to use scalar variables

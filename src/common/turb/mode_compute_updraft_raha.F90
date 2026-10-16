@@ -20,6 +20,7 @@ CONTAINS
                                  PRV_UP,PRC_UP,PRI_UP,PTHV_UP,       &
                                  PW_UP,PU_UP, PV_UP, PSV_UP,         &
                                  PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,     &
+                                 PTKE_UP,                            &
                                  PEMF,PDETR,PENTR,                   &
                                  PBUO_INTEG,KKLCL,KKETL,KKCTL,       &
                                  PDEPTH     )
@@ -56,6 +57,7 @@ CONTAINS
 !!     Y. Bouteloup (2012)
 !!     R. Honnert Janv 2013 ==> corection of some coding bugs
 !!     Y. Bouteloup Janv 2014 ==> Allow the use of loops in the both direction
+!!     S. Riette Oct 2026: TKE mixing
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -106,6 +108,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)   ::  PSVM           ! scalar var.
 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTH_UP,PTHL_UP,PRT_UP   ! updraft properties
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PU_UP, PV_UP     ! updraft wind components
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTKE_UP          ! updraft TKE
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PRV_UP,PRC_UP    ! updraft rv, rc
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PRI_UP,PTHV_UP   ! updraft ri, THv
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PW_UP,PFRAC_UP   ! updraft w, fraction
@@ -254,6 +257,7 @@ PTHL_UP(IIJB:IIJE,1:IKT)=ZTHLM_F(IIJB:IIJE,1:IKT)
 PRT_UP(IIJB:IIJE,1:IKT)=ZRTM_F(IIJB:IIJE,1:IKT)
 PU_UP(IIJB:IIJE,1:IKT)=ZUM_F(IIJB:IIJE,1:IKT)
 PV_UP(IIJB:IIJE,1:IKT)=ZVM_F(IIJB:IIJE,1:IKT)
+PTKE_UP(IIJB:IIJE,1:IKT)=ZTKEM_F(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 PSV_UP(:,:,:)=0.
 !IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) then
@@ -483,6 +487,15 @@ DO JK=IKB,IKE-IKL,IKL
 
     ENDIF
   ENDIF
+
+  IF(PARAMMF%LMIXTKE) THEN
+    WHERE(GTEST(IIJB:IIJE))
+      PTKE_UP(IIJB:IIJE,JK+IKL) = (PTKE_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
+                                   ZTKEM_F(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)) &
+                                  /(1+0.5*ZMIX2(IIJB:IIJE))
+    ENDWHERE
+  ENDIF
+
   !DO JSV=1,ISV 
   !   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
   !    WHERE(GTEST(IIJB:IIJE)) 
