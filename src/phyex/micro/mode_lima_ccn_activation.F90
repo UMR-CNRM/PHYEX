@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2025 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2026 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -130,11 +130,20 @@ REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(INOUT) :: PTOT_RV_HENU  ! Mixing
 !
 !*       0.1   Declarations of local variables :
 !
+! The automatic work arrays below are declared with the direct extents D%NIJT,D%NKT
+! (instead of SIZE(<explicit-shape dummy>,k)) as a workaround for an nvfortran bug
+! (impacts NVHPC at least up to 26.9): 4-byte automatic arrays (LOGICAL(4)/INTEGER(4))
+! whose extents are taken from SIZE(<explicit-shape dummy>,k) are mis-sized (one extent
+! is 0, the other is garbage), which corrupts the heap and crashes, at all optimisation
+! levels. PRHODREF is declared DIMENSION(D%NIJT,D%NKT) and PNFT
+! DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_CCN), so the direct form below is identical.
+! See nvfortran bug 6904282 and issue #115.
+!
 ! Packing variables
-LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) :: GNUCT 
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) :: ZW2D ! array for unpacking
+LOGICAL, DIMENSION(D%NIJT,D%NKT) :: GNUCT
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZW2D ! array for unpacking
 INTEGER :: INUCT
-INTEGER , DIMENSION(SIZE(GNUCT))   :: I1,I3 ! Used to replace the COUNT
+INTEGER , DIMENSION(D%NIJT*D%NKT)   :: I1,I3 ! Used to replace the COUNT
 INTEGER                            :: IL       ! and PACK intrinsics 
 !
 ! Packed micophysical variables
@@ -157,8 +166,8 @@ REAL, DIMENSION(:), ALLOCATABLE    :: ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6, &
 !
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZTMP, ZCHEN_MULTI
 !
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) :: ZTDT, ZRVSAT, ZW, ZW2, ZCLDFR  
-REAL, DIMENSION(SIZE(PNFT,1),SIZE(PNFT,2)) :: ZCONC_TOT         ! total CCN C. available
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZTDT, ZRVSAT, ZW, ZW2, ZCLDFR
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZCONC_TOT         ! total CCN C. available
 !
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1             ! Vectors of indices for
                                                         ! interpolations
