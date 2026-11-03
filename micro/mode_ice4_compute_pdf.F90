@@ -97,11 +97,9 @@ ELSE
    ZXBCRIAUTI(:)=PARAMI%XBCRIAUTI_NAM
 ENDIF
 
-ZRCRAUTC(:)=PRCRIAUTC(:)/PRHODREF(:) ! Autoconversion rc threshold
-
 DO JL=1, KSIZE
   IF (LDMICRO(JL)) THEN
-    ZRCRAUTC(JL)=ICEP%XCRIAUTC/PRHODREF(JL) ! Autoconversion rc threshold
+    ZRCRAUTC(JL)=PRCRIAUTC(JL)/PRHODREF(JL) ! Autoconversion rc threshold
   ELSE
     ZRCRAUTC(JL)=0.
   END IF

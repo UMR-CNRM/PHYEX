@@ -740,7 +740,7 @@ IF (KSIZE >= 0) THEN
   !Cloud water split between high and low content part is done here
   !according to autoconversion option
   DO JL = 1, KSIZE
-    ZRCRAUTC(JL) = PRCRIAUTI(JL)/ZRHODREF(JL) ! Autoconversion rc threshold
+    ZRCRAUTC(JL) = PRCRIAUTC(JL)/ZRHODREF(JL) ! Autoconversion rc threshold
   ENDDO
 
   IF (HSUBG_AUCV_RC == 'NONE') THEN

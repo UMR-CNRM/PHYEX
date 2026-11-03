@@ -51,7 +51,7 @@ CONTAINS
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY : CSTURB_t
-USE MODD_TURB_n, ONLY: TURB_t, NCED, NTURB_S, NCHF
+USE MODD_TURB_n, ONLY: TURB_t, NTURB_S, NCSHF, NCHF
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
 !
@@ -223,7 +223,7 @@ DO JK=1, IKT
       ZFLX(JI, JJ, JK)=  PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK)                                          &
                 *  (  ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
                     + ZGY_M_M3D_WORK1(JI, JJ, JK) * ZGY_M_M3D_WORK2(JI, JJ, JK)  &
-                   ) * (TURBN%XCSHF+ZCSV(JI,JJ)) / (2.*ZCTSVD)
+                   ) * (PTURB_SPP(JI,JJ,NCSHF)+ZCSV(JI,JJ)) / (2.*ZCTSVD)
     END DO
   END DO
 END DO
@@ -238,7 +238,7 @@ DO JK=1, IKT
     DO JI=1, IIT
       ZFLX(JI, JJ, JK)=  PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK)                                          &
                     * ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
-                    * (TURBN%XCSHF+ZCSV(JI,JJ)) / (2.*ZCTSVD)
+                    * (PTURB_SPP(JI,JJ,NCSHF)+ZCSV(JI,JJ)) / (2.*ZCTSVD)
     END DO
   END DO
 END DO
