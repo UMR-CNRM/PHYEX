@@ -20,7 +20,7 @@ class CheckCommitLmdz(CheckCommitBase):
     """Check a commit against the LMDZ reference."""
 
     default_expand = False
-    default_shuman_trans = False
+    default_shuman_trans = True
     default_buildSystem = 'fcm'
     alternative_buildSystem = 'make'
 

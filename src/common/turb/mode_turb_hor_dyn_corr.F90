@@ -82,14 +82,10 @@ USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT
 USE MODD_LES, ONLY: TLES_t
 !
-USE MODE_ll, ONLY: ADD3DFIELD_LL, CLEANLIST_LL, UPDATE_HALO_LL
-USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
+USE MODE_ll, ONLY: CLEANLIST_LL, UPDATE_HALO_LL
+USE MODE_ARGSLIST_ll_PHY, ONLY: ADD3DFIELD_ll_PHY
+USE MODE_IO_FIELD_WRITE_PHY,      ONLY: IO_FIELD_WRITE_PHY
 !
-USE MODI_GRADIENT_M, ONLY: GZ_M_M, GZ_M_W
-USE MODI_GRADIENT_U, ONLY: GX_U_M
-USE MODI_GRADIENT_V, ONLY: GY_V_M
-USE MODI_GRADIENT_W, ONLY: GZ_W_M
-USE MODI_SHUMAN, ONLY: DXF, DXM, DYF, DYM, DZF, MXF, MXM, MYF, MYM, MZF, MZM
 #ifdef MNH_OPENACC
 
 #endif
@@ -122,72 +118,72 @@ LOGICAL,                  INTENT(IN)    ::  OFLAT        ! Logical for zero oror
 LOGICAL,                  INTENT(IN)    ::  O2D          ! Logical for 2D model version (modd_conf)
 TYPE(TFILEDATA),          INTENT(INOUT) ::  TPFILE       ! Output file
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
                                                         ! PK = PLM * SQRT(PTKEM)
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDZZ   ! 1./PDZZ
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PINV_PDZZ   ! 1./PDZZ
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PZZ          ! vertical grid
-REAL, DIMENSION(D%NIT,D%NJT),     INTENT(IN)    ::  PDIRCOSZW
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PZZ          ! vertical grid
+REAL, DIMENSION(D%NIJT),     INTENT(IN)    ::  PDIRCOSZW
 ! Director Cosinus along z directions at surface w-point
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle 
                                       ! between i and the slope vector
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle 
                                       ! between i and the slope vector
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
 !
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCDUEFF      ! Cd * || u || at time t
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PCDUEFF      ! Cd * || u || at time t
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
        ! to the maximum slope direction and the surface normal and the binormal 
        ! at time t - dt
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU22M      ! <vv> in the same axes
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU22M      ! <vv> in the same axes
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
 !
 ! Variables at t-1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PUM,PVM,PWM,PTHLM
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN)    ::  PRM
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM
-REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PUM,PVM,PWM,PTHLM
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)    ::  PRM
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)    ::  PSVM
+REAL, DIMENSION(D%NIJT),      INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
                                      ! maximum slope direction
-REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
+REAL, DIMENSION(D%NIJT),      INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
                                      ! direction normal to the maximum slope one
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS, PRWS
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP,PTP      ! TKE production terms
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS, PRWS
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PDP,PTP      ! TKE production terms
 !
 !
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZFLX,ZWORK,ZWKLES
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZFLX,ZWORK,ZWKLES
     ! work arrays, PK is the turb. mixing coef.
 !   
-REAL, DIMENSION(D%NIT,D%NJT) ::ZDIRSINZW 
+REAL, DIMENSION(D%NIJT) ::ZDIRSINZW 
       ! sinus of the angle between the vertical and the normal to the orography
 INTEGER             :: IKB,IKE
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain  
-INTEGER             :: IKU,IKT,IIT,IJT                                   
-INTEGER             :: JSV,JI,JJ,JK          ! scalar loop counter
+INTEGER             :: IKU,IKT,IIJT
+INTEGER             :: JSV,JIJ,JK          ! scalar loop counter
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GX_U_M_PUM
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GY_V_M_PVM
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GZ_W_M_PWM
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GZ_W_M_ZWP
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZMZF_DZZ   ! MZF(PDZZ)
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZDFDDWDZ   ! formal derivative of the 
+REAL, DIMENSION(D%NIJT,D%NKT)  :: GX_U_M_PUM
+REAL, DIMENSION(D%NIJT,D%NKT)  :: GY_V_M_PVM
+REAL, DIMENSION(D%NIJT,D%NKT)  :: GZ_W_M_PWM
+REAL, DIMENSION(D%NIJT,D%NKT)  :: GZ_W_M_ZWP
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZMZF_DZZ   ! MZF(PDZZ)
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZDFDDWDZ   ! formal derivative of the 
 !                                                                   ! flux (variable: dW/dz)
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWP        ! W at future   time-step
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZWP        ! W at future   time-step
 !
-REAL, DIMENSION(D%NIT,D%NJT) :: ZDU_DZ_DZS_DX ! du/dz*dzs/dx surf
-REAL, DIMENSION(D%NIT,D%NJT) :: ZDV_DZ_DZS_DY ! dv/dz*dzs/dy surf
-REAL, DIMENSION(D%NIT,D%NJT) :: ZDU_DX        ! du/dx        surf
-REAL, DIMENSION(D%NIT,D%NJT) :: ZDV_DY        ! dv/dy        surf
-REAL, DIMENSION(D%NIT,D%NJT) :: ZDW_DZ        ! dw/dz        surf
+REAL, DIMENSION(D%NIJT) :: ZDU_DZ_DZS_DX ! du/dz*dzs/dx surf
+REAL, DIMENSION(D%NIJT) :: ZDV_DZ_DZS_DY ! dv/dz*dzs/dy surf
+REAL, DIMENSION(D%NIJT) :: ZDU_DX        ! du/dx        surf
+REAL, DIMENSION(D%NIJT) :: ZDV_DY        ! dv/dy        surf
+REAL, DIMENSION(D%NIJT) :: ZDW_DZ        ! dw/dz        surf
 !
 INTEGER                :: IINFO_ll      ! return code of parallel routine
 TYPE(LIST_ll), POINTER :: TZFIELDS_ll   ! list of fields to exchange
@@ -195,7 +191,7 @@ TYPE(LIST_ll), POINTER :: TZFIELDS_ll   ! list of fields to exchange
 REAL :: ZTIME1, ZTIME2
 
 
-REAL, DIMENSION(D%NIT,D%NJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF , ZDZZ
+REAL, DIMENSION(D%NIJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF , ZDZZ
                                     ! coefficients for the uncentred gradient 
                                     ! computation near the ground
 TYPE(TFIELDMETADATA) :: TZFIELD
@@ -212,17 +208,16 @@ XCMFS = CTURB_XCMFS
 NULLIFY(TZFIELDS_ll)
 !
 IKB = 1+JPVEXT               
-IKE = SIZE(PUM,3)-JPVEXT    
-IKU = SIZE(PUM,3)
-IIT=D%NIT
-IJT=D%NJT
+IKE = SIZE(PUM,2)-JPVEXT    
+IKU = SIZE(PUM,2)
+IIJT=D%NIJT
 IKT=D%NKT
 !
 !
 !$acc kernels ! async(1)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZDIRSINZW(1:IIT,1:IJT) = SQRT( 1. - PDIRCOSZW(1:IIT,1:IJT)**2 )
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+ZDIRSINZW(1:IIJT) = SQRT( 1. - PDIRCOSZW(1:IIJT)**2 )
+!$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 !
 GX_U_M_PUM = GX_U_M(OFLAT,PUM,PDXX,PDZZ,PDZX)
@@ -231,7 +226,7 @@ GZ_W_M_PWM = GZ_W_M(PWM,PDZZ)
 !
 ZMZF_DZZ = MZF(PDZZ)
 !
-CALL ADD3DFIELD_ll( TZFIELDS_ll, ZFLX, 'TURB_HOR_DYN_CORR::ZFLX' )
+CALL ADD3DFIELD_ll_PHY(D, TZFIELDS_ll, ZFLX, 'TURB_HOR_DYN_CORR::ZFLX' )
 
 
 !  compute the coefficients for the uncentred gradient computation near the 
@@ -243,31 +238,31 @@ CALL ADD3DFIELD_ll( TZFIELDS_ll, ZFLX, 'TURB_HOR_DYN_CORR::ZFLX' )
 ! Computes the U variance
 IF (.NOT. O2D) THEN
    !$acc kernels present_cr(zflx,gz_w_m_pwm) ! async(2)
-   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-      ZFLX(1:IIT,1:IJT,1:IKT)= (2./3.) * PTKEM(1:IIT,1:IJT,1:IKT)                            &
-           - XCMFS * PK(1:IIT,1:IJT,1:IKT) *( (4./3.) * GX_U_M_PUM(1:IIT,1:IJT,1:IKT)        &
-           -(2./3.) * ( GY_V_M_PVM(1:IIT,1:IJT,1:IKT)                     &
-           +GZ_W_M_PWM(1:IIT,1:IJT,1:IKT)                ) )
-   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+   !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
+      ZFLX(1:IIJT,1:IKT)= (2./3.) * PTKEM(1:IIJT,1:IKT)                            &
+           - XCMFS * PK(1:IIJT,1:IKT) *( (4./3.) * GX_U_M_PUM(1:IIJT,1:IKT)        &
+           -(2./3.) * ( GY_V_M_PVM(1:IIJT,1:IKT)                     &
+           +GZ_W_M_PWM(1:IIJT,1:IKT)                ) )
+   !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
    !$acc end kernels
    !!  &   to be tested later
   !!  + XCMFB *  PLM / SQRT(PTKEM) * (-2./3.) * PTP 
 ELSE
   !$acc kernels ! async(2)
-  !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-  ZFLX(1:IIT,1:IJT,1:IKT)= (2./3.) * PTKEM(1:IIT,1:IJT,1:IKT)                                  &
-    - XCMFS * PK(1:IIT,1:IJT,1:IKT) *( (4./3.) * GX_U_M_PUM(1:IIT,1:IJT,1:IKT)                 &
-                   -(2./3.) * ( GZ_W_M_PWM(1:IIT,1:IJT,1:IKT)             ) ) 
-  !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+  !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
+  ZFLX(1:IIJT,1:IKT)= (2./3.) * PTKEM(1:IIJT,1:IKT)                                  &
+    - XCMFS * PK(1:IIJT,1:IKT) *( (4./3.) * GX_U_M_PUM(1:IIJT,1:IKT)                 &
+                   -(2./3.) * ( GZ_W_M_PWM(1:IIJT,1:IKT)             ) ) 
+  !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
   !$acc end kernels
   !!  &   to be tested later
   !!  + XCMFB *  PLM / SQRT(PTKEM) * (-2./3.) * PTP 
 END IF
 !
 !$acc kernels ! async(2)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-   ZFLX(1:IIT,1:IJT,IKE+1) = ZFLX(1:IIT,1:IJT,IKE) 
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+   ZFLX(1:IIJT,IKE+1) = ZFLX(1:IIJT,IKE) 
+!$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 !
 !* prescription of du/dz and dv/dz with uncentered gradient at the surface
@@ -275,59 +270,59 @@ END IF
 !  using a Boussinesq hypothesis to remove the z dependance of rhod_ref
 !  (div u = 0)
 !
-! ZDZZ(:,:,:) = MXM(PDZZ(:,:,IKB:IKB+2)) ! case not handled yet by pyft --expandAllArraysConcurrent and shumanFUNCtoCALL
-ZDZZ(:,:,IKB) = MXM(PDZZ(:,:,IKB))
-ZDZZ(:,:,IKB+1) = MXM(PDZZ(:,:,IKB+1))
-ZDZZ(:,:,IKB+2) = MXM(PDZZ(:,:,IKB+2))
+! ZDZZ(:,:) = MXM(PDZZ(:,IKB:IKB+2)) ! case not handled yet by pyft --expandAllArraysConcurrent and shumanFUNCtoCALL
+ZDZZ(:,IKB) = MXM2D(PDZZ(:,IKB))
+ZDZZ(:,IKB+1) = MXM2D(PDZZ(:,IKB+1))
+ZDZZ(:,IKB+2) = MXM2D(PDZZ(:,IKB+2))
 !$acc kernels present_cr(zdzz,zcoeff) ! async(3)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-   ZCOEFF(1:IIT,1:IJT,IKB+2)= - ZDZZ(1:IIT,1:IJT,2) /      &
-        ( (ZDZZ(1:IIT,1:IJT,3)+ZDZZ(1:IIT,1:IJT,2)) * ZDZZ(1:IIT,1:IJT,3) )
-   ZCOEFF(1:IIT,1:IJT,IKB+1)=   (ZDZZ(1:IIT,1:IJT,3)+ZDZZ(1:IIT,1:IJT,2)) /      &
-        ( ZDZZ(1:IIT,1:IJT,2) * ZDZZ(1:IIT,1:IJT,3) )
-   ZCOEFF(1:IIT,1:IJT,IKB)= - (ZDZZ(1:IIT,1:IJT,3)+2.*ZDZZ(1:IIT,1:IJT,2)) /      &
-        ( (ZDZZ(1:IIT,1:IJT,3)+ZDZZ(1:IIT,1:IJT,2)) * ZDZZ(1:IIT,1:IJT,2) )
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+   ZCOEFF(1:IIJT,IKB+2)= - ZDZZ(1:IIJT,2) /      &
+        ( (ZDZZ(1:IIJT,3)+ZDZZ(1:IIJT,2)) * ZDZZ(1:IIJT,3) )
+   ZCOEFF(1:IIJT,IKB+1)=   (ZDZZ(1:IIJT,3)+ZDZZ(1:IIJT,2)) /      &
+        ( ZDZZ(1:IIJT,2) * ZDZZ(1:IIJT,3) )
+   ZCOEFF(1:IIJT,IKB)= - (ZDZZ(1:IIJT,3)+2.*ZDZZ(1:IIJT,2)) /      &
+        ( (ZDZZ(1:IIJT,3)+ZDZZ(1:IIJT,2)) * ZDZZ(1:IIJT,2) )
+!$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 !
-ZDU_DZ_DZS_DX(:,:)=MXF ((ZCOEFF(:,:,IKB+2)*PUM(:,:,IKB+2)       &
-                          +ZCOEFF(:,:,IKB+1)*PUM(:,:,IKB+1)       &
-                          +ZCOEFF(:,:,IKB)*PUM(:,:,IKB)       &
-                          )* 0.5 * ( PDZX(:,:,IKB+1)+PDZX(:,:,IKB)) &
-                         )/ MXF(PDXX(:,:,IKB))
+ZDU_DZ_DZS_DX(:)=MXF2D((ZCOEFF(:,IKB+2)*PUM(:,IKB+2)       &
+                          +ZCOEFF(:,IKB+1)*PUM(:,IKB+1)       &
+                          +ZCOEFF(:,IKB)*PUM(:,IKB)       &
+                          )* 0.5 * ( PDZX(:,IKB+1)+PDZX(:,IKB)) &
+                         )/ MXF2D(PDXX(:,IKB))
 !
-ZDZZ(:,:,IKB) = MYM(PDZZ(:,:,IKB))
-ZDZZ(:,:,IKB+1) = MYM(PDZZ(:,:,IKB+1))
-ZDZZ(:,:,IKB+2) = MYM(PDZZ(:,:,IKB+2))
+ZDZZ(:,IKB) = MYM2D(PDZZ(:,IKB))
+ZDZZ(:,IKB+1) = MYM2D(PDZZ(:,IKB+1))
+ZDZZ(:,IKB+2) = MYM2D(PDZZ(:,IKB+2))
 !
 !$acc kernels present_cr(zdzz,zcoeff) ! async(4)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-   ZCOEFF(1:IIT,1:IJT,IKB+2)= - ZDZZ(1:IIT,1:IJT,2) /      &
-        ( (ZDZZ(1:IIT,1:IJT,3)+ZDZZ(1:IIT,1:IJT,2)) * ZDZZ(1:IIT,1:IJT,3) )
-   ZCOEFF(1:IIT,1:IJT,IKB+1)=   (ZDZZ(1:IIT,1:IJT,3)+ZDZZ(1:IIT,1:IJT,2)) /      &
-        ( ZDZZ(1:IIT,1:IJT,2) * ZDZZ(1:IIT,1:IJT,3) )
-   ZCOEFF(1:IIT,1:IJT,IKB)= - (ZDZZ(1:IIT,1:IJT,3)+2.*ZDZZ(1:IIT,1:IJT,2)) /      &
-        ( (ZDZZ(1:IIT,1:IJT,3)+ZDZZ(1:IIT,1:IJT,2)) * ZDZZ(1:IIT,1:IJT,2) )
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+   ZCOEFF(1:IIJT,IKB+2)= - ZDZZ(1:IIJT,2) /      &
+        ( (ZDZZ(1:IIJT,3)+ZDZZ(1:IIJT,2)) * ZDZZ(1:IIJT,3) )
+   ZCOEFF(1:IIJT,IKB+1)=   (ZDZZ(1:IIJT,3)+ZDZZ(1:IIJT,2)) /      &
+        ( ZDZZ(1:IIJT,2) * ZDZZ(1:IIJT,3) )
+   ZCOEFF(1:IIJT,IKB)= - (ZDZZ(1:IIJT,3)+2.*ZDZZ(1:IIJT,2)) /      &
+        ( (ZDZZ(1:IIJT,3)+ZDZZ(1:IIJT,2)) * ZDZZ(1:IIJT,2) )
+!$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 
-ZDV_DZ_DZS_DY(:,:)=MYF ((ZCOEFF(:,:,IKB+2)*PVM(:,:,IKB+2)       &
-                          +ZCOEFF(:,:,IKB+1)*PVM(:,:,IKB+1)       &
-                          +ZCOEFF(:,:,IKB)*PVM(:,:,IKB)       &
-                          )* 0.5 * ( PDZY(:,:,IKB+1)+PDZY(:,:,IKB)) &
-                         )/ MYF(PDYY(:,:,IKB))
+ZDV_DZ_DZS_DY(:)=MYF2D ((ZCOEFF(:,IKB+2)*PVM(:,IKB+2)       &
+                          +ZCOEFF(:,IKB+1)*PVM(:,IKB+1)       &
+                          +ZCOEFF(:,IKB)*PVM(:,IKB)       &
+                          )* 0.5 * ( PDZY(:,IKB+1)+PDZY(:,IKB)) &
+                         )/ MYF2D(PDYY(:,IKB))
 !
 !
-ZDU_DX(:,:)=  DXF(PUM(:,:,IKB)) / MXF(PDXX(:,:,IKB))  &
-              - ZDU_DZ_DZS_DX(:,:)
+ZDU_DX(:)=  DXF2D(PUM(:,IKB)) / MXF2D(PDXX(:,IKB))  &
+              - ZDU_DZ_DZS_DX(:)
 
-ZDV_DY(:,:)=  DYF(PVM(:,:,IKB)) / MYF(PDYY(:,:,IKB)) &
-              - ZDV_DZ_DZS_DY(:,:)
+ZDV_DY(:)=  DYF2D(PVM(:,IKB)) / MYF2D(PDYY(:,IKB)) &
+              - ZDV_DZ_DZS_DY(:)
 !
 !$acc kernels present_cr(zdv_dy,zdw_dz) ! async(4)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZDW_DZ(1:IIT,1:IJT)=-ZDU_DX(1:IIT,1:IJT)-ZDV_DY(1:IIT,1:IJT)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+ZDW_DZ(1:IIJT)=-ZDU_DX(1:IIJT)-ZDV_DY(1:IIJT)
+!$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 !
 !* computation 
@@ -338,20 +333,20 @@ ZDW_DZ(1:IIT,1:IJT)=-ZDU_DX(1:IIT,1:IJT)-ZDV_DY(1:IIT,1:IJT)
 !!$acc ! wait(4)
 !
 ! ! !!! we can launch the update of ZFLX on the part that has already been computed
-! ! !$acc update self(ZFLX(:,:,IKB+1:)) async(10)
+! ! !$acc update self(ZFLX(:,IKB+1:)) async(10)
 !attention !!!!! je ne comprends pas pourquoi mais ce update plante à l'execution...
 ! du coup je ne peux pas faire de update self asynchrone...
 !
 !$acc kernels present_cr(zdu_dx,zflx) ! async(3)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-   ZFLX(1:IIT,1:IJT,IKB)   = (2./3.) * PTKEM(1:IIT,1:IJT,IKB)                           &
-        - XCMFS * PK(1:IIT,1:IJT,IKB) * 2. * ZDU_DX(1:IIT,1:IJT)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+   ZFLX(1:IIJT,IKB)   = (2./3.) * PTKEM(1:IIJT,IKB)                           &
+        - XCMFS * PK(1:IIJT,IKB) * 2. * ZDU_DX(1:IIJT)
+!$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 
 !!  &  to be tested later
-!! + XCMFB * PLM(:,:,IKB:IKB) /SQRT(PTKEM(:,:,IKB:IKB)) *        &
-!!   (-2./3.) * PTP(:,:,IKB:IKB)
+!! + XCMFB * PLM(:,IKB:IKB) /SQRT(PTKEM(:,IKB:IKB)) *        &
+!!   (-2./3.) * PTP(:,IKB:IKB)
 !
 ! extrapolates this flux under the ground with the surface flux
 !
@@ -360,40 +355,40 @@ ZDW_DZ(1:IIT,1:IJT)=-ZDU_DX(1:IIT,1:IJT)-ZDV_DY(1:IIT,1:IJT)
 !!$acc ! wait(1)
 !
 !$acc kernels present_cr(ZFLX,ZDIRSINZW) ! async(4)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZFLX(1:IIT,1:IJT,IKB-1) =                                                            &
-        PTAU11M(1:IIT,1:IJT) * PCOSSLOPE(1:IIT,1:IJT)**2 * PDIRCOSZW(1:IIT,1:IJT)**2                 &
-  -2. * PTAU12M(1:IIT,1:IJT) * PCOSSLOPE(1:IIT,1:IJT)* PSINSLOPE(1:IIT,1:IJT) * PDIRCOSZW(1:IIT,1:IJT)       &
-  +     PTAU22M(1:IIT,1:IJT) * PSINSLOPE(1:IIT,1:IJT)**2                                     &
-  +     PTAU33M(1:IIT,1:IJT) * PCOSSLOPE(1:IIT,1:IJT)**2 * ZDIRSINZW(1:IIT,1:IJT)**2                 &
-  +2. * PCDUEFF(1:IIT,1:IJT) *      (                                                &
-      PVSLOPEM(1:IIT,1:IJT) * PCOSSLOPE(1:IIT,1:IJT)    * PSINSLOPE(1:IIT,1:IJT) * ZDIRSINZW(1:IIT,1:IJT)    &
-    - PUSLOPEM(1:IIT,1:IJT) * PCOSSLOPE(1:IIT,1:IJT)**2 * ZDIRSINZW(1:IIT,1:IJT) * PDIRCOSZW(1:IIT,1:IJT)    )
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+ZFLX(1:IIJT,IKB-1) =                                                            &
+        PTAU11M(1:IIJT) * PCOSSLOPE(1:IIJT)**2 * PDIRCOSZW(1:IIJT)**2                 &
+  -2. * PTAU12M(1:IIJT) * PCOSSLOPE(1:IIJT)* PSINSLOPE(1:IIJT) * PDIRCOSZW(1:IIJT)       &
+  +     PTAU22M(1:IIJT) * PSINSLOPE(1:IIJT)**2                                     &
+  +     PTAU33M(1:IIJT) * PCOSSLOPE(1:IIJT)**2 * ZDIRSINZW(1:IIJT)**2                 &
+  +2. * PCDUEFF(1:IIJT) *      (                                                &
+      PVSLOPEM(1:IIJT) * PCOSSLOPE(1:IIJT)    * PSINSLOPE(1:IIJT) * ZDIRSINZW(1:IIJT)    &
+    - PUSLOPEM(1:IIJT) * PCOSSLOPE(1:IIJT)**2 * ZDIRSINZW(1:IIJT) * PDIRCOSZW(1:IIJT)    )
+!$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 ! 
-!!! wait for the computation of ZFLX(:,:,IKB) and ZFLX(:,:,IKB-1)
+!!! wait for the computation of ZFLX(:,IKB) and ZFLX(:,IKB-1)
 !!$acc ! wait(3) async(4)
 !
 !$acc kernels ! async(4)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-   ZFLX(1:IIT,1:IJT,IKB-1) = 2. * ZFLX(1:IIT,1:IJT,IKB-1) -  ZFLX(1:IIT,1:IJT,IKB)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+   ZFLX(1:IIJT,IKB-1) = 2. * ZFLX(1:IIJT,IKB-1) -  ZFLX(1:IIJT,IKB)
+!$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 !
 !
-!!! wait for the computation of ZFLX(:,:,IKB-1)
+!!! wait for the computation of ZFLX(:,IKB-1)
 !!$acc ! wait(4)
 !
 
 
 ! ! !!! we can launch the update of ZFLX on the rest
-! ! !$acc update self(ZFLX(:,:,1:IKB)) async(11)
+! ! !$acc update self(ZFLX(:,1:IKB)) async(11)
 ! ! !
 ! ! !!! and wait for the update self(ZFLX(...)) to complete
 ! ! !$acc wait(10)
 ! ! !$acc wait(11)
-!attention !!!!! je ne comprends pas pourquoi mais le update self(ZFLX(:,:,IKB+1:)) plante à l'execution...
+!attention !!!!! je ne comprends pas pourquoi mais le update self(ZFLX(:,IKB+1:)) plante à l'execution...
 ! du coup je ne peux pas faire de update self asynchrone...
 
 
@@ -422,36 +417,36 @@ IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
     NTYPE      = TYPEREAL,      &
     NDIMS      = 3,             &
     LTIMEDEP   = .TRUE.         )
-  CALL IO_Field_write(TPFILE,TZFIELD,ZFLX)
+  CALL IO_FIELD_WRITE_PHY(D, TPFILE,TZFIELD,ZFLX)
 END IF
 !
 ! Complete the U tendency
 IF (.NOT. OFLAT) THEN
-  PRUS(:,:,:)=PRUS                                            &
+  PRUS(:,:)=PRUS                                            &
               -DXM(PRHODJ * ZFLX / MXF(PDXX) )                &
               +DZF( PDZX / MZM(PDXX) * MXM( MZM(PRHODJ*ZFLX) * PINV_PDZZ ) )
 ELSE
-  PRUS(:,:,:)=PRUS -DXM(PRHODJ * ZFLX / MXF(PDXX) )
+  PRUS(:,:)=PRUS -DXM(PRHODJ * ZFLX / MXF(PDXX) )
 END IF
 !
 IF (KSPLT==1) THEN
   ! Contribution to the dynamic production of TKE:
    !$acc kernels present_cr(gx_u_m_pum,zwork) ! async(2)
-   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-      ZWORK(1:IIT,1:IJT,1:IKT)     = - ZFLX(1:IIT,1:IJT,1:IKT) * GX_U_M_PUM(1:IIT,1:IJT,1:IKT)
-   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+   !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
+      ZWORK(1:IIJT,1:IKT)     = - ZFLX(1:IIJT,1:IKT) * GX_U_M_PUM(1:IIJT,1:IKT)
+   !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
   !$acc end kernels
   !
   ! evaluate the dynamic production at w(IKB+1) in PDP(IKB)
   !
   !$acc kernels present_cr(zdu_dx,zwork) ! async(2)
-   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-      ZWORK(1:IIT,1:IJT,IKB) = 0.5* ( -ZFLX(1:IIT,1:IJT,IKB)*ZDU_DX(1:IIT,1:IJT) + ZWORK(1:IIT,1:IJT,IKB+1) )
-   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+   !$mnh_expand_array(JIJ=1:IIJT)
+      ZWORK(1:IIJT,IKB) = 0.5* ( -ZFLX(1:IIJT,IKB)*ZDU_DX(1:IIJT) + ZWORK(1:IIJT,IKB+1) )
+   !$mnh_end_expand_array(JIJ=1:IIJT)
    !$acc end kernels
   !
   !$acc kernels present_cr(ZWORK) ! async(2)
-  PDP(:,:,:) = PDP(:,:,:) + ZWORK(:,:,:)
+  PDP(:,:) = PDP(:,:) + ZWORK(:,:)
   !$acc end kernels
 END IF
 !
@@ -476,23 +471,23 @@ END IF
 ! Computes the V variance
 IF (.NOT. O2D) THEN
    !$acc kernels present_cr(gz_w_m_pwm,zflx) ! async(3)
-   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-      ZFLX(1:IIT,1:IJT,1:IKT)= (2./3.) * PTKEM(1:IIT,1:IJT,1:IKT)                                  &
-           - XCMFS * PK(1:IIT,1:IJT,1:IKT) *( (4./3.) * GY_V_M_PVM(1:IIT,1:IJT,1:IKT)                        &
-           -(2./3.) * ( GX_U_M_PUM(1:IIT,1:IJT,1:IKT)                      &
-           +GZ_W_M_PWM(1:IIT,1:IJT,1:IKT)                ) )
-   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+   !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
+      ZFLX(1:IIJT,1:IKT)= (2./3.) * PTKEM(1:IIJT,1:IKT)                                  &
+           - XCMFS * PK(1:IIJT,1:IKT) *( (4./3.) * GY_V_M_PVM(1:IIJT,1:IKT)                        &
+           -(2./3.) * ( GX_U_M_PUM(1:IIJT,1:IKT)                      &
+           +GZ_W_M_PWM(1:IIJT,1:IKT)                ) )
+   !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
    !$acc end kernels
   !! &  to be tested
   !!  + XCMFB *  PLM / SQRT(PTKEM) * (-2./3.) * PTP 
   !
 ELSE
    !$acc kernels present_cr(gz_w_m_pwm,zflx) ! async(3)
-   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-      ZFLX(1:IIT,1:IJT,1:IKT)= (2./3.) * PTKEM(1:IIT,1:IJT,1:IKT)                           &
-           - XCMFS * PK(1:IIT,1:IJT,1:IKT) *(-(2./3.) * ( GX_U_M_PUM(1:IIT,1:IJT,1:IKT)        &
-                                      +GZ_W_M_PWM(1:IIT,1:IJT,1:IKT)     ) )  
-   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+   !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
+      ZFLX(1:IIJT,1:IKT)= (2./3.) * PTKEM(1:IIJT,1:IKT)                           &
+           - XCMFS * PK(1:IIJT,1:IKT) *(-(2./3.) * ( GX_U_M_PUM(1:IIJT,1:IKT)        &
+                                      +GZ_W_M_PWM(1:IIJT,1:IKT)     ) )  
+   !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
    !$acc end kernels
   !! &  to be tested
   !!  + XCMFB *  PLM / SQRT(PTKEM) * (-2./3.) * PTP 
@@ -500,47 +495,47 @@ ELSE
 END IF
 !
 !$acc kernels ! async(3)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZFLX(1:IIT,1:IJT,IKE+1) = ZFLX(1:IIT,1:IJT,IKE) 
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+ZFLX(1:IIJT,IKE+1) = ZFLX(1:IIJT,IKE) 
+!$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 !
 ! ! !!! wait for the computation of ZFLX to begin the update
 ! ! !$acc wait(3)
-! ! !$acc update self(ZFLX(:,:,IKB+1:)) async(10)
+! ! !$acc update self(ZFLX(:,IKB+1:)) async(10)
 !
 !$acc kernels present_cr(zdv_dy,zflx) ! async(3)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-   ZFLX(1:IIT,1:IJT,IKB)   = (2./3.) * PTKEM(1:IIT,1:IJT,IKB)                           &
-        - XCMFS * PK(1:IIT,1:IJT,IKB) * 2. * ZDV_DY(1:IIT,1:IJT)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+   ZFLX(1:IIJT,IKB)   = (2./3.) * PTKEM(1:IIJT,IKB)                           &
+        - XCMFS * PK(1:IIJT,IKB) * 2. * ZDV_DY(1:IIJT)
+!$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 
 !!           & to be tested
-!! + XCMFB * PLM(:,:,IKB:IKB) /SQRT(PTKEM(:,:,IKB:IKB)) *         &
-!!   (-2./3.) * PTP(:,:,IKB:IKB)
+!! + XCMFB * PLM(:,IKB:IKB) /SQRT(PTKEM(:,IKB:IKB)) *         &
+!!   (-2./3.) * PTP(:,IKB:IKB)
 !
 ! extrapolates this flux under the ground with the surface flux
 !$acc kernels present_cr(ZFLX,ZDIRSINZW)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZFLX(1:IIT,1:IJT,IKB-1) =                                                            &
-        PTAU11M(1:IIT,1:IJT) * PSINSLOPE(1:IIT,1:IJT)**2 * PDIRCOSZW(1:IIT,1:IJT)**2                 &         
-  +2. * PTAU12M(1:IIT,1:IJT) * PCOSSLOPE(1:IIT,1:IJT)* PSINSLOPE(1:IIT,1:IJT) * PDIRCOSZW(1:IIT,1:IJT)       &
-  +     PTAU22M(1:IIT,1:IJT) * PCOSSLOPE(1:IIT,1:IJT)**2                                     &
-  +     PTAU33M(1:IIT,1:IJT) * PSINSLOPE(1:IIT,1:IJT)**2 * ZDIRSINZW(1:IIT,1:IJT)**2                 &
-  -2. * PCDUEFF(1:IIT,1:IJT)*       (                                                &
-      PUSLOPEM(1:IIT,1:IJT) * PSINSLOPE(1:IIT,1:IJT)**2 * ZDIRSINZW(1:IIT,1:IJT) * PDIRCOSZW(1:IIT,1:IJT)    &
-    + PVSLOPEM(1:IIT,1:IJT) * PCOSSLOPE(1:IIT,1:IJT)    * PSINSLOPE(1:IIT,1:IJT) * ZDIRSINZW(1:IIT,1:IJT)    )
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+ZFLX(1:IIJT,IKB-1) =                                                            &
+        PTAU11M(1:IIJT) * PSINSLOPE(1:IIJT)**2 * PDIRCOSZW(1:IIJT)**2                 &         
+  +2. * PTAU12M(1:IIJT) * PCOSSLOPE(1:IIJT)* PSINSLOPE(1:IIJT) * PDIRCOSZW(1:IIJT)       &
+  +     PTAU22M(1:IIJT) * PCOSSLOPE(1:IIJT)**2                                     &
+  +     PTAU33M(1:IIJT) * PSINSLOPE(1:IIJT)**2 * ZDIRSINZW(1:IIJT)**2                 &
+  -2. * PCDUEFF(1:IIJT)*       (                                                &
+      PUSLOPEM(1:IIJT) * PSINSLOPE(1:IIJT)**2 * ZDIRSINZW(1:IIJT) * PDIRCOSZW(1:IIJT)    &
+    + PVSLOPEM(1:IIJT) * PCOSSLOPE(1:IIJT)    * PSINSLOPE(1:IIJT) * ZDIRSINZW(1:IIJT)    )
+!$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 !
 !$acc kernels ! async(3)
-ZFLX(:,:,IKB-1) = 2. * ZFLX(:,:,IKB-1) -  ZFLX(:,:,IKB)
+ZFLX(:,IKB-1) = 2. * ZFLX(:,IKB-1) -  ZFLX(:,IKB)
 !$acc end kernels
 !
 !
-! ! !!! wait for the computation of ZFLX(:,:,1:IKB) to begin the update
-! ! !$acc update self(ZFLX(:,:,IKB+1:)) async(3)
+! ! !!! wait for the computation of ZFLX(:,1:IKB) to begin the update
+! ! !$acc update self(ZFLX(:,IKB+1:)) async(3)
 ! ! !
 ! ! !!! and wait for the update self(ZFLX(...)) to complete
 ! ! !$acc wait(10)
@@ -567,7 +562,7 @@ IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
     NTYPE      = TYPEREAL,      &
     NDIMS      = 3,             &
     LTIMEDEP   = .TRUE.         )
-  CALL IO_Field_write(TPFILE,TZFIELD,ZFLX)
+  CALL IO_FIELD_WRITE_PHY(D, TPFILE,TZFIELD,ZFLX)
 END IF
 !
 !!! wait for the computation of PRUS (that uses temporary variables)
@@ -578,27 +573,27 @@ END IF
 ! Complete the V tendency
 IF (.NOT. O2D) THEN
   IF (.NOT. OFLAT) THEN
-    PRVS(:,:,:)=PRVS                                          &
+    PRVS(:,:)=PRVS                                          &
                 -DYM(PRHODJ * ZFLX / MYF(PDYY) )              &
                 +DZF( PDZY / MZM(PDYY) *                      &
                 MYM( MZM(PRHODJ*ZFLX) * PINV_PDZZ ) )
   ELSE
-    PRVS(:,:,:)=PRVS -DYM(PRHODJ * ZFLX / MYF(PDYY) )
+    PRVS(:,:)=PRVS -DYM(PRHODJ * ZFLX / MYF(PDYY) )
   END IF
 !
 ! Contribution to the dynamic production of TKE:
   IF (KSPLT==1) THEN
      !$acc kernels
-     !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-     ZWORK(1:IIT,1:IJT,1:IKT)     = - ZFLX(1:IIT,1:IJT,1:IKT) * GY_V_M_PVM(1:IIT,1:IJT,1:IKT)
-     !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+     !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
+     ZWORK(1:IIJT,1:IKT)     = - ZFLX(1:IIJT,1:IKT) * GY_V_M_PVM(1:IIJT,1:IKT)
+     !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
      !$acc end kernels
   END IF
 ELSE
   !$acc kernels ! async(2)
-  !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-  ZWORK(1:IIT,1:IJT,1:IKT)     = 0.
-  !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+  !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
+  ZWORK(1:IIJT,1:IKT)     = 0.
+  !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
   !$acc end kernels
 END IF
 !
@@ -607,15 +602,15 @@ IF (KSPLT==1) THEN
   ! evaluate the dynamic production at w(IKB+1) in PDP(IKB)
   !
    !$acc kernels present_cr(zdv_dy,zwork) ! async(2)
-   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-      ZWORK(1:IIT,1:IJT,IKB) = 0.5* ( -ZFLX(1:IIT,1:IJT,IKB)*ZDV_DY(1:IIT,1:IJT) + ZWORK(1:IIT,1:IJT,IKB+1) )
-   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+   !$mnh_expand_array(JIJ=1:IIJT)
+      ZWORK(1:IIJT,IKB) = 0.5* ( -ZFLX(1:IIJT,IKB)*ZDV_DY(1:IIJT) + ZWORK(1:IIJT,IKB+1) )
+   !$mnh_end_expand_array(JIJ=1:IIJT)
    !$acc end kernels
   !
   !$acc kernels ! async(2)
-  !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-  PDP(1:IIT,1:IJT,1:IKT) = PDP(1:IIT,1:IJT,1:IKT) + ZWORK(1:IIT,1:IJT,1:IKT)
-  !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+  !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
+  PDP(1:IIJT,1:IKT) = PDP(1:IIJT,1:IKT) + ZWORK(1:IIJT,1:IKT)
+  !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
   !$acc end kernels
 END IF
 !
@@ -636,66 +631,66 @@ END IF
 ! Computes the W variance
 IF (.NOT. O2D) THEN
    !$acc kernels present_cr(gy_v_m_pvm,zflx) ! async(2)
-   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-      ZFLX(1:IIT,1:IJT,1:IKT) = (2./3.) * PTKEM(1:IIT,1:IJT,1:IKT)                                  &
-           - XCMFS * PK(1:IIT,1:IJT,1:IKT) *( (4./3.) * GZ_W_M_PWM(1:IIT,1:IJT,1:IKT)                        &
-           -(2./3.) * ( GX_U_M_PUM(1:IIT,1:IJT,1:IKT)                      &
-           +GY_V_M_PVM(1:IIT,1:IJT,1:IKT)                ) )
-   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+   !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
+      ZFLX(1:IIJT,1:IKT) = (2./3.) * PTKEM(1:IIJT,1:IKT)                                  &
+           - XCMFS * PK(1:IIJT,1:IKT) *( (4./3.) * GZ_W_M_PWM(1:IIJT,1:IKT)                        &
+           -(2./3.) * ( GX_U_M_PUM(1:IIJT,1:IKT)                      &
+           +GY_V_M_PVM(1:IIJT,1:IKT)                ) )
+   !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
   !$acc end kernels
   !!  &  to be tested
   !!    -2.* XCMFB *  PLM / SQRT(PTKEM) * (-2./3.) * PTP 
 ELSE
    !$acc kernels present_cr(gx_u_m_pum,zflx) ! async(2)
-   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-      ZFLX(1:IIT,1:IJT,1:IKT)= (2./3.) * PTKEM(1:IIT,1:IJT,1:IKT)                           &
-           - XCMFS * PK(1:IIT,1:IJT,1:IKT) *( (4./3.) * GZ_W_M_PWM(1:IIT,1:IJT,1:IKT)          &
-           -(2./3.) * ( GX_U_M_PUM(1:IIT,1:IJT,1:IKT)           ) ) 
-   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+   !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
+      ZFLX(1:IIJT,1:IKT)= (2./3.) * PTKEM(1:IIJT,1:IKT)                           &
+           - XCMFS * PK(1:IIJT,1:IKT) *( (4./3.) * GZ_W_M_PWM(1:IIJT,1:IKT)          &
+           -(2./3.) * ( GX_U_M_PUM(1:IIJT,1:IKT)           ) ) 
+   !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
    !$acc end kernels
   !!  &  to be tested
   !!    -2.* XCMFB *  PLM / SQRT(PTKEM) * (-2./3.) * PTP 
 END IF
 !
 !$acc kernels ! async(2)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZFLX(1:IIT,1:IJT,IKE+1)= ZFLX(1:IIT,1:IJT,IKE)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+ZFLX(1:IIJT,IKE+1)= ZFLX(1:IIJT,IKE)
+!$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 !!! wait for the computation of ZWORK, PDP and ZFLX
 !!$acc ! wait(2)
 !
 !
 !$acc kernels present_cr(zdw_dz,zflx) ! async(2)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-   ZFLX(1:IIT,1:IJT,IKB)   = (2./3.) * PTKEM(1:IIT,1:IJT,IKB)                           &
-        - XCMFS * PK(1:IIT,1:IJT,IKB) * 2. * ZDW_DZ(1:IIT,1:IJT)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+   ZFLX(1:IIJT,IKB)   = (2./3.) * PTKEM(1:IIJT,IKB)                           &
+        - XCMFS * PK(1:IIJT,IKB) * 2. * ZDW_DZ(1:IIJT)
+!$mnh_end_expand_array(JIJ=1:IIJT)
 
 !$acc end kernels
 !
 
 !             &  to be tested
-!   - 2.* XCMFB * PLM(:,:,IKB:IKB) /SQRT(PTKEM(:,:,IKB:IKB)) *             &
-!  (-2./3.) * PTP(:,:,IKB:IKB)
+!   - 2.* XCMFB * PLM(:,IKB:IKB) /SQRT(PTKEM(:,IKB:IKB)) *             &
+!  (-2./3.) * PTP(:,IKB:IKB)
 ! extrapolates this flux under the ground with the surface flux
 !$acc kernels present_cr(ZFLX) ! async(3)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZFLX(1:IIT,1:IJT,IKB-1) =                                                     &
-        PTAU11M(1:IIT,1:IJT) * ZDIRSINZW(1:IIT,1:IJT)**2                                &
-  +     PTAU33M(1:IIT,1:IJT) * PDIRCOSZW(1:IIT,1:IJT)**2                                &
-  +2. * PCDUEFF(1:IIT,1:IJT)* PUSLOPEM(1:IIT,1:IJT)  * ZDIRSINZW(1:IIT,1:IJT) * PDIRCOSZW(1:IIT,1:IJT) 
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)        
+!$mnh_expand_array(JIJ=1:IIJT)
+ZFLX(1:IIJT,IKB-1) =                                                     &
+        PTAU11M(1:IIJT) * ZDIRSINZW(1:IIJT)**2                                &
+  +     PTAU33M(1:IIJT) * PDIRCOSZW(1:IIJT)**2                                &
+  +2. * PCDUEFF(1:IIJT)* PUSLOPEM(1:IIJT)  * ZDIRSINZW(1:IIJT) * PDIRCOSZW(1:IIJT) 
+!$mnh_end_expand_array(JIJ=1:IIJT)        
 !$acc end kernels
 ! 
 !
-!!! wait for the computation of ZFLX(:,:,IKB-1) and ZFLX(:,:,IKB)
+!!! wait for the computation of ZFLX(:,IKB-1) and ZFLX(:,IKB)
 !!$acc ! wait(2) ! async(3)
 !
 !$acc kernels ! async(3)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-ZFLX(1:IIT,1:IJT,IKB-1) = 2. * ZFLX(1:IIT,1:IJT,IKB-1) - ZFLX(1:IIT,1:IJT,IKB)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_expand_array(JIJ=1:IIJT)
+ZFLX(1:IIJT,IKB-1) = 2. * ZFLX(1:IIJT,IKB-1) - ZFLX(1:IIJT,IKB)
+!$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 !
 IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
@@ -713,7 +708,7 @@ IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
     NTYPE      = TYPEREAL,      &
     NDIMS      = 3,             &
     LTIMEDEP   = .TRUE.         )
-  CALL IO_Field_write(TPFILE,TZFIELD,ZFLX)
+  CALL IO_FIELD_WRITE_PHY(D, TPFILE,TZFIELD,ZFLX)
 END IF
 !
 !
@@ -724,56 +719,56 @@ END IF
 !
 ! Complete the W tendency
 !
-!PRWS(:,:,:)=PRWS(:,:,:) - DZM( PRHODJ*ZFLX/MZF(PDZZ) )
+!PRWS(:,:)=PRWS(:,:) - DZM( PRHODJ*ZFLX/MZF(PDZZ) )
 !$acc kernels ! async(2)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-ZDFDDWDZ(1:IIT,1:IJT,1:IKT)    = - XCMFS * PK(1:IIT,1:IJT,1:IKT) * (4./3.)
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+!$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
+ZDFDDWDZ(1:IIJT,1:IKT)    = - XCMFS * PK(1:IIJT,1:IKT) * (4./3.)
+!$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
 !$acc end kernels
 !$acc kernels ! async(2)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKB)
-ZDFDDWDZ(1:IIT,1:IJT,1:IKB) = 0.
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKB)
+!$mnh_expand_array(JIJ=1:IIJT,JK=1:IKB)
+ZDFDDWDZ(1:IIJT,1:IKB) = 0.
+!$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKB)
 !$acc end kernels
 !
-!!! wait for the computation of ZFLX(:,:,IKB-1) and ZDFDDWDZ
+!!! wait for the computation of ZFLX(:,IKB-1) and ZDFDDWDZ
 !!$acc ! wait(3) async(2)
 !!$acc ! wait(2)
 !
 CALL TRIDIAG_W(D,PWM,ZFLX,ZDFDDWDZ,PTSTEP,ZMZF_DZZ,PRHODJ,ZWP)
 !
-PRWS = PRWS(:,:,:) + MZM(PRHODJ(:,:,:))*(ZWP(:,:,:)-PWM(:,:,:))/PTSTEP
+PRWS = PRWS(:,:) + MZM(PRHODJ(:,:))*(ZWP(:,:)-PWM(:,:))/PTSTEP
 !
 !* recomputes flux using guess of W
 !
 GZ_W_M_ZWP = GZ_W_M(ZWP,PDZZ)
 !$acc kernels present_cr(gz_w_m_pwm,zflx) ! async(2)
-!$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=IKB+1:IKT)
-   ZFLX(1:IIT,1:IJT,IKB+1:IKT)=ZFLX(1:IIT,1:IJT,IKB+1:IKT) &
-        - XCMFS * PK(1:IIT,1:IJT,IKB+1:IKT) * (4./3.) * (GZ_W_M_ZWP(1:IIT,1:IJT,IKB+1:IKT) - GZ_W_M_PWM(1:IIT,1:IJT,IKB+1:IKT))
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=IKB+1:IKT)
+!$mnh_expand_array(JIJ=1:IIJT,JK=IKB+1:IKT)
+   ZFLX(1:IIJT,IKB+1:IKT)=ZFLX(1:IIJT,IKB+1:IKT) &
+        - XCMFS * PK(1:IIJT,IKB+1:IKT) * (4./3.) * (GZ_W_M_ZWP(1:IIJT,IKB+1:IKT) - GZ_W_M_PWM(1:IIJT,IKB+1:IKT))
+!$mnh_end_expand_array(JIJ=1:IIJT,JK=IKB+1:IKT)
 !$acc end kernels
 !
 IF (KSPLT==1) THEN
    !Contribution to the dynamic production of TKE:
    !$acc kernels present_cr(gz_w_m_zwp,zwork) ! async(2)
-   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-      ZWORK(1:IIT,1:IJT,1:IKT) = - ZFLX(1:IIT,1:IJT,1:IKT) * GZ_W_M_ZWP(1:IIT,1:IJT,1:IKT)
-   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)   
+   !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
+      ZWORK(1:IIJT,1:IKT) = - ZFLX(1:IIJT,1:IKT) * GZ_W_M_ZWP(1:IIJT,1:IKT)
+   !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)   
    !$acc end kernels
   !
   ! evaluate the dynamic production at w(IKB+1) in PDP(IKB)
   !
    !$acc kernels present_cr(zdw_dz,zwork) ! async(2)
-   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
-      ZWORK(1:IIT,1:IJT,IKB) = 0.5* ( -ZFLX(1:IIT,1:IJT,IKB)*ZDW_DZ(1:IIT,1:IJT) + ZWORK(1:IIT,1:IJT,IKB+1) )
-   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+   !$mnh_expand_array(JIJ=1:IIJT)
+      ZWORK(1:IIJT,IKB) = 0.5* ( -ZFLX(1:IIJT,IKB)*ZDW_DZ(1:IIJT) + ZWORK(1:IIJT,IKB+1) )
+   !$mnh_end_expand_array(JIJ=1:IIJT)
    !$acc end kernels
   !
   !$acc kernels ! async(2)
-  !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
-  PDP(1:IIT,1:IJT,1:IKT) = PDP(1:IIT,1:IJT,1:IKT) + ZWORK(1:IIT,1:IJT,1:IKT)
-  !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+  !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
+  PDP(1:IIJT,1:IKT) = PDP(1:IIJT,1:IKT) + ZWORK(1:IIJT,1:IKT)
+  !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
   !$acc end kernels
 END IF
 !
@@ -790,18 +785,18 @@ IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
   ZWKLES = ZFLX*MZF(GZ_M_W(PTHLM,PDZZ))
   CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_RES_ddz_Thl_SBG_W2)
   IF (KRR>=1) THEN
-    ZWKLES = GZ_M_M(PRM(:,:,:,1),PDZZ)*ZFLX
+    ZWKLES = GZ_M_M(PRM(:,:,1),PDZZ)*ZFLX
     CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
                            TLES%X_LES_RES_ddxa_Rt_SBG_UaW , .TRUE.)
-    ZWKLES = ZFLX*MZF(GZ_M_W(PRM(:,:,:,1),PDZZ))
+    ZWKLES = ZFLX*MZF(GZ_M_W(PRM(:,:,1),PDZZ))
     CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
                            TLES%X_LES_RES_ddz_Rt_SBG_W2)
   END IF
   DO JSV=1,KSV
-    ZWKLES = GZ_M_M(PSVM(:,:,:,JSV),PDZZ)*ZFLX
+    ZWKLES = GZ_M_M(PSVM(:,:,JSV),PDZZ)*ZFLX
     CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
                            TLES%X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,JSV) , .TRUE.)
-    ZWKLES = ZFLX*MZF(GZ_M_W(PSVM(:,:,:,JSV),PDZZ))
+    ZWKLES = ZFLX*MZF(GZ_M_W(PSVM(:,:,JSV),PDZZ))
     CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
                            TLES%X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
   END DO
@@ -812,5 +807,7 @@ END IF
 CALL CLEANLIST_ll(TZFIELDS_ll)
 !
 !
+CONTAINS
+INCLUDE "shugrad.h"
 END SUBROUTINE TURB_HOR_DYN_CORR
 END MODULE MODE_TURB_HOR_DYN_CORR

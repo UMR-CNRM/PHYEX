@@ -69,11 +69,8 @@ USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT
 USE MODD_LES, ONLY: TLES_t
 !
-USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
+USE MODE_IO_FIELD_WRITE_PHY, ONLY: IO_FIELD_WRITE_PHY
 !
-USE MODI_GRADIENT_M, ONLY: GX_M_M, GX_M_U, GY_M_M, GY_M_V
-USE MODI_GRADIENT_W, ONLY: GX_W_UW, GY_W_VW
-USE MODI_SHUMAN, ONLY: DXF, DXM, DYF, DYM, DZF, MXF, MXM, MYF, MYM, MZF, MZM 
 USE MODI_LES_MEAN_SUBGRID_PHY, ONLY: LES_MEAN_SUBGRID_PHY
 !
 USE MODI_SECOND_MNH, ONLY: SECOND_MNH
@@ -96,48 +93,48 @@ LOGICAL,                  INTENT(IN)    ::  OFLAT        ! Logical for zero oror
 LOGICAL,                  INTENT(IN)    ::  O2D          ! Logical for 2D model version (modd_conf)
 TYPE(TFILEDATA),          INTENT(INOUT) ::  TPFILE       ! Output file
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
                                                         ! PK = PLM * SQRT(PTKEM)
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDXX   ! 1./PDXX
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDYY   ! 1./PDYY
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDZZ   ! 1./PDZZ
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PMZM_PRHODJ ! MZM(PRHODJ)
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PINV_PDXX   ! 1./PDXX
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PINV_PDYY   ! 1./PDYY
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PINV_PDZZ   ! 1./PDZZ
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PMZM_PRHODJ ! MZM(PRHODJ)
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
-REAL, DIMENSION(D%NIT,D%NJT),     INTENT(IN)    ::  PDIRCOSXW, PDIRCOSYW
+REAL, DIMENSION(D%NIJT),     INTENT(IN)    ::  PDIRCOSXW, PDIRCOSYW
 ! Director Cosinus along x, y and z directions at surface w-point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
 !
-REAL, DIMENSION(D%NIT,D%NJT),     INTENT(IN)    ::  PSFTHM,PSFRM
+REAL, DIMENSION(D%NIJT),     INTENT(IN)    ::  PSFTHM,PSFRM
 !
 ! Variables at t-1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PWM 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTHLM 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN)    ::  PRM          ! mixing ratios at t-1,
-                              !  where PRM(:,:,:,1) = conservative mixing ratio
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PWM 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTHLM 
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)    ::  PRM          ! mixing ratios at t-1,
+                              !  where PRM(:,:,1) = conservative mixing ratio
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PAMOIST      ! s and Thetal and Rnp
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PAMOIST      ! s and Thetal and Rnp
 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PSRCM
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PSRCM
                                   ! normalized 2nd-order flux
                                   ! s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PFRAC_ICE    ! ri fraction of rc+ri
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PFRAC_ICE    ! ri fraction of rc+ri
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRTHLS
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS         ! var. at t+1 -split-
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRTHLS
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS         ! var. at t+1 -split-
 !
 !
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZFLX,ZFLXC,ZWKLES ! work arrays
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZFLX,ZFLXC,ZWKLES ! work arrays
 !
-INTEGER             :: IKB,IKE,IKU, IKT, IIT, IJT
+INTEGER             :: IKB,IKE,IKU, IKT, IIJT
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain  
-REAL, DIMENSION(D%NIT,D%NJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF 
+REAL, DIMENSION(D%NIJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF 
                                     ! coefficients for the uncentred gradient 
                                     ! computation near the ground
 !
@@ -149,22 +146,21 @@ TYPE(TFIELDMETADATA) :: TZFIELD
 !             ------------------------
 !
 IKB = 1+JPVEXT               
-IKE = SIZE(PTHLM,3)-JPVEXT    
-IKU = SIZE(PTHLM,3)
-IIT=D%NIT
-IJT=D%NJT
+IKE = SIZE(PTHLM,2)-JPVEXT    
+IKU = SIZE(PTHLM,2)
+IIJT=D%NIJT
 IKT=D%NKT
 !
 !
 !  compute the coefficients for the uncentred gradient computation near the 
 !  ground
 !$acc kernels present_cr(zcoeff)
-ZCOEFF(:,:,IKB+2)= - PDZZ(:,:,IKB+1) /      &
-       ( (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) * PDZZ(:,:,IKB+2) )
-ZCOEFF(:,:,IKB+1)=   (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) /      &
-       ( PDZZ(:,:,IKB+1) * PDZZ(:,:,IKB+2) )
-ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
-       ( (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) * PDZZ(:,:,IKB+1) )
+ZCOEFF(:,IKB+2)= - PDZZ(:,IKB+1) /      &
+       ( (PDZZ(:,IKB+2)+PDZZ(:,IKB+1)) * PDZZ(:,IKB+2) )
+ZCOEFF(:,IKB+1)=   (PDZZ(:,IKB+2)+PDZZ(:,IKB+1)) /      &
+       ( PDZZ(:,IKB+1) * PDZZ(:,IKB+2) )
+ZCOEFF(:,IKB)= - (PDZZ(:,IKB+2)+2.*PDZZ(:,IKB+1)) /      &
+       ( (PDZZ(:,IKB+2)+PDZZ(:,IKB+1)) * PDZZ(:,IKB+1) )
 !$acc end kernels
 !
 !*       2.   < U' THETA'l >
@@ -174,34 +170,34 @@ ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
 #define UTHETA UTHETA_ON
 !!!!!!! UTHETA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef UTHETA
-ZFLX(:,:,:)     = -TURBN%XCSHF * MXM( PK ) * GX_M_U(OFLAT,PTHLM,PDXX,PDZZ,PDZX)
+ZFLX(:,:)     = -TURBN%XCSHF * MXM( PK ) * GX_M_U(OFLAT,PTHLM,PDXX,PDZZ,PDZX)
 !$acc kernels present_cr(ZFLX)
-ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE) 
+ZFLX(:,IKE+1) = ZFLX(:,IKE) 
 !$acc end kernels
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-ZFLX(:,:,IKB) = -TURBN%XCSHF * MXM( PK(:,:,IKB) ) *          &
-  ( DXM(PTHLM(:,:,IKB)) * PINV_PDXX(:,:,IKB)           &
-   -MXM( ZCOEFF(:,:,IKB+2)*PTHLM(:,:,IKB+2)        &
-         +ZCOEFF(:,:,IKB+1)*PTHLM(:,:,IKB+1)       &
-         +ZCOEFF(:,:,IKB)*PTHLM(:,:,IKB))      &
-        *0.5* ( PDZX(:,:,IKB+1)+PDZX(:,:,IKB))       &
-        * PINV_PDXX(:,:,IKB) )
+ZFLX(:,IKB) = -TURBN%XCSHF * MXM2D( PK(:,IKB) ) *          &
+  ( DXM2D(PTHLM(:,IKB)) * PINV_PDXX(:,IKB)           &
+   -MXM2D( ZCOEFF(:,IKB+2)*PTHLM(:,IKB+2)        &
+         +ZCOEFF(:,IKB+1)*PTHLM(:,IKB+1)       &
+         +ZCOEFF(:,IKB)*PTHLM(:,IKB))      &
+        *0.5* ( PDZX(:,IKB+1)+PDZX(:,IKB))       &
+        * PINV_PDXX(:,IKB) )
 ! extrapolates the flux under the ground so that the vertical average with 
 ! the IKB flux gives the ground value  ( warning the tangential surface
 ! flux has been set to 0 for the moment !!  to be improved )
-ZFLX(:,:,IKB-1) = 2. * MXM(PSFTHM(:,:)* PDIRCOSXW(:,:))  &
-                       - ZFLX(:,:,IKB)
+ZFLX(:,IKB-1) = 2. * MXM2D(PSFTHM(:)* PDIRCOSXW(:))  &
+                       - ZFLX(:,IKB)
 !
 ! Add this source to the Theta_l sources
 !
 IF (.NOT. OFLAT) THEN
-  PRTHLS(:,:,:) =  PRTHLS                                                   &
+  PRTHLS(:,:) =  PRTHLS                                                   &
                 - DXF( MXM(PRHODJ) * ZFLX * PINV_PDXX )                          &
                 + DZF( PMZM_PRHODJ *MXF(PDZX*(MZM(ZFLX * PINV_PDXX))) * PINV_PDZZ )
 ELSE
-  PRTHLS(:,:,:) =  PRTHLS - DXF( MXM(PRHODJ) * ZFLX * PINV_PDXX )
+  PRTHLS(:,:) =  PRTHLS - DXF( MXM(PRHODJ) * ZFLX * PINV_PDXX )
 END IF
 !
 ! Compute the equivalent tendancy for Rc and Ri
@@ -213,18 +209,18 @@ IF ( KRRL >= 1 ) THEN
                                                PDZX*(MZM( ZFLX*PINV_PDXX )) ) )&
                )
     IF ( KRRI >= 1 ) THEN
-      PRRS(:,:,:,2) = PRRS(:,:,:,2) +  2. *                                    &
+      PRRS(:,:,2) = PRRS(:,:,2) +  2. *                                    &
         (- DXF( MXM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDXX )                   &
          + DZF( MZM( PRHODJ*PATHETA*PSRCM )*MXF( PDZX*(MZM( ZFLX*PINV_PDXX )) )&
                                            *PINV_PDZZ )                        &
-        )*(1.0-PFRAC_ICE(:,:,:))
-      PRRS(:,:,:,4) = PRRS(:,:,:,4) +  2. *                                    &
+        )*(1.0-PFRAC_ICE(:,:))
+      PRRS(:,:,4) = PRRS(:,:,4) +  2. *                                    &
         (- DXF( MXM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDXX )                   &
          + DZF( MZM( PRHODJ*PATHETA*PSRCM )*MXF( PDZX*(MZM( ZFLX*PINV_PDXX )) )&
                                            *PINV_PDZZ )                        &
-        )*PFRAC_ICE(:,:,:)
+        )*PFRAC_ICE(:,:)
     ELSE
-      PRRS(:,:,:,2) = PRRS(:,:,:,2) +  2. *                                    &
+      PRRS(:,:,2) = PRRS(:,:,2) +  2. *                                    &
         (- DXF( MXM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDXX )                   &
          + DZF( MZM( PRHODJ*PATHETA*PSRCM )*MXF( PDZX*(MZM( ZFLX*PINV_PDXX )) )&
                                            *PINV_PDZZ )                        &
@@ -233,19 +229,19 @@ IF ( KRRL >= 1 ) THEN
   ELSE
     ZFLXC = 2.*MXF( MXM( PRHODJ*PATHETA*PSRCM )*ZFLX )
     IF ( KRRI >= 1 ) THEN
-      PRRS(:,:,:,2) = PRRS(:,:,:,2) -  2. *                                    &
-        DXF( MXM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDXX )*(1.0-PFRAC_ICE(:,:,:))
-      PRRS(:,:,:,4) = PRRS(:,:,:,4) -  2. *                                    &
-        DXF( MXM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDXX )*PFRAC_ICE(:,:,:)
+      PRRS(:,:,2) = PRRS(:,:,2) -  2. *                                    &
+        DXF( MXM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDXX )*(1.0-PFRAC_ICE(:,:))
+      PRRS(:,:,4) = PRRS(:,:,4) -  2. *                                    &
+        DXF( MXM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDXX )*PFRAC_ICE(:,:)
     ELSE
-      PRRS(:,:,:,2) = PRRS(:,:,:,2) -  2. *                                    &
+      PRRS(:,:,2) = PRRS(:,:,2) -  2. *                                    &
         DXF( MXM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDXX )
     END IF
   END IF
 END IF
 !
 !! stores this flux in ZWORK to compute later <U' VPT'>
-!!ZWORK(:,:,:) = ZFLX(:,:,:) 
+!!ZWORK(:,:) = ZFLX(:,:) 
 !
 ! stores the horizontal  <U THl>
 IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
@@ -261,7 +257,7 @@ IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
     NDIMS      = 3,                &
     LTIMEDEP   = .TRUE.            )
 !$acc update self(ZFLX)
-  CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
+  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLX)
 END IF
 !
 IF (KSPLT==1 .AND. TLES%LLES_CALL) THEN
@@ -272,7 +268,7 @@ IF (KSPLT==1 .AND. TLES%LLES_CALL) THEN
   ZWKLES = GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX)*MXF(ZFLX)
   CALL LES_MEAN_SUBGRID_PHY(D, TLES,ZWKLES, TLES%X_LES_RES_ddxa_Thl_SBG_UaThl , .TRUE. )
   IF (KRR>=1) THEN
-    ZWKLES = GX_M_M(OFLAT,PRM(:,:,:,1),PDXX,PDZZ,PDZX)*MXF(ZFLX)
+    ZWKLES = GX_M_M(OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX)*MXF(ZFLX)
     CALL LES_MEAN_SUBGRID_PHY(D, TLES,ZWKLES, TLES%X_LES_RES_ddxa_Rt_SBG_UaThl , .TRUE. )
   END IF
   CALL SECOND_MNH(ZTIME2)
@@ -287,34 +283,34 @@ END IF
 #ifdef URNP
 IF (KRR/=0) THEN
   !
-  ZFLX(:,:,:)     = -TURBN%XCHF * MXM( PK ) * GX_M_U(OFLAT,PRM(:,:,:,1),PDXX,PDZZ,PDZX)
+  ZFLX(:,:)     = -TURBN%XCHF * MXM( PK ) * GX_M_U(OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX)
 !$acc kernels present_cr(ZFLX)
-  ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE)
+  ZFLX(:,IKE+1) = ZFLX(:,IKE)
 !$acc end kernels
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-  ZFLX(:,:,IKB) = -TURBN%XCHF * MXM( PK(:,:,IKB) ) *           &
-    ( DXM(PRM(:,:,IKB,1)) * PINV_PDXX(:,:,IKB)           &
-     -MXM( ZCOEFF(:,:,IKB+2)*PRM(:,:,IKB+2,1)        &
-           +ZCOEFF(:,:,IKB+1)*PRM(:,:,IKB+1,1)       &
-           +ZCOEFF(:,:,IKB)*PRM(:,:,IKB,1))      &
-          *0.5* ( PDZX(:,:,IKB+1)+PDZX(:,:,IKB))       &
-          * PINV_PDXX(:,:,IKB) )
+  ZFLX(:,IKB) = -TURBN%XCHF * MXM2D( PK(:,IKB) ) *           &
+    ( DXM2D(PRM(:,IKB,1)) * PINV_PDXX(:,IKB)           &
+     -MXM2D( ZCOEFF(:,IKB+2)*PRM(:,IKB+2,1)        &
+           +ZCOEFF(:,IKB+1)*PRM(:,IKB+1,1)       &
+           +ZCOEFF(:,IKB)*PRM(:,IKB,1))      &
+          *0.5* ( PDZX(:,IKB+1)+PDZX(:,IKB))       &
+          * PINV_PDXX(:,IKB) )
 ! extrapolates the flux under the ground so that the vertical average with 
 ! the IKB flux gives the ground value  ( warning the tangential surface
 ! flux has been set to 0 for the moment !!  to be improved )
-  ZFLX(:,:,IKB-1) = 2. * MXM(PSFRM(:,:)* PDIRCOSXW(:,:)) &
-                       - ZFLX(:,:,IKB)
+  ZFLX(:,IKB-1) = 2. * MXM2D(PSFRM(:)* PDIRCOSXW(:)) &
+                       - ZFLX(:,IKB)
   !
   ! Add this source to the conservative mixing ratio sources
   !
   IF (.NOT. OFLAT) THEN
-    PRRS(:,:,:,1) = PRRS(:,:,:,1)                                             &
+    PRRS(:,:,1) = PRRS(:,:,1)                                             &
                   - DXF( MXM(PRHODJ) * ZFLX * PINV_PDXX )                          &
                   + DZF( PMZM_PRHODJ *MXF(PDZX*(MZM(ZFLX * PINV_PDXX))) * PINV_PDZZ )
   ELSE
-    PRRS(:,:,:,1) = PRRS(:,:,:,1) - DXF( MXM(PRHODJ) * ZFLX * PINV_PDXX )
+    PRRS(:,:,1) = PRRS(:,:,1) - DXF( MXM(PRHODJ) * ZFLX * PINV_PDXX )
   END IF
   !
   ! Compute the equivalent tendancy for Rc and Ri
@@ -327,18 +323,18 @@ IF (KRR/=0) THEN
                                                PDZX*(MZM( ZFLX*PINV_PDXX )) ) )&
                  )
       IF ( KRRI >= 1 ) THEN
-        PRRS(:,:,:,2) = PRRS(:,:,:,2) +  2. *                                  &
+        PRRS(:,:,2) = PRRS(:,:,2) +  2. *                                  &
         (- DXF( MXM( PRHODJ*PAMOIST*PSRCM )*ZFLX*PINV_PDXX )                   &
          + DZF( MZM( PRHODJ*PAMOIST*PSRCM )*MXF( PDZX*(MZM( ZFLX*PINV_PDXX )) )&
                                            *PINV_PDZZ )                        &
-        )*(1.0-PFRAC_ICE(:,:,:))
-        PRRS(:,:,:,2) = PRRS(:,:,:,2) +  2. *                                  &
+        )*(1.0-PFRAC_ICE(:,:))
+        PRRS(:,:,2) = PRRS(:,:,2) +  2. *                                  &
         (- DXF( MXM( PRHODJ*PAMOIST*PSRCM )*ZFLX*PINV_PDXX )                   &
          + DZF( MZM( PRHODJ*PAMOIST*PSRCM )*MXF( PDZX*(MZM( ZFLX*PINV_PDXX )) )&
                                            *PINV_PDZZ )                        &
-        )*PFRAC_ICE(:,:,:)
+        )*PFRAC_ICE(:,:)
       ELSE
-        PRRS(:,:,:,2) = PRRS(:,:,:,2) +  2. *                                  &
+        PRRS(:,:,2) = PRRS(:,:,2) +  2. *                                  &
         (- DXF( MXM( PRHODJ*PAMOIST*PSRCM )*ZFLX*PINV_PDXX )                   &
          + DZF( MZM( PRHODJ*PAMOIST*PSRCM )*MXF( PDZX*(MZM( ZFLX*PINV_PDXX )) )&
                                            *PINV_PDZZ )                        &
@@ -347,12 +343,12 @@ IF (KRR/=0) THEN
     ELSE
       ZFLXC = ZFLXC + 2.*MXF( MXM( PRHODJ*PAMOIST*PSRCM )*ZFLX )
       IF ( KRRI >= 1 ) THEN
-        PRRS(:,:,:,2) = PRRS(:,:,:,2) -  2. *                                  &
-        DXF( MXM( PRHODJ*PAMOIST*PSRCM )*ZFLX*PINV_PDXX )*(1.0-PFRAC_ICE(:,:,:))
-        PRRS(:,:,:,4) = PRRS(:,:,:,4) -  2. *                                  &
-        DXF( MXM( PRHODJ*PAMOIST*PSRCM )*ZFLX*PINV_PDXX )*PFRAC_ICE(:,:,:)
+        PRRS(:,:,2) = PRRS(:,:,2) -  2. *                                  &
+        DXF( MXM( PRHODJ*PAMOIST*PSRCM )*ZFLX*PINV_PDXX )*(1.0-PFRAC_ICE(:,:))
+        PRRS(:,:,4) = PRRS(:,:,4) -  2. *                                  &
+        DXF( MXM( PRHODJ*PAMOIST*PSRCM )*ZFLX*PINV_PDXX )*PFRAC_ICE(:,:)
       ELSE
-        PRRS(:,:,:,2) = PRRS(:,:,:,2) -  2. *                                  &
+        PRRS(:,:,2) = PRRS(:,:,2) -  2. *                                  &
         DXF( MXM( PRHODJ*PAMOIST*PSRCM )*ZFLX*PINV_PDXX )
       END IF
     END IF
@@ -372,7 +368,7 @@ IF (KRR/=0) THEN
       NDIMS      = 3,               &
       LTIMEDEP   = .TRUE.           )
 !$acc update self(ZFLX)
-    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
+    CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLX)
   END IF
   !
   IF (KSPLT==1 .AND. TLES%LLES_CALL) THEN
@@ -382,7 +378,7 @@ IF (KRR/=0) THEN
     CALL LES_MEAN_SUBGRID_PHY(D, TLES,ZWKLES, TLES%X_LES_RES_ddxa_W_SBG_UaRt , .TRUE. )
     ZWKLES = GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX)*MXF(ZFLX)
     CALL LES_MEAN_SUBGRID_PHY(D, TLES,ZWKLES, TLES%X_LES_RES_ddxa_Thl_SBG_UaRt , .TRUE. )
-    ZWKLES = GX_M_M(OFLAT,PRM(:,:,:,1),PDXX,PDZZ,PDZX)*MXF(ZFLX)
+    ZWKLES = GX_M_M(OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX)*MXF(ZFLX)
     CALL LES_MEAN_SUBGRID_PHY(D, TLES,ZWKLES, TLES%X_LES_RES_ddxa_Rt_SBG_UaRt , .TRUE. )
     CALL SECOND_MNH(ZTIME2)
     TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
@@ -407,9 +403,9 @@ END IF
 !!IF (KRR/=0) THEN
 !!  ! here ZFLX= <U'Rnp'> and ZWORK= <U'Thetal'>
 !!  !
-!!  ZVPTU(:,:,:) =                                                        &
-!!    ZWORK(:,:,:)*MXM(ETHETA(KRR,KRRI,PTHLT,PEXNREF,PRT,PLOCPT,PSRCM)) +       &
-!!     ZFLX(:,:,:)*MXM(EMOIST(KRR,KRRI,PTHLT,PEXNREF,PRT,PLOCPT,PSRCM))
+!!  ZVPTU(:,:) =                                                        &
+!!    ZWORK(:,:)*MXM(ETHETA(KRR,KRRI,PTHLT,PEXNREF,PRT,PLOCPT,PSRCM)) +       &
+!!     ZFLX(:,:)*MXM(EMOIST(KRR,KRRI,PTHLT,PEXNREF,PRT,PLOCPT,PSRCM))
 !!  !
 !!  ! stores the horizontal  <U VPT>
 !!  IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
@@ -424,11 +420,11 @@ END IF
 !!      NTYPE      = TYPEREAL,         &
 !!      NDIMS      = 3,                &
 !!      LTIMEDEP   = .TRUE.            )
-!!    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZVPTU)
+!!    CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZVPTU)
 !!  END IF
 !!!
 !!ELSE
-!!  ZVPTU(:,:,:)=ZWORK(:,:,:)
+!!  ZVPTU(:,:)=ZWORK(:,:)
 !!END IF
 !
 !
@@ -439,41 +435,41 @@ END IF
 !!!!!! VTHETA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef VTHETA
 IF (.NOT. O2D) THEN
-  ZFLX(:,:,:)     = -TURBN%XCSHF * MYM( PK ) * GY_M_V(OFLAT,PTHLM,PDYY,PDZZ,PDZY)
+  ZFLX(:,:)     = -TURBN%XCSHF * MYM( PK ) * GY_M_V(OFLAT,PTHLM,PDYY,PDZZ,PDZY)
 !$acc kernels present_cr(ZFLX)
-  ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE)
+  ZFLX(:,IKE+1) = ZFLX(:,IKE)
 !$acc end kernels
 ELSE
 !$acc kernels present_cr(ZFLX)
-  ZFLX(:,:,:)     = 0.
+  ZFLX(:,:)     = 0.
 !$acc end kernels
 END IF
 !
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-ZFLX(:,:,IKB) = -TURBN%XCSHF * MYM( PK(:,:,IKB) ) *          &
-  ( DYM(PTHLM(:,:,IKB)) * PINV_PDYY(:,:,IKB)           &
-   -MYM( ZCOEFF(:,:,IKB+2)*PTHLM(:,:,IKB+2)        &
-         +ZCOEFF(:,:,IKB+1)*PTHLM(:,:,IKB+1)       &
-         +ZCOEFF(:,:,IKB)*PTHLM(:,:,IKB) )     &
-        *0.5* ( PDZY(:,:,IKB+1)+PDZY(:,:,IKB))       &
-        * PINV_PDYY(:,:,IKB) )
+ZFLX(:,IKB) = -TURBN%XCSHF * MYM2D( PK(:,IKB) ) *          &
+  ( DYM2D(PTHLM(:,IKB)) * PINV_PDYY(:,IKB)           &
+   -MYM2D( ZCOEFF(:,IKB+2)*PTHLM(:,IKB+2)        &
+         +ZCOEFF(:,IKB+1)*PTHLM(:,IKB+1)       &
+         +ZCOEFF(:,IKB)*PTHLM(:,IKB) )     &
+        *0.5* ( PDZY(:,IKB+1)+PDZY(:,IKB))       &
+        * PINV_PDYY(:,IKB) )
 ! extrapolates the flux under the ground so that the vertical average with 
 ! the IKB flux gives the ground value  ( warning the tangential surface
 ! flux has been set to 0 for the moment !!  to be improved )
-ZFLX(:,:,IKB-1) = 2. * MYM( PSFTHM(:,:)* PDIRCOSYW(:,:) ) &
-                       - ZFLX(:,:,IKB)
+ZFLX(:,IKB-1) = 2. * MYM2D( PSFTHM(:)* PDIRCOSYW(:) ) &
+                       - ZFLX(:,IKB)
 !
 ! Add this source to the Theta_l sources
 !
 IF (.NOT. O2D) THEN 
   IF (.NOT. OFLAT) THEN
-    PRTHLS(:,:,:) =  PRTHLS                                                         &
+    PRTHLS(:,:) =  PRTHLS                                                         &
                   - DYF( MYM(PRHODJ) * ZFLX * PINV_PDYY )                           &
                   + DZF( PMZM_PRHODJ *MYF(PDZY*(MZM(ZFLX * PINV_PDYY))) * PINV_PDZZ )
   ELSE
-    PRTHLS(:,:,:) =  PRTHLS - DYF( MYM(PRHODJ) * ZFLX * PINV_PDYY )
+    PRTHLS(:,:) =  PRTHLS - DYF( MYM(PRHODJ) * ZFLX * PINV_PDYY )
   END IF
 END IF
 !
@@ -487,18 +483,18 @@ IF ( KRRL >= 1 .AND. .NOT. O2D) THEN
                                                PDZY*(MZM( ZFLX*PINV_PDYY )) ) )&
                )
     IF ( KRRI >= 1 ) THEN
-      PRRS(:,:,:,2) = PRRS(:,:,:,2) + 2. *                                     &
+      PRRS(:,:,2) = PRRS(:,:,2) + 2. *                                     &
         (- DYF( MYM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDYY )                   &
          + DZF( MZM( PRHODJ*PATHETA*PSRCM )*MYF( PDZY*(MZM( ZFLX*PINV_PDYY )) )&
                                            *PINV_PDZZ )                        &
-        )*(1.0-PFRAC_ICE(:,:,:))
-      PRRS(:,:,:,4) = PRRS(:,:,:,4) + 2. *                                     &
+        )*(1.0-PFRAC_ICE(:,:))
+      PRRS(:,:,4) = PRRS(:,:,4) + 2. *                                     &
         (- DYF( MYM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDYY )                   &
          + DZF( MZM( PRHODJ*PATHETA*PSRCM )*MYF( PDZY*(MZM( ZFLX*PINV_PDYY )) )&
                                            *PINV_PDZZ )                        &
-        )*PFRAC_ICE(:,:,:)
+        )*PFRAC_ICE(:,:)
     ELSE
-      PRRS(:,:,:,2) = PRRS(:,:,:,2) + 2. *                                     &
+      PRRS(:,:,2) = PRRS(:,:,2) + 2. *                                     &
         (- DYF( MYM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDYY )                   &
          + DZF( MZM( PRHODJ*PATHETA*PSRCM )*MYF( PDZY*(MZM( ZFLX*PINV_PDYY )) )&
                                            *PINV_PDZZ )                        &
@@ -507,19 +503,19 @@ IF ( KRRL >= 1 .AND. .NOT. O2D) THEN
   ELSE
     ZFLXC = 2.*MYF( MYM( PRHODJ*PATHETA*PSRCM )*ZFLX )
     IF ( KRRI >= 1 ) THEN
-      PRRS(:,:,:,2) = PRRS(:,:,:,2) - 2. *                                     &
-        DYF( MYM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDYY )*(1.0-PFRAC_ICE(:,:,:))
-      PRRS(:,:,:,4) = PRRS(:,:,:,4) - 2. *                                     &
-        DYF( MYM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDYY )*PFRAC_ICE(:,:,:)
+      PRRS(:,:,2) = PRRS(:,:,2) - 2. *                                     &
+        DYF( MYM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDYY )*(1.0-PFRAC_ICE(:,:))
+      PRRS(:,:,4) = PRRS(:,:,4) - 2. *                                     &
+        DYF( MYM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDYY )*PFRAC_ICE(:,:)
     ELSE
-      PRRS(:,:,:,2) = PRRS(:,:,:,2) - 2. *                                     &
+      PRRS(:,:,2) = PRRS(:,:,2) - 2. *                                     &
         DYF( MYM( PRHODJ*PATHETA*PSRCM )*ZFLX*PINV_PDYY )
     END IF
   END IF
 END IF
 !
 !! stores this flux in ZWORK to compute later <V' VPT'>
-!!ZWORK(:,:,:) = ZFLX(:,:,:) 
+!!ZWORK(:,:) = ZFLX(:,:) 
 !
 ! stores the horizontal  <V THl>
 IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
@@ -535,7 +531,7 @@ IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
     NDIMS      = 3,                &
     LTIMEDEP   = .TRUE.            )
 !$acc update self(ZFLX)
-  CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
+  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLX)
 END IF
 !
 IF (KSPLT==1 .AND. TLES%LLES_CALL) THEN
@@ -546,7 +542,7 @@ IF (KSPLT==1 .AND. TLES%LLES_CALL) THEN
   ZWKLES = GY_M_M(OFLAT,PTHLM,PDYY,PDZZ,PDZY)*MYF(ZFLX)
   CALL LES_MEAN_SUBGRID_PHY(D, TLES,ZWKLES, TLES%X_LES_RES_ddxa_Thl_SBG_UaThl , .TRUE. )
   IF (KRR>=1) THEN
-    ZWKLES = GY_M_M(OFLAT,PRM(:,:,:,1),PDYY,PDZZ,PDZY)*MYF(ZFLX)
+    ZWKLES = GY_M_M(OFLAT,PRM(:,:,1),PDYY,PDZZ,PDZY)*MYF(ZFLX)
     CALL LES_MEAN_SUBGRID_PHY(D, TLES,ZWKLES, TLES%X_LES_RES_ddxa_Rt_SBG_UaThl , .TRUE. )
   END IF
   CALL SECOND_MNH(ZTIME2)
@@ -563,41 +559,41 @@ END IF
 IF (KRR/=0) THEN
   !
   IF (.NOT. O2D) THEN
-    ZFLX(:,:,:)     = -TURBN%XCHF * MYM( PK ) * GY_M_V(OFLAT,PRM(:,:,:,1),PDYY,PDZZ,PDZY)
+    ZFLX(:,:)     = -TURBN%XCHF * MYM( PK ) * GY_M_V(OFLAT,PRM(:,:,1),PDYY,PDZZ,PDZY)
 !$acc kernels present_cr(ZFLX)
-    ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE)
+    ZFLX(:,IKE+1) = ZFLX(:,IKE)
 !$acc end kernels
   ELSE
 !$acc kernels present_cr(ZFLX)
-    ZFLX(:,:,:)     = 0.
+    ZFLX(:,:)     = 0.
 !$acc end kernels
   END IF
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-  ZFLX(:,:,IKB) = -TURBN%XCHF * MYM( PK(:,:,IKB) ) *           &
-    ( DYM(PRM(:,:,IKB,1)) * PINV_PDYY(:,:,IKB)           &
-     -MYM( ZCOEFF(:,:,IKB+2)*PRM(:,:,IKB+2,1)        &
-           +ZCOEFF(:,:,IKB+1)*PRM(:,:,IKB+1,1)       &
-           +ZCOEFF(:,:,IKB)*PRM(:,:,IKB,1) )     &
-           *0.5* ( PDZY(:,:,IKB+1)+PDZY(:,:,IKB))      &
-          * PINV_PDYY(:,:,IKB) )
+  ZFLX(:,IKB) = -TURBN%XCHF * MYM2D( PK(:,IKB) ) *           &
+    ( DYM2D(PRM(:,IKB,1)) * PINV_PDYY(:,IKB)           &
+     -MYM2D( ZCOEFF(:,IKB+2)*PRM(:,IKB+2,1)        &
+           +ZCOEFF(:,IKB+1)*PRM(:,IKB+1,1)       &
+           +ZCOEFF(:,IKB)*PRM(:,IKB,1) )     &
+           *0.5* ( PDZY(:,IKB+1)+PDZY(:,IKB))      &
+          * PINV_PDYY(:,IKB) )
 ! extrapolates the flux under the ground so that the vertical average with 
 ! the IKB flux gives the ground value  ( warning the tangential surface
 ! flux has been set to 0 for the moment !!  to be improved )
-  ZFLX(:,:,IKB-1) = 2. * MYM(PSFRM(:,:)* PDIRCOSYW(:,:)) &
-                       - ZFLX(:,:,IKB)
+  ZFLX(:,IKB-1) = 2. * MYM2D(PSFRM(:)* PDIRCOSYW(:)) &
+                       - ZFLX(:,IKB)
   !
   ! Add this source to the conservative mixing ratio sources
   !
   IF (.NOT. O2D) THEN 
     IF (.NOT. OFLAT) THEN
-      PRRS(:,:,:,1) = PRRS(:,:,:,1)                                              &
+      PRRS(:,:,1) = PRRS(:,:,1)                                              &
                     - DYF( MYM(PRHODJ) * ZFLX * PINV_PDYY )                           &
 
                     + DZF( PMZM_PRHODJ *MYF(PDZY*(MZM(ZFLX * PINV_PDYY))) * PINV_PDZZ )
     ELSE
-      PRRS(:,:,:,1) = PRRS(:,:,:,1) - DYF( MYM(PRHODJ) * ZFLX * PINV_PDYY )
+      PRRS(:,:,1) = PRRS(:,:,1) - DYF( MYM(PRHODJ) * ZFLX * PINV_PDYY )
     END IF
   END IF
   !
@@ -611,18 +607,18 @@ IF (KRR/=0) THEN
                                                PDZY*(MZM( ZFLX*PINV_PDYY )) ) )&
                  )
       IF ( KRRI >= 1 ) THEN
-        PRRS(:,:,:,2) = PRRS(:,:,:,2) +  2. *                                  &
+        PRRS(:,:,2) = PRRS(:,:,2) +  2. *                                  &
         (- DYF( MYM( PRHODJ*PAMOIST*PSRCM )*ZFLX/PDYY )                        &
          + DZF( MZM( PRHODJ*PAMOIST*PSRCM )*MYF( PDZY*(MZM( ZFLX*PINV_PDYY )) )&
                                            * PINV_PDZZ )                       &
-        )*(1.0-PFRAC_ICE(:,:,:))
-        PRRS(:,:,:,4) = PRRS(:,:,:,4) +  2. *                                  &
+        )*(1.0-PFRAC_ICE(:,:))
+        PRRS(:,:,4) = PRRS(:,:,4) +  2. *                                  &
         (- DYF( MYM( PRHODJ*PAMOIST*PSRCM )*ZFLX/PDYY )                        &
          + DZF( MZM( PRHODJ*PAMOIST*PSRCM )*MYF( PDZY*(MZM( ZFLX*PINV_PDYY )) )&
                                            * PINV_PDZZ )                       &
-        )*PFRAC_ICE(:,:,:)
+        )*PFRAC_ICE(:,:)
       ELSE
-        PRRS(:,:,:,2) = PRRS(:,:,:,2) +  2. *                                  &
+        PRRS(:,:,2) = PRRS(:,:,2) +  2. *                                  &
         (- DYF( MYM( PRHODJ*PAMOIST*PSRCM )*ZFLX/PDYY )                        &
          + DZF( MZM( PRHODJ*PAMOIST*PSRCM )*MYF( PDZY*(MZM( ZFLX*PINV_PDYY )) )&
                                            * PINV_PDZZ )                       &
@@ -631,12 +627,12 @@ IF (KRR/=0) THEN
     ELSE
       ZFLXC = ZFLXC + 2.*MXF( MYM( PRHODJ*PAMOIST*PSRCM )*ZFLX )
       IF ( KRRI >= 1 ) THEN
-        PRRS(:,:,:,2) = PRRS(:,:,:,2) - 2. *                                   &
-        DYF( MYM( PRHODJ*PAMOIST*PSRCM )*ZFLX/PDYY )*(1.0-PFRAC_ICE(:,:,:))
-        PRRS(:,:,:,4) = PRRS(:,:,:,4) - 2. *                                   &
-        DYF( MYM( PRHODJ*PAMOIST*PSRCM )*ZFLX/PDYY )*PFRAC_ICE(:,:,:)
+        PRRS(:,:,2) = PRRS(:,:,2) - 2. *                                   &
+        DYF( MYM( PRHODJ*PAMOIST*PSRCM )*ZFLX/PDYY )*(1.0-PFRAC_ICE(:,:))
+        PRRS(:,:,4) = PRRS(:,:,4) - 2. *                                   &
+        DYF( MYM( PRHODJ*PAMOIST*PSRCM )*ZFLX/PDYY )*PFRAC_ICE(:,:)
       ELSE
-        PRRS(:,:,:,2) = PRRS(:,:,:,2) - 2. *                                   &
+        PRRS(:,:,2) = PRRS(:,:,2) - 2. *                                   &
         DYF( MYM( PRHODJ*PAMOIST*PSRCM )*ZFLX/PDYY )
       END IF
     END IF
@@ -656,7 +652,7 @@ IF (KRR/=0) THEN
       NDIMS      = 3,               &
       LTIMEDEP   = .TRUE.           )
 !$acc update self(ZFLX)
-    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
+    CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLX)
   END IF
   !
   IF (KSPLT==1 .AND. TLES%LLES_CALL) THEN
@@ -666,7 +662,7 @@ IF (KRR/=0) THEN
     CALL LES_MEAN_SUBGRID_PHY(D, TLES,ZWKLES, TLES%X_LES_RES_ddxa_W_SBG_UaRt , .TRUE. )
     ZWKLES = GY_M_M(OFLAT,PTHLM,PDYY,PDZZ,PDZY)*MYF(ZFLX)
     CALL LES_MEAN_SUBGRID_PHY(D, TLES,ZWKLES, TLES%X_LES_RES_ddxa_Thl_SBG_UaRt , .TRUE. )
-    ZWKLES = GY_M_M(OFLAT,PRM(:,:,:,1),PDYY,PDZZ,PDZY)*MYF(ZFLX)
+    ZWKLES = GY_M_M(OFLAT,PRM(:,:,1),PDYY,PDZZ,PDZY)*MYF(ZFLX)
     CALL LES_MEAN_SUBGRID_PHY(D, TLES,ZWKLES, TLES%X_LES_RES_ddxa_Rt_SBG_UaRt , .TRUE. )
     CALL SECOND_MNH(ZTIME2)
     TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
@@ -692,11 +688,11 @@ END IF
 !!  ! here ZFLX= <V'R'np> and ZWORK= <V'Theta'l>
 !!  !
 !!  IF (.NOT. O2D) THEN        &
-!!    ZVPTV(:,:,:) =                                                         &
-!!        ZWORK(:,:,:)*MYM(ETHETA(KRR,KRRI,PTHLT,PEXNREF,PRT,PLOCPT,PSRCM)) +       &
-!!         ZFLX(:,:,:)*MYM(EMOIST(KRR,KRRI,PTHLT,PEXNREF,PRT,PLOCPT,PSRCM))
+!!    ZVPTV(:,:) =                                                         &
+!!        ZWORK(:,:)*MYM(ETHETA(KRR,KRRI,PTHLT,PEXNREF,PRT,PLOCPT,PSRCM)) +       &
+!!         ZFLX(:,:)*MYM(EMOIST(KRR,KRRI,PTHLT,PEXNREF,PRT,PLOCPT,PSRCM))
 !!  ELSE
-!!    ZVPTV(:,:,:) = 0.
+!!    ZVPTV(:,:) = 0.
 !!  END IF
 !!  !
 !!  ! stores the horizontal  <V VPT>
@@ -712,13 +708,15 @@ END IF
 !!      NTYPE      = TYPEREAL,         &
 !!      NDIMS      = 3,                &
 !!      LTIMEDEP   = .TRUE.            )
-!!    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZVPTV)
+!!    CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZVPTV)
 !!  END IF
 !!!
 !!ELSE
-!!  ZVPTV(:,:,:)=ZWORK(:,:,:)
+!!  ZVPTV(:,:)=ZWORK(:,:)
 !!END IF
 !
 !
+CONTAINS
+INCLUDE "shugrad.h"
 END SUBROUTINE TURB_HOR_THERMO_FLUX
 END MODULE MODE_TURB_HOR_THERMO_FLUX

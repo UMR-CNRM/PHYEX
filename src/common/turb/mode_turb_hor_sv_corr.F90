@@ -55,8 +55,6 @@ USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
 !
-USE MODI_GRADIENT_M, ONLY: GX_M_M, GY_M_M
-USE MODI_SHUMAN, ONLY: MZF
 USE MODI_LES_MEAN_SUBGRID_PHY, ONLY: LES_MEAN_SUBGRID_PHY
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
@@ -86,31 +84,31 @@ LOGICAL,                  INTENT(IN)    ::  OBLOWSNOW    ! switch to activate pr
 LOGICAL,                  INTENT(IN)    ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
 LOGICAL,                  INTENT(IN)    ::  O2D          ! Logical for 2D model version (modd_conf)
 REAL,                     INTENT(IN)    ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! mixing length
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLEPS        ! dissipative length
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! tke
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTHVREF      ! reference Thv
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTHLM        ! potential temperature at t-Delta t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN)  ::  PRM          ! Mixing ratios at t-Delta t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PAMOIST      ! s and Thetal and Rnp
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PSRCM        ! normalized 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLM          ! mixing length
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLEPS        ! dissipative length
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! tke
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTHVREF      ! reference Thv
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTHLM        ! potential temperature at t-Delta t
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)  ::  PRM          ! Mixing ratios at t-Delta t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PAMOIST      ! s and Thetal and Rnp
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PSRCM        ! normalized 
                   ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PWM          ! w at t-1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PWM          ! w at t-1
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
 !
 !
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)       &
+REAL, DIMENSION(D%NIJT,D%NKT)       &
                                      :: ZFLX, ZA, ZWKLES
 !
 INTEGER             :: JSV          ! loop counter
-INTEGER             :: IKU, IIT, IJT, IKT
+INTEGER             :: IKU, IIJT, IKT
 !
 REAL :: ZTIME1, ZTIME2
 !
@@ -121,9 +119,8 @@ REAL :: ZCQSVD = 2.4  ! constant for humidity - scalar covariance dissipation
 REAL :: ZCSV          !constant for the scalar flux 
 ! ---------------------------------------------------------------------------
 !
-IKU=SIZE(PTKEM,3)
-IIT=D%NIT
-IJT=D%NJT
+IKU=SIZE(PTKEM,2)
+IIJT=D%NIJT
 IKT=D%NKT
 CALL SECOND_MNH(ZTIME1)
 !
@@ -142,12 +139,12 @@ DO JSV=1,KSV
   !
   IF (TLES%LLES_CALL) THEN
     IF (.NOT. O2D) THEN
-      ZFLX(:,:,:) =  ZCSV / ZCSVD * PLM(:,:,:) * PLEPS(:,:,:) *   &
-         (  GX_M_M(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)**2             &
-          + GY_M_M(OFLAT,PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)**2 )
+      ZFLX(:,:) =  ZCSV / ZCSVD * PLM(:,:) * PLEPS(:,:) *   &
+         (  GX_M_M(OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX)**2             &
+          + GY_M_M(OFLAT,PSVM(:,:,JSV),PDYY,PDZZ,PDZY)**2 )
     ELSE
-      ZFLX(:,:,:) =  ZCSV / ZCSVD * PLM(:,:,:) * PLEPS(:,:,:) *   &
-            GX_M_M(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)**2
+      ZFLX(:,:) =  ZCSV / ZCSVD * PLM(:,:) * PLEPS(:,:) *   &
+            GX_M_M(OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX)**2
     END IF
     ZWKLES = -2.*ZCSVD*SQRT(PTKEM)*ZFLX/PLEPS
 CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
@@ -161,13 +158,13 @@ CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
   IF (TLES%LLES_CALL) THEN
     CALL ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC,ZA)
     IF (.NOT. O2D) THEN
-      ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                          &
-          *  (  GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
-              + GY_M_M(OFLAT,PTHLM,PDYY,PDZZ,PDZY) * GY_M_M(OFLAT,PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)  &
+      ZFLX(:,:)=  PLM(:,:) * PLEPS(:,:)                                          &
+          *  (  GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX)  &
+              + GY_M_M(OFLAT,PTHLM,PDYY,PDZZ,PDZY) * GY_M_M(OFLAT,PSVM(:,:,JSV),PDYY,PDZZ,PDZY)  &
              ) * (TURBN%XCSHF+ZCSV) / (2.*ZCTSVD)
     ELSE
-      ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                          &
-              * GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
+      ZFLX(:,:)=  PLM(:,:) * PLEPS(:,:)                                          &
+              * GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX)  &
               * (TURBN%XCSHF+ZCSV) / (2.*ZCTSVD)
     END IF
     ZWKLES = ZA*ZFLX
@@ -178,13 +175,13 @@ CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
     IF (KRR>=1) THEN
       CALL  EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN,ZA)
       IF (.NOT. O2D) THEN
-        ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                                 &
-            *  (  GX_M_M(OFLAT,PRM(:,:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
-                + GY_M_M(OFLAT,PRM(:,:,:,1),PDYY,PDZZ,PDZY) * GY_M_M(OFLAT,PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)  &
+        ZFLX(:,:)=  PLM(:,:) * PLEPS(:,:)                                                 &
+            *  (  GX_M_M(OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX)  &
+                + GY_M_M(OFLAT,PRM(:,:,1),PDYY,PDZZ,PDZY) * GY_M_M(OFLAT,PSVM(:,:,JSV),PDYY,PDZZ,PDZY)  &
                ) * (TURBN%XCHF+ZCSV) / (2.*ZCQSVD)
       ELSE
-        ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                                 &
-                * GX_M_M(OFLAT,PRM(:,:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
+        ZFLX(:,:)=  PLM(:,:) * PLEPS(:,:)                                                 &
+                * GX_M_M(OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX)  &
                 * (TURBN%XCHF+ZCSV) / (2.*ZCQSVD)
       END IF
       ZWKLES = ZA*ZFLX
@@ -199,6 +196,8 @@ END DO    ! end loop JSV
 CALL SECOND_MNH(ZTIME2)
 TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 !
+CONTAINS
+INCLUDE "shugrad.h"
 END SUBROUTINE TURB_HOR_SV_CORR
 END MODULE MODE_TURB_HOR_SV_CORR
 

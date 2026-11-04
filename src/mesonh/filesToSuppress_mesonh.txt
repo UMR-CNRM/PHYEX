@@ -12,13 +12,8 @@ aux/modd_precision.f90
 aux/mode_ll.f90
 aux/mode_mppdb.f90
 aux/mode_sources_neg_correct.f90
-aux/modi_shuman.f90
 aux/modi_second_mnh.f90
 aux/second_mnh.f90
-aux/modi_gradient_m.f90
-aux/modi_gradient_u.f90
-aux/modi_gradient_v.f90
-aux/modi_gradient_w.f90
 aux/mode_io_field_write.f90
 aux/ch_aer_activation.f90
 aux/get_halo.f90

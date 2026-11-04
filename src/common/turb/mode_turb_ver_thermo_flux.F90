@@ -381,7 +381,6 @@ INTEGER             :: IKL
 !
 REAL :: ZTIME1, ZTIME2
 !
-INTEGER :: IIU, IJU
 LOGICAL :: GUSERV   ! flag to use water
 LOGICAL :: GFTH2    ! flag to use w'th'2
 LOGICAL :: GFWTH    ! flag to use w'2th'
@@ -398,8 +397,6 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_FLUX',0,ZHOOK_HANDLE)
 !
 ! Size for a given proc & a given model
-IIU=D%NIT
-IJU=D%NJT
 IIJE=D%NIJE
 IIJB=D%NIJB
 IKT=D%NKT
