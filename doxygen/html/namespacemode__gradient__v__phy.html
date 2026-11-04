@@ -78,12 +78,110 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
+<tr class="memitem:af905d66e0e9c260628129e3e5b64049d" id="r_af905d66e0e9c260628129e3e5b64049d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__gradient__v__phy.html#af905d66e0e9c260628129e3e5b64049d">gx_v_uv_phy</a> (d, oflat, pa, pdxx, pdzz, pdzx, pgx_v_uv)</td></tr>
+<tr class="separator:af905d66e0e9c260628129e3e5b64049d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0fca17477ef1c684519ade033c1821be" id="r_a0fca17477ef1c684519ade033c1821be"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__gradient__v__phy.html#a0fca17477ef1c684519ade033c1821be">gz_v_vw_phy</a> (d, pa, pdzz, pgz_v_vw)</td></tr>
 <tr class="separator:a0fca17477ef1c684519ade033c1821be"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac49ef4aaed7487f6ae04102b3fa3fafd" id="r_ac49ef4aaed7487f6ae04102b3fa3fafd"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacemode__gradient__v__phy.html#ac49ef4aaed7487f6ae04102b3fa3fafd">gy_v_m_phy</a> (d, oflat, pa, pdyy, pdzz, pdzy, pgy_v_m)</td></tr>
 <tr class="separator:ac49ef4aaed7487f6ae04102b3fa3fafd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
+<a id="af905d66e0e9c260628129e3e5b64049d" name="af905d66e0e9c260628129e3e5b64049d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af905d66e0e9c260628129e3e5b64049d">&#9670;&#160;</a></span>gx_v_uv_phy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine mode_gradient_v_phy::gx_v_uv_phy </td>
+          <td>(</td>
+          <td class="paramtype">type(<a class="el" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>d</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in)&#160;</td>
+          <td class="paramname"><em>oflat</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>pa</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>pdxx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>pdzz</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(in)&#160;</td>
+          <td class="paramname"><em>pdzx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nit,d%njt,d%nkt), intent(out)&#160;</td>
+          <td class="paramname"><em>pgx_v_uv</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="mode__gradient__v__phy_8F90_source.html#l00008">8</a> of file <a class="el" href="mode__gradient__v__phy_8F90_source.html">mode_gradient_v_phy.F90</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacemode__gradient__v__phy_af905d66e0e9c260628129e3e5b64049d_cgraph.png" border="0" usemap="#anamespacemode__gradient__v__phy_af905d66e0e9c260628129e3e5b64049d_cgraph" alt=""/></div>
+<map name="anamespacemode__gradient__v__phy_af905d66e0e9c260628129e3e5b64049d_cgraph" id="anamespacemode__gradient__v__phy_af905d66e0e9c260628129e3e5b64049d_cgraph">
+<area shape="rect" title=" " alt="" coords="5,97,172,137"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a6c289ab6a361d1385d4b061f32f3902c" title=" " alt="" coords="223,5,439,31"/>
+<area shape="poly" title=" " alt="" coords="118,94,164,66,219,40,242,32,244,37,221,44,167,71,121,99"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a440add7f9106295e507be65c1c530473" title=" " alt="" coords="223,55,438,80"/>
+<area shape="poly" title=" " alt="" coords="171,97,254,80,255,85,173,102"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#ad7e5b1c3c9f74262b10ca07db9ca6893" title=" " alt="" coords="220,104,441,129"/>
+<area shape="poly" title=" " alt="" coords="172,114,206,114,206,119,172,119"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a022e15d54f09a2283f66868ffa20e725" title=" " alt="" coords="220,153,441,179"/>
+<area shape="poly" title=" " alt="" coords="173,131,255,148,254,153,171,136"/>
+<area shape="rect" href="namespacemode__shuman__phy.html#a960e2dc2b7078cc75ef8e5192c212356" title=" " alt="" coords="225,203,437,228"/>
+<area shape="poly" title=" " alt="" coords="121,134,167,162,221,188,249,197,247,202,219,192,165,167,118,139"/>
+</map>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacemode__gradient__v__phy_af905d66e0e9c260628129e3e5b64049d_icgraph.png" border="0" usemap="#anamespacemode__gradient__v__phy_af905d66e0e9c260628129e3e5b64049d_icgraph" alt=""/></div>
+<map name="anamespacemode__gradient__v__phy_af905d66e0e9c260628129e3e5b64049d_icgraph" id="anamespacemode__gradient__v__phy_af905d66e0e9c260628129e3e5b64049d_icgraph">
+<area shape="rect" title=" " alt="" coords="879,5,1045,45"/>
+<area shape="rect" href="shugrad_8h.html#a99d05edb5e221bce520c575d94ea1cfb" title=" " alt="" coords="755,13,831,38"/>
+<area shape="poly" title=" " alt="" coords="865,28,831,28,831,23,865,23"/>
+<area shape="rect" href="namespacemode__turb__hor__uv.html#a282f69609676256ef3744836569f7d85" title=" " alt="" coords="531,5,707,45"/>
+<area shape="poly" title=" " alt="" coords="741,28,707,28,707,23,741,23"/>
+<area shape="rect" href="namespacemode__turb__hor.html#a392ed5235673e3faa3d5c1f17974a7cc" title=" " alt="" coords="300,13,483,38"/>
+<area shape="poly" title=" " alt="" coords="517,28,483,28,483,23,517,23"/>
+<area shape="rect" href="namespacemode__turb__hor__splt.html#af567a0992241afa9a2e5ad86eb96f424" title=" " alt="" coords="101,5,252,45"/>
+<area shape="poly" title=" " alt="" coords="286,28,252,28,252,23,286,23"/>
+<area shape="rect" href="turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="5,13,53,38"/>
+<area shape="poly" title=" " alt="" coords="88,28,54,28,54,23,88,23"/>
+</map>
+</div>
+
+</div>
+</div>
 <a id="ac49ef4aaed7487f6ae04102b3fa3fafd" name="ac49ef4aaed7487f6ae04102b3fa3fafd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac49ef4aaed7487f6ae04102b3fa3fafd">&#9670;&#160;</a></span>gy_v_m_phy()</h2>
 
@@ -140,7 +238,7 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="mode__gradient__v__phy_8F90_source.html#l00104">104</a> of file <a class="el" href="mode__gradient__v__phy_8F90_source.html">mode_gradient_v_phy.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mode__gradient__v__phy_8F90_source.html#l00238">238</a> of file <a class="el" href="mode__gradient__v__phy_8F90_source.html">mode_gradient_v_phy.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -155,6 +253,29 @@ Here is the call graph for this function:</div>
 <area shape="poly" title=" " alt="" coords="173,98,207,102,206,107,172,104"/>
 <area shape="rect" href="namespacemode__shuman__phy.html#a960e2dc2b7078cc75ef8e5192c212356" title=" " alt="" coords="221,153,433,179"/>
 <area shape="poly" title=" " alt="" coords="141,110,221,138,255,147,253,153,219,143,139,115"/>
+</map>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacemode__gradient__v__phy_ac49ef4aaed7487f6ae04102b3fa3fafd_icgraph.png" border="0" usemap="#anamespacemode__gradient__v__phy_ac49ef4aaed7487f6ae04102b3fa3fafd_icgraph" alt=""/></div>
+<map name="anamespacemode__gradient__v__phy_ac49ef4aaed7487f6ae04102b3fa3fafd_icgraph" id="anamespacemode__gradient__v__phy_ac49ef4aaed7487f6ae04102b3fa3fafd_icgraph">
+<area shape="rect" title=" " alt="" coords="915,37,1081,77"/>
+<area shape="rect" href="shugrad_8h.html#af73cf22ac95fb053a018cd4ff64a5af9" title=" " alt="" coords="793,45,867,70"/>
+<area shape="poly" title=" " alt="" coords="901,60,867,60,867,55,901,55"/>
+<area shape="rect" href="namespacemode__turb__hor__dyn__corr.html#a06b95eda0366712b196aa5d42934f98d" title=" " alt="" coords="563,5,745,45"/>
+<area shape="poly" title=" " alt="" coords="779,51,745,45,746,39,780,46"/>
+<area shape="rect" href="namespacemode__turb__ver__dyn__flux.html#a077a54e63ab22b827d3c526c990dd607" title=" " alt="" coords="563,69,745,109"/>
+<area shape="poly" title=" " alt="" coords="780,69,746,75,745,70,779,64"/>
+<area shape="rect" href="namespacemode__turb__hor.html#a392ed5235673e3faa3d5c1f17974a7cc" title=" " alt="" coords="332,14,515,39"/>
+<area shape="poly" title=" " alt="" coords="549,29,515,29,515,23,549,23"/>
+<area shape="rect" href="namespacemode__turb__hor__splt.html#af567a0992241afa9a2e5ad86eb96f424" title=" " alt="" coords="117,7,268,47"/>
+<area shape="poly" title=" " alt="" coords="318,29,268,29,268,24,318,24"/>
+<area shape="rect" href="turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="5,45,53,70"/>
+<area shape="poly" title=" " alt="" coords="104,46,54,56,53,50,103,41"/>
+<area shape="rect" href="namespacemode__turb__ver.html#ae492dc0352339b75c3d88aab638ab37b" title=" " alt="" coords="101,73,284,98"/>
+<area shape="poly" title=" " alt="" coords="549,91,284,89,284,83,549,86"/>
+<area shape="poly" title=" " alt="" coords="105,73,53,64,54,59,106,68"/>
 </map>
 </div>
 
@@ -198,7 +319,7 @@ Here is the call graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="mode__gradient__v__phy_8F90_source.html#l00008">8</a> of file <a class="el" href="mode__gradient__v__phy_8F90_source.html">mode_gradient_v_phy.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mode__gradient__v__phy_8F90_source.html#l00142">142</a> of file <a class="el" href="mode__gradient__v__phy_8F90_source.html">mode_gradient_v_phy.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -216,9 +337,23 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacemode__gradient__v__phy_a0fca17477ef1c684519ade033c1821be_icgraph.png" border="0" usemap="#anamespacemode__gradient__v__phy_a0fca17477ef1c684519ade033c1821be_icgraph" alt=""/></div>
 <map name="anamespacemode__gradient__v__phy_a0fca17477ef1c684519ade033c1821be_icgraph" id="anamespacemode__gradient__v__phy_a0fca17477ef1c684519ade033c1821be_icgraph">
-<area shape="rect" title=" " alt="" coords="101,5,268,45"/>
-<area shape="rect" href="turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="5,13,53,38"/>
-<area shape="poly" title=" " alt="" coords="88,28,54,28,54,23,88,23"/>
+<area shape="rect" title=" " alt="" coords="920,59,1087,99"/>
+<area shape="rect" href="shugrad_8h.html#a639473eb00b4ee70c12cfdd26fa35fd8" title=" " alt="" coords="793,67,872,92"/>
+<area shape="poly" title=" " alt="" coords="906,82,872,82,872,77,906,77"/>
+<area shape="rect" href="turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="5,67,53,92"/>
+<area shape="poly" title=" " alt="" coords="791,64,745,50,565,20,491,12,423,8,354,10,281,17,102,50,77,58,54,69,52,64,75,53,101,45,280,12,354,5,423,3,492,6,566,15,746,45,793,59"/>
+<area shape="rect" href="namespacemode__turb__hor__vw.html#aa59068d0520be7caf4c1e6a6548abc76" title=" " alt="" coords="565,59,743,99"/>
+<area shape="poly" title=" " alt="" coords="780,82,744,82,744,77,780,77"/>
+<area shape="rect" href="namespacemode__turb__ver__dyn__flux.html#a077a54e63ab22b827d3c526c990dd607" title=" " alt="" coords="563,123,745,163"/>
+<area shape="poly" title=" " alt="" coords="786,99,746,114,713,126,711,121,744,109,784,94"/>
+<area shape="rect" href="namespacemode__turb__hor.html#a392ed5235673e3faa3d5c1f17974a7cc" title=" " alt="" coords="332,67,515,92"/>
+<area shape="poly" title=" " alt="" coords="551,82,515,82,515,77,551,77"/>
+<area shape="rect" href="namespacemode__turb__hor__splt.html#af567a0992241afa9a2e5ad86eb96f424" title=" " alt="" coords="117,59,268,99"/>
+<area shape="poly" title=" " alt="" coords="318,82,268,82,268,77,318,77"/>
+<area shape="poly" title=" " alt="" coords="104,82,54,82,54,77,104,77"/>
+<area shape="rect" href="namespacemode__turb__ver.html#ae492dc0352339b75c3d88aab638ab37b" title=" " alt="" coords="101,125,284,151"/>
+<area shape="poly" title=" " alt="" coords="549,145,284,142,284,136,549,139"/>
+<area shape="poly" title=" " alt="" coords="130,124,100,114,53,93,55,88,102,109,132,119"/>
 </map>
 </div>
 

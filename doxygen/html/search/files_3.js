@@ -10,9 +10,5 @@ var searchData=
   ['getdata_5frain_5fice_5fmod_2ef90_7',['getdata_rain_ice_mod.F90',['../getdata__rain__ice__mod_8F90.html',1,'']]],
   ['getdata_5frain_5fice_5fold_5fmod_2ef90_8',['getdata_rain_ice_old_mod.F90',['../getdata__rain__ice__old__mod_8F90.html',1,'']]],
   ['getdata_5fshallow_5fmod_2ef90_9',['getdata_shallow_mod.F90',['../getdata__shallow__mod_8F90.html',1,'']]],
-  ['getdata_5fturb_5fmod_2ef90_10',['getdata_turb_mod.F90',['../getdata__turb__mod_8F90.html',1,'']]],
-  ['gradient_5fm_2ef90_11',['gradient_m.F90',['../gradient__m_8F90.html',1,'']]],
-  ['gradient_5fu_2ef90_12',['gradient_u.F90',['../gradient__u_8F90.html',1,'']]],
-  ['gradient_5fv_2ef90_13',['gradient_v.F90',['../gradient__v_8F90.html',1,'']]],
-  ['gradient_5fw_2ef90_14',['gradient_w.F90',['../gradient__w_8F90.html',1,'']]]
+  ['getdata_5fturb_5fmod_2ef90_10',['getdata_turb_mod.F90',['../getdata__turb__mod_8F90.html',1,'']]]
 ];

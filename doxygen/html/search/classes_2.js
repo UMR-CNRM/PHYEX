@@ -5,11 +5,5 @@ var searchData=
   ['dimphyex_5ft_2',['dimphyex_t',['../structmodd__dimphyex_1_1dimphyex__t.html',1,'modd_dimphyex']]],
   ['dogleg_3',['dogleg',['../interfacemodi__minpack_1_1dogleg.html',1,'modi_minpack']]],
   ['dqsat_4',['dqsat',['../interfacemode__thermo_1_1dqsat.html',1,'mode_thermo']]],
-  ['dqsati_5',['dqsati',['../interfacemode__thermo_1_1dqsati.html',1,'mode_thermo']]],
-  ['dxf_6',['dxf',['../interfacemodi__shuman_1_1dxf.html',1,'modi_shuman']]],
-  ['dxm_7',['dxm',['../interfacemodi__shuman_1_1dxm.html',1,'modi_shuman']]],
-  ['dyf_8',['dyf',['../interfacemodi__shuman_1_1dyf.html',1,'modi_shuman']]],
-  ['dym_9',['dym',['../interfacemodi__shuman_1_1dym.html',1,'modi_shuman']]],
-  ['dzf_10',['dzf',['../interfacemodi__shuman_1_1dzf.html',1,'modi_shuman']]],
-  ['dzm_11',['dzm',['../interfacemodi__shuman_1_1dzm.html',1,'modi_shuman']]]
+  ['dqsati_5',['dqsati',['../interfacemode__thermo_1_1dqsati.html',1,'mode_thermo']]]
 ];

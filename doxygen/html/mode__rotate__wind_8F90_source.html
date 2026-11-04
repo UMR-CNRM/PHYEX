@@ -324,89 +324,91 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span><span class="comment">!*       0.    DECLARATIONS</span></div>
 <div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span><span class="comment">!              ------------</span></div>
 <div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span><span class="comment">!</span></div>
-<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__ll.html">mode_ll</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_function" href="namespacemode__ll.html#abd8abc9f6fd8e5faf4fca6b85d0df975">add2dfield_ll</a>, <a class="code hl_function" href="namespacemode__ll.html#a3a7fe13ce37b4e40ab49cf132ae3a3e1">update_halo_ll</a>, <a class="code hl_function" href="namespacemode__ll.html#a47525845f3b864b7336cbcfae099930d">cleanlist_ll</a>, &amp;</div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__ll.html">mode_ll</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_function" href="namespacemode__ll.html#a3a7fe13ce37b4e40ab49cf132ae3a3e1">update_halo_ll</a>, <a class="code hl_function" href="namespacemode__ll.html#a47525845f3b864b7336cbcfae099930d">cleanlist_ll</a>, &amp;</div>
 <div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>                   <a class="code hl_function" href="namespacemode__ll.html#ac88285a7367d7ec31aa6de2182be6064">lwest_ll</a>, <a class="code hl_function" href="namespacemode__ll.html#aed8b87ed55482e1498eb8df0f6641142">least_ll</a>, <a class="code hl_function" href="namespacemode__ll.html#aff8e0e92dee9397dbb97e65db0ad096f">lsouth_ll</a>, <a class="code hl_function" href="namespacemode__ll.html#a42d593fe9bddb4f67beb9518adc88d19">lnorth_ll</a></div>
-<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__argslist__ll.html">modd_argslist_ll</a>, <span class="keywordtype">ONLY</span> : <a class="code hl_struct" href="structmodd__argslist__ll_1_1list__ll.html">list_ll</a></div>
-<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>,   <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
-<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span><span class="preprocessor">#ifdef MNH_OPENACC</span></div>
-<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span><span class="preprocessor"></span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodi__get__halo.html">modi_get_halo</a>, <span class="keywordtype">ONLY</span>: get_2d_halo_ddc</div>
-<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span><span class="preprocessor"></span><span class="keywordtype">IMPLICIT NONE</span></div>
-<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span><span class="comment">!</span></div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span><span class="comment">!*       0.1   Declarations of dummy arguments :</span></div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span><span class="comment">!</span></div>
-<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),       <span class="keywordtype">INTENT(IN)</span> :: D</div>
-<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span><span class="keywordtype">CHARACTER(LEN=4)</span>,<span class="keywordtype">DIMENSION(2)</span>,<span class="keywordtype">INTENT(IN)</span>:: HLBCX, HLBCY  <span class="comment">! X- and Y-direc LBC</span></div>
-<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIT,D%NJT)</span>, <span class="keywordtype">INTENT(INOUT)</span> :: PUSLOPE,PVSLOPE</div>
-<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span><span class="comment">!</span></div>
-<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__argslist__ll_1_1list__ll.html">list_ll</a>), <span class="keywordtype">POINTER</span> :: TZFIELDS_ll  <span class="comment">! list of fields to exchange</span></div>
-<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span><span class="keywordtype">INTEGER</span>                :: IINFO_ll       <span class="comment">! return code of parallel routine</span></div>
-<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span><span class="keywordtype">logical</span>                :: gwest, geast, gnorth, gsouth</div>
-<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span><span class="keywordtype">INTEGER</span> :: IIB, IIE, IJB, IJE</div>
-<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span><span class="comment">!</span></div>
-<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span><span class="comment">! tangential surface fluxes in the axes following the orography</span></div>
-<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span><span class="comment">!</span></div>
-<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span><span class="comment">!*        1  PROLOGUE</span></div>
-<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span><span class="comment">!</span></div>
-<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span><span class="keyword">NULLIFY</span>(tzfields_ll)</div>
-<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span><span class="comment">!</span></div>
-<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>iib = d%NIB</div>
-<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>ijb = d%NJB</div>
-<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>iie = d%NIE</div>
-<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>ije = d%NJE</div>
-<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span><span class="comment">!         2 Update halo if necessary</span></div>
-<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span><span class="comment">!</span></div>
-<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span><span class="comment">!!$IF (NHALO == 1) THEN</span></div>
-<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span><span class="preprocessor">#ifndef MNH_OPENACC</span></div>
-<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span><span class="preprocessor"></span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#abd8abc9f6fd8e5faf4fca6b85d0df975">add2dfield_ll</a>( tzfields_ll, puslope, <span class="stringliteral">&#39;UPDATE_ROTATE_WIND::PUSLOPE&#39;</span> )</div>
-<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#abd8abc9f6fd8e5faf4fca6b85d0df975">add2dfield_ll</a>( tzfields_ll, pvslope, <span class="stringliteral">&#39;UPDATE_ROTATE_WIND::PVSLOPE&#39;</span> )</div>
-<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#a3a7fe13ce37b4e40ab49cf132ae3a3e1">update_halo_ll</a>(tzfields_ll,iinfo_ll)</div>
-<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#a47525845f3b864b7336cbcfae099930d">cleanlist_ll</a>(tzfields_ll)</div>
-<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span><span class="preprocessor">#else</span></div>
-<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span><span class="preprocessor"></span><span class="comment">!</span></div>
-<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span><span class="comment">!  /!\ warning conner needed -&gt; GET_HALO...C</span></div>
-<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span><span class="comment">!</span></div>
-<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span><span class="keyword">CALL </span>get_2d_halo_ddc( puslope, hname=<span class="stringliteral">&#39;UPDATE_ROTATE_WIND::PUSLOPE&#39;</span> )</div>
-<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span><span class="keyword">CALL </span>get_2d_halo_ddc( pvslope, hname=<span class="stringliteral">&#39;UPDATE_ROTATE_WIND::PVSLOPE&#39;</span> )</div>
-<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span><span class="preprocessor"></span><span class="comment">!!$ENDIF</span></div>
-<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span><span class="comment">!</span></div>
-<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span><span class="comment">!        3 Boundary conditions for non cyclic case</span></div>
-<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span><span class="comment">!</span></div>
-<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>gwest  = hlbcx(1) /= <span class="stringliteral">&quot;CYCL&quot;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#ac88285a7367d7ec31aa6de2182be6064">lwest_ll</a>()</div>
-<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>geast  = hlbcx(2) /= <span class="stringliteral">&quot;CYCL&quot;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#aed8b87ed55482e1498eb8df0f6641142">least_ll</a>()</div>
-<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>gsouth = hlbcy(1) /= <span class="stringliteral">&quot;CYCL&quot;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#aff8e0e92dee9397dbb97e65db0ad096f">lsouth_ll</a>()</div>
-<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>gnorth = hlbcy(2) /= <span class="stringliteral">&quot;CYCL&quot;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#a42d593fe9bddb4f67beb9518adc88d19">lnorth_ll</a>()</div>
-<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span> </div>
-<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span><span class="comment">!$acc kernels present_cr(PUSLOPE,PVSLOPE)</span></div>
-<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span><span class="keywordflow">IF</span> ( gwest ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>  puslope(iib-1,:)=puslope(iib,:)</div>
-<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>  pvslope(iib-1,:)=pvslope(iib,:)</div>
-<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span><span class="keywordflow">IF</span> ( geast ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>  puslope(iie+1,:)=puslope(iie,:)</div>
-<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span>  pvslope(iie+1,:)=pvslope(iie,:)</div>
-<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span><span class="keywordflow">IF</span> ( gsouth ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>  puslope(:,ijb-1)=puslope(:,ijb)</div>
-<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>  pvslope(:,ijb-1)=pvslope(:,ijb)</div>
-<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span><span class="keywordflow">IF</span>( gnorth ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>  puslope(:,ije+1)=puslope(:,ije)</div>
-<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>  pvslope(:,ije+1)=pvslope(:,ije)</div>
-<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span><span class="comment">!</span></div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__argslist__ll__phy.html">mode_argslist_ll_phy</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_function" href="namespacemode__argslist__ll__phy.html#a5e76aa33dc39f0e48c9490bd2e2643d9">add2dfield_ll_phy</a></div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__argslist__ll.html">modd_argslist_ll</a>, <span class="keywordtype">ONLY</span> : <a class="code hl_struct" href="structmodd__argslist__ll_1_1list__ll.html">list_ll</a></div>
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>,   <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span><span class="preprocessor">#ifdef MNH_OPENACC</span></div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span><span class="preprocessor"></span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodi__get__halo.html">modi_get_halo</a>, <span class="keywordtype">ONLY</span>: get_2d_halo_ddc</div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span><span class="preprocessor"></span><span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span><span class="comment">!</span></div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span><span class="comment">!*       0.1   Declarations of dummy arguments :</span></div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span><span class="comment">!</span></div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a>),       <span class="keywordtype">INTENT(IN)</span> :: D</div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span><span class="keywordtype">CHARACTER(LEN=4)</span>,<span class="keywordtype">DIMENSION(2)</span>,<span class="keywordtype">INTENT(IN)</span>:: HLBCX, HLBCY  <span class="comment">! X- and Y-direc LBC</span></div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIT,D%NJT)</span>, <span class="keywordtype">INTENT(INOUT)</span> :: PUSLOPE,PVSLOPE</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span><span class="comment">!</span></div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__argslist__ll_1_1list__ll.html">list_ll</a>), <span class="keywordtype">POINTER</span> :: TZFIELDS_ll  <span class="comment">! list of fields to exchange</span></div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span><span class="keywordtype">INTEGER</span>                :: IINFO_ll       <span class="comment">! return code of parallel routine</span></div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span><span class="keywordtype">logical</span>                :: gwest, geast, gnorth, gsouth</div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span><span class="keywordtype">INTEGER</span> :: IIB, IIE, IJB, IJE</div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span><span class="comment">!</span></div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span><span class="comment">! tangential surface fluxes in the axes following the orography</span></div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span><span class="comment">!</span></div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span><span class="comment">!*        1  PROLOGUE</span></div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span><span class="comment">!</span></div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span><span class="keyword">NULLIFY</span>(tzfields_ll)</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span><span class="comment">!</span></div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>iib = d%NIB</div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>ijb = d%NJB</div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>iie = d%NIE</div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>ije = d%NJE</div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span><span class="comment">!         2 Update halo if necessary</span></div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span><span class="comment">!</span></div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span><span class="comment">!!$IF (NHALO == 1) THEN</span></div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span><span class="preprocessor">#ifndef MNH_OPENACC</span></div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span><span class="preprocessor"></span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__argslist__ll__phy.html#a5e76aa33dc39f0e48c9490bd2e2643d9">add2dfield_ll_phy</a>(d, tzfields_ll, puslope, <span class="stringliteral">&#39;UPDATE_ROTATE_WIND::PUSLOPE&#39;</span> )</div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__argslist__ll__phy.html#a5e76aa33dc39f0e48c9490bd2e2643d9">add2dfield_ll_phy</a>(d, tzfields_ll, pvslope, <span class="stringliteral">&#39;UPDATE_ROTATE_WIND::PVSLOPE&#39;</span> )</div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#a3a7fe13ce37b4e40ab49cf132ae3a3e1">update_halo_ll</a>(tzfields_ll,iinfo_ll)</div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>  <span class="keyword">CALL </span><a class="code hl_function" href="namespacemode__ll.html#a47525845f3b864b7336cbcfae099930d">cleanlist_ll</a>(tzfields_ll)</div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span><span class="preprocessor"></span><span class="comment">!</span></div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span><span class="comment">!  /!\ warning conner needed -&gt; GET_HALO...C</span></div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span><span class="comment">!</span></div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span><span class="keyword">CALL </span>get_2d_halo_ddc( puslope, hname=<span class="stringliteral">&#39;UPDATE_ROTATE_WIND::PUSLOPE&#39;</span> )</div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span><span class="keyword">CALL </span>get_2d_halo_ddc( pvslope, hname=<span class="stringliteral">&#39;UPDATE_ROTATE_WIND::PVSLOPE&#39;</span> )</div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span><span class="preprocessor"></span><span class="comment">!!$ENDIF</span></div>
+<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span><span class="comment">!</span></div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span><span class="comment">!        3 Boundary conditions for non cyclic case</span></div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span><span class="comment">!</span></div>
+<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>gwest  = hlbcx(1) /= <span class="stringliteral">&quot;CYCL&quot;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#ac88285a7367d7ec31aa6de2182be6064">lwest_ll</a>()</div>
+<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>geast  = hlbcx(2) /= <span class="stringliteral">&quot;CYCL&quot;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#aed8b87ed55482e1498eb8df0f6641142">least_ll</a>()</div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>gsouth = hlbcy(1) /= <span class="stringliteral">&quot;CYCL&quot;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#aff8e0e92dee9397dbb97e65db0ad096f">lsouth_ll</a>()</div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>gnorth = hlbcy(2) /= <span class="stringliteral">&quot;CYCL&quot;</span> .AND. <a class="code hl_function" href="namespacemode__ll.html#a42d593fe9bddb4f67beb9518adc88d19">lnorth_ll</a>()</div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span> </div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span><span class="comment">!$acc kernels present_cr(PUSLOPE,PVSLOPE)</span></div>
+<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span><span class="keywordflow">IF</span> ( gwest ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>  puslope(iib-1,:)=puslope(iib,:)</div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>  pvslope(iib-1,:)=pvslope(iib,:)</div>
+<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span><span class="keywordflow">IF</span> ( geast ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span>  puslope(iie+1,:)=puslope(iie,:)</div>
+<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>  pvslope(iie+1,:)=pvslope(iie,:)</div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span><span class="keywordflow">IF</span> ( gsouth ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>  puslope(:,ijb-1)=puslope(:,ijb)</div>
+<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>  pvslope(:,ijb-1)=pvslope(:,ijb)</div>
+<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span><span class="keywordflow">IF</span>( gnorth ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>  puslope(:,ije+1)=puslope(:,ije)</div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>  pvslope(:,ije+1)=pvslope(:,ije)</div>
+<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span><span class="comment">!</span></div>
 </div>
-<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__rotate__wind.html#af1c8849b58560a7485682811daaf6e51">update_rotate_wind</a></div>
-<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__rotate__wind.html">mode_rotate_wind</a></div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__rotate__wind.html#af1c8849b58560a7485682811daaf6e51">update_rotate_wind</a></div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__rotate__wind.html">mode_rotate_wind</a></div>
 <div class="ttc" id="anamespacemodd__argslist__ll_html"><div class="ttname"><a href="namespacemodd__argslist__ll.html">modd_argslist_ll</a></div><div class="ttdef"><b>Definition</b> <a href="modd__argslist__ll_8F90_source.html#l00001">modd_argslist_ll.F90:1</a></div></div>
 <div class="ttc" id="anamespacemodd__dimphyex_html"><div class="ttname"><a href="namespacemodd__dimphyex.html">modd_dimphyex</a></div><div class="ttdef"><b>Definition</b> <a href="modd__dimphyexn_8F90_source.html#l00007">modd_dimphyexn.F90:7</a></div></div>
+<div class="ttc" id="anamespacemode__argslist__ll__phy_html"><div class="ttname"><a href="namespacemode__argslist__ll__phy.html">mode_argslist_ll_phy</a></div><div class="ttdef"><b>Definition</b> <a href="mode__argslist__ll__phy_8F90_source.html#l00008">mode_argslist_ll_phy.F90:8</a></div></div>
+<div class="ttc" id="anamespacemode__argslist__ll__phy_html_a5e76aa33dc39f0e48c9490bd2e2643d9"><div class="ttname"><a href="namespacemode__argslist__ll__phy.html#a5e76aa33dc39f0e48c9490bd2e2643d9">mode_argslist_ll_phy::add2dfield_ll_phy</a></div><div class="ttdeci">subroutine add2dfield_ll_phy(d, tplist, pfield, hname)</div><div class="ttdef"><b>Definition</b> <a href="mode__argslist__ll__phy_8F90_source.html#l00014">mode_argslist_ll_phy.F90:15</a></div></div>
 <div class="ttc" id="anamespacemode__ll_html"><div class="ttname"><a href="namespacemode__ll.html">mode_ll</a></div><div class="ttdef"><b>Definition</b> <a href="mode__ll_8F90_source.html#l00001">mode_ll.F90:1</a></div></div>
 <div class="ttc" id="anamespacemode__ll_html_a3a7fe13ce37b4e40ab49cf132ae3a3e1"><div class="ttname"><a href="namespacemode__ll.html#a3a7fe13ce37b4e40ab49cf132ae3a3e1">mode_ll::update_halo_ll</a></div><div class="ttdeci">subroutine update_halo_ll(tplist, kinfo, oongpu)</div><div class="ttdef"><b>Definition</b> <a href="mode__ll_8F90_source.html#l00015">mode_ll.F90:16</a></div></div>
 <div class="ttc" id="anamespacemode__ll_html_a42d593fe9bddb4f67beb9518adc88d19"><div class="ttname"><a href="namespacemode__ll.html#a42d593fe9bddb4f67beb9518adc88d19">mode_ll::lnorth_ll</a></div><div class="ttdeci">logical function lnorth_ll()</div><div class="ttdef"><b>Definition</b> <a href="mode__ll_8F90_source.html#l00030">mode_ll.F90:31</a></div></div>
 <div class="ttc" id="anamespacemode__ll_html_a47525845f3b864b7336cbcfae099930d"><div class="ttname"><a href="namespacemode__ll.html#a47525845f3b864b7336cbcfae099930d">mode_ll::cleanlist_ll</a></div><div class="ttdeci">subroutine cleanlist_ll(tplist)</div><div class="ttdef"><b>Definition</b> <a href="mode__ll_8F90_source.html#l00046">mode_ll.F90:47</a></div></div>
-<div class="ttc" id="anamespacemode__ll_html_abd8abc9f6fd8e5faf4fca6b85d0df975"><div class="ttname"><a href="namespacemode__ll.html#abd8abc9f6fd8e5faf4fca6b85d0df975">mode_ll::add2dfield_ll</a></div><div class="ttdeci">subroutine add2dfield_ll(tplist, pfield, hname)</div><div class="ttdef"><b>Definition</b> <a href="mode__ll_8F90_source.html#l00055">mode_ll.F90:56</a></div></div>
 <div class="ttc" id="anamespacemode__ll_html_ac88285a7367d7ec31aa6de2182be6064"><div class="ttname"><a href="namespacemode__ll.html#ac88285a7367d7ec31aa6de2182be6064">mode_ll::lwest_ll</a></div><div class="ttdeci">logical function lwest_ll()</div><div class="ttdef"><b>Definition</b> <a href="mode__ll_8F90_source.html#l00038">mode_ll.F90:39</a></div></div>
 <div class="ttc" id="anamespacemode__ll_html_aed8b87ed55482e1498eb8df0f6641142"><div class="ttname"><a href="namespacemode__ll.html#aed8b87ed55482e1498eb8df0f6641142">mode_ll::least_ll</a></div><div class="ttdeci">logical function least_ll()</div><div class="ttdef"><b>Definition</b> <a href="mode__ll_8F90_source.html#l00034">mode_ll.F90:35</a></div></div>
 <div class="ttc" id="anamespacemode__ll_html_aff8e0e92dee9397dbb97e65db0ad096f"><div class="ttname"><a href="namespacemode__ll.html#aff8e0e92dee9397dbb97e65db0ad096f">mode_ll::lsouth_ll</a></div><div class="ttdeci">logical function lsouth_ll()</div><div class="ttdef"><b>Definition</b> <a href="mode__ll_8F90_source.html#l00042">mode_ll.F90:43</a></div></div>

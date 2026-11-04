@@ -24,5 +24,6 @@ var searchData=
   ['etheta_21',['etheta',['../namespacemode__etheta.html#a31f831e28aecdb5f3034da350902b721',1,'mode_etheta']]],
   ['executables_22',['Usage directly with the testprogs executables',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md62',1,'']]],
   ['execution_23',['Compilation and execution',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md59',1,'']]],
-  ['execution_20or_20manual_20execution_24',['Compilation directly in the repository without execution (or manual execution)',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md58',1,'']]]
+  ['execution_20or_20manual_20execution_24',['Compilation directly in the repository without execution (or manual execution)',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md58',1,'']]],
+  ['explicit_5fshape_25',['explicit_shape',['../mode__argslist__ll__phy_8F90.html#a36cc4350d38eba79ee32cb33329a7307',1,'mode_argslist_ll_phy.F90']]]
 ];
