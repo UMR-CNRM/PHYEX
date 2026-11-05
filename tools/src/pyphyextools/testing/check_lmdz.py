@@ -43,7 +43,7 @@ class CheckCommitLmdz(CheckCommitBase):
 
         if os.path.isdir(os.path.join(self.commit, 'src')):
             self.model_ready = False
-            json_path = os.path.join(self.commit, 'src', 'lmdz', 'lmdz_version.json')
+            json_path = os.path.join(self.commit, 'src', 'phyex', 'lmdz_version.json')
         else:
             self.model_ready = True
             json_path = os.path.join(self.commit, 'lmdz_version.json')
@@ -188,15 +188,9 @@ class CheckCommitLmdz(CheckCommitBase):
                     "link option not compatible with the update option", 10)
             target = os.path.join(self.lmdzdir, 'modipsl', 'modeles', 'LMDZ',
                                   'libf', 'phylmd')
-            common_glob = glob_mod.glob(os.path.expanduser('~/PHYEX/src/common/*/*'))
-            for src in common_glob:
+            phyex_glob = glob_mod.glob(os.path.expanduser('~/PHYEX/src/phyex/*/*'))
+            for src in phyex_glob:
                 os.symlink(src, os.path.join(target, os.path.basename(src)))
-            lmdz_glob = glob_mod.glob(os.path.expanduser('~/PHYEX/src/lmdz/*/*'))
-            for src in lmdz_glob:
-                dst = os.path.join(target, os.path.basename(src))
-                if os.path.lexists(dst):
-                    os.unlink(dst)
-                os.symlink(src, dst)
         else:
             if not os.path.isdir(packdir):
                 raise CheckCommitError(
@@ -208,7 +202,7 @@ class CheckCommitLmdz(CheckCommitBase):
                 shutil.move(os.path.join(packdir, 'phyex-lmdz'),
                             os.path.join(packdir, 'phyex-lmdzori'))
 
-            subs = ['turb', 'micro', 'aux', 'ext']
+            subs = ['turb', 'micro', 'aux']
 
             print(f"Copy {self.commit}")
             os.makedirs(os.path.join(packdir, 'PHYEX'), exist_ok=True)

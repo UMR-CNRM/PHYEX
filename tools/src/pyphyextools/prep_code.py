@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Extract a tag/commit from the PHYEX repository, merge common and model-specific
-code, apply pyfortool transformations, and optionally push the result.
+Extract a tag/commit from the PHYEX repository, suppress files/directory not
+needed for model, apply pyfortool transformations, and optionally push the result.
 """
 
 import argparse
@@ -38,7 +38,7 @@ def parse_args(argv=None):
         argv = argv[:idx]
 
     parser = argparse.ArgumentParser(
-        description="Prepare PHYEX code: extract, merge, transform, push.",
+        description="Prepare PHYEX code: extract, clean, transform, push.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 If -c is not provided, DIRECTORY must already contain files and directories
@@ -54,7 +54,7 @@ Everything after '--' is passed to pyfortool for source-to-source transformation
     parser.add_argument('directory', nargs='?', help='directory containing the script result')
     parser.add_argument('-c', dest='checkout_point',
                         help='git object to checkout (commit or tags/TAG)')
-    parser.add_argument('-m', dest='model', help='merge common code with code specific to MODEL')
+    parser.add_argument('-m', dest='model', help='prepare code for MODEL')
     parser.add_argument('-s', dest='subs', action='append', default=[],
                         help='subdirectory or file (under src) to consider')
     parser.add_argument('-p', dest='push', action='store_true',
@@ -105,45 +105,29 @@ def rename_Ff(directory, mv_func):
                 mv_func(src, dst)
 
 
-def merge_code(directory, model, subs, mv_func, rm_func):
-    """Merge ``src/common`` with model-specific sources, then remove unneeded files."""
-    src_dir = f'src/{model}'
+def prepare_code(directory, model, subs, mv_func, rm_func):
+    """Reorganize tree and remove unneeded files."""
     if not subs:
-        raise RuntimeError("It is not possible to merge without -s options")
+        raise RuntimeError("It is not possible to prepare code without -s options")
 
-    logging.info("Merge common code and %s specific code", model)
+    logging.info("Prepare code for model %s", model)
 
     all_files = [f for f in os.listdir(directory) if not f.startswith('.')]
 
     for sub in subs:
-        logging.debug("Merging %s directory/file", sub)
+        logging.debug("Moving %s directory/file", sub)
         sub_path = os.path.join(directory, sub)
         if os.path.exists(sub_path):
             raise RuntimeError(f"{sub} must not exist in the repository root, "
                               "this is a limitation of the script")
 
-        common_sub = os.path.join(directory, 'src', 'common', sub)
-        if os.path.exists(common_sub):
-            mv_func(common_sub, sub_path)
-
-        model_sub = os.path.join(directory, src_dir, sub)
-        if os.path.exists(model_sub):
-            if os.path.isfile(model_sub):
-                mv_func(model_sub, sub_path)
-            else:
-                for root, _, files in os.walk(model_sub):
-                    for f in files:
-                        rel_path = os.path.relpath(os.path.join(root, f), model_sub)
-                        dst_path = os.path.join(directory, sub, rel_path)
-                        os.makedirs(os.path.dirname(dst_path), exist_ok=True)
-                        mv_func(os.path.join(root, f), dst_path)
-                try:
-                    os.removedirs(model_sub)
-                except OSError:
-                    pass
+        phyex_sub = os.path.join(directory, 'src', 'phyex', sub)
+        if not os.path.exists(phyex_sub):
+            raise RuntimeError(f"{sub} must exist in 'src/phyex'")
+        mv_func(phyex_sub, sub_path)
 
     # Suppress unwanted files
-    suppress_file = os.path.join(directory, src_dir, f'filesToSuppress_{model}.txt')
+    suppress_file = os.path.join(directory, 'src', 'phyex', f'filesToSuppress_{model}.txt')
     if os.path.isfile(suppress_file):
         with open(suppress_file, encoding='UTF-8') as fh:
             for line in fh:
@@ -239,7 +223,7 @@ def prep_code(
     pyfortool_opts_env=None,
     pyfortool_options=None,
 ):
-    """Orchestrate checkout, renaming, merging, transformation, and push.
+    """Orchestrate checkout, renaming, cleaning, transformation, and push.
 
     Parameters
     ----------
@@ -248,7 +232,7 @@ def prep_code(
     checkout_point : str, optional
         Git object to checkout (commit hash or ``tags/TAG``).
     model : str, optional
-        Model name for merging common + model-specific code.
+        Model name for preparing code.
     subs : list of str, optional
         Subdirectories or files (under ``src``) to consider.
     push : bool
@@ -341,9 +325,9 @@ def prep_code(
     if rename_Ff_flag:
         rename_Ff(directory, mv_func)
 
-    # -------- MERGE --------
+    # -------- PREPARE CODE --------
     if model:
-        merge_code(directory, model, subs, mv_func, rm_func)
+        prepare_code(directory, model, subs, mv_func, rm_func)
 
     # -------- ILOOPRM --------
     if ilooprm:

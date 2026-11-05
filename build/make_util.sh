@@ -214,7 +214,7 @@ function main() {
     descTree=${TMPDIR:-/tmp}/descTree_$$
     trap "\rm -f $descTree" EXIT
   
-    subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s conv -s support -s progs $EXTRASUBS"
+    subs="$subs -s turb -s micro -s aux -s conv -s support -s progs $EXTRASUBS"
     if [ "$fromdir" == '' ]; then
       echo "Clone repository, and checkout commit $commit (using prep_code)"
       if [[ $commit == testprogs${separator}* || $commit == offline${separator}* ]]; then

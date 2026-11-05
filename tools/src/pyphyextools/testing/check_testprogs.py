@@ -100,7 +100,7 @@ class CheckCommitTestprogs(CheckCommitBase):
 
         if os.path.isdir(os.path.join(self.commit, 'src')):
             self.model_ready = False
-            json_path = os.path.join(self.commit, 'src', 'common', 'testprogs_version.json')
+            json_path = os.path.join(self.commit, 'src', 'phyex', 'testprogs_version.json')
         else:
             self.model_ready = True
             json_path = os.path.join(self.commit, 'testprogs_version.json')

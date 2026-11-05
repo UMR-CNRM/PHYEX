@@ -58,7 +58,7 @@ class CheckCommitIAL(CheckCommitBase):
 
         if os.path.isdir(os.path.join(self.commit, 'src')):
             self.model_ready = False
-            json_path = os.path.join(self.commit, 'src', 'arome', 'ial_version.json')
+            json_path = os.path.join(self.commit, 'src', 'phyex', 'ial_version.json')
         else:
             self.model_ready = True
             json_path = os.path.join(self.commit, 'ial_version.json')
