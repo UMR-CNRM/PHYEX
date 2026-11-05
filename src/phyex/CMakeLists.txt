@@ -171,16 +171,10 @@ foreach(PRECISION ${precision_list})
           fiat
           mpi_serial
           parkind_${PRECISION}
+          $<$<BOOL:${HAVE_OMP}>:OpenMP::OpenMP_Fortran>
+          $<$<BOOL:${HAVE_ACC}>:OpenACC::OpenACC_Fortran>
         OUTPUT_NAME ${NAME}_${PRECISION}.exe
       )
-
-      if(HAVE_OMP)
-        target_link_libraries(${NAME} PRIVATE OpenMP::OpenMP_Fortran)
-      endif()
-
-      if(HAVE_ACC)
-        target_link_libraries(${NAME} PRIVATE OpenACC::OpenACC_Fortran)
-      endif()
 
       if(DEFINED FPP_FLAGS_TESTPROGS)
         target_compile_definitions(${NAME}_${PRECISION} PUBLIC ${FPP_FLAGS_TESTPROGS})
