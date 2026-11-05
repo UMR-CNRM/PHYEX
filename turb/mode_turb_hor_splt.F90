@@ -166,16 +166,14 @@ USE MODD_IO, ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT
 !
 !
-
 USE MODE_TURB_HOR, ONLY: TURB_HOR
 USE MODE_TURB_HOR_TKE, ONLY: TURB_HOR_TKE
+USE MODE_TURB_HOR_UPDATE_HALO, ONLY: TURB_HOR_UPDATE_HALO
 !
 USE MODD_ARGSLIST_ll, ONLY : LIST_ll
-USE MODE_ll, ONLY: ADD3DFIELD_LL, ADD4DFIELD_LL, CLEANLIST_LL, GET_INDICE_LL, LEAST_LL, &
-                   LNORTH_LL, LSOUTH_LL, LWEST_LL, UPDATE_HALO_LL
-USE MODE_SHUMAN_PHY, ONLY:MXM_PHY
-USE MODE_SHUMAN_PHY, ONLY:MYM_PHY
-USE MODE_SHUMAN_PHY, ONLY:MZM_PHY
+USE MODE_ll, ONLY: CLEANLIST_LL
+USE MODE_ARGSLIST_ll_PHY, ONLY: ADD3DFIELD_LL_PHY, ADD4DFIELD_LL_PHY
+USE MODE_SHUMAN_PHY, ONLY: MXM_PHY, MYM_PHY, MZM_PHY
 !
 IMPLICIT NONE
 !
@@ -206,58 +204,58 @@ INTEGER,                INTENT(IN)   ::  KHALO        ! Size of the halo for par
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 TYPE(TFILEDATA),          INTENT(INOUT)    ::  TPFILE       ! Output file
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PZZ          ! vertical grid
-REAL, DIMENSION(D%NIT,D%NJT),     INTENT(IN)    ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PZZ          ! vertical grid
+REAL, DIMENSION(D%NIJT),     INTENT(IN)    ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
 ! Director Cosinus along x, y and z directions at surface w-point
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle 
                                       ! between i and the slope vector
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle 
                                       ! between i and the slope vector
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTHVREF      ! ref. state VPT       
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTHVREF      ! ref. state VPT       
 !
-REAL, DIMENSION(D%NIT,D%NJT),     INTENT(IN)    ::  PSFTHM,PSFRM
-REAL, DIMENSION(D%NIT,D%NJT,KSV),   INTENT(IN)    ::  PSFSVM       ! surface fluxes
+REAL, DIMENSION(D%NIJT),     INTENT(IN)    ::  PSFTHM,PSFRM
+REAL, DIMENSION(D%NIJT,KSV),   INTENT(IN)    ::  PSFSVM       ! surface fluxes
 !
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCDUEFF      ! Cd * || u || at time t
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PCDUEFF      ! Cd * || u || at time t
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
        ! to the maximum slope direction and the surface normal and the binormal 
        ! at time t - dt
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU22M      ! <vv> in the same axes
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU22M      ! <vv> in the same axes
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
 !
 ! Variables at t-1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PUM,PVM,PWM,PTHLM 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN)    ::  PRM          ! mixing ratios at t-1,
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PUM,PVM,PWM,PTHLM 
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)    ::  PRM          ! mixing ratios at t-1,
                               !  where PRM(:,:,:,1) = conservative mixing ratio
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
-REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
+REAL, DIMENSION(D%NIJT),      INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
                                      ! maximum slope direction
-REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
+REAL, DIMENSION(D%NIJT),      INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
                                      ! direction normal to the maximum slope one
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLEPS        ! dissipative length
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLOCPEXNM    ! Lv(T)/Cp/Exner at time t-1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PAMOIST      ! s and Thetal and Rnp
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLEPS        ! dissipative length
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLOCPEXNM    ! Lv(T)/Cp/Exner at time t-1
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PAMOIST      ! s and Thetal and Rnp
 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PSRCM
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PSRCM
                                   ! normalized 2nd-order flux
                                   ! s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PFRAC_ICE    ! ri fraction of rc+ri
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PFRAC_ICE    ! ri fraction of rc+ri
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS, PRWS, PRTHLS
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS    ! var. at t+1 -split-
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS   ! var. at t+1 -split-
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP,PTP      ! TKE production terms
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(OUT)   ::  PTRH
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PSIGS
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS, PRWS, PRTHLS
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS    ! var. at t+1 -split-
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS   ! var. at t+1 -split-
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PDP,PTP      ! TKE production terms
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   ::  PTRH
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PSIGS
                                   ! IN: Vertical part of Sigma_s at t
                                   ! OUT: Total Sigma_s at t
 !
@@ -265,35 +263,31 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PSIGS
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZK           ! Turbulent diffusion doef.
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZK           ! Turbulent diffusion doef.
                                                   ! ZK = PLM * SQRT(PTKEM)
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZINV_PDXX    ! 1./PDXX
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZINV_PDYY    ! 1./PDYY
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZINV_PDZZ    ! 1./PDZZ
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZMZM_PRHODJ  ! MZM(PRHODJ)
+REAL, DIMENSION(D%NIJT,D%NKT):: ZINV_PDXX    ! 1./PDXX
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZINV_PDYY    ! 1./PDYY
+REAL, DIMENSION(D%NIJT,D%NKT):: ZINV_PDZZ    ! 1./PDZZ
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZMZM_PRHODJ  ! MZM(PRHODJ)
 !
 INTEGER :: JSPLT ! current split
 !
-INTEGER :: IKB, IKE, IIB, IIE, IJB, IJE, IIT, IJT, IKT
+INTEGER :: IKB, IKE, IIJB, IIJE, IIJT, IKT
 INTEGER :: JRR, JSV
 !
-INTEGER :: ISV
-INTEGER :: IINFO_ll
+LOGICAL :: LDOUPDATE
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)   :: ZUM, ZVM, ZWM, ZTHLM, ZTKEM
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR) :: ZRM
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV) :: ZSVM
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)   :: ZRUS, ZRVS, ZRWS, ZRTHLS
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR) :: ZRRS
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV) :: ZRSVS
+REAL, DIMENSION(D%NIJT,D%NKT)   :: ZUM, ZVM, ZWM, ZTHLM, ZTKEM
+REAL, DIMENSION(D%NIJT,D%NKT,KRR) :: ZRM
+REAL, DIMENSION(D%NIJT,D%NKT,KSV) :: ZSVM
+REAL, DIMENSION(D%NIJT,D%NKT)   :: ZRUS, ZRVS, ZRWS, ZRTHLS
+REAL, DIMENSION(D%NIJT,D%NKT,KRR) :: ZRRS
+REAL, DIMENSION(D%NIJT,D%NKT,KSV) :: ZRSVS
 !
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMZM3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMXM3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMYM3D_WORK1
-INTEGER :: JI
+INTEGER :: JIJ
 INTEGER :: JK
-INTEGER :: JJ
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_1
 TYPE(LIST_ll), POINTER, SAVE :: TZFIELDS_ll
 !
 ! ---------------------------------------------------------------------------
@@ -302,31 +296,20 @@ TYPE(LIST_ll), POINTER, SAVE :: TZFIELDS_ll
 !             ------------------------
 !
 IKB = 1.+JPVEXT
-IKE = SIZE(PUM,3) - JPVEXT
+IKE = SIZE(PUM,2) - JPVEXT
 IKT=D%NKT
-IIT=D%NIT
-IJT=D%NJT
-CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
-ISV=SIZE(PSVM,4)
+IIJT=D%NIJT
+IIJB=D%NIJB
+IIJE=D%NIJE
 !
 
 ZINV_PDXX = 1./PDXX
 ZINV_PDYY = 1./PDYY
 ZINV_PDZZ = 1./PDZZ
 !
-ZK(:,:,:)         = PLM(:,:,:) * SQRT(PTKEM(:,:,:))
+ZK(:,:)         = PLM(:,:) * SQRT(PTKEM(:,:))
 
-CALL MZM_PHY(D, PRHODJ, ZMZM3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZMZM_PRHODJ(JI, JJ, JK) = ZMZM3D_WORK1(JI, JJ, JK)
-    END DO
-  END DO
-END DO
-
-!
+CALL MZM_PHY(D, PRHODJ, ZMZM_PRHODJ)
 !
 NULLIFY(TZFIELDS_ll)
 !
@@ -341,13 +324,13 @@ IF (KSPLIT>1) THEN
 !*       2.2  list for parallel exchanges
 !             ---------------------------
 !
-  CALL ADD3DFIELD_ll( TZFIELDS_ll, ZUM,               'TURB_HOR_SPLT::ZUM'               )
-  CALL ADD3DFIELD_ll( TZFIELDS_ll, ZVM,               'TURB_HOR_SPLT::ZVM'               )
-  CALL ADD3DFIELD_ll( TZFIELDS_ll, ZWM,               'TURB_HOR_SPLT::ZWM'               )
-  CALL ADD3DFIELD_ll( TZFIELDS_ll, ZTHLM,             'TURB_HOR_SPLT::ZTHLM'             )
-  CALL ADD3DFIELD_ll( TZFIELDS_ll, ZTKEM,             'TURB_HOR_SPLT::ZTKEM'             )
-  CALL ADD4DFIELD_ll( TZFIELDS_ll, ZSVM(:,:,:,1:ISV), 'TURB_HOR_SPLT::ZSVM(:,:,:,1:ISV)' )
-  CALL ADD4DFIELD_ll( TZFIELDS_ll, ZRM(:,:,:,1:KRR),  'TURB_HOR_SPLT::ZRM(:,:,:,1:KRR)'  )
+  CALL ADD3DFIELD_ll_PHY(D, TZFIELDS_ll, ZUM,               'TURB_HOR_SPLT::ZUM'               )
+  CALL ADD3DFIELD_ll_PHY(D, TZFIELDS_ll, ZVM,               'TURB_HOR_SPLT::ZVM'               )
+  CALL ADD3DFIELD_ll_PHY(D, TZFIELDS_ll, ZWM,               'TURB_HOR_SPLT::ZWM'               )
+  CALL ADD3DFIELD_ll_PHY(D, TZFIELDS_ll, ZTHLM,             'TURB_HOR_SPLT::ZTHLM'             )
+  CALL ADD3DFIELD_ll_PHY(D, TZFIELDS_ll, ZTKEM,             'TURB_HOR_SPLT::ZTKEM'             )
+  CALL ADD4DFIELD_ll_PHY(D, TZFIELDS_ll, ZSVM(:,:,1:KSV),   'TURB_HOR_SPLT::ZSVM(:,:,:,1:KSV)' )
+  CALL ADD4DFIELD_ll_PHY(D, TZFIELDS_ll, ZRM(:,:,1:KRR),    'TURB_HOR_SPLT::ZRM(:,:,:,1:KRR)'  )
 !
 !
 !*       2.3  initializations
@@ -359,7 +342,7 @@ IF (KSPLIT>1) THEN
   ZUM=PUM
   ZVM=PVM
   ZWM=PWM
-  IF (ISV>0) ZSVM=PSVM
+  IF (KSV>0) ZSVM=PSVM
   ZTHLM=PTHLM
   ZTKEM=PTKEM
   IF (KRR>0) ZRM=PRM
@@ -367,7 +350,7 @@ IF (KSPLIT>1) THEN
   ZRUS=PRUS*KSPLIT
   ZRVS=PRVS*KSPLIT
   ZRWS=PRWS*KSPLIT
-  IF (ISV>0) ZRSVS=PRSVS*KSPLIT
+  IF (KSV>0) ZRSVS=PRSVS*KSPLIT
   ZRTHLS=PRTHLS*KSPLIT
   IF (KRR>0) ZRRS=PRRS*KSPLIT
   
@@ -409,136 +392,41 @@ IF (KSPLIT>1) THEN
 !
 ! split temporal advance
 
-    CALL MXM_PHY(D, PRHODJ, ZMXM3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZUM(JI, JJ, JK)=PUM(JI, JJ, JK)+(ZRUS(JI, JJ, JK)/KSPLIT-PRUS(JI, JJ, JK))/ZMXM3D_WORK1(JI, JJ, JK)*PTSTEP    
+    CALL MXM_PHY(D, PRHODJ, ZWORKSHUGRAD_3D_1)
+    
+    DO JK=1, D%NKT
+      DO JIJ=1, D%NIJT
+        ZUM(JIJ, JK)=PUM(JIJ, JK)+(ZRUS(JIJ, JK)/KSPLIT-PRUS(JIJ, JK))/ZWORKSHUGRAD_3D_1(JIJ, JK)*PTSTEP
+      END DO
     END DO
-  END DO
-END DO
-
-!
-CALL MYM_PHY(D, PRHODJ, ZMYM3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZVM(JI, JJ, JK)=PVM(JI, JJ, JK)+(ZRVS(JI, JJ, JK)/KSPLIT-PRVS(JI, JJ, JK))/ZMYM3D_WORK1(JI, JJ, JK)*PTSTEP
+    
+    CALL MYM_PHY(D, PRHODJ, ZWORKSHUGRAD_3D_1)
+    
+    DO JK=1, D%NKT
+      DO JIJ=1, D%NIJT
+        ZVM(JIJ, JK)=PVM(JIJ, JK)+(ZRVS(JIJ, JK)/KSPLIT-PRVS(JIJ, JK))/ZWORKSHUGRAD_3D_1(JIJ, JK)*PTSTEP
+      END DO
     END DO
-  END DO
-END DO
-
-!
+    
 
     ZWM=PWM+(ZRWS/KSPLIT-PRWS)/ZMZM_PRHODJ*PTSTEP
-    DO JSV=1,ISV
-      ZSVM(:,:,:,JSV)=PSVM(:,:,:,JSV)+   &
-        (ZRSVS(:,:,:,JSV)/KSPLIT-PRSVS(:,:,:,JSV))/PRHODJ(:,:,:)*PTSTEP
+    DO JSV=1,KSV
+      ZSVM(:,:,JSV)=PSVM(:,:,JSV)+   &
+        (ZRSVS(:,:,JSV)/KSPLIT-PRSVS(:,:,JSV))/PRHODJ(:,:)*PTSTEP
     END DO
     ZTHLM=PTHLM+(ZRTHLS/KSPLIT-PRTHLS)/PRHODJ*PTSTEP
     ZTKEM=ZTKEM+PTRH*PTSTEP/KSPLIT
     DO JRR=1,KRR
-      ZRM(:,:,:,JRR)=PRM(:,:,:,JRR)+   &
-       (ZRRS(:,:,:,JRR)/KSPLIT-PRRS(:,:,:,JRR))/PRHODJ(:,:,:)*PTSTEP
+      ZRM(:,:,JRR)=PRM(:,:,JRR)+   &
+       (ZRRS(:,:,JRR)/KSPLIT-PRRS(:,:,JRR))/PRHODJ(:,:)*PTSTEP
     END DO
 
 !
 ! reinforce boundary conditions
-!
-#ifndef MNH_OPENACC
-    IF (JSPLT<KSPLIT-KHALO+1) CALL UPDATE_HALO_ll(TZFIELDS_ll,IINFO_ll)
-#else
-    !
-    ! Pour le update_halo_ll, on fait des update self, puis le update_halo_ll sur CPU
-    ! on copie ensuite les champs avec le halo a jour sur le device
-    !
-    IF (JSPLT<KSPLIT-KHALO+1) THEN
-      !$update self(ZUM,ZVM,ZWM,ZTHLM,ZTKEM)
-      IF (ISV>0) THEN
-        !$update self(ZSVM(:,:,:,1:ISV))
-      END IF
-      IF (KRR>0) THEN
-        !$update self(ZRM(:,:,:,1:KRR))
-      END IF
-      CALL UPDATE_HALO_ll(TZFIELDS_ll,IINFO_ll)
-      IF (KRR>0) THEN
-        !$update device(ZRM(:,:,:,1:KRR))
-      END IF
-      IF (ISV>0) THEN
-        !$update device(ZSVM(:,:,:,1:ISV))
-      END IF
-      !$update device(ZUM,ZVM,ZWM,ZTHLM,ZTKEM)
-    ENDIF
-#endif
-    !
-    IF ( HLBCX(1) /= "CYCL" .AND. LWEST_ll()) THEN
+  LDOUPDATE=JSPLT<KSPLIT-KHALO+1
+  CALL  TURB_HOR_UPDATE_HALO(D, HLBCX, HLBCY, LDOUPDATE, TZFIELDS_ll, KRR, KSV, &
+                             ZUM, ZVM, ZWM, ZTHLM, ZTKEM, ZRM, ZSVM)
 
-       ZUM(IIB  ,:,:)=PUM(IIB  ,:,:)
-       ZVM(IIB-1,:,:)=PVM(IIB-1,:,:)
-       ZWM(IIB-1,:,:)=PWM(IIB-1,:,:)
-       ZTHLM(IIB-1,:,:)=PTHLM(IIB-1,:,:)
-       ZTKEM(IIB-1,:,:)=PTKEM(IIB-1,:,:)
-       IF (ISV>0) ZSVM(IIB-1,:,:,:)=PSVM(IIB-1,:,:,:)
-       IF (KRR>0) ZRM (IIB-1,:,:,:)=PRM (IIB-1,:,:,:)
-
-     ENDIF
-     !
-     IF ( HLBCX(2) /= "CYCL" .AND. LEAST_ll()) THEN
-
-       ZUM(IIE+1,:,:)=PUM(IIE+1,:,:)
-       ZVM(IIE+1,:,:)=PVM(IIE+1,:,:)
-       ZWM(IIE+1,:,:)=PWM(IIE+1,:,:)
-       ZTHLM(IIE+1,:,:)=PTHLM(IIE+1,:,:)
-       ZTKEM(IIE+1,:,:)=PTKEM(IIE+1,:,:)
-       IF (ISV>0) ZSVM(IIE+1,:,:,:)=PSVM(IIE+1,:,:,:)
-       IF (KRR>0) ZRM (IIE+1,:,:,:)=PRM(IIE+1,:,:,:)
-
-     ENDIF
-     !
-     IF ( HLBCY(1) /= "CYCL" .AND. LSOUTH_ll()) THEN
-
-       ZUM(:,IJB-1,:)=PUM(:,IJB-1,:)
-       ZVM(:,IJB  ,:)=PVM(:,IJB  ,:)
-       ZWM(:,IJB-1,:)=PWM(:,IJB-1,:)
-       ZTHLM(:,IJB-1,:)=PTHLM(:,IJB-1,:)
-       ZTKEM(:,IJB-1,:)=PTKEM(:,IJB-1,:)
-       IF (ISV>0) ZSVM(:,IJB-1,:,:)=PSVM(:,IJB-1,:,:)
-       IF (KRR>0) ZRM (:,IJB-1,:,:)=PRM (:,IJB-1,:,:)
-
-     ENDIF
-     !
-     IF ( HLBCY(2) /= "CYCL" .AND. LNORTH_ll()) THEN
-
-       ZUM(:,IJE+1,:)=PUM(:,IJE+1,:)
-       ZVM(:,IJE+1,:)=PVM(:,IJE+1,:)
-       ZWM(:,IJE+1,:)=PWM(:,IJE+1,:)
-       ZTHLM(:,IJE+1,:)=PTHLM(:,IJE+1,:)
-       ZTKEM(:,IJE+1,:)=PTKEM(:,IJE+1,:)
-       IF (ISV>0) ZSVM(:,IJE+1,:,:)=PSVM(:,IJE+1,:,:)
-       IF (KRR>0) ZRM (:,IJE+1,:,:)=PRM(:,IJE+1,:,:)
-
-     ENDIF
-     !
-
-     ZUM(:,:,IKB-1)=ZUM(:,:,IKB)
-     ZVM(:,:,IKB-1)=ZVM(:,:,IKB)
-     ZWM(:,:,IKB-1)=ZWM(:,:,IKB)
-     ZTHLM(:,:,IKB-1)=ZTHLM(:,:,IKB)
-     ZTKEM(:,:,IKB-1)=ZTKEM(:,:,IKB)
-     IF (ISV>0) ZSVM(:,:,IKB-1,:)=ZSVM(:,:,IKB,:)
-     IF (KRR>0) ZRM (:,:,IKB-1,:)=ZRM (:,:,IKB,:)
-     !
-     ZUM(:,:,IKE+1)=ZUM(:,:,IKE)
-     ZVM(:,:,IKE+1)=ZVM(:,:,IKE)
-     ZWM(:,:,IKE+1)=ZWM(:,:,IKE)
-     ZTHLM(:,:,IKE+1)=ZTHLM(:,:,IKE)
-     ZTKEM(:,:,IKE+1)=ZTKEM(:,:,IKE)
-     IF (ISV>0) ZSVM(:,:,IKE+1,:)=ZSVM(:,:,IKE,:)
-     IF (KRR>0) ZRM (:,:,IKE+1,:)=ZRM (:,:,IKE,:)
-
-     !
   END DO
 !
 !*       2.5  update the complete tendencies
@@ -548,7 +436,7 @@ END DO
   PRUS=ZRUS/KSPLIT
   PRVS=ZRVS/KSPLIT
   PRWS=ZRWS/KSPLIT
-  IF (ISV>0) PRSVS=ZRSVS/KSPLIT
+  IF (KSV>0) PRSVS=ZRSVS/KSPLIT
   PRTHLS=ZRTHLS/KSPLIT
   IF (KRR>0) PRRS=ZRRS/KSPLIT
   PTRH=(ZTKEM-PTKEM)/PTSTEP

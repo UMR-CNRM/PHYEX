@@ -82,14 +82,10 @@ USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT
 USE MODD_LES, ONLY: TLES_t
 !
-USE MODE_ll, ONLY: ADD3DFIELD_LL, CLEANLIST_LL, UPDATE_HALO_LL
-USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
+USE MODE_ll, ONLY: CLEANLIST_LL, UPDATE_HALO_LL
+USE MODE_ARGSLIST_ll_PHY, ONLY: ADD3DFIELD_ll_PHY
+USE MODE_IO_FIELD_WRITE_PHY,      ONLY: IO_FIELD_WRITE_PHY
 !
-USE MODI_GRADIENT_M, ONLY: GZ_M_M 
-
-
-
-
 #ifdef MNH_OPENACC
 
 #endif
@@ -97,25 +93,11 @@ USE MODI_LES_MEAN_SUBGRID_PHY, ONLY: LES_MEAN_SUBGRID_PHY
 USE MODE_TRIDIAG_W, ONLY: TRIDIAG_W
 !
 USE MODI_SECOND_MNH, ONLY: SECOND_MNH
-USE MODE_SHUMAN_PHY, ONLY:DXF2D_PHY
-USE MODE_SHUMAN_PHY, ONLY:DXM_PHY
-USE MODE_SHUMAN_PHY, ONLY:DYF2D_PHY
-USE MODE_SHUMAN_PHY, ONLY:DYM_PHY
-USE MODE_SHUMAN_PHY, ONLY:DZF_PHY
-USE MODE_GRADIENT_U_PHY, ONLY:GX_U_M_PHY
-USE MODE_GRADIENT_V_PHY, ONLY:GY_V_M_PHY
-USE MODE_GRADIENT_M_PHY, ONLY:GZ_M_W_PHY
-USE MODE_GRADIENT_W_PHY, ONLY:GZ_W_M_PHY
-USE MODE_SHUMAN_PHY, ONLY:MXF2D_PHY
-USE MODE_SHUMAN_PHY, ONLY:MXF_PHY
-USE MODE_SHUMAN_PHY, ONLY:MXM2D_PHY
-USE MODE_SHUMAN_PHY, ONLY:MXM_PHY
-USE MODE_SHUMAN_PHY, ONLY:MYF2D_PHY
-USE MODE_SHUMAN_PHY, ONLY:MYF_PHY
-USE MODE_SHUMAN_PHY, ONLY:MYM2D_PHY
-USE MODE_SHUMAN_PHY, ONLY:MYM_PHY
-USE MODE_SHUMAN_PHY, ONLY:MZF_PHY
-USE MODE_SHUMAN_PHY, ONLY:MZM_PHY
+USE MODE_SHUMAN_PHY, ONLY: DXF2D_PHY, DXM_PHY, DYF2D_PHY, DYM_PHY, DZF_PHY, MXF2D_PHY, MXF_PHY, MXM2D_PHY, MXM_PHY, MYF2D_PHY, MYF_PHY, MYM2D_PHY, MYM_PHY, MZF_PHY, MZM_PHY
+USE MODE_GRADIENT_U_PHY, ONLY: GX_U_M_PHY
+USE MODE_GRADIENT_V_PHY, ONLY: GY_V_M_PHY
+USE MODE_GRADIENT_M_PHY, ONLY: GZ_M_M_PHY, GZ_M_W_PHY
+USE MODE_GRADIENT_W_PHY, ONLY: GZ_W_M_PHY
 !
 ! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
 #ifdef MNH_COMPILER_CCE
@@ -141,72 +123,72 @@ LOGICAL,                  INTENT(IN)    ::  OFLAT        ! Logical for zero oror
 LOGICAL,                  INTENT(IN)    ::  O2D          ! Logical for 2D model version (modd_conf)
 TYPE(TFILEDATA),          INTENT(INOUT) ::  TPFILE       ! Output file
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
                                                         ! PK = PLM * SQRT(PTKEM)
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PINV_PDZZ   ! 1./PDZZ
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PINV_PDZZ   ! 1./PDZZ
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PZZ          ! vertical grid
-REAL, DIMENSION(D%NIT,D%NJT),     INTENT(IN)    ::  PDIRCOSZW
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PZZ          ! vertical grid
+REAL, DIMENSION(D%NIJT),     INTENT(IN)    ::  PDIRCOSZW
 ! Director Cosinus along z directions at surface w-point
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle 
                                       ! between i and the slope vector
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle 
                                       ! between i and the slope vector
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
 !
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCDUEFF      ! Cd * || u || at time t
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PCDUEFF      ! Cd * || u || at time t
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
        ! to the maximum slope direction and the surface normal and the binormal 
        ! at time t - dt
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU22M      ! <vv> in the same axes
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU22M      ! <vv> in the same axes
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
 !
 ! Variables at t-1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PUM,PVM,PWM,PTHLM
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN)    ::  PRM
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM
-REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PUM,PVM,PWM,PTHLM
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)    ::  PRM
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)    ::  PSVM
+REAL, DIMENSION(D%NIJT),      INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
                                      ! maximum slope direction
-REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
+REAL, DIMENSION(D%NIJT),      INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
                                      ! direction normal to the maximum slope one
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS, PRWS
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP,PTP      ! TKE production terms
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS, PRWS
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PDP,PTP      ! TKE production terms
 !
 !
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZFLX,ZWORK,ZWKLES
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZFLX,ZWORK,ZWKLES
     ! work arrays, PK is the turb. mixing coef.
 !   
-REAL, DIMENSION(D%NIT,D%NJT) ::ZDIRSINZW 
+REAL, DIMENSION(D%NIJT) ::ZDIRSINZW 
       ! sinus of the angle between the vertical and the normal to the orography
 INTEGER             :: IKB,IKE
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain  
-INTEGER             :: IKU,IKT,IIT,IJT                                   
-INTEGER             :: JSV,JI,JJ,JK          ! scalar loop counter
+INTEGER             :: IKU,IKT,IIJT
+INTEGER             :: JSV,JIJ,JK          ! scalar loop counter
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GX_U_M_PUM
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GY_V_M_PVM
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GZ_W_M_PWM
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: GZ_W_M_ZWP
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZMZF_DZZ   ! MZF(PDZZ)
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZDFDDWDZ   ! formal derivative of the 
+REAL, DIMENSION(D%NIJT,D%NKT)  :: GX_U_M_PUM
+REAL, DIMENSION(D%NIJT,D%NKT)  :: GY_V_M_PVM
+REAL, DIMENSION(D%NIJT,D%NKT)  :: GZ_W_M_PWM
+REAL, DIMENSION(D%NIJT,D%NKT)  :: GZ_W_M_ZWP
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZMZF_DZZ   ! MZF(PDZZ)
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZDFDDWDZ   ! formal derivative of the 
 !                                                                   ! flux (variable: dW/dz)
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWP        ! W at future   time-step
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZWP        ! W at future   time-step
 !
-REAL, DIMENSION(D%NIT,D%NJT) :: ZDU_DZ_DZS_DX ! du/dz*dzs/dx surf
-REAL, DIMENSION(D%NIT,D%NJT) :: ZDV_DZ_DZS_DY ! dv/dz*dzs/dy surf
-REAL, DIMENSION(D%NIT,D%NJT) :: ZDU_DX        ! du/dx        surf
-REAL, DIMENSION(D%NIT,D%NJT) :: ZDV_DY        ! dv/dy        surf
-REAL, DIMENSION(D%NIT,D%NJT) :: ZDW_DZ        ! dw/dz        surf
+REAL, DIMENSION(D%NIJT) :: ZDU_DZ_DZS_DX ! du/dz*dzs/dx surf
+REAL, DIMENSION(D%NIJT) :: ZDV_DZ_DZS_DY ! dv/dz*dzs/dy surf
+REAL, DIMENSION(D%NIJT) :: ZDU_DX        ! du/dx        surf
+REAL, DIMENSION(D%NIJT) :: ZDV_DY        ! dv/dy        surf
+REAL, DIMENSION(D%NIJT) :: ZDW_DZ        ! dw/dz        surf
 !
 INTEGER                :: IINFO_ll      ! return code of parallel routine
 TYPE(LIST_ll), POINTER :: TZFIELDS_ll   ! list of fields to exchange
@@ -214,36 +196,24 @@ TYPE(LIST_ll), POINTER :: TZFIELDS_ll   ! list of fields to exchange
 REAL :: ZTIME1, ZTIME2
 
 
-REAL, DIMENSION(D%NIT,D%NJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF , ZDZZ
+REAL, DIMENSION(D%NIJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF , ZDZZ
                                     ! coefficients for the uncentred gradient 
                                     ! computation near the ground
 TYPE(TFIELDMETADATA) :: TZFIELD
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZGX_U_M3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZGY_V_M3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZGZ_W_M3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMZF3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT) ::ZMXM2D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT) ::ZSHUGRADWK1_2D
-REAL, DIMENSION(D%NIT,D%NJT) ::ZMXF2D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT) ::ZMXF2D_WORK2
-REAL, DIMENSION(D%NIT,D%NJT) ::ZMYM2D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT) ::ZMYF2D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT) ::ZMYF2D_WORK2
-REAL, DIMENSION(D%NIT,D%NJT) ::ZDXF2D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT) ::ZDYF2D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZSHUGRADWK1_3D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZDXM3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMXF3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZDZF3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMZM3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMXM3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZSHUGRADWK2_3D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMZM3D_WORK2
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZDYM3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMYF3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZMYM3D_WORK1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::ZGZ_M_W3D_WORK1
+REAL, DIMENSION(D%NIJT) :: ZWORKSHUGRAD_2D_1
+REAL, DIMENSION(D%NIJT) :: ZWORKSHUGRAD_2D_2
+REAL, DIMENSION(D%NIJT) :: ZWORKSHUGRAD_2D_3
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_1
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_2
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_3
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_4
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_5
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_6
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_7
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_8
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_9
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_10
 REAL :: XCMFS
 !
 ! --------------------------------------------------------------------------
@@ -256,70 +226,25 @@ XCMFS = CTURB_XCMFS
 NULLIFY(TZFIELDS_ll)
 !
 IKB = 1+JPVEXT               
-IKE = SIZE(PUM,3)-JPVEXT    
-IKU = SIZE(PUM,3)
-IIT=D%NIT
-IJT=D%NJT
+IKE = SIZE(PUM,2)-JPVEXT    
+IKU = SIZE(PUM,2)
+IIJT=D%NIJT
 IKT=D%NKT
 !
 !
 
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZDIRSINZW(JI, JJ) = SQRT( 1. - PDIRCOSZW(JI, JJ)**2 )
-  END DO
+DO JIJ=1, IIJT
+  ZDIRSINZW(JIJ) = SQRT( 1. - PDIRCOSZW(JIJ)**2 )
 END DO
 
 !
-CALL GX_U_M_PHY(D, OFLAT,PUM,PDXX,PDZZ,PDZX, ZGX_U_M3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      GX_U_M_PUM(JI, JJ, JK) = ZGX_U_M3D_WORK1(JI, JJ, JK)
-    END DO
-  END DO
-END DO
-
+CALL GX_U_M_PHY(D, OFLAT, PUM, PDXX, PDZZ, PDZX, GX_U_M_PUM)
+IF (.NOT. O2D) CALL GY_V_M_PHY(D, OFLAT, PVM, PDYY, PDZZ, PDZY, GY_V_M_PVM)
+CALL GZ_W_M_PHY(D, PWM, PDZZ, GZ_W_M_PWM)
 !
-IF (.NOT. O2D) THEN
-  CALL GY_V_M_PHY(D, OFLAT,PVM,PDYY,PDZZ,PDZY, ZGY_V_M3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      GY_V_M_PVM(JI, JJ, JK) = ZGY_V_M3D_WORK1(JI, JJ, JK)
-    END DO
-  END DO
-END DO
-
+CALL MZF_PHY(D, PDZZ, ZMZF_DZZ)
 !
-END IF
-CALL GZ_W_M_PHY(D, PWM,PDZZ, ZGZ_W_M3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      GZ_W_M_PWM(JI, JJ, JK) = ZGZ_W_M3D_WORK1(JI, JJ, JK)
-    END DO
-  END DO
-END DO
-
-!
-!
-CALL MZF_PHY(D, PDZZ, ZMZF3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZMZF_DZZ(JI, JJ, JK) = ZMZF3D_WORK1(JI, JJ, JK)
-    END DO
-  END DO
-END DO
-
-!
-!
-CALL ADD3DFIELD_ll( TZFIELDS_ll, ZFLX, 'TURB_HOR_DYN_CORR::ZFLX' )
+CALL ADD3DFIELD_ll_PHY(D, TZFIELDS_ll, ZFLX, 'TURB_HOR_DYN_CORR::ZFLX' )
 
 
 !  compute the coefficients for the uncentred gradient computation near the 
@@ -332,14 +257,12 @@ CALL ADD3DFIELD_ll( TZFIELDS_ll, ZFLX, 'TURB_HOR_DYN_CORR::ZFLX' )
 IF (.NOT. O2D) THEN
    
    DO JK=1, IKT
-        DO JJ=1, IJT
-          DO JI=1, IIT
-            ZFLX(JI, JJ, JK)= (2./3.) * PTKEM(JI, JJ, JK)                            &
-                 - XCMFS * PK(JI, JJ, JK) *( (4./3.) * GX_U_M_PUM(JI, JJ, JK)        &
-                 -(2./3.) * ( GY_V_M_PVM(JI, JJ, JK)                     &
-                 +GZ_W_M_PWM(JI, JJ, JK)                ) )
-       END DO
-        END DO
+        DO JIJ=1, IIJT
+          ZFLX(JIJ, JK)= (2./3.) * PTKEM(JIJ, JK)                            &
+               - XCMFS * PK(JIJ, JK) *( (4./3.) * GX_U_M_PUM(JIJ, JK)        &
+               -(2./3.) * ( GY_V_M_PVM(JIJ, JK)                     &
+               +GZ_W_M_PWM(JIJ, JK)                ) )
+     END DO
       END DO
    
    !!  &   to be tested later
@@ -347,12 +270,10 @@ IF (.NOT. O2D) THEN
 ELSE
   
   DO JK=1, IKT
-    DO JJ=1, IJT
-      DO JI=1, IIT
-        ZFLX(JI, JJ, JK)= (2./3.) * PTKEM(JI, JJ, JK)                                  &
-          - XCMFS * PK(JI, JJ, JK) *( (4./3.) * GX_U_M_PUM(JI, JJ, JK)                 &
-                         -(2./3.) * ( GZ_W_M_PWM(JI, JJ, JK)             ) ) 
-      END DO
+    DO JIJ=1, IIJT
+      ZFLX(JIJ, JK)= (2./3.) * PTKEM(JIJ, JK)                                  &
+        - XCMFS * PK(JIJ, JK) *( (4./3.) * GX_U_M_PUM(JIJ, JK)                 &
+                       -(2./3.) * ( GZ_W_M_PWM(JIJ, JK)             ) ) 
     END DO
   END DO
   
@@ -361,11 +282,9 @@ ELSE
 END IF
 !
 
-DO JJ=1, IJT
-     DO JI=1, IIT
-       ZFLX(JI, JJ, IKE+1) = ZFLX(JI, JJ, IKE) 
-  END DO
-   END DO
+DO JIJ=1, IIJT
+     ZFLX(JIJ, IKE+1) = ZFLX(JIJ, IKE) 
+END DO
 
 !
 !* prescription of du/dz and dv/dz with uncentered gradient at the surface
@@ -373,187 +292,89 @@ DO JJ=1, IJT
 !  using a Boussinesq hypothesis to remove the z dependance of rhod_ref
 !  (div u = 0)
 !
-! ZDZZ(:,:,:) = MXM(PDZZ(:,:,IKB:IKB+2)) ! case not handled yet by pyft --expandAllArraysConcurrent and shumanFUNCtoCALL
-CALL MXM2D_PHY(D, PDZZ(:,:,IKB), ZMXM2D_WORK1)
+! ZDZZ(:,:) = MXM(PDZZ(:,IKB:IKB+2)) ! case not handled yet by pyft --expandAllArraysConcurrent and shumanFUNCtoCALL
+CALL MXM2D_PHY(D, PDZZ(:,IKB), ZDZZ(:,IKB))
+CALL MXM2D_PHY(D, PDZZ(:,IKB+1), ZDZZ(:,IKB+1))
+CALL MXM2D_PHY(D, PDZZ(:,IKB+2), ZDZZ(:,IKB+2))
 
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZDZZ(JI, JJ, IKB) = ZMXM2D_WORK1(JI, JJ)
-  END DO
-END DO
-
-
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZSHUGRADWK1_2D(JI, JJ) = PDZZ(JI, JJ, IKB+1)
-  END DO
-END DO
-
-!
-CALL MXM2D_PHY(D, ZSHUGRADWK1_2D, ZMXM2D_WORK1)
-!
-
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZDZZ(JI, JJ, IKB+1) = ZMXM2D_WORK1(JI, JJ)
-  END DO
+DO JIJ=1, IIJT
+     ZCOEFF(JIJ, IKB+2)= - ZDZZ(JIJ, 2) /      &
+          ( (ZDZZ(JIJ, 3)+ZDZZ(JIJ, 2)) * ZDZZ(JIJ, 3) )
+     ZCOEFF(JIJ, IKB+1)=   (ZDZZ(JIJ, 3)+ZDZZ(JIJ, 2)) /      &
+          ( ZDZZ(JIJ, 2) * ZDZZ(JIJ, 3) )
+     ZCOEFF(JIJ, IKB)= - (ZDZZ(JIJ, 3)+2.*ZDZZ(JIJ, 2)) /      &
+          ( (ZDZZ(JIJ, 3)+ZDZZ(JIJ, 2)) * ZDZZ(JIJ, 2) )
 END DO
 
 !
 
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZSHUGRADWK1_2D(JI, JJ) = PDZZ(JI, JJ, IKB+2)
-  END DO
+DO JIJ=1, D%NIJT
+  ZWORKSHUGRAD_2D_1(JIJ)=(ZCOEFF(JIJ, IKB+2)*PUM(JIJ, IKB+2)       &
+                            +ZCOEFF(JIJ, IKB+1)*PUM(JIJ, IKB+1)       &
+                            +ZCOEFF(JIJ, IKB)*PUM(JIJ, IKB)       &
+                            )* 0.5 * ( PDZX(JIJ, IKB+1)+PDZX(JIJ, IKB))
+END DO
+
+CALL MXF2D_PHY(D, ZWORKSHUGRAD_2D_1, ZWORKSHUGRAD_2D_2)
+CALL MXF2D_PHY(D, PDXX(:,IKB), ZWORKSHUGRAD_2D_3)
+
+DO JIJ=1, D%NIJT
+  ZDU_DZ_DZS_DX(JIJ)=ZWORKSHUGRAD_2D_2(JIJ)/ ZWORKSHUGRAD_2D_3(JIJ)
 END DO
 
 !
-CALL MXM2D_PHY(D, ZSHUGRADWK1_2D, ZMXM2D_WORK1)
+CALL MYM2D_PHY(D, PDZZ(:,IKB), ZDZZ(:,IKB))
+CALL MYM2D_PHY(D, PDZZ(:,IKB+1), ZDZZ(:,IKB+1))
+CALL MYM2D_PHY(D, PDZZ(:,IKB+2), ZDZZ(:,IKB+2))
+!
 
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZDZZ(JI, JJ, IKB+2) = ZMXM2D_WORK1(JI, JJ)
-  END DO
+DO JIJ=1, IIJT
+     ZCOEFF(JIJ, IKB+2)= - ZDZZ(JIJ, 2) /      &
+          ( (ZDZZ(JIJ, 3)+ZDZZ(JIJ, 2)) * ZDZZ(JIJ, 3) )
+     ZCOEFF(JIJ, IKB+1)=   (ZDZZ(JIJ, 3)+ZDZZ(JIJ, 2)) /      &
+          ( ZDZZ(JIJ, 2) * ZDZZ(JIJ, 3) )
+     ZCOEFF(JIJ, IKB)= - (ZDZZ(JIJ, 3)+2.*ZDZZ(JIJ, 2)) /      &
+          ( (ZDZZ(JIJ, 3)+ZDZZ(JIJ, 2)) * ZDZZ(JIJ, 2) )
 END DO
 
-!
 
-DO JJ=1, IJT
-     DO JI=1, IIT
-       ZCOEFF(JI, JJ, IKB+2)= - ZDZZ(JI, JJ, 2) /      &
-            ( (ZDZZ(JI, JJ, 3)+ZDZZ(JI, JJ, 2)) * ZDZZ(JI, JJ, 3) )
-       ZCOEFF(JI, JJ, IKB+1)=   (ZDZZ(JI, JJ, 3)+ZDZZ(JI, JJ, 2)) /      &
-            ( ZDZZ(JI, JJ, 2) * ZDZZ(JI, JJ, 3) )
-       ZCOEFF(JI, JJ, IKB)= - (ZDZZ(JI, JJ, 3)+2.*ZDZZ(JI, JJ, 2)) /      &
-            ( (ZDZZ(JI, JJ, 3)+ZDZZ(JI, JJ, 2)) * ZDZZ(JI, JJ, 2) )
-  END DO
-   END DO
 
-!
-
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZSHUGRADWK1_2D(JI, JJ) = (ZCOEFF(JI, JJ, IKB+2)*PUM(JI, JJ, IKB+2)        +ZCOEFF(JI, JJ, IKB+1)*PUM(JI, JJ, IKB+1)        +ZCOEFF(JI, JJ, IKB)*PUM(JI, JJ, IKB)       ) * 0.5 * ( PDZX(JI, JJ, IKB+1)+PDZX(JI, JJ, IKB))
-  END DO
+DO JIJ=1, D%NIJT
+  ZWORKSHUGRAD_2D_1(JIJ)=(ZCOEFF(JIJ, IKB+2)*PVM(JIJ, IKB+2)       &
+                            +ZCOEFF(JIJ, IKB+1)*PVM(JIJ, IKB+1)       &
+                            +ZCOEFF(JIJ, IKB)*PVM(JIJ, IKB)       &
+                            )* 0.5 * ( PDZY(JIJ, IKB+1)+PDZY(JIJ, IKB))
 END DO
 
-!
-CALL MXF2D_PHY(D, ZSHUGRADWK1_2D, ZMXF2D_WORK1)
-CALL MXF2D_PHY(D, PDXX(:,:,IKB), ZMXF2D_WORK2)
+CALL MYF2D_PHY(D, ZWORKSHUGRAD_2D_1, ZWORKSHUGRAD_2D_2)
+CALL MYF2D_PHY(D, PDYY(:,IKB), ZWORKSHUGRAD_2D_3)
 
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZDU_DZ_DZS_DX(JI, JJ)=ZMXF2D_WORK1(JI, JJ)/ ZMXF2D_WORK2(JI, JJ)
-  END DO
-END DO
-
-!
-!
-CALL MYM2D_PHY(D, PDZZ(:,:,IKB), ZMYM2D_WORK1)
-
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZDZZ(JI, JJ, IKB) = ZMYM2D_WORK1(JI, JJ)
-  END DO
-END DO
-
-!
-
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZSHUGRADWK1_2D(JI, JJ) = PDZZ(JI, JJ, IKB+1)
-  END DO
-END DO
-
-!
-CALL MYM2D_PHY(D, ZSHUGRADWK1_2D, ZMYM2D_WORK1)
-
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZDZZ(JI, JJ, IKB+1) = ZMYM2D_WORK1(JI, JJ)
-  END DO
-END DO
-
-!
-
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZSHUGRADWK1_2D(JI, JJ) = PDZZ(JI, JJ, IKB+2)
-  END DO
-END DO
-
-!
-CALL MYM2D_PHY(D, ZSHUGRADWK1_2D, ZMYM2D_WORK1)
-
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZDZZ(JI, JJ, IKB+2) = ZMYM2D_WORK1(JI, JJ)
-  END DO
+DO JIJ=1, D%NIJT
+  ZDV_DZ_DZS_DY(JIJ)=ZWORKSHUGRAD_2D_2(JIJ)/ ZWORKSHUGRAD_2D_3(JIJ)
 END DO
 
 !
 !
+CALL DXF2D_PHY(D, PUM(:,IKB), ZWORKSHUGRAD_2D_1)
+CALL MXF2D_PHY(D, PDXX(:,IKB), ZWORKSHUGRAD_2D_2)
 
-DO JJ=1, IJT
-     DO JI=1, IIT
-       ZCOEFF(JI, JJ, IKB+2)= - ZDZZ(JI, JJ, 2) /      &
-            ( (ZDZZ(JI, JJ, 3)+ZDZZ(JI, JJ, 2)) * ZDZZ(JI, JJ, 3) )
-       ZCOEFF(JI, JJ, IKB+1)=   (ZDZZ(JI, JJ, 3)+ZDZZ(JI, JJ, 2)) /      &
-            ( ZDZZ(JI, JJ, 2) * ZDZZ(JI, JJ, 3) )
-       ZCOEFF(JI, JJ, IKB)= - (ZDZZ(JI, JJ, 3)+2.*ZDZZ(JI, JJ, 2)) /      &
-            ( (ZDZZ(JI, JJ, 3)+ZDZZ(JI, JJ, 2)) * ZDZZ(JI, JJ, 2) )
-  END DO
-   END DO
+DO JIJ=1, D%NIJT
+  ZDU_DX(JIJ)=  ZWORKSHUGRAD_2D_1(JIJ) / ZWORKSHUGRAD_2D_2(JIJ)  &
+                - ZDU_DZ_DZS_DX(JIJ)
+END DO
 
+CALL DYF2D_PHY(D, PVM(:,IKB), ZWORKSHUGRAD_2D_1)
+CALL MYF2D_PHY(D, PDYY(:,IKB), ZWORKSHUGRAD_2D_2)
 
-
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZSHUGRADWK1_2D(JI, JJ) = (ZCOEFF(JI, JJ, IKB+2)*PVM(JI, JJ, IKB+2)        +ZCOEFF(JI, JJ, IKB+1)*PVM(JI, JJ, IKB+1)        +ZCOEFF(JI, JJ, IKB)*PVM(JI, JJ, IKB)       ) * 0.5 * ( PDZY(JI, JJ, IKB+1)+PDZY(JI, JJ, IKB))
-  END DO
+DO JIJ=1, D%NIJT
+  ZDV_DY(JIJ)=  ZWORKSHUGRAD_2D_1(JIJ) / ZWORKSHUGRAD_2D_2(JIJ) &
+                - ZDV_DZ_DZS_DY(JIJ)
 END DO
 
 !
-CALL MYF2D_PHY(D, ZSHUGRADWK1_2D, ZMYF2D_WORK1)
-CALL MYF2D_PHY(D, PDYY(:,:,IKB), ZMYF2D_WORK2)
 
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZDV_DZ_DZS_DY(JI, JJ)=ZMYF2D_WORK1(JI, JJ)/ ZMYF2D_WORK2(JI, JJ)
-  END DO
-END DO
-
-!
-!
-!
-CALL DXF2D_PHY(D, PUM(:,:,IKB), ZDXF2D_WORK1)
-CALL MXF2D_PHY(D, PDXX(:,:,IKB), ZMXF2D_WORK1)
-
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZDU_DX(JI, JJ)=  ZDXF2D_WORK1(JI, JJ) / ZMXF2D_WORK1(JI, JJ)  &
-                  - ZDU_DZ_DZS_DX(JI, JJ)
-  END DO
-END DO
-
-!
-CALL DYF2D_PHY(D, PVM(:,:,IKB), ZDYF2D_WORK1)
-CALL MYF2D_PHY(D, PDYY(:,:,IKB), ZMYF2D_WORK1)
-
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZDV_DY(JI, JJ)=  ZDYF2D_WORK1(JI, JJ) / ZMYF2D_WORK1(JI, JJ) &
-                  - ZDV_DZ_DZS_DY(JI, JJ)
-  END DO
-END DO
-
-!
-!
-
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZDW_DZ(JI, JJ)=-ZDU_DX(JI, JJ)-ZDV_DY(JI, JJ)
-  END DO
+DO JIJ=1, IIJT
+  ZDW_DZ(JIJ)=-ZDU_DX(JIJ)-ZDV_DY(JIJ)
 END DO
 
 !
@@ -565,22 +386,20 @@ END DO
 !!$acc ! wait(4)
 !
 ! ! !!! we can launch the update of ZFLX on the part that has already been computed
-! ! !$acc update self(ZFLX(:,:,IKB+1:)) async(10)
+! ! !$acc update self(ZFLX(:,IKB+1:)) async(10)
 !attention !!!!! je ne comprends pas pourquoi mais ce update plante à l'execution...
 ! du coup je ne peux pas faire de update self asynchrone...
 !
 
-DO JJ=1, IJT
-     DO JI=1, IIT
-       ZFLX(JI, JJ, IKB)   = (2./3.) * PTKEM(JI, JJ, IKB)                           &
-            - XCMFS * PK(JI, JJ, IKB) * 2. * ZDU_DX(JI, JJ)
-  END DO
-   END DO
+DO JIJ=1, IIJT
+     ZFLX(JIJ, IKB)   = (2./3.) * PTKEM(JIJ, IKB)                           &
+          - XCMFS * PK(JIJ, IKB) * 2. * ZDU_DX(JIJ)
+END DO
 
 
 !!  &  to be tested later
-!! + XCMFB * PLM(:,:,IKB:IKB) /SQRT(PTKEM(:,:,IKB:IKB)) *        &
-!!   (-2./3.) * PTP(:,:,IKB:IKB)
+!! + XCMFB * PLM(:,IKB:IKB) /SQRT(PTKEM(:,IKB:IKB)) *        &
+!!   (-2./3.) * PTP(:,IKB:IKB)
 !
 ! extrapolates this flux under the ground with the surface flux
 !
@@ -589,44 +408,40 @@ DO JJ=1, IJT
 !!$acc ! wait(1)
 !
 
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZFLX(JI, JJ, IKB-1) =                                                            &
-            PTAU11M(JI, JJ) * PCOSSLOPE(JI, JJ)**2 * PDIRCOSZW(JI, JJ)**2                 &
-      -2. * PTAU12M(JI, JJ) * PCOSSLOPE(JI, JJ)* PSINSLOPE(JI, JJ) * PDIRCOSZW(JI, JJ)       &
-      +     PTAU22M(JI, JJ) * PSINSLOPE(JI, JJ)**2                                     &
-      +     PTAU33M(JI, JJ) * PCOSSLOPE(JI, JJ)**2 * ZDIRSINZW(JI, JJ)**2                 &
-      +2. * PCDUEFF(JI, JJ) *      (                                                &
-          PVSLOPEM(JI, JJ) * PCOSSLOPE(JI, JJ)    * PSINSLOPE(JI, JJ) * ZDIRSINZW(JI, JJ)    &
-        - PUSLOPEM(JI, JJ) * PCOSSLOPE(JI, JJ)**2 * ZDIRSINZW(JI, JJ) * PDIRCOSZW(JI, JJ)    )
-  END DO
+DO JIJ=1, IIJT
+  ZFLX(JIJ, IKB-1) =                                                            &
+          PTAU11M(JIJ) * PCOSSLOPE(JIJ)**2 * PDIRCOSZW(JIJ)**2                 &
+    -2. * PTAU12M(JIJ) * PCOSSLOPE(JIJ)* PSINSLOPE(JIJ) * PDIRCOSZW(JIJ)       &
+    +     PTAU22M(JIJ) * PSINSLOPE(JIJ)**2                                     &
+    +     PTAU33M(JIJ) * PCOSSLOPE(JIJ)**2 * ZDIRSINZW(JIJ)**2                 &
+    +2. * PCDUEFF(JIJ) *      (                                                &
+        PVSLOPEM(JIJ) * PCOSSLOPE(JIJ)    * PSINSLOPE(JIJ) * ZDIRSINZW(JIJ)    &
+      - PUSLOPEM(JIJ) * PCOSSLOPE(JIJ)**2 * ZDIRSINZW(JIJ) * PDIRCOSZW(JIJ)    )
 END DO
 
 ! 
-!!! wait for the computation of ZFLX(:,:,IKB) and ZFLX(:,:,IKB-1)
+!!! wait for the computation of ZFLX(:,IKB) and ZFLX(:,IKB-1)
 !!$acc ! wait(3) async(4)
 !
 
-DO JJ=1, IJT
-     DO JI=1, IIT
-       ZFLX(JI, JJ, IKB-1) = 2. * ZFLX(JI, JJ, IKB-1) -  ZFLX(JI, JJ, IKB)
-  END DO
-   END DO
+DO JIJ=1, IIJT
+     ZFLX(JIJ, IKB-1) = 2. * ZFLX(JIJ, IKB-1) -  ZFLX(JIJ, IKB)
+END DO
 
 !
 !
-!!! wait for the computation of ZFLX(:,:,IKB-1)
+!!! wait for the computation of ZFLX(:,IKB-1)
 !!$acc ! wait(4)
 !
 
 
 ! ! !!! we can launch the update of ZFLX on the rest
-! ! !$acc update self(ZFLX(:,:,1:IKB)) async(11)
+! ! !$acc update self(ZFLX(:,1:IKB)) async(11)
 ! ! !
 ! ! !!! and wait for the update self(ZFLX(...)) to complete
 ! ! !$acc wait(10)
 ! ! !$acc wait(11)
-!attention !!!!! je ne comprends pas pourquoi mais le update self(ZFLX(:,:,IKB+1:)) plante à l'execution...
+!attention !!!!! je ne comprends pas pourquoi mais le update self(ZFLX(:,IKB+1:)) plante à l'execution...
 ! du coup je ne peux pas faire de update self asynchrone...
 
 
@@ -655,118 +470,93 @@ IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
     NTYPE      = TYPEREAL,      &
     NDIMS      = 3,             &
     LTIMEDEP   = .TRUE.         )
-  CALL IO_Field_write(TPFILE,TZFIELD,ZFLX)
+  CALL IO_FIELD_WRITE_PHY(D, TPFILE,TZFIELD,ZFLX)
 END IF
 !
 ! Complete the U tendency
 IF (.NOT. OFLAT) THEN
-  CALL MXF_PHY(D, PDXX, ZMXF3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZSHUGRADWK1_3D(JI, JJ, JK) = PRHODJ(JI, JJ, JK) * ZFLX(JI, JJ, JK) / ZMXF3D_WORK1(JI, JJ, JK)
+  
+  DO JK=1, D%NKT
+    DO JIJ=1, D%NIJT
+      ZWORKSHUGRAD_3D_1(JIJ, JK)=PRHODJ(JIJ, JK)*ZFLX(JIJ, JK)
     END DO
   END DO
-END DO
-
-!
-CALL DXM_PHY(D, ZSHUGRADWK1_3D, ZDXM3D_WORK1)
-CALL MZM_PHY(D, PDXX, ZMZM3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZSHUGRADWK2_3D(JI, JJ, JK) = PRHODJ(JI, JJ, JK)*ZFLX(JI, JJ, JK)
+  
+  CALL MZM_PHY(D, ZWORKSHUGRAD_3D_1, ZWORKSHUGRAD_3D_2)
+  CALL MXF_PHY(D, PDXX, ZWORKSHUGRAD_3D_3)
+  CALL MZM_PHY(D, PDXX, ZWORKSHUGRAD_3D_4)
+  
+  DO JK=1, D%NKT
+    DO JIJ=1, D%NIJT
+      ZWORKSHUGRAD_3D_5(JIJ, JK)=ZWORKSHUGRAD_3D_2(JIJ, JK) * PINV_PDZZ(JIJ, JK)
     END DO
   END DO
-END DO
-
-!
-CALL MZM_PHY(D, ZSHUGRADWK2_3D, ZMZM3D_WORK2)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZSHUGRADWK1_3D(JI, JJ, JK) = ZMZM3D_WORK2(JI, JJ, JK) * PINV_PDZZ(JI, JJ, JK)
+  
+  CALL MXM_PHY(D, ZWORKSHUGRAD_3D_5, ZWORKSHUGRAD_3D_6)
+  
+  DO JK=1, D%NKT
+    DO JIJ=1, D%NIJT
+      ZWORKSHUGRAD_3D_7(JIJ, JK)=PRHODJ(JIJ, JK) * ZFLX(JIJ, JK) / ZWORKSHUGRAD_3D_3(JIJ, JK)
     END DO
   END DO
-END DO
-
-!
-CALL MXM_PHY(D, ZSHUGRADWK1_3D, ZMXM3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZSHUGRADWK1_3D(JI, JJ, JK) = PDZX(JI, JJ, JK) / ZMZM3D_WORK1(JI, JJ, JK) * ZMXM3D_WORK1(JI, JJ, JK)
+  
+  CALL DXM_PHY(D, ZWORKSHUGRAD_3D_7, ZWORKSHUGRAD_3D_8)
+  
+  DO JK=1, D%NKT
+    DO JIJ=1, D%NIJT
+      ZWORKSHUGRAD_3D_9(JIJ, JK)=PDZX(JIJ, JK) / ZWORKSHUGRAD_3D_4(JIJ, JK) * ZWORKSHUGRAD_3D_6(JIJ, JK)
     END DO
   END DO
-END DO
-
-!
-CALL DZF_PHY(D, ZSHUGRADWK1_3D, ZDZF3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      PRUS(JI, JJ, JK)=PRUS(JI, JJ, JK)                                            &
-                    -ZDXM3D_WORK1(JI, JJ, JK)                &
-                    +ZDZF3D_WORK1(JI, JJ, JK)
+  
+  CALL DZF_PHY(D, ZWORKSHUGRAD_3D_9, ZWORKSHUGRAD_3D_10)
+  
+  DO JK=1, D%NKT
+    DO JIJ=1, D%NIJT
+      PRUS(JIJ, JK)=PRUS(JIJ, JK)                                            &
+                  -ZWORKSHUGRAD_3D_8(JIJ, JK)                &
+                  +ZWORKSHUGRAD_3D_10(JIJ, JK)
     END DO
   END DO
-END DO
-
-!
+  
 ELSE
-  CALL MXF_PHY(D, PDXX, ZMXF3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZSHUGRADWK1_3D(JI, JJ, JK) = PRHODJ(JI, JJ, JK) * ZFLX(JI, JJ, JK) / ZMXF3D_WORK1(JI, JJ, JK)
+  CALL MXF_PHY(D, PDXX, ZWORKSHUGRAD_3D_1)
+  
+  DO JK=1, D%NKT
+    DO JIJ=1, D%NIJT
+      ZWORKSHUGRAD_3D_2(JIJ, JK)=PRHODJ(JIJ, JK) * ZFLX(JIJ, JK) / ZWORKSHUGRAD_3D_1(JIJ, JK)
     END DO
   END DO
-END DO
-
-!
-CALL DXM_PHY(D, ZSHUGRADWK1_3D, ZDXM3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      PRUS(JI, JJ, JK)=PRUS(JI, JJ, JK) -ZDXM3D_WORK1(JI, JJ, JK)
+  
+  CALL DXM_PHY(D, ZWORKSHUGRAD_3D_2, ZWORKSHUGRAD_3D_3)
+  
+  DO JK=1, D%NKT
+    DO JIJ=1, D%NIJT
+      PRUS(JIJ, JK)=PRUS(JIJ, JK) -ZWORKSHUGRAD_3D_3(JIJ, JK)
     END DO
   END DO
-END DO
-
-!
+  
 END IF
 !
 IF (KSPLT==1) THEN
   ! Contribution to the dynamic production of TKE:
    
    DO JK=1, IKT
-        DO JJ=1, IJT
-          DO JI=1, IIT
-            ZWORK(JI, JJ, JK)     = - ZFLX(JI, JJ, JK) * GX_U_M_PUM(JI, JJ, JK)
-       END DO
-        END DO
+        DO JIJ=1, IIJT
+          ZWORK(JIJ, JK)     = - ZFLX(JIJ, JK) * GX_U_M_PUM(JIJ, JK)
+     END DO
       END DO
   
   !
   ! evaluate the dynamic production at w(IKB+1) in PDP(IKB)
   !
   
-   DO JJ=1, IJT
-        DO JI=1, IIT
-          ZWORK(JI, JJ, IKB) = 0.5* ( -ZFLX(JI, JJ, IKB)*ZDU_DX(JI, JJ) + ZWORK(JI, JJ, IKB+1) )
-     END DO
-      END DO
+   DO JIJ=1, IIJT
+        ZWORK(JIJ, IKB) = 0.5* ( -ZFLX(JIJ, IKB)*ZDU_DX(JIJ) + ZWORK(JIJ, IKB+1) )
+   END DO
    
   !
   
-  PDP(:,:,:) = PDP(:,:,:) + ZWORK(:,:,:)
+  PDP(:,:) = PDP(:,:) + ZWORK(:,:)
   
 END IF
 !
@@ -792,14 +582,12 @@ END IF
 IF (.NOT. O2D) THEN
    
    DO JK=1, IKT
-        DO JJ=1, IJT
-          DO JI=1, IIT
-            ZFLX(JI, JJ, JK)= (2./3.) * PTKEM(JI, JJ, JK)                                  &
-                 - XCMFS * PK(JI, JJ, JK) *( (4./3.) * GY_V_M_PVM(JI, JJ, JK)                        &
-                 -(2./3.) * ( GX_U_M_PUM(JI, JJ, JK)                      &
-                 +GZ_W_M_PWM(JI, JJ, JK)                ) )
-       END DO
-        END DO
+        DO JIJ=1, IIJT
+          ZFLX(JIJ, JK)= (2./3.) * PTKEM(JIJ, JK)                                  &
+               - XCMFS * PK(JIJ, JK) *( (4./3.) * GY_V_M_PVM(JIJ, JK)                        &
+               -(2./3.) * ( GX_U_M_PUM(JIJ, JK)                      &
+               +GZ_W_M_PWM(JIJ, JK)                ) )
+     END DO
       END DO
    
   !! &  to be tested
@@ -808,13 +596,11 @@ IF (.NOT. O2D) THEN
 ELSE
    
    DO JK=1, IKT
-        DO JJ=1, IJT
-          DO JI=1, IIT
-            ZFLX(JI, JJ, JK)= (2./3.) * PTKEM(JI, JJ, JK)                           &
-                 - XCMFS * PK(JI, JJ, JK) *(-(2./3.) * ( GX_U_M_PUM(JI, JJ, JK)        &
-                                            +GZ_W_M_PWM(JI, JJ, JK)     ) )  
-       END DO
-        END DO
+        DO JIJ=1, IIJT
+          ZFLX(JIJ, JK)= (2./3.) * PTKEM(JIJ, JK)                           &
+               - XCMFS * PK(JIJ, JK) *(-(2./3.) * ( GX_U_M_PUM(JIJ, JK)        &
+                                          +GZ_W_M_PWM(JIJ, JK)     ) )  
+     END DO
       END DO
    
   !! &  to be tested
@@ -823,53 +609,47 @@ ELSE
 END IF
 !
 
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZFLX(JI, JJ, IKE+1) = ZFLX(JI, JJ, IKE) 
-  END DO
+DO JIJ=1, IIJT
+  ZFLX(JIJ, IKE+1) = ZFLX(JIJ, IKE) 
 END DO
 
 !
 ! ! !!! wait for the computation of ZFLX to begin the update
 ! ! !$acc wait(3)
-! ! !$acc update self(ZFLX(:,:,IKB+1:)) async(10)
+! ! !$acc update self(ZFLX(:,IKB+1:)) async(10)
 !
 
-DO JJ=1, IJT
-     DO JI=1, IIT
-       ZFLX(JI, JJ, IKB)   = (2./3.) * PTKEM(JI, JJ, IKB)                           &
-            - XCMFS * PK(JI, JJ, IKB) * 2. * ZDV_DY(JI, JJ)
-  END DO
-   END DO
+DO JIJ=1, IIJT
+     ZFLX(JIJ, IKB)   = (2./3.) * PTKEM(JIJ, IKB)                           &
+          - XCMFS * PK(JIJ, IKB) * 2. * ZDV_DY(JIJ)
+END DO
 
 
 !!           & to be tested
-!! + XCMFB * PLM(:,:,IKB:IKB) /SQRT(PTKEM(:,:,IKB:IKB)) *         &
-!!   (-2./3.) * PTP(:,:,IKB:IKB)
+!! + XCMFB * PLM(:,IKB:IKB) /SQRT(PTKEM(:,IKB:IKB)) *         &
+!!   (-2./3.) * PTP(:,IKB:IKB)
 !
 ! extrapolates this flux under the ground with the surface flux
 
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZFLX(JI, JJ, IKB-1) =                                                            &
-            PTAU11M(JI, JJ) * PSINSLOPE(JI, JJ)**2 * PDIRCOSZW(JI, JJ)**2                 &         
-      +2. * PTAU12M(JI, JJ) * PCOSSLOPE(JI, JJ)* PSINSLOPE(JI, JJ) * PDIRCOSZW(JI, JJ)       &
-      +     PTAU22M(JI, JJ) * PCOSSLOPE(JI, JJ)**2                                     &
-      +     PTAU33M(JI, JJ) * PSINSLOPE(JI, JJ)**2 * ZDIRSINZW(JI, JJ)**2                 &
-      -2. * PCDUEFF(JI, JJ)*       (                                                &
-          PUSLOPEM(JI, JJ) * PSINSLOPE(JI, JJ)**2 * ZDIRSINZW(JI, JJ) * PDIRCOSZW(JI, JJ)    &
-        + PVSLOPEM(JI, JJ) * PCOSSLOPE(JI, JJ)    * PSINSLOPE(JI, JJ) * ZDIRSINZW(JI, JJ)    )
-  END DO
+DO JIJ=1, IIJT
+  ZFLX(JIJ, IKB-1) =                                                            &
+          PTAU11M(JIJ) * PSINSLOPE(JIJ)**2 * PDIRCOSZW(JIJ)**2                 &         
+    +2. * PTAU12M(JIJ) * PCOSSLOPE(JIJ)* PSINSLOPE(JIJ) * PDIRCOSZW(JIJ)       &
+    +     PTAU22M(JIJ) * PCOSSLOPE(JIJ)**2                                     &
+    +     PTAU33M(JIJ) * PSINSLOPE(JIJ)**2 * ZDIRSINZW(JIJ)**2                 &
+    -2. * PCDUEFF(JIJ)*       (                                                &
+        PUSLOPEM(JIJ) * PSINSLOPE(JIJ)**2 * ZDIRSINZW(JIJ) * PDIRCOSZW(JIJ)    &
+      + PVSLOPEM(JIJ) * PCOSSLOPE(JIJ)    * PSINSLOPE(JIJ) * ZDIRSINZW(JIJ)    )
 END DO
 
 !
 
-ZFLX(:,:,IKB-1) = 2. * ZFLX(:,:,IKB-1) -  ZFLX(:,:,IKB)
+ZFLX(:,IKB-1) = 2. * ZFLX(:,IKB-1) -  ZFLX(:,IKB)
 
 !
 !
-! ! !!! wait for the computation of ZFLX(:,:,1:IKB) to begin the update
-! ! !$acc update self(ZFLX(:,:,IKB+1:)) async(3)
+! ! !!! wait for the computation of ZFLX(:,1:IKB) to begin the update
+! ! !$acc update self(ZFLX(:,IKB+1:)) async(3)
 ! ! !
 ! ! !!! and wait for the update self(ZFLX(...)) to complete
 ! ! !$acc wait(10)
@@ -896,7 +676,7 @@ IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
     NTYPE      = TYPEREAL,      &
     NDIMS      = 3,             &
     LTIMEDEP   = .TRUE.         )
-  CALL IO_Field_write(TPFILE,TZFIELD,ZFLX)
+  CALL IO_FIELD_WRITE_PHY(D, TPFILE,TZFIELD,ZFLX)
 END IF
 !
 !!! wait for the computation of PRUS (that uses temporary variables)
@@ -907,98 +687,75 @@ END IF
 ! Complete the V tendency
 IF (.NOT. O2D) THEN
   IF (.NOT. OFLAT) THEN
-    CALL MYF_PHY(D, PDYY, ZMYF3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZSHUGRADWK1_3D(JI, JJ, JK) = PRHODJ(JI, JJ, JK) * ZFLX(JI, JJ, JK) / ZMYF3D_WORK1(JI, JJ, JK)
+    
+    DO JK=1, D%NKT
+      DO JIJ=1, D%NIJT
+        ZWORKSHUGRAD_3D_1(JIJ, JK)=PRHODJ(JIJ, JK)*ZFLX(JIJ, JK)
+      END DO
     END DO
-  END DO
-END DO
-
-!
-CALL DYM_PHY(D, ZSHUGRADWK1_3D, ZDYM3D_WORK1)
-CALL MZM_PHY(D, PDYY, ZMZM3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZSHUGRADWK2_3D(JI, JJ, JK) = PRHODJ(JI, JJ, JK)*ZFLX(JI, JJ, JK)
+    
+    CALL MZM_PHY(D, ZWORKSHUGRAD_3D_1, ZWORKSHUGRAD_3D_2)
+    CALL MYF_PHY(D, PDYY, ZWORKSHUGRAD_3D_3)
+    CALL MZM_PHY(D, PDYY, ZWORKSHUGRAD_3D_4)
+    
+    DO JK=1, D%NKT
+      DO JIJ=1, D%NIJT
+        ZWORKSHUGRAD_3D_5(JIJ, JK)=ZWORKSHUGRAD_3D_2(JIJ, JK) * PINV_PDZZ(JIJ, JK)
+      END DO
     END DO
-  END DO
-END DO
-
-!
-CALL MZM_PHY(D, ZSHUGRADWK2_3D, ZMZM3D_WORK2)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZSHUGRADWK1_3D(JI, JJ, JK) = ZMZM3D_WORK2(JI, JJ, JK) * PINV_PDZZ(JI, JJ, JK)
+    
+    CALL MYM_PHY(D, ZWORKSHUGRAD_3D_5, ZWORKSHUGRAD_3D_6)
+    
+    DO JK=1, D%NKT
+      DO JIJ=1, D%NIJT
+        ZWORKSHUGRAD_3D_7(JIJ, JK)=PRHODJ(JIJ, JK) * ZFLX(JIJ, JK) / ZWORKSHUGRAD_3D_3(JIJ, JK)
+      END DO
     END DO
-  END DO
-END DO
-
-!
-CALL MYM_PHY(D, ZSHUGRADWK1_3D, ZMYM3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZSHUGRADWK1_3D(JI, JJ, JK) = PDZY(JI, JJ, JK) / ZMZM3D_WORK1(JI, JJ, JK) *                      &
-                      ZMYM3D_WORK1(JI, JJ, JK)
+    
+    CALL DYM_PHY(D, ZWORKSHUGRAD_3D_7, ZWORKSHUGRAD_3D_8)
+    
+    DO JK=1, D%NKT
+      DO JIJ=1, D%NIJT
+        ZWORKSHUGRAD_3D_9(JIJ, JK)=PDZY(JIJ, JK) / ZWORKSHUGRAD_3D_4(JIJ, JK) *                      &
+                    ZWORKSHUGRAD_3D_6(JIJ, JK)
+      END DO
     END DO
-  END DO
-END DO
-
-!
-CALL DZF_PHY(D, ZSHUGRADWK1_3D, ZDZF3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      PRVS(JI, JJ, JK)=PRVS(JI, JJ, JK)                                          &
-                      -ZDYM3D_WORK1(JI, JJ, JK)              &
-                      +ZDZF3D_WORK1(JI, JJ, JK)  
+    
+    CALL DZF_PHY(D, ZWORKSHUGRAD_3D_9, ZWORKSHUGRAD_3D_10)
+    
+    DO JK=1, D%NKT
+      DO JIJ=1, D%NIJT
+        PRVS(JIJ, JK)=PRVS(JIJ, JK)                                          &
+                    -ZWORKSHUGRAD_3D_8(JIJ, JK)              &
+                    +ZWORKSHUGRAD_3D_10(JIJ, JK)
+      END DO
     END DO
-  END DO
-END DO
-
-!
-ELSE
-    CALL MYF_PHY(D, PDYY, ZMYF3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZSHUGRADWK1_3D(JI, JJ, JK) = PRHODJ(JI, JJ, JK) * ZFLX(JI, JJ, JK) / ZMYF3D_WORK1(JI, JJ, JK)
+    
+  ELSE
+    CALL MYF_PHY(D, PDYY, ZWORKSHUGRAD_3D_1)
+    
+    DO JK=1, D%NKT
+      DO JIJ=1, D%NIJT
+        ZWORKSHUGRAD_3D_2(JIJ, JK)=PRHODJ(JIJ, JK) * ZFLX(JIJ, JK) / ZWORKSHUGRAD_3D_1(JIJ, JK)
+      END DO
     END DO
-  END DO
-END DO
-
-!
-CALL DYM_PHY(D, ZSHUGRADWK1_3D, ZDYM3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      PRVS(JI, JJ, JK)=PRVS(JI, JJ, JK) -ZDYM3D_WORK1(JI, JJ, JK)  
+    
+    CALL DYM_PHY(D, ZWORKSHUGRAD_3D_2, ZWORKSHUGRAD_3D_3)
+    
+    DO JK=1, D%NKT
+      DO JIJ=1, D%NIJT
+        PRVS(JIJ, JK)=PRVS(JIJ, JK) -ZWORKSHUGRAD_3D_3(JIJ, JK)
+      END DO
     END DO
-  END DO
-END DO
-
-!
-END IF
+    
+  END IF
 !
 ! Contribution to the dynamic production of TKE:
   IF (KSPLT==1) THEN
      
      DO JK=1, IKT
-       DO JJ=1, IJT
-         DO JI=1, IIT
-           ZWORK(JI, JJ, JK)     = - ZFLX(JI, JJ, JK) * GY_V_M_PVM(JI, JJ, JK)
-         END DO
+       DO JIJ=1, IIJT
+         ZWORK(JIJ, JK)     = - ZFLX(JIJ, JK) * GY_V_M_PVM(JIJ, JK)
        END DO
      END DO
      
@@ -1006,10 +763,8 @@ END IF
 ELSE
   
   DO JK=1, IKT
-    DO JJ=1, IJT
-      DO JI=1, IIT
-        ZWORK(JI, JJ, JK)     = 0.
-      END DO
+    DO JIJ=1, IIJT
+      ZWORK(JIJ, JK)     = 0.
     END DO
   END DO
   
@@ -1020,19 +775,15 @@ IF (KSPLT==1) THEN
   ! evaluate the dynamic production at w(IKB+1) in PDP(IKB)
   !
    
-   DO JJ=1, IJT
-        DO JI=1, IIT
-          ZWORK(JI, JJ, IKB) = 0.5* ( -ZFLX(JI, JJ, IKB)*ZDV_DY(JI, JJ) + ZWORK(JI, JJ, IKB+1) )
-     END DO
-      END DO
+   DO JIJ=1, IIJT
+        ZWORK(JIJ, IKB) = 0.5* ( -ZFLX(JIJ, IKB)*ZDV_DY(JIJ) + ZWORK(JIJ, IKB+1) )
+   END DO
    
   !
   
   DO JK=1, IKT
-    DO JJ=1, IJT
-      DO JI=1, IIT
-        PDP(JI, JJ, JK) = PDP(JI, JJ, JK) + ZWORK(JI, JJ, JK)
-      END DO
+    DO JIJ=1, IIJT
+      PDP(JIJ, JK) = PDP(JIJ, JK) + ZWORK(JIJ, JK)
     END DO
   END DO
   
@@ -1056,14 +807,12 @@ END IF
 IF (.NOT. O2D) THEN
    
    DO JK=1, IKT
-        DO JJ=1, IJT
-          DO JI=1, IIT
-            ZFLX(JI, JJ, JK) = (2./3.) * PTKEM(JI, JJ, JK)                                  &
-                 - XCMFS * PK(JI, JJ, JK) *( (4./3.) * GZ_W_M_PWM(JI, JJ, JK)                        &
-                 -(2./3.) * ( GX_U_M_PUM(JI, JJ, JK)                      &
-                 +GY_V_M_PVM(JI, JJ, JK)                ) )
-       END DO
-        END DO
+        DO JIJ=1, IIJT
+          ZFLX(JIJ, JK) = (2./3.) * PTKEM(JIJ, JK)                                  &
+               - XCMFS * PK(JIJ, JK) *( (4./3.) * GZ_W_M_PWM(JIJ, JK)                        &
+               -(2./3.) * ( GX_U_M_PUM(JIJ, JK)                      &
+               +GY_V_M_PVM(JIJ, JK)                ) )
+     END DO
       END DO
   
   !!  &  to be tested
@@ -1071,13 +820,11 @@ IF (.NOT. O2D) THEN
 ELSE
    
    DO JK=1, IKT
-        DO JJ=1, IJT
-          DO JI=1, IIT
-            ZFLX(JI, JJ, JK)= (2./3.) * PTKEM(JI, JJ, JK)                           &
-                 - XCMFS * PK(JI, JJ, JK) *( (4./3.) * GZ_W_M_PWM(JI, JJ, JK)          &
-                 -(2./3.) * ( GX_U_M_PUM(JI, JJ, JK)           ) ) 
-       END DO
-        END DO
+        DO JIJ=1, IIJT
+          ZFLX(JIJ, JK)= (2./3.) * PTKEM(JIJ, JK)                           &
+               - XCMFS * PK(JIJ, JK) *( (4./3.) * GZ_W_M_PWM(JIJ, JK)          &
+               -(2./3.) * ( GX_U_M_PUM(JIJ, JK)           ) ) 
+     END DO
       END DO
    
   !!  &  to be tested
@@ -1085,10 +832,8 @@ ELSE
 END IF
 !
 
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZFLX(JI, JJ, IKE+1)= ZFLX(JI, JJ, IKE)
-  END DO
+DO JIJ=1, IIJT
+  ZFLX(JIJ, IKE+1)= ZFLX(JIJ, IKE)
 END DO
 
 !!! wait for the computation of ZWORK, PDP and ZFLX
@@ -1096,40 +841,34 @@ END DO
 !
 !
 
-DO JJ=1, IJT
-     DO JI=1, IIT
-       ZFLX(JI, JJ, IKB)   = (2./3.) * PTKEM(JI, JJ, IKB)                           &
-            - XCMFS * PK(JI, JJ, IKB) * 2. * ZDW_DZ(JI, JJ)
-  END DO
-   END DO
+DO JIJ=1, IIJT
+     ZFLX(JIJ, IKB)   = (2./3.) * PTKEM(JIJ, IKB)                           &
+          - XCMFS * PK(JIJ, IKB) * 2. * ZDW_DZ(JIJ)
+END DO
 
 
 !
 
 !             &  to be tested
-!   - 2.* XCMFB * PLM(:,:,IKB:IKB) /SQRT(PTKEM(:,:,IKB:IKB)) *             &
-!  (-2./3.) * PTP(:,:,IKB:IKB)
+!   - 2.* XCMFB * PLM(:,IKB:IKB) /SQRT(PTKEM(:,IKB:IKB)) *             &
+!  (-2./3.) * PTP(:,IKB:IKB)
 ! extrapolates this flux under the ground with the surface flux
 
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZFLX(JI, JJ, IKB-1) =                                                     &
-            PTAU11M(JI, JJ) * ZDIRSINZW(JI, JJ)**2                                &
-      +     PTAU33M(JI, JJ) * PDIRCOSZW(JI, JJ)**2                                &
-      +2. * PCDUEFF(JI, JJ)* PUSLOPEM(JI, JJ)  * ZDIRSINZW(JI, JJ) * PDIRCOSZW(JI, JJ) 
-  END DO
+DO JIJ=1, IIJT
+  ZFLX(JIJ, IKB-1) =                                                     &
+          PTAU11M(JIJ) * ZDIRSINZW(JIJ)**2                                &
+    +     PTAU33M(JIJ) * PDIRCOSZW(JIJ)**2                                &
+    +2. * PCDUEFF(JIJ)* PUSLOPEM(JIJ)  * ZDIRSINZW(JIJ) * PDIRCOSZW(JIJ) 
 END DO
 
 ! 
 !
-!!! wait for the computation of ZFLX(:,:,IKB-1) and ZFLX(:,:,IKB)
+!!! wait for the computation of ZFLX(:,IKB-1) and ZFLX(:,IKB)
 !!$acc ! wait(2) ! async(3)
 !
 
-DO JJ=1, IJT
-  DO JI=1, IIT
-    ZFLX(JI, JJ, IKB-1) = 2. * ZFLX(JI, JJ, IKB-1) - ZFLX(JI, JJ, IKB)
-  END DO
+DO JIJ=1, IIJT
+  ZFLX(JIJ, IKB-1) = 2. * ZFLX(JIJ, IKB-1) - ZFLX(JIJ, IKB)
 END DO
 
 !
@@ -1148,7 +887,7 @@ IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
     NTYPE      = TYPEREAL,      &
     NDIMS      = 3,             &
     LTIMEDEP   = .TRUE.         )
-  CALL IO_Field_write(TPFILE,TZFIELD,ZFLX)
+  CALL IO_FIELD_WRITE_PHY(D, TPFILE,TZFIELD,ZFLX)
 END IF
 !
 !
@@ -1159,65 +898,46 @@ END IF
 !
 ! Complete the W tendency
 !
-!PRWS(:,:,:)=PRWS(:,:,:) - DZM( PRHODJ*ZFLX/MZF(PDZZ) )
+!PRWS(:,:)=PRWS(:,:) - DZM( PRHODJ*ZFLX/MZF(PDZZ) )
 
 DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZDFDDWDZ(JI, JJ, JK)    = - XCMFS * PK(JI, JJ, JK) * (4./3.)
-    END DO
+  DO JIJ=1, IIJT
+    ZDFDDWDZ(JIJ, JK)    = - XCMFS * PK(JIJ, JK) * (4./3.)
   END DO
 END DO
 
 
 DO JK=1, IKB
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZDFDDWDZ(JI, JJ, JK) = 0.
-    END DO
+  DO JIJ=1, IIJT
+    ZDFDDWDZ(JIJ, JK) = 0.
   END DO
 END DO
 
 !
-!!! wait for the computation of ZFLX(:,:,IKB-1) and ZDFDDWDZ
+!!! wait for the computation of ZFLX(:,IKB-1) and ZDFDDWDZ
 !!$acc ! wait(3) async(2)
 !!$acc ! wait(2)
 !
 CALL TRIDIAG_W(D,PWM,ZFLX,ZDFDDWDZ,PTSTEP,ZMZF_DZZ,PRHODJ,ZWP)
 !
-CALL MZM_PHY(D, PRHODJ, ZMZM3D_WORK1)
+CALL MZM_PHY(D, PRHODJ, ZWORKSHUGRAD_3D_1)
 
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      PRWS(JI, JJ, JK) = PRWS(JI, JJ, JK) + ZMZM3D_WORK1(JI, JJ, JK)*(ZWP(JI, JJ, JK)-PWM(JI, JJ, JK))/PTSTEP
-    END DO
+DO JK=1, D%NKT
+  DO JIJ=1, D%NIJT
+    PRWS(JIJ, JK) = PRWS(JIJ, JK) + ZWORKSHUGRAD_3D_1(JIJ, JK)*(ZWP(JIJ, JK)-PWM(JIJ, JK))/PTSTEP
   END DO
 END DO
 
-!
 !
 !* recomputes flux using guess of W
 !
-CALL GZ_W_M_PHY(D, ZWP,PDZZ, ZGZ_W_M3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      GZ_W_M_ZWP(JI, JJ, JK) = ZGZ_W_M3D_WORK1(JI, JJ, JK)
-    END DO
-  END DO
-END DO
-
-!
+CALL GZ_W_M_PHY(D, ZWP, PDZZ, GZ_W_M_ZWP)
 
 DO JK=IKB+1, IKT
-     DO JJ=1, IJT
-       DO JI=1, IIT
-         ZFLX(JI, JJ, JK)=ZFLX(JI, JJ, JK) &
-              - XCMFS * PK(JI, JJ, JK) * (4./3.) * (GZ_W_M_ZWP(JI, JJ, JK) - GZ_W_M_PWM(JI, JJ, JK))
-    END DO
-     END DO
+     DO JIJ=1, IIJT
+       ZFLX(JIJ, JK)=ZFLX(JIJ, JK) &
+            - XCMFS * PK(JIJ, JK) * (4./3.) * (GZ_W_M_ZWP(JIJ, JK) - GZ_W_M_PWM(JIJ, JK))
+  END DO
    END DO
 
 !
@@ -1225,30 +945,24 @@ IF (KSPLT==1) THEN
    !Contribution to the dynamic production of TKE:
    
    DO JK=1, IKT
-        DO JJ=1, IJT
-          DO JI=1, IIT
-            ZWORK(JI, JJ, JK) = - ZFLX(JI, JJ, JK) * GZ_W_M_ZWP(JI, JJ, JK)
-       END DO
-        END DO
+        DO JIJ=1, IIJT
+          ZWORK(JIJ, JK) = - ZFLX(JIJ, JK) * GZ_W_M_ZWP(JIJ, JK)
+     END DO
       END DO
    
   !
   ! evaluate the dynamic production at w(IKB+1) in PDP(IKB)
   !
    
-   DO JJ=1, IJT
-        DO JI=1, IIT
-          ZWORK(JI, JJ, IKB) = 0.5* ( -ZFLX(JI, JJ, IKB)*ZDW_DZ(JI, JJ) + ZWORK(JI, JJ, IKB+1) )
-     END DO
-      END DO
+   DO JIJ=1, IIJT
+        ZWORK(JIJ, IKB) = 0.5* ( -ZFLX(JIJ, IKB)*ZDW_DZ(JIJ) + ZWORK(JIJ, IKB+1) )
+   END DO
    
   !
   
   DO JK=1, IKT
-    DO JJ=1, IJT
-      DO JI=1, IIT
-        PDP(JI, JJ, JK) = PDP(JI, JJ, JK) + ZWORK(JI, JJ, JK)
-      END DO
+    DO JIJ=1, IIJT
+      PDP(JIJ, JK) = PDP(JIJ, JK) + ZWORK(JIJ, JK)
     END DO
   END DO
   
@@ -1262,57 +976,69 @@ IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
   CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZFLX, TLES%X_LES_SUBGRID_W2 ) 
   ZWKLES = -ZWORK
   CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_RES_ddxa_W_SBG_UaW , .TRUE.)
-  ZWKLES = GZ_M_M(PTHLM,PDZZ)*ZFLX
-  CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_RES_ddxa_Thl_SBG_UaW , .TRUE.)
-  CALL GZ_M_W_PHY(D, PTHLM,PDZZ, ZGZ_M_W3D_WORK1)
-CALL MZF_PHY(D, ZGZ_M_W3D_WORK1, ZMZF3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZWKLES(JI, JJ, JK) = ZFLX(JI, JJ, JK)*ZMZF3D_WORK1(JI, JJ, JK)  
+  CALL GZ_M_M_PHY(D, PTHLM, PDZZ, ZWORKSHUGRAD_3D_1)
+  
+  DO JK=1, D%NKT
+    DO JIJ=1, D%NIJT
+      ZWKLES(JIJ, JK) = ZWORKSHUGRAD_3D_1(JIJ, JK)*ZFLX(JIJ, JK)
     END DO
   END DO
-END DO
-
-!
-CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_RES_ddz_Thl_SBG_W2)
+  
+  CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_RES_ddxa_Thl_SBG_UaW , .TRUE.)
+  CALL GZ_M_W_PHY(D, PTHLM, PDZZ, ZWORKSHUGRAD_3D_1)
+  CALL MZF_PHY(D, ZWORKSHUGRAD_3D_1, ZWORKSHUGRAD_3D_2)
+  
+  DO JK=1, D%NKT
+    DO JIJ=1, D%NIJT
+      ZWKLES(JIJ, JK) = ZFLX(JIJ, JK)*ZWORKSHUGRAD_3D_2(JIJ, JK)
+    END DO
+  END DO
+  
+  CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_RES_ddz_Thl_SBG_W2)
   IF (KRR>=1) THEN
-    ZWKLES = GZ_M_M(PRM(:,:,:,1),PDZZ)*ZFLX
+    CALL GZ_M_M_PHY(D, PRM(:,:,1), PDZZ, ZWORKSHUGRAD_3D_1)
+    
+    DO JK=1, D%NKT
+      DO JIJ=1, D%NIJT
+        ZWKLES(JIJ, JK) = ZWORKSHUGRAD_3D_1(JIJ, JK)*ZFLX(JIJ, JK)
+      END DO
+    END DO
+    
     CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
                            TLES%X_LES_RES_ddxa_Rt_SBG_UaW , .TRUE.)
-    CALL GZ_M_W_PHY(D, PRM(:,:,:,1),PDZZ, ZGZ_M_W3D_WORK1)
-CALL MZF_PHY(D, ZGZ_M_W3D_WORK1, ZMZF3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZWKLES(JI, JJ, JK) = ZFLX(JI, JJ, JK)*ZMZF3D_WORK1(JI, JJ, JK)    
+    CALL GZ_M_W_PHY(D, PRM(:,:,1), PDZZ, ZWORKSHUGRAD_3D_1)
+    CALL MZF_PHY(D, ZWORKSHUGRAD_3D_1, ZWORKSHUGRAD_3D_2)
+    
+    DO JK=1, D%NKT
+      DO JIJ=1, D%NIJT
+        ZWKLES(JIJ, JK) = ZFLX(JIJ, JK)*ZWORKSHUGRAD_3D_2(JIJ, JK)
+      END DO
     END DO
-  END DO
-END DO
-
-!
-CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
+    
+    CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
                            TLES%X_LES_RES_ddz_Rt_SBG_W2)
   END IF
   DO JSV=1,KSV
-    ZWKLES = GZ_M_M(PSVM(:,:,:,JSV),PDZZ)*ZFLX
+    CALL GZ_M_M_PHY(D, PSVM(:,:,JSV), PDZZ, ZWORKSHUGRAD_3D_1)
+    
+    DO JK=1, D%NKT
+      DO JIJ=1, D%NIJT
+        ZWKLES(JIJ, JK) = ZWORKSHUGRAD_3D_1(JIJ, JK)*ZFLX(JIJ, JK)
+      END DO
+    END DO
+    
     CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
                            TLES%X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,JSV) , .TRUE.)
-    CALL GZ_M_W_PHY(D, PSVM(:,:,:,JSV),PDZZ, ZGZ_M_W3D_WORK1)
-CALL MZF_PHY(D, ZGZ_M_W3D_WORK1, ZMZF3D_WORK1)
-
-DO JK=1, IKT
-  DO JJ=1, IJT
-    DO JI=1, IIT
-      ZWKLES(JI, JJ, JK) = ZFLX(JI, JJ, JK)*ZMZF3D_WORK1(JI, JJ, JK)    
+    CALL GZ_M_W_PHY(D, PSVM(:,:,JSV), PDZZ, ZWORKSHUGRAD_3D_1)
+    CALL MZF_PHY(D, ZWORKSHUGRAD_3D_1, ZWORKSHUGRAD_3D_2)
+    
+    DO JK=1, D%NKT
+      DO JIJ=1, D%NIJT
+        ZWKLES(JIJ, JK) = ZFLX(JIJ, JK)*ZWORKSHUGRAD_3D_2(JIJ, JK)
+      END DO
     END DO
-  END DO
-END DO
-
-!
-CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
+    
+    CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
                            TLES%X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
   END DO
   CALL SECOND_MNH(ZTIME2)

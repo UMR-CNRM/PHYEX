@@ -11,6 +11,54 @@ MODULE MODE_ARGSLIST_ll_PHY
 !
  CONTAINS
 !
+ SUBROUTINE ADD2DFIELD_ll_PHY(D, TPLIST, PFIELD, HNAME)
+!!    ###############################################
+!
+!!****  *ADD3DFIELD_ll_PHY* -
+!
+!!    Purpose
+!!    -------
+!     This routine is used as an interface to ADD3DFIELD_ll for
+!     unpacking horizontal dimensions
+!
+!!    Reference
+!!    ---------
+!
+!     see PHYEX documentation
+!
+!!    Implicit Arguments
+!!    ------------------
+!
+!     Module MODD_ARGSLIST :
+!         LIST_ll : list of fields
+!         DIMPHYEX_t: PHYEX dimensions
+!
+!!    Author
+!!    ------
+!
+!     S. Riette
+!
+!!    Modifications
+!!    -------------
+!     Original    Oct 2026
+!
+!-------------------------------------------------------------------------------
+ USE MODE_ll, ONLY: ADD2DFIELD_LL
+ USE MODD_ARGSLIST_ll, ONLY : LIST_ll
+ USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
+!
+  IMPLICIT NONE
+!
+  TYPE(DIMPHYEX_t),        INTENT(IN)   :: D
+  TYPE(LIST_ll), POINTER, INTENT(INOUT) :: TPLIST   ! list of fields
+  REAL, DIMENSION(D%NIT,D%NJT), TARGET, INTENT(IN) :: PFIELD   ! field which is unpaked here
+!                                              of fields
+  CHARACTER(LEN=*), INTENT(IN) :: HNAME ! Name of the field to be added
+
+  CALL ADD2DFIELD_ll(TPLIST, PFIELD, HNAME)
+              
+ END SUBROUTINE ADD2DFIELD_ll_PHY
+
  SUBROUTINE ADD3DFIELD_ll_PHY(D, TPLIST, PFIELD, HNAME)
 !!    ###############################################
 !
@@ -58,4 +106,59 @@ MODULE MODE_ARGSLIST_ll_PHY
   CALL ADD3DFIELD_ll(TPLIST, PFIELD, HNAME)
               
  END SUBROUTINE ADD3DFIELD_ll_PHY
+ SUBROUTINE ADD4DFIELD_ll_PHY(D, TPLIST, PFIELD, HNAME)
+!!    ###############################################
+!
+!!****  *ADD4DFIELD_ll_PHY* -
+!
+!!    Purpose
+!!    -------
+!     This routine is used as an interface to ADD4DFIELD_ll for
+!     unpacking horizontal dimensions
+!
+!!    Reference
+!!    ---------
+!
+!     see PHYEX documentation
+!
+!!    Implicit Arguments
+!!    ------------------
+!
+!     Module MODD_ARGSLIST :
+!         LIST_ll : list of fields
+!         DIMPHYEX_t: PHYEX dimensions
+!
+!!    Author
+!!    ------
+!
+!     S. Riette
+!
+!!    Modifications
+!!    -------------
+!     Original    Oct 2026
+!
+!-------------------------------------------------------------------------------
+ USE MODE_ll, ONLY: ADD4DFIELD_LL
+ USE MODD_ARGSLIST_ll, ONLY : LIST_ll
+ USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
+!
+  IMPLICIT NONE
+!
+  TYPE(DIMPHYEX_t),        INTENT(IN)   :: D
+  TYPE(LIST_ll), POINTER, INTENT(INOUT) :: TPLIST   ! list of fields
+  REAL, DIMENSION(:,:,:), TARGET, INTENT(IN) :: PFIELD   ! field which is unpaked here
+!                                              of fields
+  CHARACTER(LEN=*), INTENT(IN) :: HNAME ! Name of the field to be added
+  INTEGER :: I
+  I=SIZE(PFIELD,3)
+  CALL EXPLICIT_SHAPE(PFIELD, I)
+  CONTAINS
+  SUBROUTINE EXPLICIT_SHAPE(PFIELD, K)
+  INTEGER, INTENT(IN) :: K
+  REAL, DIMENSION(D%NIT, D%NJT, D%NKT, K), TARGET, INTENT(IN) :: PFIELD
+  CALL ADD4DFIELD_ll(TPLIST, PFIELD, HNAME)
+  END SUBROUTINE EXPLICIT_SHAPE
+              
+ END SUBROUTINE ADD4DFIELD_ll_PHY
+
 END MODULE MODE_ARGSLIST_ll_PHY

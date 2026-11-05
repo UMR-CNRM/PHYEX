@@ -134,7 +134,7 @@ CONTAINS
 USE MODD_DIMPHYEX,   ONLY : DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY : JPVEXT
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODE_SHUMAN_PHY, ONLY : MZM_PHY
+USE MODE_SHUMAN_PHY, ONLY: MZM_PHY
 
 #ifdef MNH_COMPILER_CCE
 !$mnh_undef(LOOP)
@@ -147,27 +147,27 @@ IMPLICIT NONE
 !*       0.1 declarations of arguments
 !
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PVARM   ! variable at t-1      at flux point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PF      ! flux in dT/dt=-dF/dz at mass point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDFDDWDZ! dF/d(dW/dz)          at mass point
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PVARM   ! variable at t-1      at flux point
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PF      ! flux in dT/dt=-dF/dz at mass point
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PDFDDWDZ! dF/d(dW/dz)          at mass point
 REAL,                   INTENT(IN) :: PTSTEP  ! Double time step
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PMZF_DZZ! Dz                   at mass point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRHODJ  ! (dry rho)*J          at mass point
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PMZF_DZZ! Dz                   at mass point
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PRHODJ  ! (dry rho)*J          at mass point
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT):: PVARP   ! variable at t+1      at flux point
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT):: PVARP   ! variable at t+1      at flux point
 !
 !*       0.2 declarations of local variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZRHODJ_DFDDWDZ_O_DZ2
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZMZM_RHODJ
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZA, ZB, ZC
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZY ,ZGAM ! RHS of the equation, 3D work array
-REAL, DIMENSION(D%NIT,D%NJT)       :: ZBET     ! 2D work array
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZRHODJ_DFDDWDZ_O_DZ2
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZMZM_RHODJ
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZA, ZB, ZC
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZY ,ZGAM ! RHS of the equation, 3D work array
+REAL, DIMENSION(D%NIJT)       :: ZBET     ! 2D work array
 !
-INTEGER                              :: JK,JI,JJ      ! loop counter
+INTEGER                              :: JK,JIJ        ! loop counter
 INTEGER                              :: IKB,IKE       ! inner vertical limits
 !
-INTEGER  :: IIT, IJT, IKT
+INTEGER  :: IIJT, IKT
 ! ---------------------------------------------------------------------------
 
 
@@ -178,20 +178,17 @@ INTEGER  :: IIT, IJT, IKT
 !           -------------
 !
 IKB=1+JPVEXT
-IKE=SIZE(PVARM,3)-JPVEXT 
-IIT=D%NIT
-IJT=D%NJT
+IKE=SIZE(PVARM,2)-JPVEXT 
+IIJT=D%NIJT
 IKT=D%NKT
 !
-CALL MZM_PHY(D,PRHODJ,ZMZM_RHODJ)
+CALL MZM_PHY(D, PRHODJ, ZMZM_RHODJ)
 
 
 DO JK=1, IKT
-     DO JJ=1, IJT
-       DO JI=1, IIT
-         ZRHODJ_DFDDWDZ_O_DZ2(JI, JJ, JK) = PRHODJ(JI, JJ, JK)*PDFDDWDZ(JI, JJ, JK)/PMZF_DZZ(JI, JJ, JK)**2
-    END DO
-     END DO
+     DO JIJ=1, IIJT
+       ZRHODJ_DFDDWDZ_O_DZ2(JIJ, JK) = PRHODJ(JIJ, JK)*PDFDDWDZ(JIJ, JK)/PMZF_DZZ(JIJ, JK)**2
+  END DO
    END DO
 
 !
@@ -224,48 +221,42 @@ ZY=0.
 !!#endif
 !
 
-!$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
-DO JJ=1,IJT
-  DO JI=1,IIT
-   ZY(JI,JJ,IKB) = ZMZM_RHODJ(JI,JJ,IKB)*PVARM(JI,JJ,IKB)/PTSTEP              &
-        - PRHODJ(JI,JJ,IKB  ) * PF(JI,JJ,IKB  )/PMZF_DZZ(JI,JJ,IKB  )           &
-        + PRHODJ(JI,JJ,IKB-1) * PF(JI,JJ,IKB-1)/PMZF_DZZ(JI,JJ,IKB-1)           &
-        + ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKB) * PVARM(JI,JJ,IKB+1)&
-        - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKB) * PVARM(JI,JJ,IKB  )
-  END DO
+!$mnh_do_concurrent(JIJ=1:IIJT)
+DO JIJ=1,IIJT
+   ZY(JIJ,IKB) = ZMZM_RHODJ(JIJ,IKB)*PVARM(JIJ,IKB)/PTSTEP              &
+        - PRHODJ(JIJ,IKB  ) * PF(JIJ,IKB  )/PMZF_DZZ(JIJ,IKB  )           &
+        + PRHODJ(JIJ,IKB-1) * PF(JIJ,IKB-1)/PMZF_DZZ(JIJ,IKB-1)           &
+        + ZRHODJ_DFDDWDZ_O_DZ2(JIJ,IKB) * PVARM(JIJ,IKB+1)&
+        - ZRHODJ_DFDDWDZ_O_DZ2(JIJ,IKB) * PVARM(JIJ,IKB  )
 END DO
 !$mnh_end_do()
 
 !
 
-!$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT,JK=IKB+1:IKE-1)
+!$mnh_do_concurrent(JIJ=1:IIJT,JK=IKB+1:IKE-1)
 DO JK=IKB+1,IKE-1
- DO JJ=1,IJT
-  DO JI=1,IIT
-    ZY(JI,JJ,JK) = ZMZM_RHODJ(JI,JJ,JK)*PVARM(JI,JJ,JK)/PTSTEP               &
-       - PRHODJ(JI,JJ,JK  ) * PF(JI,JJ,JK  )/PMZF_DZZ(JI,JJ,JK  )          &
-       + PRHODJ(JI,JJ,JK-1) * PF(JI,JJ,JK-1)/PMZF_DZZ(JI,JJ,JK-1)              &
-       + ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK  ) * PVARM(JI,JJ,JK+1)  &
-       - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK  ) * PVARM(JI,JJ,JK  )  &
-       - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK-1) * PVARM(JI,JJ,JK  )  &
-       + ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK-1) * PVARM(JI,JJ,JK-1)
+  DO JIJ=1,IIJT
+    ZY(JIJ,JK) = ZMZM_RHODJ(JIJ,JK)*PVARM(JIJ,JK)/PTSTEP               &
+       - PRHODJ(JIJ,JK  ) * PF(JIJ,JK  )/PMZF_DZZ(JIJ,JK  )          &
+       + PRHODJ(JIJ,JK-1) * PF(JIJ,JK-1)/PMZF_DZZ(JIJ,JK-1)              &
+       + ZRHODJ_DFDDWDZ_O_DZ2(JIJ,JK  ) * PVARM(JIJ,JK+1)  &
+       - ZRHODJ_DFDDWDZ_O_DZ2(JIJ,JK  ) * PVARM(JIJ,JK  )  &
+       - ZRHODJ_DFDDWDZ_O_DZ2(JIJ,JK-1) * PVARM(JIJ,JK  )  &
+       + ZRHODJ_DFDDWDZ_O_DZ2(JIJ,JK-1) * PVARM(JIJ,JK-1)
   END DO
- END DO
 END DO
 !$mnh_end_do()  
 
 ! 
 
-!$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
-DO JJ=1,IJT
-  DO JI=1,IIT
-   ZY(JI,JJ,IKE) = ZMZM_RHODJ(JI,JJ,IKE)*PVARM(JI,JJ,IKE)/PTSTEP              &
-        - PRHODJ(JI,JJ,IKE  ) * PF(JI,JJ,IKE  )/PMZF_DZZ(JI,JJ,IKE  )           &
-        + PRHODJ(JI,JJ,IKE-1) * PF(JI,JJ,IKE-1)/PMZF_DZZ(JI,JJ,IKE-1)           &
-        - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKE  ) * PVARM(JI,JJ,IKE )  &
-        - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKE-1) * PVARM(JI,JJ,IKE  ) &
-        + ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKE-1) * PVARM(JI,JJ,IKE-1)
-  END DO
+!$mnh_do_concurrent(JIJ=1:IIJT)
+DO JIJ=1,IIJT
+   ZY(JIJ,IKE) = ZMZM_RHODJ(JIJ,IKE)*PVARM(JIJ,IKE)/PTSTEP              &
+        - PRHODJ(JIJ,IKE  ) * PF(JIJ,IKE  )/PMZF_DZZ(JIJ,IKE  )           &
+        + PRHODJ(JIJ,IKE-1) * PF(JIJ,IKE-1)/PMZF_DZZ(JIJ,IKE-1)           &
+        - ZRHODJ_DFDDWDZ_O_DZ2(JIJ,IKE  ) * PVARM(JIJ,IKE )  &
+        - ZRHODJ_DFDDWDZ_O_DZ2(JIJ,IKE-1) * PVARM(JIJ,IKE  ) &
+        + ZRHODJ_DFDDWDZ_O_DZ2(JIJ,IKE-1) * PVARM(JIJ,IKE-1)
 END DO
 !$mnh_end_do()
 
@@ -284,58 +275,48 @@ END DO
 !! c(k) = + PRHODJ(k)   * PDFDDWDZ(k)/PMZF_DZZ(k)**2
 !
 
-!$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
-DO JJ=1,IJT
-  DO JI=1,IIT
-  ZB(JI,JJ,IKB) =   ZMZM_RHODJ(JI,JJ,IKB)/PTSTEP      &
-       - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKB)
-  END DO
+!$mnh_do_concurrent(JIJ=1:IIJT)
+DO JIJ=1,IIJT
+  ZB(JIJ,IKB) =   ZMZM_RHODJ(JIJ,IKB)/PTSTEP      &
+       - ZRHODJ_DFDDWDZ_O_DZ2(JIJ,IKB)
 END DO
 !$mnh_end_do()  
 
 
-!$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
-DO JJ=1,IJT
-  DO JI=1,IIT
-   ZC(JI,JJ,IKB) =   ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKB)
-  END DO
+!$mnh_do_concurrent(JIJ=1:IIJT)
+DO JIJ=1,IIJT
+   ZC(JIJ,IKB) =   ZRHODJ_DFDDWDZ_O_DZ2(JIJ,IKB)
 END DO
 !$mnh_end_do()   
 
 
 
-!$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT,JK=IKB+1:IKE-1)
+!$mnh_do_concurrent(JIJ=1:IIJT,JK=IKB+1:IKE-1)
 DO JK=IKB+1,IKE-1
- DO JJ=1,IJT
-  DO JI=1,IIT
-    ZA(JI,JJ,JK) =   ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK-1)
-    ZB(JI,JJ,JK) =   ZMZM_RHODJ(JI,JJ,JK)/PTSTEP      &
-                 - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK  ) &
-                 - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK-1)
-    ZC(JI,JJ,JK) =   ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,JK  )
+  DO JIJ=1,IIJT
+    ZA(JIJ,JK) =   ZRHODJ_DFDDWDZ_O_DZ2(JIJ,JK-1)
+    ZB(JIJ,JK) =   ZMZM_RHODJ(JIJ,JK)/PTSTEP      &
+                 - ZRHODJ_DFDDWDZ_O_DZ2(JIJ,JK  ) &
+                 - ZRHODJ_DFDDWDZ_O_DZ2(JIJ,JK-1)
+    ZC(JIJ,JK) =   ZRHODJ_DFDDWDZ_O_DZ2(JIJ,JK  )
   END DO
- END DO
 END DO
 !$mnh_end_do()    
 
 
 
-!$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
-DO JJ=1,IJT
-  DO JI=1,IIT
-   ZA(JI,JJ,IKE) =   ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKE-1)
-  END DO
+!$mnh_do_concurrent(JIJ=1:IIJT)
+DO JIJ=1,IIJT
+   ZA(JIJ,IKE) =   ZRHODJ_DFDDWDZ_O_DZ2(JIJ,IKE-1)
 END DO
 !$mnh_end_do()   
 
 
-!$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
-DO JJ=1,IJT
-  DO JI=1,IIT
-  ZB(JI,JJ,IKE) =   ZMZM_RHODJ(JI,JJ,IKE)/PTSTEP      &
-                - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKE  ) &
-                - ZRHODJ_DFDDWDZ_O_DZ2(JI,JJ,IKE-1)
-  END DO
+!$mnh_do_concurrent(JIJ=1:IIJT)
+DO JIJ=1,IIJT
+  ZB(JIJ,IKE) =   ZMZM_RHODJ(JIJ,IKE)/PTSTEP      &
+                - ZRHODJ_DFDDWDZ_O_DZ2(JIJ,IKE  ) &
+                - ZRHODJ_DFDDWDZ_O_DZ2(JIJ,IKE-1)
 END DO
 !$mnh_end_do()  
 
@@ -347,12 +328,10 @@ END DO
 !            --------
 !
 
-!$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
-DO JJ=1,IJT
-  DO JI=1,IIT
-  ZBET(JI,JJ) = ZB(JI,JJ,IKB)  ! bet = b(ikb)
-  PVARP(JI,JJ,IKB) = ZY(JI,JJ,IKB) / ZBET(JI,JJ)
-  END DO
+!$mnh_do_concurrent(JIJ=1:IIJT)
+DO JIJ=1,IIJT
+  ZBET(JIJ) = ZB(JIJ,IKB)  ! bet = b(ikb)
+  PVARP(JIJ,IKB) = ZY(JIJ,IKB) / ZBET(JIJ)
 END DO
 !$mnh_end_do()
 
@@ -363,32 +342,28 @@ DO JK = IKB+1,IKE-1
 #ifdef MNH_COMPILER_CCE
    
 #endif
-   !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
-DO JJ=1,IJT
-  DO JI=1,IIT
-      ZGAM(JI,JJ,JK) = ZC(JI,JJ,JK-1) / ZBET(JI,JJ)  
+   !$mnh_do_concurrent(JIJ=1:IIJT)
+  DO JIJ=1,IIJT
+      ZGAM(JIJ,JK) = ZC(JIJ,JK-1) / ZBET(JIJ)  
       ! gam(k) = c(k-1) / bet
-      ZBET(JI,JJ)    = ZB(JI,JJ,JK) - ZA(JI,JJ,JK) * ZGAM(JI,JJ,JK)
+      ZBET(JIJ)    = ZB(JIJ,JK) - ZA(JIJ,JK) * ZGAM(JIJ,JK)
       ! bet = b(k) - a(k)* gam(k)  
-      PVARP(JI,JJ,JK)= ( ZY(JI,JJ,JK) - ZA(JI,JJ,JK) * PVARP(JI,JJ,JK-1) ) / ZBET(JI,JJ)
+      PVARP(JIJ,JK)= ( ZY(JIJ,JK) - ZA(JIJ,JK) * PVARP(JIJ,JK-1) ) / ZBET(JIJ)
       ! res(k) = (y(k) -a(k)*res(k-1))/ bet
   END DO
-END DO
    !$mnh_end_do()
 END DO
 
 ! special treatment for the last level
 
-!$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
-DO JJ=1,IJT
-  DO JI=1,IIT
-   ZGAM(JI,JJ,IKE) = ZC(JI,JJ,IKE-1) / ZBET(JI,JJ) 
+!$mnh_do_concurrent(JIJ=1:IIJT)
+DO JIJ=1,IIJT
+   ZGAM(JIJ,IKE) = ZC(JIJ,IKE-1) / ZBET(JIJ) 
    ! gam(k) = c(k-1) / bet
-   ZBET(JI,JJ)     = ZB(JI,JJ,IKE) - ZA(JI,JJ,IKE) * ZGAM(JI,JJ,IKE)
+   ZBET(JIJ)     = ZB(JIJ,IKE) - ZA(JIJ,IKE) * ZGAM(JIJ,IKE)
    ! bet = b(k) - a(k)* gam(k)  
-   PVARP(JI,JJ,IKE)= ( ZY(JI,JJ,IKE) - ZA(JI,JJ,IKE) * PVARP(JI,JJ,IKE-1) ) / ZBET(JI,JJ)
+   PVARP(JIJ,IKE)= ( ZY(JIJ,IKE) - ZA(JIJ,IKE) * PVARP(JIJ,IKE-1) ) / ZBET(JIJ)
    ! res(k) = (y(k) -a(k)*res(k-1))/ bet
-  END DO
 END DO
 !$mnh_end_do()  
 
@@ -402,12 +377,10 @@ DO JK = IKE-1,IKB,-1
 #ifdef MNH_COMPILER_CCE
    
 #endif
-   !$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
-DO JJ=1,IJT
-  DO JI=1,IIT
-      PVARP(JI,JJ,JK) = PVARP(JI,JJ,JK) - ZGAM(JI,JJ,JK+1) * PVARP(JI,JJ,JK+1)
+   !$mnh_do_concurrent(JIJ=1:IIJT)
+  DO JIJ=1,IIJT
+      PVARP(JIJ,JK) = PVARP(JIJ,JK) - ZGAM(JIJ,JK+1) * PVARP(JIJ,JK+1)
   END DO
-END DO
    !$mnh_end_do()   
 END DO
 
@@ -417,12 +390,10 @@ END DO
 !            ----------------------------------------
 !
 
-!$mnh_do_concurrent(JI=1:IIT,JJ=1:IJT)
-DO JJ=1,IJT
-  DO JI=1,IIT
-   PVARP(JI,JJ,IKB-1)=PVARP(JI,JJ,IKB)
-   PVARP(JI,JJ,IKE+1)=0.
-  END DO
+!$mnh_do_concurrent(JIJ=1:IIJT)
+DO JIJ=1,IIJT
+   PVARP(JIJ,IKB-1)=PVARP(JIJ,IKB)
+   PVARP(JIJ,IKE+1)=0.
 END DO
 !$mnh_end_do()
 

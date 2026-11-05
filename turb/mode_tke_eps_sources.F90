@@ -48,8 +48,8 @@ CONTAINS
 !!      GX_U_M,GY_V_M,GZ_W_M
 !!      GX_M_U,GY_M_V          :  Cartesian vertical gradient operators
 !!
-!!      MXF,MXM.MYF,MYM,MZF,MZM:  Shuman functions (mean operators)
-!!      DZF                    :  Shuman functions (difference operators)     
+!!      MZF,MZM                :  Shuman functions (mean operators)
+!!      DZF,DZM                :  Shuman functions (difference operators)     
 !!
 !!      SUBROUTINE TRIDIAG     :  to solve an implicit temporal scheme
 !!      
@@ -130,7 +130,6 @@ CONTAINS
 !*       0.   DECLARATIONS
 !             ------------
 !
-USE MODE_SHUMAN_PHY, ONLY: MZF_PHY
 USE YOMHOOK,    ONLY: LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
@@ -150,9 +149,7 @@ USE MODE_ARGSLIST_ll_PHY, ONLY: ADD3DFIELD_ll_PHY
 USE MODI_GET_HALO, ONLY: GET_HALO_PHY
 USE MODI_LES_MEAN_SUBGRID_PHY, ONLY: LES_MEAN_SUBGRID_PHY
 USE MODE_TRIDIAG_TKE,          ONLY: TRIDIAG_TKE
-USE MODE_SHUMAN_PHY, ONLY:DZF_PHY
-USE MODE_SHUMAN_PHY, ONLY:DZM_PHY
-USE MODE_SHUMAN_PHY, ONLY:MZM_PHY
+USE MODE_SHUMAN_PHY, ONLY: DZF_PHY, DZM_PHY, MZF_PHY, MZM_PHY
 !
 ! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
 #ifdef MNH_COMPILER_CCE
@@ -226,11 +223,9 @@ TYPE(LIST_ll), POINTER :: TZFIELDDISS_ll ! list of fields to exchange
 INTEGER                :: IINFO_ll       ! return code of parallel routine
 TYPE(TFIELDMETADATA)   :: TZFIELD
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-REAL, DIMENSION(D%NIJT,D%NKT) ::ZMZM2D_WORK1
-REAL, DIMENSION(D%NIJT,D%NKT) ::ZMZM2D_WORK2
-REAL, DIMENSION(D%NIJT,D%NKT) ::ZSHUGRADWK1_2D
-REAL, DIMENSION(D%NIJT,D%NKT) ::ZDZM2D_WORK1
-REAL, DIMENSION(D%NIJT,D%NKT) ::ZDZF2D_WORK1
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_1
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_2
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_3
 INTEGER :: JIJ,JK
 !
 !----------------------------------------------------------------------------
@@ -319,16 +314,15 @@ END IF
 ! matrix inverted in TRIDIAG 
 !
 !
-CALL MZM_PHY(D, ZKEFF, ZMZM2D_WORK1)
-CALL MZM_PHY(D, PRHODJ, ZMZM2D_WORK2)
+CALL MZM_PHY(D, PRHODJ, ZWORKSHUGRAD_3D_1)
+CALL MZM_PHY(D, ZKEFF, ZWORKSHUGRAD_3D_2)
 
-DO JK=1, IKT
+DO JK=1, D%NKT
   DO JIJ=IIJB, IIJE
-    ZA(JIJ, JK) = - PTSTEP * CSTURB%XCET * ZMZM2D_WORK1(JIJ, JK) * ZMZM2D_WORK2(JIJ, JK) / PDZZ(JIJ, JK)**2
+    ZA(JIJ, JK) = - PTSTEP * CSTURB%XCET * ZWORKSHUGRAD_3D_2(JIJ, JK) * ZWORKSHUGRAD_3D_1(JIJ, JK) / PDZZ(JIJ, JK)**2
   END DO
 END DO
 
-!
 !
 ! Compute TKE at time t+deltat: ( stored in ZRES )
 !
@@ -385,25 +379,23 @@ IF ( TLES%LLES_CALL .OR.                         &
 !
 ! Compute the cartesian vertical flux of TKE in ZFLX
 !
-    CALL MZM_PHY(D, ZKEFF, ZMZM2D_WORK1)
-
-DO JK=1, IKT
-  DO JIJ=IIJB, IIJE
-    ZSHUGRADWK1_2D(JIJ, JK) = TURBN%XIMPL * ZRES(JIJ, JK) + PEXPL * PTKEM(JIJ, JK)
-  END DO
-END DO
-
-!
-CALL DZM_PHY(D, ZSHUGRADWK1_2D, ZDZM2D_WORK1)
-
-DO JK=1, IKT
-  DO JIJ=IIJB, IIJE
-    ZFLX(JIJ, JK)   = - CSTURB%XCET * ZMZM2D_WORK1(JIJ, JK) *   &
-                      ZDZM2D_WORK1(JIJ, JK) / PDZZ(JIJ, JK)
-  END DO
-END DO
-
-!
+    
+    DO JK=1, D%NKT
+      DO JIJ=IIJB, IIJE
+        ZWORKSHUGRAD_3D_1(JIJ, JK)=TURBN%XIMPL * ZRES(JIJ, JK) + PEXPL * PTKEM(JIJ, JK)
+      END DO
+    END DO
+    
+    CALL DZM_PHY(D, ZWORKSHUGRAD_3D_1, ZWORKSHUGRAD_3D_2)
+    CALL MZM_PHY(D, ZKEFF, ZWORKSHUGRAD_3D_3)
+    
+    DO JK=1, D%NKT
+      DO JIJ=IIJB, IIJE
+        ZFLX(JIJ, JK)   = - CSTURB%XCET * ZWORKSHUGRAD_3D_3(JIJ, JK) *   &
+                      ZWORKSHUGRAD_3D_2(JIJ, JK) / PDZZ(JIJ, JK)
+      END DO
+    END DO
+    
 !
 
   ZFLX(IIJB:IIJE,IKB) = 0.
@@ -412,29 +404,27 @@ END DO
 !
 ! Compute the whole turbulent TRansport of TKE:
 !
-  CALL MZM_PHY(D, PRHODJ, ZMZM2D_WORK1)
-
-DO JK=1, IKT
-  DO JIJ=IIJB, IIJE
-    ZSHUGRADWK1_2D(JIJ, JK) = ZMZM2D_WORK1(JIJ, JK) * ZFLX(JIJ, JK) / PDZZ(JIJ, JK)
+  CALL MZM_PHY(D, PRHODJ, ZWORKSHUGRAD_3D_1)
+  
+  DO JK=1, D%NKT
+    DO JIJ=IIJB, IIJE
+      ZWORKSHUGRAD_3D_2(JIJ, JK)=ZWORKSHUGRAD_3D_1(JIJ, JK) * ZFLX(JIJ, JK) / PDZZ(JIJ, JK)
+    END DO
   END DO
-END DO
-
-!
-CALL DZF_PHY(D, ZSHUGRADWK1_2D, ZDZF2D_WORK1)
-
-DO JK=1, IKT
-  DO JIJ=IIJB, IIJE
-    PTR(JIJ, JK)= PTR(JIJ, JK) - ZDZF2D_WORK1(JIJ, JK) /PRHODJ(JIJ, JK)
+  
+  CALL DZF_PHY(D, ZWORKSHUGRAD_3D_2, ZWORKSHUGRAD_3D_3)
+  
+  DO JK=1, D%NKT
+    DO JIJ=IIJB, IIJE
+      PTR(JIJ, JK)= PTR(JIJ, JK) - ZWORKSHUGRAD_3D_3(JIJ, JK) /PRHODJ(JIJ, JK)
+    END DO
   END DO
-END DO
-
-!
+  
 !
 ! Storage in the LES configuration
 !
   IF (TLES%LLES_CALL) THEN
-    CALL MZF_PHY(D,ZFLX,ZMWORK1)
+    CALL MZF_PHY(D, ZFLX, ZMWORK1)
     CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMWORK1, TLES%X_LES_SUBGRID_WTke )
     ZWKLES = -ZTR
     CALL LES_MEAN_SUBGRID_PHY(D,TLES, ZWKLES, TLES%X_LES_SUBGRID_ddz_WTke )
