@@ -48,7 +48,7 @@ jobs:
               find . -not -path './.git/*' -not -path './.git' -delete || exit 1
               # Copy the new commit src directory and transform it using prep_code
               cp -r ${{ github.workspace }}/src . || exit 1
-              phyex-prep_code -s gmkpack_ignored_files -s turb -s micro -s aux -s conv -s ial_version.json -s CMakeLists.txt -s cmake -m arome $temp_dir -- --shumanFUNCtoCALL --removeACC --mnhExpand || exit 1
+              phyex-prep_code -s gmkpack_ignored_files -s turb -s micro -s aux -s conv -s ial_version.json -s CMakeLists.txt -s cmake -m arome $temp_dir -- --shugradTransfo --removeACC --mnhExpand || exit 1
               # Commit and push to the main repo
               git add . || exit 1
               git commit -m "AROME version of commit $commit" -m "$cmd" || exit 1
