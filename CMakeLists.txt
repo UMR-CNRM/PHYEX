@@ -7,7 +7,12 @@
 #
 # Dependency versions and repositories can be overridden with environment
 # variables (read at first configure) or with -D<VAR>=... on the command line:
-#   PHYEX_ECBUILD_VERSION, PHYEX_ECBUILD_REPO, PHYEX_FIAT_VERSION, PHYEX_FIAT_REPO
+#   PHYEX_ECBUILD_VERSION, PHYEX_ECBUILD_REPO, PHYEX_FIAT_VERSION, PHYEX_FIAT_REPO,
+#   PHYEX_PYFORTOOL_SPEC
+#
+# The PHYEX source code can be transformed at build time by pyfortool with
+# -DPHYEX_TRANSFORMATION=<name> (or the environment variable of the same
+# name), see step 4. Example: -DPHYEX_TRANSFORMATION=IAL
 #
 # Usage example:
 #   cmake -S . -B build/cmake -DCMAKE_TOOLCHAIN_FILE=<arch>.ecbuild
@@ -38,6 +43,12 @@ phyex_dependency_setting(PHYEX_FIAT_VERSION "1.6.2"
                          "fiat version (git tag) to download if fiat is not found")
 phyex_dependency_setting(PHYEX_FIAT_REPO "https://github.com/ecmwf-ifs/fiat.git"
                          "fiat git repository")
+phyex_dependency_setting(PHYEX_PYFORTOOL_SPEC "pyfortool>=0.2.24"
+                         "pip requirement used to install pyfortool if it is not found")
+
+# Transformation of the PHYEX source code at build time (see step 4)
+phyex_dependency_setting(PHYEX_TRANSFORMATION ""
+                         "Transformation applied to the PHYEX source code at build time (empty or NONE: no transformation)")
 
 #-----------------------------------------------------------------------
 # Step 1: ecbuild
@@ -239,10 +250,176 @@ if(HAVE_PYTHON_WHEEL)
 endif()
 
 #-----------------------------------------------------------------------
-# Step 4: PHYEX
+# Step 4: source code transformation at build time (optional)
+#-----------------------------------------------------------------------
+
+# When PHYEX_TRANSFORMATION is set (e.g. -DPHYEX_TRANSFORMATION=IAL), each
+# Fortran source file of the PHYEX targets, and each included file (.h) of
+# src/phyex, is transformed by pyfortool at build
+# time (script cmake/phyex_transform.py, which defines the pyfortool arguments
+# for each transformation), and the PHYEX targets compile the transformed
+# files, kept in ${CMAKE_BINARY_DIR}/phyex_transformed.
+# Additional pyfortool options can be given, at build time, with the PYFT_OPTS
+# environment variable (a modification of PYFT_OPTS does not trigger a new
+# transformation: remove the phyex_transformed directory).
+# The transformed files are compiled (instead of using a compiler wrapper) so
+# that the build system computes the compilation order from the transformed
+# code (a transformation can add USE statements).
+set(PHYEX_TRANSFORM_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/cmake/phyex_transform.py)
+set(PHYEX_TRANSFORM_COMMAND)
+if(PHYEX_TRANSFORMATION AND NOT PHYEX_TRANSFORMATION STREQUAL "NONE")
+  ecbuild_find_python(VERSION 3.8 NO_LIBS REQUIRED)
+  # -I: the script only needs the standard library, and must not be
+  # influenced by PYTHONPATH
+  set(_script ${Python_EXECUTABLE} -I ${PHYEX_TRANSFORM_SCRIPT})
+
+  # Available transformations are defined in the script
+  execute_process(COMMAND ${_script} --list
+                  OUTPUT_VARIABLE _transformations OUTPUT_STRIP_TRAILING_WHITESPACE
+                  RESULT_VARIABLE _result)
+  if(NOT _result EQUAL 0)
+    ecbuild_critical("Unable to execute ${PHYEX_TRANSFORM_SCRIPT}")
+  endif()
+  set_property(CACHE PHYEX_TRANSFORMATION PROPERTY STRINGS "NONE;${_transformations}")
+  if(NOT PHYEX_TRANSFORMATION IN_LIST _transformations)
+    string(REPLACE ";" ", " _values "NONE;${_transformations}")
+    ecbuild_critical("Unknown transformation PHYEX_TRANSFORMATION=${PHYEX_TRANSFORMATION}, available values are: ${_values}")
+  endif()
+
+  # pyfortool: found in PATH (the python tools virtual environment comes first
+  # when ENABLE_PYTHON_WHEEL is ON), otherwise installed in a python virtual
+  # environment inside the build directory
+  set(_pyft_venv ${CMAKE_BINARY_DIR}/pyfortool)
+  if(PHYEX_PYFORTOOL AND NOT EXISTS ${PHYEX_PYFORTOOL})
+    unset(PHYEX_PYFORTOOL CACHE)
+  endif()
+  find_program(PHYEX_PYFORTOOL pyfortool DOC "pyfortool executable")
+  if(NOT PHYEX_PYFORTOOL)
+    ecbuild_info("pyfortool not found, installing ${PHYEX_PYFORTOOL_SPEC} in ${_pyft_venv}")
+    file(REMOVE_RECURSE ${_pyft_venv})
+    execute_process(COMMAND ${Python_EXECUTABLE} -m venv ${_pyft_venv}
+                    RESULT_VARIABLE _result)
+    if(_result EQUAL 0)
+      execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONPATH
+                              ${_pyft_venv}/bin/python -m pip install ${PHYEX_PYFORTOOL_SPEC}
+                      RESULT_VARIABLE _result)
+    endif()
+    if(NOT _result EQUAL 0 OR NOT EXISTS ${_pyft_venv}/bin/pyfortool)
+      file(REMOVE_RECURSE ${_pyft_venv})
+      ecbuild_critical("Installation of pyfortool failed")
+    endif()
+    set(PHYEX_PYFORTOOL ${_pyft_venv}/bin/pyfortool CACHE FILEPATH "pyfortool executable" FORCE)
+  endif()
+  ecbuild_info("Source code transformation ${PHYEX_TRANSFORMATION} applied at build time, using ${PHYEX_PYFORTOOL}")
+
+  set(PHYEX_TRANSFORM_COMMAND ${_script}
+      --transformation ${PHYEX_TRANSFORMATION}
+      --pyfortool ${PHYEX_PYFORTOOL})
+  # pyfortool installed in the build directory (by this file) must not be
+  # polluted by a PYTHONPATH
+  string(FIND "${PHYEX_PYFORTOOL}" "${CMAKE_BINARY_DIR}/" _pos)
+  if(_pos EQUAL 0)
+    list(APPEND PHYEX_TRANSFORM_COMMAND --unset-pythonpath)
+  endif()
+endif()
+
+#-----------------------------------------------------------------------
+# Step 5: PHYEX
 #-----------------------------------------------------------------------
 
 add_subdirectory(src/phyex ${CMAKE_BINARY_DIR}/phyex)
+
+if(PHYEX_TRANSFORM_COMMAND)
+  # Source transformation (step 4): the Fortran source files of the PHYEX
+  # targets are replaced by their transformed version
+  set(_srcdir ${CMAKE_CURRENT_SOURCE_DIR}/src/phyex)
+  set(_outdir ${CMAKE_BINARY_DIR}/phyex_transformed)
+  # Changing the transformation triggers a new transformation
+  set(_stamp ${CMAKE_BINARY_DIR}/phyex_transformation.txt)
+  file(WRITE ${_stamp}.tmp "${PHYEX_TRANSFORMATION}\n")
+  configure_file(${_stamp}.tmp ${_stamp} COPYONLY)
+
+  set(_outputs)
+  set(_transformed_targets)
+
+  # Included files (.h) are transformed too. Their transformed version is
+  # found first: it is in the same directory as the transformed source file
+  # including it, or in a directory put first in the include path
+  file(GLOB_RECURSE _headers ${_srcdir}/*.h)
+  set(_header_dirs)
+  foreach(_src ${_headers})
+    file(RELATIVE_PATH _rel ${_srcdir} ${_src})
+    set(_out ${_outdir}/${_rel})
+    add_custom_command(OUTPUT ${_out}
+                       COMMAND ${PHYEX_TRANSFORM_COMMAND} ${_src} ${_out}
+                       DEPENDS ${_src} ${PHYEX_TRANSFORM_SCRIPT} ${_stamp}
+                       COMMENT "Transforming (${PHYEX_TRANSFORMATION}) ${_rel}"
+                       VERBATIM)
+    list(APPEND _outputs ${_out})
+    get_filename_component(_dir ${_out} DIRECTORY)
+    list(APPEND _header_dirs ${_dir})
+  endforeach()
+  list(REMOVE_DUPLICATES _header_dirs)
+
+  get_property(_targets DIRECTORY ${_srcdir} PROPERTY BUILDSYSTEM_TARGETS)
+  foreach(_target ${_targets})
+    get_target_property(_type ${_target} TYPE)
+    if(NOT _type MATCHES "^(STATIC_LIBRARY|SHARED_LIBRARY|MODULE_LIBRARY|OBJECT_LIBRARY|EXECUTABLE)$")
+      continue()
+    endif()
+    get_target_property(_sources ${_target} SOURCES)
+    get_target_property(_target_srcdir ${_target} SOURCE_DIR)
+    set(_new_sources)
+    set(_incdirs)
+    set(_changed FALSE)
+    foreach(_src ${_sources})
+      if(_src MATCHES "\\$<")
+        # Generator expression (e.g. $<TARGET_OBJECTS:...>): kept unchanged
+        list(APPEND _new_sources ${_src})
+        continue()
+      endif()
+      if(NOT IS_ABSOLUTE ${_src})
+        set(_src ${_target_srcdir}/${_src})
+      endif()
+      file(RELATIVE_PATH _rel ${_srcdir} ${_src})
+      if(_src MATCHES "\\.[fF](90|95|03|08)?$" AND NOT _rel MATCHES "^\\.\\./")
+        set(_out ${_outdir}/${_rel})
+        if(NOT _out IN_LIST _outputs)
+          # One command per file, shared by all the targets (dp, sp...)
+          add_custom_command(OUTPUT ${_out}
+                             COMMAND ${PHYEX_TRANSFORM_COMMAND} ${_src} ${_out}
+                             DEPENDS ${_src} ${PHYEX_TRANSFORM_SCRIPT} ${_stamp}
+                             COMMENT "Transforming (${PHYEX_TRANSFORMATION}) ${_rel}"
+                             VERBATIM)
+          list(APPEND _outputs ${_out})
+        endif()
+        list(APPEND _new_sources ${_out})
+        # Files included by the original source code are also searched in its
+        # directory (after the transformed headers)
+        get_filename_component(_dir ${_src} DIRECTORY)
+        list(APPEND _incdirs ${_dir})
+        set(_changed TRUE)
+      else()
+        list(APPEND _new_sources ${_src})
+      endif()
+    endforeach()
+    if(_changed)
+      set_property(TARGET ${_target} PROPERTY SOURCES ${_new_sources})
+      list(REMOVE_DUPLICATES _incdirs)
+      target_include_directories(${_target} BEFORE PRIVATE ${_header_dirs} ${_incdirs})
+      list(APPEND _transformed_targets ${_target})
+    endif()
+  endforeach()
+
+  # The transformed files are generated by a dedicated target, built before
+  # the PHYEX targets (which are defined in another directory)
+  set_source_files_properties(${_outputs} DIRECTORY ${_srcdir} PROPERTIES GENERATED TRUE)
+  add_custom_target(phyex_transformation DEPENDS ${_outputs})
+  foreach(_target ${_transformed_targets})
+    add_dependencies(${_target} phyex_transformation)
+  endforeach()
+  ecbuild_info("${PHYEX_TRANSFORMATION} transformation of the PHYEX source code in ${_outdir}")
+endif()
 
 if(HAVE_PYTHON_WHEEL)
   # The python binding is compiled in the PHYEX libraries
