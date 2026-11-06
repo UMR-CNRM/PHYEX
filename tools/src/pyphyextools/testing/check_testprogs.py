@@ -7,6 +7,7 @@ test programs and checks whether results are identical to a given version.
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -17,7 +18,7 @@ import numpy
 import pandas
 
 from pyphyextools.testing.check_common import (
-    CheckCommitBase, CheckCommitError, escape_commit, PHYEXCONF_DEFAULT, run_tool)
+    CheckCommitBase, CheckCommitError, escape_commit, PHYEXCONF_DEFAULT, run_tool, SEPARATOR)
 from pyphyextools import run_command
 from pyphyextools.testing.compare import comp_testprogs
 
@@ -55,7 +56,6 @@ class CheckCommitTestprogs(CheckCommitBase):
                             "turb", "shallow", "lima_adjust", "lima"]
         self.allowedTests = ["ice_adjust", "rain_ice", "rain_ice_old",
                              "turb", "shallow", "lima_adjust", "lima"]
-        self.buildSys = 'ecbuild'
         self.perf = perf
         self.checkOpt = checkOpt
         self.conf_extra_tag, self.conf_extra_opts = self._extrapolation_configs()
@@ -213,8 +213,7 @@ class CheckCommitTestprogs(CheckCommitBase):
 
     def pack_creation(self):
         testdir = os.path.join(self.TESTDIR, self.name)
-        build_dir = os.path.join(testdir, 'build', f'with_{self.buildSys}',
-                                 f'arch_{self.archfile}')
+        build_dir = os.path.join(testdir, 'build', f'arch_{self.archfile}')
 
         if self.suppress and os.path.isdir(testdir):
             shutil.rmtree(testdir)
@@ -229,60 +228,127 @@ class CheckCommitTestprogs(CheckCommitBase):
                 "suppress it to be able to compile it again "
                 "(or use the -s option to automatically suppress it)", 5)
 
-        print(f"### Pack creation for commit {self.commit}")
-        os.makedirs(testdir, exist_ok=True)
-        build_base = os.path.join(testdir, 'build')
-        if not os.path.isdir(build_base):
-            toolsdir = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), '..', '..'))
-            build_src = os.path.join(toolsdir, '..', '..', 'build')
-            shutil.copytree(build_src, build_base, symlinks=True)
-            arch_base = os.path.join(build_base, f'with_{self.buildSys}')
-            for d in os.listdir(arch_base):
-                if d.startswith('arch_'):
-                    shutil.rmtree(os.path.join(arch_base, d))
-        else:
+        if os.path.isdir(os.path.join(testdir, 'build')):
             print("WARNING: the compilation system is already there, "
                   "we use it but it could be outdated")
+        # Directory needed by pack_update
+        os.makedirs(os.path.join(testdir, 'build'), exist_ok=True)
 
     def pack_update(self):
         testdir = os.path.join(self.TESTDIR, self.name)
-        build_dir = os.path.join(testdir, 'build', f'with_{self.buildSys}')
+        build_dir = os.path.join(testdir, 'build')
         if not os.path.isdir(build_dir):
             raise CheckCommitError(
                 f"Compilation directory must exist ({build_dir})", 9)
 
-        makeargs = ['./make_' + self.buildSys + '.sh']
-        if self.packupdate:
-            makeargs.append('-u')
-        if self.packcreation:
-            makeargs.append('-p')
-        makeargs.extend(['--commit', self.commit, '--arch', self.archfile])
-        if not self.useexpand:
-            makeargs.append('--noexpand')
-        if not self.useshumantrans:
-            makeargs.append('--noshumantrans')
-        out_path = os.path.join(build_dir, 'Output_compilation_step1')
-        run_command(makeargs, build_dir, out_path, display='always')
+        # Source code, in the PHYEX subdirectory of testdir
+        phyex_dir = os.path.join(testdir, 'PHYEX')
+        if self.commit.startswith('testprogs' + SEPARATOR) or \
+           (os.path.isdir(self.commit) and self.model_ready):
+            raise NotImplementedError(
+                "Commits ready for testprogs (testprogs branches) cannot be compiled "
+                "with the CMake build system")
+        if os.path.isdir(phyex_dir):
+            shutil.rmtree(phyex_dir)
+        if os.path.isdir(self.commit):
+            print(f"Copy {self.commit}")
+            self._copy_source(self.commit, phyex_dir)
+        else:
+            # Commit hash or tag
+            if self.repo_protocol == 'https':
+                repo_url = f'https://github.com/{self.repo_user}/PHYEX.git'
+            else:
+                repo_url = f'git@github.com:{self.repo_user}/PHYEX.git'
+            print(f"Clone repository, and checkout commit {self.commit}")
+            run_command(['git', 'clone', repo_url, phyex_dir])
+            run_command(['git', 'checkout', self.commit], cwd=phyex_dir)
+
+        # Architecture files, taken in the arch subdirectory of the source code.
+        # They are copied in the architecture specific build directory (arch.env,
+        # used by the next steps, and arch.ecbuild, used as CMake toolchain file)
+        arch_dir = os.path.join(phyex_dir, 'arch')
+        envfile = os.path.join(arch_dir, f'arch-{self.archfile}.env')
+        toolchain = os.path.join(arch_dir, f'arch-{self.archfile}.ecbuild')
+        for f in (envfile, toolchain):
+            if not os.path.isfile(f):
+                raise CheckCommitError(f"Architecture file not found: {f}", 6)
+        arch_build_dir = os.path.join(build_dir, f'arch_{self.archfile}')
+        os.makedirs(arch_build_dir, exist_ok=True)
+        arch_env = os.path.join(arch_build_dir, 'arch.env')
+        shutil.copy(envfile, arch_env)
+        arch_toolchain = os.path.join(arch_build_dir, 'arch.ecbuild')
+        shutil.copy(toolchain, arch_toolchain)
+
+        # CMake configuration only (the compilation is done by the next step),
+        # executed after having sourced the environment file
+        if self.useexpand and self.useshumantrans:
+            transformation = 'IAL'
+        elif self.useexpand:
+            transformation = 'IAL_NOSHUGRAD'
+        elif self.useshumantrans:
+            transformation = 'IAL_NOEXPAND'
+        else:
+            transformation = 'NONE'
+        cmake_args = ['cmake', '-S', phyex_dir, '-B', arch_build_dir,
+                      '-DENABLE_PHYEX_BUILD_PROGS=ON',
+                      '-DENABLE_SINGLE_PRECISION=ON',
+                      '-DCMAKE_BUILD_TYPE=Release',
+                      '-DBUILD_SHARED_LIBS=OFF',
+                      f'-DPHYEX_TRANSFORMATION={transformation}',
+                      f'-DCMAKE_TOOLCHAIN_FILE={arch_toolchain}',
+                      '-DENABLE_DR_HOOK_NVTX=OFF',
+                      '-DCMAKE_CXX_FLAGS=-lstdc++']
+        script = f'set -e; . {shlex.quote(arch_env)}; ' + shlex.join(cmake_args)
+        out_path = os.path.join(arch_build_dir, 'Output_compilation_step1')
+        run_command(['bash', '-c', script], build_dir, out_path, display='always')
+
+    @staticmethod
+    def _copy_source(srcdir, destdir):
+        """Copy the source code of a PHYEX directory: in a git repository,
+        tracked files and untracked files not ignored (local modifications are
+        kept, build directories and virtual environments are not copied),
+        otherwise the whole directory (except .git)."""
+        if os.path.exists(os.path.join(srcdir, '.git')):
+            result = subprocess.run(
+                ['git', 'ls-files', '-z', '--cached', '--others', '--exclude-standard'],
+                cwd=srcdir, stdout=subprocess.PIPE, check=True)
+            for rel in sorted(set(result.stdout.decode('utf-8').split('\0'))):
+                src = os.path.join(srcdir, rel)
+                if rel == '' or not os.path.lexists(src):
+                    continue  # deleted but still tracked file
+                dst = os.path.join(destdir, rel)
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
+                shutil.copy2(src, dst, follow_symlinks=False)
+        else:
+            shutil.copytree(srcdir, destdir, symlinks=True,
+                            ignore=shutil.ignore_patterns('.git'))
 
     def compilation_step(self):
         testdir = os.path.join(self.TESTDIR, self.name)
-        build_dir = os.path.join(testdir, 'build', f'with_{self.buildSys}')
-        libphyex = os.path.join(build_dir, f'arch_{self.archfile}', 'build', 'lib',
-                                'libphyex.so')
-        if not self.onlyIfNeeded or not os.path.isfile(libphyex):
+        build_dir = os.path.join(testdir, 'build')
+        arch_build_dir = os.path.join(build_dir, f'arch_{self.archfile}')
+        # Library built by CMake (static with BUILD_SHARED_LIBS=OFF, see pack_update)
+        libphyex = [os.path.join(arch_build_dir, 'lib', f'libphyex_{self.precision}{ext}')
+                    for ext in ('.a', '.so')]
+        if not self.onlyIfNeeded or not any(os.path.isfile(lib) for lib in libphyex):
             print(f"### Compilation of commit {self.commit}")
-            makeargs = ['./make_' + self.buildSys + '.sh', '-c', '--jobs=10',
-                        '--commit', self.commit, '--arch', self.archfile]
-            out_path = os.path.join(build_dir, 'Output_compilation_step2')
-            run_command(makeargs, build_dir, out_path, display='always')
+            # Build (the CMake configuration is done by pack_update), executed
+            # after having sourced the environment file
+            arch_env = os.path.join(arch_build_dir, 'arch.env')
+            if not os.path.isfile(arch_env):
+                raise CheckCommitError(
+                    f"Environment file not found ({arch_env}), the pack must be created first", 9)
+            cmake_args = ['cmake', '--build', arch_build_dir, '--parallel', '10']
+            script = f'set -e; . {shlex.quote(arch_env)}; ' + shlex.join(cmake_args)
+            out_path = os.path.join(arch_build_dir, 'Output_compilation_step2')
+            run_command(['bash', '-c', script], build_dir, out_path, display='always')
 
     def execution(self):
         testdir = os.path.join(self.TESTDIR, self.name)
 
         if not self.onlyIfNeeded:
             for t in self.tests:
-                test_out = os.path.join(testdir, 'tests', f'with_{self.buildSys}',
+                test_out = os.path.join(testdir, 'tests',
                                         f'arch_{self.archfile}',
                                         f'{t}{self.extrapolation_tag}')
                 if os.path.isdir(test_out):
@@ -294,7 +360,7 @@ class CheckCommitTestprogs(CheckCommitBase):
                 print(f"The test {t} is not allowed")
                 continue
 
-            test_out = os.path.join(testdir, 'tests', f'with_{self.buildSys}',
+            test_out = os.path.join(testdir, 'tests',
                                     f'arch_{self.archfile}',
                                     f'{t}{self.extrapolation_tag}')
             if os.path.isdir(test_out) and self.onlyIfNeeded:
@@ -304,8 +370,8 @@ class CheckCommitTestprogs(CheckCommitBase):
                 print(f"### Running of commit {self.commit}")
                 firstrun = 0
 
-            exe_main = os.path.join(testdir, 'build', f'with_{self.buildSys}',
-                                    f'arch_{self.archfile}', 'build', 'bin',
+            exe_main = os.path.join(testdir, 'build',
+                                    f'arch_{self.archfile}', 'bin',
                                     f'main_{t}_{self.precision}.exe')
             if not os.path.isfile(exe_main):
                 raise CheckCommitError(
@@ -325,7 +391,7 @@ class CheckCommitTestprogs(CheckCommitBase):
             else:
                 env = os.environ.copy()
 
-            arch_env = os.path.join(testdir, 'build', f'with_{self.buildSys}',
+            arch_env = os.path.join(testdir, 'build',
                                     f'arch_{self.archfile}', 'arch.env')
             if os.path.isfile(arch_env):
                 with open(arch_env, encoding='utf-8') as f:
@@ -397,8 +463,8 @@ class CheckCommitTestprogs(CheckCommitBase):
             if t not in self.allowedTests:
                 continue
 
-            exe_main = os.path.join(testdir, 'build', f'with_{self.buildSys}',
-                                    f'arch_{self.archfile}', 'build', 'bin',
+            exe_main = os.path.join(testdir, 'build',
+                                    f'arch_{self.archfile}', 'bin',
                                     f'main_{t}_{self.precision}.exe')
             if not os.path.isfile(exe_main):
                 raise CheckCommitError(
@@ -407,7 +473,7 @@ class CheckCommitTestprogs(CheckCommitBase):
 
             if firstrun:
                 firstrun = 0
-                arch_env = os.path.join(testdir, 'build', f'with_{self.buildSys}',
+                arch_env = os.path.join(testdir, 'build',
                                         f'arch_{self.archfile}', 'arch.env')
                 env = os.environ.copy()
                 if os.path.isfile(arch_env):
@@ -440,7 +506,7 @@ class CheckCommitTestprogs(CheckCommitBase):
                 if not self.onlyIfNeeded:
                     for t2 in self.tests:
                         perf_dir = os.path.join(
-                            testdir, 'tests', f'with_{self.buildSys}',
+                            testdir, 'tests',
                             f'arch_{self.archfile}', f'{t2}{perf_tag}')
                         if os.path.isdir(perf_dir):
                             shutil.rmtree(perf_dir)
@@ -464,7 +530,7 @@ class CheckCommitTestprogs(CheckCommitBase):
                 env=env_perf)
 
             output_file = os.path.join(
-                testdir, 'tests', f'with_{self.buildSys}',
+                testdir, 'tests',
                 f'arch_{self.archfile}', f'{t}{perf_tag}', 'Output_run')
             if os.path.isfile(output_file):
                 with open(output_file, encoding='utf-8') as f:
@@ -523,11 +589,10 @@ class CheckCommitTestprogs(CheckCommitBase):
             else:
                 refname = caseref
 
-            file1 = os.path.join(testdir, 'tests', f'with_{self.buildSys}',
+            file1 = os.path.join(testdir, 'tests',
                                  f'arch_{self.archfile}',
                                  f'{t}{self.extrapolation_tag}', 'Output_run')
             file2 = os.path.join(self.TESTDIR, refname, 'tests',
-                                 f'with_{self.buildSys}',
                                  f'arch_{self.refarchfile}',
                                  f'{t}{self.extrapolation_tag}', 'Output_run')
 
