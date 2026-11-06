@@ -13,4 +13,4 @@ jobs:
       run: pip install -e tools/
 
     - name: Check norms
-      run: phyex-check_norms -v src/common/
+      run: phyex-check_norms -v src/phyex/
