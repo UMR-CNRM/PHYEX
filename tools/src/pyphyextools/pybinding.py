@@ -312,7 +312,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
         argList1name = [v[0] for v in argList1]
         f.write(('{kind} PY{name}({argList}) ' + \
                  'BIND(C, name="PY{name}")\n').format(kind=kind,
-                                                      argList=', '.join(argList1name),
+                                                      argList=', &\n  '.join(argList1name),
                                                       name=name))
         if scope.split('/')[0].split(':')[0] == 'module':
             f.write(f"\nUSE {scope.split('/')[0].split(':')[1]}\n")
@@ -323,7 +323,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
         f.write('\nIMPLICIT NONE\n')
         f.write('\n'.join(declList) + '\n')
         f.write('\n'.join(copyList) + '\n')
-        f.write(f"CALL {name}({', '.join(argList2)})\n")
+        f.write(f"CALL {name}({', &\n  '.join(argList2)})\n")
         for unit in flush:
             f.write(f"FLUSH({unit})\n")
         f.write(f'END {kind} PY{name}')
@@ -333,11 +333,11 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
         extraname = ['K_' + e for e in extra]
         f.write(('{kind} HPY{name}({argList}) ' + \
                  'BIND(C, name="HPY{name}")\n').format(kind=kind,
-                                                       argList=', '.join(argList1name + extraname),
+                                                       argList=', &\n  '.join(argList1name + extraname),
                                                        name=name))
         f.write('\n'.join(moduleListHelper) + '\n')
         f.write('\nUSE, INTRINSIC :: ISO_C_BINDING, ONLY: C_CHAR, C_BOOL\n')
-        f.write('INTEGER(KIND=4), INTENT(OUT) :: ' + (', '.join(argList1name + extraname)) + '\n')
+        f.write('INTEGER(KIND=4), INTENT(OUT) :: ' + (', &\n  '.join(argList1name + extraname)) + '\n')
         for varname, vartype, _, _, _ in argList1:
             f.write(vartype + ' :: ' + 'K_' + varname + '\n')
         for varname, vartype, _, _, _ in argList1:
@@ -368,10 +368,13 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             f.write('MAO = ctypesForFortran.MANDATORY_AFTER_OPTIONAL\n')
             f.write('\n')
             f.write('ctypesFF = None\n')
+            # Shared lib paths are relative to the python module and resolved at
+            # runtime, so that the module can be moved together with the lib
+            f.write('_dirname = os.path.dirname(os.path.realpath(__file__))\n')
             for libsoname in libso:
-                libsoname = os.path.join(os.path.dirname(os.path.realpath(python_out)), libsoname)
-                f.write(f'if ctypesFF is None and os.path.exists("{libsoname}"):\n')
-                f.write(f'    ctypesFF, handle = ctypesForFortran.ctypesForFortranFactory("{libsoname}")\n')
+                f.write(f'_libso = os.path.join(_dirname, {libsoname!r})\n')
+                f.write('if ctypesFF is None and os.path.exists(_libso):\n')
+                f.write('    ctypesFF, handle = ctypesForFortran.ctypesForFortranFactory(_libso)\n')
             f.write('if ctypesFF is None:\n')
             f.write(f'    raise IOError("Shared lib is missing (tested path are: {", ".join(libso)}).")\n')
             f.write('\n')

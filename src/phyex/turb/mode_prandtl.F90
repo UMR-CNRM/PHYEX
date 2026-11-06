@@ -587,7 +587,8 @@ DO JSV=1,KSV
       IF ( JSV == 1 ) THEN
 !$acc kernels
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-        ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) / PTKEM(IIJB:IIJE,1:IKT))**2
+        ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) / &
+          & PTKEM(IIJB:IIJE,1:IKT))**2
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
         ZW1=MZM(ZWORK1)
@@ -660,7 +661,8 @@ DO JSV=1,KSV
       IF ( JSV == 1 ) THEN
 !$acc kernels
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-        ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) / PTKEM(IIJB:IIJE,1:IKT))**2
+        ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) / &
+          & PTKEM(IIJB:IIJE,1:IKT))**2
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
         ZW1=MZM(ZWORK1)

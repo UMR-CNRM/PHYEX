@@ -24,11 +24,13 @@ SUBROUTINE GETDATA_SHALLOW (NPROMA, NGPBLKS, NFLEVG, KRR, KRRL, KRRI, KSV, KLEV,
                         &PFLXZTHVMF_B,ZFLXZTHMF_B, &
                         &ZFLXZRMF_B,ZFLXZUMF_B, &
                         &ZFLXZVMF_B,ZDETR_B,ZENTR_B, IKLCL_B, IKETL_B, IKCTL_B,&
-                        &PDTKEDT_MF_B, PHLC_HRC_B, PHLC_HCF_B, PHLI_HRI_B, PHLI_HCF_B, PWEIGHT_MF_CLOUD_B, PFLXZTKEMF_B, PTKE_UP_B, &
+                        &PDTKEDT_MF_B, PHLC_HRC_B, PHLC_HCF_B, PHLI_HRI_B, PHLI_HCF_B, PWEIGHT_MF_CLOUD_B, PFLXZTKEMF_B, &
+                        &PTKE_UP_B, &
                         !OUT and INOUT (expected values)
                         &PDUDT_MF_OUT_B, PDVDT_MF_OUT_B, &
                         &PDTHLDT_MF_OUT_B, PDRTDT_MF_OUT_B, &
-                        &PDSVDT_MF_OUT_B, PSIGMF_OUT_B, PRC_MF_OUT_B, PRI_MF_OUT_B, PCF_MF_OUT_B, PFLXZTHVMF_OUT_B, ZFLXZTHMF_OUT_B, &
+                        &PDSVDT_MF_OUT_B, PSIGMF_OUT_B, PRC_MF_OUT_B, PRI_MF_OUT_B, PCF_MF_OUT_B, PFLXZTHVMF_OUT_B, &
+                        &ZFLXZTHMF_OUT_B, &
                         &ZFLXZRMF_OUT_B, &
                         &ZFLXZUMF_OUT_B, ZFLXZVMF_OUT_B, PTHL_UP_OUT_B, PRT_UP_OUT_B, PRV_UP_OUT_B, PRC_UP_OUT_B, PRI_UP_OUT_B, &
                         &PU_UP_OUT_B, PV_UP_OUT_B, &

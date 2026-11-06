@@ -396,7 +396,8 @@ ZZW(:) = 0.0
 IHAIL = 0.
 IF (LIMAP%NMOM_H.GE.1) IHAIL = 1. 
 !
-WHERE( ODCOMPUTE(:) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ZZW1(:)+ZZW4(:)>=ZRLWETG(:) .AND. ZZW1(:)+ZZW4(:)>0. )
+WHERE( ODCOMPUTE(:) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ZZW1(:)+ZZW4(:)>=ZRLWETG(:) &
+  & .AND. ZZW1(:)+ZZW4(:)>0. )
 !
 ! assume a linear percent of conversion of graupel into hail
 ! ZZW = percentage of graupel transformed

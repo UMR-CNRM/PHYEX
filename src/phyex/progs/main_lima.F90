@@ -289,7 +289,8 @@ DO ITIME = 1, NTIME
                PINPRG=PINPRG(:, IBL), PINPRH=PINPRH(:, IBL), &
                PEVAP3D=PEVAP(:, :, IBL), PCLDFR=PCLDFR(:, :, IBL), PICEFR=PICEFR(:, :, IBL), PPRCFR=PPRCFR(:, :, IBL), &
                PFPR=PFPR(:, :, :, IBL), &
-               PHLC_HCF=PHLC_HCF(:, :, IBL), PHLC_HRC=PHLC_HRC(:, :, IBL), PHLI_HCF=PHLI_HCF(:, :, IBL), PHLI_HRI=PHLI_HRI(:, :, IBL) &
+               PHLC_HCF=PHLC_HCF(:, :, IBL), PHLC_HRC=PHLC_HRC(:, :, IBL), &
+               PHLI_HCF=PHLI_HCF(:, :, IBL), PHLI_HRI=PHLI_HRI(:, :, IBL) &
 
 #ifdef USE_STACK
     & , YDSTACK=YLSTACK &
