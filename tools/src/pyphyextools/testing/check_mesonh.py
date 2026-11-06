@@ -149,7 +149,7 @@ class CheckCommitMesonh(CheckCommitBase):
             prep_code(
                 directory=os.path.join(src_base, 'PHYEX'),
                 model='mesonh',
-                subs=['turb', 'micro', 'aux', 'ext', 'conv'],
+                subs=['turb', 'micro', 'aux', 'conv'],
                 rename_Ff_flag=True,
                 ilooprm=True,
                 no_raise_on_coding_norms=True,
