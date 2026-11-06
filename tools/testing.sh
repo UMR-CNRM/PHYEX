@@ -347,27 +347,24 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
       compilation='-p -c'
       execution="-r $perfopt"
       comparison='-C --computeRefIfNeeded'
-      jsonfile="src/arome/ial_version.json"
       docmp=1
     elif [ "${model}" == 'lmdz' ]; then
       compilation='-p -c --nofcm'
       execution="-r --nofcm $perfopt"
       comparison='-C'
-      jsonfile="src/${model}/${model}_version.json"
       docmp=0
     elif [ "${model}" == 'testprogs' ]; then
       compilation='-p -c'
       execution="-r $perfopt"
       comparison='-C --computeRefIfNeeded'
-      jsonfile="src/common/${model}_version.json"
       docmp=1
     else
       compilation='-p -c'
       execution="-r $perfopt"
       comparison='-C --computeRefIfNeeded'
-      jsonfile="src/${model}/${model}_version.json"
       docmp=1
     fi
+    jsonfile="src/phyex/${model}_version.json"
 
     #Commande
     cmd="phyex-check_${model} --repo-user ${PHYEXREPOuser} --repo-protocol ${PHYEXREPOprotocol} ${additionalOptions} --name ${SHA}"
