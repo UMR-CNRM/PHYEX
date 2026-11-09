@@ -273,48 +273,19 @@ class CheckCommitLmdz(CheckCommitBase):
                 os.path.join(os.path.dirname(target), 'phylmdorig'),
                 dirs_exist_ok=True, symlinks=True)
 
+        # Preparation of the phylmd directory for the compilation (shugrad.h
+        # inclusion, renaming for make, ecrad files needed without ecrad),
+        # done by a script of the phyex-lmdz repository
+        prep_script = os.path.join(self.phyexlmdzdir, 'prep_phylmd.sh')
+        if not os.path.isfile(prep_script):
+            raise CheckCommitError(f"Script {prep_script} not found", 11)
+        prep_cmd = ['bash', prep_script]
+        if self.rad == 'ecrad':
+            prep_cmd.append('--ecrad')
         if self.buildSys == 'make':
-            if os.path.isfile(os.path.join(target, 'modd_dimphyexn.F90')):
-                mvdiff(os.path.join(target, 'modd_dimphyexn.F90'),
-                       os.path.join(target, 'modd_dimphyex.F90'))
-            result = run_command(
-                ['grep', '-i', 'END MODULE'] + [f for f in os.listdir(target)
-                                                 if f.endswith('n.F90')],
-                cwd=target)
-            for line in result.stdout.split('\n'):
-                parts = line.split(':')
-                if len(parts) >= 1:
-                    name = parts[0].replace('n.F90', '')
-                    if name:
-                        src = os.path.join(target, f"{name}n.F90")
-                        dst = os.path.join(target, f"{name}_n.F90")
-                        if os.path.isfile(src):
-                            mvdiff(src, dst)
-            for src, dst in [('hypgeo.F90', 'modi_hypgeo.F90'),
-                             ('hypser.F90', 'modi_hypser.F90'),
-                             ('momg.F90', 'modi_momg.F90'),
-                             ('tools.F90', 'mode_tools.F90')]:
-                src_full = os.path.join(target, src)
-                dst_full = os.path.join(target, dst)
-                if os.path.isfile(src_full):
-                    mvdiff(src_full, dst_full)
-            for src, dst in [('shuman_mf.F90', 'modi_shuman_mf.F90'),
-                             ('shuman_phy.F90', 'mode_shuman_phy.F90')]:
-                src_full = os.path.join(target, src)
-                dst_full = os.path.join(target, dst)
-                if os.path.isfile(src_full):
-                    mvdiff(src_full, dst_full)
-
-        if not self.packupdate and self.rad != 'ecrad':
-            for pattern in ('ecrad/yom*', 'ecrad/abor1.F90', 'ecrad/abor1.intfb.h',
-                            'ecrad/parkind1.F90',
-                            'ecrad/*/yom*', 'ecrad/*/abor1.F90',
-                            'ecrad/*/abor1.intfb.h', 'ecrad/*/parkind1.F90'):
-                for f in glob_mod.glob(os.path.join(target, pattern)):
-                    basename = os.path.basename(f)
-                    bpath = os.path.join(target, basename)
-                    if not os.path.isfile(bpath):
-                        os.symlink(f, bpath)
+            prep_cmd.append('--make')
+        prep_cmd.append(self.lmdzdir)
+        run_command(prep_cmd)
 
     def compilation_step(self):
         """Compile LMDZ with the chosen build system."""
