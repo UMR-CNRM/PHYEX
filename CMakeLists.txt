@@ -3,6 +3,8 @@ find_package(ecbuild 3.11 REQUIRED HINTS ${CMAKE_SOURCE_DIR})
 project(phyex VERSION 1.0 LANGUAGES Fortran)
 
 include(phyex_macros)
+include(phyex_transformation)
+include(phyex_modi)
 
 #-----------------------------------------------------------------------
 # Options
@@ -78,6 +80,14 @@ if(HAVE_PHYEX_BUILD_PROGS)
   list(APPEND PHYEX_SOURCES ${PHYEXPROGS_SOURCES})
 endif()
 
+# Optional transformation of the source code (PHYEX_TRANSFORMATION, see
+# cmake/phyex_transformation.cmake); without transformation, the list is unchanged
+phyex_transform_sources(PHYEX_SOURCES ${PHYEX_SOURCES})
+
+# Interface modules (MODI_*) generated at build time, from the transformed
+# source code if any (see cmake/phyex_modi.cmake and cmake/modi_sources.txt)
+phyex_generate_modi(PHYEX_SOURCES)
+
 # Headers
 set(GLOB PHYEX_HEADERS
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/phyex/turb>
@@ -123,6 +133,8 @@ foreach(PRECISION ${precision_list})
     HEADER_DESTINATION include/${PRECISION}
     PUBLIC_INCLUDES ${PHYEX_INCLUDEDIRS}
   ) 
+  phyex_transformation_target(phyex_${PRECISION})
+  phyex_modi_target(phyex_${PRECISION})
 
   if(HAVE_OMP)
     target_link_libraries(phyex_${PRECISION} PRIVATE OpenMP::OpenMP_Fortran)
@@ -162,25 +174,21 @@ foreach(PRECISION ${precision_list})
     # Build all executables
     foreach(EP ${PHYEXPROGS_ENTRYPOINTS})
       get_filename_component(NAME ${EP} NAME_WLE)
+      phyex_transform_sources(EP_SOURCES ${EP})
       ecbuild_add_executable(
         TARGET ${NAME}_${PRECISION}
-        SOURCES ${EP}
+        SOURCES ${EP_SOURCES}
         OBJECTS phyex_${PRECISION}
         INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/modules_${PRECISION}
         LIBS
           fiat
           mpi_serial
           parkind_${PRECISION}
+          $<$<BOOL:${HAVE_OMP}>:OpenMP::OpenMP_Fortran>
+          $<$<BOOL:${HAVE_ACC}>:OpenACC::OpenACC_Fortran>
         OUTPUT_NAME ${NAME}_${PRECISION}.exe
       )
-
-      if(HAVE_OMP)
-        target_link_libraries(${NAME} PRIVATE OpenMP::OpenMP_Fortran)
-      endif()
-
-      if(HAVE_ACC)
-        target_link_libraries(${NAME} PRIVATE OpenACC::OpenACC_Fortran)
-      endif()
+      phyex_transformation_target(${NAME}_${PRECISION})
 
       if(DEFINED FPP_FLAGS_TESTPROGS)
         target_compile_definitions(${NAME}_${PRECISION} PUBLIC ${FPP_FLAGS_TESTPROGS})
@@ -193,6 +201,8 @@ foreach(PRECISION ${precision_list})
   endif()
 
 endforeach()
+
+phyex_transformation_finalize()
 
 #-----------------------------------------------------------------------
 # Final packaging

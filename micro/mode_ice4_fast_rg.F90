@@ -352,9 +352,11 @@ IF(KRR==7) THEN
   DO JIJ=D%NIJB, D%NIJE
     IF (LDWETG(JIJ)) THEN
       !assume a linear percent of conversion of produced graupel into hail
-      PRWETGH(JIJ)=(MAX(0., PRGSI(JIJ)+PRICFRRG(JIJ)+PRRCFRIG(JIJ))+ZRWETG_INIT(JIJ))*&
+      PRWETGH(JIJ)=(MAX(0., PRGSI(JIJ)+PRICFRRG(JIJ)+PRRCFRIG(JIJ)) &
+                      & +ZRWETG_INIT(JIJ))* &
                       &ZRDRYG_INIT(JIJ)/(ZRWETG_INIT(JIJ)+ZRDRYG_INIT(JIJ))
-      PRWETGH_MR(JIJ)=MAX(0., PRGSI_MR(JIJ))*ZRDRYG_INIT(JIJ)/(ZRWETG_INIT(JIJ)+ZRDRYG_INIT(JIJ))
+      PRWETGH_MR(JIJ)=MAX(0., PRGSI_MR(JIJ))*ZRDRYG_INIT(JIJ) &
+        & /(ZRWETG_INIT(JIJ)+ZRDRYG_INIT(JIJ))
     ELSE
       PRWETGH(JIJ)=0.
       PRWETGH_MR(JIJ)=0.

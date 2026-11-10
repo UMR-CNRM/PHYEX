@@ -1,0 +1,28 @@
+# Source files (relative to src/phyex) whose interface module (MODI_*) is
+# generated at build time by gen_modi.py: the interface of xxx.F90 is the
+# MODI_XXX module in modi_xxx.F90.
+# Used by src/phyex/CMakeLists.txt (cmake/phyex_modi.cmake).
+# modi_gamma.F90 and modi_minpack.F90 cannot be generated, they are kept in
+# the repository.
+aux/gamma_inc.F90
+aux/general_gamma.F90
+aux/ini_phyex.F90
+aux/second_mnh.F90
+conv/deep_convection.F90
+conv/shallow_convection.F90
+conv/shallow_convection_part1.F90
+conv/shallow_convection_part2.F90
+conv/shallow_convection_part2_select.F90
+micro/condensation.F90
+micro/ice4_pack.F90
+micro/ice4_stepping.F90
+micro/ice_adjust.F90
+micro/lima.F90
+micro/lima_adjust_split.F90
+micro/lima_precip_scavenging.F90
+micro/rain_ice.F90
+micro/rain_ice_old.F90
+micro/rain_ice_part1.F90
+micro/rain_ice_part3.F90
+turb/shallow_mf.F90
+turb/turb.F90

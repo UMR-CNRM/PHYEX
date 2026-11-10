@@ -626,7 +626,8 @@ DO JSV=1,KSV
 
         DO JK=1, IKT
           DO JIJ=IIJB, IIJE
-            ZWORK1(JIJ, JK) = (CST%XG / PTHVREF(JIJ, JK) * PLM(JIJ, JK) * PLEPS(JIJ, JK) / PTKEM(JIJ, JK))**2
+            ZWORK1(JIJ, JK) = (CST%XG / PTHVREF(JIJ, JK) * PLM(JIJ, JK) * PLEPS(JIJ, JK) / &
+              & PTKEM(JIJ, JK))**2
           END DO
         END DO
 
@@ -711,7 +712,8 @@ DO JSV=1,KSV
 
         DO JK=1, IKT
           DO JIJ=IIJB, IIJE
-            ZWORK1(JIJ, JK) = (CST%XG / PTHVREF(JIJ, JK) * PLM(JIJ, JK) * PLEPS(JIJ, JK) / PTKEM(JIJ, JK))**2
+            ZWORK1(JIJ, JK) = (CST%XG / PTHVREF(JIJ, JK) * PLM(JIJ, JK) * PLEPS(JIJ, JK) / &
+              & PTKEM(JIJ, JK))**2
           END DO
         END DO
 

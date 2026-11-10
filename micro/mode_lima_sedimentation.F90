@@ -254,16 +254,20 @@ DO WHILE (ZANYREMAINT)
                !
                IF (IMOMENTS == 1) THEN
                   IF (KID == 5) THEN
-                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAC%XCCS*ZLBDA**LIMAC%XCXS * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
+                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAC%XCCS*ZLBDA**LIMAC%XCXS * ELECP%XFQSED(KID) &
+                       & * ZLBDA**(-ELECP%XDQ(KID))
                   ELSE IF (KID == 6) THEN
-                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAM%XCCG*ZLBDA**LIMAM%XCXG * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
+                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAM%XCCG*ZLBDA**LIMAM%XCXG * ELECP%XFQSED(KID) &
+                       & * ZLBDA**(-ELECP%XDQ(KID))
                   ELSE IF (KID == 7) THEN
-                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAM%XCCH*ZLBDA**LIMAM%XCXH * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
+                     ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * LIMAM%XCCH*ZLBDA**LIMAM%XCXH * ELECP%XFQSED(KID) &
+                       & * ZLBDA**(-ELECP%XDQ(KID))
                   ELSE
                      ZWSEDQ(JIJ,JK) = 0.
                   END IF
                ELSE
-                  ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * PCS(JIJ,JK) * ELECP%XFQSED(KID) * ZLBDA**(-ELECP%XDQ(KID))
+                  ZWSEDQ(JIJ,JK) = PRHODREF(JIJ,JK)**(1.-LIMAP%XCEXVT) * ZES * PCS(JIJ,JK) * ELECP%XFQSED(KID) * &
+                    & ZLBDA**(-ELECP%XDQ(KID))
                END IF
                IF (KID == 2) ZWSEDQ(JIJ,JK) = ZWSEDQ(JIJ,JK) * ZCC
             END IF
