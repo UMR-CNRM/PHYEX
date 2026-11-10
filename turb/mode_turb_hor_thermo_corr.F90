@@ -128,7 +128,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exn
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between 
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PSRCM        ! normalized 
-REAL, DIMENSION(D%NIT,D%NJT,NTURB_S), INTENT(IN)   ::  PTURB_SPP ! SPP for turbulence!
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,NTURB_S), INTENT(IN)  ::  PTURB_SPP ! SPP for turbulence!
 !
 !
 !
@@ -211,7 +211,7 @@ CALL GY_M_M_PHY(D, OFLAT,PTHLM,PDYY,PDZZ,PDZY, ZGY_M_M3D_WORK1)
 DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
-      ZFLX(JI, JJ, JK) = PTURB_SPP(JI,JJ,NCTV) * PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *                           &
+      ZFLX(JI, JJ, JK) = PTURB_SPP(JI, JJ, JK, NCTV) * PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *                           &
              ( ZGX_M_M3D_WORK1(JI, JJ, JK)**2 + ZGY_M_M3D_WORK1(JI, JJ, JK)**2 )  
     END DO
   END DO
@@ -224,7 +224,7 @@ ELSE
 DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
-      ZFLX(JI, JJ, JK) = PTURB_SPP(JI,JJ,NCTV) * PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *                           &
+      ZFLX(JI, JJ, JK) = PTURB_SPP(JI, JJ, JK, NCTV) * PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *                           &
                ZGX_M_M3D_WORK1(JI, JJ, JK)**2  
     END DO
   END DO
@@ -261,7 +261,7 @@ CALL MYF2D_PHY(D, PDYY(:,:,IKB), ZMYF2D_WORK2)
 
 DO JJ=1, IJT
   DO JI=1, IIT
-    ZFLX(JI, JJ, IKB) = PTURB_SPP(JI,JJ,NCTV) * PLM(JI, JJ, IKB)                  &
+    ZFLX(JI, JJ, IKB) = PTURB_SPP(JI, JJ, IKB, NCTV) * PLM(JI, JJ, IKB)                  &
       * PLEPS(JI, JJ, IKB) *  (                                    &
       ( ZMXF2D_WORK1(JI, JJ)      &
        - ( ZCOEFF(JI, JJ, IKB+2)*PTHLM(JI, JJ, IKB+2)          &
@@ -363,7 +363,7 @@ DO JK=1, IKT
                   PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *                                          &
                   (ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
                  + ZGY_M_M3D_WORK1(JI, JJ, JK) * ZGY_M_M3D_WORK2(JI, JJ, JK)  &
-                  ) * (PTURB_SPP(JI,JJ,NCHT1)+PTURB_SPP(JI,JJ,NCHT2))
+                  ) * (PTURB_SPP(JI, JJ, JK, NCHT1)+PTURB_SPP(JI, JJ, JK, NCHT2))
     END DO
   END DO
 END DO
@@ -379,7 +379,7 @@ DO JK=1, IKT
       ZFLX(JI, JJ, JK)=                                                               &
                   PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK) *                                          &
                   (ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
-                  ) * (PTURB_SPP(JI,JJ,NCHT1)+PTURB_SPP(JI,JJ,NCHT2))
+                  ) * (PTURB_SPP(JI, JJ, JK, NCHT1)+PTURB_SPP(JI, JJ, JK, NCHT2))
     END DO
   END DO
 END DO
@@ -436,7 +436,7 @@ CALL MYF2D_PHY(D, PDYY(:,:,IKB), ZMYF2D_WORK4)
 
 DO JJ=1, IJT
   DO JI=1, IIT
-    ZFLX(JI, JJ, IKB) = (PTURB_SPP(JI,JJ,NCHT1)+PTURB_SPP(JI,JJ,NCHT2)) * PLM(JI, JJ, IKB)         &
+    ZFLX(JI, JJ, IKB) = (PTURB_SPP(JI, JJ, IKB, NCHT1)+PTURB_SPP(JI, JJ, IKB, NCHT2)) * PLM(JI, JJ, IKB)         &
         * PLEPS(JI, JJ, IKB)  *  (                                   &
         ( ZMXF2D_WORK1(JI, JJ)      &
          - ( ZCOEFF(JI, JJ, IKB+2)*PTHLM(JI, JJ, IKB+2)          &

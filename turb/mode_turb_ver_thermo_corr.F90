@@ -322,7 +322,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PTHLP      ! guess of thl at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRP        ! guess of r at t+ deltat
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
-REAL, DIMENSION(D%NIJT,NTURB_S), INTENT(IN)       ::  PTURB_SPP    ! SPP for turbulence
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S), INTENT(IN)  ::  PTURB_SPP    ! SPP for turbulence
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)),   INTENT(OUT)  ::  PSIGS     ! Vert. part of Sigma_s at t
 !
@@ -489,7 +489,7 @@ END IF
 
       DO JK=1, IKT
         DO JIJ=IIJB, IIJE
-          ZF(JIJ, JK) = PTURB_SPP(JIJ,NCTV) * &
+          ZF(JIJ, JK) = PTURB_SPP(JIJ, JK, NCTV) * &
                                   PLMF(JIJ, JK)*PLEPSF(JIJ, JK)*ZWORK2(JIJ, JK)
         END DO
       END DO
@@ -515,7 +515,7 @@ END IF
 
     DO JK=1, IKT
       DO JIJ=IIJB, IIJE
-        ZF(JIJ, JK) = PTURB_SPP(JIJ,NCTV)*PLM(JIJ, JK)*PLEPS(JIJ, JK)&
+        ZF(JIJ, JK) = PTURB_SPP(JIJ, JK, NCTV)*PLM(JIJ, JK)*PLEPS(JIJ, JK)&
                                      * ZWORK2(JIJ, JK)
       END DO
     END DO
@@ -674,14 +674,14 @@ END DO
     IF (NEBN%LSTATNW) THEN
 
       DO JIJ=IIJB, IIJE
-        ZFLXZ(JIJ, IKB) = PTURB_SPP(JIJ,NCTV) * ZFLXZ(JIJ, IKB)
+        ZFLXZ(JIJ, IKB) = PTURB_SPP(JIJ, IKB, NCTV) * ZFLXZ(JIJ, IKB)
       END DO
 
     END IF
   ELSE
 
      DO JIJ=IIJB, IIJE
-       ZFLXZ(JIJ, IKB) = PTURB_SPP(JIJ,NCTV) * PPHI3(JIJ, IKB+IKL) * PLM(JIJ, IKB)   &
+       ZFLXZ(JIJ, IKB) = PTURB_SPP(JIJ, IKB, NCTV) * PPHI3(JIJ, IKB+IKL) * PLM(JIJ, IKB)   &
        * PLEPS(JIJ, IKB)                                         &
        *( PEXPL *                                                  &
        ( ZCOEFF(JIJ, IKB+2*IKL)*PTHLM(JIJ, IKB+2*IKL)             &
@@ -795,7 +795,7 @@ CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_RES_W_SBG_Thl2 )
 
       DO JK=1, IKT
         DO JIJ=IIJB, IIJE
-          ZF(JIJ, JK) = PTURB_SPP(JIJ,NCTV) * &
+          ZF(JIJ, JK) = PTURB_SPP(JIJ, JK, NCTV) * &
                                   PLMF(JIJ, JK)*PLEPSF(JIJ, JK)*ZWORK2(JIJ, JK)
         END DO
       END DO
@@ -822,7 +822,7 @@ CALL MZF_PHY(D, ZSHUGRADWK1_2D, ZMZF2D_WORK1)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    ZF(JIJ, JK) = PTURB_SPP(JIJ,NCTV)*PLM(JIJ, JK)*PLEPS(JIJ, JK)* &
+    ZF(JIJ, JK) = PTURB_SPP(JIJ, JK, NCTV)*PLM(JIJ, JK)*PLEPS(JIJ, JK)* &
         ZMZF2D_WORK1(JIJ, JK)
   END DO
 END DO
@@ -1021,7 +1021,7 @@ IF (NEBN%LSTATNW) THEN
 
         DO JK=1, IKT
           DO JIJ=IIJB, IIJE
-            ZFLXZ(JIJ, JK)   = PTURB_SPP(JIJ,NCTV) * ZFLXZ(JIJ, JK)
+            ZFLXZ(JIJ, JK)   = PTURB_SPP(JIJ, JK, NCTV) * ZFLXZ(JIJ, JK)
           END DO
         END DO
 
@@ -1106,7 +1106,7 @@ CALL MZF_PHY(D, ZSHUGRADWK1_2D, ZMZF2D_WORK3)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     ZFLXZ(JIJ, JK)   = ZF(JIJ, JK)                          &
-            + TURBN%XIMPL * PTURB_SPP(JIJ,NCTV)*PLM(JIJ, JK)*PLEPS(JIJ, JK)*0.5 &
+            + TURBN%XIMPL * PTURB_SPP(JIJ, JK, NCTV)*PLM(JIJ, JK)*PLEPS(JIJ, JK)*0.5 &
             * ZMZF2D_WORK1(JIJ, JK)    &
             + TURBN%XIMPL * ZDFDDTDZ(JIJ, JK) * ZMZF2D_WORK2(JIJ, JK)         &
             + TURBN%XIMPL * ZDFDDRDZ(JIJ, JK) * ZMZF2D_WORK3(JIJ, JK)    
@@ -1142,7 +1142,7 @@ ENDIF
     IF (NEBN%LSTATNW) THEN
 
       DO JIJ=IIJB, IIJE
-        ZFLXZ(JIJ, IKB) = (PTURB_SPP(JIJ,NCHT1) + PTURB_SPP(JIJ,NCHT2)) * ZFLXZ(JIJ, IKB)
+        ZFLXZ(JIJ, IKB) = (PTURB_SPP(JIJ, IKB, NCHT1) + PTURB_SPP(JIJ, IKB, NCHT2)) * ZFLXZ(JIJ, IKB)
       END DO
 
     END IF
@@ -1150,7 +1150,7 @@ ENDIF
 
       DO JIJ=IIJB, IIJE
         ZFLXZ(JIJ, IKB) =                                                            & 
-        (PTURB_SPP(JIJ,NCHT1) * PPHI3(JIJ, IKB+IKL) + PTURB_SPP(JIJ,NCHT2) * PPSI3(JIJ, IKB+IKL))   &
+        (PTURB_SPP(JIJ, IKB, NCHT1) * PPHI3(JIJ, IKB+IKL) + PTURB_SPP(JIJ, IKB, NCHT2) * PPSI3(JIJ, IKB+IKL))   &
         *( PEXPL *                                                                              &
            ( ZCOEFF(JIJ, IKB+2*IKL)*PTHLM(JIJ, IKB+2*IKL)             &
             +ZCOEFF(JIJ, IKB+IKL)*PTHLM(JIJ, IKB+IKL)             & 
@@ -1281,7 +1281,7 @@ IF (NEBN%LSTATNW) THEN
 
     DO JK=1, IKT
       DO JIJ=IIJB, IIJE
-        ZF(JIJ, JK) = PTURB_SPP(JIJ,NCTV) * ZF(JIJ, JK)
+        ZF(JIJ, JK) = PTURB_SPP(JIJ, JK, NCTV) * ZF(JIJ, JK)
       END DO
     END DO
 
@@ -1299,7 +1299,7 @@ CALL MZF_PHY(D, ZSHUGRADWK1_2D, ZMZF2D_WORK1)
 
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
-    ZF(JIJ, JK) = PTURB_SPP(JIJ,NCTV)*PLM(JIJ, JK)*PLEPS(JIJ, JK)& 
+    ZF(JIJ, JK) = PTURB_SPP(JIJ, JK, NCTV)*PLM(JIJ, JK)*PLEPS(JIJ, JK)&
                                     *ZMZF2D_WORK1(JIJ, JK)
   END DO
 END DO
@@ -1467,7 +1467,7 @@ IF (NEBN%LSTATNW) THEN
 
       DO JK=1, IKT
         DO JIJ=IIJB, IIJE
-          ZFLXZ(JIJ, JK) = PTURB_SPP(JIJ,NCTV) * ZFLXZ(JIJ, JK)
+          ZFLXZ(JIJ, JK) = PTURB_SPP(JIJ, JK, NCTV) * ZFLXZ(JIJ, JK)
         END DO
       END DO
 
@@ -1515,7 +1515,7 @@ CALL MZF_PHY(D, ZSHUGRADWK1_2D, ZMZF2D_WORK2)
 DO JK=1, IKT
   DO JIJ=IIJB, IIJE
     ZFLXZ(JIJ, JK) = ZF(JIJ, JK)                             &
-              + TURBN%XIMPL * PTURB_SPP(JIJ,NCTV)*PLM(JIJ, JK) *PLEPS(JIJ, JK) &
+              + TURBN%XIMPL * PTURB_SPP(JIJ, JK, NCTV)*PLM(JIJ, JK) *PLEPS(JIJ, JK) &
                 * ZMZF2D_WORK1(JIJ, JK) &
               + TURBN%XIMPL * ZDFDDRDZ(JIJ, JK) * ZMZF2D_WORK2(JIJ, JK)  
   END DO

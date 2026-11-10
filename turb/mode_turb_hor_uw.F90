@@ -129,7 +129,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
-REAL, DIMENSION(D%NIT,D%NJT,NTURB_S), INTENT(IN)    ::  PTURB_SPP    ! SPP for turbulence
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,NTURB_S), INTENT(IN)  ::  PTURB_SPP    ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRWS
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE production terms
@@ -215,7 +215,7 @@ DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
       ZFLX(JI, JJ, JK) =                                                      &
-        - PTURB_SPP(JI,JJ,NCMFS) * ZMXM3D_WORK1(JI, JJ, JK) * GX_W_UW_PWM(JI, JJ, JK)
+        - PTURB_SPP(JI, JJ, JK, NCMFS) * ZMXM3D_WORK1(JI, JJ, JK) * GX_W_UW_PWM(JI, JJ, JK)
     END DO
   END DO
 END DO

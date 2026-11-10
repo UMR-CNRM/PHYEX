@@ -143,7 +143,7 @@ REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PUSLOPEM     ! wind componen
 REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
                                      ! direction normal to the maximum slope one
 !
-REAL, DIMENSION(D%NIT,D%NJT,NTURB_S),     INTENT(IN) ::  PTURB_SPP    ! SPP for turbulence 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,NTURB_S),     INTENT(IN)  ::  PTURB_SPP    ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS   ! var. at t+1 -split-
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE production terms
@@ -268,7 +268,7 @@ CALL MYM_PHY(D, ZMXM3D_WORK1, ZMYM3D_WORK1)
 DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
-      ZFLX(JI, JJ, JK)= - PTURB_SPP(JI,JJ,NCMFS) * ZMYM3D_WORK1(JI, JJ, JK) *                           &
+      ZFLX(JI, JJ, JK)= - PTURB_SPP(JI, JJ, JK, NCMFS) * ZMYM3D_WORK1(JI, JJ, JK) *                           &
                 (GY_U_UV_PUM(JI, JJ, JK) + GX_V_UV_PVM(JI, JJ, JK))
     END DO
   END DO
@@ -282,7 +282,7 @@ CALL MYM_PHY(D, ZMXM3D_WORK1, ZMYM3D_WORK1)
 DO JK=1, IKT
   DO JJ=1, IJT
     DO JI=1, IIT
-      ZFLX(JI, JJ, JK)= - PTURB_SPP(JI,JJ,NCMFS) * ZMYM3D_WORK1(JI, JJ, JK) *                           &
+      ZFLX(JI, JJ, JK)= - PTURB_SPP(JI, JJ, JK, NCMFS) * ZMYM3D_WORK1(JI, JJ, JK) *                           &
                 (GX_V_UV_PVM(JI, JJ, JK))
     END DO
   END DO
@@ -369,7 +369,7 @@ CALL MYM2D_PHY(D, PDXX(:,:,IKB), ZMYM2D_WORK6)
 
 DO JJ=1, IJT
   DO JI=1, IIT
-    ZFLX(JI, JJ, IKB)   = - PTURB_SPP(JI,JJ,NCMFS) * ZMYM2D_WORK1(JI, JJ) *  (     &
+    ZFLX(JI, JJ, IKB)   = - PTURB_SPP(JI, JJ, IKB, NCMFS) * ZMYM2D_WORK1(JI, JJ) *  (     &
       ( ZDYM2D_WORK1(JI, JJ)                                        &
        -ZMYM2D_WORK2(JI, JJ)&
         *0.5*ZMXM2D_WORK3(JI, JJ)            &

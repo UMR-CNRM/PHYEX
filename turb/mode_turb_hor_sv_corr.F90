@@ -51,7 +51,7 @@ CONTAINS
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY : CSTURB_t
-USE MODD_TURB_n, ONLY: TURB_t, NTURB_S, NCSHF, NCHF
+USE MODD_TURB_n, ONLY: TURB_t, NCED, NTURB_S, NCHF
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
 !
@@ -104,7 +104,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PSRCM        ! normalize
                   ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PWM          ! w at t-1
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
-REAL, DIMENSION(D%NIT,D%NJT,NTURB_S), INTENT(IN)        ::  PTURB_SPP    ! SPP for turbulence 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,NTURB_S), INTENT(IN)  ::  PTURB_SPP    ! SPP for turbulence
 !
 !
 !
@@ -143,13 +143,13 @@ IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
   DO JJ=1,IJT
      DO JI=1,IIT
-       ZCSV(JI,JJ)=PTURB_SPP(JI,JJ,NCHF)/PRSNOW
+       ZCSV(JI,JJ)=PTURB_SPP(JI, JJ, IKT, NCHF)/PRSNOW
      ENDDO
   ENDDO
 ELSE
   DO JJ=1,IJT
      DO JI=1,IIT
-       ZCSV(JI,JJ)=PTURB_SPP(JI,JJ,NCHF)
+       ZCSV(JI,JJ)=PTURB_SPP(JI, JJ, IKT, NCHF)
      ENDDO
   ENDDO
 ENDIF
@@ -223,7 +223,7 @@ DO JK=1, IKT
       ZFLX(JI, JJ, JK)=  PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK)                                          &
                 *  (  ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
                     + ZGY_M_M3D_WORK1(JI, JJ, JK) * ZGY_M_M3D_WORK2(JI, JJ, JK)  &
-                   ) * (PTURB_SPP(JI,JJ,NCSHF)+ZCSV(JI,JJ)) / (2.*ZCTSVD)
+                   ) * (TURBN%XCSHF+ZCSV(JI,JJ)) / (2.*ZCTSVD)
     END DO
   END DO
 END DO
@@ -238,7 +238,7 @@ DO JK=1, IKT
     DO JI=1, IIT
       ZFLX(JI, JJ, JK)=  PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK)                                          &
                     * ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
-                    * (PTURB_SPP(JI,JJ,NCSHF)+ZCSV(JI,JJ)) / (2.*ZCTSVD)
+                    * (TURBN%XCSHF+ZCSV(JI,JJ)) / (2.*ZCTSVD)
     END DO
   END DO
 END DO

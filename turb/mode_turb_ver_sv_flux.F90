@@ -279,7 +279,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PWM          ! vertical wind
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.for scalars
-REAL, DIMENSION(D%NIJT,NTURB_S), INTENT(IN) ::  PTURB_SPP      ! SPP for turbulence
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S), INTENT(IN)  ::  PTURB_SPP      ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS
                             ! cumulated sources for the prognostic variables
@@ -361,11 +361,11 @@ ENDIF
 IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
   DO JIJ=IIJB, IIJE
-     ZCSV(JIJ)=PTURB_SPP(JIJ,NCHF)/PRSNOW
+     ZCSV(JIJ)=PTURB_SPP(JIJ, IKB, NCHF)/PRSNOW
   ENDDO
 ELSE
   DO JIJ=IIJB, IIJE
-     ZCSV(JIJ)=PTURB_SPP(JIJ,NCHF)
+     ZCSV(JIJ)=PTURB_SPP(JIJ, IKB, NCHF)
   ENDDO
 ENDIF
 !----------------------------------------------------------------------------
