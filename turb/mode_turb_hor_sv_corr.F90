@@ -223,7 +223,7 @@ DO JK=1, IKT
       ZFLX(JI, JJ, JK)=  PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK)                                          &
                 *  (  ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
                     + ZGY_M_M3D_WORK1(JI, JJ, JK) * ZGY_M_M3D_WORK2(JI, JJ, JK)  &
-                   ) * (TURBN%XCSHF+ZCSV(JI,JJ)) / (2.*ZCTSVD)
+                   ) * (PTURB_SPP(JI, JJ, JK, NCSHF)+ZCSV(JI,JJ)) / (2.*ZCTSVD)
     END DO
   END DO
 END DO
@@ -238,7 +238,7 @@ DO JK=1, IKT
     DO JI=1, IIT
       ZFLX(JI, JJ, JK)=  PLM(JI, JJ, JK) * PLEPS(JI, JJ, JK)                                          &
                     * ZGX_M_M3D_WORK1(JI, JJ, JK) * ZGX_M_M3D_WORK2(JI, JJ, JK)  &
-                    * (TURBN%XCSHF+ZCSV(JI,JJ)) / (2.*ZCTSVD)
+                    * (PTURB_SPP(JI, JJ, JK, NCSHF)+ZCSV(JI,JJ)) / (2.*ZCTSVD)
     END DO
   END DO
 END DO
