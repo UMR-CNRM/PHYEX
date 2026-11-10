@@ -278,6 +278,8 @@ class CheckCommitBase:
                 kwargs['rename_Ff_flag'] = True
             elif part == '--ilooprm':
                 kwargs['ilooprm'] = True
+            elif part == '--genModi':
+                kwargs['gen_modi'] = True
             else:
                 print(f"Warning: unknown prep_code option '{part}' ignored")
         return kwargs

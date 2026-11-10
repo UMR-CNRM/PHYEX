@@ -146,6 +146,8 @@ class CheckCommitMesonh(CheckCommitBase):
                 # --mnhExpand after --shugradTransfo to deal with the directives
                 # added during the transformation
                 pyfortool_options.append('--mnhExpand')
+            # Interface modules (MODI_*) generated
+            prep_kwargs['gen_modi'] = True
             prep_code(
                 directory=os.path.join(src_base, 'PHYEX'),
                 model='mesonh',

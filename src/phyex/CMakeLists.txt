@@ -4,6 +4,7 @@ project(phyex VERSION 1.0 LANGUAGES Fortran)
 
 include(phyex_macros)
 include(phyex_transformation)
+include(phyex_modi)
 
 #-----------------------------------------------------------------------
 # Options
@@ -83,6 +84,10 @@ endif()
 # cmake/phyex_transformation.cmake); without transformation, the list is unchanged
 phyex_transform_sources(PHYEX_SOURCES ${PHYEX_SOURCES})
 
+# Interface modules (MODI_*) generated at build time, from the transformed
+# source code if any (see cmake/phyex_modi.cmake and cmake/modi_sources.txt)
+phyex_generate_modi(PHYEX_SOURCES)
+
 # Headers
 set(GLOB PHYEX_HEADERS
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/phyex/turb>
@@ -129,6 +134,7 @@ foreach(PRECISION ${precision_list})
     PUBLIC_INCLUDES ${PHYEX_INCLUDEDIRS}
   ) 
   phyex_transformation_target(phyex_${PRECISION})
+  phyex_modi_target(phyex_${PRECISION})
 
   if(HAVE_OMP)
     target_link_libraries(phyex_${PRECISION} PRIVATE OpenMP::OpenMP_Fortran)
