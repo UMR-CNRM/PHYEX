@@ -186,7 +186,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodd__dimphyex.html">modd_dimphyex</a>,         <span class="keywordtype">ONLY</span>: <a class="code hl_struct" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
 <div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="comment">!</span></div>
 <div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="comment">!</span></div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodi__condensation.html">modi_condensation</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemodi__condensation_1_1condensation.html">condensation</a></div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="keywordtype">USE </span>modi_condensation, <span class="keywordtype">ONLY</span>: <a class="code hl_function" href="condensation_8F90.html#a932fe4eafeb129ea06fda6ec55f10f36">condensation</a></div>
 <div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemode__lima__ccn__activation.html">mode_lima_ccn_activation</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_function" href="namespacemode__lima__ccn__activation.html#abc1c855d76ed81dd65e912638061e76a">lima_ccn_activation</a></div>
 <div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span><span class="keywordtype">USE </span>yomhook, <span class="keywordtype">ONLY</span>:lhook, dr_hook, jphook</div>
 <div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span><span class="comment">!</span></div>
@@ -514,7 +514,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00421" name="l00421"></a><span class="lineno">  421</span>   zwr=zrrs*ptstep</div>
 <div class="line"><a id="l00422" name="l00422"></a><span class="lineno">  422</span>   zws=zrss*ptstep</div>
 <div class="line"><a id="l00423" name="l00423"></a><span class="lineno">  423</span>   zwg=zrgs*ptstep</div>
-<div class="line"><a id="l00424" name="l00424"></a><span class="lineno">  424</span>   <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__condensation_1_1condensation.html">condensation</a>(d, cst, <a class="code hl_variable" href="namespacemodd__rain__ice__param__n.html#a62e2ddc0b967191a9f34b58f7b459bf1">rain_ice_paramn</a>, nebn, turbn,                   &amp;</div>
+<div class="line"><a id="l00424" name="l00424"></a><span class="lineno">  424</span>   <span class="keyword">CALL </span><a class="code hl_function" href="condensation_8F90.html#a932fe4eafeb129ea06fda6ec55f10f36">condensation</a>(d, cst, <a class="code hl_variable" href="namespacemodd__rain__ice__param__n.html#a62e2ddc0b967191a9f34b58f7b459bf1">rain_ice_paramn</a>, nebn, turbn,                   &amp;</div>
 <div class="line"><a id="l00425" name="l00425"></a><span class="lineno">  425</span>        <span class="stringliteral">&#39;S&#39;</span>, hcondens, hlambda3,                                             &amp;</div>
 <div class="line"><a id="l00426" name="l00426"></a><span class="lineno">  426</span>        ppabst, pzz, prhodref, zt, zrv_in, zrv, zrc_in, zrc, zri_in, zri,    &amp;</div>
 <div class="line"><a id="l00427" name="l00427"></a><span class="lineno">  427</span>        zwr, zws, zwg, &amp;</div>
@@ -679,163 +679,165 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span>   zw(d%NIJB:d%NIJE,:) = 0.</div>
 <div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span>   <span class="keywordflow">WHERE</span> (zrcs(d%NIJB:d%NIJE,:) &lt;= zrtmin(2) .OR. zccs(d%NIJB:d%NIJE,:) &lt;=0.) </div>
 <div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span>      zrvs(d%NIJB:d%NIJE,:) = zrvs(d%NIJB:d%NIJE,:) + zrcs(d%NIJB:d%NIJE,:) </div>
-<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>      pths(d%NIJB:d%NIJE,:) = pths(d%NIJB:d%NIJE,:) - zrcs(d%NIJB:d%NIJE,:)*zlv(d%NIJB:d%NIJE,:)/(zcph(d%NIJB:d%NIJE,:)*zexns(d%NIJB:d%NIJE,:))</div>
-<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>      zrcs(d%NIJB:d%NIJE,:) = 0.0</div>
-<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>      zw(d%NIJB:d%NIJE,:)   = max(zccs(d%NIJB:d%NIJE,:),0.)</div>
-<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>      zccs(d%NIJB:d%NIJE,:) = 0.0</div>
-<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span>      pcldfr(d%NIJB:d%NIJE,:) = 0.</div>
-<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span><span class="keywordflow">   END WHERE</span></div>
-<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span>   <span class="comment">!</span></div>
-<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span>   zzw1(d%NIJB:d%NIJE,:) = 0.</div>
-<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>   <span class="keywordflow">IF</span> (limap%NMOD_CCN.GE.1) zzw1(d%NIJB:d%NIJE,:) = sum(znas(d%NIJB:d%NIJE,:,:),dim=3)</div>
-<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>   zw(d%NIJB:d%NIJE,:) = min( zw(d%NIJB:d%NIJE,:), zzw1(d%NIJB:d%NIJE,:) )</div>
-<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>   zzw2(d%NIJB:d%NIJE,:) = 0.</div>
-<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span>   <span class="keywordflow">WHERE</span> ( zw(d%NIJB:d%NIJE,:) &gt; 0. )</div>
-<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span>      zmask(d%NIJB:d%NIJE,:) = 1.0</div>
-<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>      zzw2(d%NIJB:d%NIJE,:) = zw(d%NIJB:d%NIJE,:) / zzw1(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span><span class="keywordflow">   ENDWHERE</span></div>
-<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span>   <span class="comment">!</span></div>
-<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span>   <span class="keywordflow">IF</span> (limap%NMOD_CCN.GE.1) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span>      <span class="keywordflow">DO</span> imod = 1, limap%NMOD_CCN</div>
-<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span>         znfs(d%NIJB:d%NIJE,:,imod) = znfs(d%NIJB:d%NIJE,:,imod) +                           &amp;</div>
-<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span>              zmask(d%NIJB:d%NIJE,:) * znas(d%NIJB:d%NIJE,:,imod) * zzw2(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span>         znas(d%NIJB:d%NIJE,:,imod) = znas(d%NIJB:d%NIJE,:,imod) -                           &amp;</div>
-<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span>              zmask(d%NIJB:d%NIJE,:) * znas(d%NIJB:d%NIJE,:,imod) * zzw2(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span>         znas(d%NIJB:d%NIJE,:,imod) = max( 0.0 , znas(d%NIJB:d%NIJE,:,imod) )</div>
-<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span><span class="keywordflow">      ENDDO</span></div>
-<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span><span class="keywordflow">   END IF</span></div>
-<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span>   <span class="keywordflow">IF</span> (limap%LSCAV .AND. limap%LAERO_MASS) zmas(d%NIJB:d%NIJE,:) = zmas(d%NIJB:d%NIJE,:) * (1-zmask(d%NIJB:d%NIJE,:))</div>
-<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span><span class="comment">!</span></div>
-<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span><span class="comment">!</span></div>
-<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span><span class="comment">!*       5.     REMOVE SMALL NUMBERS OF CRYSTALS</span></div>
-<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span><span class="comment">!               --------------------------------</span></div>
-<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span><span class="comment">!</span></div>
-<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span><span class="keywordflow">IF</span> (limap%NMOM_I .GE. 2) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span>   zmask(d%NIJB:d%NIJE,:) = 0.0</div>
-<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>   zw(d%NIJB:d%NIJE,:) = 0.</div>
-<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>   <span class="keywordflow">WHERE</span> (zris(d%NIJB:d%NIJE,:) &lt;= zrtmin(4) .OR. zcis(d%NIJB:d%NIJE,:) &lt;= zctmin(4)) </div>
-<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>      zrvs(d%NIJB:d%NIJE,:) = zrvs(d%NIJB:d%NIJE,:) + zris(d%NIJB:d%NIJE,:) </div>
-<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>      pths(d%NIJB:d%NIJE,:) = pths(d%NIJB:d%NIJE,:) - zris(d%NIJB:d%NIJE,:)*zls(d%NIJB:d%NIJE,:)/(zcph(d%NIJB:d%NIJE,:)*zexns(d%NIJB:d%NIJE,:))</div>
-<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span>      zris(d%NIJB:d%NIJE,:) = 0.0</div>
-<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span>      zw(d%NIJB:d%NIJE,:)   = max(zcis(d%NIJB:d%NIJE,:),0.)</div>
-<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span>      zcis(d%NIJB:d%NIJE,:) = 0.0</div>
-<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span><span class="keywordflow">   END WHERE</span></div>
-<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span>   <span class="comment">!</span></div>
-<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span>   zzw1(d%NIJB:d%NIJE,:) = 0.</div>
-<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span>   <span class="keywordflow">IF</span> (limap%NMOD_IFN .GE. 1) zzw1(d%NIJB:d%NIJE,:) = zzw1(d%NIJB:d%NIJE,:) + sum(zins,dim=3)</div>
-<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span>   <span class="keywordflow">IF</span> (limap%NMOD_IMM .GE. 1) zzw1(d%NIJB:d%NIJE,:) = zzw1(d%NIJB:d%NIJE,:) + sum(znis,dim=3)</div>
-<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span>   zw(d%NIJB:d%NIJE,:) = min( zw(d%NIJB:d%NIJE,:), zzw1(d%NIJB:d%NIJE,:) )</div>
-<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span>   zzw2(d%NIJB:d%NIJE,:) = 0.</div>
-<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span>   <span class="keywordflow">WHERE</span> ( zw(d%NIJB:d%NIJE,:) &gt; 0. )</div>
-<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span>      zmask(d%NIJB:d%NIJE,:) = 1.0</div>
-<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span>      zzw2(d%NIJB:d%NIJE,:) = zw(d%NIJB:d%NIJE,:) / zzw1(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span><span class="keywordflow">   ENDWHERE</span></div>
-<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span>   <span class="comment">!</span></div>
-<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span>   <span class="keywordflow">IF</span> (limap%NMOD_IFN.GE.1) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span>      <span class="keywordflow">DO</span> imod = 1, limap%NMOD_IFN</div>
-<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span>         zifs(d%NIJB:d%NIJE,:,imod) = zifs(d%NIJB:d%NIJE,:,imod) +                    &amp;</div>
-<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span>              zmask(d%NIJB:d%NIJE,:) * zins(d%NIJB:d%NIJE,:,imod) * zzw2(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span>         zins(d%NIJB:d%NIJE,:,imod) = zins(d%NIJB:d%NIJE,:,imod) -                    &amp;</div>
+<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>      pths(d%NIJB:d%NIJE,:) = pths(d%NIJB:d%NIJE,:) - zrcs(d%NIJB:d%NIJE,:)*zlv(d%NIJB:d%NIJE,:) &amp;</div>
+<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>        &amp; /(zcph(d%NIJB:d%NIJE,:)*zexns(d%NIJB:d%NIJE,:))</div>
+<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>      zrcs(d%NIJB:d%NIJE,:) = 0.0</div>
+<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>      zw(d%NIJB:d%NIJE,:)   = max(zccs(d%NIJB:d%NIJE,:),0.)</div>
+<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span>      zccs(d%NIJB:d%NIJE,:) = 0.0</div>
+<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span>      pcldfr(d%NIJB:d%NIJE,:) = 0.</div>
+<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span><span class="keywordflow">   END WHERE</span></div>
+<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span>   <span class="comment">!</span></div>
+<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>   zzw1(d%NIJB:d%NIJE,:) = 0.</div>
+<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>   <span class="keywordflow">IF</span> (limap%NMOD_CCN.GE.1) zzw1(d%NIJB:d%NIJE,:) = sum(znas(d%NIJB:d%NIJE,:,:),dim=3)</div>
+<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>   zw(d%NIJB:d%NIJE,:) = min( zw(d%NIJB:d%NIJE,:), zzw1(d%NIJB:d%NIJE,:) )</div>
+<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span>   zzw2(d%NIJB:d%NIJE,:) = 0.</div>
+<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span>   <span class="keywordflow">WHERE</span> ( zw(d%NIJB:d%NIJE,:) &gt; 0. )</div>
+<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>      zmask(d%NIJB:d%NIJE,:) = 1.0</div>
+<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span>      zzw2(d%NIJB:d%NIJE,:) = zw(d%NIJB:d%NIJE,:) / zzw1(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span><span class="keywordflow">   ENDWHERE</span></div>
+<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span>   <span class="comment">!</span></div>
+<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span>   <span class="keywordflow">IF</span> (limap%NMOD_CCN.GE.1) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span>      <span class="keywordflow">DO</span> imod = 1, limap%NMOD_CCN</div>
+<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span>         znfs(d%NIJB:d%NIJE,:,imod) = znfs(d%NIJB:d%NIJE,:,imod) +                           &amp;</div>
+<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span>              zmask(d%NIJB:d%NIJE,:) * znas(d%NIJB:d%NIJE,:,imod) * zzw2(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span>         znas(d%NIJB:d%NIJE,:,imod) = znas(d%NIJB:d%NIJE,:,imod) -                           &amp;</div>
+<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span>              zmask(d%NIJB:d%NIJE,:) * znas(d%NIJB:d%NIJE,:,imod) * zzw2(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span>         znas(d%NIJB:d%NIJE,:,imod) = max( 0.0 , znas(d%NIJB:d%NIJE,:,imod) )</div>
+<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span><span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span><span class="keywordflow">   END IF</span></div>
+<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span>   <span class="keywordflow">IF</span> (limap%LSCAV .AND. limap%LAERO_MASS) zmas(d%NIJB:d%NIJE,:) = zmas(d%NIJB:d%NIJE,:) * (1-zmask(d%NIJB:d%NIJE,:))</div>
+<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span><span class="comment">!</span></div>
+<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span><span class="comment">!</span></div>
+<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span><span class="comment">!*       5.     REMOVE SMALL NUMBERS OF CRYSTALS</span></div>
+<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span><span class="comment">!               --------------------------------</span></div>
+<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span><span class="comment">!</span></div>
+<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span><span class="keywordflow">IF</span> (limap%NMOM_I .GE. 2) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>   zmask(d%NIJB:d%NIJE,:) = 0.0</div>
+<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>   zw(d%NIJB:d%NIJE,:) = 0.</div>
+<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>   <span class="keywordflow">WHERE</span> (zris(d%NIJB:d%NIJE,:) &lt;= zrtmin(4) .OR. zcis(d%NIJB:d%NIJE,:) &lt;= zctmin(4)) </div>
+<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>      zrvs(d%NIJB:d%NIJE,:) = zrvs(d%NIJB:d%NIJE,:) + zris(d%NIJB:d%NIJE,:) </div>
+<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span>      pths(d%NIJB:d%NIJE,:) = pths(d%NIJB:d%NIJE,:) - zris(d%NIJB:d%NIJE,:)*zls(d%NIJB:d%NIJE,:) &amp;</div>
+<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span>        &amp; /(zcph(d%NIJB:d%NIJE,:)*zexns(d%NIJB:d%NIJE,:))</div>
+<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span>      zris(d%NIJB:d%NIJE,:) = 0.0</div>
+<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span>      zw(d%NIJB:d%NIJE,:)   = max(zcis(d%NIJB:d%NIJE,:),0.)</div>
+<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span>      zcis(d%NIJB:d%NIJE,:) = 0.0</div>
+<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span><span class="keywordflow">   END WHERE</span></div>
+<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span>   <span class="comment">!</span></div>
+<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span>   zzw1(d%NIJB:d%NIJE,:) = 0.</div>
+<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span>   <span class="keywordflow">IF</span> (limap%NMOD_IFN .GE. 1) zzw1(d%NIJB:d%NIJE,:) = zzw1(d%NIJB:d%NIJE,:) + sum(zins,dim=3)</div>
+<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span>   <span class="keywordflow">IF</span> (limap%NMOD_IMM .GE. 1) zzw1(d%NIJB:d%NIJE,:) = zzw1(d%NIJB:d%NIJE,:) + sum(znis,dim=3)</div>
+<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span>   zw(d%NIJB:d%NIJE,:) = min( zw(d%NIJB:d%NIJE,:), zzw1(d%NIJB:d%NIJE,:) )</div>
+<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span>   zzw2(d%NIJB:d%NIJE,:) = 0.</div>
+<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span>   <span class="keywordflow">WHERE</span> ( zw(d%NIJB:d%NIJE,:) &gt; 0. )</div>
+<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span>      zmask(d%NIJB:d%NIJE,:) = 1.0</div>
+<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span>      zzw2(d%NIJB:d%NIJE,:) = zw(d%NIJB:d%NIJE,:) / zzw1(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span><span class="keywordflow">   ENDWHERE</span></div>
+<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span>   <span class="comment">!</span></div>
+<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span>   <span class="keywordflow">IF</span> (limap%NMOD_IFN.GE.1) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span>      <span class="keywordflow">DO</span> imod = 1, limap%NMOD_IFN</div>
+<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span>         zifs(d%NIJB:d%NIJE,:,imod) = zifs(d%NIJB:d%NIJE,:,imod) +                    &amp;</div>
 <div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span>              zmask(d%NIJB:d%NIJE,:) * zins(d%NIJB:d%NIJE,:,imod) * zzw2(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span>         zins(d%NIJB:d%NIJE,:,imod) = max( 0.0 , zins(d%NIJB:d%NIJE,:,imod) )</div>
-<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span><span class="keywordflow">      ENDDO</span></div>
-<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span><span class="keywordflow">   END IF</span></div>
-<div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span>   <span class="comment">!</span></div>
-<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span>   <span class="keywordflow">IF</span> (limap%NMOD_IMM.GE.1) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span>      imod_imm = 0</div>
-<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span>      <span class="keywordflow">DO</span> imod = 1, limap%NMOD_CCN</div>
-<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span>         <span class="keywordflow">IF</span> (limap%NIMM(imod) == 1) <span class="keywordflow">THEN</span> </div>
-<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span>            imod_imm = imod_imm + 1 </div>
-<div class="line"><a id="l00658" name="l00658"></a><span class="lineno">  658</span>            znas(d%NIJB:d%NIJE,:,imod)     = znas(d%NIJB:d%NIJE,:,imod) +                     &amp;</div>
-<div class="line"><a id="l00659" name="l00659"></a><span class="lineno">  659</span>                 zmask(d%NIJB:d%NIJE,:) * znis(d%NIJB:d%NIJE,:,imod_imm) * zzw2(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span>            znis(d%NIJB:d%NIJE,:,imod_imm) = znis(d%NIJB:d%NIJE,:,imod_imm) -                 &amp;</div>
+<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span>         zins(d%NIJB:d%NIJE,:,imod) = zins(d%NIJB:d%NIJE,:,imod) -                    &amp;</div>
+<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span>              zmask(d%NIJB:d%NIJE,:) * zins(d%NIJB:d%NIJE,:,imod) * zzw2(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span>         zins(d%NIJB:d%NIJE,:,imod) = max( 0.0 , zins(d%NIJB:d%NIJE,:,imod) )</div>
+<div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span><span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span><span class="keywordflow">   END IF</span></div>
+<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span>   <span class="comment">!</span></div>
+<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span>   <span class="keywordflow">IF</span> (limap%NMOD_IMM.GE.1) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span>      imod_imm = 0</div>
+<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span>      <span class="keywordflow">DO</span> imod = 1, limap%NMOD_CCN</div>
+<div class="line"><a id="l00658" name="l00658"></a><span class="lineno">  658</span>         <span class="keywordflow">IF</span> (limap%NIMM(imod) == 1) <span class="keywordflow">THEN</span> </div>
+<div class="line"><a id="l00659" name="l00659"></a><span class="lineno">  659</span>            imod_imm = imod_imm + 1 </div>
+<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span>            znas(d%NIJB:d%NIJE,:,imod)     = znas(d%NIJB:d%NIJE,:,imod) +                     &amp;</div>
 <div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span>                 zmask(d%NIJB:d%NIJE,:) * znis(d%NIJB:d%NIJE,:,imod_imm) * zzw2(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span>            znis(d%NIJB:d%NIJE,:,imod_imm) = max( 0.0 , znis(d%NIJB:d%NIJE,:,imod_imm) )</div>
-<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span><span class="keywordflow">         END IF</span></div>
-<div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span><span class="keywordflow">      ENDDO</span></div>
-<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span><span class="keywordflow">   END IF</span></div>
-<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span><span class="comment">!</span></div>
-<div class="line"><a id="l00668" name="l00668"></a><span class="lineno">  668</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span>            znis(d%NIJB:d%NIJE,:,imod_imm) = znis(d%NIJB:d%NIJE,:,imod_imm) -                 &amp;</div>
+<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span>                 zmask(d%NIJB:d%NIJE,:) * znis(d%NIJB:d%NIJE,:,imod_imm) * zzw2(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span>            znis(d%NIJB:d%NIJE,:,imod_imm) = max( 0.0 , znis(d%NIJB:d%NIJE,:,imod_imm) )</div>
+<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span><span class="keywordflow">         END IF</span></div>
+<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span><span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span><span class="keywordflow">   END IF</span></div>
+<div class="line"><a id="l00668" name="l00668"></a><span class="lineno">  668</span><span class="keywordflow">END IF</span></div>
 <div class="line"><a id="l00669" name="l00669"></a><span class="lineno">  669</span><span class="comment">!</span></div>
-<div class="line"><a id="l00670" name="l00670"></a><span class="lineno">  670</span><span class="comment">!*       6.     SAVE CHANGES &amp; CLEANING</span></div>
-<div class="line"><a id="l00671" name="l00671"></a><span class="lineno">  671</span><span class="comment">!               -----------------------</span></div>
-<div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span><span class="comment">!</span></div>
-<div class="line"><a id="l00673" name="l00673"></a><span class="lineno">  673</span><span class="comment">! 3D water mixing ratios</span></div>
-<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span>prs(d%NIJB:d%NIJE,:,1) = zrvs(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span><span class="keywordflow">IF</span> ( krr .GE. 2 ) prs(d%NIJB:d%NIJE,:,2) = zrcs(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span><span class="keywordflow">IF</span> ( krr .GE. 3 ) prs(d%NIJB:d%NIJE,:,3) = zrrs(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span><span class="keywordflow">IF</span> ( krr .GE. 4 ) prs(d%NIJB:d%NIJE,:,4) = zris(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span><span class="keywordflow">IF</span> ( krr .GE. 5 ) prs(d%NIJB:d%NIJE,:,5) = zrss(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span><span class="keywordflow">IF</span> ( krr .GE. 6 ) prs(d%NIJB:d%NIJE,:,6) = zrgs(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span><span class="keywordflow">IF</span> ( krr .GE. 7 ) prs(d%NIJB:d%NIJE,:,7) = zrhs(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span><span class="comment">!</span></div>
-<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span><span class="comment">! Prepare 3D number concentrations</span></div>
+<div class="line"><a id="l00670" name="l00670"></a><span class="lineno">  670</span><span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00671" name="l00671"></a><span class="lineno">  671</span><span class="comment">!</span></div>
+<div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span><span class="comment">!*       6.     SAVE CHANGES &amp; CLEANING</span></div>
+<div class="line"><a id="l00673" name="l00673"></a><span class="lineno">  673</span><span class="comment">!               -----------------------</span></div>
+<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span><span class="comment">!</span></div>
+<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span><span class="comment">! 3D water mixing ratios</span></div>
+<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span>prs(d%NIJB:d%NIJE,:,1) = zrvs(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span><span class="keywordflow">IF</span> ( krr .GE. 2 ) prs(d%NIJB:d%NIJE,:,2) = zrcs(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span><span class="keywordflow">IF</span> ( krr .GE. 3 ) prs(d%NIJB:d%NIJE,:,3) = zrrs(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span><span class="keywordflow">IF</span> ( krr .GE. 4 ) prs(d%NIJB:d%NIJE,:,4) = zris(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span><span class="keywordflow">IF</span> ( krr .GE. 5 ) prs(d%NIJB:d%NIJE,:,5) = zrss(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span><span class="keywordflow">IF</span> ( krr .GE. 6 ) prs(d%NIJB:d%NIJE,:,6) = zrgs(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span><span class="keywordflow">IF</span> ( krr .GE. 7 ) prs(d%NIJB:d%NIJE,:,7) = zrhs(d%NIJB:d%NIJE,:)</div>
 <div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span><span class="comment">!</span></div>
-<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span><span class="keywordflow">IF</span> ( limap%NMOM_C.GE.2 ) psvs(d%NIJB:d%NIJE,:,isv_lima_nc) = zccs(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span><span class="keywordflow">IF</span> ( limap%LSCAV .AND. limap%LAERO_MASS ) psvs(d%NIJB:d%NIJE,:,isv_lima_scavmass) = zmas(d%NIJB:d%NIJE,:)</div>
-<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span><span class="keywordflow">IF</span> ( limap%NMOM_C.GE.1 .AND. limap%NMOD_CCN.GE.1 ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span>   psvs(d%NIJB:d%NIJE,:,isv_lima_ccn_free:isv_lima_ccn_free+limap%NMOD_CCN-1) = znfs(d%NIJB:d%NIJE,:,:)</div>
-<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span>   psvs(d%NIJB:d%NIJE,:,isv_lima_ccn_acti:isv_lima_ccn_acti+limap%NMOD_CCN-1) = znas(d%NIJB:d%NIJE,:,:)</div>
-<div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span><span class="keywordflow">IF</span> ( limap%NMOM_I.GE.1 .AND. limap%NMOD_IFN.GE.1 ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span>   psvs(d%NIJB:d%NIJE,:,isv_lima_ifn_free:isv_lima_ifn_free+limap%NMOD_IFN-1) = zifs(d%NIJB:d%NIJE,:,:)</div>
-<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span>   psvs(d%NIJB:d%NIJE,:,isv_lima_ifn_nucl:isv_lima_ifn_nucl+limap%NMOD_IFN-1) = zins(d%NIJB:d%NIJE,:,:)</div>
-<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span><span class="keywordflow">IF</span> ( limap%NMOM_I.GE.1 .AND. limap%NMOD_IMM.GE.1 ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span>   psvs(d%NIJB:d%NIJE,:,isv_lima_imm_nucl:isv_lima_imm_nucl+limap%NMOD_IMM-1) = znis(d%NIJB:d%NIJE,:,:)</div>
-<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span><span class="comment">!</span></div>
-<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span><span class="comment">! Initialize budgets</span></div>
+<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span><span class="comment">! Prepare 3D number concentrations</span></div>
+<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span><span class="comment">!</span></div>
+<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span><span class="keywordflow">IF</span> ( limap%NMOM_C.GE.2 ) psvs(d%NIJB:d%NIJE,:,isv_lima_nc) = zccs(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span><span class="keywordflow">IF</span> ( limap%LSCAV .AND. limap%LAERO_MASS ) psvs(d%NIJB:d%NIJE,:,isv_lima_scavmass) = zmas(d%NIJB:d%NIJE,:)</div>
+<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span><span class="keywordflow">IF</span> ( limap%NMOM_C.GE.1 .AND. limap%NMOD_CCN.GE.1 ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span>   psvs(d%NIJB:d%NIJE,:,isv_lima_ccn_free:isv_lima_ccn_free+limap%NMOD_CCN-1) = znfs(d%NIJB:d%NIJE,:,:)</div>
+<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span>   psvs(d%NIJB:d%NIJE,:,isv_lima_ccn_acti:isv_lima_ccn_acti+limap%NMOD_CCN-1) = znas(d%NIJB:d%NIJE,:,:)</div>
+<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span><span class="keywordflow">IF</span> ( limap%NMOM_I.GE.1 .AND. limap%NMOD_IFN.GE.1 ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span>   psvs(d%NIJB:d%NIJE,:,isv_lima_ifn_free:isv_lima_ifn_free+limap%NMOD_IFN-1) = zifs(d%NIJB:d%NIJE,:,:)</div>
+<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span>   psvs(d%NIJB:d%NIJE,:,isv_lima_ifn_nucl:isv_lima_ifn_nucl+limap%NMOD_IFN-1) = zins(d%NIJB:d%NIJE,:,:)</div>
+<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span><span class="keywordflow">IF</span> ( limap%NMOM_I.GE.1 .AND. limap%NMOD_IMM.GE.1 ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span>   psvs(d%NIJB:d%NIJE,:,isv_lima_imm_nucl:isv_lima_imm_nucl+limap%NMOD_IMM-1) = znis(d%NIJB:d%NIJE,:,:)</div>
+<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span><span class="keywordflow">END IF</span></div>
 <div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span><span class="comment">!</span></div>
-<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span><span class="keywordflow">IF</span> ( buconf%LBU_ENABLE ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_TH ) zwkbud(:,:) = pths(:,:) * prhodj(:,:)</div>
-<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_TH ) <span class="keyword">CALL </span>tbudgets(<a class="code hl_variable" href="namespacemodd__budget.html#a0d120a8b4c8fb6af560c814c1d3c2c19">nbudget_th</a>)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
-<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_RV ) zwkbud(:,:) = zrvs(:,:) * prhodj(:,:)</div>
-<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_RV ) <span class="keyword">CALL </span>tbudgets(<a class="code hl_variable" href="namespacemodd__budget.html#a032a9fef7c9e0c47fa34eae42fc05279">nbudget_rv</a>)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
-<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_RC ) zwkbud(:,:) = zrcs(:,:) * prhodj(:,:)</div>
-<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_RC ) <span class="keyword">CALL </span>tbudgets(<a class="code hl_variable" href="namespacemodd__budget.html#a685847647e25e21af43ab48da13b1797">nbudget_rc</a>)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
-<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_RI ) zwkbud(:,:) = zris(:,:) * prhodj(:,:)</div>
-<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_RI ) <span class="keyword">CALL </span>tbudgets(<a class="code hl_variable" href="namespacemodd__budget.html#a4ea4532bcfa769b5ed97e4d1e68a8113">nbudget_ri</a>)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
-<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_SV ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span>    <span class="keywordflow">IF</span> ( limap%NMOM_C.GE.2) zwkbud(:,:) = zccs(:,:) * prhodj(:,:)</div>
-<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span>    <span class="keywordflow">IF</span> ( limap%NMOM_C.GE.2) &amp;</div>
-<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>      <span class="keyword">CALL </span>tbudgets(<a class="code hl_variable" href="namespacemodd__budget.html#aab05ad1db5848733632fdbcefeb4a0a0">nbudget_sv1</a> - 1 + tnsv%NSV_LIMA_NC)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
-<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span>    <span class="keywordflow">IF</span> ( limap%LSCAV .AND. limap%LAERO_MASS ) zwkbud(:,:) = zmas(:,:) * prhodj(:,:)</div>
-<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span>    <span class="keywordflow">IF</span> ( limap%LSCAV .AND. limap%LAERO_MASS ) &amp;</div>
-<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span>      <span class="keyword">CALL </span>tbudgets(<a class="code hl_variable" href="namespacemodd__budget.html#aab05ad1db5848733632fdbcefeb4a0a0">nbudget_sv1</a> - 1 + tnsv%NSV_LIMA_SCAVMASS)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
-<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span>    <span class="keywordflow">IF</span> ( limap%NMOM_C.GE.1 ) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span>      <span class="keywordflow">DO</span> il = 1, limap%NMOD_CCN</div>
-<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span>        idx = <a class="code hl_variable" href="namespacemodd__budget.html#aab05ad1db5848733632fdbcefeb4a0a0">nbudget_sv1</a> - 1 + tnsv%NSV_LIMA_CCN_FREE - 1 + il</div>
-<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span>        zwkbud(:,:) = znfs(:,:, il) * prhodj(:,:)</div>
-<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span>        <span class="keyword">CALL </span>tbudgets(idx)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
-<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span>        idx = <a class="code hl_variable" href="namespacemodd__budget.html#aab05ad1db5848733632fdbcefeb4a0a0">nbudget_sv1</a> - 1 + tnsv%NSV_LIMA_CCN_ACTI - 1 + il</div>
-<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span>        zwkbud(:,:) = znas(:,:, il) * prhodj(:,:)</div>
-<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span>        <span class="keyword">CALL </span>tbudgets(idx)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
-<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span><span class="keywordflow">      END DO</span></div>
-<div class="line"><a id="l00725" name="l00725"></a><span class="lineno">  725</span><span class="keywordflow">    END IF</span></div>
-<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span><span class="keywordflow">  END IF</span></div>
-<div class="line"><a id="l00727" name="l00727"></a><span class="lineno">  727</span><span class="keywordflow">END IF</span></div>
-<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span><span class="comment">!</span></div>
-<div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span><span class="keyword">DEALLOCATE</span>(zrtmin)</div>
-<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span><span class="keyword">DEALLOCATE</span>(zctmin)</div>
-<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(znfs)) <span class="keyword">DEALLOCATE</span>(znfs)</div>
-<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(znas)) <span class="keyword">DEALLOCATE</span>(znas)</div>
-<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(znft)) <span class="keyword">DEALLOCATE</span>(znft)</div>
-<div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(znat)) <span class="keyword">DEALLOCATE</span>(znat)</div>
-<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(zifs)) <span class="keyword">DEALLOCATE</span>(zifs)</div>
-<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(zins)) <span class="keyword">DEALLOCATE</span>(zins)</div>
-<div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(znis)) <span class="keyword">DEALLOCATE</span>(znis)</div>
-<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span><span class="comment">!</span></div>
-<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span><span class="comment">!------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span><span class="comment">! Initialize budgets</span></div>
+<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span><span class="comment">!</span></div>
+<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span><span class="keywordflow">IF</span> ( buconf%LBU_ENABLE ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_TH ) zwkbud(:,:) = pths(:,:) * prhodj(:,:)</div>
+<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_TH ) <span class="keyword">CALL </span>tbudgets(<a class="code hl_variable" href="namespacemodd__budget.html#a0d120a8b4c8fb6af560c814c1d3c2c19">nbudget_th</a>)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
+<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_RV ) zwkbud(:,:) = zrvs(:,:) * prhodj(:,:)</div>
+<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_RV ) <span class="keyword">CALL </span>tbudgets(<a class="code hl_variable" href="namespacemodd__budget.html#a032a9fef7c9e0c47fa34eae42fc05279">nbudget_rv</a>)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
+<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_RC ) zwkbud(:,:) = zrcs(:,:) * prhodj(:,:)</div>
+<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_RC ) <span class="keyword">CALL </span>tbudgets(<a class="code hl_variable" href="namespacemodd__budget.html#a685847647e25e21af43ab48da13b1797">nbudget_rc</a>)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
+<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_RI ) zwkbud(:,:) = zris(:,:) * prhodj(:,:)</div>
+<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_RI ) <span class="keyword">CALL </span>tbudgets(<a class="code hl_variable" href="namespacemodd__budget.html#a4ea4532bcfa769b5ed97e4d1e68a8113">nbudget_ri</a>)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
+<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span>  <span class="keywordflow">IF</span> ( buconf%LBUDGET_SV ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>    <span class="keywordflow">IF</span> ( limap%NMOM_C.GE.2) zwkbud(:,:) = zccs(:,:) * prhodj(:,:)</div>
+<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span>    <span class="keywordflow">IF</span> ( limap%NMOM_C.GE.2) &amp;</div>
+<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span>      <span class="keyword">CALL </span>tbudgets(<a class="code hl_variable" href="namespacemodd__budget.html#aab05ad1db5848733632fdbcefeb4a0a0">nbudget_sv1</a> - 1 + tnsv%NSV_LIMA_NC)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
+<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span>    <span class="keywordflow">IF</span> ( limap%LSCAV .AND. limap%LAERO_MASS ) zwkbud(:,:) = zmas(:,:) * prhodj(:,:)</div>
+<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span>    <span class="keywordflow">IF</span> ( limap%LSCAV .AND. limap%LAERO_MASS ) &amp;</div>
+<div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span>      <span class="keyword">CALL </span>tbudgets(<a class="code hl_variable" href="namespacemodd__budget.html#aab05ad1db5848733632fdbcefeb4a0a0">nbudget_sv1</a> - 1 + tnsv%NSV_LIMA_SCAVMASS)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
+<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span>    <span class="keywordflow">IF</span> ( limap%NMOM_C.GE.1 ) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span>      <span class="keywordflow">DO</span> il = 1, limap%NMOD_CCN</div>
+<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span>        idx = <a class="code hl_variable" href="namespacemodd__budget.html#aab05ad1db5848733632fdbcefeb4a0a0">nbudget_sv1</a> - 1 + tnsv%NSV_LIMA_CCN_FREE - 1 + il</div>
+<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span>        zwkbud(:,:) = znfs(:,:, il) * prhodj(:,:)</div>
+<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span>        <span class="keyword">CALL </span>tbudgets(idx)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
+<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span>        idx = <a class="code hl_variable" href="namespacemodd__budget.html#aab05ad1db5848733632fdbcefeb4a0a0">nbudget_sv1</a> - 1 + tnsv%NSV_LIMA_CCN_ACTI - 1 + il</div>
+<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span>        zwkbud(:,:) = znas(:,:, il) * prhodj(:,:)</div>
+<div class="line"><a id="l00725" name="l00725"></a><span class="lineno">  725</span>        <span class="keyword">CALL </span>tbudgets(idx)%PTR%END_PHY(d, <span class="stringliteral">&#39;CEDS&#39;</span>, zwkbud )</div>
+<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span><span class="keywordflow">      END DO</span></div>
+<div class="line"><a id="l00727" name="l00727"></a><span class="lineno">  727</span><span class="keywordflow">    END IF</span></div>
+<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span><span class="keywordflow">  END IF</span></div>
+<div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span><span class="keywordflow">END IF</span></div>
+<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span><span class="comment">!</span></div>
+<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span><span class="keyword">DEALLOCATE</span>(zrtmin)</div>
+<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span><span class="keyword">DEALLOCATE</span>(zctmin)</div>
+<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(znfs)) <span class="keyword">DEALLOCATE</span>(znfs)</div>
+<div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(znas)) <span class="keyword">DEALLOCATE</span>(znas)</div>
+<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(znft)) <span class="keyword">DEALLOCATE</span>(znft)</div>
+<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(znat)) <span class="keyword">DEALLOCATE</span>(znat)</div>
+<div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(zifs)) <span class="keyword">DEALLOCATE</span>(zifs)</div>
+<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(zins)) <span class="keyword">DEALLOCATE</span>(zins)</div>
+<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span><span class="keywordflow">IF</span> (<span class="keyword">ALLOCATED</span>(znis)) <span class="keyword">DEALLOCATE</span>(znis)</div>
 <div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span><span class="comment">!</span></div>
-<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;LIMA_ADJUST_SPLIT&#39;</span>, 1, zhook_handle)</div>
-<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="lima__adjust__split_8F90.html#a6f1efc31f2871b54a66aaa402f467e1e">lima_adjust_split</a></div>
-<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span> </div>
+<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span><span class="comment">!------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span><span class="comment">!</span></div>
+<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;LIMA_ADJUST_SPLIT&#39;</span>, 1, zhook_handle)</div>
+<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="lima__adjust__split_8F90.html#a6f1efc31f2871b54a66aaa402f467e1e">lima_adjust_split</a></div>
+<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span> </div>
 </div>
-<div class="ttc" id="ainterfacemodi__condensation_1_1condensation_html"><div class="ttname"><a href="interfacemodi__condensation_1_1condensation.html">modi_condensation::condensation</a></div><div class="ttdef"><b>Definition</b> <a href="modi__condensation_8F90_source.html#l00008">modi_condensation.F90:8</a></div></div>
+<div class="ttc" id="acondensation_8F90_html_a932fe4eafeb129ea06fda6ec55f10f36"><div class="ttname"><a href="condensation_8F90.html#a932fe4eafeb129ea06fda6ec55f10f36">condensation</a></div><div class="ttdeci">subroutine condensation(d, cst, icep, nebn, turbn, hfrac_ice, hcondens, hlambda3, ppabs, pzz, prhodref, pt, prv_in, prv_out, prc_in, prc_out, pri_in, pri_out, prr, prs, prg, psigs, lmfconv, pmfconv, pcldfr, psigrc, ouseri, osigmas, ocnd2, picldfr, pwcldfr, pssio, pssiu, pifr, psigqsat, plv, pls, pcph, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, pice_cld_wgt)</div><div class="ttdef"><b>Definition</b> <a href="condensation_8F90_source.html#l00007">condensation.F90:16</a></div></div>
 <div class="ttc" id="alima__adjust__split_8F90_html_a6f1efc31f2871b54a66aaa402f467e1e"><div class="ttname"><a href="lima__adjust__split_8F90.html#a6f1efc31f2871b54a66aaa402f467e1e">lima_adjust_split</a></div><div class="ttdeci">subroutine lima_adjust_split(limap, limaw, tnsv, d, cst, nebn, turbn, buconf, tbudgets, kbudgets, krr, hcondens, hlambda3, kcarb, ksoa, ksp, odust, osalt, oorilam, osubg_cond, osigmas, ptstep, psigqsat, prhodref, prhodj, pexnref, psigs, omfconv, pmfconv, ppabst, pzz, odthrad, pdthrad, pw_nu, prt, prs, psvt, psvs, hactccn, paero, psolorg, pmi, pths, ocompute_src, psrcs, pcldfr, picefr, prc_mf, pri_mf, pcf_mf, pice_cld_wgt, pweight_mf_cloud, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, phlc_hrc_mf, phlc_hcf_mf, phli_hri_mf, phli_hcf_mf)</div><div class="ttdef"><b>Definition</b> <a href="lima__adjust__split_8F90_source.html#l00007">lima_adjust_split.F90:20</a></div></div>
 <div class="ttc" id="anamespacemodd__budget_html"><div class="ttname"><a href="namespacemodd__budget.html">modd_budget</a></div><div class="ttdef"><b>Definition</b> <a href="modd__budget_8F90_source.html#l00002">modd_budget.F90:2</a></div></div>
 <div class="ttc" id="anamespacemodd__budget_html_a032a9fef7c9e0c47fa34eae42fc05279"><div class="ttname"><a href="namespacemodd__budget.html#a032a9fef7c9e0c47fa34eae42fc05279">modd_budget::nbudget_rv</a></div><div class="ttdeci">integer, parameter nbudget_rv</div><div class="ttdef"><b>Definition</b> <a href="modd__budget_8F90_source.html#l00051">modd_budget.F90:51</a></div></div>
@@ -854,7 +856,6 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="anamespacemodd__turb__n_html"><div class="ttname"><a href="namespacemodd__turb__n.html">modd_turb_n</a></div><div class="ttdef"><b>Definition</b> <a href="modd__turbn_8F90_source.html#l00007">modd_turbn.F90:7</a></div></div>
 <div class="ttc" id="anamespacemode__lima__ccn__activation_html"><div class="ttname"><a href="namespacemode__lima__ccn__activation.html">mode_lima_ccn_activation</a></div><div class="ttdef"><b>Definition</b> <a href="mode__lima__ccn__activation_8F90_source.html#l00006">mode_lima_ccn_activation.F90:6</a></div></div>
 <div class="ttc" id="anamespacemode__lima__ccn__activation_html_abc1c855d76ed81dd65e912638061e76a"><div class="ttname"><a href="namespacemode__lima__ccn__activation.html#abc1c855d76ed81dd65e912638061e76a">mode_lima_ccn_activation::lima_ccn_activation</a></div><div class="ttdeci">subroutine lima_ccn_activation(limap, limaw, tnsv, d, cst, nebn, kcarb, ksoa, ksp, odust, osalt, oorilam, prhodref, pexnref, ppabst, pt, pdthrad, pw_nu, paero, psolorg, pmi, hactccn, ptht, prvt, prct, pcct, prrt, pnft, pnat, pcldfr, ptot_rv_henu)</div><div class="ttdef"><b>Definition</b> <a href="mode__lima__ccn__activation_8F90_source.html#l00010">mode_lima_ccn_activation.F90:16</a></div></div>
-<div class="ttc" id="anamespacemodi__condensation_html"><div class="ttname"><a href="namespacemodi__condensation.html">modi_condensation</a></div><div class="ttdef"><b>Definition</b> <a href="modi__condensation_8F90_source.html#l00002">modi_condensation.F90:2</a></div></div>
 <div class="ttc" id="astructmodd__budget_1_1tbudgetconf__t_html"><div class="ttname"><a href="structmodd__budget_1_1tbudgetconf__t.html">modd_budget::tbudgetconf_t</a></div><div class="ttdef"><b>Definition</b> <a href="modd__budget_8F90_source.html#l00106">modd_budget.F90:106</a></div></div>
 <div class="ttc" id="astructmodd__budget_1_1tbudgetdata__ptr_html"><div class="ttname"><a href="structmodd__budget_1_1tbudgetdata__ptr.html">modd_budget::tbudgetdata_ptr</a></div><div class="ttdef"><b>Definition</b> <a href="modd__budget_8F90_source.html#l00102">modd_budget.F90:102</a></div></div>
 <div class="ttc" id="astructmodd__cst_1_1cst__t_html"><div class="ttname"><a href="structmodd__cst_1_1cst__t.html">modd_cst::cst_t</a></div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00056">modd_cst.F90:56</a></div></div>

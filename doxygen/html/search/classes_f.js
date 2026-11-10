@@ -12,6 +12,5 @@ var searchData=
   ['timestamp_9',['timestamp',['../interfacemodi__minpack_1_1timestamp.html',1,'modi_minpack']]],
   ['tiwmx_5ft_10',['tiwmx_t',['../structmodd__tiwmx_1_1tiwmx__t.html',1,'modd_tiwmx']]],
   ['tles_5ft_11',['tles_t',['../structmodd__les_1_1tles__t.html',1,'modd_les']]],
-  ['turb_12',['turb',['../interfacemodi__turb_1_1turb.html',1,'modi_turb']]],
-  ['turb_5ft_13',['turb_t',['../structmodd__turb__n_1_1turb__t.html',1,'modd_turb_n']]]
+  ['turb_5ft_12',['turb_t',['../structmodd__turb__n_1_1turb__t.html',1,'modd_turb_n']]]
 ];

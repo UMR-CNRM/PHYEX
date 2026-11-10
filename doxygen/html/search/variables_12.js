@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['vsigqsat_0',['vsigqsat',['../structmodd__neb__n_1_1neb__t.html#a85ddaa1871760437f53020ddd8cbb22d',1,'modd_neb_n::neb_t::vsigqsat'],['../namespacemodd__neb__n.html#a6a03e7902c4b26710e8aa0bdde74a98d',1,'modd_neb_n::vsigqsat']]]
+  ['u_0',['u',['../structstack__mod_1_1stack.html#aac5aa4b7901ed60412b1f2e83458b03d',1,'stack_mod::stack']]],
+  ['use_1',['use',['../structxrd__getoptions_1_1xrd__opt.html#a91652ad58afc45b6063e48a630c6e151',1,'xrd_getoptions::xrd_opt']]]
 ];

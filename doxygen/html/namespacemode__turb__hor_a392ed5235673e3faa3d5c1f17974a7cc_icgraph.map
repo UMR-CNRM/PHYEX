@@ -1,7 +1,9 @@
 <map id="mode_turb_hor::turb_hor" name="mode_turb_hor::turb_hor">
-<area shape="rect" id="Node000001" title=" " alt="" coords="300,13,483,38"/>
-<area shape="rect" id="Node000002" href="$namespacemode__turb__hor__splt.html#af567a0992241afa9a2e5ad86eb96f424" title=" " alt="" coords="101,5,252,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="286,28,252,28,252,23,286,23"/>
-<area shape="rect" id="Node000003" href="$turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="5,13,53,38"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="88,28,54,28,54,23,88,23"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="436,13,619,38"/>
+<area shape="rect" id="Node000002" href="$namespacemode__turb__hor__splt.html#af567a0992241afa9a2e5ad86eb96f424" title=" " alt="" coords="237,5,388,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="422,28,388,28,388,23,422,23"/>
+<area shape="rect" id="Node000003" href="$turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="141,13,189,38"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="224,28,190,28,190,23,224,23"/>
+<area shape="rect" id="Node000004" href="$main__turb_8F90.html#ae55925d0151bca669f2e99235cf77eff" title=" " alt="" coords="5,13,93,38"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="128,28,94,28,94,23,128,23"/>
 </map>

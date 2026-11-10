@@ -177,7 +177,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="comment">!*       0.    DECLARATIONS</span></div>
 <div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="comment">!              ------------</span></div>
 <div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="comment">!</span></div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="keywordtype">USE </span><a class="code hl_namespace" href="namespacemodi__general__gamma.html">modi_general_gamma</a>, <span class="keywordtype">ONLY</span>: <a class="code hl_interface" href="interfacemodi__general__gamma_1_1general__gamma.html">general_gamma</a></div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="keywordtype">USE </span>modi_general_gamma, <span class="keywordtype">ONLY</span>: <a class="code hl_function" href="general__gamma_8F90.html#a7e9ead66c980067e7c432b9ed7fd5002">general_gamma</a></div>
 <div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="comment">!</span></div>
 <div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="keywordtype">IMPLICIT NONE</span></div>
 <div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="comment">!</span></div>
@@ -293,7 +293,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span><span class="comment">!                dimensional spectrum of specy Z</span></div>
 <div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span><span class="comment">!</span></div>
 <div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>        zfunc  = (zdx+zdz)**2 * zdz**pexmassz                            &amp;</div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>                              * <a class="code hl_interface" href="interfacemodi__general__gamma_1_1general__gamma.html">general_gamma</a>(palphaz,pnuz,zlbdaz,zdz)</div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>                              * <a class="code hl_function" href="general__gamma_8F90.html#a7e9ead66c980067e7c432b9ed7fd5002">general_gamma</a>(palphaz,pnuz,zlbdaz,zdz)</div>
 <div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>        zscalz = zscalz + zfunc</div>
 <div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span><span class="comment">!</span></div>
 <div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span><span class="comment">!*       1.7     Compute the scaled fall speed difference by integration over</span></div>
@@ -306,7 +306,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span><span class="comment">!*       1.8     Compute the normalization factor by integration over the</span></div>
 <div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span><span class="comment">!                dimensional spectrum of specy X</span></div>
 <div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span><span class="comment">!</span></div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>      zfunc   = <a class="code hl_interface" href="interfacemodi__general__gamma_1_1general__gamma.html">general_gamma</a>(palphax,pnux,zlbdax,zdx)</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>      zfunc   = <a class="code hl_function" href="general__gamma_8F90.html#a7e9ead66c980067e7c432b9ed7fd5002">general_gamma</a>(palphax,pnux,zlbdax,zdx)</div>
 <div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>      zscalxz = zscalxz + zscalz * zfunc</div>
 <div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span><span class="comment">!</span></div>
 <div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span><span class="comment">!*       1.9     Compute the scaled fall speed difference by integration over</span></div>
@@ -325,10 +325,9 @@ $(document).ready(function() { init_codefold(0); });
 </div>
 <div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__rzcolx.html#aeb11a3b2ed349f8d87726ca94786c393">rzcolx</a></div>
 <div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__rzcolx.html">mode_rzcolx</a></div>
-<div class="ttc" id="ainterfacemodi__general__gamma_1_1general__gamma_html"><div class="ttname"><a href="interfacemodi__general__gamma_1_1general__gamma.html">modi_general_gamma::general_gamma</a></div><div class="ttdef"><b>Definition</b> <a href="modi__general__gamma_8F90_source.html#l00012">modi_general_gamma.F90:12</a></div></div>
+<div class="ttc" id="ageneral__gamma_8F90_html_a7e9ead66c980067e7c432b9ed7fd5002"><div class="ttname"><a href="general__gamma_8F90.html#a7e9ead66c980067e7c432b9ed7fd5002">general_gamma</a></div><div class="ttdeci">real function general_gamma(palpha, pnu, plbda, px)</div><div class="ttdef"><b>Definition</b> <a href="general__gamma_8F90_source.html#l00005">general_gamma.F90:6</a></div></div>
 <div class="ttc" id="anamespacemode__rzcolx_html"><div class="ttname"><a href="namespacemode__rzcolx.html">mode_rzcolx</a></div><div class="ttdef"><b>Definition</b> <a href="mode__rzcolx_8F90_source.html#l00007">mode_rzcolx.F90:7</a></div></div>
 <div class="ttc" id="anamespacemode__rzcolx_html_aeb11a3b2ed349f8d87726ca94786c393"><div class="ttname"><a href="namespacemode__rzcolx.html#aeb11a3b2ed349f8d87726ca94786c393">mode_rzcolx::rzcolx</a></div><div class="ttdeci">subroutine rzcolx(knd, palphax, pnux, palphaz, pnuz, pexz, pexmassz, pfallx, pexfallx, pfallexpx, pfallz, pexfallz, pfallexpz, plbdaxmax, plbdazmax, plbdaxmin, plbdazmin, pdinfty, przcolx)</div><div class="ttdef"><b>Definition</b> <a href="mode__rzcolx_8F90_source.html#l00012">mode_rzcolx.F90:17</a></div></div>
-<div class="ttc" id="anamespacemodi__general__gamma_html"><div class="ttname"><a href="namespacemodi__general__gamma.html">modi_general_gamma</a></div><div class="ttdef"><b>Definition</b> <a href="modi__general__gamma_8F90_source.html#l00006">modi_general_gamma.F90:6</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
