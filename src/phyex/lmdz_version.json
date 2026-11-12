@@ -3,5 +3,5 @@
 "install_arg":"-unstable",
 "rad":"oldrad",
 "phyex-lmdz-repo":"https://github.com/SebastienRietteMTO/phyex-lmdz.git",
-"phyex-lmdz-commit":"64ed2297aee9af6728f78403e9e7a1a2f3435073"
+"phyex-lmdz-commit":"ebdc416f036d9146cd9e8c13792dcb2f530444f8"
 }
