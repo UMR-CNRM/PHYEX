@@ -111,7 +111,7 @@ endif()
 #-----------------------------------------------------------------------
 
 ecbuild_add_option(FEATURE PYTHON_WHEEL
-                   DESCRIPTION "Build the PHYEX python wheel (installs the python tools in the build directory)"
+                   DESCRIPTION "Build the PHYEX python wheel (generates the python binding with pyfortool)"
                    DEFAULT OFF)
 ecbuild_add_option(FEATURE CHECK_NORMS
                    DESCRIPTION "Check the coding norms of the transformed source code (PHYEX_TRANSFORMATION)"

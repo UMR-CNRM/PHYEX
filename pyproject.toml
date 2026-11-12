@@ -15,7 +15,11 @@
 #-----------------------------------------------------------------------
 
 [build-system]
-requires = ["scikit-build-core>=0.10"]
+# pyfortool generates the python binding; installed by pip in the build
+# environment, it is found by CMake which does not install it again.
+# The pyfortool minimal version must be kept in sync with
+# src/phyex/cmake/phyex_pyfortool.cmake and tools/pyproject.toml
+requires = ["scikit-build-core>=0.10", "pyfortool>=0.2.25"]
 build-backend = "scikit_build_core.build"
 
 [project]

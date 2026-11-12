@@ -15,7 +15,9 @@ license = {file = "LICENSE"}
 dependencies = [
     "netCDF4<=1.7.2", # line to be removed completely when belenos is updated
     "matplotlib",
-    "pyfortool>=0.2.25", # must be kept in sync with src/phyex/cmake/phyex_transformation.cmake
+    # pyfortool version must be kept in sync with src/phyex/cmake/phyex_pyfortool.cmake
+    # and with the build requirements of the top-level pyproject.toml
+    "pyfortool>=0.2.25",
     "numpy",
     "pandas<=2.3.2", # version constraint to be removed when belenos is updated
     "xarray",
@@ -32,7 +34,6 @@ Homepage = "https://github.com/UMR-CNRM/PHYEX"
 [project.scripts]
 "phyex-prep_code" = "pyphyextools.prep_code:main"
 "phyex-plot_perf" = "pyphyextools.plot_perf:main"
-"phyex-pybinding" = "pyphyextools.pybinding:main"
 "phyex-check_norms" = "pyphyextools.testing.coding_norms:main"
 "phyex-compare" = "pyphyextools.testing.compare:main"
 "phyex-check_ial" = "pyphyextools.testing.check_ial:main"

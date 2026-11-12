@@ -2,79 +2,24 @@
 # PHYEX python wheel (included by the top-level CMakeLists.txt when
 # ENABLE_PYTHON_WHEEL is ON, after the PHYEX targets are defined)
 #
-#  - installation of the python tools (pyphyextools) in a virtual
-#    environment of the build directory
 #  - generation of the python binding (pyphyex), compiled in the PHYEX
-#    libraries
+#    libraries, by src/phyex/cmake/pybinding.py (pyfortool is needed, see
+#    src/phyex/cmake/phyex_pyfortool.cmake)
 #  - install rules of the 'pyphyex' component, used to build the wheel
 #
 # Variables defined for the rest of the configuration:
-#   PHYEX_TOOLS_VENV, PHYEX_TOOLS_BINDIR, PHYEX_TOOLS_PYTHON, PHYEX_TOOLS_ENV
 #   PYPHYEX_F90, PYPHYEX_PY
-# The virtual environment is put first in PATH (ENV{PATH}).
 #-----------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-# Python tools
+# Python binding generator (src/phyex/cmake/pybinding.py), only needs
+# pyfortool (found or installed as for the source code transformation)
 #-----------------------------------------------------------------------
 
-ecbuild_find_python(VERSION 3.8 NO_LIBS REQUIRED)
-
-# The tools are installed, with their dependencies, in a python virtual
-# environment inside the build directory so that each build can use its own
-# versions. They are installed at configure time because they are needed to
-# generate source code.
-# The pyphyextools package itself must be installed in editable mode (it
-# uses files from the repository): its source code is used directly from the
-# tools directory, a modification of the tools does not need a
-# re-installation.
-set(PHYEX_TOOLS_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tools)
-set(PHYEX_TOOLS_VENV ${CMAKE_BINARY_DIR}/pyphyextools)
-set(PHYEX_TOOLS_BINDIR ${PHYEX_TOOLS_VENV}/bin)
-set(PHYEX_TOOLS_PYTHON ${PHYEX_TOOLS_BINDIR}/python)
-
-# The virtual environment must not be polluted by a PYTHONPATH (set, for
-# example, by pip when the build is driven by pip in an isolated environment)
-unset(ENV{PYTHONPATH})
-
-# A modification of the dependencies triggers a new configuration and a
-# re-installation
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-             ${PHYEX_TOOLS_SOURCE_DIR}/pyproject.toml)
-file(SHA256 ${PHYEX_TOOLS_SOURCE_DIR}/pyproject.toml _deps_hash)
-
-if(NOT EXISTS ${PHYEX_TOOLS_BINDIR}/phyex-prep_code OR
-   NOT _deps_hash STREQUAL PHYEX_TOOLS_DEPS_HASH)
-  ecbuild_info("Installing python tools and their dependencies in ${PHYEX_TOOLS_VENV}")
-  file(REMOVE_RECURSE ${PHYEX_TOOLS_VENV})
-  execute_process(COMMAND ${Python_EXECUTABLE} -m venv ${PHYEX_TOOLS_VENV}
-                  RESULT_VARIABLE _result)
-  if(NOT _result EQUAL 0)
-    ecbuild_critical("Creation of the python virtual environment ${PHYEX_TOOLS_VENV} failed")
-  endif()
-  execute_process(COMMAND ${PHYEX_TOOLS_PYTHON} -m pip install
-                          --editable ${PHYEX_TOOLS_SOURCE_DIR}
-                  RESULT_VARIABLE _result)
-  if(NOT _result EQUAL 0 OR NOT EXISTS ${PHYEX_TOOLS_BINDIR}/phyex-prep_code)
-    file(REMOVE_RECURSE ${PHYEX_TOOLS_VENV})
-    ecbuild_critical("Installation of the python tools failed")
-  endif()
-  set(PHYEX_TOOLS_DEPS_HASH ${_deps_hash} CACHE INTERNAL "Hash of tools/pyproject.toml")
-else()
-  ecbuild_info("Python tools are up to date in ${PHYEX_TOOLS_VENV}")
-endif()
-
-# Scripts installed in the virtual environment can be called directly
-# (e.g. ${PHYEX_TOOLS_BINDIR}/phyex-prep_code), but they also call other
-# tools by name (e.g. pyfortool): the virtual environment must come first
-# in PATH.
-#  - at configure time, PATH is set in the cmake environment
-#  - at build time, prefix the commands with ${PHYEX_TOOLS_ENV}, e.g.
-#    add_custom_command(... COMMAND ${PHYEX_TOOLS_ENV} phyex-prep_code ...)
-set(_path "${PHYEX_TOOLS_BINDIR}:$ENV{PATH}")
-set(PHYEX_TOOLS_ENV ${CMAKE_COMMAND} -E env --unset=PYTHONPATH "PATH=${_path}")
-set(ENV{PATH} "${_path}")
-ecbuild_info("Python tools available in ${PHYEX_TOOLS_BINDIR}")
+include(${CMAKE_CURRENT_SOURCE_DIR}/src/phyex/cmake/phyex_pyfortool.cmake)
+phyex_find_pyfortool()
+set(PYPHYEX_BINDING_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/src/phyex/cmake/pybinding.py)
+ecbuild_info("Python binding generated with ${PYPHYEX_BINDING_SCRIPT}, using ${PHYEX_PYFORTOOL_PYTHON}")
 
 #-----------------------------------------------------------------------
 # Python binding generation
@@ -116,7 +61,7 @@ foreach(_dir ${PYPHYEX_WHEEL_LIBDIR} ${_libdir})
   endforeach()
 endforeach()
 
-# phyex-pybinding appends to its output files: they are rebuilt from scratch
+# pybinding.py appends to its output files: they are rebuilt from scratch
 set(_raw ${PYPHYEX_DIR}/pyphyex_raw.F90)
 file(MAKE_DIRECTORY ${PYPHYEX_DIR} ${CMAKE_BINARY_DIR}/bin)
 file(REMOVE ${_raw} ${PYPHYEX_PY})
@@ -130,7 +75,9 @@ foreach(_i RANGE 0 ${_last} 2)
   set(_file ${CMAKE_CURRENT_SOURCE_DIR}/src/phyex/${_file})
   list(APPEND _inputs ${_file})
   execute_process(
-    COMMAND ${PHYEX_TOOLS_BINDIR}/phyex-pybinding ${_file} ${_scope} ${_raw} ${PYPHYEX_PY} ${_libso}
+    COMMAND ${PHYEX_PYFORTOOL_ENV} PYTHONDONTWRITEBYTECODE=1
+            ${PHYEX_PYFORTOOL_PYTHON} ${PYPHYEX_BINDING_SCRIPT}
+            ${_file} ${_scope} ${_raw} ${PYPHYEX_PY} ${_libso}
     RESULT_VARIABLE _result)
   if(NOT _result EQUAL 0)
     ecbuild_critical("Python binding generation failed for ${_scope} (${_file})")
@@ -146,7 +93,7 @@ configure_file(${_raw} ${PYPHYEX_F90} COPYONLY)
 # Any modification of the bound routines or of the generator triggers a
 # new configuration (and a new generation)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-             ${_inputs} ${PHYEX_TOOLS_SOURCE_DIR}/src/pyphyextools/pybinding.py)
+             ${_inputs} ${PYPHYEX_BINDING_SCRIPT})
 ecbuild_info("Python binding generated in ${PYPHYEX_F90} and ${PYPHYEX_PY}")
 
 #-----------------------------------------------------------------------

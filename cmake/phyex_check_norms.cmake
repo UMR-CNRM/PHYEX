@@ -13,31 +13,22 @@
 #
 # Uses, from src/phyex: the phyex_transformation target, the
 # PHYEX_TRANSFORMED_DIR and PHYEX_TRANSFORMED_FILES directory properties and
-# the PHYEX_PYFORTOOL cache variable.
+# the phyex_find_pyfortool function.
 #-----------------------------------------------------------------------
 
 set(_phyex_dir ${CMAKE_CURRENT_SOURCE_DIR}/src/phyex)
 get_property(_outdir DIRECTORY ${_phyex_dir} PROPERTY PHYEX_TRANSFORMED_DIR)
 get_property(_outputs DIRECTORY ${_phyex_dir} PROPERTY PHYEX_TRANSFORMED_FILES)
 
-# A python interpreter able to import pyfortool: the one of the pyfortool
-# installation (virtual environment) or the one found by ecbuild
-ecbuild_find_python(VERSION 3.8 NO_LIBS REQUIRED)
-get_filename_component(_pyft_bindir ${PHYEX_PYFORTOOL} DIRECTORY)
-set(_norms_python)
-foreach(_python ${_pyft_bindir}/python ${_pyft_bindir}/python3 ${Python_EXECUTABLE})
-  if(EXISTS ${_python})
-    execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONPATH
-                            ${_python} -c "import pyfortool"
-                    RESULT_VARIABLE _result OUTPUT_QUIET ERROR_QUIET)
-    if(_result EQUAL 0)
-      set(_norms_python ${_python})
-      break()
-    endif()
-  endif()
-endforeach()
-if(NOT _norms_python)
-  ecbuild_critical("No python interpreter able to import pyfortool found for the coding norms check (use -DENABLE_CHECK_NORMS=OFF to disable the check)")
+# pyfortool and a python interpreter able to import it (see
+# src/phyex/cmake/phyex_pyfortool.cmake)
+phyex_find_pyfortool()
+set(_pyft_bindir ${PHYEX_PYFORTOOL_BINDIR})
+if(PHYEX_PYFORTOOL_IN_BUILD OR NOT DEFINED ENV{PYTHONPATH})
+  set(_pythonpath ${CMAKE_CURRENT_SOURCE_DIR}/tools/src)
+else()
+  # PYTHONPATH can be needed to import pyfortool
+  set(_pythonpath "${CMAKE_CURRENT_SOURCE_DIR}/tools/src:$ENV{PYTHONPATH}")
 endif()
 if(NOT EXISTS ${_pyft_bindir}/pyfortool_parallel)
   ecbuild_critical("pyfortool_parallel not found in ${_pyft_bindir}, needed for the coding norms check (use -DENABLE_CHECK_NORMS=OFF to disable the check)")
@@ -49,10 +40,10 @@ set(_norms_stamp ${CMAKE_BINARY_DIR}/phyex_check_norms.stamp)
 add_custom_command(OUTPUT ${_norms_stamp}
                    COMMAND ${CMAKE_COMMAND} -E remove -f ${_norms_stamp}
                    COMMAND ${CMAKE_COMMAND} -E env
-                           "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tools/src"
+                           "PYTHONPATH=${_pythonpath}"
                            "PATH=${_pyft_bindir}:$ENV{PATH}"
                            PYTHONDONTWRITEBYTECODE=1
-                           ${_norms_python} -m pyphyextools.testing.coding_norms -v ${_outdir}
+                           ${PHYEX_PYFORTOOL_PYTHON} -m pyphyextools.testing.coding_norms -v ${_outdir}
                    COMMAND ${CMAKE_COMMAND} -E touch ${_norms_stamp}
                    DEPENDS ${_outputs}
                            ${CMAKE_CURRENT_SOURCE_DIR}/tools/src/pyphyextools/testing/coding_norms.py
@@ -61,4 +52,4 @@ add_custom_command(OUTPUT ${_norms_stamp}
 # The transformed files are generated (in src/phyex) before the check
 add_custom_target(phyex_check_norms ALL DEPENDS ${_norms_stamp})
 add_dependencies(phyex_check_norms phyex_transformation)
-ecbuild_info("Coding norms of the transformed source code checked at build time, using ${_norms_python}")
+ecbuild_info("Coding norms of the transformed source code checked at build time, using ${PHYEX_PYFORTOOL_PYTHON}")
