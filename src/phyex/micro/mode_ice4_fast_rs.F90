@@ -119,7 +119,7 @@ DO JIJ=D%NIJB, D%NIJE
     IF(.NOT. LDSOFT) THEN
       PRS_TEND(JIJ, IFREEZ1)=PRVT(JIJ)*PPRES(JIJ)/(CST%XEPSILO+PRVT(JIJ)) ! Vapor pressure
       IF(PARAMI%LEVLIMIT) THEN
-        PRS_TEND(JIJ, IFREEZ1)=MIN(PRS_TEND(JIJ, IFREEZ1), EXP(CST%XALPI-CST%XBETAI/PT(JIJ)-CST%XGAMI*LOG(PT(JIJ)))) ! min(ev, es_i(T))
+        PRS_TEND(JIJ, IFREEZ1)=MIN(PRS_TEND(JIJ, IFREEZ1), EXP(CST%XALPI-CST%XBETAI/PT(JIJ)-CST%XGAMI*LOG(PT(JIJ)))) ! min(ev, es_i)
       ENDIF
       PRS_TEND(JIJ, IFREEZ1)=PKA(JIJ)*(CST%XTT-PT(JIJ)) +                              &
                            &(PDV(JIJ)*(CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(JIJ)-CST%XTT)) &
@@ -187,13 +187,13 @@ IF(.NOT. LDSOFT) THEN
     !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
     IF(.NOT. ICEP%LNEWCOEFF) THEN
       WHERE (GRIM(D%NIJB:D%NIJE))
-        PRS_TEND(D%NIJB:D%NIJE, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(D%NIJB:D%NIJE) * PRCT(D%NIJB:D%NIJE) * PCOLF(D%NIJB:D%NIJE) & ! RCRIMSS
+        PRS_TEND(D%NIJB:D%NIJE, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(D%NIJB:D%NIJE) * PRCT(D%NIJB:D%NIJE) * PCOLF(D%NIJB:D%NIJE) &
                                         * PLBDAS(D%NIJB:D%NIJE)**ICEP%XEXCRIMSS &
                                         * PRHODREF(D%NIJB:D%NIJE)**(-ICED%XCEXVT)
       END WHERE
     ELSE
       WHERE (GRIM(D%NIJB:D%NIJE))
-        PRS_TEND(D%NIJB:D%NIJE, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(D%NIJB:D%NIJE) * PRCT(D%NIJB:D%NIJE) * PCOLF(D%NIJB:D%NIJE) & ! RCRIMSS
+        PRS_TEND(D%NIJB:D%NIJE, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(D%NIJB:D%NIJE) * PRCT(D%NIJB:D%NIJE) * PCOLF(D%NIJB:D%NIJE) &
                                         * PRST(D%NIJB:D%NIJE)*(1+(ICED%XFVELOS/PLBDAS(D%NIJB:D%NIJE))**ICED%XALPHAS) &
                                           **(-ICED%XNUS+ICEP%XEXCRIMSS/ICED%XALPHAS) &
                                         * PRHODREF(D%NIJB:D%NIJE)**(-ICED%XCEXVT+1.) &
@@ -444,7 +444,8 @@ DO JIJ=D%NIJB, D%NIJE
       ! because the graupeln produced by this process are still icy!!!
       !
       ! When T < XTT, rc is collected by snow (riming) to produce snow and graupel
-      ! When T > XTT, if riming was still enabled, rc would produce snow and graupel with snow becomming graupel (conversion/melting) and graupel becomming rain (melting)
+      ! When T > XTT, if riming was still enabled, rc would produce snow and graupel with
+      !               snow becomming graupel (conversion/melting) and graupel becomming rain (melting)
       ! To insure consistency when crossing T=XTT, rc collected with T>XTT must be transformed in rain.
       ! rc cannot produce iced species with a positive temperature but is still collected with a good efficiency by snow
       PRCMLTSR(JIJ) = PRS_TEND(JIJ, IRCRIMS) ! both species are liquid, no heat is exchanged

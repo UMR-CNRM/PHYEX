@@ -87,15 +87,15 @@ REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PCLDFR ! Cloud 
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PICLDFR ! Ice cloud fraction
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PZZZ    ! Model level height
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PCONC3D ! Cloud croplet number concentration
-REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the supersaturated fraction
-REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the  subsaturated fraction
+REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PSSIO   ! Super-sat. with respect to ice in the supersat fraction
+REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PSSIU   ! Sub-sat. with respect to ice in the subsaturated fraction
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part
 REAL,    DIMENSION(MERGE(D%NIJT,0,PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')), INTENT(INOUT) :: PHLC_HRC, &
                                                                                                                   & PHLC_HCF, &
                                                                                                                   & PHLI_HRI, &
                                                                                                                   & PHLI_HCF
-REAL,    DIMENSION(MERGE(D%NIJT,0,PARAMI%LEXT_TEND)),   INTENT(IN) :: PTHS !To take into acount external tendencies inside the splitting
-REAL,    DIMENSION(MERGE(D%NIJT,0,PARAMI%LEXT_TEND),7), INTENT(IN) :: PRS !To take into acount external tendencies inside the splitting
+REAL,    DIMENSION(MERGE(D%NIJT,0,PARAMI%LEXT_TEND)),   INTENT(IN) :: PTHS !To use external tendencies inside the splitting
+REAL,    DIMENSION(MERGE(D%NIJT,0,PARAMI%LEXT_TEND),7), INTENT(IN) :: PRS !To use external tendencies inside the splitting
 REAL,    DIMENSION(D%NIJT),                     INTENT(OUT)   :: PRREVAV
 REAL,    DIMENSION(D%NIJT),                     INTENT(INOUT) :: PRAINFR
 REAL,    DIMENSION(MERGE(D%NIJT,0,PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')), INTENT(IN) :: PSIGS

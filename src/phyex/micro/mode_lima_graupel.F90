@@ -278,7 +278,7 @@ WHERE( GDRY(:) )
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
                                                     * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
-   ZZW3N(:) = LIMAM%XFNSDRYG * ZZW(:) * EXP( LIMAM%XCOLEXSG*(PT(:)-CST%XTT) )        & ! NSDRYG - Ns collected by graupel in dry mode
+   ZZW3N(:) = LIMAM%XFNSDRYG * ZZW(:) * EXP( LIMAM%XCOLEXSG*(PT(:)-CST%XTT) )      & ! NSDRYG - Ns collected by graupel in dry mode
                       *  PCST(:) * PCGT(:)                           &
                       *  PRHODREF(:)**(1-LIMAP%XCEXVT)                     &
                       *( LIMAM%XLBNSDRYG1/( PLBDG(:)**2                ) + &

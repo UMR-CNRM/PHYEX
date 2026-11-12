@@ -310,7 +310,7 @@ DO ILEV2 = 1, NLEV2
     ZWB = ZLEV1 - REAL (ILEV1A)
   ENDIF
 
-! WRITE (*, '(" ZLEV2 = ",E12.5," ZLEV1 = ",E12.5," ILEV2 = ",I4," ILEV1A = ",I4," ZWA = ",E12.5," ILEV1B = ",I4," ZWB = ",E12.5)') &
+! WRITE (*, '(" ZLEV2 = ",E12.5," ZLEV1 = ",E12.5," ILEV2 = ",I4," ILEV1A = ",I4," ZWA = ",E12.5," ILEV1B = ",I4," ZWB = ",E12.5)')&
 !   & ZLEV2, ZLEV1, ILEV2, ILEV1A, ZWA, ILEV1B, ZWB
 
   P (1:KOFF, ILEV2, :) = ZWA * Z (1:KOFF, ILEV1A, :) + ZWB * Z (1:KOFF, ILEV1B, :) 
@@ -353,7 +353,7 @@ DO ILEV2 = 1, NLEV2
     ZWB = ZLEV1 - REAL (ILEV1A)
   ENDIF
 
-! WRITE (*, '(" ZLEV2 = ",E12.5," ZLEV1 = ",E12.5," ILEV2 = ",I4," ILEV1A = ",I4," ZWA = ",E12.5," ILEV1B = ",I4," ZWB = ",E12.5)') &
+! WRITE (*, '(" ZLEV2 = ",E12.5," ZLEV1 = ",E12.5," ILEV2 = ",I4," ILEV1A = ",I4," ZWA = ",E12.5," ILEV1B = ",I4," ZWB = ",E12.5)')&
 !   & ZLEV2, ZLEV1, ILEV2, ILEV1A, ZWA, ILEV1B, ZWB
 
   P (1:KOFF, ILEV2, :, :) = ZWA * Z (1:KOFF, ILEV1A, :, :) + ZWB * Z (1:KOFF, ILEV1B, :, :) 
@@ -395,7 +395,7 @@ DO ILEV2 = 1, NLEV2
     ZWB = ZLEV1 - REAL (ILEV1A)
   ENDIF
 
-! WRITE (*, '(" ZLEV2 = ",E12.5," ZLEV1 = ",E12.5," ILEV2 = ",I4," ILEV1A = ",I4," ZWA = ",E12.5," ILEV1B = ",I4," ZWB = ",E12.5)') &
+! WRITE (*, '(" ZLEV2 = ",E12.5," ZLEV1 = ",E12.5," ILEV2 = ",I4," ILEV1A = ",I4," ZWA = ",E12.5," ILEV1B = ",I4," ZWB = ",E12.5)')&
 !   & ZLEV2, ZLEV1, ILEV2, ILEV1A, ZWA, ILEV1B, ZWB
 
   L (1:KOFF, ILEV2, :) = ZWA * MERGE(1., 0., Z (1:KOFF, ILEV1A, :)) + ZWB * MERGE(1., 0., Z (1:KOFF, ILEV1B, :)) >= 0.5

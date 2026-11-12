@@ -67,6 +67,7 @@ def coding_norms(sourcedir, verbose=False):
             "--checkEmptyParensInCall", "Warn",
             "--checkEmptyParensInMnhExpand", "Warn",
             "--checkContinuationInArraySection", "Warn",
+            "--checkLineLength", "Warn",
         ]
 
         result = run_command(cmd, check=False)

@@ -186,7 +186,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    :: PRVHENI, &  ! heterogeneo
                                                        PRGMLTR     ! Melting of the graupel
 ! microphysics rates specific to ICE3 (knmoments==1)
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(IN)    :: PRCMLTSR,&  ! Cld droplet collection onto aggregates by pos. temp.
-                                                               PRICFRR     ! Rain contact freezing (part of ice crystals converted to rain)
+                                                               PRICFRR     ! Rain contact frz (part of ri converted to rr)
 ! microphysics rates specific to LIMA (knmoments==2)
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(IN)    :: PRVHENC, &  ! Cld droplet formation
                                                                PRCHINC, &  ! Heterogeneous nucleation of coated IFN

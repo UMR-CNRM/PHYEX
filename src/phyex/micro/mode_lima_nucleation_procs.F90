@@ -106,7 +106,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHT       ! Hail m.r. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCCT       ! Cloud water conc. at t 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCRT       ! Rain water conc. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT       ! Prinstine ice conc. at t
-REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(INOUT) :: PCIT_SHAPE ! Ice crystal conc. at t for different shapes !++cb--
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(INOUT) :: PCIT_SHAPE ! Ice crystal conc. at t for different shapes
 !
 REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_CCN), INTENT(INOUT) :: PNFT       ! CCN C. available at t
 REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_CCN), INTENT(INOUT) :: PNAT       ! CCN C. activated at t

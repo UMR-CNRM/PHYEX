@@ -170,7 +170,7 @@ INTEGER, DIMENSION(D%NIJT)  :: ITPL            ! top levels of troposphere
 REAL,    DIMENSION(D%NIJT)  :: ZTMIN           ! minimum Temp. related to ITPL
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZLV, ZLS, ZCPD
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZGCOND, ZAUTC, ZAUTI, ZGAUV, ZGAUC, ZGAUI, ZGAUTC, ZGAUTI, ZCRIAUTI   ! Used for Gaussian PDF integration
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZGCOND, ZAUTC, ZAUTI, ZGAUV, ZGAUC, ZGAUI, ZGAUTC, ZGAUTI, ZCRIAUTI ! Used for Gaussian PDF
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZLVS                                      ! thermodynamics
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZPV, ZPIV, ZQSL, ZQSI ! thermodynamics
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZLL, DZZ, ZZZ                           ! used for length scales
@@ -573,7 +573,8 @@ DO JK=IKTB,IKTE
         ZCOND(JIJ,JK)=0.
       ENDIF
 
-      INQ1(JIJ,JK) = MIN( MAX(-22,FLOOR(MIN(100., MAX(-100., 2*ZQ1(JIJ,JK)))) ), 10)  !inner min/max prevents sigfpe when 2*zq1 does not fit into an int
+      !inner min/max prevents sigfpe when 2*zq1 does not fit into an int
+      INQ1(JIJ,JK) = MIN( MAX(-22,FLOOR(MIN(100., MAX(-100., 2*ZQ1(JIJ,JK)))) ), 10)
       ZINC(JIJ,JK) = 2.*ZQ1(JIJ,JK) - INQ1(JIJ,JK)
 
       PSIGRC(JIJ,JK) =  MIN(1.,(1.-ZINC(JIJ,JK))*ZSRC_1D(INQ1(JIJ,JK))+ZINC(JIJ,JK)*ZSRC_1D(INQ1(JIJ,JK)+1))

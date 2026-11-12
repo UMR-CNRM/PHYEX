@@ -145,8 +145,8 @@ TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
 !
 REAL,    DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRI          ! Total cloud ice m.r. (source or at t)
-REAL,    DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(IN)    :: PCI_SHAPE    ! Pristine ice conc. per shape (source or at t)
-REAL,    DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(INOUT) :: PRI_SHAPE    ! pristine ice m.r. per shape (source or at t)
+REAL,    DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(IN)    :: PCI_SHAPE ! Pristine ice conc. per shape (source or at t)
+REAL,    DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(INOUT) :: PRI_SHAPE ! pristine ice m.r. per shape (source or at t)
 REAL,    DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(INOUT) :: PLBDAI_SHAPE ! lambda per habit
 !
 !

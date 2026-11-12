@@ -207,45 +207,47 @@ REAL, DIMENSION(:,:), ALLOCATABLE :: ZCIT1D_SHAPE
 !
 ! for each process & species inside the loop, we need 1D packed variables to store instant tendencies for hydrometeors
 REAL, DIMENSION(:), ALLOCATABLE ::                          &
-! mixing ratio & concentration changes by instantaneous processes (kg/kg and #/kg) :
-     Z_CR_BRKU,                                             & ! spontaneous break up of drops (BRKU) : Nr
-     Z_TH_HONR, Z_RR_HONR, Z_CR_HONR,                       & ! rain drops homogeneous freezing (HONR) : rr, Nr, rg=-rr, th
-     Z_TH_IMLT, Z_RC_IMLT, Z_CC_IMLT,                       & ! ice melting (IMLT) : rc, Nc, ri=-rc, Ni=-Nc, th, IFNF, IFNA
-! mixing ratio & concentration tendencies by continuous processes (kg/kg/s and #/kg/s) :
-     Z_TH_HONC, Z_RC_HONC, Z_CC_HONC,                       & ! droplets homogeneous freezing (HONC) : rc, Nc, ri=-rc, Ni=-Nc, th
-     Z_CC_SELF,                                             & ! self collection of droplets (SELF) : Nc
-     Z_RC_AUTO, Z_CC_AUTO, Z_CR_AUTO,                       & ! autoconversion of cloud droplets (AUTO) : rc, Nc, rr=-rc, Nr
-     Z_RC_ACCR, Z_CC_ACCR,                                  & ! accretion of droplets by rain drops (ACCR) : rc, Nc, rr=-rr
-     Z_CR_SCBU,                                             & ! self collectio break up of drops (SCBU) : Nr
-!      Z_TH_EVAP, Z_RC_EVAP, Z_CC_EVAP, Z_RR_EVAP, Z_CR_EVAP, & ! evaporation of rain drops (EVAP) : rv=-rr-rc, rc, Nc, rr, Nr, th
-     Z_TH_EVAP, Z_RR_EVAP, Z_CR_EVAP,                       & ! evaporation of rain drops (EVAP) : rv=-rr-rc, rc, Nc, rr, Nr, th
-     Z_RI_CNVI, Z_CI_CNVI,                                  & ! conversion snow -> ice (CNVI) : ri, Ni, rs=-ri
-     Z_TH_DEPS, Z_RS_DEPS,                                  & ! deposition of vapor on snow (DEPS) : rv=-rs, rs, th
-     Z_TH_DEPI, Z_RI_DEPI,                                  & ! deposition of vapor on ice (DEPI) : rv=-ri, ri, th
-     Z_RI_CNVS, Z_CI_CNVS,                                  & ! conversion ice -> snow (CNVS) : ri, Ni, rs=-ri
-     Z_CS_SSC,                                              & ! self collection of snow (SSC) : Ns
-     Z_CI_ISC,                                              & ! self collection of ice (ISC) : Ni      ++mt--
-     Z_RI_AGGS, Z_CI_AGGS,                                  & ! aggregation of ice on snow (AGGS) : ri, Ni, rs=-ri
-     Z_TH_DEPG, Z_RG_DEPG,                                  & ! deposition of vapor on graupel (DEPG) : rv=-rg, rg, th
-     Z_TH_BERFI, Z_RC_BERFI,                                & ! Bergeron (BERFI) : rc, ri=-rc, th
-     Z_TH_RIM, Z_CC_RIM, Z_CS_RIM, Z_RC_RIMSS, Z_RC_RIMSG, Z_RS_RIMCG, & ! cloud droplet riming (RIM) : rc, Nc, rs, rg, th
-     Z_RI_HMS, Z_CI_HMS, Z_RS_HMS,                          & ! hallett mossop snow (HMS) : ri, Ni, rs
-     Z_TH_ACC, Z_CR_ACC, Z_CS_ACC, Z_RR_ACCSS, Z_RR_ACCSG, Z_RS_ACCRG, & ! rain accretion on aggregates (ACC) : rr, Nr, rs, rg, th
-     Z_RS_CMEL, Z_CS_CMEL,                                  & ! conversion-melting (CMEL) : rs, rg=-rs
-     Z_TH_CFRZ, Z_RR_CFRZ, Z_CR_CFRZ, Z_RI_CFRZ, Z_CI_CFRZ, & ! rain freezing (CFRZ) : rr, Nr, ri, Ni, rg=-rr-ri, th
-     Z_RI_CIBU, Z_CI_CIBU,                                  & ! collisional ice break-up (CIBU) : ri, Ni, rs=-ri
-     Z_RI_RDSF, Z_CI_RDSF,                                  & ! rain drops freezing shattering (RDSF) : ri, Ni, rg=-ri
-     Z_TH_WETG, Z_RC_WETG, Z_CC_WETG, Z_RR_WETG, Z_CR_WETG, & ! wet growth of graupel (WETG) : rc, NC, rr, Nr, ri, Ni, rs, rg, rh, th
-     Z_RI_WETG, Z_CI_WETG, Z_RS_WETG, Z_CS_WETG, Z_RG_WETG, Z_CG_WETG, Z_RH_WETG, & ! wet growth of graupel (WETG) : rc, NC, rr, Nr, ri, Ni, rs, Ns, rg, Ng, rh, Nh=-Ng, th
-     Z_TH_DRYG, Z_RC_DRYG, Z_CC_DRYG, Z_RR_DRYG, Z_CR_DRYG, & ! dry growth of graupel (DRYG) : rc, Nc, rr, Nr, ri, Ni, rs, rg, th
-     Z_RI_DRYG, Z_CI_DRYG, Z_RS_DRYG, Z_CS_DRYG, Z_RG_DRYG, & ! dry growth of graupel (DRYG) : rc, Nc, rr, Nr, ri, Ni, rs, Ns, rg, th
-     Z_RI_HMG, Z_CI_HMG, Z_RG_HMG,                          & ! hallett mossop graupel (HMG) : ri, Ni, rg
-     Z_TH_GMLT, Z_RR_GMLT, Z_CR_GMLT, Z_CG_GMLT,            & ! graupel melting (GMLT) : rr, Nr, rg=-rr, th
-     Z_TH_DEPH, Z_RH_DEPH,                                  & ! deposition of vapor on hail (DEPH) : rv=-rh, rh, th
-     Z_TH_WETH, Z_RC_WETH, Z_CC_WETH, Z_RR_WETH, Z_CR_WETH, & ! wet growth of hail (WETH) : rc, Nc, rr, Nr, ri, Ni, rs, rg, rh, th
-     Z_RI_WETH, Z_CI_WETH, Z_RS_WETH, Z_CS_WETH, Z_RG_WETH, Z_CG_WETH, Z_RH_WETH, & ! wet growth of hail (WETH) : rc, Nc, rr, Nr, ri, Ni, rs, rg, rh, th
-     Z_RG_COHG, Z_CG_COHG,                                  & ! conversion of hail into graupel (COHG) : rg, rh
-     Z_TH_HMLT, Z_RR_HMLT, Z_CR_HMLT, Z_CH_HMLT,            & ! hail melting (HMLT) : rr, Nr, rh=-rr, th
+! mixing ratio & concentration changes by instantaneous processes (kg/kg and #/kg):
+     Z_CR_BRKU,                                             & ! spontaneous break up of drops (BRKU): Nr
+     Z_TH_HONR, Z_RR_HONR, Z_CR_HONR,                       & ! rain drops homogeneous freezing (HONR): rr, Nr, rg=-rr, th
+     Z_TH_IMLT, Z_RC_IMLT, Z_CC_IMLT,                       & ! ice melting (IMLT): rc, Nc, ri=-rc, Ni=-Nc, th, IFNF, IFNA
+! mixing ratio & concentration tendencies by continuous processes (kg/kg/s and #/kg/s):
+     Z_TH_HONC, Z_RC_HONC, Z_CC_HONC,                       & ! droplets homogeneous freezing (HONC): rc, Nc, ri=-rc, Ni=-Nc, th
+     Z_CC_SELF,                                             & ! self collection of droplets (SELF): Nc
+     Z_RC_AUTO, Z_CC_AUTO, Z_CR_AUTO,                       & ! autoconversion of cloud droplets (AUTO): rc, Nc, rr=-rc, Nr
+     Z_RC_ACCR, Z_CC_ACCR,                                  & ! accretion of droplets by rain drops (ACCR): rc, Nc, rr=-rr
+     Z_CR_SCBU,                                             & ! self collectio break up of drops (SCBU): Nr
+!      Z_TH_EVAP, Z_RC_EVAP, Z_CC_EVAP, Z_RR_EVAP, Z_CR_EVAP, & ! evaporation of rain drops (EVAP): rv=-rr-rc, rc, Nc, rr, Nr, th
+     Z_TH_EVAP, Z_RR_EVAP, Z_CR_EVAP,                       & ! evaporation of rain drops (EVAP): rv=-rr-rc, rc, Nc, rr, Nr, th
+     Z_RI_CNVI, Z_CI_CNVI,                                  & ! conversion snow -> ice (CNVI): ri, Ni, rs=-ri
+     Z_TH_DEPS, Z_RS_DEPS,                                  & ! deposition of vapor on snow (DEPS): rv=-rs, rs, th
+     Z_TH_DEPI, Z_RI_DEPI,                                  & ! deposition of vapor on ice (DEPI): rv=-ri, ri, th
+     Z_RI_CNVS, Z_CI_CNVS,                                  & ! conversion ice -> snow (CNVS): ri, Ni, rs=-ri
+     Z_CS_SSC,                                              & ! self collection of snow (SSC): Ns
+     Z_CI_ISC,                                              & ! self collection of ice (ISC): Ni      ++mt--
+     Z_RI_AGGS, Z_CI_AGGS,                                  & ! aggregation of ice on snow (AGGS): ri, Ni, rs=-ri
+     Z_TH_DEPG, Z_RG_DEPG,                                  & ! deposition of vapor on graupel (DEPG): rv=-rg, rg, th
+     Z_TH_BERFI, Z_RC_BERFI,                                & ! Bergeron (BERFI): rc, ri=-rc, th
+     Z_TH_RIM, Z_CC_RIM, Z_CS_RIM, Z_RC_RIMSS, Z_RC_RIMSG, Z_RS_RIMCG, & ! cloud droplet riming (RIM): rc, Nc, rs, rg, th
+     Z_RI_HMS, Z_CI_HMS, Z_RS_HMS,                          & ! hallett mossop snow (HMS): ri, Ni, rs
+     Z_TH_ACC, Z_CR_ACC, Z_CS_ACC, Z_RR_ACCSS, Z_RR_ACCSG, Z_RS_ACCRG, & ! rain accretion on aggregates (ACC): rr, Nr, rs, rg, th
+     Z_RS_CMEL, Z_CS_CMEL,                                  & ! conversion-melting (CMEL): rs, rg=-rs
+     Z_TH_CFRZ, Z_RR_CFRZ, Z_CR_CFRZ, Z_RI_CFRZ, Z_CI_CFRZ, & ! rain freezing (CFRZ): rr, Nr, ri, Ni, rg=-rr-ri, th
+     Z_RI_CIBU, Z_CI_CIBU,                                  & ! collisional ice break-up (CIBU): ri, Ni, rs=-ri
+     Z_RI_RDSF, Z_CI_RDSF,                                  & ! rain drops freezing shattering (RDSF): ri, Ni, rg=-ri
+     Z_TH_WETG, Z_RC_WETG, Z_CC_WETG, Z_RR_WETG, Z_CR_WETG, & ! wet growth of graupel (WETG): rc, NC, rr, Nr, ri, Ni, rs, rg, rh, th
+     Z_RI_WETG, Z_CI_WETG, Z_RS_WETG, Z_CS_WETG, Z_RG_WETG, Z_CG_WETG, Z_RH_WETG, & ! wet growth of graupel (WETG): rc, NC, rr, Nr,
+                                                                                    ! ri, Ni, rs, Ns, rg, Ng, rh, Nh=-Ng, th
+     Z_TH_DRYG, Z_RC_DRYG, Z_CC_DRYG, Z_RR_DRYG, Z_CR_DRYG, & ! dry growth of graupel (DRYG): rc, Nc, rr, Nr, ri, Ni, rs, rg, th
+     Z_RI_DRYG, Z_CI_DRYG, Z_RS_DRYG, Z_CS_DRYG, Z_RG_DRYG, & ! dry growth of graupel (DRYG): rc, Nc, rr, Nr, ri, Ni, rs, Ns, rg, th
+     Z_RI_HMG, Z_CI_HMG, Z_RG_HMG,                          & ! hallett mossop graupel (HMG): ri, Ni, rg
+     Z_TH_GMLT, Z_RR_GMLT, Z_CR_GMLT, Z_CG_GMLT,            & ! graupel melting (GMLT): rr, Nr, rg=-rr, th
+     Z_TH_DEPH, Z_RH_DEPH,                                  & ! deposition of vapor on hail (DEPH): rv=-rh, rh, th
+     Z_TH_WETH, Z_RC_WETH, Z_CC_WETH, Z_RR_WETH, Z_CR_WETH, & ! wet growth of hail (WETH): rc, Nc, rr, Nr, ri, Ni, rs, rg, rh, th
+     Z_RI_WETH, Z_CI_WETH, Z_RS_WETH, Z_CS_WETH, Z_RG_WETH, Z_CG_WETH, Z_RH_WETH, & ! wet growth of hail (WETH): rc, Nc, rr, Nr,
+                                                                                    ! ri, Ni, rs, rg, rh, th
+     Z_RG_COHG, Z_CG_COHG,                                  & ! conversion of hail into graupel (COHG): rg, rh
+     Z_TH_HMLT, Z_RR_HMLT, Z_CR_HMLT, Z_CH_HMLT,            & ! hail melting (HMLT): rr, Nr, rh=-rr, th
      Z_RV_CORR2, Z_RC_CORR2, Z_RR_CORR2, Z_RI_CORR2,        &
      Z_CC_CORR2, Z_CR_CORR2, Z_CI_CORR2
 !
@@ -254,9 +256,11 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::  Z_RR_CVRC, Z_CR_CVRC        ! conversion of ra
 
 !
 ! Packed variables for total tendencies
-REAL, DIMENSION(:),   ALLOCATABLE ::                                              &
-     ZA_TH, ZA_RV, ZA_RC, ZA_CC, ZA_RR, ZA_CR, ZA_RI, ZA_CI, ZA_RS, ZA_CS, ZA_RG, ZA_CG, ZA_RH, ZA_CH, & ! ZA = continuous tendencies (kg/kg/s = S variable)
-     ZB_TH, ZB_RV, ZB_RC, ZB_CC, ZB_RR, ZB_CR, ZB_RI, ZB_CI, ZB_RS, ZB_CS, ZB_RG, ZB_CG, ZB_RH, ZB_CH    ! ZB = instant mixing ratio change (kg/kg = T variable)
+! ZA = continuous tendencies (kg/kg/s = S variable)
+! ZB = instant mixing ratio change (kg/kg = T variable)
+REAL, DIMENSION(:),   ALLOCATABLE :: &
+     ZA_TH, ZA_RV, ZA_RC, ZA_CC, ZA_RR, ZA_CR, ZA_RI, ZA_CI, ZA_RS, ZA_CS, ZA_RG, ZA_CG, ZA_RH, ZA_CH, &
+     ZB_TH, ZB_RV, ZB_RC, ZB_CC, ZB_RR, ZB_CR, ZB_RI, ZB_CI, ZB_RS, ZB_CS, ZB_RG, ZB_CG, ZB_RH, ZB_CH
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZB_IFNN
 
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZA_CI_SHAPE ! continuous tendencies (kg/kg/s = S variable) for ice shapes C.
@@ -293,7 +297,7 @@ REAL, DIMENSION(:,:), ALLOCATABLE ::                                       &
      ZTOT_RI_CIBU, ZTOT_CI_CIBU,                                           & ! collisional ice break-up (CIBU)
      ZTOT_RI_RDSF, ZTOT_CI_RDSF,                                           & ! rain drops freezing shattering (RDSF)
      ZTOT_TH_WETG, ZTOT_RC_WETG, ZTOT_CC_WETG, ZTOT_RR_WETG, ZTOT_CR_WETG, & ! wet growth of graupel (WETG)
-     ZTOT_RI_WETG, ZTOT_CI_WETG, ZTOT_RS_WETG, ZTOT_CS_WETG, ZTOT_RG_WETG, ZTOT_CG_WETG, ZTOT_RH_WETG, & ! wet growth of graupel (WETG)
+     ZTOT_RI_WETG, ZTOT_CI_WETG, ZTOT_RS_WETG, ZTOT_CS_WETG, ZTOT_RG_WETG, ZTOT_CG_WETG, ZTOT_RH_WETG, & ! wet growth of graupel
      ZTOT_TH_DRYG, ZTOT_RC_DRYG, ZTOT_CC_DRYG, ZTOT_RR_DRYG, ZTOT_CR_DRYG, & ! dry growth of graupel (DRYG)
      ZTOT_RI_DRYG, ZTOT_CI_DRYG, ZTOT_RS_DRYG, ZTOT_CS_DRYG, ZTOT_RG_DRYG,               & ! dry growth of graupel (DRYG)
      ZTOT_RI_HMG, ZTOT_CI_HMG, ZTOT_RG_HMG,                                & ! hallett mossop graupel (HMG)
@@ -303,7 +307,7 @@ REAL, DIMENSION(:,:), ALLOCATABLE ::                                       &
      ZTOT_RI_WETH, ZTOT_CI_WETH, ZTOT_RS_WETH, ZTOT_CS_WETH, ZTOT_RG_WETH, ZTOT_CG_WETH, ZTOT_RH_WETH, & ! wet growth of hail (WETH)
      ZTOT_RG_COHG, ZTOT_CG_COHG,                                           & ! conversion of hail into graupel (COHG)
      ZTOT_TH_HMLT, ZTOT_RR_HMLT, ZTOT_CR_HMLT, ZTOT_CH_HMLT,               & ! hail melting (HMLT)
-     ZTOT_RR_CVRC, ZTOT_CR_CVRC,                                           & ! conversion of rain into cloud droplets if diameter too small
+     ZTOT_RR_CVRC, ZTOT_CR_CVRC,                                           & ! conversion rain->cloud droplets if diameter too small
      ZTOT_RV_CORR2, ZTOT_RC_CORR2, ZTOT_RR_CORR2, ZTOT_RI_CORR2,           &
      ZTOT_CC_CORR2, ZTOT_CR_CORR2, ZTOT_CI_CORR2,                          &
      ZTOT_RI_HIND, ZTOT_RC_HINC, ZTOT_RV_HENU, ZTOT_RV_HONH
@@ -853,11 +857,11 @@ PEVAP3D(:,:)=0.
 !*       0.     Check mean diameter for cloud, rain  and ice
 !               --------------------------------------------
 ! if ( BUCONF%LBU_ENABLE ) then
-!   if ( BUCONF%lbudget_rc .and. lwarm .and. lrain ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', zrcs(:,:) * prhodj(:,:) )
-!   if ( BUCONF%lbudget_rr .and. lwarm .and. lrain ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', zrrs(:,:) * prhodj(:,:) )
-!   if ( BUCONF%lbudget_ri .and. lcold .and. lsnow ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', zris(:,:) * prhodj(:,:) )
-!   if ( BUCONF%lbudget_rs .and. lcold .and. lsnow ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'CORR', zrss(:,:) * prhodj(:,:) )
-!   if ( BUCONF%lbudget_sv ) then
+!   if(BUCONF%lbudget_rc .and. lwarm .and. lrain) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', zrcs(:,:)*prhodj(:,:))
+!   if(BUCONF%lbudget_rr .and. lwarm .and. lrain) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', zrrs(:,:)*prhodj(:,:))
+!   if(BUCONF%lbudget_ri .and. lcold .and. lsnow) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', zris(:,:)*prhodj(:,:))
+!   if(BUCONF%lbudget_rs .and. lcold .and. lsnow) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'CORR', zrss(:,:)*prhodj(:,:))
+!   if( BUCONF%lbudget_sv ) then
 !     if ( lwarm .and. lrain .and. nmom_c.ge.2) &
 !       call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CORR', zccs(:,:) * prhodj(:,:) )
 !     if ( lwarm .and. lrain .and. nmom_r.ge.2) &
@@ -904,11 +908,11 @@ PEVAP3D(:,:)=0.
 !!$END IF
 !
 ! if ( BUCONF%LBU_ENABLE ) then
-!   if ( BUCONF%lbudget_rc .and. lwarm .and. lrain ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', zrcs(:,:) * prhodj(:,:) )
-!   if ( BUCONF%lbudget_rr .and. lwarm .and. lrain ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', zrrs(:,:) * prhodj(:,:) )
-!   if ( BUCONF%lbudget_ri .and. lcold .and. lsnow ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', zris(:,:) * prhodj(:,:) )
-!   if ( BUCONF%lbudget_rs .and. lcold .and. lsnow ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'CORR', zrss(:,:) * prhodj(:,:) )
-!   if ( BUCONF%lbudget_sv ) then
+!   if(BUCONF%lbudget_rc .and. lwarm .and. lrain) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', zrcs(:,:)*prhodj(:,:))
+!   if(BUCONF%lbudget_rr .and. lwarm .and. lrain) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'CORR', zrrs(:,:)*prhodj(:,:))
+!   if(BUCONF%lbudget_ri .and. lcold .and. lsnow) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR', zris(:,:)*prhodj(:,:))
+!   if(BUCONF%lbudget_rs .and. lcold .and. lsnow) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'CORR', zrss(:,:)*prhodj(:,:))
+!   if (BUCONF%lbudget_sv ) then
 !     if ( lwarm .and. lrain .and. nmom_c.ge.2) &
 !       call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CORR', zccs(:,:) * prhodj(:,:) )
 !     if ( lwarm .and. lrain .and. nmom_r.ge.2) &
@@ -1242,8 +1246,8 @@ END IF
 !!$Z_CR_CVRC(:,:) = 0.
 !!$IF (LIMAP%NMOM_R.GE.2) THEN
 !!$   if( BUCONF%LBU_ENABLE ) then
-!!$    if ( BUCONF%lbudget_rc ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC),                    'R2C1', zrcs(:,:) * prhodj(:,:) )
-!!$    if ( BUCONF%lbudget_rr ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR),                    'R2C1', zrrs(:,:) * prhodj(:,:) )
+!!$    if(BUCONF%lbudget_rc) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC),                    'R2C1', zrcs(:,:) * prhodj(:,:))
+!!$    if(BUCONF%lbudget_rr) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR),                    'R2C1', zrrs(:,:) * prhodj(:,:))
 !!$    if ( BUCONF%lbudget_sv .and. nmom_c.ge.2) &
 !!$         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'R2C1', zccs(:,:) * prhodj(:,:) )
 !!$    if ( BUCONF%lbudget_sv .and. nmom_r.ge.2) &
@@ -1259,8 +1263,8 @@ END IF
 !!$   ZCRS(:,:) = ZCRS(:,:) + Z_CR_CVRC(:,:)/PTSTEP
 !!$
 !!$   if( BUCONF%LBU_ENABLE ) then
-!!$    if ( BUCONF%lbudget_rc ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC),                    'R2C1', zrcs(:,:) * prhodj(:,:) )
-!!$    if ( BUCONF%lbudget_rr ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR),                    'R2C1', zrrs(:,:) * prhodj(:,:) )
+!!$    if ( BUCONF%lbudget_rc ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC),                    'R2C1', zrcs(:,:)*prhodj(:,:))
+!!$    if ( BUCONF%lbudget_rr ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR),                    'R2C1', zrrs(:,:)*prhodj(:,:))
 !!$    if ( BUCONF%lbudget_sv .and. nmom_c.ge.2) &
 !!$         call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'R2C1', zccs(:,:) * prhodj(:,:) )
 !!$    if ( BUCONF%lbudget_sv .and. nmom_r.ge.2) &
@@ -1508,7 +1512,8 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
    ENDIF
    !
    GLCOMPUTE(:,:)=.FALSE.
-   GLCOMPUTE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP ! Compuation only for points for which integration time has not reached the timestep
+   ! Compuation only for points for which integration time has not reached the timestep
+   GLCOMPUTE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP
    WHERE(GLCOMPUTE(:,:))
       IITER(:,:)=IITER(:,:)+1
    END WHERE
@@ -1837,9 +1842,9 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
                             ZTHT1D, ZRVT1D, ZRCT1D, ZRRT1D, ZRIT1D, ZRST1D, ZRGT1D, &
                             ZCCT1D, ZCRT1D, ZCIT1D, ZCIT1D_SHAPE,               &
                             ZIFNN1D,                                            &
-                            Z_CR_BRKU,                                          & ! spontaneous break up of drops (BRKU) : Nr
-                            Z_TH_HONR, Z_RR_HONR, Z_CR_HONR,                    & ! rain drops homogeneous freezing (HONR) : rr, Nr, rg=-rr, th
-                            Z_TH_IMLT, Z_RC_IMLT, Z_CC_IMLT,                    & ! ice melting (IMLT) : rc, Nc, ri=-rc, Ni=-Nc, th, IFNF, IFNA
+                            Z_CR_BRKU,                             & ! spontaneous break up of drops (BRKU) : Nr
+                            Z_TH_HONR, Z_RR_HONR, Z_CR_HONR,       & ! rain drops homogeneous freezing (HONR) : rr, Nr, rg=-rr, th
+                            Z_TH_IMLT, Z_RC_IMLT, Z_CC_IMLT,       & ! ice melting (IMLT) : rc, Nc, ri=-rc, Ni=-Nc, th, IFNF, IFNA
                             Z_SHCI_IMLT,                                        &
                             ZB_TH, ZB_RV, ZB_RC, ZB_RR, ZB_RI, ZB_RG,           &
                             ZB_CC, ZB_CR, ZB_CI, ZB_CI_SHAPE, ZB_CG,            &
@@ -1984,7 +1989,8 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
 
       ! We must recompute tendencies when the maximum allowed change is reached
       ! When a species is missing, only the external tendencies can be active and we do not want to recompute
-      ! the microphysical tendencies when external tendencies are negative (results won't change because species was already missing)
+      ! the microphysical tendencies when external tendencies are negative
+      ! (results won't change because species was already missing)
       IF(LIMAP%XMRSTEP/=0.) THEN
          ZTIME_THRESHOLD(:)=-1.
          WHERE(IITER1D(:)<INB_ITER_MAX .AND. ABS(ZA_RV(:))>1.E-20)

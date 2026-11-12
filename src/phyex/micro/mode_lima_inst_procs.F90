@@ -13,8 +13,8 @@ CONTAINS
                               PCCT, PCRT, PCIT, PCIT_SHAPE,                       &
                               PINT,                                               &
                               P_CR_BRKU,                                          & ! spontaneous break up of drops (BRKU) : Nr
-                              P_TH_HONR, P_RR_HONR, P_CR_HONR,                    & ! rain drops homogeneous freezing (HONR) : rr, Nr, rg=-rr, th
-                              P_TH_IMLT, P_RC_IMLT, P_CC_IMLT, P_SHCI_IMLT,       & ! ice melting (IMLT) : rc, Nc, ri=-rc, Ni=-Nc, th, IFNF, IFNA
+                              P_TH_HONR, P_RR_HONR, P_CR_HONR,       & ! rain drops homogeneous freezing (HONR) : rr, Nr, rg=-rr, th
+                              P_TH_IMLT, P_RC_IMLT, P_CC_IMLT, P_SHCI_IMLT, & ! ice melting: rc, Nc, ri=-rc, Ni=-Nc, th, IFNF, IFNA
                               PB_TH, PB_RV, PB_RC, PB_RR, PB_RI, PB_RG,           &
                               PB_CC, PB_CR, PB_CI, PB_CI_SHAPE, PB_CG,            &
                               PB_IFNN,                                            &
