@@ -66,6 +66,16 @@ This script is designed to be run periodically by cron. It searches for the last
 use the different check\_commit\_\* scripts to run the test cases and add a comments attached to the gihub commit
 to report success or unsecess of these tests. In case of an error, the script can also send an email.
 
+### phyex-check\_commit
+
+This command performs all the checks (consistency, coding norms, documentation generation, python wheel
+creation and the test cases of IAL, Meso-NH, testprogs and LMDZ) on the repository containing the tools
+(with its uncommitted modifications); the --only option restricts the checks.
+The report is written on the standard output; it can also be sent by email in case of an error (--mail)
+and attached as a status to a github commit (--github-status, the API url to use must be given).
+
+Options can be displayed with the -h option.
+
 ### others
 
 Other scripts are:

@@ -56,6 +56,7 @@ wheel.py-api = "py3"
 sdist.exclude = [
     "/tools/conf_tests",   # test cases data (with symlinks, >2GB when archived)
     "/tools/testing.sh",
+    "/clone_and_test.sh",
     "/docs",
     "/.github",
     "/build",              # old compilation scripts

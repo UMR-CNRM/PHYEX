@@ -19,18 +19,19 @@ CHECKS = {'version': 'check_version.py',
           'pyfortool': 'check_pyfortool_version.py'}
 
 
-def check_consistency(checks=None):
+def check_consistency(checks=None, repo_dir=REPO_DIR):
     """
     Runs the consistency checks
     :param checks: list of checks to run (keys of CHECKS), all by default
+    :param repo_dir: PHYEX repository to check (the one of the tools by default)
     :return: list of the checks that failed
     """
     failed = []
     for check in checks or CHECKS:
-        script = os.path.join(REPO_DIR, '.github', 'scripts', CHECKS[check])
+        script = os.path.join(repo_dir, '.github', 'scripts', CHECKS[check])
         print(f'### Check {check}')
         sys.stdout.flush()
-        if subprocess.run([sys.executable, script], cwd=REPO_DIR, check=False).returncode != 0:
+        if subprocess.run([sys.executable, script], cwd=repo_dir, check=False).returncode != 0:
             failed.append(check)
     return failed
 
@@ -40,11 +41,14 @@ def main():
     parser = argparse.ArgumentParser(description='Consistency checks of the PHYEX repository')
     parser.add_argument('checks', nargs='*', metavar='CHECK',
                         help='checks to run among ' + ', '.join(CHECKS) + ' (default: all)')
+    parser.add_argument('--repo-dir', default=REPO_DIR,
+                        help='PHYEX repository to check (default: the repository of the tools, '
+                             f'{REPO_DIR})')
     args = parser.parse_args()
     for check in args.checks:
         if check not in CHECKS:
             parser.error(f"invalid check '{check}' (choose from {', '.join(CHECKS)})")
-    failed = check_consistency(args.checks)
+    failed = check_consistency(args.checks, os.path.abspath(args.repo_dir))
     if failed:
         print('Failed checks: ' + ', '.join(failed))
         sys.exit(1)

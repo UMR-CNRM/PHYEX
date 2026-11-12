@@ -41,6 +41,7 @@ Homepage = "https://github.com/UMR-CNRM/PHYEX"
 "phyex-check_lmdz" = "pyphyextools.testing.check_lmdz:main"
 "phyex-check_testprogs" = "pyphyextools.testing.check_testprogs:main"
 "phyex-check_consistency" = "pyphyextools.testing.check_consistency:main"
+"phyex-check_commit" = "pyphyextools.testing.check_commit:main"
 
 [tool.setuptools.package-dir]
 "" = "src"
