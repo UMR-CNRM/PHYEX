@@ -35,9 +35,10 @@
 # Settings (default values can be given by environment variables)
 #-----------------------------------------------------------------------
 
+# pyfortool version must be kept in sync with tools/pyproject.toml
 foreach(_setting
         "PHYEX_TRANSFORMATION;;Transformation applied to the PHYEX source code at build time (empty or NONE: no transformation)"
-        "PHYEX_PYFORTOOL_SPEC;pyfortool>=0.2.24;pip requirement used to install pyfortool if it is not found")
+        "PHYEX_PYFORTOOL_SPEC;pyfortool>=0.2.25;pip requirement used to install pyfortool if it is not found")
   list(GET _setting 0 _var)
   list(GET _setting 1 _default)
   list(GET _setting 2 _doc)
