@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">PHYEX
+   <div id="projectname">PHYEX<span id="projectnumber">&#160;0.9.2</span>
    </div>
    <div id="projectbrief">PHYsique EXternalisée</div>
   </td>
@@ -204,7 +204,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>    <span class="keywordflow">IF</span>(.NOT. ldsoft) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>      prs_tend(jij, ifreez1)=prvt(jij)*ppres(jij)/(cst%XEPSILO+prvt(jij)) <span class="comment">! Vapor pressure</span></div>
 <div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>      <span class="keywordflow">IF</span>(parami%LEVLIMIT) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>        prs_tend(jij, ifreez1)=min(prs_tend(jij, ifreez1), exp(cst%XALPI-cst%XBETAI/pt(jij)-cst%XGAMI*log(pt(jij)))) <span class="comment">! min(ev, es_i(T))</span></div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>        prs_tend(jij, ifreez1)=min(prs_tend(jij, ifreez1), exp(cst%XALPI-cst%XBETAI/pt(jij)-cst%XGAMI*log(pt(jij)))) <span class="comment">! min(ev, es_i)</span></div>
 <div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span><span class="keywordflow">      ENDIF</span></div>
 <div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>      prs_tend(jij, ifreez1)=pka(jij)*(cst%XTT-pt(jij)) +                              &amp;</div>
 <div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>                           &amp;(pdv(jij)*(cst%XLVTT+(cst%XCPV-cst%XCL)*(pt(jij)-cst%XTT)) &amp;</div>
@@ -272,13 +272,13 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    <span class="comment">!$mnh_expand_where(JIJ=D%NIJB:D%NIJE)</span></div>
 <div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>    <span class="keywordflow">IF</span>(.NOT. icep%LNEWCOEFF) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>      <span class="keywordflow">WHERE</span> (grim(d%NIJB:d%NIJE))</div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>        prs_tend(d%NIJB:d%NIJE, ircrimss) = icep%XCRIMSS * zzw1(d%NIJB:d%NIJE) * prct(d%NIJB:d%NIJE) * pcolf(d%NIJB:d%NIJE) &amp; <span class="comment">! RCRIMSS</span></div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>        prs_tend(d%NIJB:d%NIJE, ircrimss) = icep%XCRIMSS * zzw1(d%NIJB:d%NIJE) * prct(d%NIJB:d%NIJE) * pcolf(d%NIJB:d%NIJE) &amp;</div>
 <div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>                                        * plbdas(d%NIJB:d%NIJE)**icep%XEXCRIMSS &amp;</div>
 <div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>                                        * prhodref(d%NIJB:d%NIJE)**(-iced%XCEXVT)</div>
 <div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span><span class="keywordflow">      END WHERE</span></div>
 <div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>    <span class="keywordflow">ELSE</span></div>
 <div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>      <span class="keywordflow">WHERE</span> (grim(d%NIJB:d%NIJE))</div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>        prs_tend(d%NIJB:d%NIJE, ircrimss) = icep%XCRIMSS * zzw1(d%NIJB:d%NIJE) * prct(d%NIJB:d%NIJE) * pcolf(d%NIJB:d%NIJE) &amp; <span class="comment">! RCRIMSS</span></div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>        prs_tend(d%NIJB:d%NIJE, ircrimss) = icep%XCRIMSS * zzw1(d%NIJB:d%NIJE) * prct(d%NIJB:d%NIJE) * pcolf(d%NIJB:d%NIJE) &amp;</div>
 <div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>                                        * prst(d%NIJB:d%NIJE)*(1+(iced%XFVELOS/plbdas(d%NIJB:d%NIJE))**iced%XALPHAS) &amp;</div>
 <div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>                                          **(-iced%XNUS+icep%XEXCRIMSS/iced%XALPHAS) &amp;</div>
 <div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>                                        * prhodref(d%NIJB:d%NIJE)**(-iced%XCEXVT+1.) &amp;</div>
@@ -529,27 +529,28 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00444" name="l00444"></a><span class="lineno">  444</span>      <span class="comment">! because the graupeln produced by this process are still icy!!!</span></div>
 <div class="line"><a id="l00445" name="l00445"></a><span class="lineno">  445</span>      <span class="comment">!</span></div>
 <div class="line"><a id="l00446" name="l00446"></a><span class="lineno">  446</span>      <span class="comment">! When T &lt; XTT, rc is collected by snow (riming) to produce snow and graupel</span></div>
-<div class="line"><a id="l00447" name="l00447"></a><span class="lineno">  447</span>      <span class="comment">! When T &gt; XTT, if riming was still enabled, rc would produce snow and graupel with snow becomming graupel (conversion/melting) and graupel becomming rain (melting)</span></div>
-<div class="line"><a id="l00448" name="l00448"></a><span class="lineno">  448</span>      <span class="comment">! To insure consistency when crossing T=XTT, rc collected with T&gt;XTT must be transformed in rain.</span></div>
-<div class="line"><a id="l00449" name="l00449"></a><span class="lineno">  449</span>      <span class="comment">! rc cannot produce iced species with a positive temperature but is still collected with a good efficiency by snow</span></div>
-<div class="line"><a id="l00450" name="l00450"></a><span class="lineno">  450</span>      prcmltsr(jij) = prs_tend(jij, ircrims) <span class="comment">! both species are liquid, no heat is exchanged</span></div>
-<div class="line"><a id="l00451" name="l00451"></a><span class="lineno">  451</span><span class="keywordflow">    ENDIF</span></div>
-<div class="line"><a id="l00452" name="l00452"></a><span class="lineno">  452</span>  <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00453" name="l00453"></a><span class="lineno">  453</span>    prsmltg(jij)=0.</div>
-<div class="line"><a id="l00454" name="l00454"></a><span class="lineno">  454</span>    prcmltsr(jij)=0.</div>
-<div class="line"><a id="l00455" name="l00455"></a><span class="lineno">  455</span><span class="keywordflow">  ENDIF</span></div>
-<div class="line"><a id="l00456" name="l00456"></a><span class="lineno">  456</span><span class="keywordflow">ENDDO</span></div>
-<div class="line"><a id="l00457" name="l00457"></a><span class="lineno">  457</span><span class="comment">!$mnh_end_do()</span></div>
-<div class="line"><a id="l00458" name="l00458"></a><span class="lineno">  458</span><span class="comment">!$acc end kernels</span></div>
-<div class="line"><a id="l00459" name="l00459"></a><span class="lineno">  459</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;ICE4_FAST_RS&#39;</span>, 1, zhook_handle)</div>
-<div class="line"><a id="l00460" name="l00460"></a><span class="lineno">  460</span><span class="comment">!</span></div>
-<div class="line"><a id="l00461" name="l00461"></a><span class="lineno">  461</span><span class="keyword">CONTAINS</span></div>
-<div class="line"><a id="l00462" name="l00462"></a><span class="lineno">  462</span><span class="comment">!</span></div>
-<div class="line"><a id="l00463" name="l00463"></a><span class="lineno">  463</span>include <span class="stringliteral">&quot;interp_micro.func.h&quot;</span></div>
-<div class="line"><a id="l00464" name="l00464"></a><span class="lineno">  464</span><span class="comment">!</span></div>
+<div class="line"><a id="l00447" name="l00447"></a><span class="lineno">  447</span>      <span class="comment">! When T &gt; XTT, if riming was still enabled, rc would produce snow and graupel with</span></div>
+<div class="line"><a id="l00448" name="l00448"></a><span class="lineno">  448</span>      <span class="comment">!               snow becomming graupel (conversion/melting) and graupel becomming rain (melting)</span></div>
+<div class="line"><a id="l00449" name="l00449"></a><span class="lineno">  449</span>      <span class="comment">! To insure consistency when crossing T=XTT, rc collected with T&gt;XTT must be transformed in rain.</span></div>
+<div class="line"><a id="l00450" name="l00450"></a><span class="lineno">  450</span>      <span class="comment">! rc cannot produce iced species with a positive temperature but is still collected with a good efficiency by snow</span></div>
+<div class="line"><a id="l00451" name="l00451"></a><span class="lineno">  451</span>      prcmltsr(jij) = prs_tend(jij, ircrims) <span class="comment">! both species are liquid, no heat is exchanged</span></div>
+<div class="line"><a id="l00452" name="l00452"></a><span class="lineno">  452</span><span class="keywordflow">    ENDIF</span></div>
+<div class="line"><a id="l00453" name="l00453"></a><span class="lineno">  453</span>  <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00454" name="l00454"></a><span class="lineno">  454</span>    prsmltg(jij)=0.</div>
+<div class="line"><a id="l00455" name="l00455"></a><span class="lineno">  455</span>    prcmltsr(jij)=0.</div>
+<div class="line"><a id="l00456" name="l00456"></a><span class="lineno">  456</span><span class="keywordflow">  ENDIF</span></div>
+<div class="line"><a id="l00457" name="l00457"></a><span class="lineno">  457</span><span class="keywordflow">ENDDO</span></div>
+<div class="line"><a id="l00458" name="l00458"></a><span class="lineno">  458</span><span class="comment">!$mnh_end_do()</span></div>
+<div class="line"><a id="l00459" name="l00459"></a><span class="lineno">  459</span><span class="comment">!$acc end kernels</span></div>
+<div class="line"><a id="l00460" name="l00460"></a><span class="lineno">  460</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;ICE4_FAST_RS&#39;</span>, 1, zhook_handle)</div>
+<div class="line"><a id="l00461" name="l00461"></a><span class="lineno">  461</span><span class="comment">!</span></div>
+<div class="line"><a id="l00462" name="l00462"></a><span class="lineno">  462</span><span class="keyword">CONTAINS</span></div>
+<div class="line"><a id="l00463" name="l00463"></a><span class="lineno">  463</span><span class="comment">!</span></div>
+<div class="line"><a id="l00464" name="l00464"></a><span class="lineno">  464</span>include <span class="stringliteral">&quot;interp_micro.func.h&quot;</span></div>
+<div class="line"><a id="l00465" name="l00465"></a><span class="lineno">  465</span><span class="comment">!</span></div>
 </div>
-<div class="line"><a id="l00465" name="l00465"></a><span class="lineno">  465</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__ice4__fast__rs.html#af4e380f6e1d0dbda96264489b3b9645d">ice4_fast_rs</a></div>
-<div class="line"><a id="l00466" name="l00466"></a><span class="lineno">  466</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__ice4__fast__rs.html">mode_ice4_fast_rs</a></div>
+<div class="line"><a id="l00466" name="l00466"></a><span class="lineno">  466</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__ice4__fast__rs.html#af4e380f6e1d0dbda96264489b3b9645d">ice4_fast_rs</a></div>
+<div class="line"><a id="l00467" name="l00467"></a><span class="lineno">  467</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__ice4__fast__rs.html">mode_ice4_fast_rs</a></div>
 <div class="ttc" id="ainterp__micro_8func_8h_html_a02fe946211ee3426ca91e94f8f54d7ab"><div class="ttname"><a href="interp__micro_8func_8h.html#a02fe946211ee3426ca91e94f8f54d7ab">interp_micro_2d</a></div><div class="ttdeci">subroutine interp_micro_2d(d, pin1, pin2, knum1, knum2, p11, p12, p21, p22, ldpack, ldmask, kbuf1, kbuf2, kbuf3, pbuf1, pbuf2, pbuf3, klen, plt1, pout1, plt2, pout2, plt3, pout3)</div><div class="ttdef"><b>Definition</b> <a href="interp__micro_8func_8h_source.html#l00127">interp_micro.func.h:131</a></div></div>
 <div class="ttc" id="ainterp__micro_8func_8h_html_a51805a9f6295fc647015d6fd65433055"><div class="ttname"><a href="interp__micro_8func_8h.html#a51805a9f6295fc647015d6fd65433055">interp_micro_1d</a></div><div class="ttdeci">subroutine interp_micro_1d(d, pin, knum, p1, p2, ldpack, ldmask, kbuf1, kbuf2, pbuf1, pbuf2, klen, plt1, pout1, plt2, pout2, plt3, pout3)</div><div class="ttdef"><b>Definition</b> <a href="interp__micro_8func_8h_source.html#l00005">interp_micro.func.h:9</a></div></div>
 <div class="ttc" id="anamespacemodd__cst_html"><div class="ttname"><a href="namespacemodd__cst.html">modd_cst</a></div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00007">modd_cst.F90:7</a></div></div>

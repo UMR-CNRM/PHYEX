@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">PHYEX
+   <div id="projectname">PHYEX<span id="projectnumber">&#160;0.9.2</span>
    </div>
    <div id="projectbrief">PHYsique EXternalisée</div>
   </td>
@@ -255,7 +255,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT)</span>  :: ZTMIN           <span class="comment">! minimum Temp. related to ITPL</span></div>
 <div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span><span class="comment">!</span></div>
 <div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span> :: ZLV, ZLS, ZCPD</div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span> :: ZGCOND, ZAUTC, ZAUTI, ZGAUV, ZGAUC, ZGAUI, ZGAUTC, ZGAUTI, ZCRIAUTI   <span class="comment">! Used for Gaussian PDF integration</span></div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span> :: ZGCOND, ZAUTC, ZAUTI, ZGAUV, ZGAUC, ZGAUI, ZGAUTC, ZGAUTI, ZCRIAUTI <span class="comment">! Used for Gaussian PDF</span></div>
 <div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span> :: ZLVS                                      <span class="comment">! thermodynamics</span></div>
 <div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span> :: ZPV, ZPIV, ZQSL, ZQSI <span class="comment">! thermodynamics</span></div>
 <div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span> :: ZLL, DZZ, ZZZ                           <span class="comment">! used for length scales</span></div>
@@ -658,101 +658,102 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span>        zcond(jij,jk)=0.</div>
 <div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span><span class="keywordflow">      ENDIF</span></div>
 <div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span> </div>
-<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span>      inq1(jij,jk) = min( max(-22,floor(min(100., max(-100., 2*zq1(jij,jk)))) ), 10)  <span class="comment">!inner min/max prevents sigfpe when 2*zq1 does not fit into an int</span></div>
-<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span>      zinc(jij,jk) = 2.*zq1(jij,jk) - inq1(jij,jk)</div>
-<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span> </div>
-<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span>      psigrc(jij,jk) =  min(1.,(1.-zinc(jij,jk))*zsrc_1d(inq1(jij,jk))+zinc(jij,jk)*zsrc_1d(inq1(jij,jk)+1))</div>
-<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span>    <span class="keywordflow">IF</span>(<span class="keyword">PRESENT</span>(phlc_hcf) .AND. <span class="keyword">PRESENT</span>(phlc_hrc))<span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span>      phlc_hcf(jij,jk)=0.</div>
-<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span>      phlc_hrc(jij,jk)=0.</div>
-<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span><span class="keywordflow">    ENDIF</span></div>
-<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>    <span class="keywordflow">IF</span>(<span class="keyword">PRESENT</span>(phli_hcf) .AND. <span class="keyword">PRESENT</span>(phli_hri))<span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>      phli_hcf(jij,jk)=0.</div>
-<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span>      phli_hri(jij,jk)=0.</div>
-<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span><span class="keywordflow">    ENDIF</span></div>
-<div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span><span class="keywordflow">  END IF</span> <span class="comment">!HCONDENS</span></div>
-<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span> </div>
-<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>  <span class="keywordflow">IF</span>(.NOT. ocnd2) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>      prc_out(jij,jk) = (1.-zfrac(jij,jk)) * zcond(jij,jk) <span class="comment">! liquid condensate</span></div>
-<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>      pri_out(jij,jk) = zfrac(jij,jk) * zcond(jij,jk)   <span class="comment">! solid condensate</span></div>
-<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>      pt(jij,jk) = pt(jij,jk) + ((prc_out(jij,jk)-prc_in(jij,jk))*zlv(jij,jk) + &amp;</div>
-<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span>                                    &amp;(pri_out(jij,jk)-pri_in(jij,jk))*zls(jij,jk)   ) &amp;</div>
-<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span>                                  &amp; /zcpd(jij,jk)</div>
-<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span>      prv_out(jij,jk) = zrt(jij,jk) - prc_out(jij,jk) - pri_out(jij,jk)*zprifact(jij,jk)</div>
-<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span>  <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>      prc_out(jij,jk) = (1.-zfrac(jij,jk)) * zcond(jij,jk) <span class="comment">! liquid condensate</span></div>
-<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>      zlwinc(jij,jk) = prc_out(jij,jk) - prc_in(jij,jk)</div>
-<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>      <span class="comment">!</span></div>
-<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span><span class="comment">!     This check is mainly for noise reduction :</span></div>
-<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span><span class="comment">!     -------------------------</span></div>
-<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>      <span class="keywordflow">IF</span>(abs(zlwinc(jij,jk))&gt;1.0e-12  .AND.  <a class="code hl_function" href="namespacemode__tiwmx.html#acd903cfe9f0b5e900777f8052b9e0dbe">esatw</a>(icep%TIWMX, pt(jij,jk)) &lt; ppabs(jij,jk)*0.5 )<span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span>         zrcold(jij,jk) = prc_out(jij,jk)</div>
-<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span>         zrfrac(jij,jk) = prv_in(jij,jk) - zlwinc(jij,jk)</div>
-<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span>         <span class="keywordflow">IF</span>( prv_in(jij,jk) &lt; zrsw(jij,jk) )<span class="keywordflow">THEN</span> <span class="comment">! sub - saturation over water:</span></div>
-<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span>            <span class="comment">! Avoid drying of cloudwater leading to supersaturation with</span></div>
-<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span>            <span class="comment">! respect to water</span></div>
-<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span>            zrsdif(jij,jk)= min(0.,zrsp(jij,jk)-zrfrac(jij,jk))</div>
-<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span>         <span class="keywordflow">ELSE</span>  <span class="comment">! super - saturation over water:</span></div>
-<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span>            <span class="comment">! Avoid deposition of water leading to sub-saturation with</span></div>
-<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span>            <span class="comment">! respect to water</span></div>
-<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span>            <span class="comment">!            ZRSDIF(JIJ,JK)= MAX(0.,ZRSP(JIJ,JK)-ZRFRAC(JIJ,JK))</span></div>
-<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span>            zrsdif(jij,jk)= 0. <span class="comment">! t7</span></div>
-<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span><span class="keywordflow">         ENDIF</span></div>
-<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span>         prc_out(jij,jk) = zcond(jij,jk)  - zrsdif(jij,jk)</div>
-<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span>      <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span>        zrcold(jij,jk) = prc_in(jij,jk)</div>
-<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span><span class="keywordflow">      ENDIF</span></div>
-<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span> <span class="comment">!   end check</span></div>
-<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span> </div>
-<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span> <span class="comment">!    compute separate ice cloud:</span></div>
-<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span>      pwcldfr(jij,jk) = pcldfr(jij,jk)</div>
-<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span>      zdum1(jij,jk) = min(1.0,20.* prc_out(jij,jk)*sqrt(zdz(jij,jk))/zqsl(jij,jk)) <span class="comment">! cloud liquid water factor</span></div>
-<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>      zdum3(jij,jk) = max(0.,picldfr(jij,jk)-pwcldfr(jij,jk)) <span class="comment">! pure ice cloud part</span></div>
-<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>      <span class="keywordflow">IF</span> (jk==iktb) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>        zdum4(jij,jk) = pri_in(jij,jk)</div>
-<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>      <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span>        zdum4(jij,jk) = pri_in(jij,jk) + prs(jij,jk)*0.5 + prg(jij,jk)*0.25</div>
-<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span><span class="keywordflow">      ENDIF</span></div>
-<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span> </div>
-<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span>      zdum4(jij,jk) = max(0.,min(1.,zice_cld_wgt(jij,jk)*zdum4(jij,jk)*sqrt(zdz(jij,jk))/zqsi(jij,jk))) <span class="comment">! clould ice+solid </span></div>
-<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span>                                                         <span class="comment">! precip. water factor </span></div>
-<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span> </div>
-<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span>      zdum2(jij,jk) = (0.8*pcldfr(jij,jk)+0.2)*min(1.,zdum1(jij,jk) + zdum4(jij,jk)*pcldfr(jij,jk))</div>
-<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span>      <span class="comment">! water cloud, use &#39;statistical&#39; cloud, but reduce it in case of low liquid content</span></div>
-<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span> </div>
-<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span>      pcldfr(jij,jk) = min(1., zdum2(jij,jk) + (0.5*zdum3(jij,jk)+0.5)*zdum4(jij,jk)) <span class="comment">! Rad cloud</span></div>
-<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span>           <span class="comment">! Reduce ice cloud part in case of low ice water content</span></div>
-<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span>      pri_out(jij,jk) = pri_in(jij,jk)</div>
-<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span>      pt(jij,jk) = pt(jij,jk) + ((prc_out(jij,jk)-zrcold(jij,jk))*zlv(jij,jk) + &amp;</div>
-<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span>                                    &amp;(pri_out(jij,jk)-pri_in(jij,jk))*zls(jij,jk)   ) &amp;</div>
-<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span>                                  &amp; /zcpd(jij,jk)</div>
-<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span>      prv_out(jij,jk) = zrt(jij,jk) - prc_out(jij,jk) - pri_out(jij,jk)*zprifact(jij,jk)</div>
-<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span><span class="keywordflow">  END IF</span> <span class="comment">! End OCND2</span></div>
-<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span>  <span class="keywordflow">IF</span>(hlambda3==<span class="stringliteral">&#39;CB&#39;</span>)<span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span>      <span class="comment">! s r_c/ sig_s^2</span></div>
-<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span>      <span class="comment">!    PSIGRC(JIJ,JK) = PCLDFR(JIJ,JK)  ! use simple Gaussian relation</span></div>
-<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span>      <span class="comment">!</span></div>
-<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span>      <span class="comment">!    multiply PSRCS by the lambda3 coefficient</span></div>
-<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span>      <span class="comment">!</span></div>
-<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span>      <span class="comment">!      PSIGRC(JIJ,JK) = 2.*PCLDFR(JIJ,JK) * MIN( 3. , MAX(1.,1.-ZQ1(JIJ,JK)) )</span></div>
-<div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span>      <span class="comment">! in the 3D case lambda_3 = 1.</span></div>
-<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span> </div>
-<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span>      psigrc(jij,jk) = psigrc(jij,jk)* min( 3. , max(1.,1.-zq1(jij,jk)) )</div>
-<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span><span class="keywordflow">  END IF</span></div>
-<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span><span class="keywordflow"> END DO</span></div>
-<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span><span class="keywordflow">END DO</span></div>
-<div class="line"><a id="l00658" name="l00658"></a><span class="lineno">  658</span><span class="comment">!$mnh_end_do()</span></div>
-<div class="line"><a id="l00659" name="l00659"></a><span class="lineno">  659</span><span class="comment">!$mnh_end_do()  </span></div>
-<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span><span class="comment">!$acc end parallel</span></div>
-<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span><span class="comment">!</span></div>
-<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;CONDENSATION&#39;</span>,1,zhook_handle)</div>
-<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span><span class="comment">!</span></div>
-<div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span><span class="keyword">CONTAINS</span></div>
-<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span>include <span class="stringliteral">&quot;compute_frac_ice.func.h&quot;</span></div>
-<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span><span class="comment">!</span></div>
-<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="condensation_8F90.html#a932fe4eafeb129ea06fda6ec55f10f36">condensation</a></div>
+<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span>      <span class="comment">!inner min/max prevents sigfpe when 2*zq1 does not fit into an int</span></div>
+<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span>      inq1(jij,jk) = min( max(-22,floor(min(100., max(-100., 2*zq1(jij,jk)))) ), 10)</div>
+<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span>      zinc(jij,jk) = 2.*zq1(jij,jk) - inq1(jij,jk)</div>
+<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span> </div>
+<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span>      psigrc(jij,jk) =  min(1.,(1.-zinc(jij,jk))*zsrc_1d(inq1(jij,jk))+zinc(jij,jk)*zsrc_1d(inq1(jij,jk)+1))</div>
+<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span>    <span class="keywordflow">IF</span>(<span class="keyword">PRESENT</span>(phlc_hcf) .AND. <span class="keyword">PRESENT</span>(phlc_hrc))<span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span>      phlc_hcf(jij,jk)=0.</div>
+<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span>      phlc_hrc(jij,jk)=0.</div>
+<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span><span class="keywordflow">    ENDIF</span></div>
+<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>    <span class="keywordflow">IF</span>(<span class="keyword">PRESENT</span>(phli_hcf) .AND. <span class="keyword">PRESENT</span>(phli_hri))<span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span>      phli_hcf(jij,jk)=0.</div>
+<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span>      phli_hri(jij,jk)=0.</div>
+<div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span><span class="keywordflow">    ENDIF</span></div>
+<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span><span class="keywordflow">  END IF</span> <span class="comment">!HCONDENS</span></div>
+<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span> </div>
+<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>  <span class="keywordflow">IF</span>(.NOT. ocnd2) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>      prc_out(jij,jk) = (1.-zfrac(jij,jk)) * zcond(jij,jk) <span class="comment">! liquid condensate</span></div>
+<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>      pri_out(jij,jk) = zfrac(jij,jk) * zcond(jij,jk)   <span class="comment">! solid condensate</span></div>
+<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span>      pt(jij,jk) = pt(jij,jk) + ((prc_out(jij,jk)-prc_in(jij,jk))*zlv(jij,jk) + &amp;</div>
+<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span>                                    &amp;(pri_out(jij,jk)-pri_in(jij,jk))*zls(jij,jk)   ) &amp;</div>
+<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span>                                  &amp; /zcpd(jij,jk)</div>
+<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span>      prv_out(jij,jk) = zrt(jij,jk) - prc_out(jij,jk) - pri_out(jij,jk)*zprifact(jij,jk)</div>
+<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>  <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>      prc_out(jij,jk) = (1.-zfrac(jij,jk)) * zcond(jij,jk) <span class="comment">! liquid condensate</span></div>
+<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>      zlwinc(jij,jk) = prc_out(jij,jk) - prc_in(jij,jk)</div>
+<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span>      <span class="comment">!</span></div>
+<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span><span class="comment">!     This check is mainly for noise reduction :</span></div>
+<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span><span class="comment">!     -------------------------</span></div>
+<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span>      <span class="keywordflow">IF</span>(abs(zlwinc(jij,jk))&gt;1.0e-12  .AND.  <a class="code hl_function" href="namespacemode__tiwmx.html#acd903cfe9f0b5e900777f8052b9e0dbe">esatw</a>(icep%TIWMX, pt(jij,jk)) &lt; ppabs(jij,jk)*0.5 )<span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span>         zrcold(jij,jk) = prc_out(jij,jk)</div>
+<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span>         zrfrac(jij,jk) = prv_in(jij,jk) - zlwinc(jij,jk)</div>
+<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span>         <span class="keywordflow">IF</span>( prv_in(jij,jk) &lt; zrsw(jij,jk) )<span class="keywordflow">THEN</span> <span class="comment">! sub - saturation over water:</span></div>
+<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span>            <span class="comment">! Avoid drying of cloudwater leading to supersaturation with</span></div>
+<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span>            <span class="comment">! respect to water</span></div>
+<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span>            zrsdif(jij,jk)= min(0.,zrsp(jij,jk)-zrfrac(jij,jk))</div>
+<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span>         <span class="keywordflow">ELSE</span>  <span class="comment">! super - saturation over water:</span></div>
+<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span>            <span class="comment">! Avoid deposition of water leading to sub-saturation with</span></div>
+<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span>            <span class="comment">! respect to water</span></div>
+<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span>            <span class="comment">!            ZRSDIF(JIJ,JK)= MAX(0.,ZRSP(JIJ,JK)-ZRFRAC(JIJ,JK))</span></div>
+<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span>            zrsdif(jij,jk)= 0. <span class="comment">! t7</span></div>
+<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span><span class="keywordflow">         ENDIF</span></div>
+<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span>         prc_out(jij,jk) = zcond(jij,jk)  - zrsdif(jij,jk)</div>
+<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span>      <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span>        zrcold(jij,jk) = prc_in(jij,jk)</div>
+<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span><span class="keywordflow">      ENDIF</span></div>
+<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span> <span class="comment">!   end check</span></div>
+<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span> </div>
+<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span> <span class="comment">!    compute separate ice cloud:</span></div>
+<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span>      pwcldfr(jij,jk) = pcldfr(jij,jk)</div>
+<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>      zdum1(jij,jk) = min(1.0,20.* prc_out(jij,jk)*sqrt(zdz(jij,jk))/zqsl(jij,jk)) <span class="comment">! cloud liquid water factor</span></div>
+<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>      zdum3(jij,jk) = max(0.,picldfr(jij,jk)-pwcldfr(jij,jk)) <span class="comment">! pure ice cloud part</span></div>
+<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>      <span class="keywordflow">IF</span> (jk==iktb) <span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>        zdum4(jij,jk) = pri_in(jij,jk)</div>
+<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span>      <span class="keywordflow">ELSE</span></div>
+<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span>        zdum4(jij,jk) = pri_in(jij,jk) + prs(jij,jk)*0.5 + prg(jij,jk)*0.25</div>
+<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span><span class="keywordflow">      ENDIF</span></div>
+<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span> </div>
+<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span>      zdum4(jij,jk) = max(0.,min(1.,zice_cld_wgt(jij,jk)*zdum4(jij,jk)*sqrt(zdz(jij,jk))/zqsi(jij,jk))) <span class="comment">! clould ice+solid </span></div>
+<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span>                                                         <span class="comment">! precip. water factor </span></div>
+<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span> </div>
+<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span>      zdum2(jij,jk) = (0.8*pcldfr(jij,jk)+0.2)*min(1.,zdum1(jij,jk) + zdum4(jij,jk)*pcldfr(jij,jk))</div>
+<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span>      <span class="comment">! water cloud, use &#39;statistical&#39; cloud, but reduce it in case of low liquid content</span></div>
+<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span> </div>
+<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span>      pcldfr(jij,jk) = min(1., zdum2(jij,jk) + (0.5*zdum3(jij,jk)+0.5)*zdum4(jij,jk)) <span class="comment">! Rad cloud</span></div>
+<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span>           <span class="comment">! Reduce ice cloud part in case of low ice water content</span></div>
+<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span>      pri_out(jij,jk) = pri_in(jij,jk)</div>
+<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span>      pt(jij,jk) = pt(jij,jk) + ((prc_out(jij,jk)-zrcold(jij,jk))*zlv(jij,jk) + &amp;</div>
+<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span>                                    &amp;(pri_out(jij,jk)-pri_in(jij,jk))*zls(jij,jk)   ) &amp;</div>
+<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span>                                  &amp; /zcpd(jij,jk)</div>
+<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span>      prv_out(jij,jk) = zrt(jij,jk) - prc_out(jij,jk) - pri_out(jij,jk)*zprifact(jij,jk)</div>
+<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span><span class="keywordflow">  END IF</span> <span class="comment">! End OCND2</span></div>
+<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span>  <span class="keywordflow">IF</span>(hlambda3==<span class="stringliteral">&#39;CB&#39;</span>)<span class="keywordflow">THEN</span></div>
+<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span>      <span class="comment">! s r_c/ sig_s^2</span></div>
+<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span>      <span class="comment">!    PSIGRC(JIJ,JK) = PCLDFR(JIJ,JK)  ! use simple Gaussian relation</span></div>
+<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span>      <span class="comment">!</span></div>
+<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span>      <span class="comment">!    multiply PSRCS by the lambda3 coefficient</span></div>
+<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span>      <span class="comment">!</span></div>
+<div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span>      <span class="comment">!      PSIGRC(JIJ,JK) = 2.*PCLDFR(JIJ,JK) * MIN( 3. , MAX(1.,1.-ZQ1(JIJ,JK)) )</span></div>
+<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span>      <span class="comment">! in the 3D case lambda_3 = 1.</span></div>
+<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span> </div>
+<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span>      psigrc(jij,jk) = psigrc(jij,jk)* min( 3. , max(1.,1.-zq1(jij,jk)) )</div>
+<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span><span class="keywordflow">  END IF</span></div>
+<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span><span class="keywordflow"> END DO</span></div>
+<div class="line"><a id="l00658" name="l00658"></a><span class="lineno">  658</span><span class="keywordflow">END DO</span></div>
+<div class="line"><a id="l00659" name="l00659"></a><span class="lineno">  659</span><span class="comment">!$mnh_end_do()</span></div>
+<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span><span class="comment">!$mnh_end_do()  </span></div>
+<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span><span class="comment">!$acc end parallel</span></div>
+<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span><span class="comment">!</span></div>
+<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span><span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;CONDENSATION&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span><span class="comment">!</span></div>
+<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span><span class="keyword">CONTAINS</span></div>
+<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span>include <span class="stringliteral">&quot;compute_frac_ice.func.h&quot;</span></div>
+<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span><span class="comment">!</span></div>
+<div class="line"><a id="l00668" name="l00668"></a><span class="lineno">  668</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="condensation_8F90.html#a932fe4eafeb129ea06fda6ec55f10f36">condensation</a></div>
 </div>
-<div class="line"><a id="l00668" name="l00668"></a><span class="lineno">  668</span> </div>
+<div class="line"><a id="l00669" name="l00669"></a><span class="lineno">  669</span> </div>
 <div class="ttc" id="acompute__frac__ice_8func_8h_html_a6acd9214f569a56dfe4b0fd2b94c133e"><div class="ttname"><a href="compute__frac__ice_8func_8h.html#a6acd9214f569a56dfe4b0fd2b94c133e">compute_frac_ice</a></div><div class="ttdeci">elemental subroutine compute_frac_ice(cst, hfrac_ice, nebn, pfrac_ice, pt)</div><div class="ttdef"><b>Definition</b> <a href="compute__frac__ice_8func_8h_source.html#l00005">compute_frac_ice.func.h:6</a></div></div>
 <div class="ttc" id="acondensation_8F90_html_a932fe4eafeb129ea06fda6ec55f10f36"><div class="ttname"><a href="condensation_8F90.html#a932fe4eafeb129ea06fda6ec55f10f36">condensation</a></div><div class="ttdeci">subroutine condensation(d, cst, icep, nebn, turbn, hfrac_ice, hcondens, hlambda3, ppabs, pzz, prhodref, pt, prv_in, prv_out, prc_in, prc_out, pri_in, pri_out, prr, prs, prg, psigs, lmfconv, pmfconv, pcldfr, psigrc, ouseri, osigmas, ocnd2, picldfr, pwcldfr, pssio, pssiu, pifr, psigqsat, plv, pls, pcph, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, pice_cld_wgt)</div><div class="ttdef"><b>Definition</b> <a href="condensation_8F90_source.html#l00007">condensation.F90:16</a></div></div>
 <div class="ttc" id="anamespacemodd__cst_html"><div class="ttname"><a href="namespacemodd__cst.html">modd_cst</a></div><div class="ttdef"><b>Definition</b> <a href="modd__cst_8F90_source.html#l00007">modd_cst.F90:7</a></div></div>

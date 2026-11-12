@@ -16,10 +16,13 @@ var searchData=
   ['reg_5fis_5fstill_5fdecl_13',['reg_is_still_decl',['../namespacegen__modi.html#a384d398bcc3f22abd8eb154e3da64cd0',1,'gen_modi']]],
   ['reg_5fis_5fvariable_5fdecl_14',['reg_is_variable_decl',['../namespacegen__modi.html#af249ebb55fc1f27171d660a20e5b76a7',1,'gen_modi']]],
   ['reg_5fproc_5fargs_15',['reg_proc_args',['../namespacegen__modi.html#a2a9b9f80d672dd8a793e18f41d55a09a',1,'gen_modi']]],
-  ['reg_5fproc_5fname_16',['reg_proc_name',['../namespacegen__modi.html#a7a4d092935d5eb4aea3a2407a5d7d488',1,'gen_modi']]],
-  ['reg_5fstring_17',['reg_string',['../namespacegen__modi.html#a1f8d025603ffb481cf1fa6e06c5a73e8',1,'gen_modi']]],
-  ['reg_5fuse_5fmodule_5fname_18',['reg_use_module_name',['../namespacegen__modi.html#aafae261ffa3122037b3573a3739c7888',1,'gen_modi']]],
-  ['reg_5fuse_5fmodule_5fonly_19',['reg_use_module_only',['../namespacegen__modi.html#a46330fb64688c57b14f7c1c787fc518d',1,'gen_modi']]],
-  ['reg_5fvariable_5fname_5fsimple_20',['reg_variable_name_simple',['../namespacegen__modi.html#a2bfdcd37f8facf3e6e91ded286f44187',1,'gen_modi']]],
-  ['rinvxp00_21',['rinvxp00',['../structmodd__cst_1_1cst__t.html#abd708ea97104f72e05fcefe1a64696d8',1,'modd_cst::cst_t::rinvxp00'],['../namespacemodd__cst.html#a449e56d546afb298d983180d01cfebca',1,'modd_cst::rinvxp00']]]
+  ['reg_5fproc_5fend_16',['reg_proc_end',['../namespacegen__modi.html#a3d4aa78df7e4daca20738a7bb7cc9c63',1,'gen_modi']]],
+  ['reg_5fproc_5fname_17',['reg_proc_name',['../namespacegen__modi.html#a7a4d092935d5eb4aea3a2407a5d7d488',1,'gen_modi']]],
+  ['reg_5fproc_5fprefix_18',['reg_proc_prefix',['../namespacegen__modi.html#acf37b5ee23420bab134a3cabb2cf6983',1,'gen_modi']]],
+  ['reg_5fstring_19',['reg_string',['../namespacegen__modi.html#a1f8d025603ffb481cf1fa6e06c5a73e8',1,'gen_modi']]],
+  ['reg_5ftype_5fspec_20',['reg_type_spec',['../namespacegen__modi.html#aef1730d06826ed852583cd65f3bcec03',1,'gen_modi']]],
+  ['reg_5fuse_5fmodule_5fname_21',['reg_use_module_name',['../namespacegen__modi.html#aafae261ffa3122037b3573a3739c7888',1,'gen_modi']]],
+  ['reg_5fuse_5fmodule_5fonly_22',['reg_use_module_only',['../namespacegen__modi.html#a46330fb64688c57b14f7c1c787fc518d',1,'gen_modi']]],
+  ['reg_5fvariable_5fname_5fsimple_23',['reg_variable_name_simple',['../namespacegen__modi.html#a2bfdcd37f8facf3e6e91ded286f44187',1,'gen_modi']]],
+  ['rinvxp00_24',['rinvxp00',['../structmodd__cst_1_1cst__t.html#abd708ea97104f72e05fcefe1a64696d8',1,'modd_cst::cst_t::rinvxp00'],['../namespacemodd__cst.html#a449e56d546afb298d983180d01cfebca',1,'modd_cst::rinvxp00']]]
 ];

@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">PHYEX
+   <div id="projectname">PHYEX<span id="projectnumber">&#160;0.9.2</span>
    </div>
    <div id="projectbrief">PHYsique EXternalisée</div>
   </td>
@@ -103,11 +103,11 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment"># Transformation name -&gt; pyfortool arguments</span></div>
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno"><a class="line" href="namespacephyex__transform.html#a5e76c9f85555cf8a0858068626c02fb5">   21</a></span>TRANSFORMATIONS = {</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    <span class="stringliteral">&#39;IAL&#39;</span>: [<span class="stringliteral">&#39;--wrapH&#39;</span>, <span class="stringliteral">&#39;--removeACC&#39;</span>, <span class="stringliteral">&#39;--shugradTransfo&#39;</span>, <span class="stringliteral">&#39;--mnhExpand&#39;</span>],</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    <span class="stringliteral">&#39;IAL&#39;</span>: [<span class="stringliteral">&#39;--wrapH&#39;</span>, <span class="stringliteral">&#39;--removeACC&#39;</span>, <span class="stringliteral">&#39;--shugradTransfo&#39;</span>, <span class="stringliteral">&#39;--mnhExpand&#39;</span>, <span class="stringliteral">&#39;--splitLongLines&#39;</span>],</div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <span class="comment"># IAL without the transformation of shuman/gradient functions into subroutine calls</span></div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="stringliteral">&#39;IAL_NOSHUGRAD&#39;</span>: [<span class="stringliteral">&#39;--wrapH&#39;</span>, <span class="stringliteral">&#39;--removeACC&#39;</span>, <span class="stringliteral">&#39;--mnhExpand&#39;</span>],</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="stringliteral">&#39;IAL_NOSHUGRAD&#39;</span>: [<span class="stringliteral">&#39;--wrapH&#39;</span>, <span class="stringliteral">&#39;--removeACC&#39;</span>, <span class="stringliteral">&#39;--mnhExpand&#39;</span>, <span class="stringliteral">&#39;--splitLongLines&#39;</span>],</div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <span class="comment"># IAL without the expansion of the mnh_expand directives (code kept in array syntax)</span></div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <span class="stringliteral">&#39;IAL_NOEXPAND&#39;</span>: [<span class="stringliteral">&#39;--wrapH&#39;</span>, <span class="stringliteral">&#39;--removeACC&#39;</span>, <span class="stringliteral">&#39;--shugradTransfo&#39;</span>],</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <span class="stringliteral">&#39;IAL_NOEXPAND&#39;</span>: [<span class="stringliteral">&#39;--wrapH&#39;</span>, <span class="stringliteral">&#39;--removeACC&#39;</span>, <span class="stringliteral">&#39;--shugradTransfo&#39;</span>, <span class="stringliteral">&#39;--splitLongLines&#39;</span>],</div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>}</div>
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="comment"># Name of the environment variable containing additional pyfortool arguments</span></div>

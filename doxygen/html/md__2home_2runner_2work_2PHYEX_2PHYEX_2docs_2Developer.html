@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">PHYEX
+   <div id="projectname">PHYEX<span id="projectnumber">&#160;0.9.2</span>
    </div>
    <div id="projectbrief">PHYsique EXternalisée</div>
   </td>
@@ -135,7 +135,7 @@ Scientific contributions until cycle 49t1</h2>
 Refactoring contributions from now on, and scientific contributions after cycle 49t1</h2>
 <p>Who: developers with scientific contributions based on cycles 50 and following (as soon as PHYEX is a bundle component); and developers with GPU-refactoring contributions.</p>
 <p>Workflow summary: after the cycle 49t1 (probably starting from cycle 50), AROME and HARMONIE-AROME will become a bundle. Il will be built with source codes coming from various places. One of these places will be the PHYEX repository. Pull requests must be sent to each modified components of the bundle.</p>
-<p>Developer must use a model specific branch (arome_&lt;commit_hash&gt; when working with the model, or offline_&lt;commit_hash&gt; when working with the offline tools). These branches receive tags based on the master branch version. For example the commit, in the master branch, corresponding to the version 1.0.0 of PHYEX will receive the tag "v1.0.0". The arome specific commit corresponding to this version will be tagged "v1.0.0\_arome".</p>
+<p>Developer must use a model specific branch (arome_&lt;commit_hash&gt; when working with the model, or offline_&lt;commit_hash&gt; when working with the offline tools). These branches receive tags based on the master branch version. For example the commit, in the master branch, corresponding to the version 1.0.0 of PHYEX will receive the tag "v1.0.0". The arome specific commit corresponding to this version will be tagged "v1.0.0\_arome". The version number is only stored in the src/phyex/VERSION file (used by CMake, the python wheel and the python tools): it must be updated before tagging a new version. The "consistency" GitHub workflow (or the phyex-check_consistency tool) checks that it is the version of the last release tag.</p>
 <p><img src="./AROMEworkflow2.svg" alt="" style="pointer-events: none;" class="inline"/></p>
 <p>Workflow details (getting the source code in blue, pull request in red, integration in green):</p>
 <ul>

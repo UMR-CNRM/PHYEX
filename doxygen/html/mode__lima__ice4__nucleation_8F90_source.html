@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">PHYEX
+   <div id="projectname">PHYEX<span id="projectnumber">&#160;0.9.2</span>
    </div>
    <div id="projectbrief">PHYsique EXternalisée</div>
   </td>
@@ -187,7 +187,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    <span class="keywordflow">IF</span>(pt(ii)&lt;cst%XTT-5.0 .AND. zssi(ii)&gt;0.0) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>      zzw(ii)=limac%XNU20*exp(limac%XALPHA2*zssi(ii)-limac%XBETA2)</div>
 <div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    <span class="keywordflow">ELSEIF</span>(pt(ii)&lt;=cst%XTT-2.0 .AND. pt(ii)&gt;=cst%XTT-5.0 .AND. zssi(ii)&gt;0.0) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>      zzw(ii)=max(limac%XNU20*exp(-limac%XBETA2 ), &amp;                                                                                       </div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>      zzw(ii)=max(limac%XNU20*exp(-limac%XBETA2 ), &amp;</div>
 <div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>                  limac%XNU10*exp(-limac%XBETA1*(pt(ii)-cst%XTT))*(zssi(ii)/zusw(ii))**limac%XALPHA1)</div>
 <div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span><span class="keywordflow">    ENDIF</span></div>
 <div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="keywordflow">  ENDIF</span></div>

@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">PHYEX
+   <div id="projectname">PHYEX<span id="projectnumber">&#160;0.9.2</span>
    </div>
    <div id="projectbrief">PHYsique EXternalisée</div>
   </td>
@@ -327,7 +327,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC))</span>, <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(INOUT)</span> :: PQSS   <span class="comment">! Snow          |  source</span></div>
 <div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC))</span>, <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(INOUT)</span> :: PQGS   <span class="comment">! Graupel       |</span></div>
 <div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span><span class="comment">!</span></div>
-<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(D%NKT,0,OSEDIM_BEARD))</span>, <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span> :: PEFIELDW <span class="comment">! vertical electric field</span></div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(D%NKT,0,OSEDIM_BEARD))</span>, <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span> :: PEFIELDW <span class="comment">! vertical elec. field</span></div>
 <div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span><span class="comment">!</span></div>
 <div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span><span class="comment">! optional variables</span></div>
 <div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>,           <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: PSEA    <span class="comment">! Sea Mask</span></div>

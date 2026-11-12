@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">PHYEX
+   <div id="projectname">PHYEX<span id="projectnumber">&#160;0.9.2</span>
    </div>
    <div id="projectbrief">PHYsique EXternalisée</div>
   </td>
@@ -387,7 +387,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>    <span class="keywordflow">IF</span>(.NOT. ldsoft) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>      prg_tend(jij, ifreez1)=prvt(jij)*ppres(jij)/(cst%XEPSILO+prvt(jij)) <span class="comment">! Vapor pressure</span></div>
 <div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>      <span class="keywordflow">IF</span>(parami%LEVLIMIT) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>        prg_tend(jij, ifreez1)=min(prg_tend(jij, ifreez1), exp(cst%XALPI-cst%XBETAI/pt(jij)-cst%XGAMI*log(pt(jij)))) <span class="comment">! min(ev, es_i(T))</span></div>
+<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>        prg_tend(jij, ifreez1)=min(prg_tend(jij, ifreez1), exp(cst%XALPI-cst%XBETAI/pt(jij)-cst%XGAMI*log(pt(jij)))) <span class="comment">! min(ev, es_i)</span></div>
 <div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span><span class="keywordflow">      ENDIF</span></div>
 <div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span>      prg_tend(jij, ifreez1)=pka(jij)*(cst%XTT-pt(jij)) +                              &amp;</div>
 <div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>               (pdv(jij)*(cst%XLVTT+(cst%XCPV-cst%XCL)*(pt(jij)-cst%XTT)) &amp;</div>

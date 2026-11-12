@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">PHYEX
+   <div id="projectname">PHYEX<span id="projectnumber">&#160;0.9.2</span>
    </div>
    <div id="projectbrief">PHYsique EXternalisée</div>
   </td>
@@ -164,7 +164,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
 <div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="keywordtype">    REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT, 0:D%NKT+1)</span> :: ZWSED <span class="comment">! sedimentation fluxes</span></div>
 <div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span> </div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <span class="keywordtype">LOGICAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span> :: GSEDIMR,GSEDIMC, GSEDIMI, GSEDIMS, GSEDIMG, GSEDIMH <span class="comment">! Test where to compute the SED processes</span></div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <span class="keywordtype">LOGICAL</span>, <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span> :: GSEDIMR,GSEDIMC, GSEDIMI, GSEDIMS, GSEDIMG, GSEDIMH <span class="comment">! Test where to compute the SED process</span></div>
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    <span class="keywordtype">INTEGER</span>, <span class="keywordtype">DIMENSION(D%NIJT*D%NKT)</span> :: IC1, IC2</div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <span class="keywordtype">INTEGER</span>, <span class="keywordtype">DIMENSION(D%NIJT*D%NKT)</span> :: IR1, IR2</div>
 <div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    <span class="keywordtype">INTEGER</span>, <span class="keywordtype">DIMENSION(D%NIJT*D%NKT)</span> :: IS1, IS2</div>

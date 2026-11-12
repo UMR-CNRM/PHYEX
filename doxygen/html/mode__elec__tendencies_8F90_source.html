@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">PHYEX
+   <div id="projectname">PHYEX<span id="projectnumber">&#160;0.9.2</span>
    </div>
    <div id="projectbrief">PHYsique EXternalisée</div>
   </td>
@@ -271,7 +271,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>                                                       PRGMLTR     <span class="comment">! Melting of the graupel</span></div>
 <div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span><span class="comment">! microphysics rates specific to ICE3 (knmoments==1)</span></div>
 <div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIT,D%NJT,D%NKT)</span>, <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: PRCMLTSR,&amp;  <span class="comment">! Cld droplet collection onto aggregates by pos. temp.</span></div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>                                                               PRICFRR     <span class="comment">! Rain contact freezing (part of ice crystals converted to rain)</span></div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>                                                               PRICFRR     <span class="comment">! Rain contact frz (part of ri converted to rr)</span></div>
 <div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span><span class="comment">! microphysics rates specific to LIMA (knmoments==2)</span></div>
 <div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIT,D%NJT,D%NKT)</span>, <span class="keywordtype">OPTIONAL</span>, <span class="keywordtype">INTENT(IN)</span>    :: PRVHENC, &amp;  <span class="comment">! Cld droplet formation</span></div>
 <div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>                                                               PRCHINC, &amp;  <span class="comment">! Heterogeneous nucleation of coated IFN</span></div>

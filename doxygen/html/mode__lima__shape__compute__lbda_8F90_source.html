@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">PHYEX
+   <div id="projectname">PHYEX<span id="projectnumber">&#160;0.9.2</span>
    </div>
    <div id="projectbrief">PHYsique EXternalisée</div>
   </td>
@@ -232,8 +232,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span><span class="keywordtype">TYPE</span>(<a class="code hl_struct" href="structmodd__param__lima__cold_1_1param__lima__cold__t.html">param_lima_cold_t</a>),<span class="keywordtype">INTENT(IN)</span>::LIMAC</div>
 <div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span><span class="comment">!</span></div>
 <div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT)</span>,   <span class="keywordtype">INTENT(IN)</span>    :: PRI          <span class="comment">! Total cloud ice m.r. (source or at t)</span></div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PCI_SHAPE    <span class="comment">! Pristine ice conc. per shape (source or at t)</span></div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE)</span>, <span class="keywordtype">INTENT(INOUT)</span> :: PRI_SHAPE    <span class="comment">! pristine ice m.r. per shape (source or at t)</span></div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE)</span>, <span class="keywordtype">INTENT(IN)</span>    :: PCI_SHAPE <span class="comment">! Pristine ice conc. per shape (source or at t)</span></div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE)</span>, <span class="keywordtype">INTENT(INOUT)</span> :: PRI_SHAPE <span class="comment">! pristine ice m.r. per shape (source or at t)</span></div>
 <div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span><span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE)</span>, <span class="keywordtype">INTENT(INOUT)</span> :: PLBDAI_SHAPE <span class="comment">! lambda per habit</span></div>
 <div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span><span class="comment">!</span></div>
 <div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span><span class="comment">!</span></div>

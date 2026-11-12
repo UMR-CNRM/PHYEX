@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">PHYEX
+   <div id="projectname">PHYEX<span id="projectnumber">&#160;0.9.2</span>
    </div>
    <div id="projectbrief">PHYsique EXternalisée</div>
   </td>
@@ -1006,8 +1006,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00920" name="l00920"></a><span class="lineno">  920</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>,   <span class="keywordtype">INTENT(INOUT)</span>  ::  PRC_MIX, PRI_MIX      <span class="comment">! Mixture cloud content</span></div>
 <div class="line"><a id="l00921" name="l00921"></a><span class="lineno">  921</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>,   <span class="keywordtype">INTENT(OUT)</span>    ::  PENTR     <span class="comment">! Mass flux entrainment of the updraft</span></div>
 <div class="line"><a id="l00922" name="l00922"></a><span class="lineno">  922</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>,   <span class="keywordtype">INTENT(OUT)</span>    ::  PDETR     <span class="comment">! Mass flux detrainment of the updraft</span></div>
-<div class="line"><a id="l00923" name="l00923"></a><span class="lineno">  923</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>,   <span class="keywordtype">INTENT(OUT)</span>    ::  PENTR_CLD <span class="comment">! Mass flux entrainment of the updraft in cloudy part (multiplied by (1-part_dry))</span></div>
-<div class="line"><a id="l00924" name="l00924"></a><span class="lineno">  924</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>,   <span class="keywordtype">INTENT(OUT)</span>    ::  PDETR_CLD <span class="comment">! Mass flux detrainment of the updraft in cloudy part (multiplied by (1-part_dry))</span></div>
+<div class="line"><a id="l00923" name="l00923"></a><span class="lineno">  923</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>,   <span class="keywordtype">INTENT(OUT)</span>    ::  PENTR_CLD <span class="comment">! Mass flux entr. of the updraft in cloudy part (multiplied by (1-part_dry))</span></div>
+<div class="line"><a id="l00924" name="l00924"></a><span class="lineno">  924</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>,   <span class="keywordtype">INTENT(OUT)</span>    ::  PDETR_CLD <span class="comment">! Mass flux detr. of the updraft in cloudy part (multiplied by (1-part_dry))</span></div>
 <div class="line"><a id="l00925" name="l00925"></a><span class="lineno">  925</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>,   <span class="keywordtype">INTENT(OUT)</span>    ::  PBUO_INTEG_DRY, PBUO_INTEG_CLD<span class="comment">! Integral Buoyancy</span></div>
 <div class="line"><a id="l00926" name="l00926"></a><span class="lineno">  926</span><span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>,   <span class="keywordtype">INTENT(OUT)</span>    ::  PPART_DRY <span class="comment">! ratio of dry part at the transition level</span></div>
 <div class="line"><a id="l00927" name="l00927"></a><span class="lineno">  927</span><span class="comment">!</span></div>

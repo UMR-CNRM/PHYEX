@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">PHYEX
+   <div id="projectname">PHYEX<span id="projectnumber">&#160;0.9.2</span>
    </div>
    <div id="projectbrief">PHYsique EXternalisée</div>
   </td>
@@ -490,7 +490,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span><span class="comment">!</span></div>
 <div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span>   zwork2(:) = zwork1(:) / zdt(:) * ( <a class="code hl_variable" href="namespacemodd__cst.html#a574fa787e7447772a9b0c7b9dd99f93d">cst</a>%XBETAW / zdt(:) - <a class="code hl_variable" href="namespacemodd__cst.html#a574fa787e7447772a9b0c7b9dd99f93d">cst</a>%XGAMW ) <span class="comment">! dr_sat/dT</span></div>
 <div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span>   zwork2(:) = zlv(:) / zcph(:) * zwork1(:) * ( 1. - <a class="code hl_variable" href="namespacemodd__convpar.html#aa3bfa972de366585dca54c6be5933a4e">xrhdbc</a> ) /              &amp;</div>
-<div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span>                    ( 1. + zlv(:) / zcph(:) * zwork2(:) ) <span class="comment">! temperature perturb                                                           ! due to evaporation</span></div>
+<div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span>                    ( 1. + zlv(:) / zcph(:) * zwork2(:) ) <span class="comment">! temperature perturb due to evaporation</span></div>
 <div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span>   zdt(:)    = zdt(:) + zwork2(:)</div>
 <div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span><span class="comment">!</span></div>
 <div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span>   <span class="keywordflow">DO</span> ji = 1, iie</div>
