@@ -84,6 +84,9 @@ foreach(_i RANGE 0 ${_last} 2)
   endif()
 endforeach()
 
+# Version of the python module
+file(APPEND ${PYPHYEX_PY} "\n__version__ = \"${PHYEX_VERSION}\"\n")
+
 # The generated routines are put in a module. The final file is only
 # written if its content changed, to avoid useless recompilations
 file(READ ${_raw} _content)

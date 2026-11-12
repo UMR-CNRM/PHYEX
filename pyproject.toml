@@ -66,5 +66,5 @@ ENABLE_PYTHON_WHEEL = "ON"
 
 [tool.scikit-build.metadata.version]
 provider = "scikit_build_core.metadata.regex"
-input = "src/phyex/CMakeLists.txt"
-regex = 'project\(phyex\s+VERSION\s+(?P<value>[0-9.]+)'
+input = "src/phyex/VERSION"
+regex = '(?P<value>[0-9]+(?:\.[0-9]+)*)'

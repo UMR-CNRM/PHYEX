@@ -16,10 +16,7 @@ import glob
 import pyfortool.scripting
 from pyphyextools.testing.coding_norms import coding_norms
 
-try:
-    from pyphyex import __version__
-except ImportError:
-    __version__ = "UNKNOWN"
+from pyphyextools import __version__
 
 
 SEPARATOR = '_'
@@ -153,14 +150,22 @@ def prepare_code(directory, model, subs, mv_func, rm_func):
     for sub in subs:
         logging.debug("Moving %s directory/file", sub)
         sub_path = os.path.join(directory, sub)
-        if os.path.exists(sub_path):
-            raise RuntimeError(f"{sub} must not exist in the repository root, "
-                              "this is a limitation of the script")
-
         phyex_sub = os.path.join(directory, 'src', 'phyex', sub)
         if not os.path.exists(phyex_sub):
             raise RuntimeError(f"{sub} must exist in 'src/phyex'")
+        if os.path.exists(sub_path):
+            if sub not in all_files:
+                raise RuntimeError(f"{sub} must not exist in the repository root, "
+                                   "this is a limitation of the script")
+            # A file or directory of the repository root with the same name
+            # (e.g. the top-level CMakeLists.txt or cmake directory) is
+            # replaced by the src/phyex one (it would be removed below anyway)
+            logging.debug("Suppression of %s (replaced by src/phyex/%s)", sub, sub)
+            rm_func(sub_path)
         mv_func(phyex_sub, sub_path)
+        if sub in all_files:
+            # Must not be removed with the unrelevant files
+            all_files.remove(sub)
 
     # Suppress unwanted files
     suppress_file = os.path.join(directory, 'src', 'phyex', f'filesToSuppress_{model}.txt')

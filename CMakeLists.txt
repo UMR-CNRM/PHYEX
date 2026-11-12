@@ -77,7 +77,18 @@ message(STATUS "Using ecbuild ${ecbuild_VERSION} from ${ecbuild_DIR}")
 # Bundle project (ecbuild is now available)
 #-----------------------------------------------------------------------
 
-project(phyex_bundle VERSION 1.0 LANGUAGES Fortran)
+# Same version as PHYEX (src/phyex/VERSION)
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/phyex/VERSION)
+  message(FATAL_ERROR "${CMAKE_CURRENT_SOURCE_DIR}/src/phyex/VERSION (PHYEX version) not found")
+endif()
+file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/src/phyex/VERSION PHYEX_VERSION
+     LIMIT_COUNT 1 REGEX "^[0-9]+(\\.[0-9]+)*$")
+if(NOT PHYEX_VERSION)
+  message(FATAL_ERROR "No valid version (x.y.z) found in ${CMAKE_CURRENT_SOURCE_DIR}/src/phyex/VERSION")
+endif()
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+             ${CMAKE_CURRENT_SOURCE_DIR}/src/phyex/VERSION)
+project(phyex_bundle VERSION ${PHYEX_VERSION} LANGUAGES Fortran)
 
 include(ecbuild_bundle)
 ecbuild_bundle_initialize()

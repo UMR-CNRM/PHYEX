@@ -79,6 +79,8 @@ Workflow summary: after the cycle 49t1 (probably starting from cycle 50), AROME 
 Developer must use a model specific branch (arome\_\<commit\_hash\> when working with the model, or offline\_\<commit\_hash\> when working with the offline tools).
 These branches receive tags based on the master branch version. For example the commit, in the master branch, corresponding to the version 1.0.0 of PHYEX will receive the tag "v1.0.0".
 The arome specific commit corresponding to this version will be tagged "v1.0.0\_arome".
+The version number is only stored in the src/phyex/VERSION file (used by CMake, the python wheel and the python tools): it must be updated before tagging a new version.
+The "consistency" GitHub workflow (or the phyex-check\_consistency tool) checks that it is the version of the last release tag.
 
 ![](./AROMEworkflow2.svg)
 

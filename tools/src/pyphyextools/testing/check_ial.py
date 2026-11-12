@@ -208,7 +208,7 @@ class CheckCommitIAL(CheckCommitBase):
                 directory=os.path.join(phyex_dir, 'PHYEX'),
                 model='arome',
                 subs=['gmkpack_ignored_files', 'turb', 'micro', 'aux', 'conv',
-                      'CMakeLists.txt', 'cmake'],
+                      'CMakeLists.txt', 'VERSION', 'cmake'],
                 pyfortool_options=pyfortool_options,
                 **prep_kwargs)
         else:
@@ -232,19 +232,20 @@ class CheckCommitIAL(CheckCommitBase):
                     for fname in files:
                         rel = os.path.relpath(os.path.join(root, fname), find_root)
                         mvdiff(os.path.join(find_root, rel), os.path.join(phyex_dir, rel))
-            cmake_file = 'CMakeLists.txt'
-            if os.path.isfile(os.path.join(phyex_dir, 'PHYEX', cmake_file)):
-                mvdiff(os.path.join(phyex_dir, 'PHYEX', cmake_file),
-                       os.path.join(phyex_dir, cmake_file))
+            for cmake_file in ('CMakeLists.txt', 'VERSION'):
+                if os.path.isfile(os.path.join(phyex_dir, 'PHYEX', cmake_file)):
+                    mvdiff(os.path.join(phyex_dir, 'PHYEX', cmake_file),
+                           os.path.join(phyex_dir, cmake_file))
             shutil.rmtree(os.path.join(phyex_dir, 'PHYEX'))
         else:
             for rep in ('turb', 'micro', 'conv', 'aux', 'cmake'):
                 src = os.path.join(phyex_dir, 'PHYEX', rep)
                 if os.path.isdir(src):
                     shutil.move(src, phyex_dir)
-            cmake_src = os.path.join(phyex_dir, 'PHYEX', 'CMakeLists.txt')
-            if os.path.isfile(cmake_src):
-                shutil.move(cmake_src, phyex_dir)
+            for cmake_file in ('CMakeLists.txt', 'VERSION'):
+                cmake_src = os.path.join(phyex_dir, 'PHYEX', cmake_file)
+                if os.path.isfile(cmake_src):
+                    shutil.move(cmake_src, phyex_dir)
 
         ignored_file = os.path.join(phyex_dir, 'PHYEX', 'gmkpack_ignored_files')
         if os.path.isfile(ignored_file):

@@ -5,13 +5,18 @@ pyphyextools python package
 import os
 import subprocess
 
-__version__ = "0.9.0"
-
 # Check if current package is installed in editable mode
 pyproject = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          '..', '..', 'pyproject.toml')
 if not os.path.exists(pyproject):
     raise RuntimeError('pyphyextools package must be installed in editable mode')
+
+# Version of the tools: the PHYEX version, stored in src/phyex/VERSION (also
+# used by tools/pyproject.toml)
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                       '..', '..', '..', 'src', 'phyex', 'VERSION'),
+          encoding='utf-8') as _version_file:
+    __version__ = _version_file.read().strip()
 
 
 def run_command(cmd, cwd=None, out_path=None, mode='w', env=None, input_string=None,

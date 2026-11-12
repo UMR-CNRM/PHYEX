@@ -1,0 +1,37 @@
+name: consistency
+
+on: [push, pull_request]
+
+jobs:
+  version:
+    # PHYEX version (src/phyex/CMakeLists.txt) vs the release tags
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository (with history and tags)
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Check the PHYEX version
+      run: python .github/scripts/check_version.py
+
+  pyfortool-version:
+    # Same minimal pyfortool version in pyproject.toml, tools/pyproject.toml
+    # and src/phyex/cmake/phyex_pyfortool.cmake
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Check the minimal pyfortool version
+      run: python .github/scripts/check_pyfortool_version.py

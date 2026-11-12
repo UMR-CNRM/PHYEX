@@ -1,0 +1,55 @@
+"""
+Consistency checks of the PHYEX repository, also run by the GitHub workflow
+.github/workflows/consistency.yaml:
+  - version: the PHYEX version (src/phyex/VERSION) vs the release tags
+  - pyfortool: same minimal pyfortool version everywhere
+The checks are the scripts of .github/scripts (they only need the python
+standard library, so that the workflow does not need to install the tools).
+"""
+
+import argparse
+import os
+import subprocess
+import sys
+
+# Repository root (the package is installed in editable mode)
+REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                        '..', '..', '..', '..'))
+CHECKS = {'version': 'check_version.py',
+          'pyfortool': 'check_pyfortool_version.py'}
+
+
+def check_consistency(checks=None):
+    """
+    Runs the consistency checks
+    :param checks: list of checks to run (keys of CHECKS), all by default
+    :return: list of the checks that failed
+    """
+    failed = []
+    for check in checks or CHECKS:
+        script = os.path.join(REPO_DIR, '.github', 'scripts', CHECKS[check])
+        print(f'### Check {check}')
+        sys.stdout.flush()
+        if subprocess.run([sys.executable, script], cwd=REPO_DIR, check=False).returncode != 0:
+            failed.append(check)
+    return failed
+
+
+def main():
+    """Main function"""
+    parser = argparse.ArgumentParser(description='Consistency checks of the PHYEX repository')
+    parser.add_argument('checks', nargs='*', metavar='CHECK',
+                        help='checks to run among ' + ', '.join(CHECKS) + ' (default: all)')
+    args = parser.parse_args()
+    for check in args.checks:
+        if check not in CHECKS:
+            parser.error(f"invalid check '{check}' (choose from {', '.join(CHECKS)})")
+    failed = check_consistency(args.checks)
+    if failed:
+        print('Failed checks: ' + ', '.join(failed))
+        sys.exit(1)
+    print('All checks passed')
+
+
+if __name__ == '__main__':
+    main()
