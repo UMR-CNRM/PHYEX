@@ -204,6 +204,8 @@ class CheckCommitIAL(CheckCommitBase):
                 # --mnhExpand after --shugradTransfo to deal with the directives
                 # added during the transformation
                 pyfortool_options.append('--mnhExpand')
+            if self.useshumantrans or self.useexpand:
+                pyfortool_options.append('--splitLongLines')
             prep_code(
                 directory=os.path.join(phyex_dir, 'PHYEX'),
                 model='arome',
