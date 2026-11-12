@@ -19,11 +19,11 @@ import sys
 
 # Transformation name -> pyfortool arguments
 TRANSFORMATIONS = {
-    'IAL': ['--wrapH', '--removeACC', '--shugradTransfo', '--mnhExpand'],
+    'IAL': ['--wrapH', '--removeACC', '--shugradTransfo', '--mnhExpand', '--splitLongLines'],
     # IAL without the transformation of shuman/gradient functions into subroutine calls
-    'IAL_NOSHUGRAD': ['--wrapH', '--removeACC', '--mnhExpand'],
+    'IAL_NOSHUGRAD': ['--wrapH', '--removeACC', '--mnhExpand', '--splitLongLines'],
     # IAL without the expansion of the mnh_expand directives (code kept in array syntax)
-    'IAL_NOEXPAND': ['--wrapH', '--removeACC', '--shugradTransfo'],
+    'IAL_NOEXPAND': ['--wrapH', '--removeACC', '--shugradTransfo', '--splitLongLines'],
 }
 
 # Name of the environment variable containing additional pyfortool arguments
