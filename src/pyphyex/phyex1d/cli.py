@@ -4,8 +4,41 @@ Command line client
 
 import argparse
 from matplotlib import pyplot as plt
-from .experiment_runner import ExperimentRunner
+from .experiment_runner import ExperimentRunner, PHYSICS_CLASSES, physics_options
 from . import Phyex1DError
+
+
+def convert_option(cls_name, key, value, default):
+    """
+    Conversion of a command line value, according to the type of the default value
+    of the option in the physics class
+    :param cls_name: name of the physics class (for error messages)
+    :param key: option name
+    :param value: string to convert
+    :param default: default value of the option
+    :return: converted value
+    """
+    if isinstance(default, bool):
+        if value not in ('True', 'False'):
+            raise Phyex1DError(f"Option {key} of {cls_name} must be True or False")
+        return value == 'True'
+    if isinstance(default, (int, float)):
+        try:
+            return type(default)(value)
+        except ValueError as err:
+            raise Phyex1DError(f"Option {key} of {cls_name} must be a "
+                               f"{type(default).__name__}") from err
+    return value
+
+
+def physics_options_help():
+    """Description of the options of the different physics classes"""
+    lines = []
+    for cls_name, cls in PHYSICS_CLASSES.items():
+        options = ', '.join(f'{key}={default!r}'
+                            for key, default in physics_options(cls).items())
+        lines.append(f'- {cls_name}: {options}')
+    return '\n'.join(lines)
 
 
 def main():
@@ -14,25 +47,30 @@ def main():
     """
     epilog = """
 Each --exp option is followed by a list of key=value strings.
-The allowed keys are:
+The keys common to all the physics classes are:
 - grid: Grid name or file name containing a grid description
         (with '.grid' extension).
 - dt: Timestep (s)
-- dx, dy: mesh size (for scale aware parametrizations)
 - name: experiment name
 - class: name of the class that implements a timestep among:
-         - PhysicsAromeTQ, PhysicsAromeThetaR (PHYEX physics)
+         - PhysicsAromeTQ (default), PhysicsAromeThetaR (PHYEX physics)
          - SimplePhysicsTQ, SimplePhysicsThetaR (simplified physics, without PHYEX)
+- attr: override an attribute definig the case, eg.: attr=radiation:on
+        (only some of the attributes are implemented)
+
+The other keys are options of the physics class (with their default values):
+""" + physics_options_help() + """
+
+with, for the PHYEX physics:
+- dx, dy: mesh size (for scale aware parametrizations)
 - pyecrad: path to the pyecrad/__init__.py file to use. If not provided, the package must be found
            in the PYTHONPATH in order to use ecrad.
 - namel: namelist name or file name (with a .namel extension)
-- attr: override an attribute definig the case, eg.: attr=radiation:on
-        (only some of the attributes are implemented)
-Options of the simplified physics (SimplePhysicsTQ, SimplePhysicsThetaR):
+
+and, for the simplified physics:
 - mf_max, mf_dtheta, mf_rt_factor: parameters of the prescribed mass flux
 - do_adjustment, do_shallow, do_turb: True or False to activate or not the
   saturation adjustment, the shallow convection and the turbulence
-Other keys are given to the class implementing the physics.
 """
     parser = argparse.ArgumentParser(description='1D model using PHYEX', epilog=epilog,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -56,6 +94,12 @@ Other keys are given to the class implementing the physics.
     # Experiment list
     experiments = []
     for expe in args.experiments:
+        values = dict(arg.split('=', 1) for arg in expe if not arg.startswith('attr='))
+        cls_name = values.get('class', 'PhysicsAromeTQ')
+        if cls_name not in PHYSICS_CLASSES:
+            raise Phyex1DError(f"Unknown physics class {cls_name}, allowed classes are: " +
+                               ', '.join(PHYSICS_CLASSES))
+        options = physics_options(PHYSICS_CLASSES[cls_name])
         expe_descr = {}
         attrs = {}
         for arg in expe:
@@ -66,8 +110,16 @@ Other keys are given to the class implementing the physics.
                     attrs[attr] = str(attrval)
                 else:
                     raise Phyex1DError(f"This experiment attribute is not implemented: {attr}")
-            else:
+            elif key == 'dt':
+                expe_descr[key] = float(val)
+            elif key in ('name', 'grid', 'class'):
                 expe_descr[key] = val
+            elif key in options:
+                expe_descr[key] = convert_option(cls_name, key, val, options[key])
+            else:
+                raise Phyex1DError(f"Option {key} does not exist for {cls_name}, allowed "
+                                   "options are: dt, name, grid, class, attr, " +
+                                   ', '.join(options))
         expe_descr['attrs'] = attrs
         experiments.append(expe_descr)
 

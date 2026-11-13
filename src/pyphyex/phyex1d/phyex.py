@@ -28,7 +28,7 @@ class PHYEX(PhysicsBase):
     """
 
     def __init__(self, dt, method, name, tag, case, grid, prognostic_variables,
-                 pyecrad=None, namel='default', dx=0, dy=0, attrs=None):
+                 pyecrad=None, namel='default', dx=0., dy=0., attrs=None):
         super().__init__(dt, method, name, tag, case, grid, prognostic_variables)
         self._pyphyex = None
         self.pyecrad = pyecrad
@@ -896,7 +896,7 @@ class PhysicsAromeTQ(PhysicsArome):
     """
 
     def __init__(self, dt, method, name, tag, case, grid, pyecrad=None,
-                 namel='default', dx=0, dy=0, attrs=None):
+                 namel='default', dx=0., dy=0., attrs=None):
         """
         :param dt: timestep (s)
         :param method: 'step-by-step' or 'one-step'
@@ -920,7 +920,7 @@ class PhysicsAromeThetaR(PhysicsArome):
     """
 
     def __init__(self, dt, method, name, tag, case, grid, pyecrad=None,
-                 namel='default', dx=0, dy=0, attrs=None):
+                 namel='default', dx=0., dy=0., attrs=None):
         """
         :param dt: timestep (s)
         :param method: 'step-by-step' or 'one-step'
@@ -944,7 +944,7 @@ class PhysicsForcingTQ(PHYEX):
     """
 
     def __init__(self, dt, method, name, tag, case, grid, pyecrad=None,
-                 namel='default', dx=0, dy=0, attrs=None):
+                 namel='default', dx=0., dy=0., attrs=None):
         """
         :param dt: timestep (s)
         :param method: 'step-by-step' or 'one-step'
@@ -968,7 +968,7 @@ class PhysicsForcingThetaR(PHYEX):
     """
 
     def __init__(self, dt, method, name, tag, case, grid, pyecrad=None,
-                 namel='default', dx=0, dy=0, attrs=None):
+                 namel='default', dx=0., dy=0., attrs=None):
         """
         :param dt: timestep (s)
         :param method: 'step-by-step' or 'one-step'
