@@ -1,7 +1,7 @@
 var searchData=
 [
   ['when_20using_20mode_5f_20or_20modi_5f_0',['When using mode_ or modi_?',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2CodingNorms.html#autotoc_md26',1,'']]],
-  ['with_20phyex_1',['with phyex',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2tools_2INSTALL__pack__mesonh.html',1,'INSTALLATION NEEDED FOR MESONH COMPILATION WITH PHYEX'],['../md__2home_2runner_2work_2PHYEX_2PHYEX_2tools_2INSTALL__pack__mesonh.html#autotoc_md91',1,'MESONH COMPILATION WITH PHYEX']]],
+  ['with_20phyex_1',['WITH PHYEX',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2tools_2INSTALL__pack__mesonh.html',1,'INSTALLATION NEEDED FOR MESONH COMPILATION WITH PHYEX'],['../md__2home_2runner_2work_2PHYEX_2PHYEX_2tools_2INSTALL__pack__mesonh.html#autotoc_md92',1,'MESONH COMPILATION WITH PHYEX']]],
   ['with_20the_20testprogs_20executables_2',['Usage directly with the testprogs executables',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md62',1,'']]],
   ['within_20a_20loop_20on_20horizontal_20or_20vertical_20dimensions_3',['Call to routines from within a loop on horizontal or vertical dimensions',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2CodingNorms.html#autotoc_md30',1,'']]],
   ['without_20execution_20or_20manual_20execution_4',['Compilation directly in the repository without execution (or manual execution)',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md58',1,'']]],

@@ -1,7 +1,7 @@
 <map id="mode_rotate_wind::update_rotate_wind" name="mode_rotate_wind::update_rotate_wind">
-<area shape="rect" id="Node000001" title=" " alt="" coords="237,5,433,45"/>
-<area shape="rect" id="Node000002" href="$turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="141,13,189,38"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="224,28,190,28,190,23,224,23"/>
-<area shape="rect" id="Node000003" href="$main__turb_8F90.html#ae55925d0151bca669f2e99235cf77eff" title=" " alt="" coords="5,13,93,38"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="128,28,94,28,94,23,128,23"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="236,5,431,50"/>
+<area shape="rect" id="Node000002" href="$turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="141,14,188,42"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="217,28,189,30,188,25,223,27"/>
+<area shape="rect" id="Node000003" href="$main__turb_8F90.html#ae55925d0151bca669f2e99235cf77eff" title=" " alt="" coords="5,14,93,42"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="122,28,93,30,93,25,128,27"/>
 </map>

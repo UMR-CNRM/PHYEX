@@ -1,5 +1,5 @@
 <map id="modd_budget::tbudgetdata" name="modd_budget::tbudgetdata">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,5,204,31"/>
-<area shape="rect" id="Node000002" href="$structmode__budget__offline_1_1tbudgetdata__offline.html" title=" " alt="" coords="25,79,184,119"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="107,44,107,79,102,79,102,44"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,5,203,33"/>
+<area shape="rect" id="Node000002" href="$structmode__budget__offline_1_1tbudgetdata__offline.html" title=" " alt="" coords="25,81,183,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="106,47,106,81,102,79,102,51"/>
 </map>

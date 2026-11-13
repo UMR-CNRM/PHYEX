@@ -1,5 +1,5 @@
 <map id="getdata_rain_ice_mod::getdata_rain_ice" name="getdata_rain_ice_mod::getdata_rain_ice">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,5,172,45"/>
-<area shape="rect" id="Node000002" href="$namespacearrays__manip.html#ae44322b0cfc52771acaf310fccebd842" title=" " alt="" coords="220,13,375,38"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="172,23,206,23,206,28,172,28"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,5,171,50"/>
+<area shape="rect" id="Node000002" href="$namespacearrays__manip.html#ae44322b0cfc52771acaf310fccebd842" title=" " alt="" coords="219,14,373,42"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="171,25,206,27,201,28,171,30"/>
 </map>

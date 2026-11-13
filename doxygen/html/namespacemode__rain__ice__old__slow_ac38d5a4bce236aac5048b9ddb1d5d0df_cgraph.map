@@ -1,5 +1,5 @@
 <map id="mode_rain_ice_old_slow::rain_ice_old_slow" name="mode_rain_ice_old_slow::rain_ice_old_slow">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,5,187,45"/>
-<area shape="rect" id="Node000002" href="$namespacemode__rain__ice__old__icenumber2.html#a9d50236b5bccd5d43890edc74bee2dc1" title=" " alt="" coords="235,5,463,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="187,23,221,23,221,28,187,28"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,5,186,50"/>
+<area shape="rect" id="Node000002" href="$namespacemode__rain__ice__old__icenumber2.html#a9d50236b5bccd5d43890edc74bee2dc1" title=" " alt="" coords="234,5,461,50"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="186,25,221,27,215,28,186,30"/>
 </map>

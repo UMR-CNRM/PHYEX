@@ -1,9 +1,9 @@
 <map id="mode_lima_ice_self_collection::lima_ice_self_collection" name="mode_lima_ice_self_collection::lima_ice_self_collection">
-<area shape="rect" id="Node000001" title=" " alt="" coords="464,5,619,60"/>
-<area shape="rect" id="Node000002" href="$namespacemode__lima__tendencies.html#a979afc73321e0bb962caf6d004610f90" title=" " alt="" coords="243,13,416,53"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="450,35,416,35,416,30,450,30"/>
-<area shape="rect" id="Node000003" href="$lima_8F90.html#a44669a04dd97ef6c68aeb7803059fd3c" title=" " alt="" coords="144,20,195,45"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="229,35,195,35,195,30,229,30"/>
-<area shape="rect" id="Node000004" href="$main__lima_8F90.html#a98a6c25ee98634744f14468b1801c7ce" title=" " alt="" coords="5,20,96,45"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="130,35,96,35,96,30,130,30"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="462,5,617,67"/>
+<area shape="rect" id="Node000002" href="$namespacemode__lima__tendencies.html#a979afc73321e0bb962caf6d004610f90" title=" " alt="" coords="242,14,414,58"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="445,36,415,39,415,34,450,36"/>
+<area shape="rect" id="Node000003" href="$lima_8F90.html#a44669a04dd97ef6c68aeb7803059fd3c" title=" " alt="" coords="144,22,194,50"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="224,36,195,39,194,34,229,36"/>
+<area shape="rect" id="Node000004" href="$main__lima_8F90.html#a98a6c25ee98634744f14468b1801c7ce" title=" " alt="" coords="5,22,96,50"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="126,37,96,39,96,34,131,36"/>
 </map>
