@@ -17,6 +17,10 @@ PHYSICS_CLASSES = {'PhysicsAromeTQ': PhysicsAromeTQ,
                    'SimplePhysicsTQ': SimplePhysicsTQ,
                    'SimplePhysicsThetaR': SimplePhysicsThetaR}
 
+# Default comparison name (the results are stored in a subdirectory of the output
+# directory named after the comparison)
+DEFAULT_COMP_NAME = 'phyex1dcomp'
+
 # Arguments of the physics classes that are set by ExperimentRunner
 RUNNER_ARGUMENTS = ('dt', 'method', 'name', 'tag', 'case', 'grid', 'attrs')
 
@@ -37,7 +41,7 @@ class ExperimentRunner(PPPYComp):
     """
     Deals with the execution of the 1D model
     """
-    def __init__(self, inputfile_or_case, experiments, output_dir, comp_name=''):
+    def __init__(self, inputfile_or_case, experiments, output_dir, comp_name=DEFAULT_COMP_NAME):
         """
         :param inputfile_or_case: path to a netCDF driver file or a Case instance
         :param experiments: list of dictionaries describing the experiments
@@ -52,10 +56,16 @@ class ExperimentRunner(PPPYComp):
                               - attrs: dictionary of case attributes to override
                             the other keys are options given to the class (see
                             physics_options)
-        :param comp_name: comparison name
+        :param comp_name: comparison name (DEFAULT_COMP_NAME if empty)
+        The results are stored in <output_dir>/<comparison tag>/<experiment tag>.hdf5, the
+        tags being the comparison and experiment names with quotes removed and spaces and
+        slashes replaced by underscores.
         """
         def string2filename(s):
-            return s.replace('"', '').replace("'", "").replace(' ', '_')
+            return s.replace('"', '').replace("'", "").replace(' ', '_').replace('/', '_')
+
+        if not comp_name:
+            comp_name = DEFAULT_COMP_NAME
 
         if isinstance(inputfile_or_case, Case):
             case = inputfile_or_case

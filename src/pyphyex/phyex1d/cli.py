@@ -4,7 +4,8 @@ Command line client
 
 import argparse
 from matplotlib import pyplot as plt
-from .experiment_runner import ExperimentRunner, PHYSICS_CLASSES, physics_options
+from .experiment_runner import (ExperimentRunner, PHYSICS_CLASSES, physics_options,
+                                DEFAULT_COMP_NAME)
 from . import Phyex1DError
 
 
@@ -71,6 +72,17 @@ and, for the simplified physics:
 - mf_max, mf_dtheta, mf_rt_factor: parameters of the prescribed mass flux
 - do_adjustment, do_shallow, do_turb: True or False to activate or not the
   saturation adjustment, the shallow convection and the turbulence
+
+Results are stored in OUTPUT_DIR/<comparison name>/<experiment name>.hdf5 (OUTPUT_DIR is
+the current directory by default; quotes are removed, spaces and slashes are replaced by
+underscores). Examples:
+- without comparison name (--name) and without experiment name (name key):
+    phyex1d case.nc -o out --exp dt=60
+  results in out/""" + DEFAULT_COMP_NAME + """/Experiment.hdf5
+- with both names:
+    phyex1d case.nc -o out --name armcu --exp dt=60 name=simple class=SimplePhysicsTQ
+  results in out/armcu/simple.hdf5
+An experiment is not run again if its result file already exists (use --force).
 """
     parser = argparse.ArgumentParser(description='1D model using PHYEX', epilog=epilog,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -80,15 +92,16 @@ and, for the simplified physics:
                         help="List of key=value strings defining an experiment. " +
                              "The list of keys is provided at the end of the help message.")
     parser.add_argument('-o', dest='output_dir', type=str, default='.',
-                        help="Output directory")
+                        help="Output directory (default: current directory); it must exist")
     parser.add_argument('--plot', nargs='*', action='append', dest='plots', default=[],
                         help="plot file name followed by options and then the list of "
                              "variables to plot (one plot by --plot usage). " +
                              "example: --plot theta.png y_var=P Theta")
     parser.add_argument('--force', default=False, action='store_true',
                         help="Force run to be executed even if output already exists")
-    parser.add_argument('--name', default='', type=str,
-                        help='Name of the comparison')
+    parser.add_argument('--name', default=DEFAULT_COMP_NAME, type=str,
+                        help='Name of the comparison (default: %(default)s); results are '
+                             'stored in OUTPUT_DIR/NAME/<experiment name>.hdf5')
     args = parser.parse_args()
 
     # Experiment list
