@@ -828,15 +828,14 @@ DO WHILE (GANYREMAINT)
 !$mnh_end_do()
 !$acc end kernels
   !
-!$acc kernels
   GANYREMAINT = .FALSE.
   ZANYREMAINT = 0.0
-!$acc loop independent reduction(max:ZANYREMAINT)
+  !$acc parallel loop independent reduction(max:ZANYREMAINT)
   DO JIJ=IIJB,IIJE
     ZANYREMAINT=MAX(ZANYREMAINT,ZREMAINT(JIJ))
   END DO
+  !$acc end parallel 
   IF(ZANYREMAINT>0.) GANYREMAINT = .TRUE.
-!$acc end kernels
 END DO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT', 1, ZHOOK_HANDLE)
