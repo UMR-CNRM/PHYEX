@@ -2,10 +2,12 @@
 # PHYEX python wheel (included by the top-level CMakeLists.txt when
 # ENABLE_PYTHON_WHEEL is ON, after the PHYEX targets are defined)
 #
-#  - generation of the python binding (pyphyex), compiled in the PHYEX
-#    libraries, by src/phyex/cmake/pybinding.py (pyfortool is needed, see
+#  - generation of the python binding (low-level module of the pyphyex
+#    package, pyphyex.lowlevel), compiled in the PHYEX libraries, by
+#    src/phyex/cmake/pybinding.py (pyfortool is needed, see
 #    src/phyex/cmake/phyex_pyfortool.cmake)
 #  - install rules of the 'pyphyex' component, used to build the wheel
+#    (the other modules of the pyphyex package are in src/pyphyex)
 #
 # Variables defined for the rest of the configuration:
 #   PYPHYEX_F90, PYPHYEX_PY
@@ -43,7 +45,7 @@ set(PYPHYEX_BINDINGS
 #  - FORTRAN interface, compiled in the PHYEX libraries
 #  - python module, next to the executables, loading the shared library
 #    (paths given relative to the python module, first found is used):
-#      - in the wheel, the module is pyphyex/__init__.py and the libraries
+#      - in the wheel, the module is pyphyex/lowlevel.py and the libraries
 #        are in pyphyex/lib (see install rules below)
 #      - in the build tree, the module is bin/pyphyex.py and the libraries
 #        are in lib (ecbuild puts executables in ${CMAKE_BINARY_DIR}/bin and
@@ -84,8 +86,11 @@ foreach(_i RANGE 0 ${_last} 2)
   endif()
 endforeach()
 
-# Version of the python module
+# Version of the python module, and of the pyphyex package (_version.py,
+# imported by src/pyphyex/__init__.py)
 file(APPEND ${PYPHYEX_PY} "\n__version__ = \"${PHYEX_VERSION}\"\n")
+set(PYPHYEX_VERSION_PY ${PYPHYEX_DIR}/_version.py)
+file(WRITE ${PYPHYEX_VERSION_PY} "__version__ = \"${PHYEX_VERSION}\"\n")
 
 # The generated routines are put in a module. The final file is only
 # written if its content changed, to avoid useless recompilations
@@ -113,12 +118,15 @@ foreach(_precision dp sp)
 endforeach()
 
 # Content of the python wheel, installed in the 'pyphyex' component only
-# (the wheel build installs only this component, see pyproject.toml):
-#   pyphyex/__init__.py : the generated python module
+# (the wheel build installs only this component, see pyproject.toml), in
+# addition to the pyphyex package of src/pyphyex:
+#   pyphyex/lowlevel.py : the generated python module
+#   pyphyex/_version.py : version of the package
 #   pyphyex/lib/        : the shared libraries (their RPATH, $ORIGIN/../lib,
 #                         allows them to find each other)
-install(FILES ${PYPHYEX_PY} DESTINATION pyphyex RENAME __init__.py
+install(FILES ${PYPHYEX_PY} DESTINATION pyphyex RENAME lowlevel.py
         COMPONENT pyphyex)
+install(FILES ${PYPHYEX_VERSION_PY} DESTINATION pyphyex COMPONENT pyphyex)
 install(TARGETS ${_libs}
         LIBRARY DESTINATION pyphyex/${PYPHYEX_WHEEL_LIBDIR}
         COMPONENT pyphyex)
