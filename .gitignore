@@ -1,6 +1,0 @@
-src/phyex1d.egg-info/
-*.swp
-__pycache__/
-docs/html
-dist/
-venv
