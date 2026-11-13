@@ -198,4 +198,4 @@ done
 exec phyex-check_commit \
      --github-status "https://api.github.com/repos/${PHYEXREPOuser}/${PHYEXREPOrepo}/statuses/${SHA}" \
      --github-target-url "https://${PHYEXREPOuser}.github.io/${PHYEXREPOrepo}/displayparam.html?" \
-     --hostname "${contextHostname}" ${remove} "${checkCommitOptions[@]}"
+     --hostname "${contextHostname}" --name "${SHA}" ${remove} "${checkCommitOptions[@]}"

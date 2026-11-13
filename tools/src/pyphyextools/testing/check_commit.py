@@ -301,6 +301,8 @@ class CheckCommit:
         if self.args.suppress:
             compilation = compilation + ['-s']
         cmd = [sys.executable, '-m', f'pyphyextools.testing.check_{model}']
+        if self.args.name is not None:
+            cmd += ['--name', self.args.name]
         cmd += self.args.check_options + getattr(self.args, f'options_{model}')
         if self.args.perf is not None:
             execution = execution + ['--perf', self.args.perf]
@@ -404,6 +406,12 @@ def parse_arguments():
     parser.add_argument('--parallel', action='store_true',
                         help='check the different models simultaneously (after the other '
                              'checks)')
+    parser.add_argument('--name', default=None,
+                        help='name given to the model checks (--name option), used for their '
+                             'compilation directories and in the performance file; it should be '
+                             'the commit hash, to be able to use these directories as references '
+                             '(by default, the model checks build a name from the path of the '
+                             'repository)')
     parser.add_argument('--perf', metavar='FILE', default=None,
                         help='add performance statistics in file FILE')
     parser.add_argument('--mail', default=None,
