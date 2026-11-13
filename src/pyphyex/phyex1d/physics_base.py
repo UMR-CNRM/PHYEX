@@ -26,6 +26,7 @@ class PhysicsBase(PPPY):
         self.grid = grid
         self.prognostic_variables = prognostic_variables
         self.cst = Cst()
+        self.tkemin = 1e-6  # minimum TKE (overridden by the PHYEX namelist value)
 
     def setup(self, init_state, duration):
         """Set up the scheme. Override in subclasses."""
@@ -100,17 +101,21 @@ class PhysicsBase(PPPY):
         if 'qv' in self.prognostic_variables:
             qt = state['qv'].copy()
             for var in ('qc', 'qi', 'qr', 'qs', 'qg', 'qh'):
-                qt += state[var]
+                if var in state:
+                    qt += state[var]
             state['qt'] = qt
             for v in ('v', 'c', 'i', 'r', 's', 'g', 'h'):
-                state['r' + v] = state['q' + v] / (1. - qt)
+                if 'q' + v in state:
+                    state['r' + v] = state['q' + v] / (1. - qt)
         elif 'rv' in self.prognostic_variables:
             rt = state['rv'].copy()
             for var in ('rc', 'ri', 'rr', 'rs', 'rg', 'rh'):
-                rt += state[var]
+                if var in state:
+                    rt += state[var]
             state['rt'] = rt
             for v in ('v', 'c', 'i', 'r', 's', 'g', 'h'):
-                state['q' + v] = state['r' + v] / (1. + rt)
+                if 'r' + v in state:
+                    state['q' + v] = state['r' + v] / (1. + rt)
 
     def build_init_state(self, init_state):
         """
@@ -158,8 +163,7 @@ class PhysicsBase(PPPY):
                     interp = RegularGridInterpolator((input_coord, ), self.case.get(var, 0),
                                                      bounds_error=False, fill_value=None)
                     init_state[var] = interp(output_coord)
-            init_state['tke'] = numpy.maximum(self.full_phyex_namel['NAM_TURBn']['XTKEMIN'],
-                                              init_state['tke'])
+            init_state['tke'] = numpy.maximum(self.tkemin, init_state['tke'])
 
         # Vertical coordinates
         self.add_vertical_coordinate(init_state)

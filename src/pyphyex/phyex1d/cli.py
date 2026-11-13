@@ -21,13 +21,18 @@ The allowed keys are:
 - dx, dy: mesh size (for scale aware parametrizations)
 - name: experiment name
 - class: name of the class that implements a timestep among:
-         - PhysicsAromeTQ, PhysicsAromeThetaR
-         - PhysicsForcingTQ, PhysicsForcingThetaR
+         - PhysicsAromeTQ, PhysicsAromeThetaR (PHYEX physics)
+         - SimplePhysicsTQ, SimplePhysicsThetaR (simplified physics, without PHYEX)
 - pyecrad: path to the pyecrad/__init__.py file to use. If not provided, the package must be found
            in the PYTHONPATH in order to use ecrad.
 - namel: namelist name or file name (with a .namel extension)
 - attr: override an attribute definig the case, eg.: attr=radiation:on
         (only some of the attributes are implemented)
+Options of the simplified physics (SimplePhysicsTQ, SimplePhysicsThetaR):
+- mf_max, mf_dtheta, mf_rt_factor: parameters of the prescribed mass flux
+- do_adjustment, do_shallow, do_turb: True or False to activate or not the
+  saturation adjustment, the shallow convection and the turbulence
+Other keys are given to the class implementing the physics.
 """
     parser = argparse.ArgumentParser(description='1D model using PHYEX', epilog=epilog,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -55,16 +60,14 @@ The allowed keys are:
         attrs = {}
         for arg in expe:
             key, val = arg.split('=', 1)
-            if key in ('grid', 'dt', 'dx', 'dy', 'name', 'class', 'pyecrad', 'namel'):
-                expe_descr[key] = val
-            elif key == 'attr':
+            if key == 'attr':
                 attr, attrval = val.split(':', 1)
                 if attr in ('radiation', ):
                     attrs[attr] = str(attrval)
                 else:
-                    raise  Phyex1DError(f"This experiment attribute is not implemented: {attr}")
+                    raise Phyex1DError(f"This experiment attribute is not implemented: {attr}")
             else:
-                raise  Phyex1DError(f"This experiment option doest not exist: {key}")
+                expe_descr[key] = val
         expe_descr['attrs'] = attrs
         experiments.append(expe_descr)
 

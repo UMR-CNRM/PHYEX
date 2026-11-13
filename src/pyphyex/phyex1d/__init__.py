@@ -57,3 +57,4 @@ from .experiment_runner import ExperimentRunner
 from .physics_base import PhysicsBase
 from .phyex import (PHYEX, PhysicsArome, PhysicsAromeTQ, PhysicsAromeThetaR,
                     PhysicsForcingTQ, PhysicsForcingThetaR)
+from .simple_physics import SimplePhysics, SimplePhysicsTQ, SimplePhysicsThetaR

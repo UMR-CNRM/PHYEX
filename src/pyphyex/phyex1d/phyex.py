@@ -28,7 +28,7 @@ class PHYEX(PhysicsBase):
     """
 
     def __init__(self, dt, method, name, tag, case, grid, prognostic_variables,
-                 pyecrad=None, namel=None, dx=0, dy=0, attrs=None):
+                 pyecrad=None, namel='default', dx=0, dy=0, attrs=None):
         super().__init__(dt, method, name, tag, case, grid, prognostic_variables)
         self._pyphyex = None
         self.pyecrad = pyecrad
@@ -115,6 +115,7 @@ class PHYEX(PhysicsBase):
                 LDCHECK=False, KPRINT=1, LDINIT=False)
             self.full_phyex_namel = f90nml.read(f'fort.{numnml}')
             set_default(self.full_phyex_namel)
+            self.tkemin = self.full_phyex_namel['NAM_TURBn']['XTKEMIN']
             os.remove(f'fort.{numnml}')
 
         # ECRAD SETUP
@@ -147,6 +148,8 @@ class PHYEX(PhysicsBase):
         super().finalize()
         if self._pyphyex is not None:
             self._pyphyex.close()
+        if self._pyecrad is not None:
+            self._pyecrad.close()
 
 
 class PhysicsArome(PHYEX):
@@ -268,7 +271,7 @@ class PhysicsArome(PHYEX):
         ##################################################################
         ##################################################################
         if self.full_phyex_namel['PHYEX']['CMICRO'] == 'NONE':
-            pass
+            src = numpy.zeros((nkt, ))
         elif self.full_phyex_namel['PHYEX']['CMICRO'] == 'ICE3':
             if 'qv' in self.prognostic_variables:
                 rvsin = rvs.copy()
@@ -589,7 +592,7 @@ class PhysicsArome(PHYEX):
         ##################################################################
         ##################################################################
         if self.full_phyex_namel['PHYEX']['CSCONV'] == 'NONE':
-            flxzthvmf = flxzumf = flxzvmf = numpy.zeros((nkt, ))
+            flxzthvmf = flxzumf = flxzvmf = sigs_mf = numpy.zeros((nkt, ))
         elif self.full_phyex_namel['PHYEX']['CSCONV'] == 'EDKF':
             # Updraft properties
             pthl_up = numpy.zeros((nkt, ))
@@ -893,7 +896,7 @@ class PhysicsAromeTQ(PhysicsArome):
     """
 
     def __init__(self, dt, method, name, tag, case, grid, pyecrad=None,
-                 namel=None, dx=0, dy=0, attrs=None):
+                 namel='default', dx=0, dy=0, attrs=None):
         """
         :param dt: timestep (s)
         :param method: 'step-by-step' or 'one-step'
@@ -917,7 +920,7 @@ class PhysicsAromeThetaR(PhysicsArome):
     """
 
     def __init__(self, dt, method, name, tag, case, grid, pyecrad=None,
-                 namel=None, dx=0, dy=0, attrs=None):
+                 namel='default', dx=0, dy=0, attrs=None):
         """
         :param dt: timestep (s)
         :param method: 'step-by-step' or 'one-step'
@@ -941,7 +944,7 @@ class PhysicsForcingTQ(PHYEX):
     """
 
     def __init__(self, dt, method, name, tag, case, grid, pyecrad=None,
-                 namel=None, dx=0, dy=0, attrs=None):
+                 namel='default', dx=0, dy=0, attrs=None):
         """
         :param dt: timestep (s)
         :param method: 'step-by-step' or 'one-step'
@@ -965,7 +968,7 @@ class PhysicsForcingThetaR(PHYEX):
     """
 
     def __init__(self, dt, method, name, tag, case, grid, pyecrad=None,
-                 namel=None, dx=0, dy=0, attrs=None):
+                 namel='default', dx=0, dy=0, attrs=None):
         """
         :param dt: timestep (s)
         :param method: 'step-by-step' or 'one-step'
