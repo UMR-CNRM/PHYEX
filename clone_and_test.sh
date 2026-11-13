@@ -31,8 +31,9 @@ function usage {
   echo "--insecure, --options-<model>, options for the model checks...), see its -h option for details."
   echo ""
   echo "This script is designed to be run periodically by cron to test the last commit of a branch"
-  echo "(eg '00 22 * * * bash -l -c \"PHYEXWORKDIR=~/PHYEXTESTING ~/PHYEXTESTING/PHYEX/clone_and_test.sh \\"
-  echo "                             --repo-user UMR-CNRM --repo-protocol ssh --repo-repo PHYEX --mail user@domain\"')."
+  echo "(eg '00 22 * * * bash -l -c \"SHELL=/bin/bash PHYEXWORKDIR=~/PHYEXTESTING bash \\"
+  echo "                             <(curl -fsSL https://raw.githubusercontent.com/UMR-CNRM/PHYEX/refs/heads/master/clone_and_test.sh) \\"
+  echo "                             --repo-user <UMR-CNRM --mail user@domain\" >/dev/null 2>&1')."
   echo "Steps:"
   echo "  - the commit is checked out in the \${PHYEXWORKDIR}/PHYEX clone (created if needed); if this"
   echo "    version of the clone_and_test.sh script differs from the running one, it is executed instead;"
@@ -191,8 +192,10 @@ for d in "${TESTPROGSDIR}" "${HOMEPACK}" "${MNHPACK}" "${LMDZPACK}"; do
   fi
 done
 
-#Checks
-exec "${venv}/bin/phyex-check_commit" \
+#Checks, in the activated virtual environment: the scripts installed in it (pyfortool,
+#pyfortool_parallel...) are called by the model checks and must be found in the PATH
+. "${venv}/bin/activate"
+exec phyex-check_commit \
      --github-status "https://api.github.com/repos/${PHYEXREPOuser}/${PHYEXREPOrepo}/statuses/${SHA}" \
      --github-target-url "https://${PHYEXREPOuser}.github.io/${PHYEXREPOrepo}/displayparam.html?" \
      --hostname "${contextHostname}" ${remove} "${checkCommitOptions[@]}"

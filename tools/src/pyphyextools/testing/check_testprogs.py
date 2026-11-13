@@ -219,8 +219,15 @@ class CheckCommitTestprogs(CheckCommitBase):
             shutil.rmtree(testdir)
 
         if os.path.isdir(build_dir) and self.onlyIfNeeded:
-            self.packcreation = False  # To prevent pack_update from being executed
-            return
+            if any(os.path.isfile(lib) for lib in self._libphyex()):
+                self.packcreation = False  # To prevent pack_update from being executed
+                return
+            # The library has not been built: the directory has been left in an
+            # unknown state by a previous attempt (e.g. failed CMake configuration),
+            # it is created again
+            print(f"WARNING: the compilation directory ({build_dir}) is incomplete, "
+                  "it is suppressed to be created again")
+            shutil.rmtree(build_dir)
 
         if os.path.isdir(build_dir):
             raise CheckCommitError(
@@ -323,14 +330,18 @@ class CheckCommitTestprogs(CheckCommitBase):
             shutil.copytree(srcdir, destdir, symlinks=True,
                             ignore=shutil.ignore_patterns('.git'))
 
+    def _libphyex(self):
+        """Possible paths of the library built by CMake (static with
+        BUILD_SHARED_LIBS=OFF, see pack_update)"""
+        arch_build_dir = os.path.join(self.TESTDIR, self.name, 'build', f'arch_{self.archfile}')
+        return [os.path.join(arch_build_dir, 'lib', f'libphyex_{self.precision}{ext}')
+                for ext in ('.a', '.so')]
+
     def compilation_step(self):
         testdir = os.path.join(self.TESTDIR, self.name)
         build_dir = os.path.join(testdir, 'build')
         arch_build_dir = os.path.join(build_dir, f'arch_{self.archfile}')
-        # Library built by CMake (static with BUILD_SHARED_LIBS=OFF, see pack_update)
-        libphyex = [os.path.join(arch_build_dir, 'lib', f'libphyex_{self.precision}{ext}')
-                    for ext in ('.a', '.so')]
-        if not self.onlyIfNeeded or not any(os.path.isfile(lib) for lib in libphyex):
+        if not self.onlyIfNeeded or not any(os.path.isfile(lib) for lib in self._libphyex()):
             print(f"### Compilation of commit {self.commit}")
             # Build (the CMake configuration is done by pack_update), executed
             # after having sourced the environment file

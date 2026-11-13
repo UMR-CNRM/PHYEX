@@ -215,6 +215,8 @@ class CheckCommitLmdz(CheckCommitBase):
                 pyfortool_options.append('--mnhExpand')
             if self.useshumantrans:
                 pyfortool_options.append('--shugradTransfo')
+            if self.useexpand or self.useshumantrans:
+                pyfortool_options.append('--splitLongLines')
             prep_code(
                 directory=os.path.join(packdir, 'PHYEX'),
                 model='lmdz',

@@ -146,6 +146,8 @@ class CheckCommitMesonh(CheckCommitBase):
                 # --mnhExpand after --shugradTransfo to deal with the directives
                 # added during the transformation
                 pyfortool_options.append('--mnhExpand')
+            if self.useshumantrans or self.useexpand:
+                pyfortool_options.append('--splitLongLines')
             # Interface modules (MODI_*) generated
             prep_kwargs['gen_modi'] = True
             prep_code(
