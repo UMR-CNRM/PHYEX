@@ -61,3 +61,28 @@ forcing and plots is available at
     - [reference](https://doi.org/10.1175/2010MWR3425.1)
   - Common format:
     - [documentation and cases](https://github.com/GdR-DEPHY/DEPHY-SCM)
+
+## TODO (to be integrated when the documentation is rewritten): development installation
+
+Notes on the editable installation of the pyphyex package (scikit-build-core):
+
+- ```pip install -e .``` works with the compiled library: the python modules (src/pyphyex, among
+  them phyex1d) are used directly from the source tree, while the files produced by CMake
+  (pyphyex/lowlevel.py, pyphyex/_version.py, pyphyex/lib/) are installed in site-packages.
+  A modification of the Fortran code (or of the bound routines) needs a new ```pip install -e .```.
+- ```build-dir```: by default the CMake build is done in a temporary directory (full rebuild at each
+  installation). With ```-C build-dir=build/{wheel_tag}``` the build tree is kept and a new
+  installation is incremental (the directory must be git-ignored).
+- ```editable.rebuild=true``` (experimental): the CMake build is run at each import of the package,
+  so Fortran modifications are taken into account automatically. It needs ```build-dir``` and
+  ```--no-build-isolation``` (the build requirements, scikit-build-core and pyfortool, must be
+  installed in the environment: the binding is generated at configure time with pyfortool).
+  Each import is slower and needs the compilers.
+- Proposed usage, on the command line rather than in pyproject.toml (which would also affect
+  the normal wheel builds):
+  ```
+  pip install scikit-build-core pyfortool
+  pip install --no-build-isolation -e . -C build-dir=build/{wheel_tag} -C editable.rebuild=true
+  ```
+  or, without editable.rebuild, run the same ```pip install --no-build-isolation -e . -C build-dir=...```
+  again after a Fortran modification.
