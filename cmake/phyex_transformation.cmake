@@ -35,17 +35,15 @@
 # Settings (default values can be given by environment variables)
 #-----------------------------------------------------------------------
 
-foreach(_setting
-        "PHYEX_TRANSFORMATION;;Transformation applied to the PHYEX source code at build time (empty or NONE: no transformation)"
-        "PHYEX_PYFORTOOL_SPEC;pyfortool>=0.2.24;pip requirement used to install pyfortool if it is not found")
-  list(GET _setting 0 _var)
-  list(GET _setting 1 _default)
-  list(GET _setting 2 _doc)
-  if(DEFINED ENV{${_var}})
-    set(_default "$ENV{${_var}}")
-  endif()
-  set(${_var} "${_default}" CACHE STRING "${_doc}")
-endforeach()
+set(_default "")
+if(DEFINED ENV{PHYEX_TRANSFORMATION})
+  set(_default "$ENV{PHYEX_TRANSFORMATION}")
+endif()
+set(PHYEX_TRANSFORMATION "${_default}" CACHE STRING
+    "Transformation applied to the PHYEX source code at build time (empty or NONE: no transformation)")
+
+# pyfortool (PHYEX_PYFORTOOL_SPEC setting and phyex_find_pyfortool)
+include(${CMAKE_CURRENT_LIST_DIR}/phyex_pyfortool.cmake)
 
 set(PHYEX_TRANSFORM_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/phyex_transform.py)
 set(PHYEX_TRANSFORM_COMMAND)
@@ -78,38 +76,16 @@ if(PHYEX_TRANSFORMATION AND NOT PHYEX_TRANSFORMATION STREQUAL "NONE")
     ecbuild_critical("Unknown transformation PHYEX_TRANSFORMATION=${PHYEX_TRANSFORMATION}, available values are: ${_values}")
   endif()
 
-  # pyfortool: found in PATH, otherwise installed in a python virtual
-  # environment inside the build directory
-  set(_pyft_venv ${CMAKE_CURRENT_BINARY_DIR}/pyfortool)
-  if(PHYEX_PYFORTOOL AND NOT EXISTS ${PHYEX_PYFORTOOL})
-    unset(PHYEX_PYFORTOOL CACHE)
-  endif()
-  find_program(PHYEX_PYFORTOOL pyfortool DOC "pyfortool executable")
-  if(NOT PHYEX_PYFORTOOL)
-    ecbuild_info("pyfortool not found, installing ${PHYEX_PYFORTOOL_SPEC} in ${_pyft_venv}")
-    file(REMOVE_RECURSE ${_pyft_venv})
-    execute_process(COMMAND ${Python_EXECUTABLE} -m venv ${_pyft_venv}
-                    RESULT_VARIABLE _result)
-    if(_result EQUAL 0)
-      execute_process(COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONPATH
-                              ${_pyft_venv}/bin/python -m pip install ${PHYEX_PYFORTOOL_SPEC}
-                      RESULT_VARIABLE _result)
-    endif()
-    if(NOT _result EQUAL 0 OR NOT EXISTS ${_pyft_venv}/bin/pyfortool)
-      file(REMOVE_RECURSE ${_pyft_venv})
-      ecbuild_critical("Installation of pyfortool failed")
-    endif()
-    set(PHYEX_PYFORTOOL ${_pyft_venv}/bin/pyfortool CACHE FILEPATH "pyfortool executable" FORCE)
-  endif()
-  ecbuild_info("Source code transformation ${PHYEX_TRANSFORMATION} applied at build time, using ${PHYEX_PYFORTOOL}")
+  # pyfortool (see phyex_pyfortool.cmake)
+  phyex_find_pyfortool()
+  ecbuild_info("Source code transformation ${PHYEX_TRANSFORMATION} applied at build time, using ${PHYEX_PYFORTOOL} (version ${PHYEX_PYFORTOOL_VERSION})")
 
   set(PHYEX_TRANSFORM_COMMAND ${_script}
       --transformation ${PHYEX_TRANSFORMATION}
       --pyfortool ${PHYEX_PYFORTOOL})
   # pyfortool installed in the build directory must not be polluted by a
   # PYTHONPATH
-  string(FIND "${PHYEX_PYFORTOOL}" "${CMAKE_BINARY_DIR}/" _pos)
-  if(_pos EQUAL 0)
+  if(PHYEX_PYFORTOOL_IN_BUILD)
     list(APPEND PHYEX_TRANSFORM_COMMAND --unset-pythonpath)
   endif()
 

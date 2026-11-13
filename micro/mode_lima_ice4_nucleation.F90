@@ -102,7 +102,7 @@ DO II=1,KSIZE
     IF(PT(II)<CST%XTT-5.0 .AND. ZSSI(II)>0.0) THEN
       ZZW(II)=LIMAC%XNU20*EXP(LIMAC%XALPHA2*ZSSI(II)-LIMAC%XBETA2)
     ELSEIF(PT(II)<=CST%XTT-2.0 .AND. PT(II)>=CST%XTT-5.0 .AND. ZSSI(II)>0.0) THEN
-      ZZW(II)=MAX(LIMAC%XNU20*EXP(-LIMAC%XBETA2 ), &                                                                                       
+      ZZW(II)=MAX(LIMAC%XNU20*EXP(-LIMAC%XBETA2 ), &
                   LIMAC%XNU10*EXP(-LIMAC%XBETA1*(PT(II)-CST%XTT))*(ZSSI(II)/ZUSW(II))**LIMAC%XALPHA1)
     ENDIF
   ENDIF

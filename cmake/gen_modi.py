@@ -4,7 +4,16 @@ import sys
 import re
 from pathlib import Path
 
-reg_proc_name = re.compile(r"^\s*(SUBROUTINE|FUNCTION)\s+(\w+)", re.IGNORECASE)
+# Start of a procedure, with its optional prefixes (PURE, ELEMENTAL, RECURSIVE...
+# and, for a function, its type: REAL, REAL(KIND=JPRB), TYPE(T), CHARACTER*8...)
+reg_type_spec = (r"(?:INTEGER|REAL|DOUBLE\s*PRECISION|COMPLEX|CHARACTER|LOGICAL|TYPE|CLASS)"
+                 r"\s*(?:\((?:[^()]|\([^()]*\))*\)|\*\s*\w+)?")
+reg_proc_prefix = (r"(?:(?:IMPURE|PURE|ELEMENTAL|RECURSIVE|NON_RECURSIVE)\s+|"
+                   + reg_type_spec + r"\s*)*")
+reg_proc_name = re.compile(r"^\s*" + reg_proc_prefix + r"(SUBROUTINE|FUNCTION)\s+(\w+)",
+                           re.IGNORECASE)
+# End of a procedure (a bare END can only end a program unit)
+reg_proc_end = re.compile(r"^\s*END\s*((SUBROUTINE|FUNCTION)\b|$)", re.IGNORECASE)
 reg_proc_args = re.compile(r"\(([\w\s,]+)\)", re.IGNORECASE)
 reg_func_result = re.compile(r"RESULT\s*\(([\w\s]+)\)", re.IGNORECASE)
 reg_use_module_only = re.compile(r"(?:^\s*use\s+\w+\s*,\s*only\s*:)(.*)", re.IGNORECASE)
@@ -29,8 +38,7 @@ reg_all_decl_variable = [
 reg_all_decl = [
     r"^\s*$",
     r"^\s*!",
-    r"^\s*SUBROUTINE ",
-    r"^\s*FUNCTION ",
+    reg_proc_name.pattern,
     r"^\s* ",
     r"^\s*USE[,\s]",
     r"^\s*#",
@@ -43,6 +51,10 @@ reg_is_still_decl = re.compile("|".join(x for x in reg_all_decl), re.IGNORECASE)
 reg_is_variable_decl = re.compile(
     "|".join(x for x in reg_all_decl_variable), re.IGNORECASE
 )
+
+
+class GenModiError(Exception):
+    """Source file whose interface module cannot be generated"""
 
 
 def is_modi_needed(lines):
@@ -82,11 +94,11 @@ def remove_contained_procedures(lines):
     depth = 0
 
     for idx, line in enumerate(lines):
-        if line.startswith("SUBROUTINE ") or line.startswith("FUNCTION "):
+        if reg_proc_name.match(line):
             depth = depth + 1
         if depth > 1:
             to_rm.append(idx)
-        if line.startswith("END SUBROUTINE") or line.startswith("END FUNCTION"):
+        if reg_proc_end.match(line):
             depth = depth - 1
     for idx in reversed(to_rm):
         lines.pop(idx)
@@ -154,13 +166,15 @@ def get_proc_signature(line):
     proc_type = matches.group(1)
     proc_name = matches.group(2)
 
+    # arguments are searched after the procedure name (not in the type)
+    end_name = matches.end()
     proc_args = []
-    matches = reg_proc_args.search(line)
+    matches = reg_proc_args.search(line, end_name)
     if matches:
         proc_args = [arg.strip() for arg in matches.group(1).split(",")]
 
     if proc_type == "FUNCTION":
-        matches = reg_func_result.search(line)
+        matches = reg_func_result.search(line, end_name)
         if matches:
             proc_args.append(matches.group(1).strip())
 
@@ -190,15 +204,34 @@ def break_long_lines(lines):
     return newlines
 
 
+def check_procedures(f90, lines):
+    # The file must contain exactly one procedure (outside a module), whose
+    # name is the file name: the interface module of xxx.F90 is MODI_XXX in
+    # modi_xxx.F90
+    names = [reg_proc_name.match(line).group(2) for line in lines
+             if reg_proc_name.match(line)]
+    if not names:
+        raise GenModiError(f"{f90}: no SUBROUTINE or FUNCTION found")
+    if len(names) > 1:
+        raise GenModiError(f"{f90}: several procedures found outside a module "
+                           f"({', '.join(names)}), only one is allowed")
+    if names[0].upper() != f90.stem.upper():
+        raise GenModiError(f"{f90}: the procedure name ({names[0]}) must be the "
+                           f"file name ({f90.stem})")
+
+
 def gen_modi(f90):
     modi_path = Path(modi_dir / Path("modi_" + str(f90.name)))
-    src = open(f90, "r")
-    lines = simplify_code(src)
+    # No outdated file is left in case of error
+    modi_path.unlink(missing_ok=True)
+    with open(f90, "r") as src:
+        lines = simplify_code(src)
     if not is_modi_needed(lines):
         modi_path.touch()
         return
 
     remove_contained_procedures(lines)
+    check_procedures(f90, lines)
 
     modi_lines = []
     proc_type = ""
@@ -206,7 +239,7 @@ def gen_modi(f90):
     proc_args = []
     for line in lines:
         if not proc_name:
-            if line.startswith("SUBROUTINE ") or line.startswith("FUNCTION "):
+            if reg_proc_name.match(line):
                 proc_type, proc_name, proc_args = get_proc_signature(line)
                 modi_lines.append(f"MODULE MODI_{proc_name}\nINTERFACE\n")
 
@@ -234,8 +267,8 @@ def gen_modi(f90):
     remove_dangling_ifdef(modi_lines)
     remove_unsed_modules(modi_lines)
     modi_lines = break_long_lines(modi_lines)
-    modi = open(modi_path, "w")
-    modi.write("".join(modi_lines))
+    with open(modi_path, "w") as modi:
+        modi.write("".join(modi_lines))
 
 
 modi_dir = Path("modi")
@@ -251,4 +284,8 @@ if idx:
 
 for arg in sys.argv[1:]:
     file = Path(arg)
-    gen_modi(file)
+    try:
+        gen_modi(file)
+    except GenModiError as err:
+        print(f"gen_modi.py: error: {err}", file=sys.stderr)
+        sys.exit(1)

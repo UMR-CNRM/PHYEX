@@ -287,7 +287,7 @@ IF( INUCT >= 1 ) THEN
       ENDDO
    ENDDO
 !
-IF ((HACTCCN == 'ABRK').AND.((OORILAM).OR.(ODUST).OR.(OSALT))) THEN  ! CCN activation from Abdul-Razack (only if prognostic aerosols)
+IF ((HACTCCN == 'ABRK').AND.((OORILAM).OR.(ODUST).OR.(OSALT))) THEN ! CCN activation from Abdul-Razack (only if prognostic aerosols)
 !
      ALLOCATE(ZMCN(INUCT))
      ALLOCATE(ZNATOLD(INUCT))

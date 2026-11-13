@@ -249,7 +249,7 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_WETG
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CS_WETG
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RG_WETG
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CG_WETG
-REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RH_WETG ! wet growth of graupel (WETG) : rc, NC, rr, Nr, ri, Ni, rs, Ns, rg, Ng, rh, Nh=-Ng, th
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RH_WETG ! wet growth of graupel: rc, NC, rr, Nr, ri, Ni, rs, Ns, rg, Ng, rh, Nh=-Ng, th
 REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(OUT) :: P_SHCI_WETG
 !
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_DRYG
@@ -1008,7 +1008,7 @@ IF (LIMAP%NMOM_I.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
    ZWK2(:) = ZRST(:)/ZPF1D(:)
    ZWK3(:) = ZCIT(:)/ZIF1D(:)
    ZWK4(:) = ZCST(:)/ZPF1D(:)
-   CALL LIMA_ICE_AGGREGATION_SNOW (CST, LIMAP, LIMAC, KSIZE, ODCOMPUTE,                                             & ! depends on IF, PF
+   CALL LIMA_ICE_AGGREGATION_SNOW (CST, LIMAP, LIMAC, KSIZE, ODCOMPUTE,                          & ! depends on IF, PF
                                    ZT, PRHODREF,                                                 &
                                    ZWK1, ZWK2, ZWK3, ZWK4, ZLBDI, ZLBDS, &
                                    ZCIT_SHAPE_IF, ZRIT_SHAPE_IF, ZLBDAI_SHAPE,                   &
@@ -1205,7 +1205,7 @@ IF (LIMAP%NMOM_S.GE.1 .AND. LIMAP%NMOM_G.GE.1 .AND. LIMAP%LCIBU) THEN
    ZWK4(:) = ZCIT(:)/ZIF1D(:)
    ZWK5(:) = ZCST(:)/ZPF1D(:)
    ZWK6(:) = ZCGT(:)/ZPF1D(:)
-   CALL LIMA_COLLISIONAL_ICE_BREAKUP (LIMAP, LIMAC, LIMAM, KSIZE, ODCOMPUTE,                               & ! depends on PF (IF for fragments size)
+   CALL LIMA_COLLISIONAL_ICE_BREAKUP (LIMAP, LIMAC, LIMAM, KSIZE, ODCOMPUTE,          & ! depends on PF (IF for fragments size)
                                       PRHODREF,                                       &
                                       ZWK1, ZWK2, ZWK3, ZWK4, ZWK5, ZWK6, &
                                       ZLBDS, ZLBDG,                                   &
@@ -1243,7 +1243,7 @@ IF (LIMAP%NMOM_R.GE.1 .AND. LIMAP%NMOM_I.GE.1 .AND. LIMAP%LRDSF) THEN
    ZWK3(:) = ZRIT(:)/ZIF1D(:)
    ZWK4(:) = ZCIT(:)/ZIF1D(:)
    ZWK5(:) = ZRGT(:)/ZPF1D(:)
-   CALL LIMA_RAINDROP_SHATTERING_FREEZING (LIMAP, LIMAW, LIMAC, LIMAM, KSIZE, ODCOMPUTE,                               & ! depends on PF, IF
+   CALL LIMA_RAINDROP_SHATTERING_FREEZING (LIMAP, LIMAW, LIMAC, LIMAM, KSIZE, ODCOMPUTE,                   & ! depends on PF, IF
                                            PRHODREF, ZT,                                   &
                                            ZWK1, ZWK2, ZWK3, ZWK4, ZWK5, &
                                            ZLBDR,                                          &

@@ -405,7 +405,7 @@ DO JK = IKB + 1, IKE
 !
    ZWORK2(:) = ZWORK1(:) / ZDT(:) * ( CST%XBETAW / ZDT(:) - CST%XGAMW ) ! dr_sat/dT
    ZWORK2(:) = ZLV(:) / ZCPH(:) * ZWORK1(:) * ( 1. - XRHDBC ) /              &
-                    ( 1. + ZLV(:) / ZCPH(:) * ZWORK2(:) ) ! temperature perturb                                                           ! due to evaporation
+                    ( 1. + ZLV(:) / ZCPH(:) * ZWORK2(:) ) ! temperature perturb due to evaporation
    ZDT(:)    = ZDT(:) + ZWORK2(:)
 !
    DO JI = 1, IIE
