@@ -47,8 +47,8 @@ function usage {
   echo "is attached to the commit (and a mail is sent if --mail is given)."
   echo ""
   echo "All the work is done within the \${PHYEXWORKDIR} directory (it defaults to ~/PHYEXTESTING)."
-  echo "The TESTPROGSDIR, HOMEPACK, MNHPACK and LMDZPACK environment variables, used by the model checks,"
-  echo "are set to the TESTPROGS, pack, MesoNH and LMDZ subdirectories of \${PHYEXWORKDIR}."
+  echo "The TESTPROGSDIR, HOMEPACK, MNHPACK, LMDZPACK and PHYEXCONF environment variables, used by the model"
+  echo "checks, are set to the TESTPROGS, pack, MesoNH, LMDZ and PHYEXCONF subdirectories of \${PHYEXWORKDIR}."
   echo "It may be necessary to fill these directories with base source code (for arome and/or mesonh),"
   echo "with data (testprogs) and with the reference simulations."
 }
@@ -185,7 +185,8 @@ export TESTPROGSDIR="${WORKDIR}/TESTPROGS"
 export HOMEPACK="${WORKDIR}/pack"
 export MNHPACK="${WORKDIR}/MesoNH"
 export LMDZPACK="${WORKDIR}/LMDZ"
-for d in "${TESTPROGSDIR}" "${HOMEPACK}" "${MNHPACK}" "${LMDZPACK}"; do
+export PHYEXCONF="${WORKDIR}/PHYEXCONF"
+for d in "${TESTPROGSDIR}" "${HOMEPACK}" "${MNHPACK}" "${LMDZPACK}" "${PHYEXCONF}"; do
   if [ ! -d "${d}" ]; then
     echo "Creating directory ${d}"
     mkdir -p "${d}"

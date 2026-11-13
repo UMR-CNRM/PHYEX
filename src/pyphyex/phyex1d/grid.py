@@ -10,6 +10,7 @@ import json
 import numpy
 from . import Phyex1DError
 from . import Cst
+from . import user_dir
 
 FLUX = ['FLUX', 'HALF', 'INTERFACE']
 MASS = ['MASS', 'FULL']
@@ -49,9 +50,8 @@ class Grid():
         else:
             # look for a grid with the name provided in the user's directory,
             # then in the package directory
-            user_dir = os.path.join(os.environ['HOME'], '.phyex1d', 'grids')
             package_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'grids')
-            for grid_dir in (user_dir, package_dir):
+            for grid_dir in (user_dir('grids'), package_dir):
                 gridfile = os.path.join(grid_dir, grid + '.grid')
                 if os.path.exists(gridfile):
                     grid_descr = self._read_gridfile(gridfile)

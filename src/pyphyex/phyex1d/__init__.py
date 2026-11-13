@@ -2,9 +2,21 @@
 1D model using PHYEX
 """
 
+import os
+
 import numpy
 
 from pyphyex import __version__  # PHYEX version
+
+
+def user_dir(subdir):
+    """
+    User directory in which grids and namelists are searched before the package
+    directory: $PHYEXCONF/phyex1d/<subdir>, PHYEXCONF being ~/.phyex by default
+    :param subdir: 'grids' or 'namelists'
+    """
+    return os.path.join(os.environ.get('PHYEXCONF', os.path.expanduser('~/.phyex')),
+                        'phyex1d', subdir)
 
 
 class Phyex1DError(Exception):

@@ -16,6 +16,7 @@ import numpy
 from ctypesForFortran import MISSING
 
 from . import Phyex1DError
+from . import user_dir
 from . import wasp
 from .physics_base import PhysicsBase
 
@@ -44,15 +45,16 @@ class PHYEX(PhysicsBase):
             else:
                 # look for a namelis with the name provided in the user's directory,
                 # then in the package directory
-                user_dir = os.path.join(os.environ['HOME'], '.phyex1d', 'namelists')
                 package_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'namelists')
                 namelist_file = None
-                for namel_dir in (user_dir, package_dir):
-                    namelist_file = os.path.join(namel_dir, self.namel + '.namel')
-                    if os.path.exists(namelist_file):
+                for namel_dir in (user_dir('namelists'), package_dir):
+                    filename = os.path.join(namel_dir, self.namel + '.namel')
+                    if os.path.exists(filename):
+                        namelist_file = filename
                         break
             if namelist_file is None:
-                raise Phyex1DError('Namelist not found')
+                raise Phyex1DError(f"Namelist {self.namel} not found (in {user_dir('namelists')} "
+                                   "and in the package)")
 
             with open(namelist_file, 'r', encoding='UTF-8') as f:
                 self.namel = f90nml.read(f)

@@ -22,7 +22,8 @@ import pandas
 from pyphyextools import run_command
 
 SEPARATOR = '_'
-PHYEXCONF_DEFAULT = os.path.expanduser('~/.phyex')
+# User configuration directory (testprogs data...), ~/.phyex by default
+PHYEXCONF = os.environ.get('PHYEXCONF', os.path.expanduser('~/.phyex'))
 
 
 def _parse_test_list(s):

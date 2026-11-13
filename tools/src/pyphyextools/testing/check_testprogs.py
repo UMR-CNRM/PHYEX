@@ -15,7 +15,7 @@ import tempfile
 from pathlib import Path
 
 from pyphyextools.testing.check_common import (
-    CheckCommitBase, CheckCommitError, aggregate_drhook_profile, escape_commit, PHYEXCONF_DEFAULT,
+    CheckCommitBase, CheckCommitError, aggregate_drhook_profile, escape_commit, PHYEXCONF,
     run_tool, SEPARATOR, sourced_env)
 from pyphyextools import download_and_extract, run_command
 from pyphyextools.testing.compare import comp_testprogs
@@ -63,7 +63,7 @@ class CheckCommitTestprogs(CheckCommitBase):
         self.precision = precision or self.default_precision
         self.TESTDIR = os.environ.get('TESTPROGSDIR',
                                        os.path.expanduser('~/TESTPROGS'))
-        self.dirdata = os.path.join(PHYEXCONF_DEFAULT, 'testprogs_data')
+        self.dirdata = os.path.join(PHYEXCONF, 'testprogs_data')
         self.defaultarchfile = 'gnu'
         self.submit_method = ''
         self.varToExport = ("NPROMA,NBLOCKS,OMP_NUM_THREADS,DR_HOOK_OPT,"
@@ -137,9 +137,13 @@ class CheckCommitTestprogs(CheckCommitBase):
                             const='', default='--check',
                             help='suppress value printing (comparison will be impossible)')
         parser.add_argument('-a', dest='archfile', default=None,
-                            help='architecture name to build and run the commit')
+                            help='architecture name to build and run the commit (the files '
+                                 'arch-<ARCH>.env and arch-<ARCH>.ecbuild are searched in '
+                                 '${PHYEXCONF}/arch, then in the arch directory of the '
+                                 'source code)')
         parser.add_argument('-A', dest='refarchfile', default=None,
-                            help='architecture name for the reference simulation')
+                            help='architecture name for the reference simulation (files '
+                                 'searched as for -a)')
         parser.add_argument('-e', dest='extrapolation', type=int, default=0,
                             help='extrapolation configuration index\n'
                              + '\n'.join(f'  {k}: {v}'
@@ -270,15 +274,11 @@ class CheckCommitTestprogs(CheckCommitBase):
             run_command(['git', 'clone', repo_url, phyex_dir])
             run_command(['git', 'checkout', self.commit], cwd=phyex_dir)
 
-        # Architecture files, taken in the arch subdirectory of the source code.
+        # Architecture files, searched in ${PHYEXCONF}/arch (user's files) then in
+        # the arch subdirectory of the source code (each file independently).
         # They are copied in the architecture specific build directory (arch.env,
         # used by the next steps, and arch.ecbuild, used as CMake toolchain file)
-        arch_dir = os.path.join(phyex_dir, 'arch')
-        envfile = os.path.join(arch_dir, f'arch-{self.archfile}.env')
-        toolchain = os.path.join(arch_dir, f'arch-{self.archfile}.ecbuild')
-        for f in (envfile, toolchain):
-            if not os.path.isfile(f):
-                raise CheckCommitError(f"Architecture file not found: {f}", 6)
+        envfile, toolchain = (self._arch_file(phyex_dir, ext) for ext in ('env', 'ecbuild'))
         arch_build_dir = os.path.join(build_dir, f'arch_{self.archfile}')
         os.makedirs(arch_build_dir, exist_ok=True)
         arch_env = os.path.join(arch_build_dir, 'arch.env')
@@ -308,6 +308,18 @@ class CheckCommitTestprogs(CheckCommitBase):
         out_path = os.path.join(arch_build_dir, 'Output_compilation_step1')
         run_command(cmake_args, build_dir, out_path, env=sourced_env(arch_env),
                     display='always')
+
+    def _arch_file(self, phyex_dir, ext):
+        """Architecture file arch-<archfile>.<ext>, searched in ${PHYEXCONF}/arch
+        then in the arch directory of the source code"""
+        filename = f'arch-{self.archfile}.{ext}'
+        candidates = [os.path.join(PHYEXCONF, 'arch', filename),
+                      os.path.join(phyex_dir, 'arch', filename)]
+        for path in candidates:
+            if os.path.isfile(path):
+                print(f"Architecture file used: {path}")
+                return path
+        raise CheckCommitError("Architecture file not found: " + ' or '.join(candidates), 6)
 
     @staticmethod
     def _copy_source(srcdir, destdir):
