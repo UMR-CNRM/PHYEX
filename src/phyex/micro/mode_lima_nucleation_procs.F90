@@ -73,8 +73,6 @@ TYPE(NEB_T),              INTENT(IN)    :: NEBN
 TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
 TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS 
-INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
-LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 !
 INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
 LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
