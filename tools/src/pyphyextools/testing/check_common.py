@@ -5,11 +5,19 @@ resolution, step orchestration) that each model-specific tool specialises.
 """
 
 import argparse
+import contextlib
+import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
+from pathlib import Path
+
+import numpy
+import pandas
 
 from pyphyextools import run_command
 
@@ -220,18 +228,15 @@ class CheckCommitBase:
             run_command(['git', 'checkout', self.commit], cwd=phyex_dir)
 
             if not os.path.isdir(os.path.join(phyex_dir, 'docs')):
-                result = run_command(
-                    ['git', 'log', '--all', '--full-history', '--', 'tools'],
-                    cwd=phyex_dir)
-                toolscommit = result.stdout.strip().split('\n')[0].split()[1]
+                toolscommit = run_command(
+                    ['git', 'log', '-1', '--format=%H', '--all', '--full-history', '--', 'tools'],
+                    cwd=phyex_dir).stdout.strip()
                 parents = run_command(
                     ['git', 'rev-parse', f'{toolscommit}^@'],
                     cwd=phyex_dir)
                 for parent in parents.stdout.strip().split():
-                    nfiles = run_command(
-                        ['git', 'ls-tree', '-r', parent, '--', 'tools'],
-                        cwd=phyex_dir)
-                    if nfiles.stdout.count('\n') != 0:
+                    if run_command(['git', 'ls-tree', '-r', parent, '--', 'tools'],
+                                   cwd=phyex_dir).stdout.strip():
                         toolscommit = parent
                         break
                 for path in ('tools', 'pyproject.toml', 'src/pyphyex'):
@@ -356,6 +361,133 @@ class CheckCommitBase:
 
     def performance_evaluation(self):
         """Optional performance evaluation."""
+
+
+_SOURCED_ENV_MARKER = '#### PHYEX ENVIRONMENT AFTER SOURCING ####'
+_SOURCED_ENV_CACHE = {}
+
+
+def sourced_env(script, cwd=None):
+    """Return the environment (dict) obtained by sourcing the shell file *script*.
+
+    The file is sourced by bash with ``set -a``: all the variables it sets are
+    exported, even if they are not explicitly exported (as when the file is
+    sourced in a shell script using these variables). The output of the
+    sourcing is displayed; failing commands in the file only produce a
+    warning (environment files are known to produce harmless errors). The
+    result is cached (for a given file, modification time and *cwd*), a copy
+    is returned.
+
+    Parameters
+    ----------
+    script : str
+        Environment file to source (it must exist).
+    cwd : str or None
+        Directory in which the file is sourced.
+
+    Returns
+    -------
+    dict
+        Environment to give to the commands (``env`` argument of
+        :func:`~pyphyextools.run_command`).
+    """
+    script = os.path.abspath(script)
+    if not os.path.isfile(script):
+        raise CheckCommitError(f"Environment file not found: {script}", 9)
+    key = (script, os.stat(script).st_mtime_ns, cwd)
+    if key not in _SOURCED_ENV_CACHE:
+        # The environment is printed (after a marker, following the output of the
+        # sourcing) by the python interpreter executed in the sourced environment
+        dump = ('import json, os, sys; '
+                f'print({_SOURCED_ENV_MARKER!r}); print(sys.argv[1]); '
+                'print(json.dumps(dict(os.environ)))')
+        # The failing commands of the file are counted with an ERR trap. The
+        # arguments are saved in variables (__phyex_*) and removed before
+        # sourcing (some environment files modify the positional parameters)
+        result = run_command(['bash', '-c', '__phyex_file=$1; __phyex_python=$2; __phyex_dump=$3; '
+                                            'set --; __phyex_errors=0; '
+                                            'trap \'__phyex_errors=$((__phyex_errors+1))\' ERR; '
+                                            'set -a; . "$__phyex_file"; set +a; trap - ERR; '
+                                            'exec "$__phyex_python" -c "$__phyex_dump" '
+                                            '"$__phyex_errors"',
+                              'bash', script, sys.executable, dump],
+                             cwd=cwd, display='never', banner=False, check=False)
+        output, marker, env_part = result.stdout.rpartition(_SOURCED_ENV_MARKER + '\n')
+        print(f'### . {script}')
+        print(output if marker else result.stdout, end='')
+        if not marker or result.returncode != 0:
+            raise CheckCommitError(f"Environment file {script} cannot be sourced", 9)
+        errors, env = env_part.split('\n', 1)
+        if errors != '0':
+            print(f"WARNING: {errors} command(s) failed during the sourcing of {script} "
+                  "(ignored)")
+        env = {var: value for var, value in json.loads(env).items()
+               if not var.startswith('__phyex_')}
+        # Variables set by bash itself
+        for var in ('_', 'PWD', 'OLDPWD', 'SHLVL'):
+            env.pop(var, None)
+            if var in os.environ:
+                env[var] = os.environ[var]
+        _SOURCED_ENV_CACHE[key] = env
+    return dict(_SOURCED_ENV_CACHE[key])
+
+
+@contextlib.contextmanager
+def timed(perffile, *fields):
+    """Context manager timing the block (elapsed time, measured with
+    time.perf_counter) and, if *perffile* is given, appending to it a line
+    made of *fields* followed by the elapsed time in ms. Nothing is written
+    if the block raises an exception.
+
+    Example::
+
+        with timed(self.perffile, self.name, 'ial', test):
+            ...
+    """
+    start = time.perf_counter()
+    yield
+    elapsed_ms = int((time.perf_counter() - start) * 1000)
+    if perffile:
+        with open(perffile, 'a', encoding='utf-8') as pf:
+            pf.write(' '.join(map(str, fields)) + f' {elapsed_ms}\n')
+
+
+def aggregate_drhook_profile(prof_file, agg_file):
+    """Aggregate, by routine, a DrHook profile (statistics on the time spent
+    in each routine) and write the result, ordered by self time, in *agg_file*.
+
+    Parameters
+    ----------
+    prof_file : str
+        DrHook profile (drhook.prof.* file, possibly the concatenation of the
+        profiles of several MPI tasks).
+    agg_file : str
+        Output file.
+    """
+    # The data start at the first line beginning with '1' (first routine)
+    lines = Path(prof_file).read_text(encoding='utf-8').splitlines()
+    first_line = next((i for i, line in enumerate(lines) if re.match(r'^\s*1', line)), None)
+    if first_line is None:
+        print(f"No data found in the DrHook profile {prof_file}")
+        return
+    columns = {'time': ('<f4', ('mean',)),
+               'self': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
+               'total': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
+               'calls': ('<i4', ('sum',)),
+               'self_per_call': ('<f4', ('mean',)),
+               'total_per_call': ('<f4', ('mean',)),
+               'routine': ('U256', '')}
+    arraynp = numpy.loadtxt(prof_file,
+                            dtype=[(k, v[0]) for (k, v) in columns.items()],
+                            converters={8: lambda s: s.split(b'@')[0].lstrip(b'*')},
+                            skiprows=first_line, usecols=[1, 3, 4, 5, 6, 7, 8],
+                            encoding='bytes')
+    df = pandas.DataFrame(arraynp).groupby('routine').agg(
+        **{k + '_' + agg: pandas.NamedAgg(column=k, aggfunc=agg)
+           for k, (_, aggs) in columns.items() for agg in aggs
+           if k != 'routine'}).sort_values('self_sum', ascending=False)
+    df.index.name += ' ordered by self_sum'
+    Path(agg_file).write_text(df.to_string(), encoding='utf-8')
 
 
 def run_tool(tool_class, module_name=None):

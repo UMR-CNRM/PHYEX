@@ -7,11 +7,12 @@ runs RICO and ARM-CU 1D cases.
 import glob as glob_mod
 import json
 import os
+import re
 import shutil
-import time
+from pathlib import Path
 
 from pyphyextools.testing.check_common import (
-    CheckCommitBase, CheckCommitError, mvdiff, run_tool)
+    CheckCommitBase, CheckCommitError, mvdiff, run_tool, timed)
 from pyphyextools import run_command
 from pyphyextools.prep_code import prep_code
 
@@ -305,12 +306,10 @@ class CheckCommitLmdz(CheckCommitBase):
                     os.remove(ex)
 
             if self.buildSys == 'fcm':
-                compile_file = os.path.join(bin_dir, 'compile')
-                with open(compile_file, encoding='utf-8') as f:
-                    content = f.read()
-                content = content.replace('fcm=0', 'fcm=1')
-                with open(compile_file, 'w', encoding='utf-8') as f:
-                    f.write(content)
+                compile_file = Path(bin_dir, 'compile')
+                compile_file.write_text(
+                    compile_file.read_text(encoding='utf-8').replace('fcm=0', 'fcm=1'),
+                    encoding='utf-8')
 
             compile_cmd = self.compilecmd.split()
             run_command(compile_cmd, cwd=bin_dir,
@@ -411,24 +410,18 @@ class CheckCommitLmdz(CheckCommitBase):
                             os.symlink(alt, os.path.join(d, 'lmdz1d.e'))
 
                 if DEF == 'PHYEX':
-                    gcm_file = os.path.join(d, 'gcm1d.def')
-                    if os.path.isfile(gcm_file):
-                        with open(gcm_file, encoding='utf-8') as f:
-                            content = f.read()
-                        content = content.replace('day_step=144$', 'day_step=1440')
-                        with open(gcm_file, 'w', encoding='utf-8') as f:
-                            f.write(content)
+                    # day_step=144 replaced by day_step=1440 ('$': end of line, re.M)
+                    gcm_file = Path(d, 'gcm1d.def')
+                    if gcm_file.is_file():
+                        gcm_file.write_text(re.sub(r'day_step=144$', 'day_step=1440',
+                                                   gcm_file.read_text(encoding='utf-8'),
+                                                   flags=re.M),
+                                            encoding='utf-8')
 
-                t1_us = time.time_ns() // 1000
-                run_command(['./lmdz1d.e'], cwd=d,
-                            out_path=os.path.join(d, 'execution.log'),
-                            display='never', check=False)
-                t2_us = time.time_ns() // 1000
-                elapsed_ms = (t2_us - t1_us) // 1000
-
-                if self.perffile:
-                    with open(self.perffile, 'a', encoding='utf-8') as pf:
-                        pf.write(f"{self.name} lmdz {t} {elapsed_ms}\n")
+                with timed(self.perffile, self.name, 'lmdz', t):
+                    run_command(['./lmdz1d.e'], cwd=d,
+                                out_path=os.path.join(d, 'execution.log'),
+                                display='never', check=False)
 
     def comparison(self):
         """Comparison is not yet implemented for LMDZ."""

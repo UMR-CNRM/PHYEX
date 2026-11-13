@@ -46,7 +46,7 @@ import traceback
 import urllib.parse
 import urllib.request
 
-from pyphyextools.testing.check_consistency import REPO_DIR
+from pyphyextools import REPO_DIR, run_command
 
 MODELS = ('ial', 'mesonh', 'testprogs', 'lmdz')
 CHECKS = ('consistency', 'norms', 'doc', 'wheel') + MODELS
@@ -140,13 +140,24 @@ class Reporter:
         self.github(self.args.github_status, data)
 
     def send_mail(self, message):
-        """Sends the report by e-mail"""
+        """
+        Sends the report by e-mail (to the comma-separated list of addresses
+        given by --mail). A failure only produces a warning.
+        """
+        addresses = [address.strip() for address in self.args.mail.split(',')
+                     if address.strip()]
         if shutil.which('mail'):
-            cmd = ['mail', '-s', self.context, self.args.mail]
+            cmd = ['mail', '-s', self.context] + addresses
+        elif shutil.which('sendmail'):
+            cmd = ['sendmail'] + addresses
+            message = f'To: {", ".join(addresses)}\nSubject: {self.context}\n\n{message}'
         else:
-            cmd = ['sendmail', self.args.mail]
-            message = f'Subject: {self.context}\n\n{message}'
-        subprocess.run(cmd, input=message, text=True, check=True)
+            print('WARNING: neither mail nor sendmail found, the report cannot be sent by e-mail')
+            return
+        try:
+            run_command(cmd, input_string=message, banner=False)
+        except (OSError, subprocess.CalledProcessError) as err:
+            print(f'WARNING: the report cannot be sent by e-mail ({err})')
 
     def report(self, success, error=None):
         """
@@ -156,9 +167,9 @@ class Reporter:
         """
         lines = [self.context, '', f'Repository {REPO_DIR}']
         try:
-            lines.append('Commit ' + subprocess.run(['git', 'describe', '--always', '--dirty'],
-                                                    cwd=REPO_DIR, check=True, text=True,
-                                                    capture_output=True).stdout.strip())
+            lines.append('Commit ' + run_command(['git', 'describe', '--always', '--dirty'],
+                                                 cwd=REPO_DIR, display='never', banner=False,
+                                                 err_path=False).stdout.strip())
         except (OSError, subprocess.CalledProcessError):
             pass
         lines.append(self.args.start)
@@ -174,11 +185,20 @@ class Reporter:
 
         print('\n' + '=' * 70 + '\n' + message)
         sys.stdout.flush()
+        # The GitHub status is set first; the mail is sent even if the status
+        # cannot be set (the exception is raised afterwards)
+        status_error = None
+        if self.args.github_status is not None:
+            try:
+                self.add_status('success' if success else ('error' if error else 'failure'),
+                                message)
+            except Exception as err:  # pylint: disable=broad-exception-caught
+                print(f'ERROR: the GitHub status cannot be set ({err})')
+                status_error = err
         if self.args.mail and not success:
             self.send_mail(message)
-        if self.args.github_status is not None:
-            self.add_status('success' if success else ('error' if error else 'failure'),
-                            message)
+        if status_error is not None:
+            raise status_error
 
 
 class CheckCommit:

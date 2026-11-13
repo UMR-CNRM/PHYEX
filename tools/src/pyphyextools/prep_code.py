@@ -9,14 +9,13 @@ import logging
 import os
 import re
 import shutil
-import subprocess
 import sys
 import glob
 
 import pyfortool.scripting
 from pyphyextools.testing.coding_norms import coding_norms
 
-from pyphyextools import __version__
+from pyphyextools import __version__, run_command
 
 
 SEPARATOR = '_'
@@ -78,12 +77,6 @@ Everything after '--' is passed to pyfortool for source-to-source transformation
     return args
 
 
-def run(cmd, **kwargs):
-    """Execute *cmd* via subprocess, forwarding extra kwargs.  Exit on failure."""
-    logging.debug("Running: %s", ' '.join(cmd) if isinstance(cmd, list) else cmd)
-    return subprocess.run(cmd, check=True, **kwargs)
-
-
 def get_repository():
     """Build the PHYEX repository URL from ``PHYEXREPOprotocol`` and ``PHYEXREPOuser`` env vars."""
     protocol = os.environ.get('PHYEXREPOprotocol', '')
@@ -123,7 +116,7 @@ def generate_modi(directory, add_func):
             if not os.path.isfile(src):
                 raise RuntimeError(f"{src} (listed in {list_file}) not found")
             outdir = os.path.dirname(src)
-            run([sys.executable, '-I', script, '-o', outdir, src])
+            run_command([sys.executable, '-I', script, '-o', outdir, src])
             generated.append(os.path.join(outdir, 'modi_' + os.path.basename(src)))
     add_func(generated)
 
@@ -347,13 +340,10 @@ def prep_code(
         if not repository:
             raise RuntimeError("A repository must be set (use -h option to get help)")
 
-        run(['git', 'clone', repository, directory])
+        run_command(['git', 'clone', repository, directory], display='always')
         if branch and push:
-            result = subprocess.run(
-                ['git', 'ls-remote', '--heads', 'origin', 'SR_GPU'],
-                capture_output=True, text=True, check=True,
-                cwd=directory
-            )
+            result = run_command(['git', 'ls-remote', '--heads', 'origin', branch],
+                                 cwd=directory, banner=False)
             if result.stdout.strip():
                 raise RuntimeError(f"{branch} branch already exists on remote")
 
@@ -361,15 +351,15 @@ def prep_code(
         if branch:
             checkout_args.extend(['-b', branch])
         checkout_args.append(checkout_point)
-        run(checkout_args, cwd=directory)
+        run_command(checkout_args, cwd=directory)
 
         def mv_func(src, dst):
-            run(['git', 'mv', '-f', src, dst], cwd=directory)
+            run_command(['git', 'mv', '-f', src, dst], cwd=directory)
         def rm_func(path):
-            run(['git', 'rm', '-q', '-f', '-r', path], cwd=directory)
+            run_command(['git', 'rm', '-q', '-f', '-r', path], cwd=directory)
         def add_func(paths):
             if paths:
-                run(['git', 'add', '-f'] + paths, cwd=directory)
+                run_command(['git', 'add', '-f'] + paths, cwd=directory)
 
     # -------- INTERFACE MODULES --------
     # Generated first, the generated files are then processed as the others
@@ -446,13 +436,13 @@ def prep_code(
     # -------- PUSH --------
     if branch and push:
         logging.info("commit and push")
-        run(['git', 'add', '-A'], cwd=directory)
+        run_command(['git', 'add', '-A'], cwd=directory)
         commit_msg = (
             f"Version '{checkout_point}' of source code ready for "
             f"inclusion into {model} source tree"
         )
-        run(['git', 'commit', '-m', commit_msg], cwd=directory)
-        run(['git', 'push', '-u', 'origin', 'HEAD'], cwd=directory)
+        run_command(['git', 'commit', '-m', commit_msg], cwd=directory, display='always')
+        run_command(['git', 'push', '-u', 'origin', 'HEAD'], cwd=directory, display='always')
 
     logging.info("Finished!")
 

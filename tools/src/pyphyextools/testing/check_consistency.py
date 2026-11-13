@@ -9,12 +9,10 @@ standard library, so that the workflow does not need to install the tools).
 
 import argparse
 import os
-import subprocess
 import sys
 
-# Repository root (the package is installed in editable mode)
-REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                        '..', '..', '..', '..'))
+from pyphyextools import REPO_DIR, run_command
+
 CHECKS = {'version': 'check_version.py',
           'pyfortool': 'check_pyfortool_version.py'}
 
@@ -31,7 +29,8 @@ def check_consistency(checks=None, repo_dir=REPO_DIR):
         script = os.path.join(repo_dir, '.github', 'scripts', CHECKS[check])
         print(f'### Check {check}')
         sys.stdout.flush()
-        if subprocess.run([sys.executable, script], cwd=repo_dir, check=False).returncode != 0:
+        if run_command([sys.executable, script], cwd=repo_dir, check=False,
+                       display='always', banner=False).returncode != 0:
             failed.append(check)
     return failed
 

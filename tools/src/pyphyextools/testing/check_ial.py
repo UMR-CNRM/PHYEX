@@ -12,13 +12,12 @@ import re
 import shutil
 import sys
 import tempfile
-import time
-import numpy
-import pandas
+from pathlib import Path
 
 from pyphyextools.testing.check_common import (
-    CheckCommitBase, CheckCommitError, escape_commit, mvdiff, run_tool)
-from pyphyextools import run_command
+    CheckCommitBase, CheckCommitError, aggregate_drhook_profile, escape_commit, mvdiff,
+    run_tool, timed)
+from pyphyextools import REPO_DIR, run_command
 from pyphyextools.prep_code import prep_code
 from pyphyextools.testing.compare import comp_binary, comp_NODE
 
@@ -46,8 +45,7 @@ class CheckCommitIAL(CheckCommitBase):
         self.gmkpack_o = 'dp'
         self.ialdir = None
         self.cycle = None
-        self.phytoolsdir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+        self.phytoolsdir = os.path.join(REPO_DIR, 'tools')
 
         hostname = os.uname().nodename
         if hostname[:7] in ('belenos', 'taranis'):
@@ -133,8 +131,7 @@ class CheckCommitIAL(CheckCommitBase):
         print(f"### Pack creation for commit {self.commit}")
         os.environ['GMKTMP'] = '/dev/shm'
 
-        result = run_command(['which', 'ial-to_pack'], check=False)
-        if result.returncode != 0:
+        if shutil.which('ial-to_pack') is None:
             raise CheckCommitError("ial-to_pack not found, please install it", 7)
 
         tmpbuilddir = tempfile.mkdtemp()
@@ -170,12 +167,9 @@ class CheckCommitIAL(CheckCommitBase):
 
             for fname in os.listdir(ialdir_full):
                 if fname.startswith('ics_'):
-                    fpath = os.path.join(ialdir_full, fname)
-                    with open(fpath, 'r', encoding='utf-8') as fh:
-                        content = fh.read()
-                    content = content.replace(old_path, ialdir_full)
-                    with open(fpath, 'w', encoding='utf-8') as fh:
-                        fh.write(content)
+                    fpath = Path(ialdir_full, fname)
+                    content = fpath.read_text(encoding='utf-8')
+                    fpath.write_text(content.replace(old_path, ialdir_full), encoding='utf-8')
 
             phyex_dir = os.path.join(ialdir_full, 'hub', 'local', 'src', 'PHYEX', 'phyex')
             shutil.rmtree(phyex_dir, ignore_errors=True)
@@ -215,8 +209,9 @@ class CheckCommitIAL(CheckCommitBase):
                 **prep_kwargs)
         else:
             print("model ready")
-            run_command(['scp', '-q', '-r', os.path.join(self.commit, '*'), 'PHYEX/'],
-                        cwd=phyex_dir)
+            # '*' expanded as the shell would do (the command is not run by a shell)
+            run_command(['scp', '-q', '-r'] + sorted(glob.glob(os.path.join(self.commit, '*'))) +
+                        ['PHYEX/'], cwd=phyex_dir)
             prep_kwargs = self._parse_prep_code_opts(self.prepCodeOpts)
             prep_code(directory=os.path.join(phyex_dir, 'PHYEX'), **prep_kwargs)
 
@@ -256,15 +251,11 @@ class CheckCommitIAL(CheckCommitBase):
                     with open(ignored_file, encoding='utf-8') as fh:
                         lines = [l.strip() for l in fh if l.strip()]
                     if lines:
-                        ics_file = os.path.join(ialdir_full, 'ics_masterodb')
-                        with open(ics_file, 'r', encoding='utf-8') as fh:
-                            content = fh.read()
+                        ics_file = Path(ialdir_full, 'ics_masterodb')
                         insert = '\n'.join(lines)
-                        content = content.replace(
-                            'end_of_ignored_files',
-                            f'end_of_ignored_files\n{insert}', 1)
-                        with open(ics_file, 'w', encoding='utf-8') as fh:
-                            fh.write(content)
+                        ics_file.write_text(ics_file.read_text(encoding='utf-8').replace(
+                            'end_of_ignored_files', f'end_of_ignored_files\n{insert}', 1),
+                            encoding='utf-8')
             else:
                 with open(ignored_file, encoding='utf-8') as fh:
                     for line in fh:
@@ -291,7 +282,7 @@ class CheckCommitIAL(CheckCommitBase):
                     continue
                 for root, dirs, files in os.walk(sub_path):
                     for fname in files:
-                        if not (fname.endswith('.F90') or fname.endswith('.h')):
+                        if not fname.endswith(('.F90', '.h')):
                             continue
                         full = os.path.join(root, fname)
                         with open(full, 'rb') as fh:
@@ -315,12 +306,11 @@ class CheckCommitIAL(CheckCommitBase):
         if not self.onlyIfNeeded or not os.path.isfile(os.path.join(ialdir_full, 'bin', 'MASTERODB')):
             print(f"### Compilation of commit {self.commit}")
 
-            ics_file = os.path.join(ialdir_full, 'ics_masterodb')
-            with open(ics_file, 'r', encoding='utf-8') as fh:
-                content = fh.read()
-            content = content.replace('GMK_THREADS=1$', 'GMK_THREADS=10')
-            with open(ics_file, 'w', encoding='utf-8') as fh:
-                fh.write(content)
+            # Compilation with 10 threads ('$': end of line, re.M)
+            ics_file = Path(ialdir_full, 'ics_masterodb')
+            ics_file.write_text(re.sub(r'GMK_THREADS=1$', 'GMK_THREADS=10',
+                                       ics_file.read_text(encoding='utf-8'), flags=re.M),
+                                encoding='utf-8')
 
             if os.path.isfile(os.path.join(ialdir_full, 'ics_packages')):
                 self.submit(os.path.join(ialdir_full, 'Output_compilation_hub'),
@@ -339,7 +329,7 @@ class CheckCommitIAL(CheckCommitBase):
                 if os.path.isdir(test_dir):
                     shutil.rmtree(test_dir)
 
-        firstrun = 1
+        firstrun = True
         for t in self.tests:
             if t not in self.allowedTests:
                 print(f"The test {t} is not allowed")
@@ -351,7 +341,7 @@ class CheckCommitIAL(CheckCommitBase):
 
             if firstrun:
                 print(f"### Running of commit {self.commit}")
-                firstrun = 0
+                firstrun = False
 
             if not os.path.isfile(os.path.join(ialdir_full, 'bin', 'MASTERODB')):
                 raise CheckCommitError(
@@ -359,16 +349,9 @@ class CheckCommitIAL(CheckCommitBase):
 
             os.makedirs(test_dir, exist_ok=True)
 
-            t1_us = time.time_ns() // 1000
-
             script_dir = os.path.join(dirconf, t)
-            script_candidates = [os.path.join(script_dir, 'aro.sh'),
-                                 os.path.join(script_dir, 'arp.sh')]
-            script = None
-            for sc in script_candidates:
-                if os.path.isfile(sc):
-                    script = sc
-                    break
+            script = next((os.path.join(script_dir, name) for name in ('aro.sh', 'arp.sh')
+                           if os.path.isfile(os.path.join(script_dir, name))), None)
             if script is None:
                 print(f"No script found in {script_dir}")
                 continue
@@ -376,54 +359,22 @@ class CheckCommitIAL(CheckCommitBase):
             env = os.environ.copy()
             env['MYLIB'] = self.ialdir
             env['TESTDIR'] = script_dir
-            self.submit(os.path.join(test_dir, 'Output_run'), [script], cwd=test_dir, env=env)
+            with timed(self.perffile, self.name, 'ial', t):
+                self.submit(os.path.join(test_dir, 'Output_run'), [script], cwd=test_dir,
+                            env=env)
 
-            t2_us = time.time_ns() // 1000
-            elapsed_ms = (t2_us - t1_us) // 1000
-
-            if self.perffile:
-                with open(self.perffile, 'a', encoding='utf-8') as pf:
-                    pf.write(f"{self.name} ial {t} {elapsed_ms}\n")
-
-            prof_files = [f for f in os.listdir(test_dir) if f.startswith('drhook.prof.')]
+            # DrHook profiles of the different MPI tasks (drhook.prof.<n>): concatenation
+            # (header of the first profile, data lines of all of them) and aggregation
+            prof_files = sorted(f for f in os.listdir(test_dir)
+                                if re.fullmatch(r'drhook\.prof\.\d+', f))
             if prof_files:
-                firstfile = True
                 concat_file = os.path.join(test_dir, 'drhook.prof.concat')
-                for fname in prof_files:
-                    fpath = os.path.join(test_dir, fname)
-                    if firstfile:
-                        shutil.copy2(fpath, concat_file)
-                        firstfile = False
-                    else:
-                        with open(fpath, encoding='utf-8') as src:
-                            with open(concat_file, 'a', encoding='utf-8') as dst:
-                                for line in src:
-                                    if re.match(r'^\s*\d', line):
-                                        dst.write(line)
-
-                if os.path.isfile(concat_file):
-                    d = {'time': ('<f4', ('mean',)), 'self': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
-                         'total': ('<f4', ('mean', 'max', 'min', 'std', 'sum')), 'calls': ('<i4', ('sum',)),
-                         'self_per_call': ('<f4', ('mean',)), 'total_per_call': ('<f4', ('mean',)), 'routine': ('U256', '')}
-                    with open(os.path.join(test_dir, 'drhook.prof.concat'), encoding='utf-8') as f:
-                        content = f.read()
-                    first_line = None
-                    for i, line in enumerate(content.split('\n')):
-                        if re.match(r'^\s*1', line):
-                            first_line = i + 1
-                            break
-                    if first_line is not None:
-                        arraynp = numpy.loadtxt(os.path.join(test_dir, 'drhook.prof.concat'),
-                            dtype=[(k, v[0]) for (k, v) in d.items()],
-                            converters={8: lambda s: s.split(b'@')[0].lstrip(b'*')},
-                            skiprows=first_line - 1, usecols=[1, 3, 4, 5, 6, 7, 8], encoding='bytes')
-                        df = pandas.DataFrame(arraynp).groupby('routine').agg(
-                            **{k + '_' + agg: pandas.NamedAgg(column=k, aggfunc=agg)
-                               for k in d.keys() for agg in d[k][1]
-                               if k != 'routine'}).sort_values('self_sum', ascending=False)
-                        df.index.name += ' ordered by self_sum'
-                        with open(os.path.join(test_dir, 'drhook.prof.agg'), 'w', encoding='utf-8') as f:
-                            f.write(df.to_string())
+                with open(concat_file, 'w', encoding='utf-8') as dst:
+                    for i, fname in enumerate(prof_files):
+                        with open(os.path.join(test_dir, fname), encoding='utf-8') as src:
+                            dst.writelines(line for line in src
+                                           if i == 0 or re.match(r'^\s*\d', line))
+                aggregate_drhook_profile(concat_file, os.path.join(test_dir, 'drhook.prof.agg'))
 
     def comparison(self):
         """Compare output files against the reference commit."""

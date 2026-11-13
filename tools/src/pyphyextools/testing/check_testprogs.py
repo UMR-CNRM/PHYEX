@@ -9,17 +9,15 @@ import os
 import re
 import shlex
 import shutil
-import subprocess
+import string
 import sys
 import tempfile
-import re
-
-import numpy
-import pandas
+from pathlib import Path
 
 from pyphyextools.testing.check_common import (
-    CheckCommitBase, CheckCommitError, escape_commit, PHYEXCONF_DEFAULT, run_tool, SEPARATOR)
-from pyphyextools import run_command
+    CheckCommitBase, CheckCommitError, aggregate_drhook_profile, escape_commit, PHYEXCONF_DEFAULT,
+    run_tool, SEPARATOR, sourced_env)
+from pyphyextools import download_and_extract, run_command
 from pyphyextools.testing.compare import comp_testprogs
 
 
@@ -151,8 +149,15 @@ class CheckCommitTestprogs(CheckCommitBase):
         args = parser.parse_args()
         return vars(args), cls._build_commitcmd(parser)
 
+    def _arch_env(self):
+        """Environment file of the architecture (copied in the build directory)"""
+        return os.path.join(self.TESTDIR, self.name, 'build', f'arch_{self.archfile}',
+                            'arch.env')
+
     def submit(self, output, error, cmd_args, cwd=None, env=None):
-        """Run a command, either through SLURM or directly."""
+        """Run a command, either through SLURM or directly. With SLURM, only
+        some variables are exported to the job (varToExport), the environment
+        file is then sourced in the job script."""
         if self.submit_method == 'slurm_belenos':
             with tempfile.NamedTemporaryFile(mode='w', suffix='.sh', delete=False) as f:
                 f.write('#!/bin/bash\n')
@@ -163,31 +168,29 @@ class CheckCommitTestprogs(CheckCommitBase):
                 f.write(f'#SBATCH --export={self.varToExport}\n')
                 if run_command(['ldd', cmd_args[0]]).stdout.count('libcuda') > 0:
                     f.write('#SBATCH -p ndl\n')
-                f.write(f'\ncd {cwd or os.getcwd()}\n')
+                f.write(f'\n. {shlex.quote(self._arch_env())}\n')
+                f.write(f'cd {cwd or os.getcwd()}\n')
                 f.write(' '.join(cmd_args) + '\n')
                 f.flush()
                 os.chmod(f.name, 0o755)
 
-            outtmp = tempfile.mktemp()
+            fd, outtmp = tempfile.mkstemp()
+            os.close(fd)
             run_command(['sbatch', '--wait', '-o', outtmp, '-e', error, f.name], env=env)
-            with open(outtmp, encoding='utf-8') as fh:
-                content = fh.read()
-            sep = '#' * 41
-            idx = content.find(sep)
+            content = Path(outtmp).read_text(encoding='utf-8')
+            # The SLURM report (after a line of '#') goes in the error file
+            idx = content.find('#' * 41)
             if idx >= 0:
                 with open(error, 'a', encoding='utf-8') as ef:
                     ef.write(content[idx-1:])
-                with open(output, 'w', encoding='utf-8') as of:
-                    of.write(content[:idx-2])
+                Path(output).write_text(content[:idx-2], encoding='utf-8')
             else:
-                with open(output, 'w', encoding='utf-8') as of:
-                    of.write(content)
+                Path(output).write_text(content, encoding='utf-8')
             os.unlink(f.name)
             os.unlink(outtmp)
         else:
-            with (open(output, 'w', encoding='utf-8') as out,
-                  open(error, 'w', encoding='utf-8') as err):
-                subprocess.run(cmd_args, stdout=out, stderr=err, cwd=cwd, check=False, env=env)
+            run_command(cmd_args, cwd=cwd, out_path=output, err_path=error, env=env,
+                        check=False, display='never')
 
     def fill_dirdata(self):
         """Download and extract test data if not already present."""
@@ -206,10 +209,7 @@ class CheckCommitTestprogs(CheckCommitBase):
             basename_noext = os.path.splitext(os.path.splitext(basefile)[0])[0]
             data_file = os.path.join(self.dirdata, basename_noext, '00000000.dat')
             if not os.path.isfile(data_file):
-                run_command(['wget', '--no-check-certificate', url, '-O', basefile],
-                            cwd=self.dirdata)
-                run_command(['tar', 'xf', basefile], cwd=self.dirdata)
-                os.remove(os.path.join(self.dirdata, basefile))
+                download_and_extract(url, self.dirdata)
 
     def pack_creation(self):
         testdir = os.path.join(self.TESTDIR, self.name)
@@ -287,7 +287,7 @@ class CheckCommitTestprogs(CheckCommitBase):
         shutil.copy(toolchain, arch_toolchain)
 
         # CMake configuration only (the compilation is done by the next step),
-        # executed after having sourced the environment file
+        # executed in the environment defined by the environment file
         if self.useexpand and self.useshumantrans:
             transformation = 'IAL'
         elif self.useexpand:
@@ -305,9 +305,9 @@ class CheckCommitTestprogs(CheckCommitBase):
                       f'-DCMAKE_TOOLCHAIN_FILE={arch_toolchain}',
                       '-DENABLE_DR_HOOK_NVTX=OFF',
                       '-DCMAKE_CXX_FLAGS=-lstdc++']
-        script = f'set -e; . {shlex.quote(arch_env)}; ' + shlex.join(cmake_args)
         out_path = os.path.join(arch_build_dir, 'Output_compilation_step1')
-        run_command(['bash', '-c', script], build_dir, out_path, display='always')
+        run_command(cmake_args, build_dir, out_path, env=sourced_env(arch_env),
+                    display='always')
 
     @staticmethod
     def _copy_source(srcdir, destdir):
@@ -316,10 +316,10 @@ class CheckCommitTestprogs(CheckCommitBase):
         kept, build directories and virtual environments are not copied),
         otherwise the whole directory (except .git)."""
         if os.path.exists(os.path.join(srcdir, '.git')):
-            result = subprocess.run(
+            result = run_command(
                 ['git', 'ls-files', '-z', '--cached', '--others', '--exclude-standard'],
-                cwd=srcdir, stdout=subprocess.PIPE, check=True)
-            for rel in sorted(set(result.stdout.decode('utf-8').split('\0'))):
+                cwd=srcdir, banner=False)
+            for rel in sorted(set(result.stdout.split('\0'))):
                 src = os.path.join(srcdir, rel)
                 if rel == '' or not os.path.lexists(src):
                     continue  # deleted but still tracked file
@@ -344,15 +344,11 @@ class CheckCommitTestprogs(CheckCommitBase):
         if not self.onlyIfNeeded or not any(os.path.isfile(lib) for lib in self._libphyex()):
             print(f"### Compilation of commit {self.commit}")
             # Build (the CMake configuration is done by pack_update), executed
-            # after having sourced the environment file
-            arch_env = os.path.join(arch_build_dir, 'arch.env')
-            if not os.path.isfile(arch_env):
-                raise CheckCommitError(
-                    f"Environment file not found ({arch_env}), the pack must be created first", 9)
+            # in the environment defined by the environment file
             cmake_args = ['cmake', '--build', arch_build_dir, '--parallel', '10']
-            script = f'set -e; . {shlex.quote(arch_env)}; ' + shlex.join(cmake_args)
             out_path = os.path.join(arch_build_dir, 'Output_compilation_step2')
-            run_command(['bash', '-c', script], build_dir, out_path, display='always')
+            run_command(cmake_args, build_dir, out_path, env=sourced_env(self._arch_env()),
+                        display='always')
 
     def execution(self):
         testdir = os.path.join(self.TESTDIR, self.name)
@@ -365,7 +361,7 @@ class CheckCommitTestprogs(CheckCommitBase):
                 if os.path.isdir(test_out):
                     shutil.rmtree(test_out)
 
-        firstrun = 1
+        firstrun = True
         for t in self.tests:
             if t not in self.allowedTests:
                 print(f"The test {t} is not allowed")
@@ -379,7 +375,7 @@ class CheckCommitTestprogs(CheckCommitBase):
 
             if firstrun:
                 print(f"### Running of commit {self.commit}")
-                firstrun = 0
+                firstrun = False
 
             exe_main = os.path.join(testdir, 'build',
                                     f'arch_{self.archfile}', 'bin',
@@ -394,25 +390,10 @@ class CheckCommitTestprogs(CheckCommitBase):
             self.fill_dirdata()
             os.symlink(os.path.join(self.dirdata, t), os.path.join(test_out, 'data'))
 
+            env = sourced_env(self._arch_env())
             if self.perf:
-                env = os.environ.copy()
-                env['DR_HOOK_OPT'] = 'prof'
-                env['DR_HOOK'] = '1'
-                env['DR_HOOK_IGNORE_SIGNALS'] = '-1'
-            else:
-                env = os.environ.copy()
-
-            arch_env = os.path.join(testdir, 'build',
-                                    f'arch_{self.archfile}', 'arch.env')
-            if os.path.isfile(arch_env):
-                with open(arch_env, encoding='utf-8') as f:
-                    for line in f:
-                        line = line.strip()
-                        if line.startswith('export '):
-                            parts = line[7:].split('=', 1)
-                            if len(parts) == 2:
-                                env[parts[0].strip()] = os.path.expandvars(
-                                    parts[1].strip())
+                env.update({'DR_HOOK_OPT': 'prof', 'DR_HOOK': '1',
+                            'DR_HOOK_IGNORE_SIGNALS': '-1'})
 
             cmd = [exe_main]
             if self.checkOpt:
@@ -423,42 +404,22 @@ class CheckCommitTestprogs(CheckCommitBase):
             self.submit(os.path.join(test_out, 'Output_run'),
                         os.path.join(test_out, 'Stderr_run'), cmd,
                         cwd=test_out, env=env)
-            stderr_run = os.path.join(test_out, 'Stderr_run')
-            if os.path.isfile(stderr_run):
-                with open(stderr_run, encoding='utf-8') as f:
-                    err_content = f.read()
+            stderr_run = Path(test_out, 'Stderr_run')
+            if stderr_run.is_file():
+                err_content = stderr_run.read_text(encoding='utf-8')
                 if err_content.strip():
                     print(err_content, file=sys.stderr)
 
             if self.perf:
-                prof0 = os.path.join(test_out, 'drhook.prof.1')
-                with open(prof0, encoding='utf-8') as f:
-                    content = f.read()
-                first_line = None
-                for i, line in enumerate(content.split('\n')):
-                    if re.match(r'^\s*1', line):
-                        first_line = i
-                        break
-                d = {'time': ('<f4', ('mean',)),
-                     'self': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
-                     'total': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
-                     'calls': ('<i4', ('sum',)),
-                     'self_per_call': ('<f4', ('mean',)),
-                     'total_per_call': ('<f4', ('mean',)),
-                     'routine': ('U256', '')}
-                arraynp = numpy.loadtxt(prof0,
-                                        dtype=[(k, v[0]) for (k, v) in d.items()],
-                                        converters={8: lambda s: s.split(b'@')[0].lstrip(b'*')},
-                                        skiprows=first_line, usecols=[1, 3, 4, 5, 6, 7, 8],
-                                        encoding='bytes')
-                df = pandas.DataFrame(arraynp).groupby('routine').agg(
-                    **{k + '_' + agg: pandas.NamedAgg(column=k, aggfunc=agg)
-                       for k in d.keys() for agg in d[k][1]
-                       if k != 'routine'}).sort_values('self_sum', ascending=False)
-                df.index.name += ' ordered by self_sum'
-                with open(os.path.join(test_out, 'drhook.prof.agg'),
-                          'w', encoding='utf-8') as f:
-                    f.write(df.to_string())
+                aggregate_drhook_profile(os.path.join(test_out, 'drhook.prof.1'),
+                                         os.path.join(test_out, 'drhook.prof.agg'))
+
+    @staticmethod
+    def _add_timing(total, value):
+        """Sum of timings: -999 as soon as a value is not available (None)"""
+        if value is None or total < 0:
+            return -999.0
+        return total + value
 
     def performance_evaluation(self):
         testdir = os.path.join(self.TESTDIR, self.name)
@@ -469,7 +430,7 @@ class CheckCommitTestprogs(CheckCommitBase):
 
         ZTD_sum = 0.0
         ZTC_sum = 0.0
-        firstrun = 1
+        firstrun = True
         for t in self.tests:
             if t not in self.allowedTests:
                 continue
@@ -483,19 +444,8 @@ class CheckCommitTestprogs(CheckCommitBase):
                     f"Run '-p -c {self.commit}' to compile.", 7)
 
             if firstrun:
-                firstrun = 0
-                arch_env = os.path.join(testdir, 'build',
-                                        f'arch_{self.archfile}', 'arch.env')
-                env = os.environ.copy()
-                if os.path.isfile(arch_env):
-                    with open(arch_env, encoding='utf-8') as f:
-                        for line in f:
-                            line = line.strip()
-                            if line.startswith('export '):
-                                parts = line[7:].split('=', 1)
-                                if len(parts) == 2:
-                                    env[parts[0].strip()] = os.path.expandvars(
-                                        parts[1].strip())
+                firstrun = False
+                env = sourced_env(self._arch_env())
 
                 NPOINTS = 100000
                 NPOINTS_perf = int(env.get('NPOINTS_perf', str(NPOINTS)))
@@ -508,11 +458,8 @@ class CheckCommitTestprogs(CheckCommitBase):
                 OMP_NUM_THREADS = int(env.get('OMP_NUM_THREADS_perf', '8'))
                 NBLOCKS = NPOINTS // NPROMA // 8 * 8
 
-                perf_tag_template = self.conf_extra_tag[4]
-                perf_tag = (perf_tag_template
-                            .replace('${NPROMA}', str(NPROMA))
-                            .replace('${NBLOCKS}', str(NBLOCKS))
-                            .replace('${NTIMES}', str(NTIMES)))
+                perf_tag = string.Template(self.conf_extra_tag[4]).substitute(
+                    NPROMA=NPROMA, NBLOCKS=NBLOCKS, NTIMES=NTIMES)
 
                 if not self.onlyIfNeeded:
                     for t2 in self.tests:
@@ -521,12 +468,6 @@ class CheckCommitTestprogs(CheckCommitBase):
                             f'arch_{self.archfile}', f'{t2}{perf_tag}')
                         if os.path.isdir(perf_dir):
                             shutil.rmtree(perf_dir)
-
-            perf_tag_template = self.conf_extra_tag[4]
-            perf_tag = (perf_tag_template
-                        .replace('${NPROMA}', str(NPROMA))
-                        .replace('${NBLOCKS}', str(NBLOCKS))
-                        .replace('${NTIMES}', str(NTIMES)))
 
             env_perf = os.environ.copy()
             env_perf['NPROMA'] = str(NPROMA)
@@ -540,41 +481,18 @@ class CheckCommitTestprogs(CheckCommitBase):
                  '-e', '4', '--name', self.name, '--prec', self.precision, self.commit],
                 env=env_perf)
 
-            output_file = os.path.join(
-                testdir, 'tests',
-                f'arch_{self.archfile}', f'{t}{perf_tag}', 'Output_run')
-            if os.path.isfile(output_file):
-                with open(output_file, encoding='utf-8') as f:
-                    content = f.read()
-
-                ZTD = None
-                for line in content.split('\n'):
-                    m = re.match(r'.*\bZTD\s*=\s*(\S+)', line)
-                    if m:
-                        ZTD = float(m.group(1))
-                        break
-                if ZTD is not None:
-                    ZTD_sum = ZTD_sum + ZTD if ZTD_sum >= 0 else ZTD
-                else:
-                    ZTD = -999.0
-                    ZTD_sum = -999.0
-
-                ZTC = None
-                for line in content.split('\n'):
-                    m = re.match(r'.*\bZTC\s*=\s*(\S+)', line)
-                    if m:
-                        ZTC = float(m.group(1))
-                        break
-                if ZTC is not None:
-                    ZTC_sum = ZTC_sum + ZTC if ZTC_sum >= 0 else ZTC
-                else:
-                    ZTC = -999.0
-                    ZTC_sum = -999.0
-            else:
-                ZTD = -999.0
-                ZTD_sum = -999.0
-                ZTC = -999.0
-                ZTC_sum = -999.0
+            # Timings (ZTD and ZTC values printed by the program), -999 if not found
+            output_file = Path(testdir, 'tests', f'arch_{self.archfile}', f'{t}{perf_tag}',
+                               'Output_run')
+            content = output_file.read_text(encoding='utf-8') if output_file.is_file() else ''
+            timings = {}
+            for name in ('ZTD', 'ZTC'):
+                m = re.search(rf'\b{name}[ \t]*=[ \t]*(\S+)', content)
+                timings[name] = float(m.group(1)) if m else None
+            ZTD, ZTC = (-999.0 if timings[name] is None else timings[name]
+                        for name in ('ZTD', 'ZTC'))
+            ZTD_sum = self._add_timing(ZTD_sum, timings['ZTD'])
+            ZTC_sum = self._add_timing(ZTC_sum, timings['ZTC'])
 
             with open(self.perffile, 'a', encoding='utf-8') as pf:
                 pf.write(f"{self.name} testprogs {t} {ZTD} {ZTC}\n")

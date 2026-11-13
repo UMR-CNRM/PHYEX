@@ -9,11 +9,10 @@ import json
 import os
 import shutil
 import sys
-import time
 
 from pyphyextools.testing.check_common import (
-    CheckCommitBase, CheckCommitError, escape_commit, mvdiff, run_tool)
-from pyphyextools import run_command
+    CheckCommitBase, CheckCommitError, escape_commit, mvdiff, run_tool, sourced_env, timed)
+from pyphyextools import download_and_extract, run_command
 from pyphyextools.prep_code import prep_code
 from pyphyextools.testing.compare import compareBACKUPFiles, compareTSERIESFiles, comp_ncdump
 
@@ -107,12 +106,7 @@ class CheckCommitMesonh(CheckCommitBase):
         url = self.json_content.get(
             'MESONHrepo', 'https://src.koda.cnrs.fr/mesonh/mesonh-code')
         url += f"/-/archive/{mesonh_commit}/mesonh-code-{mesonh_commit}.tar.gz"
-        run_command(['wget', '--no-check-certificate',
-                        '-O', f"mesonh-code-{mesonh_commit}.tar.gz", url],
-                       cwd=self.MNHPACK)
-        run_command(['tar', 'xf', f"mesonh-code-{mesonh_commit}.tar.gz"],
-                    cwd=self.MNHPACK)
-        os.unlink(os.path.join(self.MNHPACK, f"mesonh-code-{mesonh_commit}.tar.gz"))
+        download_and_extract(url, self.MNHPACK)
         shutil.move(os.path.join(self.MNHPACK, f"mesonh-code-{mesonh_commit}"), mnhdir_full)
 
     def pack_update(self):
@@ -166,8 +160,12 @@ class CheckCommitMesonh(CheckCommitBase):
             if os.path.isdir(git_dir):
                 shutil.rmtree(git_dir)
 
-        run_command(['find', 'PHYEX', '-type', 'f', '-exec', 'touch', '{}', ';'],
-                    cwd=src_base)
+        # Update of the modification time of all the files (as 'touch')
+        for root, _, files in os.walk(os.path.join(src_base, 'PHYEX')):
+            for name in files:
+                path = os.path.join(root, name)
+                if not os.path.islink(path):
+                    os.utime(path)
 
         if self.packupdate:
             phyex_dir = os.path.join(src_base, 'PHYEX')
@@ -189,6 +187,15 @@ class CheckCommitMesonh(CheckCommitBase):
             for f in os.listdir(exe_dir):
                 os.remove(os.path.join(exe_dir, f))
 
+    def _profile_env(self):
+        """Environment defined by the Meso-NH profile (conf/profile_mesonh-*,
+        produced by configure)"""
+        profiles = glob.glob(os.path.join(self.MNHPACK, self.mnhdir, 'conf', 'profile_mesonh-*'))
+        if len(profiles) != 1:
+            raise CheckCommitError(
+                f"One Meso-NH profile expected, found: {profiles or 'none'}", 9)
+        return sourced_env(profiles[0])
+
     def compilation_step(self):
         """Compile MesoNH with *make*."""
         mnhdir_full = os.path.join(self.MNHPACK, self.mnhdir)
@@ -201,17 +208,18 @@ class CheckCommitMesonh(CheckCommitBase):
             print(f"### Compilation of commit {self.commit}")
             src_dir = os.path.join(mnhdir_full, 'src')
 
+            # Profiles of previous configurations removed (only the one produced by
+            # configure must remain)
+            for profile in glob.glob(os.path.join(mnhdir_full, 'conf', 'profile_mesonh-*')):
+                os.remove(profile)
             run_command(['./configure'], cwd=src_dir)
 
             for f in os.listdir(exe_dir):
                 os.remove(os.path.join(exe_dir, f))
-            shell_cmd = (
-                f". {mnhdir_full}/conf/profile_mesonh-* 2>/dev/null; "
-                f"make -j 8 && make installmaster"
-            )
-            run_command(['bash', '-c', shell_cmd],
-                        os.path.join(mnhdir_full, 'src'),
-                        os.path.join(mnhdir_full, 'Output_compilation'),
+            env = self._profile_env()
+            out_path = os.path.join(mnhdir_full, 'Output_compilation')
+            run_command(['make', '-j', '8'], src_dir, out_path, env=env, display='always')
+            run_command(['make', 'installmaster'], src_dir, out_path, mode='a', env=env,
                         display='always')
 
     def execution(self):
@@ -248,28 +256,18 @@ class CheckCommitMesonh(CheckCommitBase):
                     f"Pack does not exist ({mnhdir_full}) or compilation has failed, "
                     "please check", 6)
 
-            t1_us = time.time_ns() // 1000
             #POSTRUN=echo to disable plotting
             #PHYEX_TEST_MODE=yes to adapt some tests (grid reduction, simulation length...)
             #input 'yes' to accept the dowloading of PGD files
-            shell_cmd = (
-                f". {mnhdir_full}/conf/profile_mesonh-* 2>/dev/null; "
-                f"make all"
-            )
-            env = os.environ.copy()
+            env = self._profile_env()
             env.update({'POSTRUN': 'echo',
                         'PHYEX_TEST_MODE': 'yes'})
-            run_command(['bash', '-c', shell_cmd], full_casedir,
-                        os.path.join(full_casedir, 'Output_run'),
-                        env=env,
-                        input_string='yes',
-                        display='always')
-            t2_us = time.time_ns() // 1000
-            elapsed_ms = (t2_us - t1_us) // 1000
-
-            if self.perffile:
-                with open(self.perffile, 'a', encoding='utf-8') as pf:
-                    pf.write(f"{self.name} mesonh {t} {elapsed_ms}\n")
+            with timed(self.perffile, self.name, 'mesonh', t):
+                run_command(['make', 'all'], full_casedir,
+                            os.path.join(full_casedir, 'Output_run'),
+                            env=env,
+                            input_string='yes',
+                            display='always')
 
     def comparison(self):
         """Compare NetCDF output files against the reference."""
@@ -277,11 +275,8 @@ class CheckCommitMesonh(CheckCommitBase):
         print(f"### Check commit {self.commit} against commit {self.reference}")
         refByTest = self.resolve_ref_per_test(self.json_content)
 
-        result = run_command(
-            ['bash', '-c',
-             f'. {mnhdir_full}/conf/profile_mesonh-* 2>/dev/null; echo $HDF5_PLUGIN_PATH'],
-            check=False)
-        hdf5_path = result.stdout.strip()
+        # HDF5_PLUGIN_PATH (defined by the profile) needed to read the outputs
+        hdf5_path = self._profile_env().get('HDF5_PLUGIN_PATH')
         if hdf5_path:
             os.environ['HDF5_PLUGIN_PATH'] = hdf5_path
 
