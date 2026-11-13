@@ -44,7 +44,6 @@ class ExperimentRunner(PPPYComp):
                                tag=string2filename(exp.get('name', 'Experiment')),
                                case=case,
                                grid=Grid(exp.get('grid', 'L90arome')),
-                               pyphyex=exp.get('pyphyex', None),
                                pyecrad=exp.get('pyecrad', None),
                                namel=exp.get('namel', 'default'),
                                dx=exp.get('dx', 0),

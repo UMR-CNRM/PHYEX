@@ -18,7 +18,7 @@ import numpy as np
 import xarray as xr
 from matplotlib import pyplot as plt
 
-from phyex1d import CaseXarray, ExperimentRunner
+from pyphyex.phyex1d import CaseXarray, ExperimentRunner
 
 logging.basicConfig(level=logging.INFO)
 

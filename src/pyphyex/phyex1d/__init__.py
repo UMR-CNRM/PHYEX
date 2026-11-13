@@ -4,7 +4,7 @@
 
 import numpy
 
-__version__ = "0.1.0"
+from pyphyex import __version__  # PHYEX version
 
 
 class Phyex1DError(Exception):

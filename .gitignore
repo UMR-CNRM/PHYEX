@@ -13,3 +13,7 @@
 *.whl
 __pycache__
 venv
+dist/
+
+# phyex1d documentation
+/docs/phyex1d/html
