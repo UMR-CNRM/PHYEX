@@ -34,6 +34,14 @@ INTEGER :: IINFO_ll, IIB, IIE, IJB, IJE, IKB, IKE
 !
 ! ---------------------------------------------------------------------------
 !
+    IIB=D%NIB
+    IIE=D%NIE
+    IJB=D%NJB
+    IJE=D%NJE
+    IKB=D%NKB
+    IKE=D%NKE
+!
+!
 #ifndef MNH_OPENACC
     IF (ODOUPDATE) CALL UPDATE_HALO_ll(TZFIELDS_ll,IINFO_ll)
 #else
