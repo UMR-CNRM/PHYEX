@@ -323,7 +323,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
         f.write('\nIMPLICIT NONE\n')
         f.write('\n'.join(declList) + '\n')
         f.write('\n'.join(copyList) + '\n')
-        f.write(f"CALL {name}({', &\n  '.join(argList2)})\n")
+        f.write(f"CALL {name}(" + ', &\n  '.join(argList2) + ")\n")
         for unit in flush:
             f.write(f"FLUSH({unit})\n")
         f.write(f'END {kind} PY{name}')
