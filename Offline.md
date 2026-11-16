@@ -3,78 +3,70 @@
 ## About this section
 
 This document is intended for persons who want to use PHYEX in an offline mode.
-Some offline test programs are provided with the package and a library suitable for use with python is also available.
+Some offline test programs are provided with the package and a python package (python binding and 1D model) is also available.
 
 ## Compilation
 
-The compilation can be achieved using different build systems.
-In the following explanations, the build system name is replaced by \<bs\>.
+The library and the test programs are compiled with CMake (version 3.18 or later), from the main CMakeLists.txt file:
 
-The PHYEX source code needs the [fiat](https://github.com/ecmwf-ifs/fiat) package 
-installation is done automatically by the compilation script).
+```
+. PHYEX/arch/arch-<architecture>.env
+cmake -S PHYEX -B build -DCMAKE_TOOLCHAIN_FILE=PHYEX/arch/arch-<architecture>.ecbuild -DENABLE_PHYEX_BUILD_PROGS=ON
+cmake --build build -j
+```
 
-The different build/with\_\<bs\> directories in the master branch contains the build environments.
+The PHYEX source code needs the [fiat](https://github.com/ecmwf-ifs/fiat) package and the build system needs [ecbuild](https://github.com/ecmwf/ecbuild).
+If they are not found (installed versions can be given with the usual CMake mechanisms, e.g. CMAKE\_PREFIX\_PATH), they are downloaded and built automatically (an internet connection is then needed).
+Their versions and repositories can be changed with the PHYEX\_ECBUILD\_VERSION, PHYEX\_ECBUILD\_REPO, PHYEX\_FIAT\_VERSION and PHYEX\_FIAT\_REPO variables (environment or -D options).
 
-The [fcm](https://metomi.github.io/fcm/doc/user_guide/) build system needs to be installed,
-this is done automatically by the compilation script.
+The arch directory contains the architecture files: arch-\<architecture\>.ecbuild is a CMake toolchain file (compilers and compilation options) and arch-\<architecture\>.env is an environment file to source before compiling and executing (modules to load...).
 
-The script build/with\_\<bs\>/make\_\<bs\>.sh uses configuration files and build the library and test programs.
-These executables can be found in the build/bin subdirectory in the architecture specific directory arch\_\<architecture name\>.
+The main options (-D\<option\>=\<value\>) are:
 
-Some configuration files are stored in build/with\_\<bs\>/arch but other can be maintained by the end users in their
-${HOME}/.phyex/\<bs\>\_arch.
+  - ENABLE\_DOUBLE\_PRECISION (ON by default) and ENABLE\_SINGLE\_PRECISION (OFF by default): precisions to compile (the libraries are named libphyex\_dp and libphyex\_sp)
+  - ENABLE\_PHYEX\_BUILD\_PROGS (OFF by default): compilation of the test programs (main\_\<test\>\_\<precision\>.exe)
+  - ENABLE\_OMP, ENABLE\_ACC: OpenMP and OpenACC support
+  - PHYEX\_TRANSFORMATION (also read from the environment variable of the same name): transformation of the source code at build time by [pyfortool](https://github.com/UMR-CNRM/pyfortool), among IAL (transformations applied for the AROME model: mnh\_expand directives expanded in DO loops, shuman functions transformed...), IAL\_NOSHUGRAD and IAL\_NOEXPAND (empty or NONE, the default, means no transformation). If pyfortool is not found, or is too old, it is installed automatically in a python virtual environment in the build directory
+  - ENABLE\_CHECK\_NORMS (ON by default): check of the coding norms of the transformed source code
+  - ENABLE\_PYTHON\_WHEEL (OFF by default): generation of the python binding (used to build the python package, see [below](#python-package))
 
-Some more details on the build system can be found in [build/README.md file](../build/README.md).
+The src/phyex directory can also be compiled alone, using its own CMakeLists.txt file (for instance when included in a bigger project providing ecbuild and fiat).
 
-### Compilation directly in the repository without execution (or manual execution)
+## Test programs
 
-When on a master commit, the build/with\_\<bs\>/make\_\<bs\>.sh script can be used to compile the offline tools.
+### Usage through the phyex-check\_testprogs tool
 
-### Compilation and execution
+The phyex-check\_testprogs tool (see the [Tools documentation](./Tools.md)) compiles the test programs (with the CMake build system), executes them and compares the results with those of a reference version. The source code can be a commit of a remote repository or the content of a local repository (with its uncommitted modifications), for instance:
 
-When on a master commit, the tools/check\_commit\_testprogs.sh script can be used to compile and execute the testprogs (offline tests).
-The check\_commit\_testprogs.sh script uses the PHYEX source code:
+```
+phyex-check_testprogs -p -c -r -C --computeRefIfNeeded $HOME/PHYEX REF
+```
 
-  - of a specific commit on the master branch available on a remote repository
-  - or, the last commit of a offline\_\<commit\_hash\> branch available on a remote repository
-  - or, the content of a local repository.
+This command creates a directory (in $TESTPROGSDIR, $HOME/TESTPROGS by default) with a copy of the source code, builds and executes the testprogs, then compares the results with the reference results (REF: the reference commits given in the 'testing' entry of the src/phyex/testprogs\_version.json file, computed if needed).
 
-In the latter case, it can be interesting to clone the PHYEX repository twice.
-A first one to have the build tools on the master branch, and a second one to checkout the source code version to use.
-This solution is especially useful when working on a offline\_\<commit\_hash\> branch (because these branches does not
-contain the build tools).
+### Data
 
-Something like this can be used:
+The test programs need input data, stored in ${PHYEXCONF}/testprogs\_data (the PHYEXCONF environment variable defaults to ${HOME}/.phyex).
+If this directory is empty, a reduced dataset is automatically downloaded and installed when phyex-check\_testprogs is used.
 
-- cd $HOME; git clone \<PHYEX url\> PHYEXtools
-- cd PHYEXtools; git checkout master
-- cd $HOME; git clone \<PHYEX url\> PHYEX
-- cd PHYEX; git checkout arome\_\<commit\_hash\>; source code moddifications...
-- . PHYEXtools/tools/env.sh; check\_commit\_testprogs.sh $HOME/PHYEX REF
+The data can also be generated:
 
-The last step will create a directory (in $HOME/TESTPROGS) with a copy of your source code and the build system, builds the testprogs and executes them.
+  - The branch testprogs\_data contains modified source code for the AROME model to enable the generation of data samples for the turb, shallow, rain\_ice and ice\_adjust testprogs.
+  - The branch testprogs\_data2 contains modified source code for the AROME model to enable the generation of data samples for the rain\_ice\_old testprog.
+  - The branch testprogs\_data3 contains modified source code for the AROME model to enable the generation of data samples for the lima and lima\_adjust testprogs.
 
-## Test program
-
-### Data generation
-
-The branch testprogs\_data contains modified source code for the AROME model to enable the generation of data samples for the turb, shallow, rain\_ice and ice\_adjust testprogs.
-The branch testprogs\_data2 contains modified source code for the AROME model to enable the generation of data samples for the rain\_ice\_old testprog.
-The branch testprogs\_data3 contains modified source code for the AROME model to enable the generation of data samples for the lima and lima\_adjust testprogs.
 Using these branches, in the drivers of the different parametrisations (aro\_\* files), output can be enable for the AROME model.
 Running the AROME model with these modifications outputs files in the running directory.
-This must be done once by parametrisation (note that the check\_commit\_ial.sh script can be used to execute an AROME simulation).
+This must be done once by parametrisation (note that the phyex-check\_ial tool can be used to execute an AROME simulation).
 
 These files should be renamed with the following command:
-i=0; for file in ????_??_????????.dat; do mv $file `printf %08d $i`.dat; i=$((i+1)); done
+i=0; for file in ????\_??\_????????.dat; do mv $file `printf %08d $i`.dat; i=$((i+1)); done
+
+and put in the corresponding directories under ${PHYEXCONF}/testprogs\_data.
 
 ### Usage directly with the testprogs executables
 
 The different main\_\*.exe programs obtained by the compilation can be run. Each of these executables is expecting the presence of a 'data' directory in their working directory containing the different files.
-
-### Usage through the check\_commit\_testprogs.sh script
-
-As described in [COMPILATION](#compilation).
 
 ## Python package
 
@@ -82,11 +74,10 @@ The pyphyex python package contains:
 
 - pyphyex.lowlevel: python binding of the main subroutines of PHYEX (PYINI\_PHYEX, PYICE\_ADJUST,
   PYRAIN\_ICE, PYTURB, PYSHALLOW\_MF...). This module loads the PHYEX shared library when imported.
-- pyphyex.phyex1d: a 1D model using PHYEX, also available through the phyex1d-exp\_run, phyex1d-exp\_plot and phyex1d-exp\_list commands
-  (see the [phyex1d documentation](phyex1d/README.md)).
+- pyphyex.phyex1d: a 1D model using PHYEX, also available through the phyex1d-\* commands
+  (see the [phyex1d documentation](./phyex1d.md)).
 
-The package is compiled and installed with pip (a Fortran compiler and CMake are needed), from the
-root of the PHYEX repository:
+The package is compiled and installed with pip (python >= 3.10, a Fortran compiler and CMake >= 3.18 are needed) from the root of the PHYEX repository:
 
 ```
 pip install .          # or, to build a wheel: pip wheel . -w dist
@@ -94,6 +85,29 @@ pip install .          # or, to build a wheel: pip wheel . -w dist
 
 CMake options (e.g. toolchain file) can be given with
 '-C cmake.define.CMAKE\_TOOLCHAIN\_FILE=\<arch\>.ecbuild' or with the CMAKE\_ARGS environment variable.
+
+### Development installation
+
+The package can be installed in editable mode (pip install -e .):
+
+- the python modules (src/pyphyex, among them phyex1d) are used directly from the source tree, while
+  the files produced by CMake (pyphyex/lowlevel.py, pyphyex/\_version.py, pyphyex/lib/) are installed in
+  site-packages. A modification of the Fortran code (or of the bound routines) needs a new installation.
+- by default the CMake build is done in a temporary directory (full rebuild at each installation). With
+  '-C build-dir=build/{wheel\_tag}' the build tree is kept and a new installation is incremental.
+- with '-C editable.rebuild=true' (experimental), the CMake build is run at each import of the package, so
+  Fortran modifications are taken into account automatically. It needs build-dir and --no-build-isolation
+  (the build requirements, scikit-build-core and pyfortool, must then be installed in the environment).
+  Each import is slower and needs the compilers.
+
+For instance:
+```
+pip install scikit-build-core pyfortool
+pip install --no-build-isolation -e . -C build-dir=build/{wheel_tag} -C editable.rebuild=true
+```
+or, without editable.rebuild, run the same command again after a Fortran modification.
+
+### Python binding
 
 The low-level module can be used like in this example for ice\_adjust:
 

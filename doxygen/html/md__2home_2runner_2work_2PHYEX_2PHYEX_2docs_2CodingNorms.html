@@ -86,7 +86,7 @@ Namelists</h2>
 <p>We must be able to reproduce (binary comparison of the output files) the model results before and after code modifications. It means that every modification must be controlled by a namelist key (with the exception of bug corrections).</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md25"></a>
 File names</h2>
-<p>The fortran file names use a capital F letter (eg: foo.F90) except if working in a Meso-NH branch (mesonh_&lt;commit&gt;) or in the folder (src/mesonh) specific to the Meso-NH model.</p>
+<p>The fortran file names use a capital F letter (eg: foo.F90) except if working in a Meso-NH branch (mesonh_&lt;commit&gt;).</p>
 <p>Names for the module:</p>
 <ul>
 <li>modd_ for module containing only variable declaration (eg: tuning parameters)</li>
@@ -96,8 +96,8 @@ File names</h2>
 </ul>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md26"></a>
 When using mode_ or modi_?</h2>
-<p>When writing a new subroutine, should we put it in a module (in a mode_ file) or should we write the subroutine in a file and write the interface bloc in another file (modi_ file)?</p>
-<p>The answer depends on whether the routine is the 'main' routine of the parametrisation or not. If it is the 'main' routine, the interface bloc is declared apart, if not we can use a module. The idea behind is to break compilation dependency at the parametrisation level, and to isolate the interface declaration of the different routines that must be plugged in the hosting model.</p>
+<p>When writing a new subroutine, should we put it in a module (in a mode_ file) or should we write the subroutine directly in a file and it in the src/phyex/cmake/modi_sources.txt file (to automatically build the modi_ file at compile time)?</p>
+<p>The answer depends on whether the routine is the 'main' routine of the parametrisation or not. If it is the 'main' routine, the interface bloc is automatically generated, if not we can use a module. The idea behind is to break compilation dependency at the parametrisation level, and to isolate the interface declaration of the different routines that must be plugged in the hosting model.</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md27"></a>
 Miscellaneous constraints</h2>
 <p>Several constraints are imposed:</p>
@@ -105,10 +105,16 @@ Miscellaneous constraints</h2>
 <li>The code must be written with up to 132 characters per line.</li>
 <li>CODE IS IN CAPITAL LETTERS! comments in small letters</li>
 <li>All variables must be declared: IMPLICIT NONE</li>
+<li>All dummy variables must be declared with INTENT attribute</li>
 <li>except in rare cases, use automatic arrays, no allocatable</li>
 <li>dimensions of dummy argument arrays are explicit (no (:,:))</li>
 <li>except variables declared with the PARAMETER attribute, no variable from modules can be used in the physics. Variables must be put in a type received by interface.</li>
-<li>functions returning arrays must be rewritten as subroutine</li>
+<li>functions returning arrays must be rewritten as subroutine (hard-coded or with a transformation)</li>
+<li>All unused local variables must be removed</li>
+<li>USE statements must always be used with ONLY:</li>
+<li>No operation can be used in CALL statements</li>
+<li>statements inside mnh_expand blocks must use explicit array bounds</li>
+<li>No empty parens in CALL statements</li>
 </ul>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md28"></a>
 Doctor norm</h2>
@@ -128,12 +134,12 @@ Doctor norm</h2>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md29"></a>
 Array-syntax or not?</h2>
 <p>The master branch and the Méso-NH specifc branches are written using array-syntax with mnh_expand directives.</p>
-<p>For these branches, developer must be carrefull when using the mnh_expand directives, code must respect some constraints (the verify_mnh_expand.py tool can help the PHYEX admin at checking the validity of the written code):</p><ul>
-<li>parenthesis after array variables are mandatory (no A=B+C, but A(:,:)=B(:,:)+C(:,:))</li>
+<p>For these branches, developer must be carrefull when using the mnh_expand directives, code must respect some constraints (the phyex-check_norms tool, described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Tools.html">Tools documentation</a>, checks the coding norms including some of these constraints):</p><ul>
+<li>parenthesis after array variables are mandatory (no A=B+C, but A(:,:)=B(:,:)+C(:,:)) except in CALL statements where it is forbidden if there is no index selection</li>
 <li>no space between array variables and the opening parenthesis (no A (:)=B (:), but A(:)=B(:))</li>
 <li>same bounds as declared in the mnh_expand directive should be used in the array-syntax (A(DNIB:DNIE)=...)</li>
 </ul>
-<p>The arome and offline specific branches are written using DO loops.</p>
+<p>The arome branch is written using DO loops.</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md30"></a>
 Call to routines from within a loop on horizontal or vertical dimensions</h2>
 <p>Call to external subroutine in loop on horizontal or vertical dimensions must be suppressed in the master version. If possible, the call must be put outside of the loop (acting on the full array as a whole) or the subroutine must be put in the CONTAINS part but, in this case, the included subroutine cannot use local array. There are 3 cases:</p>

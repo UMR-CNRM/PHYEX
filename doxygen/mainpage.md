@@ -2,12 +2,13 @@ Doxygen is used to document the source code, general documentation is available
 directly in the [docs directory](../..) as Makdown files and are linked here:
 
   - [Introduction](../PHYEX.md)
-  - [Developer](../Developer.md): package organisation, how to contribute, coding norms
+  - [Developer](../Developer.md): package organisation, how to contribute
   - [Coding norms](../CodingNorms.md): coding norms
-  - [Integrator](../Integrator.md): how to merge contributions
-  - [Offline](../Offline.md): how to compile the library and the test programs, how to use the library with python and how to use the test programs
+  - [Integrator](../Integrator.md): how to merge contributions, how to prepare the source code for the models
+  - [Offline](../Offline.md): how to compile the library and the test programs, how to use the test programs and the python binding
+  - [phyex1d](../phyex1d.md): the 1D model using PHYEX (pyphyex python package)
   - [Plugging](../Plugging.md) : how to plug the physics package in a model
-  - [Tools](../Tools.md): description of the check\_commit\_\*.sh scripts (to check bit reproducibility between two commits) and of the prep\_code.sh script
+  - [Tools](../Tools.md): installation and description of the tools (source code preparation and phyex-check\_\* commands to check the bit-reproducibility between two commits)
 
 The main entry points of the package are:
 
@@ -17,6 +18,8 @@ The main entry points of the package are:
   - [ice\_adjust](@ref ice\_adjust): to run the adjustment process linked to the ICE3/ICE4 scheme
   - [turb](@ref turb): to run the turbulence scheme
   - [shallow\_mf](@ref shallow\_mf): to run the shallow convection scheme
+
+The python package is documented in the [pyphyex](@ref pyphyex) entry (python binding and phyex1d 1D model).
 
 In addition, some offline tools are available:
 

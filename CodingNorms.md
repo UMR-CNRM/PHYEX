@@ -10,7 +10,7 @@ This section is intended for developers and integrators and describes the coding
 We must be able to reproduce (binary comparison of the output files) the model results before and after code modifications. It means that every modification must be controlled by a namelist key (with the exception of bug corrections).
 
 ### File names
-The fortran file names use a capital F letter (eg: foo.F90) except if working in a Meso-NH branch (mesonh\_\<commit\>) or in the folder (src/mesonh) specific to the Meso-NH model.
+The fortran file names use a capital F letter (eg: foo.F90) except if working in a Meso-NH branch (mesonh\_\<commit\>).
 
 Names for the module:
 
@@ -20,9 +20,9 @@ Names for the module:
   - mode\_ for module containing executable source code (subroutine or function)
 
 ### When using mode\_ or modi\_?
-When writing a new subroutine, should we put it in a module (in a mode\_ file) or should we write the subroutine in a file and write the interface bloc in another file (modi\_ file)?
+When writing a new subroutine, should we put it in a module (in a mode\_ file) or should we write the subroutine directly in a file and it in the src/phyex/cmake/modi\_sources.txt file (to automatically build the modi\_ file at compile time)?
 
-The answer depends on whether the routine is the 'main' routine of the parametrisation or not. If it is the 'main' routine, the interface bloc is declared apart, if not we can use a module.
+The answer depends on whether the routine is the 'main' routine of the parametrisation or not. If it is the 'main' routine, the interface bloc is automatically generated, if not we can use a module.
 The idea behind is to break compilation dependency at the parametrisation level, and to isolate the interface declaration of the different routines that must be plugged in the hosting model.
 
 ### Miscellaneous constraints
@@ -31,10 +31,16 @@ Several constraints are imposed:
   - The code must be written with up to 132 characters per line.
   - CODE IS IN CAPITAL LETTERS! comments in small letters
   - All variables must be declared: IMPLICIT NONE
+  - All dummy variables must be declared with INTENT attribute
   - except in rare cases, use automatic arrays, no allocatable
   - dimensions of dummy argument arrays are explicit (no (:,:))
   - except variables declared with the PARAMETER attribute, no variable from modules can be used in the physics. Variables must be put in a type received by interface.
-  - functions returning arrays must be rewritten as subroutine
+  - functions returning arrays must be rewritten as subroutine (hard-coded or with a transformation)
+  - All unused local variables must be removed
+  - USE statements must always be used with ONLY:
+  - No operation can be used in CALL statements
+  - statements inside mnh\_expand blocks must use explicit array bounds
+  - No empty parens in CALL statements
 
 ### Doctor norm
 The variables are named according to the doctor norm:
@@ -49,12 +55,12 @@ The variables are named according to the doctor norm:
 ### Array-syntax or not?
 The master branch and the Méso-NH specifc branches are written using array-syntax with mnh\_expand directives.
 
-For these branches, developer must be carrefull when using the mnh\_expand directives, code must respect some constraints (the verify\_mnh\_expand.py tool can help the PHYEX admin at checking the validity of the written code):
-  - parenthesis after array variables are mandatory (no A=B+C, but A(:,:)=B(:,:)+C(:,:))
+For these branches, developer must be carrefull when using the mnh\_expand directives, code must respect some constraints (the phyex-check\_norms tool, described in the [Tools documentation](./Tools.md), checks the coding norms including some of these constraints):
+  - parenthesis after array variables are mandatory (no A=B+C, but A(:,:)=B(:,:)+C(:,:)) except in CALL statements where it is forbidden if there is no index selection
   - no space between array variables and the opening parenthesis (no A (:)=B (:), but A(:)=B(:))
   - same bounds as declared in the mnh\_expand directive should be used in the array-syntax (A(D%NIB:D%NIE)=...)
 
-The arome and offline specific branches are written using DO loops.
+The arome branch is written using DO loops.
 
 ### Call to routines from within a loop on horizontal or vertical dimensions
 Call to external subroutine in loop on horizontal or vertical dimensions must be suppressed in the master version. If possible, the call must be put outside of the loop (acting on the full array as a whole) or the subroutine must be put in the CONTAINS part but, in this case, the included subroutine cannot use local array. There are 3 cases:

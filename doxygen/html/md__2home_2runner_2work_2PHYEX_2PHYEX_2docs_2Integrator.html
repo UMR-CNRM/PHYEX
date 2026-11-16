@@ -75,56 +75,39 @@ $(function() {
   <div class="headertitle"><div class="title">PHYEX INTEGRATOR DOCUMENTATION </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md43"></a></p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md44"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md41"></a></p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md42"></a>
 About this section</h1>
 <p>This document is intended for integrators who are in charge of assembling contributions received through pull requests.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md45"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md43"></a>
 Branches and norms</h1>
 <p>Regarding array-syntax, the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2CodingNorms.html">applicable norm</a> depends on the branch:</p>
 <ul>
-<li>The legacy main branch of PHYEX (and all branches based on main) was written using array-syntax</li>
 <li>The master branch is written using array-syntax with mnh_expand directives</li>
-<li>arome specific branches based on the master branch are written using DO loops</li>
-<li>mesonh specific branches based on the master branch are written using array-syntax</li>
+<li>The arome branch is written using DO loops</li>
+<li>mesonh specific branches are written using array-syntax</li>
 </ul>
 <p>Pull requests can be received on all these kind of branches and must be merged into the master branch with according norm.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md46"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md44"></a>
 Normal workflow for a contribution developed in AROME and HARMONIE-AROME</h1>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md47"></a>
-Scientific contributions until cycle 49t1</h2>
-<p><img src="./AROMEworkflow1.svg" alt="" style="pointer-events: none;" class="inline"/></p>
-<p>The pull request comes from the IAL integrator. It must be based on an arome specific branch.</p>
-<p>Details for point 6, the PHYEX administrator:</p>
-<ul>
-<li>validates (see below) the contribution</li>
-<li>integrates the contribution in the arome branch and merges it in the master branch</li>
-<li>regularly, he tags a new (minor) version of the master branch</li>
-<li>when asked by the IAL integrator, he builds a new arome specific branch</li>
-<li>when an arome specific branch is used in an official cycle, the arome specific branch is tagged accordingly</li>
-</ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md48"></a>
-Refactoring contributions from now on, and scientific contributions after cycle 49t1</h2>
 <p><img src="./AROMEworkflow2.svg" alt="" style="pointer-events: none;" class="inline"/></p>
-<p>The pull request comes directly from a developer. It must be based on an arome specific branch.</p>
+<p>The pull request comes directly from a developer. It must be based on the arome branch. When the interfaces with the rest of the model are modified, a pull request is also sent to the IAL repository (modifications of the CALL statements).</p>
 <p>Details for point 6:</p>
 <ul>
-<li>The PHYEX administrator checks the pull requests in the other applications (see below)</li>
-<li>The IAL integrator integrates the contribution on the arome specific branch</li>
 <li>The PHYEX administrator<ul>
-<li>integrates the modifications in the master branch</li>
+<li>validates the contribution (see below)</li>
+<li>integrates the modifications in the master branch (written with the array-syntax and mnh_expand directives); the arome branch is then updated automatically (see below)</li>
 <li>regularly, tags a new (minor) version of the master branch</li>
-<li>when asked by the IAL integrator, builds a new arome specific branch (see below)</li>
-<li>when an arome specific branch is used in an official cycle, the arome specific branch is tagged accordingly</li>
 </ul>
 </li>
+<li>Then, a new commit is added on the IAL working branch (on which the IAL pull request is based) to reference the new PHYEX commit (arome branch) in the bundle/bundle.yml file of IAL</li>
+<li>The IAL integrator integrates the IAL pull request</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md49"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md45"></a>
 PHYEX - IAL compatibility</h2>
-<p>Because the interfaces between the physics and the rest of the model can change, the right version of IAL to use with PHYEX must be referenced in the 'src/arome/ial_version.json' file.</p>
-<p>If no IAL version is able to receive directly the PHYEX physics, an 'ext' directory can be added to hold the files that must be modified on top of the IAL version described in the 'src/arome/ial_version.json' file.</p>
-<p>In addition, if some files must be excluded from the IAL compilation, they must be listed in the 'src/arome/gmkpack_ignored_files' file.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md50"></a>
+<p>Because the interfaces between the physics and the rest of the model can change, the IAL version to use with PHYEX must be referenced in the 'src/phyex/ial_version.json' file (repository, commit and cycle of IAL, used by the phyex-check_ial tool). On the IAL side, the PHYEX version is referenced in the bundle/bundle.yml file.</p>
+<p>In addition, if some files must be excluded from the IAL compilation, they must be listed in the 'src/phyex/gmkpack_ignored_files' file.</p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md46"></a>
 Normal workflow for a contribution developed in MESONH</h1>
 <p>The developer sends its pull request on the Méso-NH repository (the physics source code is embedded in the model source code).</p>
 <p>Integration details:</p>
@@ -139,7 +122,8 @@ Normal workflow for a contribution developed in MESONH</h1>
 </ul>
 </li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md51"></a>
+<p>The Meso-NH version used to test PHYEX is described in the 'src/phyex/mesonh_version.json' file.</p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md47"></a>
 Normal workflow for another contribution</h1>
 <p>Pull requests must be based on the master branch.</p>
 <p>The PHYEX administrator:</p>
@@ -148,25 +132,27 @@ Normal workflow for another contribution</h1>
 <li>integrates the contribution in the master branch</li>
 <li>regularly, he tags a new (minor) version of the master branch</li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md52"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md48"></a>
 Tests</h1>
-<p>The source code must follow strict mnh_expand directives (described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2CodingNorms.html">Coding Norms documentation</a>). The script verify_mnh_expand.py must be used to give an additional check.</p>
-<p>In addition to the scientific validation, the following tests must give the same results (with bit-reproducibility) in each of the model (arome, mesonh and testprogs):</p>
+<p>The source code must follow the coding norms and the strict mnh_expand directives (described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2CodingNorms.html">Coding Norms documentation</a>). They are checked by the phyex-check_norms tool (also run by the "tests" GitHub workflow).</p>
+<p>In addition to the scientific validation, the following tests must give the same results (with bit-reproducibility) in each of the model (arome, mesonh, lmdz and testprogs):</p>
 <ul>
 <li>compilation transforming the mnh_expand directives in DO loop</li>
 <li>compilation keeping the array-syntax</li>
 <li>execution with a different number of processors</li>
 </ul>
 <p>When possible, the new version of PHYEX must reproduce the old results (scientific modifications must be activated with namelist keys).</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md53"></a>
+<p>These tests are performed by the phyex-check_&lt;model&gt; tools; the reference commits for the test cases of each model are given in the 'testing' entry of the src/phyex/&lt;model&gt;_version.json files. The phyex-check_commit tool performs all the checks (coding norms, consistency, documentation generation, python wheel creation and test cases of the different models) and the clone_and_test.sh script can run them automatically (e.g. by cron) on the last commit of a branch, the result being attached to the commit on GitHub. These tools are described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Tools.html">Tools documentation</a>.</p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md49"></a>
 Code preparation</h1>
 <p>The source code stored in the master branches must be usable by all the models. But these models can have contradictory constraints. To bypass this difficulty, the source code is preprocessed before being included in the compilation environment of each model.</p>
-<p>This preprocessing step can be done on the fly (in this case the preprocessing tools must be available aside of the compilation tools), or the result of the preprocessing can be stored in the PHYEX package (in this case, the preprocessing is done once and can be used by several users). This second possibility is useful to historize the source code really used during the model compilation and enables contributions to the PHYEX package without the need of the preprocessing tools.</p>
-<p>The preprocessed versions of the source code are put in branches named &lt;model&gt;_&lt;commit&gt; where &lt;model&gt; is the name of the model for which the source code have been preprocessed and &lt;commit&gt; is the commit hash used as a basis.</p>
-<p>The preprocessing tools are described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Tools.html">Tools documentation</a>.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md54"></a>
-Code validation</h1>
-<p>The testing.h script can be automatically run to help for validation. This script is described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Tools.html">Tools documentation</a>. </p>
+<p>This preprocessing step can be done on the fly (in this case the preprocessing tools must be available aside of the compilation tools, it is the case of the CMake build system of PHYEX, see the PHYEX_TRANSFORMATION option in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html">Offline documentation</a>), or the result of the preprocessing can be stored in the PHYEX package (in this case, the preprocessing is done once and can be used by several users). This second possibility is useful to historize the source code really used during the model compilation and enables contributions to the PHYEX package without the need of the preprocessing tools.</p>
+<p>The preprocessed versions of the source code are put in model specific branches:</p>
+<ul>
+<li>the arome branch is updated automatically, at each new commit on the master branch, by the arome_branch GitHub workflow (each commit of the master branch is transformed and committed on the arome branch)</li>
+<li>the mesonh_&lt;commit&gt; branches, where &lt;commit&gt; is the commit hash used as a basis, are built by the PHYEX administrator with the phyex-prep_code tool</li>
+</ul>
+<p>The preprocessing tools are described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Tools.html">Tools documentation</a>. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 <!-- start footer part -->

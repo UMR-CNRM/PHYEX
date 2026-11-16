@@ -407,7 +407,7 @@ $(function() {
 <div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span>        f.write(<span class="stringliteral">&#39;\nIMPLICIT NONE\n&#39;</span>)</div>
 <div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span>        f.write(<span class="stringliteral">&#39;\n&#39;</span>.join(declList) + <span class="stringliteral">&#39;\n&#39;</span>)</div>
 <div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span>        f.write(<span class="stringliteral">&#39;\n&#39;</span>.join(copyList) + <span class="stringliteral">&#39;\n&#39;</span>)</div>
-<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span>        f.write(f<span class="stringliteral">&quot;CALL {name}({&#39;, &amp;\n  &#39;.join(argList2)})\n&quot;</span>)</div>
+<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span>        f.write(f<span class="stringliteral">&quot;CALL {name}(&quot;</span> + <span class="stringliteral">&#39;, &amp;\n  &#39;</span>.join(argList2) + <span class="stringliteral">&quot;)\n&quot;</span>)</div>
 <div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>        <span class="keywordflow">for</span> unit <span class="keywordflow">in</span> flush:</div>
 <div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span>            f.write(f<span class="stringliteral">&quot;FLUSH({unit})\n&quot;</span>)</div>
 <div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span>        f.write(f<span class="stringliteral">&#39;END {kind} PY{name}&#39;</span>)</div>

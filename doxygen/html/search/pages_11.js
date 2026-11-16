@@ -1,9 +1,9 @@
 var searchData=
 [
-  ['refactoring_20contributions_20from_20now_20on_20and_20scientific_20contributions_20after_20cycle_2049t1_0',['Refactoring contributions from now on and scientific contributions after cycle 49t1',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Developer.html#autotoc_md38',1,'Refactoring contributions from now on, and scientific contributions after cycle 49t1'],['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Integrator.html#autotoc_md48',1,'Refactoring contributions from now on, and scientific contributions after cycle 49t1']]],
-  ['reference_1',['REFERENCE',['../modd__param__icen_8F90.html#autotoc_md5',1,'REFERENCE'],['../modd__param__mfshalln_8F90.html#autotoc_md18',1,'REFERENCE']]],
-  ['references_2',['Main references',['../dir_cbe31ea9be6c629ab38574f3130a0c6a.html#autotoc_md75',1,'']]],
-  ['repository_20without_20execution_20or_20manual_20execution_3',['Compilation directly in the repository without execution (or manual execution)',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md58',1,'']]],
-  ['rewritten_20_3a_20development_20installation_4',['TODO (to be integrated when the documentation is rewritten): development installation',['../dir_cbe31ea9be6c629ab38574f3130a0c6a.html#autotoc_md76',1,'']]],
-  ['routines_20from_20within_20a_20loop_20on_20horizontal_20or_20vertical_20dimensions_5',['Call to routines from within a loop on horizontal or vertical dimensions',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2CodingNorms.html#autotoc_md30',1,'']]]
+  ['usage_20directly_20with_20the_20testprogs_20executables_0',['Usage directly with the testprogs executables',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md56',1,'']]],
+  ['usage_20from_20python_1',['Usage from python',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2phyex1d.html#autotoc_md69',1,'']]],
+  ['usage_20through_20the_20phyex_20check_5ftestprogs_20tool_2',['Usage through the phyex-check_testprogs tool',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md54',1,'']]],
+  ['user_20directories_20and_20environment_20variables_3',['User directories and environment variables',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Tools.html#autotoc_md76',1,'']]],
+  ['using_20mode_5f_20or_20modi_5f_4',['When using mode_ or modi_?',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2CodingNorms.html#autotoc_md26',1,'']]],
+  ['using_20phyex_5',['PHYEX1D: 1D MODEL USING PHYEX',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2phyex1d.html',1,'']]]
 ];

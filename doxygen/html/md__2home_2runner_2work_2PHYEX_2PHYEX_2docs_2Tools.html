@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>PHYEX: PHYEX TOOLS DOCUMENATTION</title>
+<title>PHYEX: PHYEX TOOLS DOCUMENTATION</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -72,61 +72,71 @@ $(function() {
 </div><!-- top -->
 <div id="doc-content">
 <div><div class="header">
-  <div class="headertitle"><div class="title">PHYEX TOOLS DOCUMENATTION </div></div>
+  <div class="headertitle"><div class="title">PHYEX TOOLS DOCUMENTATION </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md81"></a></p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md82"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md73"></a></p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md74"></a>
 About this section</h1>
-<p>This document is intended for persons who want to use the prep_code.sh or the check_commit_*.sh scripts.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md83"></a>
-Installation, path...</h1>
-<p>Installation is covered in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2tools_2INSTALL.html">tools/INSTALL.md file</a>.</p>
-<p>Environment variables can be set with:</p>
-<div class="fragment"><div class="line">. &lt;git repository&gt;/tools/env.sh</div>
-</div><!-- fragment --><h1 class="doxsection"><a class="anchor" id="autotoc_md84"></a>
-Tools</h1>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md85"></a>
-check_commit_ial.sh</h2>
-<p>The check_commit_ial script compiles, executes IAL test cases and compare the results against a reference simulations.</p>
-<p>Script options can be displayed with the -h option.</p>
-<p>Before being usable, some packages must be installed following the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2tools_2INSTALL.html">tools/INSTALL.md file</a>.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md86"></a>
-check_commit_mesonh.sh</h2>
-<p>The check_commit_mesonh.sh script compiles, runs a test case of the Meso-NH model and compares the results against a reference simulation.</p>
-<p>Script options can be displayed with the -h option.</p>
-<p>Before being usable, the mesonh model must be installed following the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2tools_2INSTALL__pack__mesonh.html">tools/INSTALL_pack_mesonh.md file</a>.</p>
-<p>For check_commit_mesonh.sh the following environment variables can be set:</p>
+<p>This document is intended for persons who want to use the tools provided with the PHYEX package: preparation of the source code for the different models and checks of the contributions (bit-reproducibility of the test cases between two commits, coding norms...).</p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md75"></a>
+Installation</h1>
+<p>The tools are provided as a python package (pyphyextools, in the tools directory) which must be installed in editable mode (the tools use the files of the repository), for instance in a virtual environment:</p>
+<div class="fragment"><div class="line">python3 -m venv phyex.env</div>
+<div class="line">. phyex.env/bin/activate</div>
+<div class="line">pip install -e PHYEX/tools</div>
+</div><!-- fragment --><p>The python dependencies (listed in tools/pyproject.toml) are installed automatically. In addition, some tools need:</p>
 <ul>
-<li>MNHPACK: directory in which MNH pack will be created (default is $HOME/MesoNH/PHYEX)</li>
-<li>REFDIR: directory in which reference pack can be found (default is the pack directory near the check_commit_mesonh.sh file)</li>
-<li>TARGZDIR: directory in which the tar.gz file can be found (default is the pack directory near the check_commit_mesonh.sh file)</li>
+<li>phyex-check_ial: the gmkpack build system must be installed and configured (the ial-to_pack command, coming from the ial_build python package, is used to create the packs)</li>
+<li>all the phyex-check_* tools: FORTRAN and C compilers, CMake, git, wget, make and an internet connection (the model source codes, the test case data and some dependencies are downloaded)</li>
 </ul>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md87"></a>
-check_commit_testprogs.sh</h2>
-<p>The check_commit_testprogs.sh script runs offline simulations in the directory given by the environment variable TESTPROGSDIR ($HOME/TESTPROGS will be used if the variable is not set). This directory must exist.</p>
-<p>Script options can be displayed with the -h option.</p>
-<p>To be usable the check_commit_testprogs.sh script needs input data. The generation and installation of these data are described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2tools_2INSTALL__testprogs.html">tools/INSTALL_testprogs.md file</a>.</p>
-<p>The goal of the script is to compare outputs between two simulations (to check if bit-reproducibility is achieved or not). A reference simulation must be performed and save. This reference simulation is run the same way as the test experiment but cannot be compared to something else: check_commit_testprogs.sh -c -r &lt;reference_commit&gt;</p>
-<p>If this reference simulation must become the 'absolute' reference (used when invoking the check_commit_testprogs.sh script with the 'REF' argument), the reference simulation directory (under $TESTPROGSDIR) must be renamed 'ref'.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md88"></a>
-prep_code.sh</h2>
-<p>This script is used by the different check_commit_* scripts and can be used directly to pre-process the source code.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md89"></a>
-testing.sh</h2>
-<p>This script is designed to be run periodically by cron. It searches for the last commit on a github repository, use the different check_commit_* scripts to run the test cases and add a comments attached to the gihub commit to report success or unsecess of these tests. In case of an error, the script can also send an email.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md90"></a>
-phyex-check_commit</h2>
-<p>This command performs all the checks (consistency, coding norms, documentation generation, python wheel creation and the test cases of IAL, Meso-NH, testprogs and LMDZ) on the repository containing the tools (with its uncommitted modifications); the &ndash;only option restricts the checks. The report is written on the standard output; it can also be sent by email in case of an error (&ndash;mail) and attached as a status to a github commit (&ndash;github-status, the API url to use must be given).</p>
-<p>Options can be displayed with the -h option.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md91"></a>
-others</h2>
-<p>Other scripts are:</p>
+<p>The tools can be used from a repository (the version of the tools is the version of the repository) to check another commit or another local repository.</p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md76"></a>
+User directories and environment variables</h1>
+<p>${PHYEXCONF} (the PHYEXCONF environment variable defaults to ${HOME}/.phyex) is the user directory containing:</p>
 <ul>
-<li>comp_DDH.py: compare DDH outputs (used by check_commit_ial.sh)</li>
-<li>compare.py: compare MESO-NH outputs (used by check_commit_mesonh.sh)</li>
-<li>diffNODE.001_01: compare NODE.0001_01 output files</li>
-<li>generate_standalone_doc.sh: to generate a standalone doc from the different md files </li>
+<li>testprogs_data: input data of the test programs (see the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html">Offline documentation</a>)</li>
+<li>arch: user architecture files (searched before those of the arch directory of the repository by phyex-check_testprogs)</li>
+<li>phyex1d: grids, namelists and DEPHY-SCM cases of the 1D model (see the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2phyex1d.html">phyex1d documentation</a>)</li>
+</ul>
+<p>The phyex-check_&lt;model&gt; tools create their compilation directories in:</p>
+<ul>
+<li>$HOMEPACK (default: $HOME/pack) for IAL; the PHYEXROOTPACK environment variable, if set, is used as root pack for the incremental packs</li>
+<li>$MNHPACK (default: $HOME/MesoNH/PHYEX) for Meso-NH</li>
+<li>$LMDZPACK (default: $HOME/LMDZ/PHYEX) for LMDZ</li>
+<li>$TESTPROGSDIR (default: $HOME/TESTPROGS) for the test programs</li>
+</ul>
+<p>The PHYEXREPOuser (default: UMR-CNRM), PHYEXREPOprotocol (https or ssh) and PHYEXREPOrepo environment variables give the GitHub repository from which the commits are cloned.</p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md77"></a>
+Tools</h1>
+<p>All the commands have a -h option describing their arguments.</p>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md78"></a>
+phyex-prep_code</h2>
+<p>This command prepares the source code for a model: extraction of the source code (from a commit or from a local repository), transformations (with pyfortool), generation of the interface modules, and, optionally, push of the result as a new branch. It is used to build the model specific branches (see the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Integrator.html">Integrator documentation</a>) and by the phyex-check_&lt;model&gt; tools.</p>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md79"></a>
+phyex-check_ial, phyex-check_mesonh, phyex-check_lmdz and phyex-check_testprogs</h2>
+<p>These commands compile a model (IAL, Meso-NH, LMDZ) or the test programs using the PHYEX source code of a given commit (or of a local repository), execute the test cases and compare the results against a reference simulation.</p>
+<p>The steps are selected with options: -p (creation of the compilation directory), -c (compilation), -r (execution), -C (comparison), &ndash;remove (suppression of the compilation directory). The first argument is the commit (or the directory) to test, the second one is the reference: a commit, a directory or REF (the references given, test case by test case, in the 'testing' entry of the src/phyex/&lt;model&gt;_version.json file).</p>
+<p>The version of the model to use is described in the src/phyex/&lt;model&gt;_version.json file (for instance, repository and commit of IAL in ial_version.json); the model source code is downloaded automatically.</p>
+<p>Example for the test programs, with the source code of a local repository: </p><div class="fragment"><div class="line">phyex-check_testprogs -p -c -r -C --computeRefIfNeeded $HOME/PHYEX REF</div>
+</div><!-- fragment --><p> The &ndash;computeRefIfNeeded option computes the reference simulations that do not exist yet.</p>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md80"></a>
+phyex-check_norms</h2>
+<p>This command checks the coding norms (described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2CodingNorms.html">CodingNorms documentation</a>) of the source code (for instance: phyex-check_norms -v src/phyex).</p>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md81"></a>
+phyex-check_consistency</h2>
+<p>This command checks the consistency of the repository: the version (src/phyex/VERSION file) is the version of the last release tag, the minimal pyfortool version is the same everywhere.</p>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md82"></a>
+phyex-check_commit</h2>
+<p>This command performs all the checks (consistency, coding norms, documentation generation, python wheel creation and the test cases of IAL, Meso-NH, testprogs and LMDZ) on the repository containing the tools (with its uncommitted modifications); the &ndash;only option restricts the checks and the &ndash;parallel option checks the different models simultaneously. The report is written on the standard output; it can also be sent by email in case of an error (&ndash;mail) and attached as a status to a github commit (&ndash;github-status, the API url to use must be given).</p>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md83"></a>
+clone_and_test.sh</h2>
+<p>This script, at the root of the repository, is designed to be run periodically by cron. It clones (or updates) the PHYEX repository in ${PHYEXWORKDIR} (default: $HOME/PHYEXTESTING), checks out the last commit of a branch (or a given commit), installs the tools and runs phyex-check_commit, the result being attached as a status to the commit on GitHub (and sent by email in case of an error).</p>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md84"></a>
+Others</h2>
+<ul>
+<li>phyex-compare: comparison of model outputs (used by the phyex-check_&lt;model&gt; tools)</li>
+<li>phyex-plot_perf: plot of the performance statistics (files produced with the &ndash;perf option of the phyex-check_&lt;model&gt; tools) </li>
 </ul>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
