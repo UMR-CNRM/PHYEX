@@ -50,6 +50,8 @@ dependencies = [
 
 [project.scripts]
 phyex1d = "pyphyex.phyex1d.cli:main"
+phyex1d-cases_install = "pyphyex.phyex1d.case:main_cases_install"
+phyex1d-cases_list = "pyphyex.phyex1d.case:main_cases_list"
 
 [project.urls]
 Homepage = "https://github.com/UMR-CNRM/PHYEX"
