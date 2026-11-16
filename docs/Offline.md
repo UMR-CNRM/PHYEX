@@ -82,7 +82,7 @@ The pyphyex python package contains:
 
 - pyphyex.lowlevel: python binding of the main subroutines of PHYEX (PYINI\_PHYEX, PYICE\_ADJUST,
   PYRAIN\_ICE, PYTURB, PYSHALLOW\_MF...). This module loads the PHYEX shared library when imported.
-- pyphyex.phyex1d: a 1D model using PHYEX, also available through the phyex1d command
+- pyphyex.phyex1d: a 1D model using PHYEX, also available through the phyex1d-exp\_run, phyex1d-exp\_plot and phyex1d-exp\_list commands
   (see the [phyex1d documentation](phyex1d/README.md)).
 
 The package is compiled and installed with pip (a Fortran compiler and CMake are needed), from the

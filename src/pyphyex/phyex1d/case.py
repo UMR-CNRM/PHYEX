@@ -512,7 +512,7 @@ def main_cases_list():
     parser = argparse.ArgumentParser(
         description='Lists the DEPHY-SCM cases installed in '
                     f'{cases_directory()} (see phyex1d-cases_install) with the path of their '
-                    'driver file (to give to phyex1d)')
+                    'driver file (the case name or the path can be given to phyex1d-exp_run)')
     parser.add_argument('-n', '--names', action='store_true',
                         help='list only the case names (CASE/SUBCASE), without the paths')
     args = parser.parse_args()

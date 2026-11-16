@@ -49,7 +49,9 @@ dependencies = [
 ]
 
 [project.scripts]
-phyex1d = "pyphyex.phyex1d.cli:main"
+phyex1d-exp_run = "pyphyex.phyex1d.cli:main_run"
+phyex1d-exp_plot = "pyphyex.phyex1d.cli:main_plot"
+phyex1d-exp_list = "pyphyex.phyex1d.cli:main_list"
 phyex1d-cases_install = "pyphyex.phyex1d.case:main_cases_install"
 phyex1d-cases_list = "pyphyex.phyex1d.case:main_cases_list"
 

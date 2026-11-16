@@ -20,8 +20,10 @@ class PhysicsBase(PPPY):
     """
 
     def __init__(self, dt, method, name, tag, case, grid, prognostic_variables):
+        # The keyword arguments are stored as attributes of the result files
         super().__init__(dt, method, name, tag, inputfile=case.description,
-                         grid=grid.filename)
+                         grid=grid.filename, experiment_name=name,
+                         physics_class=type(self).__name__)
         self.case = case
         self.grid = grid
         self.prognostic_variables = prognostic_variables
