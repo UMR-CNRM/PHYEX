@@ -333,7 +333,7 @@ END DO
 !* Maximal length between JK and the levels below (as in ARPEGE)
 !
 IF (TURBN%LBL89TOP) THEN
- DO JK=IKTE,IKTB,IKL
+ DO JK=IKB,IKE,IKL
    DO JIJ=IIJB,IIJE
      ZTMP(JIJ) = ZLWORKUP(JIJ,JK-IKL)-PDZZ(JIJ,JK)
    ENDDO
