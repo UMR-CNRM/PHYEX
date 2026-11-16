@@ -141,8 +141,8 @@ CONTAINS
 !$acc kernels
       DO JIJ=IIJB,IIJE
         IF (OOCEAN) THEN
-          DO JK=IKTE,IKTB,-1
-            ZD = ZALPHA*(PZZ(JIJ, IKTE + 1) - PZZ(JIJ, JK))
+          DO JK=IKE,IKB,-IKL
+            ZD = ZALPHA*(PZZ(JIJ, IKE + IKL) - PZZ(JIJ, JK))
             IF (PLM(JIJ, JK) > ZD) THEN
               PLM(JIJ, JK) = ZD
             ELSE
@@ -150,7 +150,7 @@ CONTAINS
             END IF
           END DO
         ELSE
-          DO JK=IKTB,IKTE
+          DO JK=IKB,IKE,IKL
             ZD = ZALPHA*(0.5*(PZZ(JIJ, JK) + PZZ(JIJ, JK + IKL)) - PZZ(JIJ, IKB))*PDIRCOSZW(JIJ)
             IF (PLM(JIJ, JK) > ZD) THEN
               PLM(JIJ, JK) = ZD
