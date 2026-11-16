@@ -506,6 +506,10 @@ IF (TURBN%LLEONARD) THEN
                      ZWORK1(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT) &
                    + ZWORK3(IIJB:IIJE,1:IKT)*ZWORK4(IIJB:IIJE,1:IKT))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !No flux through the model top
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZF_LEONARD(IIJB:IIJE,IKE+IKL)=0.
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !$acc end kernels
 END IF
 !
@@ -904,6 +908,10 @@ IF (KRR /= 0) THEN
                      ZWORK1(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT) &
                    + ZWORK3(IIJB:IIJE,1:IKT)*ZWORK4(IIJB:IIJE,1:IKT))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !No flux through the model top
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZF_LEONARD(IIJB:IIJE,IKE+IKL)=0.
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
  END IF
   !
