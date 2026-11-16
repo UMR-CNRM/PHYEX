@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['elec_5fdescr_5ft_0',['elec_descr_t',['../structmodd__elec__descr_1_1elec__descr__t.html',1,'modd_elec_descr']]],
-  ['elec_5fparam_5ft_1',['elec_param_t',['../structmodd__elec__param_1_1elec__param__t.html',1,'modd_elec_param']]],
-  ['elec_5ft_2',['elec_t',['../structmodd__elec__n_1_1elec__t.html',1,'modd_elec_n']]],
-  ['enorm_3',['enorm',['../interfacemodi__minpack_1_1enorm.html',1,'modi_minpack']]],
-  ['enorm2_4',['enorm2',['../interfacemodi__minpack_1_1enorm2.html',1,'modi_minpack']]]
+  ['diff_0',['diff',['../interfacecompute__diff_1_1diff.html',1,'compute_diff']]],
+  ['dimphyex_5ft_1',['dimphyex_t',['../structmodd__dimphyex_1_1dimphyex__t.html',1,'modd_dimphyex']]],
+  ['dogleg_2',['dogleg',['../interfacemodi__minpack_1_1dogleg.html',1,'modi_minpack']]],
+  ['dqsat_3',['dqsat',['../interfacemode__thermo_1_1dqsat.html',1,'mode_thermo']]],
+  ['dqsati_4',['dqsati',['../interfacemode__thermo_1_1dqsati.html',1,'mode_thermo']]]
 ];

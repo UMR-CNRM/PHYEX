@@ -122,22 +122,24 @@ Usage directly with the testprogs executables</h2>
 Usage through the check_commit_testprogs.sh script</h2>
 <p>As described in COMPILATION.</p>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md64"></a>
-Python bindings</h1>
-<p>The package includes a python binding to call the main subroutines of PHYEX. Using the default gfortran compiler, the needed compilation is achieved with:</p>
+Python package</h1>
+<p>The pyphyex python package contains:</p>
 <ul>
-<li>. PHYEX/tools/env.sh</li>
-<li>cd PHYEX/build/with_fcm</li>
-<li>./make_fcm.sh</li>
+<li>pyphyex.lowlevel: python binding of the main subroutines of PHYEX (PYINI_PHYEX, PYICE_ADJUST, PYRAIN_ICE, PYTURB, PYSHALLOW_MF...). This module loads the PHYEX shared library when imported.</li>
+<li><a class="el" href="namespacepyphyex_1_1phyex1d.html">pyphyex.phyex1d</a>: a 1D model using PHYEX, also available through the phyex1d-exp_run, phyex1d-exp_plot and phyex1d-exp_list commands (see the <a class="el" href="dir_cbe31ea9be6c629ab38574f3130a0c6a.html">phyex1d documentation</a>).</li>
 </ul>
-<p>This builds a shared library and writes a python wrapper. This script needs the ctypesForFortran package (available on PyPI). And it can be used like in this example for ice_adjust (the sourcing of PHYEX/tools/env.sh is also needed at this step):</p>
+<p>The package is compiled and installed with pip (a Fortran compiler and CMake are needed), from the root of the PHYEX repository:</p>
+<div class="fragment"><div class="line">pip install .          # or, to build a wheel: pip wheel . -w dist</div>
+</div><!-- fragment --><p>CMake options (e.g. toolchain file) can be given with '-C cmake.define.CMAKE_TOOLCHAIN_FILE=&lt;arch&gt;.ecbuild' or with the CMAKE_ARGS environment variable.</p>
+<p>The low-level module can be used like in this example for ice_adjust:</p>
 <div class="fragment"><div class="line">#!/usr/bin/env python3</div>
 <div class="line"> </div>
 <div class="line">&quot;&quot;&quot;</div>
-<div class="line">Offline python binding example, valid with a June 2024 version of PHYEX</div>
+<div class="line">Offline python binding example</div>
 <div class="line">&quot;&quot;&quot;</div>
 <div class="line"> </div>
 <div class="line">import tempfile</div>
-<div class="line">from pyphyex import PYICE_ADJUST, PYINI_PHYEX, close</div>
+<div class="line">from pyphyex.lowlevel import PYICE_ADJUST, PYINI_PHYEX, close</div>
 <div class="line">import numpy</div>
 <div class="line">from matplotlib import pyplot as plt</div>
 <div class="line">import f90nml</div>
@@ -169,6 +171,7 @@ Python bindings</h1>
 <div class="line">PCF_MF = numpy.zeros((NKT, NIT))</div>
 <div class="line">PRC_MF = numpy.zeros((NKT, NIT))</div>
 <div class="line">PRI_MF = numpy.zeros((NKT, NIT))</div>
+<div class="line">PWEIGHT_MF_CLOUD = numpy.zeros((NKT, NIT))</div>
 <div class="line">OCOMPUTE_SRC = True</div>
 <div class="line">PRR = numpy.zeros((NKT, NIT))</div>
 <div class="line">PRS = numpy.zeros((NKT, NIT))</div>
@@ -191,7 +194,7 @@ Python bindings</h1>
 <div class="line">PTHS = PTH / PTSTEP</div>
 <div class="line">result = PYICE_ADJUST(NIT, NKT, NKL, NVEXT, KRR, HBUNAME, PTSTEP, PSIGQSAT, PRHODJ,</div>
 <div class="line">                      PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV, PPABST, PZZ, PEXN,</div>
-<div class="line">                      PCF_MF, PRC_MF, PRI_MF, PRV, PRC, PRVS, PRCS, PTH, PTHS,</div>
+<div class="line">                      PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD, PRV, PRC, PRVS, PRCS, PTH, PTHS,</div>
 <div class="line">                      OCOMPUTE_SRC, PRR, PRI, PRIS, PRS, PRG, KBUDGETS)</div>
 <div class="line">(_, _, _, _, _, PRVS, PRCS, PTHS, PSRCS, PCLDFR, PRIS,</div>
 <div class="line"> POUT_RV, POUT_RC, POUT_RI, POUT_TH, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) = result</div>

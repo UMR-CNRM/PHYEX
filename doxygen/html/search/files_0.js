@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['arrays_5fmanip_2ef90_0',['arrays_manip.F90',['../arrays__manip_8F90.html',1,'']]]
+  ['_5f_5finit_5f_5f_2epy_0',['__init__.py',['../____init_____8py.html',1,'(Global Namespace)'],['../phyex1d_2____init_____8py.html',1,'(Global Namespace)']]]
 ];

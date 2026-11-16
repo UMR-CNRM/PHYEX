@@ -1,0 +1,7 @@
+<map id="pyphyex.phyex1d.simple_physics.SimplePhysics" name="pyphyex.phyex1d.simple_physics.SimplePhysics">
+<area shape="rect" id="Node000001" title=" " alt="" coords="8,174,193,218"/>
+<area shape="rect" id="Node000002" href="$classpyphyex_1_1phyex1d_1_1physics__base_1_1PhysicsBase.html" title=" " alt="" coords="5,81,196,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="102,139,103,174,98,173,99,143"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="74,5,127,33"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="101,46,103,81,98,80,100,51"/>
+</map>

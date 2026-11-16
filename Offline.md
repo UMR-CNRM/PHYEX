@@ -76,28 +76,36 @@ The different main\_\*.exe programs obtained by the compilation can be run. Each
 
 As described in [COMPILATION](#compilation).
 
-## Python bindings
+## Python package
 
-The package includes a python binding to call the main subroutines of PHYEX.
-Using the default gfortran compiler, the needed compilation is achieved with:
+The pyphyex python package contains:
 
-- . PHYEX/tools/env.sh
-- cd PHYEX/build/with\_fcm
-- ./make\_fcm.sh
+- pyphyex.lowlevel: python binding of the main subroutines of PHYEX (PYINI\_PHYEX, PYICE\_ADJUST,
+  PYRAIN\_ICE, PYTURB, PYSHALLOW\_MF...). This module loads the PHYEX shared library when imported.
+- pyphyex.phyex1d: a 1D model using PHYEX, also available through the phyex1d-exp\_run, phyex1d-exp\_plot and phyex1d-exp\_list commands
+  (see the [phyex1d documentation](phyex1d/README.md)).
 
-This builds a shared library and writes a python wrapper.
-This script needs the ctypesForFortran package (available on PyPI).
-And it can be used like in this example for ice\_adjust (the sourcing of PHYEX/tools/env.sh is also needed at this step):
+The package is compiled and installed with pip (a Fortran compiler and CMake are needed), from the
+root of the PHYEX repository:
+
+```
+pip install .          # or, to build a wheel: pip wheel . -w dist
+```
+
+CMake options (e.g. toolchain file) can be given with
+'-C cmake.define.CMAKE\_TOOLCHAIN\_FILE=\<arch\>.ecbuild' or with the CMAKE\_ARGS environment variable.
+
+The low-level module can be used like in this example for ice\_adjust:
 
 ```
 #!/usr/bin/env python3
 
 """
-Offline python binding example, valid with a June 2024 version of PHYEX
+Offline python binding example
 """
 
 import tempfile
-from pyphyex import PYICE_ADJUST, PYINI_PHYEX, close
+from pyphyex.lowlevel import PYICE_ADJUST, PYINI_PHYEX, close
 import numpy
 from matplotlib import pyplot as plt
 import f90nml
@@ -129,6 +137,7 @@ PZZ = numpy.zeros((NKT, NIT))
 PCF_MF = numpy.zeros((NKT, NIT))
 PRC_MF = numpy.zeros((NKT, NIT))
 PRI_MF = numpy.zeros((NKT, NIT))
+PWEIGHT_MF_CLOUD = numpy.zeros((NKT, NIT))
 OCOMPUTE_SRC = True
 PRR = numpy.zeros((NKT, NIT))
 PRS = numpy.zeros((NKT, NIT))
@@ -151,7 +160,7 @@ PRIS = PRI / PTSTEP
 PTHS = PTH / PTSTEP
 result = PYICE_ADJUST(NIT, NKT, NKL, NVEXT, KRR, HBUNAME, PTSTEP, PSIGQSAT, PRHODJ,
                       PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV, PPABST, PZZ, PEXN,
-                      PCF_MF, PRC_MF, PRI_MF, PRV, PRC, PRVS, PRCS, PTH, PTHS,
+                      PCF_MF, PRC_MF, PRI_MF, PWEIGHT_MF_CLOUD, PRV, PRC, PRVS, PRCS, PTH, PTHS,
                       OCOMPUTE_SRC, PRR, PRI, PRIS, PRS, PRG, KBUDGETS)
 (_, _, _, _, _, PRVS, PRCS, PTHS, PSRCS, PCLDFR, PRIS,
  POUT_RV, POUT_RC, POUT_RI, POUT_TH, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) = result

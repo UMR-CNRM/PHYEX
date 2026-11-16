@@ -1,0 +1,9 @@
+<map id="pyphyex.phyex1d.simple_physics.SimplePhysicsThetaR" name="pyphyex.phyex1d.simple_physics.SimplePhysicsThetaR">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,266,227,311"/>
+<area shape="rect" id="Node000002" href="$classpyphyex_1_1phyex1d_1_1simple__physics_1_1SimplePhysics.html" title=" " alt="" coords="23,174,209,218"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="118,232,118,267,114,265,114,236"/>
+<area shape="rect" id="Node000003" href="$classpyphyex_1_1phyex1d_1_1physics__base_1_1PhysicsBase.html" title=" " alt="" coords="21,81,211,126"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="117,139,119,174,113,173,115,144"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="89,5,143,33"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="117,46,119,81,113,80,115,51"/>
+</map>

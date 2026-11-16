@@ -1,9 +1,9 @@
 var searchData=
 [
-  ['hybrd_0',['hybrd',['../interfacemodi__minpack_1_1hybrd.html',1,'modi_minpack']]],
-  ['hybrd1_1',['hybrd1',['../interfacemodi__minpack_1_1hybrd1.html',1,'modi_minpack']]],
-  ['hybrj_2',['hybrj',['../interfacemodi__minpack_1_1hybrj.html',1,'modi_minpack']]],
-  ['hybrj1_3',['hybrj1',['../interfacemodi__minpack_1_1hybrj1.html',1,'modi_minpack']]],
-  ['hypgeo_4',['hypgeo',['../interfacemodi__hypgeo_1_1hypgeo.html',1,'modi_hypgeo']]],
-  ['hypser_5',['hypser',['../interfacemodi__hypser_1_1hypser.html',1,'modi_hypser']]]
+  ['gamma_0',['gamma',['../interfacemodi__gamma_1_1gamma.html',1,'modi_gamma']]],
+  ['genmodierror_1',['GenModiError',['../classgen__modi_1_1GenModiError.html',1,'gen_modi']]],
+  ['get_5fhalo_2',['get_halo',['../interfacemodi__get__halo_1_1get__halo.html',1,'modi_get_halo']]],
+  ['get_5fhalo_5fphy_3',['get_halo_phy',['../interfacemodi__get__halo_1_1get__halo__phy.html',1,'modi_get_halo']]],
+  ['getoption_4',['getoption',['../interfacexrd__getoptions_1_1getoption.html',1,'xrd_getoptions']]],
+  ['grid_5',['Grid',['../classpyphyex_1_1phyex1d_1_1grid_1_1Grid.html',1,'pyphyex::phyex1d::grid']]]
 ];

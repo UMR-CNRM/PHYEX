@@ -1,9 +1,12 @@
 var searchData=
 [
-  ['a2tab_0',['a2tab',['../structmodd__tiwmx_1_1tiwmx__t.html#aad9eb0995fd0aa83046d856cdb8ab67e',1,'modd_tiwmx::tiwmx_t']]],
-  ['a2wtab_1',['a2wtab',['../structmodd__tiwmx_1_1tiwmx__t.html#a1442f07e8eb1549cded2324542296284',1,'modd_tiwmx::tiwmx_t']]],
-  ['af3tab_2',['af3tab',['../structmodd__tiwmx_1_1tiwmx__t.html#a486aaab42af55dd57ed34d5343ec09d0',1,'modd_tiwmx::tiwmx_t']]],
-  ['am3tab_3',['am3tab',['../structmodd__tiwmx_1_1tiwmx__t.html#a5b7896ce1a0a8d7116d43b36a4c9a545',1,'modd_tiwmx::tiwmx_t']]],
-  ['args_4',['args',['../namespacegen__modi.html#aeaee7f274b779159690134242a244bbe',1,'gen_modi']]],
-  ['argsizemax_5',['argsizemax',['../namespacexrd__getoptions.html#a4d0c1b5811df81147000c12bb081a836',1,'xrd_getoptions']]]
+  ['_5fdataset_0',['_dataset',['../classpyphyex_1_1phyex1d_1_1case_1_1CaseXarray.html#a547dda5af24fb76bbd6aac599257d150',1,'pyphyex::phyex1d::case::CaseXarray']]],
+  ['_5fdescription_1',['_description',['../classpyphyex_1_1phyex1d_1_1case_1_1CaseXarray.html#ae25436951988dba26a78b66b053d6497',1,'pyphyex::phyex1d::case::CaseXarray']]],
+  ['_5fdriver_5fre_2',['_DRIVER_RE',['../namespacepyphyex_1_1phyex1d_1_1case.html#acd8c90f15e782c3030cdd1a0dbd4b19b',1,'pyphyex::phyex1d::case']]],
+  ['_5fdt_3',['_dt',['../classpyphyex_1_1phyex1d_1_1phyex_1_1PHYEX.html#afce3b413d23c4d42f67fee14b6cff317',1,'pyphyex::phyex1d::phyex::PHYEX']]],
+  ['_5finputfile_4',['_inputfile',['../classpyphyex_1_1phyex1d_1_1case_1_1CaseCommonFormat.html#ad358fb4f259fda00ba334679572fafaa',1,'pyphyex::phyex1d::case::CaseCommonFormat']]],
+  ['_5finterpolators_5',['_interpolators',['../classpyphyex_1_1phyex1d_1_1case_1_1CaseCommonFormat.html#a9b9d2c3d1790c9fc102d399ef40424b8',1,'pyphyex.phyex1d.case.CaseCommonFormat._interpolators'],['../classpyphyex_1_1phyex1d_1_1case_1_1CaseXarray.html#a4d39c6c7c064734287a936b81acb4b5f',1,'pyphyex.phyex1d.case.CaseXarray._interpolators']]],
+  ['_5fnc_6',['_nc',['../classpyphyex_1_1phyex1d_1_1case_1_1CaseCommonFormat.html#a180e6041774c92d1bb998ee00c4037dd',1,'pyphyex::phyex1d::case::CaseCommonFormat']]],
+  ['_5fpyecrad_7',['_pyecrad',['../classpyphyex_1_1phyex1d_1_1phyex_1_1PHYEX.html#a8abeb37ffde903832faf8484d5a03cd7',1,'pyphyex::phyex1d::phyex::PHYEX']]],
+  ['_5fpyphyex_8',['_pyphyex',['../classpyphyex_1_1phyex1d_1_1phyex_1_1PHYEX.html#a86694b43847045395574432be27343db',1,'pyphyex::phyex1d::phyex::PHYEX']]]
 ];

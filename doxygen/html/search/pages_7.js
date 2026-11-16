@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['generation_0',['Data generation',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md61',1,'']]],
-  ['get_20a_20modified_20pack_20suitable_20for_20phyex_1',['GET A MODIFIED PACK SUITABLE FOR PHYEX',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2tools_2INSTALL__pack__mesonh.html#autotoc_md91',1,'']]]
+  ['executables_0',['Usage directly with the testprogs executables',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md62',1,'']]],
+  ['execution_1',['execution',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md59',1,'Compilation and execution'],['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md58',1,'Compilation directly in the repository without execution (or manual execution)']]],
+  ['execution_20or_20manual_20execution_2',['Compilation directly in the repository without execution (or manual execution)',['../md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html#autotoc_md58',1,'']]],
+  ['experiment_3',['Experiment',['../dir_cbe31ea9be6c629ab38574f3130a0c6a.html#autotoc_md73',1,'']]]
 ];
