@@ -108,11 +108,23 @@ ecbuild_info("Python binding generated in ${PYPHYEX_F90} and ${PYPHYEX_PY}")
 # Compilation of the binding and content of the wheel
 #-----------------------------------------------------------------------
 
-# The python binding is compiled in the PHYEX libraries
+# The python binding is compiled in the PHYEX libraries.
+# fiat being static (see the top-level CMakeLists.txt), its runtime
+# dependencies must be added explicitly: the C++ runtime (fiat contains C++
+# code) is not added by the FORTRAN linker. The libraries must not contain
+# undefined symbols (they would only be detected when loaded by python).
+enable_language(CXX)
+include(CheckLinkerFlag)
+check_linker_flag(Fortran "-Wl,--no-undefined" PHYEX_LINKER_NO_UNDEFINED)
 set(_libs)
 foreach(_precision dp sp)
   if(TARGET phyex_${_precision})
     target_sources(phyex_${_precision} PRIVATE ${PYPHYEX_F90})
+    target_link_libraries(phyex_${_precision} PRIVATE ${CMAKE_CXX_IMPLICIT_LINK_LIBRARIES})
+    target_link_directories(phyex_${_precision} PRIVATE ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
+    if(PHYEX_LINKER_NO_UNDEFINED)
+      target_link_options(phyex_${_precision} PRIVATE "-Wl,--no-undefined")
+    endif()
     list(APPEND _libs phyex_${_precision})
   endif()
 endforeach()
