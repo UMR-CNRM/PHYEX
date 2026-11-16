@@ -1151,20 +1151,27 @@ IF (KRR /= 0) THEN
   !
   ! Buoyancy flux at flux points
   !
-  PWTHV(IIJB:IIJE,:) = PWTHV(IIJB:IIJE,:) + MZM(PEMOIST(IIJB:IIJE,:)) * ZFLXZ(IIJB:IIJE,:)
+  !(the moisture contribution is computed apart to be able to replace its boundary values
+  ! before adding it to the temperature contribution)
+  ZWORK1(IIJB:IIJE,:) = MZM(PEMOIST(IIJB:IIJE,:)) * ZFLXZ(IIJB:IIJE,:)
   !
 !$acc kernels 
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PWTHV(IIJB:IIJE,IKB) = PWTHV(IIJB:IIJE,IKB) + PEMOIST(IIJB:IIJE,IKB) * ZFLXZ(IIJB:IIJE,IKB)
+  ZWORK1(IIJB:IIJE,IKB) = PEMOIST(IIJB:IIJE,IKB) * ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
   IF (OOCEAN) THEN
 !$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    PWTHV(IIJB:IIJE,IKE) = PWTHV(IIJB:IIJE,IKE) + PEMOIST(IIJB:IIJE,IKE)* ZFLXZ(IIJB:IIJE,IKE)
+    ZWORK1(IIJB:IIJE,IKE) = PEMOIST(IIJB:IIJE,IKE)* ZFLXZ(IIJB:IIJE,IKE)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
   END IF
+!$acc kernels 
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PWTHV(IIJB:IIJE,1:IKT) = PWTHV(IIJB:IIJE,1:IKT) + ZWORK1(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
 !
 !*       3.3  Complete vertical divergence of the < Rc w > flux
 ! Correction of qc and qi negative for AROME
