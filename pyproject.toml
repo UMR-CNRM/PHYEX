@@ -57,6 +57,10 @@ phyex1d-cases_list = "pyphyex.phyex1d.case:main_cases_list"
 
 [project.urls]
 Homepage = "https://github.com/UMR-CNRM/PHYEX"
+Documentation = "https://github.com/UMR-CNRM/PHYEX/blob/master/docs/PHYEX.md"
+"Code documentation" = "https://umr-cnrm.github.io/PHYEX/"
+Repository = "https://github.com/UMR-CNRM/PHYEX.git"
+Issues = "https://github.com/UMR-CNRM/PHYEX/issues"
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"
@@ -72,11 +76,9 @@ wheel.py-api = "py3"
 # are already excluded, but untracked files are not)
 sdist.exclude = [
     "/tools/conf_tests",   # test cases data (with symlinks, >2GB when archived)
-    "/tools/testing.sh",
     "/clone_and_test.sh",
     "/docs",
     "/.github",
-    "/build",              # old compilation scripts
 ]
 
 [tool.scikit-build.cmake.define]

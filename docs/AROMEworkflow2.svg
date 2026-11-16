@@ -158,13 +158,7 @@
       <g class="TextShape">
        <g id="id11">
         <rect class="BoundingBox" stroke="none" fill="none" x="1234" y="5219" width="3824" height="396"/>
-        <text class="SVGTextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="1234" y="5537"><tspan fill="rgb(0,0,0)" stroke="none">phyex  arpifs  phys_dmn</tspan></tspan></tspan></text>
-       </g>
-      </g>
-      <g class="com.sun.star.drawing.LineShape">
-       <g id="id12">
-        <rect class="BoundingBox" stroke="none" fill="none" x="1653" y="4786" width="1449" height="547"/>
-        <path fill="none" stroke="rgb(52,101,164)" stroke-width="28" stroke-linejoin="round" d="M 3087,4801 L 1668,5318"/>
+        <text class="SVGTextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="2412" y="5537"><tspan fill="rgb(0,0,0)" stroke="none">arpifs  phys_dmn</tspan></tspan></tspan></text>
        </g>
       </g>
       <g class="com.sun.star.drawing.LineShape">
@@ -500,13 +494,7 @@
       <g class="TextShape">
        <g id="id68">
         <rect class="BoundingBox" stroke="none" fill="none" x="10032" y="5219" width="3824" height="396"/>
-        <text class="SVGTextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="10032" y="5537"><tspan fill="rgb(0,0,0)" stroke="none">phyex  arpifs  phys_dmn</tspan></tspan></tspan></text>
-       </g>
-      </g>
-      <g class="com.sun.star.drawing.LineShape">
-       <g id="id69">
-        <rect class="BoundingBox" stroke="none" fill="none" x="10452" y="4786" width="1449" height="547"/>
-        <path fill="none" stroke="rgb(52,101,164)" stroke-width="28" stroke-linejoin="round" d="M 11885,4801 L 10466,5318"/>
+        <text class="SVGTextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="11210" y="5537"><tspan fill="rgb(0,0,0)" stroke="none">arpifs  phys_dmn</tspan></tspan></tspan></text>
        </g>
       </g>
       <g class="com.sun.star.drawing.LineShape">

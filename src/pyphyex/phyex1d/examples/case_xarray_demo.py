@@ -2,12 +2,11 @@
 Demonstration of CaseXarray with idealised profiles
 
 This example shows how to create a CaseXarray from scratch using xarray,
-run a simple experiment, and produce plots. It requires the PHYEX package
-to be compiled and importable (see the main README for installation).
+run a simple experiment, and produce plots. It requires the pyphyex package
+(see docs/phyex1d.md for installation).
 
 Usage:
-    source PHYEX/tools/env.sh
-    python examples/case_xarray_demo.py
+    python case_xarray_demo.py
 """
 
 import logging
