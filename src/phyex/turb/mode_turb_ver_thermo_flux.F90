@@ -621,7 +621,7 @@ ELSE ! atmosp bottom
   !
   ! atmos top
 !$acc kernels
-  ZF(IIJB:IIJE,IKE+1)=0.
+  ZF(IIJB:IIJE,IKE+IKL)=0.
 !$acc end kernels
 END IF
 !
@@ -1025,7 +1025,7 @@ IF (KRR /= 0) THEN
     END IF
       ! atmos top
 !$acc kernels
-      ZF(IIJB:IIJE,IKE+1)=0.
+      ZF(IIJB:IIJE,IKE+IKL)=0.
 !$acc end kernels
     END IF
   ! Compute the split conservative potential temperature at t+deltat
