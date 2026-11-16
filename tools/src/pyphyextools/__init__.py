@@ -95,6 +95,11 @@ def run_command(cmd, cwd=None, out_path=None, mode='w', env=None, input_string=N
         else:
             err = open(err_path, mode, encoding=encoding)
             stderr = err
+        if cwd is not None:
+            # PWD (used by make and by some scripts instead of the real working
+            # directory) is set to the working directory, as a shell would do
+            env = dict(os.environ if env is None else env)
+            env['PWD'] = os.path.abspath(cwd)
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=stderr,
             bufsize=1, text=True, encoding=encoding, cwd=cwd, env=env,

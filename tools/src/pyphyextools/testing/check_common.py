@@ -423,11 +423,12 @@ def sourced_env(script, cwd=None):
                   "(ignored)")
         env = {var: value for var, value in json.loads(env).items()
                if not var.startswith('__phyex_')}
-        # Variables set by bash itself
+        # Variables set by bash itself (PWD, the working directory, is set by run_command
+        # for each command)
         for var in ('_', 'PWD', 'OLDPWD', 'SHLVL'):
             env.pop(var, None)
-            if var in os.environ:
-                env[var] = os.environ[var]
+        if 'SHLVL' in os.environ:
+            env['SHLVL'] = os.environ['SHLVL']
         _SOURCED_ENV_CACHE[key] = env
     return dict(_SOURCED_ENV_CACHE[key])
 

@@ -187,14 +187,15 @@ class CheckCommitMesonh(CheckCommitBase):
             for f in os.listdir(exe_dir):
                 os.remove(os.path.join(exe_dir, f))
 
-    def _profile_env(self):
+    def _profile_env(self, cwd=None):
         """Environment defined by the Meso-NH profile (conf/profile_mesonh-*,
-        produced by configure)"""
+        produced by configure), sourced in the cwd directory (the one in which the
+        commands are executed)"""
         profiles = glob.glob(os.path.join(self.MNHPACK, self.mnhdir, 'conf', 'profile_mesonh-*'))
         if len(profiles) != 1:
             raise CheckCommitError(
                 f"One Meso-NH profile expected, found: {profiles or 'none'}", 9)
-        return sourced_env(profiles[0])
+        return sourced_env(profiles[0], cwd=cwd)
 
     def compilation_step(self):
         """Compile MesoNH with *make*."""
@@ -216,7 +217,7 @@ class CheckCommitMesonh(CheckCommitBase):
 
             for f in os.listdir(exe_dir):
                 os.remove(os.path.join(exe_dir, f))
-            env = self._profile_env()
+            env = self._profile_env(src_dir)
             out_path = os.path.join(mnhdir_full, 'Output_compilation')
             run_command(['make', '-j', '8'], src_dir, out_path, env=env, display='always')
             run_command(['make', 'installmaster'], src_dir, out_path, mode='a', env=env,
@@ -259,7 +260,7 @@ class CheckCommitMesonh(CheckCommitBase):
             #POSTRUN=echo to disable plotting
             #PHYEX_TEST_MODE=yes to adapt some tests (grid reduction, simulation length...)
             #input 'yes' to accept the dowloading of PGD files
-            env = self._profile_env()
+            env = self._profile_env(full_casedir)
             env.update({'POSTRUN': 'echo',
                         'PHYEX_TEST_MODE': 'yes'})
             with timed(self.perffile, self.name, 'mesonh', t):
