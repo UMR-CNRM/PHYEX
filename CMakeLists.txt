@@ -97,6 +97,18 @@ ecbuild_bundle_initialize()
 # Step 2: fiat
 #-----------------------------------------------------------------------
 
+ecbuild_add_option(FEATURE PYTHON_WHEEL
+                   DESCRIPTION "Build the PHYEX python wheel (generates the python binding with pyfortool)"
+                   DEFAULT OFF)
+
+# The PHYEX libraries of the python wheel must be self-contained (they are
+# loaded with ctypes): fiat is always built as a subproject, with static
+# (position independent) libraries linked into the PHYEX shared libraries
+if(HAVE_PYTHON_WHEEL)
+  set(PHYEX_FIAT_FROM_SOURCE ON CACHE INTERNAL "fiat is built as a subproject")
+  set(FIAT_BUILD_SHARED_LIBS OFF)
+endif()
+
 # Once fiat has been fetched, it must stay a subproject on subsequent
 # configurations (otherwise its build tree would be found as an installation)
 if(NOT PHYEX_FIAT_FROM_SOURCE)
@@ -121,9 +133,6 @@ endif()
 # Options
 #-----------------------------------------------------------------------
 
-ecbuild_add_option(FEATURE PYTHON_WHEEL
-                   DESCRIPTION "Build the PHYEX python wheel (generates the python binding with pyfortool)"
-                   DEFAULT OFF)
 ecbuild_add_option(FEATURE CHECK_NORMS
                    DESCRIPTION "Check the coding norms of the transformed source code (PHYEX_TRANSFORMATION)"
                    DEFAULT ON)

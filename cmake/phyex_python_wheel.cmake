@@ -113,7 +113,7 @@ set(_libs)
 foreach(_precision dp sp)
   if(TARGET phyex_${_precision})
     target_sources(phyex_${_precision} PRIVATE ${PYPHYEX_F90})
-    list(APPEND _libs phyex_${_precision} parkind_${_precision})
+    list(APPEND _libs phyex_${_precision})
   endif()
 endforeach()
 
@@ -122,25 +122,12 @@ endforeach()
 # addition to the pyphyex package of src/pyphyex:
 #   pyphyex/lowlevel.py : the generated python module
 #   pyphyex/_version.py : version of the package
-#   pyphyex/lib/        : the shared libraries (their RPATH, $ORIGIN/../lib,
-#                         allows them to find each other)
+#   pyphyex/lib/        : the PHYEX shared libraries; fiat being built with
+#                         static libraries (see the top-level CMakeLists.txt),
+#                         they only depend on the compiler runtime libraries
 install(FILES ${PYPHYEX_PY} DESTINATION pyphyex RENAME lowlevel.py
         COMPONENT pyphyex)
 install(FILES ${PYPHYEX_VERSION_PY} DESTINATION pyphyex COMPONENT pyphyex)
 install(TARGETS ${_libs}
         LIBRARY DESTINATION pyphyex/${PYPHYEX_WHEEL_LIBDIR}
         COMPONENT pyphyex)
-get_target_property(_fiat_imported fiat IMPORTED)
-if(_fiat_imported)
-  # fiat comes from an existing installation
-  if(CMAKE_VERSION VERSION_LESS 3.21)
-    ecbuild_critical("CMake >= 3.21 is needed to put an installed fiat in the python wheel")
-  endif()
-  install(IMPORTED_RUNTIME_ARTIFACTS fiat
-          LIBRARY DESTINATION pyphyex/${PYPHYEX_WHEEL_LIBDIR}
-          COMPONENT pyphyex)
-else()
-  install(TARGETS fiat
-          LIBRARY DESTINATION pyphyex/${PYPHYEX_WHEEL_LIBDIR}
-          COMPONENT pyphyex)
-endif()
