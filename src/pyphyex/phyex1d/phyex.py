@@ -28,6 +28,14 @@ class PHYEX(PhysicsBase):
     This class handles the initialisation / setup of PHYEX and ECRAD.
     """
 
+    OPTIONS_HELP = {
+        'pyecrad': 'path to the pyecrad/__init__.py file to use (if not provided, the '
+                   'package must be found in the PYTHONPATH in order to use ecrad)',
+        'namel': 'namelist name or file name (with a .namel extension)',
+        'dx': 'mesh size along x (m), for scale aware parametrizations',
+        'dy': 'mesh size along y (m), for scale aware parametrizations',
+    }
+
     def __init__(self, dt, method, name, tag, case, grid, prognostic_variables,
                  pyecrad=None, namel='default', dx=0., dy=0., attrs=None):
         super().__init__(dt, method, name, tag, case, grid, prognostic_variables)

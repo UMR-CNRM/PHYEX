@@ -15,6 +15,9 @@ from .case import Case, CaseCommonFormat
 from .grid import Grid
 from . import Phyex1DError
 
+# Default physics class
+DEFAULT_CLASS = 'PhysicsAromeTQ'
+
 # Physics classes that can be designated by their name
 PHYSICS_CLASSES = {'PhysicsAromeTQ': PhysicsAromeTQ,
                    'PhysicsAromeThetaR': PhysicsAromeThetaR,
@@ -59,7 +62,7 @@ class ExperimentRunner(PPPYComp):
         :param experiments: list of dictionaries describing the experiments
                             allowed keys are:
                               - class: name of the class (key of PHYSICS_CLASSES,
-                                       PhysicsAromeTQ by default) or class implementing
+                                       DEFAULT_CLASS by default) or class implementing
                                        the physics
                               - grid: Grid name or file name containing a grid description
                                       (with '.grid' extension).
@@ -84,7 +87,7 @@ class ExperimentRunner(PPPYComp):
         self.case = case
         schemes = []
         for exp in experiments:
-            cls = exp.get('class', 'PhysicsAromeTQ')
+            cls = exp.get('class', DEFAULT_CLASS)
             if isinstance(cls, str):
                 cls = PHYSICS_CLASSES[cls]
             # The experiment keys are given to the class

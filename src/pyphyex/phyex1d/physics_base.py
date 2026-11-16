@@ -17,7 +17,14 @@ class PhysicsBase(PPPY):
     Base class for 1D model physics schemes
 
     This class is not intended to be used directly.
+
+    The first line of the docstring of the classes is used to describe them in the help
+    message of phyex1d-exp_run.
     """
+
+    # Description of the options of the constructor (arguments with a default value, except
+    # those set by ExperimentRunner), used in the help message of phyex1d-exp_run
+    OPTIONS_HELP = {}
 
     def __init__(self, dt, method, name, tag, case, grid, prognostic_variables):
         # The keyword arguments are stored as attributes of the result files

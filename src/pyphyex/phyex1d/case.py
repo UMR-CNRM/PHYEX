@@ -8,12 +8,13 @@ import os
 import re
 import subprocess
 import sys
+import textwrap
 
 import netCDF4
 from scipy.interpolate import RegularGridInterpolator
 
 from . import Phyex1DError
-from . import user_dir
+from . import user_dir, commands_help
 
 # DEPHY-SCM repository (cases in the common format)
 DEPHY_SCM_URL = 'https://github.com/GdR-DEPHY/DEPHY-SCM.git'
@@ -485,9 +486,11 @@ def list_cases(directory=None):
 def main_cases_install():
     """Entry point of the phyex1d-cases_install command"""
     parser = argparse.ArgumentParser(
-        description='Installs the DEPHY-SCM cases (in the common format) in '
-                    f'{cases_directory()} (the PHYEXCONF environment variable can be used to '
-                    'change the root directory, ~/.phyex by default)')
+        description=textwrap.fill(
+            'Installs the DEPHY-SCM cases (in the common format) in '
+            f'{cases_directory()} (the PHYEXCONF environment variable can be used to '
+            'change the root directory, ~/.phyex by default)'),
+        epilog=commands_help(), formatter_class=argparse.RawDescriptionHelpFormatter)
     subparsers = parser.add_subparsers(dest='command', required=True)
     subparsers.add_parser('download',
                           help='download (clone) or update the DEPHY-SCM repository (big: '
@@ -510,9 +513,11 @@ def main_cases_install():
 def main_cases_list():
     """Entry point of the phyex1d-cases_list command"""
     parser = argparse.ArgumentParser(
-        description='Lists the DEPHY-SCM cases installed in '
-                    f'{cases_directory()} (see phyex1d-cases_install) with the path of their '
-                    'driver file (the case name or the path can be given to phyex1d-exp_run)')
+        description=textwrap.fill(
+            'Lists the DEPHY-SCM cases installed in '
+            f'{cases_directory()} (see phyex1d-cases_install) with the path of their '
+            'driver file (the case name or the path can be given to phyex1d-exp_run)'),
+        epilog=commands_help(), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-n', '--names', action='store_true',
                         help='list only the case names (CASE/SUBCASE), without the paths')
     args = parser.parse_args()

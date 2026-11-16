@@ -9,6 +9,24 @@ import numpy
 from pyphyex import __version__  # PHYEX version
 
 
+# Command line tools (added at the end of their help messages)
+COMMANDS = {
+    'phyex1d-cases_install': 'install the DEPHY-SCM cases (download or link)',
+    'phyex1d-cases_list': 'list the installed DEPHY-SCM cases',
+    'phyex1d-exp_run': 'run experiments on a case',
+    'phyex1d-exp_list': 'list the experiments having results',
+    'phyex1d-exp_plot': 'plot the results of experiments',
+}
+
+
+def commands_help():
+    """Section, common to the help messages of the command line tools, listing them"""
+    width = max(len(command) for command in COMMANDS)
+    return '\n'.join(['phyex1d command line tools (use -h for details):'] +
+                     [f'  {command:{width}s}  {description}'
+                      for command, description in COMMANDS.items()])
+
+
 def user_dir(subdir):
     """
     User directory in which grids and namelists are searched before the package

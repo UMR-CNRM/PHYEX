@@ -4,14 +4,18 @@ the results) and phyex1d-exp_list (list of the existing results)
 """
 
 import argparse
+import inspect
 import os
 import sys
+import textwrap
 
 from matplotlib import pyplot as plt
+
 from .experiment_runner import (ExperimentRunner, ExistingResults, PHYSICS_CLASSES,
-                                physics_options, list_experiments, DEFAULT_COMP_NAME)
+                                DEFAULT_CLASS, physics_options, list_experiments,
+                                DEFAULT_COMP_NAME)
 from .case import list_cases
-from . import Phyex1DError
+from . import Phyex1DError, commands_help
 
 
 def convert_option(cls_name, key, value, default):
@@ -37,13 +41,38 @@ def convert_option(cls_name, key, value, default):
     return value
 
 
+def class_description(cls):
+    """First line of the docstring of a class"""
+    doc = inspect.getdoc(cls)
+    return doc.splitlines()[0].rstrip('.') if doc else ''
+
+
+def physics_classes_help():
+    """List of the physics classes (with their description)"""
+    return '\n'.join(textwrap.fill(f"  - {cls_name}"
+                                   f"{' (default)' if cls_name == DEFAULT_CLASS else ''}: "
+                                   f"{class_description(cls)}",
+                                   width=90, subsequent_indent='      ', break_on_hyphens=False)
+                     for cls_name, cls in PHYSICS_CLASSES.items())
+
+
 def physics_options_help():
-    """Description of the options of the different physics classes"""
-    lines = []
+    """
+    Description of the options of the physics classes (OPTIONS_HELP class attribute) with
+    their default values; classes having the same options are grouped
+    """
+    groups = {}
     for cls_name, cls in PHYSICS_CLASSES.items():
-        options = ', '.join(f'{key}={default!r}'
-                            for key, default in physics_options(cls).items())
-        lines.append(f'- {cls_name}: {options}')
+        options = tuple((key, repr(default), cls.OPTIONS_HELP.get(key, ''))
+                        for key, default in physics_options(cls).items())
+        groups.setdefault(options, []).append(cls_name)
+    lines = []
+    for options, cls_names in groups.items():
+        lines.append(f"- for {', '.join(cls_names)}:")
+        for key, default, description in options:
+            lines.append(textwrap.fill(f'  - {key} (default: {default}): {description}',
+                                       width=90, subsequent_indent='      ',
+                                       break_on_hyphens=False))
     return '\n'.join(lines)
 
 
@@ -60,24 +89,12 @@ The keys common to all the physics classes are:
 - dt: Timestep (s)
 - name: experiment name
 - class: name of the class that implements a timestep among:
-         - PhysicsAromeTQ (default), PhysicsAromeThetaR (PHYEX physics)
-         - SimplePhysicsTQ, SimplePhysicsThetaR (simplified physics, without PHYEX)
+""" + physics_classes_help() + """
 - attr: override an attribute definig the case, eg.: attr=radiation:on
         (only some of the attributes are implemented)
 
-The other keys are options of the physics class (with their default values):
+The other keys are options of the physics class:
 """ + physics_options_help() + """
-
-with, for the PHYEX physics:
-- dx, dy: mesh size (for scale aware parametrizations)
-- pyecrad: path to the pyecrad/__init__.py file to use. If not provided, the package must be found
-           in the PYTHONPATH in order to use ecrad.
-- namel: namelist name or file name (with a .namel extension)
-
-and, for the simplified physics:
-- mf_max, mf_dtheta, mf_rt_factor: parameters of the prescribed mass flux
-- do_adjustment, do_shallow, do_turb: True or False to activate or not the
-  saturation adjustment, the shallow convection and the turbulence
 
 Results are stored in OUTPUT_DIR/<comparison name>/<experiment name>.hdf5 (OUTPUT_DIR is
 the current directory by default; quotes are removed, spaces and slashes are replaced by
@@ -130,7 +147,8 @@ def input_file(case):
 
 def experiments_parser(description, epilog):
     """Parser with the arguments describing the experiments (common to run and plot)"""
-    parser = argparse.ArgumentParser(description=description, epilog=epilog,
+    parser = argparse.ArgumentParser(description=description,
+                                     epilog=epilog + '\n' + commands_help(),
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('CASE',
                         help='Netcdf file describing the case or name of an installed '
@@ -151,7 +169,7 @@ def experiments_from_args(args):
     experiments = []
     for expe in args.experiments or [[]]:
         values = dict(arg.split('=', 1) for arg in expe if not arg.startswith('attr='))
-        cls_name = values.get('class', 'PhysicsAromeTQ')
+        cls_name = values.get('class', DEFAULT_CLASS)
         if cls_name not in PHYSICS_CLASSES:
             raise Phyex1DError(f"Unknown physics class {cls_name}, allowed classes are: " +
                                ', '.join(PHYSICS_CLASSES))
@@ -259,7 +277,8 @@ def main_plot():
     """Entry point of the phyex1d-exp_plot command: plot of the results of experiments"""
     parser = argparse.ArgumentParser(
         description='Plot of the results of 1D experiments (run with phyex1d-exp_run)',
-        epilog=PLOT_HELP, formatter_class=argparse.RawDescriptionHelpFormatter)
+        epilog=PLOT_HELP + '\n' + commands_help(),
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-o', dest='output_dir', type=str, default='.',
                         help="Output directory (default: current directory)")
     parser.add_argument('--name', default=DEFAULT_COMP_NAME, type=str,
@@ -283,9 +302,11 @@ def main_plot():
 def main_list():
     """Entry point of the phyex1d-exp_list command: list of the existing results"""
     parser = argparse.ArgumentParser(
-        description='List of the experiments (name and physics class) having results in '
-                    'OUTPUT_DIR/<comparison name> (see phyex1d-exp_run); they can be plotted '
-                    'with phyex1d-exp_plot')
+        description=textwrap.fill(
+            'List of the experiments (name and physics class) having results in '
+            'OUTPUT_DIR/<comparison name> (see phyex1d-exp_run); they can be plotted '
+            'with phyex1d-exp_plot'),
+        epilog=commands_help(), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-o', dest='output_dir', type=str, default='.',
                         help="Output directory (default: current directory)")
     parser.add_argument('--name', default=DEFAULT_COMP_NAME, type=str,

@@ -21,6 +21,17 @@ class SimplePhysics(PhysicsBase):
       - only vapour (v) and cloud liquid water (c)
     """
 
+    OPTIONS_HELP = {
+        'mf_max': 'maximum of the prescribed mass flux (half-sine profile between the '
+                  'surface and the top of the updraft)',
+        'mf_dtheta': 'theta_l excess (K) of the updraft with respect to the near-surface value',
+        'mf_rt_factor': 'factor applied to the near-surface total water to get the updraft '
+                        'value',
+        'do_adjustment': 'activation of the saturation adjustment',
+        'do_shallow': 'activation of the shallow convection (mass flux)',
+        'do_turb': 'activation of the turbulence',
+    }
+
     def __init__(self, dt, method, name, tag, case, grid, prognostic_variables,
                  attrs=None,
                  mf_max=0.05, mf_dtheta=.5, mf_rt_factor=1.2,
