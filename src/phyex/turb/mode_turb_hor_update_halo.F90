@@ -127,7 +127,7 @@ INTEGER :: IINFO_ll, IIB, IIE, IJB, IJE, IKB, IKE
      !
      PUM(:,:,IKE+1)=PUM(:,:,IKE)
      PVM(:,:,IKE+1)=PVM(:,:,IKE)
-     PWM(:,:,IKE+1)=PWM(:,:,IKE)
+     PWM(:,:,IKE+1)=0. !rigid lid, as in TRIDIAG_W
      PTHLM(:,:,IKE+1)=PTHLM(:,:,IKE)
      PTKEM(:,:,IKE+1)=PTKEM(:,:,IKE)
      IF (KSV>0) PSVM(:,:,IKE+1,:)=PSVM(:,:,IKE,:)
