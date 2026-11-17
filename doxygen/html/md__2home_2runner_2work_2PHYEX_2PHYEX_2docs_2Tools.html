@@ -105,6 +105,7 @@ User directories and environment variables</h1>
 <li>$MNHPACK (default: $HOME/MesoNH/PHYEX) for Meso-NH</li>
 <li>$LMDZPACK (default: $HOME/LMDZ/PHYEX) for LMDZ</li>
 <li>$TESTPROGSDIR (default: $HOME/TESTPROGS) for the test programs</li>
+<li>$PHYEX1DDIR (default: $HOME/PHYEX1D) for the 1D model (phyex1d)</li>
 </ul>
 <p>The PHYEXREPOuser (default: UMR-CNRM), PHYEXREPOprotocol (https or ssh) and PHYEXREPOrepo environment variables give the GitHub repository from which the commits are cloned.</p>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md77"></a>
@@ -121,18 +122,22 @@ phyex-check_ial, phyex-check_mesonh, phyex-check_lmdz and phyex-check_testprogs<
 <p>Example for the test programs, with the source code of a local repository: </p><div class="fragment"><div class="line">phyex-check_testprogs -p -c -r -C --computeRefIfNeeded $HOME/PHYEX REF</div>
 </div><!-- fragment --><p> The &ndash;computeRefIfNeeded option computes the reference simulations that do not exist yet.</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md80"></a>
+phyex-check_phyex1d</h2>
+<p>This command checks the 1D model (see the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2phyex1d.html">phyex1d documentation</a>) with the same steps and arguments as phyex-check_testprogs: the source code is copied (or cloned) in $PHYEX1DDIR/&lt;name&gt;/PHYEX, a virtual environment is created next to it (-p), the pyphyex package is compiled and installed in this virtual environment (-c, the architecture is given with -a as for phyex-check_testprogs), the 1D model is run on DEPHY-SCM cases (-r, ARMCU/REF by default, -t to give other cases; the cases are installed in ${PHYEXCONF}/phyex1d if needed) and the results are compared to the reference (-C). The reference commits are given, case by case, in the 'testing' entry of the src/phyex/phyex1d_version.json file.</p>
+<p>Example, with the source code of a local repository: </p><div class="fragment"><div class="line">phyex-check_phyex1d -p -c -r -C --computeRefIfNeeded $HOME/PHYEX REF</div>
+</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="autotoc_md81"></a>
 phyex-check_norms</h2>
 <p>This command checks the coding norms (described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2CodingNorms.html">CodingNorms documentation</a>) of the source code (for instance: phyex-check_norms -v src/phyex).</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md81"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md82"></a>
 phyex-check_consistency</h2>
 <p>This command checks the consistency of the repository: the version (src/phyex/VERSION file) is the version of the last release tag, the minimal pyfortool version is the same everywhere.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md82"></a>
-phyex-check_commit</h2>
-<p>This command performs all the checks (consistency, coding norms, documentation generation, python wheel creation and the test cases of IAL, Meso-NH, testprogs and LMDZ) on the repository containing the tools (with its uncommitted modifications); the &ndash;only option restricts the checks and the &ndash;parallel option checks the different models simultaneously. The report is written on the standard output; it can also be sent by email in case of an error (&ndash;mail) and attached as a status to a github commit (&ndash;github-status, the API url to use must be given).</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md83"></a>
+phyex-check_commit</h2>
+<p>This command performs all the checks (consistency, coding norms, documentation generation, python wheel creation and the test cases of IAL, Meso-NH, testprogs, LMDZ and phyex1d) on the repository containing the tools (with its uncommitted modifications); the &ndash;only option restricts the checks and the &ndash;parallel option checks the different models simultaneously. The report is written on the standard output; it can also be sent by email in case of an error (&ndash;mail) and attached as a status to a github commit (&ndash;github-status, the API url to use must be given).</p>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md84"></a>
 clone_and_test.sh</h2>
 <p>This script, at the root of the repository, is designed to be run periodically by cron. It clones (or updates) the PHYEX repository in ${PHYEXWORKDIR} (default: $HOME/PHYEXTESTING), checks out the last commit of a branch (or a given commit), installs the tools and runs phyex-check_commit, the result being attached as a status to the commit on GitHub (and sent by email in case of an error).</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md84"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md85"></a>
 Others</h2>
 <ul>
 <li>phyex-compare: comparison of model outputs (used by the phyex-check_&lt;model&gt; tools)</li>
