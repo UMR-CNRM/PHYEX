@@ -495,13 +495,11 @@ DO JK=IKB,IKE-IKL,IKL
     ENDIF !PARAMMF%LMIXUV
 
     IF(PARAMMF%LMIXTKE) THEN
-      !$mnh_expand_where(JIJ=IIJB:IIJE)
       IF (GTEST(JIJ)) THEN
         PTKE_UP(JIJ, JK+IKL) = (PTKE_UP(JIJ, JK)*(1-0.5*ZMIX2(JIJ)) + &
                                      ZTKEM_F(JIJ, JK)*ZMIX2(JIJ)) &
                                     /(1+0.5*ZMIX2(JIJ))
       END IF
-      !$mnh_end_expand_where(JIJ=IIJB:IIJE)
     ENDIF
     !DO JSV=1,ISV 
     !   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
