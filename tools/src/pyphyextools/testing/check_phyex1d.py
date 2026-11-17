@@ -31,8 +31,10 @@ def case_tag(case):
 class CheckCommitPhyex1d(CheckCommitBase):
     """Check a commit against the phyex1d reference."""
 
-    default_expand = None  # no source code transformation option
-    default_shuman_trans = None
+    # Source code transformations (pyfortool, at build time) are off by default
+    # (--expand and --shumantrans options)
+    default_expand = False
+    default_shuman_trans = False
 
     def __init__(self, archfile=None, refarchfile=None, **kwargs):
         super().__init__(**kwargs)
@@ -167,6 +169,18 @@ class CheckCommitPhyex1d(CheckCommitBase):
         run_command([self._bin('pip'), 'install', '--upgrade', 'pip'],
                     out_path=os.path.join(venv, 'Output_pip_upgrade'))
 
+    def _transformation(self):
+        """Transformation applied to the source code when building the package (value of the
+        PHYEX_TRANSFORMATION CMake variable, see src/phyex/cmake/phyex_transform.py), as for
+        the test programs"""
+        if self.useexpand and self.useshumantrans:
+            return 'IAL'
+        if self.useexpand:
+            return 'IAL_NOSHUGRAD'
+        if self.useshumantrans:
+            return 'IAL_NOEXPAND'
+        return 'NONE'
+
     def compilation_step(self):
         venv = self._venv()
         if not os.path.isdir(venv):
@@ -176,10 +190,12 @@ class CheckCommitPhyex1d(CheckCommitBase):
             print(f"### Compilation of commit {self.commit}")
             # Installation of the package (compilation of the library and of the python
             # binding), executed in the environment defined by the environment file; the
-            # build directory is kept for the following compilations
+            # build directory is kept for the following compilations. The source code is
+            # transformed (--expand, --shumantrans options) by the PHYEX build system
             cmd = [self._bin('pip'), 'install', '--prefer-binary',
                    '-C', 'build-dir=' + os.path.join(venv, 'build'),
                    '-C', 'cmake.define.CMAKE_TOOLCHAIN_FILE=' + os.path.join(venv, 'arch.ecbuild'),
+                   '-C', 'cmake.define.PHYEX_TRANSFORMATION=' + self._transformation(),
                    os.path.join(self._testdir(), 'PHYEX')]
             run_command(cmd, venv, os.path.join(venv, 'Output_compilation'),
                         env=sourced_env(self._arch_env()), display='always')
