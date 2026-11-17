@@ -55,6 +55,8 @@ function usage {
 }
 
 origargs=("$@")
+#Path of the running script (to detect when it is the clone's script, see below)
+scriptPath=$(realpath "${BASH_SOURCE[0]}" 2>/dev/null)
 #The repository variables are exported (they are used by the model checks)
 export PHYEXREPOuser=${PHYEXREPOuser:=UMR-CNRM}
 export PHYEXREPOprotocol=${PHYEXREPOprotocol:=ssh}
@@ -164,8 +166,11 @@ echo "Checkout commit ${SHA}"
 git -C "${PHYEXDIR}" checkout --force --detach "${SHA}" || fail "Cannot checkout ${SHA}"
 
 #Use the version of this script of the tested commit
+#When the running script is the clone's one, the checkout has replaced the file but bash
+#continues to execute the old version (still opened): the new version is always executed
 if [ "${CLONE_AND_TEST_UPDATED}" != 1 -a -f "${PHYEXDIR}/clone_and_test.sh" ]; then
-  if ! cmp -s "${BASH_SOURCE[0]}" "${PHYEXDIR}/clone_and_test.sh"; then
+  if [ "${scriptPath}" == "$(realpath "${PHYEXDIR}/clone_and_test.sh")" ] || \
+     ! cmp -s "${BASH_SOURCE[0]}" "${PHYEXDIR}/clone_and_test.sh"; then
     echo "Script has changed, running the new version"
     CLONE_AND_TEST_UPDATED=1 exec bash "${PHYEXDIR}/clone_and_test.sh" "${origargs[@]}"
   fi
