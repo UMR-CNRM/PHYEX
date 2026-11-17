@@ -71,6 +71,9 @@ is created next to it (-p), the pyphyex package is compiled and installed in thi
 (-r, ARMCU/REF by default, -t to give other cases; the cases are installed in ${PHYEXCONF}/phyex1d if needed)
 and the results are compared to the reference (-C). The reference commits are given, case by case, in the
 'testing' entry of the src/phyex/phyex1d\_version.json file.
+As for phyex-check\_testprogs, the --expand and --shumantrans options apply the corresponding source code
+transformations when building the package (PHYEX\_TRANSFORMATION CMake variable); the reference simulations
+are always computed without transformation.
 
 Example, with the source code of a local repository:
 ```
