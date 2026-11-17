@@ -21,7 +21,7 @@ SUBROUTINE COMPUTE_UPDRAFT_RHCJ10(D,CST,NEBN,PARAMMF,TURBN,CSTURB,&
                                  PSVM,PTH_UP,PTHL_UP,PRT_UP,      &
                                  PRV_UP,PRC_UP,PRI_UP,PTHV_UP,    &
                                  PW_UP,PU_UP, PV_UP, PSV_UP,      &
-                                 PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,  &
+                                 PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,PTKE_UP,&
                                  PEMF,PDETR,PENTR,                &
                                  PBUO_INTEG,KKLCL,KKETL,KKCTL,    &
                                  PDEPTH     )
@@ -114,6 +114,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)   ::  PSVM           ! scalar var.
 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTH_UP,PTHL_UP,PRT_UP   ! updraft properties
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PU_UP, PV_UP     ! updraft wind components
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTKE_UP          ! updraft TKE
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PRV_UP,PRC_UP    ! updraft rv, rc
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PRI_UP           ! updraft ri
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PTHV_UP          ! updraft THv
@@ -269,6 +270,7 @@ DO JK=1, IKT
     PRT_UP(JIJ, JK)=ZRTM_F(JIJ, JK)
     PU_UP(JIJ, JK)=ZUM_F(JIJ, JK)
     PV_UP(JIJ, JK)=ZVM_F(JIJ, JK)
+    PTKE_UP(JIJ, JK)=ZTKEM_F(JIJ, JK)
   END DO
 END DO
 PSV_UP(IIJB:IIJE,1:IKT,:)=0.
@@ -514,6 +516,15 @@ DO JK=IKB,IKE-IKL,IKL
         ENDIF
       ENDDO
     ENDIF
+  ENDIF !PARAMMF%LMIXUV
+
+  IF(PARAMMF%LMIXTKE) THEN
+    DO JIJ=IIJB,IIJE
+      IF(GTEST(JIJ)) THEN
+        PTKE_UP(JIJ,JK+IKL) = (PTKE_UP(JIJ,JK)*(1-0.5*ZMIX2(JIJ)) + ZTKEM_F(JIJ,JK)*ZMIX2(JIJ)) &
+                              /(1+0.5*ZMIX2(JIJ))
+      ENDIF
+    ENDDO
   ENDIF
 
 ! This updraft is not yet ready to use scalar variables
