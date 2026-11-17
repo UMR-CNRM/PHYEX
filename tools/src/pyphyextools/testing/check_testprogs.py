@@ -15,8 +15,8 @@ import tempfile
 from pathlib import Path
 
 from pyphyextools.testing.check_common import (
-    CheckCommitBase, CheckCommitError, aggregate_drhook_profile, escape_commit, PHYEXCONF,
-    run_tool, SEPARATOR, sourced_env)
+    CheckCommitBase, CheckCommitError, aggregate_drhook_profile, arch_file, copy_source,
+    default_arch, escape_commit, PHYEXCONF, run_tool, SEPARATOR, sourced_env)
 from pyphyextools import download_and_extract, run_command
 from pyphyextools.testing.compare import comp_testprogs
 
@@ -64,24 +64,15 @@ class CheckCommitTestprogs(CheckCommitBase):
         self.TESTDIR = os.environ.get('TESTPROGSDIR',
                                        os.path.expanduser('~/TESTPROGS'))
         self.dirdata = os.path.join(PHYEXCONF, 'testprogs_data')
-        self.defaultarchfile = 'gnu'
-        self.submit_method = ''
         self.varToExport = ("NPROMA,NBLOCKS,OMP_NUM_THREADS,DR_HOOK_OPT,"
                             "DR_HOOK,DR_HOOK_IGNORE_SIGNALS,"
                             "NVCOMPILER_ACC_GANGLIMIT")
         self.extrapolation_tag = ''
         self.extrapolation_opts = ''
 
+        self.defaultarchfile = default_arch()
         hostname = os.uname().nodename
-        if hostname[:7] in ('belenos', 'taranis'):
-            self.defaultarchfile = 'MIMPIIFC1805.EPONA'
-            self.submit_method = 'slurm_belenos'
-        elif hostname == 'aurora01':
-            self.defaultarchfile = 'ECMWF_NEC440MPI225SP.AU.x'
-            self.submit_method = ''
-        else:
-            self.defaultarchfile = 'gnu'
-            self.submit_method = ''
+        self.submit_method = 'slurm_belenos' if hostname[:7] in ('belenos', 'taranis') else ''
 
         self.archfile = archfile or self.defaultarchfile
         self.refarchfile = refarchfile or self.defaultarchfile
@@ -263,7 +254,7 @@ class CheckCommitTestprogs(CheckCommitBase):
             shutil.rmtree(phyex_dir)
         if os.path.isdir(self.commit):
             print(f"Copy {self.commit}")
-            self._copy_source(self.commit, phyex_dir)
+            copy_source(self.commit, phyex_dir)
         else:
             # Commit hash or tag
             if self.repo_protocol == 'https':
@@ -278,7 +269,8 @@ class CheckCommitTestprogs(CheckCommitBase):
         # the arch subdirectory of the source code (each file independently).
         # They are copied in the architecture specific build directory (arch.env,
         # used by the next steps, and arch.ecbuild, used as CMake toolchain file)
-        envfile, toolchain = (self._arch_file(phyex_dir, ext) for ext in ('env', 'ecbuild'))
+        envfile, toolchain = (arch_file(self.archfile, phyex_dir, ext)
+                               for ext in ('env', 'ecbuild'))
         arch_build_dir = os.path.join(build_dir, f'arch_{self.archfile}')
         os.makedirs(arch_build_dir, exist_ok=True)
         arch_env = os.path.join(arch_build_dir, 'arch.env')
@@ -308,39 +300,6 @@ class CheckCommitTestprogs(CheckCommitBase):
         out_path = os.path.join(arch_build_dir, 'Output_compilation_step1')
         run_command(cmake_args, build_dir, out_path, env=sourced_env(arch_env),
                     display='always')
-
-    def _arch_file(self, phyex_dir, ext):
-        """Architecture file arch-<archfile>.<ext>, searched in ${PHYEXCONF}/arch
-        then in the arch directory of the source code"""
-        filename = f'arch-{self.archfile}.{ext}'
-        candidates = [os.path.join(PHYEXCONF, 'arch', filename),
-                      os.path.join(phyex_dir, 'arch', filename)]
-        for path in candidates:
-            if os.path.isfile(path):
-                print(f"Architecture file used: {path}")
-                return path
-        raise CheckCommitError("Architecture file not found: " + ' or '.join(candidates), 6)
-
-    @staticmethod
-    def _copy_source(srcdir, destdir):
-        """Copy the source code of a PHYEX directory: in a git repository,
-        tracked files and untracked files not ignored (local modifications are
-        kept, build directories and virtual environments are not copied),
-        otherwise the whole directory (except .git)."""
-        if os.path.exists(os.path.join(srcdir, '.git')):
-            result = run_command(
-                ['git', 'ls-files', '-z', '--cached', '--others', '--exclude-standard'],
-                cwd=srcdir, banner=False)
-            for rel in sorted(set(result.stdout.split('\0'))):
-                src = os.path.join(srcdir, rel)
-                if rel == '' or not os.path.lexists(src):
-                    continue  # deleted but still tracked file
-                dst = os.path.join(destdir, rel)
-                os.makedirs(os.path.dirname(dst), exist_ok=True)
-                shutil.copy2(src, dst, follow_symlinks=False)
-        else:
-            shutil.copytree(srcdir, destdir, symlinks=True,
-                            ignore=shutil.ignore_patterns('.git'))
 
     def _libphyex(self):
         """Possible paths of the library built by CMake (static with

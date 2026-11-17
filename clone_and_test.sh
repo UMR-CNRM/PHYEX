@@ -47,10 +47,11 @@ function usage {
   echo "is attached to the commit (and a mail is sent if --mail is given)."
   echo ""
   echo "All the work is done within the \${PHYEXWORKDIR} directory (it defaults to ~/PHYEXTESTING)."
-  echo "The TESTPROGSDIR, HOMEPACK, MNHPACK, LMDZPACK and PHYEXCONF environment variables, used by the model"
-  echo "checks, are set to the TESTPROGS, pack, MesoNH, LMDZ and PHYEXCONF subdirectories of \${PHYEXWORKDIR}."
+  echo "The TESTPROGSDIR, HOMEPACK, MNHPACK, LMDZPACK, PHYEX1DDIR and PHYEXCONF environment variables, used by"
+  echo "the model checks, are set to the TESTPROGS, pack, MesoNH, LMDZ, PHYEX1D and PHYEXCONF subdirectories"
+  echo "of \${PHYEXWORKDIR}."
   echo "It may be necessary to fill these directories with base source code (for arome and/or mesonh),"
-  echo "with data (testprogs) and with the reference simulations."
+  echo "with data (testprogs, DEPHY-SCM cases for phyex1d) and with the reference simulations."
 }
 
 origargs=("$@")
@@ -185,8 +186,9 @@ export TESTPROGSDIR="${WORKDIR}/TESTPROGS"
 export HOMEPACK="${WORKDIR}/pack"
 export MNHPACK="${WORKDIR}/MesoNH"
 export LMDZPACK="${WORKDIR}/LMDZ"
+export PHYEX1DDIR="${WORKDIR}/PHYEX1D"
 export PHYEXCONF="${WORKDIR}/PHYEXCONF"
-for d in "${TESTPROGSDIR}" "${HOMEPACK}" "${MNHPACK}" "${LMDZPACK}" "${PHYEXCONF}"; do
+for d in "${TESTPROGSDIR}" "${HOMEPACK}" "${MNHPACK}" "${LMDZPACK}" "${PHYEX1DDIR}" "${PHYEXCONF}"; do
   if [ ! -d "${d}" ]; then
     echo "Creating directory ${d}"
     mkdir -p "${d}"

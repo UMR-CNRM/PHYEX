@@ -21,6 +21,7 @@ dependencies = [
     "numpy",
     "pandas<=2.3.2", # version constraint to be removed when belenos is updated
     "xarray",
+    "h5py", # comparison of the phyex1d results
     "epygram",
     "ctypesForFortran>=1.3.0,!=2.0.*,!=2.1.*",
     "fypp",
@@ -40,6 +41,7 @@ Homepage = "https://github.com/UMR-CNRM/PHYEX"
 "phyex-check_mesonh" = "pyphyextools.testing.check_mesonh:main"
 "phyex-check_lmdz" = "pyphyextools.testing.check_lmdz:main"
 "phyex-check_testprogs" = "pyphyextools.testing.check_testprogs:main"
+"phyex-check_phyex1d" = "pyphyextools.testing.check_phyex1d:main"
 "phyex-check_consistency" = "pyphyextools.testing.check_consistency:main"
 "phyex-check_commit" = "pyphyextools.testing.check_commit:main"
 

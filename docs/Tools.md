@@ -35,6 +35,7 @@ The phyex-check\_\<model\> tools create their compilation directories in:
   - $MNHPACK (default: $HOME/MesoNH/PHYEX) for Meso-NH
   - $LMDZPACK (default: $HOME/LMDZ/PHYEX) for LMDZ
   - $TESTPROGSDIR (default: $HOME/TESTPROGS) for the test programs
+  - $PHYEX1DDIR (default: $HOME/PHYEX1D) for the 1D model (phyex1d)
 
 The PHYEXREPOuser (default: UMR-CNRM), PHYEXREPOprotocol (https or ssh) and PHYEXREPOrepo environment variables give the GitHub repository from which the commits are cloned.
 
@@ -61,6 +62,21 @@ phyex-check_testprogs -p -c -r -C --computeRefIfNeeded $HOME/PHYEX REF
 ```
 The --computeRefIfNeeded option computes the reference simulations that do not exist yet.
 
+### phyex-check\_phyex1d
+
+This command checks the 1D model (see the [phyex1d documentation](./phyex1d.md)) with the same steps and arguments
+as phyex-check\_testprogs: the source code is copied (or cloned) in $PHYEX1DDIR/\<name\>/PHYEX, a virtual environment
+is created next to it (-p), the pyphyex package is compiled and installed in this virtual environment
+(-c, the architecture is given with -a as for phyex-check\_testprogs), the 1D model is run on DEPHY-SCM cases
+(-r, ARMCU/REF by default, -t to give other cases; the cases are installed in ${PHYEXCONF}/phyex1d if needed)
+and the results are compared to the reference (-C). The reference commits are given, case by case, in the
+'testing' entry of the src/phyex/phyex1d\_version.json file.
+
+Example, with the source code of a local repository:
+```
+phyex-check_phyex1d -p -c -r -C --computeRefIfNeeded $HOME/PHYEX REF
+```
+
 ### phyex-check\_norms
 
 This command checks the coding norms (described in the [CodingNorms documentation](./CodingNorms.md)) of the source code (for instance: phyex-check\_norms -v src/phyex).
@@ -72,7 +88,7 @@ This command checks the consistency of the repository: the version (src/phyex/VE
 ### phyex-check\_commit
 
 This command performs all the checks (consistency, coding norms, documentation generation, python wheel
-creation and the test cases of IAL, Meso-NH, testprogs and LMDZ) on the repository containing the tools
+creation and the test cases of IAL, Meso-NH, testprogs, LMDZ and phyex1d) on the repository containing the tools
 (with its uncommitted modifications); the --only option restricts the checks and the --parallel option
 checks the different models simultaneously.
 The report is written on the standard output; it can also be sent by email in case of an error (--mail)

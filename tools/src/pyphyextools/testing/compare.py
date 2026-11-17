@@ -429,6 +429,52 @@ def comp_testprogs(f1, f2):
     return 0 if r else 1
 
 
+def comp_phyex1d(f1, f2):
+    """Compare two phyex1d result files (hdf5 files written by phyex1d-exp_run): the
+    datasets must be identical (same names, shapes, types and values, NaN values being
+    considered equal). The attributes (description of the experiment) are compared but
+    their differences are only reported; for paths (grid, case file...), which depend on
+    the installation, only the file names are compared."""
+    import h5py  # pylint: disable=import-outside-toplevel
+
+    def attrs(obj):
+        result = {}
+        for k, v in obj.attrs.items():
+            if isinstance(v, numpy.ndarray):
+                v = v.tolist()
+            elif isinstance(v, str) and os.sep in v:
+                v = os.path.basename(v)
+            result[k] = v
+        return result
+
+    status = 0
+    with h5py.File(f1, 'r') as h1, h5py.File(f2, 'r') as h2:
+        if attrs(h1) != attrs(h2):
+            print(f"WARNING: the attributes of {f1} and {f2} differ (not taken into account)")
+        names1, names2 = set(h1.keys()), set(h2.keys())
+        for name in sorted(names1 ^ names2):
+            print(f"Variable {name} is only present in {f1 if name in names1 else f2}")
+            status += 1
+        for name in sorted(names1 & names2):
+            v1, v2 = h1[name][...], h2[name][...]
+            if v1.shape != v2.shape or v1.dtype != v2.dtype:
+                print(f"{name}: shape or type differ ({v1.shape}, {v1.dtype} and "
+                      f"{v2.shape}, {v2.dtype})")
+                status += 1
+            elif not numpy.array_equal(v1, v2,
+                                       equal_nan=numpy.issubdtype(v1.dtype, numpy.inexact)):
+                if numpy.issubdtype(v1.dtype, numpy.number):
+                    with numpy.errstate(invalid='ignore'):
+                        diff = numpy.nanmax(numpy.abs(v1.astype(float) - v2.astype(float)))
+                    print(f"{name}: values differ (maximum absolute difference: {diff})")
+                else:
+                    print(f"{name}: values differ")
+                status += 1
+    if status != 0:
+        print(f"{f1} {f2} differ")
+    return status
+
+
 def main():
     """Parse command-line arguments and dispatch to the appropriate comparison function."""
     parser = argparse.ArgumentParser(
@@ -450,6 +496,8 @@ def main():
                                        " must be compared")
     parser.add_argument('--testprogs', nargs=2, metavar=('LST_USER', 'LST_REF'),
                         type=str, help="Testprogs listing (user and ref)")
+    parser.add_argument('--phyex1d', nargs=2, metavar=('HDF5_USER', 'HDF5_REF'),
+                        type=str, help="phyex1d result files (user and ref)")
     args = parser.parse_args()
 
     totalstatus = 0
@@ -476,6 +524,9 @@ def main():
         print('status for ncdump of files = ' + str(status))
     if args.testprogs:
         status = comp_testprogs(*args.testprogs)
+        totalstatus += status
+    if args.phyex1d:
+        status = comp_phyex1d(*args.phyex1d)
         totalstatus += status
     return totalstatus
 

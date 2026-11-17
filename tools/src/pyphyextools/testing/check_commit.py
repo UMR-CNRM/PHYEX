@@ -2,7 +2,7 @@
 Global check of the PHYEX repository containing these tools (with its
 uncommitted modifications): consistency, coding norms, documentation
 generation, python wheel creation and the test cases of the different models
-(IAL, Meso-NH, testprogs and LMDZ).
+(IAL, Meso-NH, testprogs, LMDZ and the phyex1d 1D model).
 
 The report is written on the standard output. Optionally:
   - it is sent by e-mail in case of failure (--mail);
@@ -25,7 +25,7 @@ checked simultaneously (their output lines are then prefixed by [<model>]). For 
 the src/phyex/<model>_version.json file ('testing' entry); without such an
 entry, the default test cases are compared against the 'REF' reference.
 The model checks use their own environment variables (HOMEPACK, MNHPACK,
-TESTPROGSDIR, LMDZPACK...).
+TESTPROGSDIR, LMDZPACK, PHYEX1DDIR...).
 """
 
 import argparse
@@ -48,7 +48,7 @@ import urllib.request
 
 from pyphyextools import REPO_DIR, run_command
 
-MODELS = ('ial', 'mesonh', 'testprogs', 'lmdz')
+MODELS = ('ial', 'mesonh', 'testprogs', 'lmdz', 'phyex1d')
 CHECKS = ('consistency', 'norms', 'doc', 'wheel') + MODELS
 
 # Options of the different steps of the model checks
@@ -58,6 +58,7 @@ MODEL_STEPS = {
     'mesonh': (['-p', '-c'], ['-r'], ['-C', '--computeRefIfNeeded']),
     'testprogs': (['-p', '-c'], ['-r'], ['-C', '--computeRefIfNeeded']),
     'lmdz': (['-p', '-c', '--nofcm'], ['-r', '--nofcm'], None),
+    'phyex1d': (['-p', '-c'], ['-r'], ['-C', '--computeRefIfNeeded']),
 }
 
 

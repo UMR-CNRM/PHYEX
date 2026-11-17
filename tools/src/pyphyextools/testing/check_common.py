@@ -60,6 +60,50 @@ def mvdiff(src, dst):
                 os.remove(src)
 
 
+def default_arch():
+    """Default architecture name (arch-<name>.env and arch-<name>.ecbuild files) for the
+    offline compilations (testprogs, phyex1d), depending on the host"""
+    hostname = os.uname().nodename
+    if hostname[:7] in ('belenos', 'taranis'):
+        return 'MIMPIIFC1805.EPONA'
+    if hostname == 'aurora01':
+        return 'ECMWF_NEC440MPI225SP.AU.x'
+    return 'gnu'
+
+
+def arch_file(archfile, phyex_dir, ext):
+    """Architecture file arch-<archfile>.<ext>, searched in ${PHYEXCONF}/arch then in the
+    arch directory of the source code (phyex_dir)"""
+    filename = f'arch-{archfile}.{ext}'
+    candidates = [os.path.join(PHYEXCONF, 'arch', filename),
+                  os.path.join(phyex_dir, 'arch', filename)]
+    for path in candidates:
+        if os.path.isfile(path):
+            print(f"Architecture file used: {path}")
+            return path
+    raise CheckCommitError("Architecture file not found: " + ' or '.join(candidates), 6)
+
+
+def copy_source(srcdir, destdir):
+    """Copy the source code of a PHYEX directory: in a git repository, tracked files and
+    untracked files not ignored (local modifications are kept, build directories and
+    virtual environments are not copied), otherwise the whole directory (except .git)."""
+    if os.path.exists(os.path.join(srcdir, '.git')):
+        result = run_command(
+            ['git', 'ls-files', '-z', '--cached', '--others', '--exclude-standard'],
+            cwd=srcdir, banner=False)
+        for rel in sorted(set(result.stdout.split('\0'))):
+            src = os.path.join(srcdir, rel)
+            if rel == '' or not os.path.lexists(src):
+                continue  # deleted but still tracked file
+            dst = os.path.join(destdir, rel)
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy2(src, dst, follow_symlinks=False)
+    else:
+        shutil.copytree(srcdir, destdir, symlinks=True,
+                        ignore=shutil.ignore_patterns('.git'))
+
+
 class CheckCommitBase:
     """Base class for commit-checking tools.
 
