@@ -16,6 +16,11 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Set up python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
     - name: Make the arome branch available
       run: git branch --track arome origin/arome || { echo "AROME branch does not exist. Stopping the job."; exit; }
 
@@ -29,6 +34,12 @@ jobs:
           # Loop on all new commits from the oldest to the newest, restricted to the immediate family
           status=0
           for commit in $(git rev-list --reverse --topo-order --ancestry-path ${{ github.event.before}}..${{ github.sha}}); do
+            # Commits already merged in the arome branch (for instance after the synchronisation
+            # of a fork) have already been processed
+            if git merge-base --is-ancestor $commit arome; then
+              echo "Commit $commit is already in the arome branch history, skipped"
+              continue
+            fi
             temp_dir=$(mktemp -d)
             # Each commit is processed in a subshell; on failure the transformation is
             # discarded (nothing is committed/pushed) and we continue with the next commit.
@@ -46,11 +57,17 @@ jobs:
               # Merge (only for history) the new commit and erase the content
               git merge --no-commit --no-ff $commit || true
               find . -not -path './.git/*' -not -path './.git' -delete || exit 1
-              # Copy the new commit src directory and transform it using prep_code
-              cp -r ${{ github.workspace }}/src . || exit 1
+              # Extract the src directory of the commit (not the one of the workspace, which is
+              # the last commit pushed) and transform it using prep_code
+              git archive $commit src | tar -x || exit 1
               phyex-prep_code -s gmkpack_ignored_files -s turb -s micro -s aux -s conv -s ial_version.json -s CMakeLists.txt -s VERSION -s cmake -m arome $temp_dir -- --shugradTransfo --removeACC --mnhExpand --splitLongLines || exit 1
               # Commit and push to the main repo
               git add . || exit 1
+              # Nothing to commit (no merge in progress and no modification): not an error
+              if [ ! -f .git/MERGE_HEAD ] && git diff --cached --quiet; then
+                echo "Nothing to commit for commit $commit"
+                exit 0
+              fi
               git commit -m "AROME version of commit $commit" -m "$cmd" || exit 1
               git push origin arome || exit 1
             )
