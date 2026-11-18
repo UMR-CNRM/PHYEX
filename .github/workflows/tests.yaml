@@ -28,13 +28,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The same configurations must be listed in refhash_keepalive.yaml
+        # The same configurations must be listed in refhash_keepalive.yaml (except the
+        # transformations which do not change the references: the references are always
+        # computed without transformation, the cache entry is shared)
         arch: [gnu]
         prec: [dp]
         extrap: [0]
+        transformation: [none, expand+shumantrans]
     env:
       PHYEXREPOuser: ${{ github.repository_owner }}
       OPTS: -a ${{ matrix.arch }} --prec ${{ matrix.prec }} -e ${{ matrix.extrap }} --no-perf
+      TRANSFORMATION_OPTS: ${{ matrix.transformation == 'expand+shumantrans' && '--expand --shumantrans' || '' }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -52,7 +56,7 @@ jobs:
       run: pip install -e tools/
 
     - name: Compile and run
-      run: phyex-check_testprogs -p -c -r ${OPTS} ${GITHUB_WORKSPACE}
+      run: phyex-check_testprogs -p -c -r ${OPTS} ${TRANSFORMATION_OPTS} ${GITHUB_WORKSPACE}
 
     - name: Compare to the references
       id: check
