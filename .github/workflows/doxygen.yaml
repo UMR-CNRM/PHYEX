@@ -5,7 +5,35 @@ on:
     branches:
       - master
 jobs:
+  pages:
+    # Are the GitHub Pages activated? The documentation is not generated otherwise (for
+    # instance in forks)
+    runs-on: ubuntu-latest
+    permissions:
+      pages: read
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Check if the GitHub Pages are activated
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if out=$(gh api "repos/${GITHUB_REPOSITORY}/pages" 2>&1); then
+            enabled=true
+          elif echo "${out}" | grep -q 'HTTP 404'; then
+            echo "The GitHub Pages are not activated, the documentation is not deployed"
+            enabled=false
+          else
+            echo "${out}"
+            exit 1
+          fi
+          echo "enabled=${enabled}" >> "$GITHUB_OUTPUT"
+        shell: bash
+
   deploy:
+    needs: pages
+    if: needs.pages.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
