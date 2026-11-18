@@ -10,6 +10,9 @@ description: >
   and extrapolation (testprogs) or python version (phyex1d). The key is suffixed by the run
   id because a cache entry cannot be overwritten: the most recent entry of the configuration
   is restored (prefix match).
+  The phyex1d results also depend on the CPU model (the GitHub runners use different CPUs):
+  the cache entry is a directory containing one file per CPU model (the CPU model is not in
+  the key so that the keepalive workflow keeps the hashes of all the CPU models alive).
 
 inputs:
   tool:
@@ -26,14 +29,17 @@ inputs:
     default: '0'
 
 outputs:
+  dir:
+    description: directory stored in the cache (to use to save it)
+    value: ${{ steps.key.outputs.dir }}
   file:
-    description: path of the json file (it does not exist if no entry has been found)
+    description: path of the json file to use (it does not exist if no hash is known)
     value: ${{ steps.key.outputs.file }}
   checksum:
     description: checksum of the restored file (to know if it has been modified)
     value: ${{ steps.checksum.outputs.checksum }}
   save-key:
-    description: key to use to save the updated file
+    description: key to use to save the updated directory
     value: ${{ steps.key.outputs.key }}-${{ github.run_id }}-${{ github.run_attempt }}
 
 runs:
@@ -59,20 +65,30 @@ runs:
         exit 1
       fi
       command -v gfortran > /dev/null || (sudo apt-get update && sudo apt-get install -y gfortran)
+      # Runner CPU (diagnostic, and file name for phyex1d)
+      lscpu | grep -E '^(Model name|Flags):' || true
+      cpu=$(lscpu | sed -n 's/^Model name: *//p' | head -1 | tr -c 'A-Za-z0-9.\n-' '_' | sed 's/__*/_/g;s/_$//')
       key="refhash-${TOOL}-${ARCH}-${ImageOS}-gfortran$(gfortran -dumpfullversion)"
+      dir="${RUNNER_TEMP}/refhash_${TOOL}"
       case "${TOOL}" in
-        testprogs) key="${key}-${PREC}-e${EXTRAP}";;
-        phyex1d) key="${key}-py$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')";;
+        testprogs)
+          key="${key}-${PREC}-e${EXTRAP}"
+          file="${dir}/refhash.json";;
+        phyex1d)
+          key="${key}-py$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
+          file="${dir}/refhash_${cpu:-unknown}.json";;
         *) echo "Unknown tool: ${TOOL}"; exit 1;;
       esac
-      echo "Cache key: ${key}"
+      mkdir -p "${dir}"
+      echo "Cache key: ${key}, file: $(basename "${file}")"
       echo "key=${key}" >> "$GITHUB_OUTPUT"
-      echo "file=${RUNNER_TEMP}/refhash_${TOOL}.json" >> "$GITHUB_OUTPUT"
+      echo "dir=${dir}" >> "$GITHUB_OUTPUT"
+      echo "file=${file}" >> "$GITHUB_OUTPUT"
 
   - name: Restore the reference hashes
     uses: actions/cache/restore@v4
     with:
-      path: ${{ steps.key.outputs.file }}
+      path: ${{ steps.key.outputs.dir }}
       key: ${{ steps.key.outputs.key }}-${{ github.run_id }}-${{ github.run_attempt }}
       restore-keys: ${{ steps.key.outputs.key }}-
 
@@ -80,6 +96,7 @@ runs:
     id: checksum
     shell: bash
     run: |
+      ls -l '${{ steps.key.outputs.dir }}'
       file='${{ steps.key.outputs.file }}'
-      [ -f "${file}" ] && cat "${file}" || echo "No reference hashes found"
+      [ -f "${file}" ] && cat "${file}" || echo "No reference hashes found for this configuration"
       echo "checksum=$([ -f "${file}" ] && sha256sum "${file}" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"

@@ -86,8 +86,19 @@ jobs:
       if: always() && steps.changed.outputs.changed == 'true'
       uses: actions/cache/save@v4
       with:
-        path: ${{ steps.refhash.outputs.file }}
+        path: ${{ steps.refhash.outputs.dir }}
         key: ${{ steps.refhash.outputs.save-key }}
+
+    - name: Upload the results (diagnostic)
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: testprogs-results-${{ matrix.arch }}-${{ matrix.prec }}-${{ matrix.extrap }}-${{ matrix.transformation }}
+        path: |
+          ~/TESTPROGS/*/tests/*/*/Output_run
+          ~/TESTPROGS/*/tests/*/*/hash_result.txt
+          ${{ steps.refhash.outputs.dir }}
+        if-no-files-found: ignore
 
   phyex1d:
     runs-on: ubuntu-latest
@@ -144,5 +155,16 @@ jobs:
       if: always() && steps.changed.outputs.changed == 'true'
       uses: actions/cache/save@v4
       with:
-        path: ${{ steps.refhash.outputs.file }}
+        path: ${{ steps.refhash.outputs.dir }}
         key: ${{ steps.refhash.outputs.save-key }}
+
+    - name: Upload the results (diagnostic)
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: phyex1d-results-${{ matrix.arch }}
+        path: |
+          ~/PHYEX1D/*/tests/*/*/phyex1d/*.hdf5
+          ~/PHYEX1D/*/tests/*/*/hash_result.txt
+          ${{ steps.refhash.outputs.dir }}
+        if-no-files-found: ignore
