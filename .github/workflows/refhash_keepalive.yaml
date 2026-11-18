@@ -1,0 +1,46 @@
+name: refhash keepalive
+
+# The GitHub cache entries are evicted when they have not been accessed for some days: the
+# reference hashes used by the tests workflow (see .github/actions/refhash) are restored
+# periodically to keep them alive, even without activity on the default branch.
+# The configurations must be the ones of the tests workflow.
+
+on:
+  schedule:
+    - cron: '17 3 * * 1'  # weekly (shorter than the cache retention period)
+  workflow_dispatch:
+
+jobs:
+  testprogs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [gnu]
+        prec: [dp]
+        extrap: [0]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Restore the reference hashes
+      uses: ./.github/actions/refhash
+      with:
+        tool: testprogs
+        arch: ${{ matrix.arch }}
+        prec: ${{ matrix.prec }}
+        extrap: ${{ matrix.extrap }}
+
+  phyex1d:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [gnu]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Restore the reference hashes
+      uses: ./.github/actions/refhash
+      with:
+        tool: phyex1d
+        arch: ${{ matrix.arch }}

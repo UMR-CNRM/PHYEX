@@ -13,9 +13,9 @@ from pathlib import Path
 
 from pyphyextools.testing.check_common import (
     CheckCommitBase, CheckCommitError, arch_file, copy_source, default_arch, escape_commit,
-    PHYEXCONF, run_tool, SEPARATOR, sourced_env, timed)
+    PHYEXCONF, RefHashes, run_tool, SEPARATOR, sourced_env, timed, write_result_hash)
 from pyphyextools import run_command
-from pyphyextools.testing.compare import comp_phyex1d
+from pyphyextools.testing.compare import comp_phyex1d, hash_phyex1d
 
 # Experiment run on each case (options of phyex1d-exp_run) and result file name
 # (relative to the output directory of the case)
@@ -245,12 +245,15 @@ class CheckCommitPhyex1d(CheckCommitBase):
                     print(Path(test_out, 'Output_run').read_text(encoding='utf-8'))
                     raise CheckCommitError(f"Execution of case {case} failed "
                                            f"(see {test_out})", 7)
+            write_result_hash(test_out, hash_phyex1d(os.path.join(test_out, RESULT_FILE)))
 
     def comparison(self):
         print(f"### Check commit {self.commit} against commit {self.reference}")
         refByTest = self.resolve_ref_per_test(self.json_content)
+        refhashes = RefHashes(self.refHashFile) if self.refHashFile else None
 
-        # Result files, missing references collected by reference commit
+        # Result files, missing references collected by reference commit (a reference is
+        # not needed if its hash is known)
         test_info = {}
         missing_by_ref = {}
         for case in self.tests:
@@ -258,8 +261,9 @@ class CheckCommitPhyex1d(CheckCommitBase):
             refname = escape_commit(self.reference) if '/' in caseref else caseref
             file1 = os.path.join(self._test_out(case), RESULT_FILE)
             file2 = os.path.join(self._test_out(case, refname, self.refarchfile), RESULT_FILE)
-            test_info[case] = dict(file1=file1, file2=file2, caseref=caseref)
-            if not os.path.isfile(file2) and caseref:
+            refhash = refhashes.get(case, caseref) if refhashes else None
+            test_info[case] = dict(file1=file1, file2=file2, caseref=caseref, refhash=refhash)
+            if refhash is None and not os.path.isfile(file2) and caseref:
                 missing_by_ref.setdefault(caseref, []).append(case)
 
         # Computation of the missing references (one call per reference commit)
@@ -279,15 +283,28 @@ class CheckCommitPhyex1d(CheckCommitBase):
             if not os.path.isfile(info['file1']):
                 mess.append(f"Result ({info['file1']}) for commit {self.commit} does not "
                             "exist, please run the simulation")
-            if info['caseref'] and not os.path.isfile(info['file2']):
-                mess.append(f"Result ({info['file2']}) for commit {info['caseref']} does "
-                            "not exist, please run the simulation")
+            if info['refhash'] is None and info['caseref']:
+                if not os.path.isfile(info['file2']):
+                    mess.append(f"Result ({info['file2']}) for commit {info['caseref']} "
+                                "does not exist, please run the simulation")
+                elif refhashes is not None:
+                    refhashes.set(case, info['caseref'], hash_phyex1d(info['file2']))
             if mess:
                 message += ' ' + ' and '.join(mess) + '\n'
                 alltests += 1
+            elif info['refhash'] is not None:
+                # Comparison with the stored hash of the reference
+                if hash_phyex1d(info['file1']) != info['refhash']:
+                    message += (f" Results differ for case {case} (comparison of the hash "
+                                f"with the one of the reference for commit {info['caseref']},"
+                                " rerun without --refHashFile for a detailed comparison)\n")
+                    alltests += 1
             elif comp_phyex1d(info['file1'], info['file2']) != 0:
                 message += f" Results differ for case {case}\n"
                 alltests += 1
+
+        if refhashes is not None:
+            refhashes.save()
 
         if alltests == 0:
             print("SUCCESS, files are identical")

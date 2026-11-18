@@ -80,6 +80,30 @@ Example, with the source code of a local repository:
 phyex-check_phyex1d -p -c -r -C --computeRefIfNeeded $HOME/PHYEX REF
 ```
 
+### Reference hashes (phyex-check\_testprogs and phyex-check\_phyex1d)
+
+After each simulation, phyex-check\_testprogs and phyex-check\_phyex1d write the hash of the results in a
+hash\_result.txt file next to them (for the test programs, the hash of the output listing starting at
+the first 'IBL' line, normalised as for the comparison; for phyex1d, the hash of the datasets of the
+result file, the attributes being ignored). Two results have the same hash if, and only if, the
+comparison step considers them identical.
+
+With the --refHashFile FILE option, the comparison step (-C) uses a json file containing, for each
+test case, the reference commit and the hash of its results:
+
+  - if the reference commit of a case (given on the command line or in the 'testing' entry of the
+    version json file, compared as strings: the full SHAs must be used in the json files) is the
+    commit stored in the file, the results are compared to the stored hash; the reference simulation
+    is neither needed nor computed. In case of difference, the detailed comparison is obtained by
+    running the comparison step again without the --refHashFile option.
+  - otherwise, the reference simulation is used (and computed if --computeRefIfNeeded is set) and its
+    commit and hash are stored in the file (created if it does not exist).
+
+The hashes depend on the configuration (architecture, compiler, precision...): a file must be used
+for a single configuration. This mechanism is used by the GitHub workflow (.github/workflows/tests.yaml),
+the files being stored in the GitHub cache (see .github/actions/refhash/action.yml): the references are
+compiled and run only when their hash is unknown.
+
 ### phyex-check\_norms
 
 This command checks the coding norms (described in the [CodingNorms documentation](./CodingNorms.md)) of the source code (for instance: phyex-check\_norms -v src/phyex).

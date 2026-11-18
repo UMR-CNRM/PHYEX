@@ -20,10 +20,14 @@ import numpy
 import pandas
 
 from pyphyextools import run_command
+from pyphyextools.testing.compare import HASH_FORMAT
 
 SEPARATOR = '_'
 # User configuration directory (testprogs data...), ~/.phyex by default
 PHYEXCONF = os.environ.get('PHYEXCONF', os.path.expanduser('~/.phyex'))
+
+# File, written next to the results of a simulation, containing the hash of the results
+RESULT_HASH_FILE = 'hash_result.txt'
 
 
 def _parse_test_list(s):
@@ -104,6 +108,60 @@ def copy_source(srcdir, destdir):
                         ignore=shutil.ignore_patterns('.git'))
 
 
+def write_result_hash(directory, value):
+    """Write the hash of the results of a simulation in the RESULT_HASH_FILE file of
+    *directory*"""
+    Path(directory, RESULT_HASH_FILE).write_text(value + '\n', encoding='utf-8')
+
+
+class RefHashes:
+    """Commits and hashes of the reference results, by test case, stored in a json file
+    (--refHashFile option)::
+
+        {"format": <HASH_FORMAT>,
+         "cases": {"<case>": {"commit": "<reference commit>", "hash": "<result hash>"}}}
+
+    The stored values depend on the configuration (architecture, compiler...): a file must
+    only be used for a given configuration. The entries are ignored if the format (version
+    of the hash computation) differs from the current one."""
+
+    def __init__(self, filename):
+        self.filename = filename
+        self.cases = {}
+        self.modified = False
+        if os.path.isfile(filename):
+            with open(filename, encoding='utf-8') as f:
+                content = json.load(f)
+            if content.get('format') == HASH_FORMAT:
+                self.cases = content.get('cases', {})
+            else:
+                print(f"WARNING: the hash format of {filename} is not the current one "
+                      f"({HASH_FORMAT}), its content is ignored")
+                self.modified = True
+
+    def get(self, case, commit):
+        """Stored hash of the reference results of *case* if they were produced by *commit*,
+        None otherwise"""
+        entry = self.cases.get(case, {})
+        return entry.get('hash') if commit and entry.get('commit') == commit else None
+
+    def set(self, case, commit, value):
+        """Store the hash of the reference results of *case* (produced by *commit*)"""
+        if self.cases.get(case) != {'commit': commit, 'hash': value}:
+            self.cases[case] = {'commit': commit, 'hash': value}
+            self.modified = True
+
+    def save(self):
+        """Write the file if its content has changed"""
+        if self.modified:
+            with open(self.filename, 'w', encoding='utf-8') as f:
+                json.dump({'format': HASH_FORMAT, 'cases': self.cases}, f, indent=2,
+                          sort_keys=True)
+                f.write('\n')
+            print(f"Reference hashes written in {self.filename}")
+            self.modified = False
+
+
 class CheckCommitBase:
     """Base class for commit-checking tools.
 
@@ -118,7 +176,8 @@ class CheckCommitBase:
     def __init__(self, packcreation, packupdate, compilation, run_tests, check,
                  remove, suppress, onlyIfNeeded, computeRefIfNeeded, perffile,
                  name, repo_user, repo_protocol, tests, commit, reference,
-                 useexpand=None, useshumantrans=None, module_name=None, commitcmd=None, **kwargs):
+                 useexpand=None, useshumantrans=None, module_name=None, commitcmd=None,
+                 refHashFile=None, **kwargs):
         self.packcreation = packcreation
         self.packupdate = packupdate
         self.compilation = compilation
@@ -128,6 +187,7 @@ class CheckCommitBase:
         self.suppress = suppress
         self.onlyIfNeeded = onlyIfNeeded
         self.computeRefIfNeeded = computeRefIfNeeded
+        self.refHashFile = refHashFile
         self.perffile = perffile
         self.repo_user = repo_user
         self.repo_protocol = repo_protocol
@@ -195,6 +255,14 @@ class CheckCommitBase:
         parser.add_argument('--computeRefIfNeeded', action='store_true',
                             dest='computeRefIfNeeded',
                             help='compute missing references')
+        parser.add_argument('--refHashFile', dest='refHashFile', default=None,
+                            help='json file containing, for each test case, the commit and '
+                                 'the hash of the reference results: when the reference '
+                                 'commit of a case is the commit stored in the file, the '
+                                 'comparison uses the hash (the reference simulation is '
+                                 'neither needed nor computed); otherwise the reference is '
+                                 'used (or computed with --computeRefIfNeeded) and its commit '
+                                 'and hash are stored in the file (created if needed)')
         parser.add_argument('--perf', dest='perffile', default=None,
                             help='add performance statistics in file FILE')
         parser.add_argument('--name', dest='name', default=None,

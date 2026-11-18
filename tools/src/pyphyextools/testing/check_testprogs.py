@@ -16,9 +16,10 @@ from pathlib import Path
 
 from pyphyextools.testing.check_common import (
     CheckCommitBase, CheckCommitError, aggregate_drhook_profile, arch_file, copy_source,
-    default_arch, escape_commit, PHYEXCONF, run_tool, SEPARATOR, sourced_env)
+    default_arch, escape_commit, PHYEXCONF, RefHashes, run_tool, SEPARATOR, sourced_env,
+    write_result_hash)
 from pyphyextools import download_and_extract, run_command
-from pyphyextools.testing.compare import comp_testprogs
+from pyphyextools.testing.compare import comp_testprogs, hash_testprogs
 
 
 class CheckCommitTestprogs(CheckCommitBase):
@@ -380,6 +381,13 @@ class CheckCommitTestprogs(CheckCommitBase):
                 err_content = stderr_run.read_text(encoding='utf-8')
                 if err_content.strip():
                     print(err_content, file=sys.stderr)
+            if self.checkOpt:
+                # Hash of the results (not available if the execution has failed)
+                try:
+                    write_result_hash(test_out, hash_testprogs(os.path.join(test_out,
+                                                                            'Output_run')))
+                except (OSError, ValueError):
+                    pass
 
             if self.perf:
                 aggregate_drhook_profile(os.path.join(test_out, 'drhook.prof.1'),
@@ -475,8 +483,10 @@ class CheckCommitTestprogs(CheckCommitBase):
         testdir = os.path.join(self.TESTDIR, self.name)
         print(f"### Check commit {self.commit} against commit {self.reference}")
         refByTest = self.resolve_ref_per_test(self.json_content)
+        refhashes = RefHashes(self.refHashFile) if self.refHashFile else None
 
-        # First part: build test info dict, collect missing refs by caseref
+        # First part: build test info dict, collect missing refs by caseref (a reference is
+        # not needed if its hash is known)
         test_info = {}
         missing_by_ref = {}
         for t in self.tests:
@@ -496,9 +506,10 @@ class CheckCommitTestprogs(CheckCommitBase):
                                  f'arch_{self.refarchfile}',
                                  f'{t}{self.extrapolation_tag}', 'Output_run')
 
+            refhash = refhashes.get(t, caseref) if refhashes else None
             test_info[t] = dict(refname=refname, file1=file1, file2=file2,
-                                caseref=caseref)
-            if not os.path.isfile(file2):
+                                caseref=caseref, refhash=refhash)
+            if refhash is None and not os.path.isfile(file2):
                 missing_by_ref.setdefault(caseref, []).append(t)
 
         # Between parts: compute missing references in batch (one per caseref)
@@ -525,20 +536,33 @@ class CheckCommitTestprogs(CheckCommitBase):
                 mess = f"Result ({file1}) for commit {self.commit} does not exist, " \
                        "please run the simulation"
                 te = 1
-            if not os.path.isfile(file2):
-                mess2 = f"Result ({file2}) for commit {info['caseref']} does not exist, " \
-                        "please run the simulation"
-                te = 1
-                mess = mess2 if not mess else f"{mess} and {mess2}"
+            if info['refhash'] is not None:
+                # Comparison with the stored hash of the reference
+                if te == 0 and hash_testprogs(file1) != info['refhash']:
+                    mess = f"Result ({file1}) for commit {self.commit} differs from the " \
+                           f"reference result for commit {info['caseref']} (comparison " \
+                           "of the hashes, rerun without --refHashFile for a detailed " \
+                           "comparison)"
+                    te = 1
+            else:
+                if not os.path.isfile(file2):
+                    mess2 = f"Result ({file2}) for commit {info['caseref']} does not " \
+                            "exist, please run the simulation"
+                    te = 1
+                    mess = mess2 if not mess else f"{mess} and {mess2}"
+                elif refhashes is not None and info['caseref']:
+                    refhashes.set(t, info['caseref'], hash_testprogs(file2))
 
-            if te == 0:
-                te = comp_testprogs(file1, file2)
-                mess = ""
+                if te == 0:
+                    te = comp_testprogs(file1, file2)
+                    mess = ""
 
             if te != 0:
                 message += f" {mess}\n"
             alltests += te
 
+        if refhashes is not None:
+            refhashes.save()
         if alltests == 0:
             print("SUCCESS, files are identical")
             return 0

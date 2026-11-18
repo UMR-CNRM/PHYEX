@@ -1,16 +1,144 @@
 name: tests
 
-on: [push, pull_request]
+# Test cases compared to the references, for the commits on master and the pull requests
+# targeting master (the coding norms are checked by the norms workflow)
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+# Runs of a same branch are queued (cancelled for pull requests) to prevent concurrent updates
+# of the reference hashes stored in the cache
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  check-norms:
+  # The testprogs and phyex1d jobs compare the results to the references (given in
+  # src/phyex/<tool>_version.json) using the hashes of the reference results stored in the
+  # GitHub cache (see .github/actions/refhash): a reference is compiled and run only when its
+  # hash is unknown (and its hash is then stored) or when the results differ (to get a
+  # detailed comparison).
+  # The cache entries saved by a pull request can only be used by this pull request: the
+  # references are made available to everyone by the runs on master.
+
+  testprogs:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The same configurations must be listed in refhash_keepalive.yaml
+        arch: [gnu]
+        prec: [dp]
+        extrap: [0]
+    env:
+      PHYEXREPOuser: ${{ github.repository_owner }}
+      OPTS: -a ${{ matrix.arch }} --prec ${{ matrix.prec }} -e ${{ matrix.extrap }} --no-perf
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Restore the reference hashes
+      id: refhash
+      uses: ./.github/actions/refhash
+      with:
+        tool: testprogs
+        arch: ${{ matrix.arch }}
+        prec: ${{ matrix.prec }}
+        extrap: ${{ matrix.extrap }}
+
     - name: Install tools
       run: pip install -e tools/
 
-    - name: Check norms
-      run: phyex-check_norms -v src/phyex/
+    - name: Compile and run
+      run: phyex-check_testprogs -p -c -r ${OPTS} ${GITHUB_WORKSPACE}
+
+    - name: Compare to the references
+      id: check
+      run: |
+        phyex-check_testprogs -C --computeRefIfNeeded \
+          --refHashFile ${{ steps.refhash.outputs.file }} ${OPTS} ${GITHUB_WORKSPACE} REF
+
+    - name: Detailed comparison (the references are computed if needed)
+      if: failure() && steps.check.outcome == 'failure'
+      run: phyex-check_testprogs -C --computeRefIfNeeded ${OPTS} ${GITHUB_WORKSPACE} REF
+
+    - name: Check the stored hashes against the references computed
+      if: always() && steps.check.outcome != 'skipped'
+      run: |
+        python .github/scripts/check_refhash.py testprogs ${{ steps.refhash.outputs.file }} \
+          ${{ matrix.arch }} ${{ matrix.extrap }}
+
+    - name: Has the reference hash file been updated?
+      id: changed
+      if: always() && steps.check.outcome != 'skipped'
+      run: |
+        file=${{ steps.refhash.outputs.file }}
+        checksum=$([ -f "${file}" ] && sha256sum "${file}" | cut -d' ' -f1)
+        echo "changed=$([ "${checksum}" != '${{ steps.refhash.outputs.checksum }}' ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+    - name: Save the reference hashes
+      if: always() && steps.changed.outputs.changed == 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ steps.refhash.outputs.file }}
+        key: ${{ steps.refhash.outputs.save-key }}
+
+  phyex1d:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The same configurations must be listed in refhash_keepalive.yaml
+        arch: [gnu]
+    env:
+      PHYEXREPOuser: ${{ github.repository_owner }}
+      OPTS: -a ${{ matrix.arch }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Restore the reference hashes
+      id: refhash
+      uses: ./.github/actions/refhash
+      with:
+        tool: phyex1d
+        arch: ${{ matrix.arch }}
+
+    - name: Install tools
+      run: pip install -e tools/
+
+    - name: Compile and run
+      run: phyex-check_phyex1d -p -c -r ${OPTS} ${GITHUB_WORKSPACE}
+
+    - name: Compare to the references
+      id: check
+      run: |
+        phyex-check_phyex1d -C --computeRefIfNeeded \
+          --refHashFile ${{ steps.refhash.outputs.file }} ${OPTS} ${GITHUB_WORKSPACE} REF
+
+    - name: Detailed comparison (the references are computed if needed)
+      if: failure() && steps.check.outcome == 'failure'
+      run: phyex-check_phyex1d -C --computeRefIfNeeded ${OPTS} ${GITHUB_WORKSPACE} REF
+
+    - name: Check the stored hashes against the references computed
+      if: always() && steps.check.outcome != 'skipped'
+      run: |
+        python .github/scripts/check_refhash.py phyex1d ${{ steps.refhash.outputs.file }} \
+          ${{ matrix.arch }}
+
+    - name: Has the reference hash file been updated?
+      id: changed
+      if: always() && steps.check.outcome != 'skipped'
+      run: |
+        file=${{ steps.refhash.outputs.file }}
+        checksum=$([ -f "${file}" ] && sha256sum "${file}" | cut -d' ' -f1)
+        echo "changed=$([ "${checksum}" != '${{ steps.refhash.outputs.checksum }}' ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+    - name: Save the reference hashes
+      if: always() && steps.changed.outputs.changed == 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ steps.refhash.outputs.file }}
+        key: ${{ steps.refhash.outputs.save-key }}

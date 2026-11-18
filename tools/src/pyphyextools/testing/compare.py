@@ -4,6 +4,7 @@
 
 import argparse
 import difflib
+import hashlib
 import os
 import re
 import shutil
@@ -407,26 +408,41 @@ def comp_ncdump(f1, f2):
     return 0 if ncdumps[0] == ncdumps[1] else 1
 
 
+# Version of the result hash computation (hash_testprogs and hash_phyex1d functions): it must be
+# incremented each time the normalisation or the hashed content changes, the hashes stored with
+# an other version (--refHashFile option of the phyex-check_* tools) are then ignored
+HASH_FORMAT = 1
+
+
+def _normalized_testprogs(f):
+    """Content of a testprogs output listing file, normalised for the comparison (and
+    the hash): only the part starting at the first 'IBL' line is kept, without the
+    timings; ValueError is raised if there is no 'IBL' line (failed execution...)"""
+    with open(f, 'r', encoding='utf-8') as fd:
+        s = fd.read()
+    for p in (r'\.\.', r'~=', r'!='):
+        s = re.sub(p, '', s)
+    s = re.sub(r'\-0.00000E\+00([|\- ])', r' 0.00000E+00\1', s)
+    s = re.sub(r'\n\sTotal time:.*\n', '\n', s)
+    s = re.sub(r'IBL =[ ]*', 'IBL = ', s)
+    result = s[s.index('IBL'):]
+    if result[-1] == '\n':
+        result = result[:-1]
+    return result
+
+
 def comp_testprogs(f1, f2):
     """Compare two testprogs output listing files."""
-
-    def read(f):
-        with open(f, 'r', encoding='utf-8') as fd:
-            s = fd.read()
-            for p in (r'\.\.', r'~=', r'!='):
-                s = re.sub(p, '', s)
-            s = re.sub(r'\-0.00000E\+00([|\- ])', r' 0.00000E+00\1', s)
-            s = re.sub(r'\n\sTotal time:.*\n', '\n', s)
-            s = re.sub(r'IBL =[ ]*', 'IBL = ', s)
-        result = s[s.index('IBL'):]
-        if result[-1] == '\n':
-            result = result[:-1]
-        return result
-
-    r = read(f1) == read(f2)
+    r = _normalized_testprogs(f1) == _normalized_testprogs(f2)
     if not r:
         print(f"{f1} {f2} differ")
     return 0 if r else 1
+
+
+def hash_testprogs(f):
+    """Hash of a testprogs output listing file: two files have the same hash if, and only if,
+    comp_testprogs considers them identical (ValueError is raised for a file without result)"""
+    return hashlib.sha256(_normalized_testprogs(f).encode('utf-8')).hexdigest()
 
 
 def comp_phyex1d(f1, f2):
@@ -475,6 +491,29 @@ def comp_phyex1d(f1, f2):
     return status
 
 
+def hash_phyex1d(f):
+    """Hash of a phyex1d result file: two files have the same hash if, and only if,
+    comp_phyex1d considers them identical (names, shapes, types and values of the
+    datasets; NaN values are all equal, -0. equals 0., the attributes are ignored)"""
+    import h5py  # pylint: disable=import-outside-toplevel
+
+    sha = hashlib.sha256()
+    with h5py.File(f, 'r') as h:
+        for name in sorted(h.keys()):
+            v = h[name][...]
+            if numpy.issubdtype(v.dtype, numpy.inexact):
+                v = v.copy()
+                v[v == 0] = 0  # -0. becomes 0.
+                v[numpy.isnan(v)] = numpy.nan  # a single NaN representation
+            if v.dtype.kind == 'O':  # variable length strings...
+                data = repr(v.tolist()).encode('utf-8')
+            else:
+                data = numpy.ascontiguousarray(v).tobytes()
+            sha.update(repr((name, v.dtype.str, v.shape, len(data))).encode('utf-8'))
+            sha.update(data)
+    return sha.hexdigest()
+
+
 def main():
     """Parse command-line arguments and dispatch to the appropriate comparison function."""
     parser = argparse.ArgumentParser(
@@ -498,6 +537,8 @@ def main():
                         type=str, help="Testprogs listing (user and ref)")
     parser.add_argument('--phyex1d', nargs=2, metavar=('HDF5_USER', 'HDF5_REF'),
                         type=str, help="phyex1d result files (user and ref)")
+    parser.add_argument('--hash', nargs=2, metavar=('KIND', 'FILE'), type=str,
+                        help="print the hash of a result file (KIND is testprogs or phyex1d)")
     args = parser.parse_args()
 
     totalstatus = 0
@@ -528,6 +569,9 @@ def main():
     if args.phyex1d:
         status = comp_phyex1d(*args.phyex1d)
         totalstatus += status
+    if args.hash:
+        kind, filename = args.hash
+        print({'testprogs': hash_testprogs, 'phyex1d': hash_phyex1d}[kind](filename))
     return totalstatus
 
 

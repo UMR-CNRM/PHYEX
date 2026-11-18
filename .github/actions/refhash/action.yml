@@ -1,0 +1,85 @@
+name: refhash
+description: >
+  Restore, from the GitHub cache, the json file containing the hashes of the reference
+  results (--refHashFile option of phyex-check_testprogs and phyex-check_phyex1d) for a
+  configuration. Used by the tests workflow (which saves the file again when it has been
+  updated) and by the refhash_keepalive workflow (which only restores the file to prevent
+  the cache entry from being evicted).
+  The cache key contains everything (except the source code) that can change the results:
+  tool, architecture, runner image, compiler version and, depending on the tool, precision
+  and extrapolation (testprogs) or python version (phyex1d). The key is suffixed by the run
+  id because a cache entry cannot be overwritten: the most recent entry of the configuration
+  is restored (prefix match).
+
+inputs:
+  tool:
+    description: testprogs or phyex1d
+    required: true
+  arch:
+    description: architecture name (arch/arch-<arch>.ecbuild file, gfortran compiler only)
+    required: true
+  prec:
+    description: precision (testprogs only)
+    default: dp
+  extrap:
+    description: extrapolation configuration (testprogs only)
+    default: '0'
+
+outputs:
+  file:
+    description: path of the json file (it does not exist if no entry has been found)
+    value: ${{ steps.key.outputs.file }}
+  checksum:
+    description: checksum of the restored file (to know if it has been modified)
+    value: ${{ steps.checksum.outputs.checksum }}
+  save-key:
+    description: key to use to save the updated file
+    value: ${{ steps.key.outputs.key }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+runs:
+  using: composite
+  steps:
+  - name: Set up python
+    uses: actions/setup-python@v5
+    with:
+      python-version: '3.12'
+
+  - name: Compute the cache key
+    id: key
+    shell: bash
+    env:
+      TOOL: ${{ inputs.tool }}
+      ARCH: ${{ inputs.arch }}
+      PREC: ${{ inputs.prec }}
+      EXTRAP: ${{ inputs.extrap }}
+    run: |
+      fc=$(sed -n 's/^ *set *( *CMAKE_Fortran_COMPILER  *\([^ )]*\).*/\1/p' "arch/arch-${ARCH}.ecbuild")
+      if [ "${fc}" != gfortran ]; then
+        echo "Only the gfortran compiler is supported (found '${fc}' in arch/arch-${ARCH}.ecbuild)"
+        exit 1
+      fi
+      command -v gfortran > /dev/null || (sudo apt-get update && sudo apt-get install -y gfortran)
+      key="refhash-${TOOL}-${ARCH}-${ImageOS}-gfortran$(gfortran -dumpfullversion)"
+      case "${TOOL}" in
+        testprogs) key="${key}-${PREC}-e${EXTRAP}";;
+        phyex1d) key="${key}-py$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')";;
+        *) echo "Unknown tool: ${TOOL}"; exit 1;;
+      esac
+      echo "Cache key: ${key}"
+      echo "key=${key}" >> "$GITHUB_OUTPUT"
+      echo "file=${RUNNER_TEMP}/refhash_${TOOL}.json" >> "$GITHUB_OUTPUT"
+
+  - name: Restore the reference hashes
+    uses: actions/cache/restore@v4
+    with:
+      path: ${{ steps.key.outputs.file }}
+      key: ${{ steps.key.outputs.key }}-${{ github.run_id }}-${{ github.run_attempt }}
+      restore-keys: ${{ steps.key.outputs.key }}-
+
+  - name: Checksum of the restored file
+    id: checksum
+    shell: bash
+    run: |
+      file='${{ steps.key.outputs.file }}'
+      [ -f "${file}" ] && cat "${file}" || echo "No reference hashes found"
+      echo "checksum=$([ -f "${file}" ] && sha256sum "${file}" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
