@@ -12,7 +12,7 @@ SUBROUTINE ICE4_WARM(CST, PARAMI, ICEP, ICED, D, LDSOFT, LDCOMPUTE, HSUBG_RC_RR_
                     &PHLC_LCF, PHLC_HCF, PHLC_LRC, PHLC_HRC, &
                     &PCF, PRF, &
                     &PRVT, PRCT, PRRT, PCONC, PACRF, &
-                    &PRCAUTR, PRCACCR, PRREVAV)
+                    &PRCAUTR, PRCACCR, PRREVAV, PRCRIAUTC)
 
 !$ACDC singlecolumn
 
@@ -82,6 +82,7 @@ REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PACRF    ! Collision factor cloud
 REAL, DIMENSION(D%NIJT),      INTENT(INOUT) :: PRCAUTR  ! Autoconversion of r_c for r_r production
 REAL, DIMENSION(D%NIJT),      INTENT(INOUT) :: PRCACCR  ! Accretion of r_c for r_r production
 REAL, DIMENSION(D%NIJT),      INTENT(INOUT) :: PRREVAV  ! Evaporation of r_r
+REAL, DIMENSION(D%NIJT),      INTENT(IN)    :: PRCRIAUTC  ! SPP microphysics: rc->rr threshold
 !
 !*       0.2  declaration of local variables
 !
@@ -118,7 +119,7 @@ DO JIJ=D%NIJB, D%NIJE
       IF(PHLC_HRC(JIJ)>ICED%XRTMIN(2) .AND. PHLC_HCF(JIJ)>0. ) THEN
         IF (.NOT. LDSOFT)THEN
           !HCF*autoconv(HRC/HCF) with simplification
-          PRCAUTR(JIJ) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JIJ) - PHLC_HCF(JIJ)*ICEP%XCRIAUTC/PRHODREF(JIJ), 0.0)
+          PRCAUTR(JIJ) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JIJ) - PHLC_HCF(JIJ)*PRCRIAUTC(JIJ)/PRHODREF(JIJ), 0.0)
         ENDIF
       ELSE
         PRCAUTR(JIJ) = 0.

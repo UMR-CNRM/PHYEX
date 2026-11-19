@@ -15,7 +15,7 @@ CONTAINS
                       PTHVREF,                                       &
                       PWM,PTHLM,PRM,                                 &
                       PTKEM,PLM,PLEPS,                               &
-                      PLOCPEXNM,PATHETA,PAMOIST,PSRCM,               &
+                      PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PTURB_SPP,     &
                       PSIGS                                          )
 !     ################################################################
 !
@@ -67,7 +67,7 @@ USE MODD_NEB_n,          ONLY: NEB_t
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_LES, ONLY: TLES_t
 USE MODD_PARAMETERS, ONLY: JPVEXT
-USE MODD_TURB_n,         ONLY: TURB_t
+USE MODD_TURB_n,         ONLY: TURB_t, NCTV, NCHT1, NCHT2, NTURB_S
 !
 USE MODE_IO_FIELD_WRITE_PHY, ONLY: IO_FIELD_WRITE_PHY
 !
@@ -116,6 +116,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)    ::  PRM          ! mixing ratio
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! Turb. Kin. Energy
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S),   INTENT(IN)  ::  PTURB_SPP    ! SPP for turbulence
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLEPS        ! dissipative length
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between 
@@ -204,7 +205,7 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
     
     DO JK=1, D%NKT
       DO JIJ=1, D%NIJT
-        ZFLX(JIJ, JK) = TURBN%XCTV * PLM(JIJ, JK) * PLEPS(JIJ, JK) *                           &
+        ZFLX(JIJ, JK) = PTURB_SPP(JIJ, JK, NCTV) * PLM(JIJ, JK) * PLEPS(JIJ, JK) *                           &
            ( ZWORKSHUGRAD_3D_1(JIJ, JK)**2 + ZWORKSHUGRAD_3D_2(JIJ, JK)**2 )
       END DO
     END DO
@@ -214,7 +215,7 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
     
     DO JK=1, D%NKT
       DO JIJ=1, D%NIJT
-        ZFLX(JIJ, JK) = TURBN%XCTV * PLM(JIJ, JK) * PLEPS(JIJ, JK) *                           &
+        ZFLX(JIJ, JK) = PTURB_SPP(JIJ, JK, NCTV) * PLM(JIJ, JK) * PLEPS(JIJ, JK) *                           &
              ZWORKSHUGRAD_3D_1(JIJ, JK)**2
       END DO
     END DO
@@ -242,7 +243,7 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
   CALL MYF2D_PHY(D, ZWORKSHUGRAD_2D_7, ZWORKSHUGRAD_2D_8)
   
   DO JIJ=1, D%NIJT
-    ZFLX(JIJ, IKB) = TURBN%XCTV * PLM(JIJ, IKB)                  &
+    ZFLX(JIJ, IKB) = PTURB_SPP(JIJ, IKB, NCTV) * PLM(JIJ, IKB)                  &
     * PLEPS(JIJ, IKB) *  (                                    &
     ( ZWORKSHUGRAD_2D_6(JIJ)      &
      - ( ZCOEFF(JIJ, IKB+2)*PTHLM(JIJ, IKB+2)          &
@@ -334,7 +335,7 @@ DO JK=1, IKT
                 PLM(JIJ, JK) * PLEPS(JIJ, JK) *                                          &
                 (ZWORKSHUGRAD_3D_1(JIJ, JK) * ZWORKSHUGRAD_3D_2(JIJ, JK)  &
                + ZWORKSHUGRAD_3D_3(JIJ, JK) * ZWORKSHUGRAD_3D_4(JIJ, JK)  &
-                ) * (TURBN%XCHT1+TURBN%XCHT2)
+                ) * (PTURB_SPP(JIJ, JK, NCHT1)+PTURB_SPP(JIJ, JK, NCHT2))
         END DO
       END DO
       
@@ -347,7 +348,7 @@ DO JK=1, IKT
           ZFLX(JIJ, JK)=                                                               &
                 PLM(JIJ, JK) * PLEPS(JIJ, JK) *                                          &
                 (ZWORKSHUGRAD_3D_1(JIJ, JK) * ZWORKSHUGRAD_3D_2(JIJ, JK)  &
-                ) * (TURBN%XCHT1+TURBN%XCHT2)
+                ) * (PTURB_SPP(JIJ, JK, NCHT1)+PTURB_SPP(JIJ, JK, NCHT2))
         END DO
       END DO
       
@@ -389,7 +390,7 @@ DO JK=1, IKT
     CALL MYF2D_PHY(D, ZWORKSHUGRAD_2D_15, ZWORKSHUGRAD_2D_16)
     
     DO JIJ=1, D%NIJT
-      ZFLX(JIJ, IKB) = (TURBN%XCHT1+TURBN%XCHT2) * PLM(JIJ, IKB)         &
+      ZFLX(JIJ, IKB) = (PTURB_SPP(JIJ, IKB, NCHT1)+PTURB_SPP(JIJ, IKB, NCHT2)) * PLM(JIJ, IKB)         &
       * PLEPS(JIJ, IKB)  *  (                                   &
       ( ZWORKSHUGRAD_2D_10(JIJ)      &
        - ( ZCOEFF(JIJ, IKB+2)*PTHLM(JIJ, IKB+2)          &

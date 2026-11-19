@@ -9,7 +9,7 @@ CONTAINS
 SUBROUTINE ICE4_COMPUTE_PDF(CST, ICEP, ICED, D, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
                             LDMICRO, PRHODREF, PRCT, PRIT, PCF, PT, PSIGMA_RC,&
                             PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
-                            PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, PRF)
+                            PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, PRF, PARAMI, PRCRIAUTI, PRCRIAUTC)
 
 !$ACDC singlecolumn
 
@@ -35,6 +35,7 @@ USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 USE MODE_MSG, ONLY: PRINT_MSG
@@ -70,6 +71,9 @@ REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLI_LCF
 REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLI_HRI
 REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLI_LRI
 REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PRF        ! Rain fraction
+TYPE(PARAM_ICE_t),       INTENT(IN)    :: PARAMI      ! SPP-PORT-REVIEW added for LCRIAUTI gate (was not a dummy in arome)
+REAL, DIMENSION(D%NIJT), INTENT(IN)    :: PRCRIAUTI   ! SPP-PORT-REVIEW SPP perturbed ri->rs threshold
+REAL, DIMENSION(D%NIJT), INTENT(IN)    :: PRCRIAUTC   ! SPP-PORT-REVIEW SPP perturbed rc->rr threshold
 !
 !*       0.2  declaration of local variables
 !
@@ -81,6 +85,7 @@ REAL, DIMENSION(D%NIJT) :: ZRCRAUTC,      & !RC value to begin rain formation =X
                                                     !    note that ZRC/CF = ZHLC_HRCLOCAL+ ZHLC_LRCLOCAL
                                                     !                     = PHLC_HRC/HCF+ PHLC_LRC/LCF
                           ZSUMRC, ZSUMRI
+REAL, DIMENSION(D%NIJT) :: ZXACRIAUTI, ZXBCRIAUTI  ! SPP-PORT-REVIEW perturbed cirrus-law coefficients
 REAL :: ZCOEFFRCM
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: JIJ
@@ -92,11 +97,19 @@ IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 0, ZHOOK_HANDLE)
 !$mnh_undef(LOOP)
 #endif
 !
+! SPP-PORT-REVIEW derive perturbed cirrus-law coefficients (arome used ICEP%XACRIAUTI/XBCRIAUTI directly)
+IF (PARAMI%LCRIAUTI) THEN
+  CALL CRIAUTI(PRCRIAUTI, ICEP%XT0CRIAUTI, ZXACRIAUTI, ZXBCRIAUTI)
+ELSE
+  ZXACRIAUTI = ICEP%XACRIAUTI
+  ZXBCRIAUTI = ICEP%XBCRIAUTI
+ENDIF
+!
 !Cloud water split between high and low content part is done according to autoconversion option
 
 DO JIJ=D%NIJB, D%NIJE
   IF (LDMICRO(JIJ)) THEN
-    ZRCRAUTC(JIJ)=ICEP%XCRIAUTC/PRHODREF(JIJ) ! Autoconversion rc threshold
+    ZRCRAUTC(JIJ)=PRCRIAUTC(JIJ)/PRHODREF(JIJ) ! Autoconversion rc threshold
   ELSE
     ZRCRAUTC(JIJ)=0.
   END IF
@@ -370,7 +383,7 @@ ENDIF
 DO JIJ=D%NIJB, D%NIJE
   IF (LDMICRO(JIJ)) THEN
     ! Autoconversion ri threshold
-    ZCRIAUTI(JIJ)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JIJ)-CST%XTT)+ICEP%XBCRIAUTI))
+    ZCRIAUTI(JIJ)=MIN(PRCRIAUTI(JIJ),10**(ZXACRIAUTI(JIJ)*(PT(JIJ)-CST%XTT)+ZXBCRIAUTI(JIJ)))
   ELSE
     ZCRIAUTI(JIJ)=0.
   END IF
@@ -466,6 +479,8 @@ END DO
 
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 1, ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "criauti.func.h"
 END SUBROUTINE ICE4_COMPUTE_PDF
 
 END MODULE MODE_ICE4_COMPUTE_PDF

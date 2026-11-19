@@ -16,7 +16,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
                                              PTHT, PRCT, PRRT, PRST, PRGT,   &
                                              PRCS, PRRS, PRIS, PRSS, PRGS,   &
                                              PINPRC, PINPRR, PINPRS, PINPRG, &
-                                             ZRAY, ZLBC, ZFSEDC, ZCONC3D,    &
+                                             ZRAY, ZLBC, ZFSEDC, ZCONC3D, PRXCS, &
                                              PRHT, PRHS, PINPRH, PFPR)
 
     USE MODD_PARAMETERS,       ONLY: JPVEXT
@@ -72,6 +72,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
     REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: ZLBC    ! XLBC weighted by sea fraction
     REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: ZFSEDC
     REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: ZCONC3D !  droplet concentration m-3
+    REAL, DIMENSION(D%NIJT),       INTENT(IN) :: PRXCS   ! Extra variables for VTERM
 
     REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(IN)    :: PRHT   ! Hail m.r. at t
     REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(INOUT) :: PRHS   ! Hail m.r. source
@@ -268,7 +269,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
             ZWSEDW1 (JI,JK)= ZFSEDR_V(JI,JK) *PRRS(JI,JK)**(ICEP%XEXSEDR-1)* &
             PRHODREF(JI,JK)**(ICEP%XEXSEDR-ICED%XCEXVT-1)
           ELSE
-            ZWSEDW1(JI,JK)= ICEP%XFSEDR *PRRS(JI,JK)**(ICEP%XEXSEDR-1)* &
+            ZWSEDW1(JI,JK)= (PRXCS(JI)/ICED%XCS)*ICEP%XFSEDR *PRRS(JI,JK)**(ICEP%XEXSEDR-1)* &
             PRHODREF(JI,JK)**(ICEP%XEXSEDR-ICED%XCEXVT-1)
           ENDIF
         ENDIF
@@ -280,7 +281,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
             ZWSEDW2 (JI,JK)= ZFSEDR_V(JI,JK) *(ZQP(JI))**(ICEP%XEXSEDR-1)* &
             PRHODREF(JI,JK)**(ICEP%XEXSEDR-ICED%XCEXVT-1)
           ELSE
-            ZWSEDW2(JI,JK)= ICEP%XFSEDR *(ZQP(JI))**(ICEP%XEXSEDR-1)* &
+            ZWSEDW2(JI,JK)= (PRXCS(JI)/ICED%XCS)*ICEP%XFSEDR *(ZQP(JI))**(ICEP%XEXSEDR-1)* &
             PRHODREF(JI,JK)**(ICEP%XEXSEDR-ICED%XCEXVT-1)
           ENDIF
         ENDIF

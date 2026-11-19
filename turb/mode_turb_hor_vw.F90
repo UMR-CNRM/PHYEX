@@ -13,7 +13,7 @@ CONTAINS
                       PDYY,PDZZ,PDZY,                                &
                       PRHODJ,PTHVREF,                                &
                       PVM,PWM,PTHLM,PRM,PSVM,                        &
-                      PTKEM,PLM,                                     &
+                      PTKEM,PLM,PTURB_SPP,                           &
                       PDP,                                           &
                       PRVS,PRWS                                      )
 !     ################################################################
@@ -62,7 +62,7 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NCMFS, NTURB_S
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
 USE MODD_CTURB,          ONLY: CTURB_XCMFS => XCMFS
@@ -115,6 +115,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)    ::  PSVM
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S),     INTENT(IN)  ::  PTURB_SPP    ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRVS, PRWS   ! var. at t+1 -split-
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE production terms
@@ -185,7 +186,7 @@ IF (.NOT. O2D) THEN
   DO JK=1, D%NKT
     DO JIJ=1, D%NIJT
       ZFLX(JIJ, JK) =                                                      &
-        - XCMFS * ZWORKSHUGRAD_3D_2(JIJ, JK) * GY_W_VW_PWM(JIJ, JK)
+        - PTURB_SPP(JIJ, JK, NCMFS) * ZWORKSHUGRAD_3D_2(JIJ, JK) * GY_W_VW_PWM(JIJ, JK)
     END DO
   END DO
   
