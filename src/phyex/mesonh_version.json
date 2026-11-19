@@ -1,6 +1,6 @@
 {
-"MESONHrepo":"https://src.koda.cnrs.fr/mesonh/mesonh-code",
-"MESONHcommit":"99673fb554e8e7d0429a3a50728953984985c35f",
+"MESONHrepo":"https://src.koda.cnrs.fr/sebastien.riette.1/mesonh-code",
+"MESONHcommit":"527230397b03ff06f13d1277331fb8b72ec1c5b0",
 "refversion":"MNH-dev-74-PHYEX-cycle-update",
 "testing": {
             "test_cases/007_16janvier":"75bdbf0",

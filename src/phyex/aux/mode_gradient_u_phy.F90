@@ -75,19 +75,19 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 LOGICAL,                 INTENT(IN)  ::  OFLAT  ! Logical for zero ororography
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the U point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDYY    ! metric coefficient dyy
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZY    ! metric coefficient dzy
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the U point
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDYY    ! metric coefficient dyy
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZY    ! metric coefficient dzy
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT) :: PGY_U_UV ! result UV point
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT) :: PGY_U_UV ! result UV point
 !
 !
 !*       0.2   declaration of local variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5
-INTEGER :: IIB,IJB,IIE,IJE,IKT
-INTEGER :: JI,JJ,JK
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5
+INTEGER :: IIJB,IIJE,IKT
+INTEGER :: JIJ, JK
 !
 !----------------------------------------------------------------------------
 !
@@ -96,10 +96,8 @@ INTEGER :: JI,JJ,JK
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_U_UV',0,ZHOOK_HANDLE)
-IIE=D%NIEC
-IIB=D%NIBC
-IJE=D%NJEC
-IJB=D%NJBC
+IIJB=D%NIJB
+IIJE=D%NIJE
 IKT=D%NKT
 !
 CALL DYM_PHY(D,PA,ZWORK1)
@@ -109,29 +107,29 @@ IF (.NOT. OFLAT) THEN
   CALL DZM_PHY(D,PA,ZWORK3)
   CALL MXM_PHY(D,PDZZ,ZWORK5)
   !$acc kernels 
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-  ZWORK3(IIB:IIE,IJB:IJE,1:IKT) = ZWORK3(IIB:IIE,IJB:IJE,1:IKT) / ZWORK5(IIB:IIE,IJB:IJE,1:IKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK3(IIJB:IIJE,1:IKT) = ZWORK3(IIJB:IIJE,1:IKT) / ZWORK5(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !$acc end kernels 
   CALL MYM_PHY(D,ZWORK3,ZWORK4)
   CALL MXM_PHY(D,PDZY,ZWORK5)
   !$acc kernels 
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-  ZWORK4(IIB:IIE,IJB:IJE,1:IKT) = ZWORK4(IIB:IIE,IJB:IJE,1:IKT) * ZWORK5(IIB:IIE,IJB:IJE,1:IKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK4(IIJB:IIJE,1:IKT) = ZWORK4(IIJB:IIJE,1:IKT) * ZWORK5(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !$acc end kernels 
   CALL MZF_PHY(D,ZWORK4,ZWORK3)
   !$acc kernels 
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-  PGY_U_UV(IIB:IIE,IJB:IJE,1:IKT) = ( ZWORK1(IIB:IIE,IJB:IJE,1:IKT) - ZWORK3(IIB:IIE,IJB:IJE,1:IKT)) &
-                                     / ZWORK2(IIB:IIE,IJB:IJE,1:IKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PGY_U_UV(IIJB:IIJE,1:IKT) = ( ZWORK1(IIJB:IIJE,1:IKT) - ZWORK3(IIJB:IIJE,1:IKT)) &
+                                     / ZWORK2(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !$acc end kernels 
 ELSE
   !$acc kernels 
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-  PGY_U_UV(IIB:IIE,IJB:IJE,1:IKT)= ZWORK1(IIB:IIE,IJB:IJE,1:IKT) / ZWORK2(IIB:IIE,IJB:IJE,1:IKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PGY_U_UV(IIJB:IIJE,1:IKT)= ZWORK1(IIJB:IIJE,1:IKT) / ZWORK2(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !$acc end kernels 
 END IF
 !
@@ -202,13 +200,13 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the U point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the U point
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PGZ_U_UW ! result UW point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: PA_WORK, PDZZ_WORK
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PGZ_U_UW ! result UW point
+REAL, DIMENSION(D%NIJT,D%NKT) :: PA_WORK, PDZZ_WORK
 !
-INTEGER :: JI,JJ,JK, IIB, IIE, IJB, IJE,IKT
+INTEGER :: JIJ,JK,IIJB,IIJE,IKT
 
 !
 !*       0.2   declaration of local variables
@@ -220,20 +218,17 @@ INTEGER :: JI,JJ,JK, IIB, IIE, IJB, IJE,IKT
 !*       1.    DEFINITION of GZ_U_UW
 !              ---------------------
 !
-IIE=D%NIEC
-IIB=D%NIBC
-IJE=D%NJEC
-IJB=D%NJBC
+IIJB=D%NIJB
+IIJE=D%NIJE
 IKT=D%NKT
 !
 CALL DZM_PHY(D,PA,PA_WORK)
 CALL MXM_PHY(D,PDZZ,PDZZ_WORK)
 !
 !$acc kernels
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-PGZ_U_UW(IIB:IIE,IJB:IJE,1:IKT)= PA_WORK(IIB:IIE,IJB:IJE,1:IKT) &
-                                               / PDZZ_WORK(IIB:IIE,IJB:IJE,1:IKT)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+PGZ_U_UW(IIJB:IIJE,1:IKT)= PA_WORK(IIJB:IIJE,1:IKT) / PDZZ_WORK(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
 !
 !----------------------------------------------------------------------------
@@ -309,16 +304,16 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 !
 LOGICAL, INTENT(IN) :: OFLAT
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the U point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZX    ! metric coefficient dzx
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the U point
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZX    ! metric coefficient dzx
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT) :: PGX_U_M ! result mass point
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT) :: PGX_U_M ! result mass point
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4
-INTEGER :: IIB,IJB,IIE,IJE,IKT
-INTEGER :: JI,JJ,JK
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4
+INTEGER :: IIJB,IIJE,IKT
+INTEGER :: JIJ, JK
 !
 !*       0.2   declaration of local variables
 !
@@ -332,10 +327,8 @@ INTEGER :: JI,JJ,JK
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_U_M',0,ZHOOK_HANDLE)
 !
-IIE=D%NIEC
-IIB=D%NIBC
-IJE=D%NJEC
-IJB=D%NJBC
+IIJB=D%NIJB
+IIJE=D%NIJE
 IKT=D%NKT
 !
 CALL DXF_PHY(D,PA,ZWORK1)
@@ -344,28 +337,28 @@ CALL MXF_PHY(D,PDXX,ZWORK2)
 IF (.NOT. OFLAT) THEN
   CALL DZM_PHY(D,PA,ZWORK3)
   !$acc kernels 
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-  ZWORK3(IIB:IIE,IJB:IJE,1:IKT) = ZWORK3(IIB:IIE,IJB:IJE,1:IKT) * PDZX(IIB:IIE,IJB:IJE,1:IKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK3(IIJB:IIJE,1:IKT) = ZWORK3(IIJB:IIJE,1:IKT) * PDZX(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !$acc end kernels 
   CALL MXF_PHY(D,ZWORK3,ZWORK4)
   !$acc kernels 
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-  ZWORK4(IIB:IIE,IJB:IJE,1:IKT) = ZWORK4(IIB:IIE,IJB:IJE,1:IKT) / PDZZ(IIB:IIE,IJB:IJE,1:IKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK4(IIJB:IIJE,1:IKT) = ZWORK4(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !$acc end kernels 
   CALL MZF_PHY(D,ZWORK4,ZWORK3)
   !$acc kernels 
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-  PGX_U_M(IIB:IIE,IJB:IJE,1:IKT) = ( ZWORK1(IIB:IIE,IJB:IJE,1:IKT) - ZWORK3(IIB:IIE,IJB:IJE,1:IKT)) &
-                                     / ZWORK2(IIB:IIE,IJB:IJE,1:IKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PGX_U_M(IIJB:IIJE,1:IKT) = ( ZWORK1(IIJB:IIJE,1:IKT) - ZWORK3(IIJB:IIJE,1:IKT)) &
+                                     / ZWORK2(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !$acc end kernels 
 ELSE
   !$acc kernels 
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-  PGX_U_M(IIB:IIE,IJB:IJE,1:IKT)= ZWORK1(IIB:IIE,IJB:IJE,1:IKT) / ZWORK2(IIB:IIE,IJB:IJE,1:IKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PGX_U_M(IIJB:IIJE,1:IKT)= ZWORK1(IIJB:IIJE,1:IKT) / ZWORK2(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !$acc end kernels 
 END IF
 !

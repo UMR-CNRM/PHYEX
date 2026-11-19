@@ -58,16 +58,16 @@ IMPLICIT NONE
 !*       0.1   declarations of arguments and result
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the W point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZX    ! metric coefficient dzx
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the W point
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZX    ! metric coefficient dzx
 LOGICAL, INTENT(IN) :: OFLAT
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),INTENT(OUT) :: PGX_W_UW ! result UW point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5
-INTEGER :: IIB,IJB,IIE,IJE,IKT
-INTEGER :: JI,JJ,JK
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(OUT) :: PGX_W_UW ! result UW point
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5
+INTEGER :: IIJB,IIJE,IKT
+INTEGER :: JIJ, JK
 !
 !
 !*       0.2   declaration of local variables
@@ -81,17 +81,15 @@ INTEGER :: JI,JJ,JK
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_W_UW',0,ZHOOK_HANDLE)
-IIE=D%NIEC
-IIB=D%NIBC
-IJE=D%NJEC
-IJB=D%NJBC
+IIJB=D%NIJB
+IIJE=D%NIJE
 IKT=D%NKT
 CALL MZM_PHY(D,PDXX,ZWORK1)
 CALL DXM_PHY(D,PA,ZWORK2)
 !$acc kernels
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-ZWORK3(IIB:IIE,IJB:IJE,1:IKT) = ZWORK2(IIB:IIE,IJB:IJE,1:IKT) / ZWORK1(IIB:IIE,IJB:IJE,1:IKT)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZWORK3(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) / ZWORK1(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
 !
 IF (.NOT. OFLAT) THEN
@@ -101,17 +99,17 @@ IF (.NOT. OFLAT) THEN
   !
   CALL MXM_PHY(D,PDZZ,ZWORK2)
   !$acc kernels
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-  PGX_W_UW(IIB:IIE,IJB:IJE,1:IKT)= ZWORK3(IIB:IIE,IJB:IJE,1:IKT)    &
-                 - ZWORK5(IIB:IIE,IJB:IJE,1:IKT)*PDZX(IIB:IIE,IJB:IJE,1:IKT)  &
-                 / (ZWORK1(IIB:IIE,IJB:IJE,1:IKT)*ZWORK2(IIB:IIE,IJB:IJE,1:IKT))
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PGX_W_UW(IIJB:IIJE,1:IKT)= ZWORK3(IIJB:IIJE,1:IKT)    &
+                 - ZWORK5(IIJB:IIJE,1:IKT)*PDZX(IIJB:IIJE,1:IKT)  &
+                 / (ZWORK1(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !$acc end kernels
 ELSE
   !$acc kernels
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-  PGX_W_UW(IIB:IIE,IJB:IJE,:) = ZWORK3(IIB:IIE,IJB:IJE,:)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PGX_W_UW(IIJB:IIJE,:) = ZWORK3(IIJB:IIJE,:)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !$acc end kernels
 END IF
 !
@@ -177,16 +175,16 @@ IMPLICIT NONE
 !*       0.1   declarations of arguments and result
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the W point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDYY    ! metric coefficient dxx
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZY    ! metric coefficient dzx
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the W point
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDYY    ! metric coefficient dxx
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZY    ! metric coefficient dzx
 LOGICAL, INTENT(IN) :: OFLAT
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),INTENT(OUT) :: PGY_W_VW ! result UW point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5
-INTEGER :: IIB,IJB,IIE,IJE,IKT
-INTEGER :: JI,JJ,JK
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(OUT) :: PGY_W_VW ! result UW point
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5
+INTEGER :: IIJB,IIJE,IKT
+INTEGER :: JIJ, JK
 !
 !*       0.2   declaration of local variables
 !
@@ -207,17 +205,15 @@ IF (LHOOK) CALL DR_HOOK('GY_W_VW',0,ZHOOK_HANDLE)
 !  PGY_W_VW(:,:,:)= DYM(PA(:,:,:))/(MZM(PDYY(:,:,:), KKA, KKU, KL))
 !END IF
 !
-IIE=D%NIEC
-IIB=D%NIBC
-IJE=D%NJEC
-IJB=D%NJBC
+IIJB=D%NIJB
+IIJE=D%NIJE
 IKT=D%NKT
 CALL MZM_PHY(D,PDYY,ZWORK1)
 CALL DYM_PHY(D,PA,ZWORK2)
 !$acc kernels
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-ZWORK3(IIB:IIE,IJB:IJE,1:IKT) = ZWORK2(IIB:IIE,IJB:IJE,1:IKT) / ZWORK1(IIB:IIE,IJB:IJE,1:IKT)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZWORK3(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) / ZWORK1(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
 !
 IF (.NOT. OFLAT) THEN
@@ -227,17 +223,17 @@ IF (.NOT. OFLAT) THEN
   !
   CALL MYM_PHY(D,PDZZ,ZWORK2)
   !$acc kernels
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-  PGY_W_VW(IIB:IIE,IJB:IJE,1:IKT)= ZWORK3(IIB:IIE,IJB:IJE,1:IKT)    &
-                 - ZWORK5(IIB:IIE,IJB:IJE,1:IKT)*PDZY(IIB:IIE,IJB:IJE,1:IKT)  &
-                 / (ZWORK1(IIB:IIE,IJB:IJE,1:IKT)*ZWORK2(IIB:IIE,IJB:IJE,1:IKT))
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PGY_W_VW(IIJB:IIJE,1:IKT)= ZWORK3(IIJB:IIJE,1:IKT)    &
+                 - ZWORK5(IIJB:IIJE,1:IKT)*PDZY(IIJB:IIJE,1:IKT)  &
+                 / (ZWORK1(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !$acc end kernels
 ELSE
   !$acc kernels
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-  PGY_W_VW(IIB:IIE,IJB:IJE,:)= ZWORK3(IIB:IIE,IJB:IJE,:) 
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PGY_W_VW(IIJB:IIJE,:)= ZWORK3(IIJB:IIJE,:) 
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !$acc end kernels
 END IF
 
@@ -302,13 +298,13 @@ IMPLICIT NONE
 !*       0.1   declarations of arguments and result
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the W point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) , INTENT(OUT):: PGZ_W_M ! result mass point
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the W point
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(D%NIJT,D%NKT) , INTENT(OUT):: PGZ_W_M ! result mass point
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWORK1, ZWORK2
-INTEGER :: IIB,IJB,IIE,IJE,IKT
-INTEGER :: JI,JJ,JK
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZWORK1, ZWORK2
+INTEGER :: IIJB,IIJE,IKT
+INTEGER :: JIJ,JK
 !
 !
 !*       0.2   declaration of local variables
@@ -322,17 +318,15 @@ INTEGER :: JI,JJ,JK
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GZ_W_M',0,ZHOOK_HANDLE)
-IIE=D%NIEC
-IIB=D%NIBC
-IJE=D%NJEC
-IJB=D%NJBC
+IIJB=D%NIJB
+IIJE=D%NIJE
 IKT=D%NKT
 CALL DZF_PHY(D,PA,ZWORK1)
 CALL MZF_PHY(D,PDZZ,ZWORK2)
 !$acc kernels
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
-PGZ_W_M(IIB:IIE,IJB:IJE,1:IKT)= ZWORK1(IIB:IIE,IJB:IJE,1:IKT)/ZWORK2(IIB:IIE,IJB:IJE,1:IKT)    
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+PGZ_W_M(IIJB:IIJE,1:IKT)= ZWORK1(IIJB:IIJE,1:IKT)/ZWORK2(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
 !
 !----------------------------------------------------------------------------
