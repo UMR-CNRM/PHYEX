@@ -287,7 +287,8 @@ class CheckCommitIAL(CheckCommitBase):
                         full = os.path.join(root, fname)
                         with open(full, 'rb') as fh:
                             content = fh.read().lower()
-                            if b'phyex_t' in content or b'modd_nsv' in content:
+                            if b'phyex_t' in content or b'modd_nsv' in content or \
+                               b'tiwmx' in content:
                                 grep_files.append(os.path.relpath(full, src))
             for fname in ('main/mpa/conv/externals/aro_conv_mnh.F90',
                           'main/arpifs/phys_dmn/suphmpa.F90'):

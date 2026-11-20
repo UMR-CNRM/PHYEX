@@ -43,7 +43,7 @@ micro/mode_rain_ice_old_fast_rg.f90
 micro/mode_rain_ice_old_fast_rh.f90
 micro/mode_rain_ice_old_fast_ri.f90
 micro/mode_rain_ice_old_fast_rs.f90
-micro/mode_rain_ice_old_icenumber2.f90
+micro/icenumber2.func.h
 micro/mode_rain_ice_old_nucleation.f90
 micro/mode_rain_ice_old_sedimentation_split.f90
 micro/mode_rain_ice_old_sedimentation_stat.f90
