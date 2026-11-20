@@ -25,7 +25,7 @@
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      MODULE MODI_GAMMA : computation of the Gamma function
+!!      gamma.h : computation of the Gamma function (GAMMA)
 !!
 !!    REFERENCE
 !!    ---------
@@ -43,7 +43,6 @@
 !*       0. DECLARATIONS
 !           ------------
 !
-USE MODI_GAMMA, ONLY: GAMMA
 !
 IMPLICIT NONE
 !
@@ -68,4 +67,6 @@ PGENERAL_GAMMA = (PALPHA/GAMMA(PNU))*(ZARG**ZPOWER)*PLBDA*EXP(-(ZARG**PALPHA))
 IF (LHOOK) CALL DR_HOOK('GENERAL_GAMMA',1,ZHOOK_HANDLE)
 RETURN
 !
+CONTAINS
+INCLUDE "gamma.h"
 END FUNCTION GENERAL_GAMMA

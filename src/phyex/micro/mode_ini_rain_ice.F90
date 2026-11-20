@@ -132,7 +132,6 @@ USE MODD_RAIN_ICE_PARAM_n, ONLY: LNEWCOEFF, RAIN_ICE_PARAMN, RAIN_ICE_PARAM_ALLO
                                  XSRIMCG3, XT0CRIAUTI, XTEXAUTI, XTIMAUTC, XTIMAUTI
 USE MODD_PRECISION, ONLY: MNHREAL64
 !
-USE MODI_GAMMA, ONLY: GAMMA
 USE MODI_GAMMA_INC, ONLY: GAMMA_INC
 USE MODE_RRCOLSS, ONLY: RRCOLSS
 USE MODE_RZCOLX, ONLY: RZCOLX
@@ -485,8 +484,8 @@ IF (LSNOW_T) THEN
 !   XNUS    = 43.7   ! Generalized gamma law
    XALPHAS = 1.   ! Generalized gamma law
    XNUS    = 1.3   ! Generalized gamma law
-   XTRANS_MP_GAMMAS = SQRT( ( GAMMA(DBLE(XNUS + 2._MNHREAL64/XALPHAS))*GAMMA(DBLE(XNUS + 4._MNHREAL64/XALPHAS)) ) / &
-                            ( 8._MNHREAL64* GAMMA(DBLE(XNUS + 1._MNHREAL64/XALPHAS))*GAMMA(DBLE(XNUS + 3._MNHREAL64/XALPHAS)) ) )
+   XTRANS_MP_GAMMAS = SQRT( ( GAMMA_DBLE(XNUS + 2._MNHREAL64/XALPHAS)*GAMMA_DBLE(XNUS + 4._MNHREAL64/XALPHAS) ) / &
+                            ( 8._MNHREAL64* GAMMA_DBLE(XNUS + 1._MNHREAL64/XALPHAS)*GAMMA_DBLE(XNUS + 3._MNHREAL64/XALPHAS) ) )
 ELSE
    XALPHAS = 1.0  ! Exponential law
    XNUS    = 1.0  ! Exponential law
@@ -1793,7 +1792,6 @@ CONTAINS
 ! auxiliary routine used to compute the Pth moment order of the generalized
 ! gamma law
 !
-  USE MODI_GAMMA, ONLY: GAMMA
 !
   IMPLICIT NONE
 !
@@ -1812,5 +1810,6 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
 !
+INCLUDE "gamma.h"
 END SUBROUTINE INI_RAIN_ICE
 END MODULE MODE_INI_RAIN_ICE
