@@ -484,7 +484,6 @@ USE MODD_IO, ONLY:NVERB_FATAL
 !   auxiliary routine used to compute the Pth moment order of the generalized
 !   gamma law
 !
-    USE MODI_GAMMA, ONLY: GAMMA
 !
     IMPLICIT NONE
 !
@@ -498,6 +497,8 @@ USE MODD_IO, ONLY:NVERB_FATAL
 !
     PMOMG = GAMMA(PNU+PP/PALPHA)/GAMMA(PNU)
 !
+CONTAINS
+INCLUDE "gamma.h"
   END FUNCTION MOMG
 
 END MODULE MODE_RAIN_ICE_OLD_WARM
