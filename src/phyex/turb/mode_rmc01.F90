@@ -187,7 +187,7 @@ SELECT CASE (TURBN%CTURBLEN)
     !         --------------------------------------------------------------------
     !
     ZGAM(IIJB:IIJE,IKA) = 0.
-    DO JK=IKTB,IKTE
+    DO JK=IKB,IKE,IKL
       !$mnh_expand_array(JIJ=IIJB:IIJE)
       ZGAM(IIJB:IIJE,JK) = 1.  - EXP( -3.*(ZZZ(IIJB:IIJE,JK)-ZZZ(IIJB:IIJE,IKB))/(ZZC(IIJB:IIJE,JK)) )
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
@@ -217,7 +217,7 @@ SELECT CASE (TURBN%CTURBLEN)
     !* SBL depth is used
     ZGAM(IIJB:IIJE,1:IKT) = 1.
     ZGAM(IIJB:IIJE,IKA) = 0.
-    DO JK=IKTB,IKTE
+    DO JK=IKB,IKE,IKL
       !$mnh_expand_where(JIJ=IIJB:IIJE)
       WHERE(PSBL_DEPTH(IIJB:IIJE)>0.)
         ZGAM(IIJB:IIJE,JK) = TANH( (ZZZ(IIJB:IIJE,JK)-ZZZ(IIJB:IIJE,IKB))/PSBL_DEPTH(IIJB:IIJE) )

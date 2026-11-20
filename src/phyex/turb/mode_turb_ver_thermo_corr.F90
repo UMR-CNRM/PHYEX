@@ -414,8 +414,8 @@ IF (TURBN%LHARAT) THEN
   !  so put these to normal value as this level (82) is indeed calculated
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PLMF(IIJB:IIJE,IKT)=0.001
-  PLEPSF(IIJB:IIJE,IKT)=0.001
+  PLMF(IIJB:IIJE,IKU)=0.001
+  PLEPSF(IIJB:IIJE,IKU)=0.001
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   ! with energy cascade contribution 50MF term can be omitted
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)

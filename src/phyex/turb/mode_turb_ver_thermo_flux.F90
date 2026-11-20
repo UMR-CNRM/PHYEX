@@ -500,12 +500,16 @@ IF (TURBN%LLEONARD) THEN
   ZWORK2=MZM(PHGRAD(:,:,3)) ! GX_M_M(PTHLM
   ZWORK3=MYF(PHGRAD(:,:,2)) ! GY_W_VW(PWM)
   ZWORK4=MZM(PHGRAD(:,:,4)) ! GY_M_M(PTHLM)
-  !$acc kerne=ls
+  !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)  
   ZF_LEONARD(IIJB:IIJE,1:IKT)= TURBN%XCOEFHGRADTHL*PDXX(IIJB:IIJE,1:IKT)*PDYY(IIJB:IIJE,1:IKT)/12.0*( &
                      ZWORK1(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT) &
                    + ZWORK3(IIJB:IIJE,1:IKT)*ZWORK4(IIJB:IIJE,1:IKT))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !No flux through the model top
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZF_LEONARD(IIJB:IIJE,IKE+IKL)=0.
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !$acc end kernels
 END IF
 !
@@ -621,7 +625,7 @@ ELSE ! atmosp bottom
   !
   ! atmos top
 !$acc kernels
-  ZF(IIJB:IIJE,IKE+1)=0.
+  ZF(IIJB:IIJE,IKE+IKL)=0.
 !$acc end kernels
 END IF
 !
@@ -900,10 +904,14 @@ IF (KRR /= 0) THEN
   ZWORK4=MZM(PHGRAD(:,:,6)) ! GY_M_M(PRM)
 !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)  
-  ZF_LEONARD(IIJB:IIJE,1:IKT)= TURBN%XCOEFHGRADTHL*PDXX(IIJB:IIJE,1:IKT)*PDYY(IIJB:IIJE,1:IKT)/12.0*( &
+  ZF_LEONARD(IIJB:IIJE,1:IKT)= TURBN%XCOEFHGRADRM*PDXX(IIJB:IIJE,1:IKT)*PDYY(IIJB:IIJE,1:IKT)/12.0*( &
                      ZWORK1(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT) &
                    + ZWORK3(IIJB:IIJE,1:IKT)*ZWORK4(IIJB:IIJE,1:IKT))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !No flux through the model top
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZF_LEONARD(IIJB:IIJE,IKE+IKL)=0.
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
  END IF
   !
@@ -1025,7 +1033,7 @@ IF (KRR /= 0) THEN
     END IF
       ! atmos top
 !$acc kernels
-      ZF(IIJB:IIJE,IKE+1)=0.
+      ZF(IIJB:IIJE,IKE+IKL)=0.
 !$acc end kernels
     END IF
   ! Compute the split conservative potential temperature at t+deltat
@@ -1151,20 +1159,27 @@ IF (KRR /= 0) THEN
   !
   ! Buoyancy flux at flux points
   !
-  PWTHV(IIJB:IIJE,:) = PWTHV(IIJB:IIJE,:) + MZM(PEMOIST(IIJB:IIJE,:)) * ZFLXZ(IIJB:IIJE,:)
+  !(the moisture contribution is computed apart to be able to replace its boundary values
+  ! before adding it to the temperature contribution)
+  ZWORK1(IIJB:IIJE,:) = MZM(PEMOIST(IIJB:IIJE,:)) * ZFLXZ(IIJB:IIJE,:)
   !
 !$acc kernels 
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PWTHV(IIJB:IIJE,IKB) = PWTHV(IIJB:IIJE,IKB) + PEMOIST(IIJB:IIJE,IKB) * ZFLXZ(IIJB:IIJE,IKB)
+  ZWORK1(IIJB:IIJE,IKB) = PEMOIST(IIJB:IIJE,IKB) * ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
   IF (OOCEAN) THEN
 !$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    PWTHV(IIJB:IIJE,IKE) = PWTHV(IIJB:IIJE,IKE) + PEMOIST(IIJB:IIJE,IKE)* ZFLXZ(IIJB:IIJE,IKE)
+    ZWORK1(IIJB:IIJE,IKE) = PEMOIST(IIJB:IIJE,IKE)* ZFLXZ(IIJB:IIJE,IKE)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !$acc end kernels
   END IF
+!$acc kernels 
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PWTHV(IIJB:IIJE,1:IKT) = PWTHV(IIJB:IIJE,1:IKT) + ZWORK1(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
 !
 !*       3.3  Complete vertical divergence of the < Rc w > flux
 ! Correction of qc and qi negative for AROME

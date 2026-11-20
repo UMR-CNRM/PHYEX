@@ -276,12 +276,12 @@ ZDZZ(:,IKB+1) = MXM2D(PDZZ(:,IKB+1))
 ZDZZ(:,IKB+2) = MXM2D(PDZZ(:,IKB+2))
 !$acc kernels present_cr(zdzz,zcoeff) ! async(3)
 !$mnh_expand_array(JIJ=1:IIJT)
-   ZCOEFF(1:IIJT,IKB+2)= - ZDZZ(1:IIJT,2) /      &
-        ( (ZDZZ(1:IIJT,3)+ZDZZ(1:IIJT,2)) * ZDZZ(1:IIJT,3) )
-   ZCOEFF(1:IIJT,IKB+1)=   (ZDZZ(1:IIJT,3)+ZDZZ(1:IIJT,2)) /      &
-        ( ZDZZ(1:IIJT,2) * ZDZZ(1:IIJT,3) )
-   ZCOEFF(1:IIJT,IKB)= - (ZDZZ(1:IIJT,3)+2.*ZDZZ(1:IIJT,2)) /      &
-        ( (ZDZZ(1:IIJT,3)+ZDZZ(1:IIJT,2)) * ZDZZ(1:IIJT,2) )
+   ZCOEFF(1:IIJT,IKB+2)= - ZDZZ(1:IIJT,IKB+1) /      &
+        ( (ZDZZ(1:IIJT,IKB+2)+ZDZZ(1:IIJT,IKB+1)) * ZDZZ(1:IIJT,IKB+2) )
+   ZCOEFF(1:IIJT,IKB+1)=   (ZDZZ(1:IIJT,IKB+2)+ZDZZ(1:IIJT,IKB+1)) /      &
+        ( ZDZZ(1:IIJT,IKB+1) * ZDZZ(1:IIJT,IKB+2) )
+   ZCOEFF(1:IIJT,IKB)= - (ZDZZ(1:IIJT,IKB+2)+2.*ZDZZ(1:IIJT,IKB+1)) /      &
+        ( (ZDZZ(1:IIJT,IKB+2)+ZDZZ(1:IIJT,IKB+1)) * ZDZZ(1:IIJT,IKB+1) )
 !$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 !
@@ -297,12 +297,12 @@ ZDZZ(:,IKB+2) = MYM2D(PDZZ(:,IKB+2))
 !
 !$acc kernels present_cr(zdzz,zcoeff) ! async(4)
 !$mnh_expand_array(JIJ=1:IIJT)
-   ZCOEFF(1:IIJT,IKB+2)= - ZDZZ(1:IIJT,2) /      &
-        ( (ZDZZ(1:IIJT,3)+ZDZZ(1:IIJT,2)) * ZDZZ(1:IIJT,3) )
-   ZCOEFF(1:IIJT,IKB+1)=   (ZDZZ(1:IIJT,3)+ZDZZ(1:IIJT,2)) /      &
-        ( ZDZZ(1:IIJT,2) * ZDZZ(1:IIJT,3) )
-   ZCOEFF(1:IIJT,IKB)= - (ZDZZ(1:IIJT,3)+2.*ZDZZ(1:IIJT,2)) /      &
-        ( (ZDZZ(1:IIJT,3)+ZDZZ(1:IIJT,2)) * ZDZZ(1:IIJT,2) )
+   ZCOEFF(1:IIJT,IKB+2)= - ZDZZ(1:IIJT,IKB+1) /      &
+        ( (ZDZZ(1:IIJT,IKB+2)+ZDZZ(1:IIJT,IKB+1)) * ZDZZ(1:IIJT,IKB+2) )
+   ZCOEFF(1:IIJT,IKB+1)=   (ZDZZ(1:IIJT,IKB+2)+ZDZZ(1:IIJT,IKB+1)) /      &
+        ( ZDZZ(1:IIJT,IKB+1) * ZDZZ(1:IIJT,IKB+2) )
+   ZCOEFF(1:IIJT,IKB)= - (ZDZZ(1:IIJT,IKB+2)+2.*ZDZZ(1:IIJT,IKB+1)) /      &
+        ( (ZDZZ(1:IIJT,IKB+2)+ZDZZ(1:IIJT,IKB+1)) * ZDZZ(1:IIJT,IKB+1) )
 !$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 

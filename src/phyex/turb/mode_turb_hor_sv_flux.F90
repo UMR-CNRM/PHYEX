@@ -196,7 +196,7 @@ DO JSV=1,ISV
 ! gradient
   ZFLXX(:,IKB) = -ZCSV * MXM2D( PK(:,IKB) ) *             &
     ( DXM2D(PSVM(:,IKB,JSV)) * PINV_PDXX(:,IKB)           &
-     -MXM2D ( ZCOEFF(:,2)*PSVM(:,2,JSV)       &
+     -MXM2D ( ZCOEFF(:,IKB+2)*PSVM(:,IKB+2,JSV)       &
            +ZCOEFF(:,IKB+1)*PSVM(:,IKB+1,JSV)       &
            +ZCOEFF(:,IKB  )*PSVM(:,IKB  ,JSV)       &
           ) * 0.5 * ( PDZX(:,IKB+1)+PDZX(:,IKB) )     &
@@ -258,7 +258,7 @@ DO JSV=1,ISV
 !
     ZFLXY(:,IKB) = -ZCSV * MYM2D( PK(:,IKB) ) *             &
       ( DYM2D(PSVM(:,IKB,JSV)) * PINV_PDYY(:,IKB)           &
-       -MYM2D ( ZCOEFF(:,2)*PSVM(:,2,JSV)       &
+       -MYM2D ( ZCOEFF(:,IKB+2)*PSVM(:,IKB+2,JSV)       &
              +ZCOEFF(:,IKB+1)*PSVM(:,IKB+1,JSV)       &
              +ZCOEFF(:,IKB  )*PSVM(:,IKB  ,JSV)       &
             ) * 0.5 * ( PDZY(:,IKB+1)+PDZY(:,IKB) )     &
