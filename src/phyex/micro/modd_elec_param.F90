@@ -174,6 +174,7 @@ TYPE ELEC_PARAM_t
           XFQSEDS, XEXQSEDS,    &    !  snow
           XFQSEDG, XEXQSEDG,    &    !  graupel
           XFQSEDH, XEXQSEDH          !  hail
+  REAL :: XMOMGI_BEARD               ! Beard effect of the pristine ice distribution
   !
   REAL :: XEGMIN, XEGMAX, XESMIN, XESMAX, &  ! Max and min values for
           XEIMIN, XEIMAX, XECMIN, XECMAX, &  ! e_x in q=e_x D^f_x
@@ -204,6 +205,7 @@ REAL, POINTER :: XFCI => NULL(),     &
                  XEXQSEDG => NULL(), &
                  XFQSEDH => NULL(),  &
                  XEXQSEDH => NULL(), &
+                 XMOMGI_BEARD => NULL(), &
                  XEGMIN => NULL(),   &
                  XEGMAX => NULL(),   &
                  XESMIN => NULL(),   &
@@ -245,6 +247,7 @@ SUBROUTINE ELEC_PARAM_ASSOCIATE()
   XEXQSEDG => ELEC_PARAM%XEXQSEDG
   XFQSEDH => ELEC_PARAM%XFQSEDH
   XEXQSEDH => ELEC_PARAM%XEXQSEDH
+  XMOMGI_BEARD => ELEC_PARAM%XMOMGI_BEARD
   XEGMIN => ELEC_PARAM%XEGMIN
   XEGMAX => ELEC_PARAM%XEGMAX
   XESMIN => ELEC_PARAM%XESMIN
