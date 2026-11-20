@@ -86,11 +86,11 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a6f1efc31f2871b54a66aaa402f467e1e" id="r_a6f1efc31f2871b54a66aaa402f467e1e"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6f1efc31f2871b54a66aaa402f467e1e">lima_adjust_split</a> (limap, limaw, tnsv, d, cst, nebn, turbn, buconf, tbudgets, kbudgets, krr, hcondens, hlambda3, kcarb, ksoa, ksp, odust, osalt, oorilam, osubg_cond, osigmas, ptstep, psigqsat, prhodref, prhodj, pexnref, psigs, omfconv, pmfconv, ppabst, pzz, odthrad, pdthrad, pw_nu, prt, prs, psvt, psvs, hactccn, paero, psolorg, pmi, pths, ocompute_src, psrcs, pcldfr, picefr, prc_mf, pri_mf, pcf_mf, pice_cld_wgt, pweight_mf_cloud, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, phlc_hrc_mf, phlc_hcf_mf, phli_hri_mf, phli_hcf_mf)</td></tr>
+<tr class="memitem:a8749f892cce169ffb0232509c5725cfd" id="r_a8749f892cce169ffb0232509c5725cfd"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8749f892cce169ffb0232509c5725cfd">lima_adjust_split</a> (limap, limaw, tnsv, d, cst, nebn, turbn, buconf, tbudgets, kbudgets, krr, hcondens, hlambda3, kcarb, ksoa, ksp, odust, osalt, oorilam, osubg_cond, osigmas, ptstep, psigqsat, prhodref, prhodj, pexnref, psigs, omfconv, pmfconv, ppabst, pzz, pdthrad, pw_nu, prt, prs, psvt, psvs, hactccn, paero, psolorg, pmi, pths, ocompute_src, psrcs, pcldfr, picefr, prc_mf, pri_mf, pcf_mf, pice_cld_wgt, pweight_mf_cloud, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, phlc_hrc_mf, phlc_hcf_mf, phli_hri_mf, phli_hcf_mf)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a6f1efc31f2871b54a66aaa402f467e1e" name="a6f1efc31f2871b54a66aaa402f467e1e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6f1efc31f2871b54a66aaa402f467e1e">&#9670;&#160;</a></span>lima_adjust_split()</h2>
+<a id="a8749f892cce169ffb0232509c5725cfd" name="a8749f892cce169ffb0232509c5725cfd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8749f892cce169ffb0232509c5725cfd">&#9670;&#160;</a></span>lima_adjust_split()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -253,12 +253,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">logical, intent(in)</td>          <td class="paramname"><span class="paramname"><em>odthrad</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(merge(d%nijt,0,odthrad),                 merge(d%nkt,0,odthrad)), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pdthrad</em></span>, </td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,limap%lactit),                  merge(d%nkt, 0,limap%lactit)), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pdthrad</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -402,8 +397,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="lima__adjust__split_8F90_a6f1efc31f2871b54a66aaa402f467e1e_cgraph.png" border="0" usemap="#alima__adjust__split_8F90_a6f1efc31f2871b54a66aaa402f467e1e_cgraph" loading="lazy" alt=""/></div>
-<map name="alima__adjust__split_8F90_a6f1efc31f2871b54a66aaa402f467e1e_cgraph" id="alima__adjust__split_8F90_a6f1efc31f2871b54a66aaa402f467e1e_cgraph">
+<div class="center"><img src="lima__adjust__split_8F90_a8749f892cce169ffb0232509c5725cfd_cgraph.png" border="0" usemap="#alima__adjust__split_8F90_a8749f892cce169ffb0232509c5725cfd_cgraph" loading="lazy" alt=""/></div>
+<map name="alima__adjust__split_8F90_a8749f892cce169ffb0232509c5725cfd_cgraph" id="alima__adjust__split_8F90_a8749f892cce169ffb0232509c5725cfd_cgraph">
 <area shape="rect" title=" " alt="" coords="5,180,138,208"/>
 <area shape="rect" href="condensation_8F90.html#a932fe4eafeb129ea06fda6ec55f10f36" title=" " alt="" coords="229,129,338,157"/>
 <area shape="poly" title=" " alt="" coords="131,177,216,158,212,161,133,182"/>
@@ -433,8 +428,8 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="lima__adjust__split_8F90_a6f1efc31f2871b54a66aaa402f467e1e_icgraph.png" border="0" usemap="#alima__adjust__split_8F90_a6f1efc31f2871b54a66aaa402f467e1e_icgraph" loading="lazy" alt=""/></div>
-<map name="alima__adjust__split_8F90_a6f1efc31f2871b54a66aaa402f467e1e_icgraph" id="alima__adjust__split_8F90_a6f1efc31f2871b54a66aaa402f467e1e_icgraph">
+<div class="center"><img src="lima__adjust__split_8F90_a8749f892cce169ffb0232509c5725cfd_icgraph.png" border="0" usemap="#alima__adjust__split_8F90_a8749f892cce169ffb0232509c5725cfd_icgraph" loading="lazy" alt=""/></div>
+<map name="alima__adjust__split_8F90_a8749f892cce169ffb0232509c5725cfd_icgraph" id="alima__adjust__split_8F90_a8749f892cce169ffb0232509c5725cfd_icgraph">
 <area shape="rect" title=" " alt="" coords="191,5,323,33"/>
 <area shape="rect" href="main__lima__adjust_8F90.html#a602f56e6ee73ca2374453cc990a2593c" title=" " alt="" coords="5,5,143,33"/>
 <area shape="poly" title=" " alt="" coords="172,19,143,22,143,17,178,19"/>

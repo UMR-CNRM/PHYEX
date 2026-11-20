@@ -651,15 +651,15 @@ $(function() {
 <div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span>  <span class="keywordflow">ELSE</span>  <span class="keywordflow">IF</span> (o2d) <span class="keywordflow">THEN</span> <span class="comment">! 3D case in a 2D model</span></div>
 <div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span><span class="comment">!</span></div>
 <div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span>    <span class="keywordflow">IF</span> (oocean) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span>      <span class="comment">!!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span>      <span class="comment">!! mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
 <div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span>      <span class="comment">!ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG *CST%XALPHAOC * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) &amp;</span></div>
 <div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span>      <span class="comment">!                                 / PTKEM(IIJB:IIJE,1:IKT))**2</span></div>
-<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span>      <span class="comment">!!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span>      <span class="comment">!! mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
 <div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span>      <span class="comment">!ZWORK2=MZM(ZWORK1)</span></div>
 <div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span>      <span class="comment">!IF (KRR /= 0) THEN</span></div>
-<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span>      <span class="comment">!  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span>      <span class="comment">!  ! mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
 <div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span>      <span class="comment">!  ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)</span></div>
-<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span>      <span class="comment">!  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span>      <span class="comment">!  ! mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
 <div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span>      <span class="comment">!ELSE</span></div>
 <div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span>      <span class="comment">!  ZW1 = ZWORK2</span></div>
 <div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span>      <span class="comment">!END IF</span></div>
@@ -725,15 +725,15 @@ $(function() {
 <div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span>  <span class="keywordflow">ELSE</span> <span class="comment">! 3D case in a 3D model</span></div>
 <div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span><span class="comment">!</span></div>
 <div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span>    <span class="keywordflow">IF</span> (oocean) <span class="keywordflow">THEN</span></div>
-<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span>      <span class="comment">!!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span>      <span class="comment">!! mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
 <div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span>      <span class="comment">!ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG *CST%XALPHAOC * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) &amp;</span></div>
 <div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span>      <span class="comment">!                                 / PTKEM(IIJB:IIJE,1:IKT))**2</span></div>
-<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span>      <span class="comment">!!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span>      <span class="comment">!! mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
 <div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span>      <span class="comment">!ZWORK2=MZM(ZWORK1)</span></div>
 <div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span>      <span class="comment">!IF (KRR /= 0) THEN</span></div>
-<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span>      <span class="comment">!  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span>      <span class="comment">!  ! mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
 <div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span>      <span class="comment">!  ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)</span></div>
-<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span>      <span class="comment">!  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
+<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span>      <span class="comment">!  ! mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)</span></div>
 <div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span>      <span class="comment">!ELSE</span></div>
 <div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span>      <span class="comment">!  ZW1 = ZWORK2</span></div>
 <div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span>      <span class="comment">!END IF</span></div>

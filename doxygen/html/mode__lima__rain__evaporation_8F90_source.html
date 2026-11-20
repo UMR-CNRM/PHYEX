@@ -191,7 +191,7 @@ $(function() {
 <div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="keywordflow">IF</span> (limap%LKHKO) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span> </div>
 <div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>   <span class="keywordflow">WHERE</span> ( gevap )</div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>      zzw1(:) = max((1.0 - prvt(:)/zzw1(:)),0.0)  <span class="comment">! Subsaturation</span></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>      zzw1(:) = max((1.0 - prvt(:)/prvsat(:)),0.0)  <span class="comment">! Subsaturation</span></div>
 <div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    </div>
 <div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>      zzw2(:) = 1. / ( cst%XRHOLW*((((plv(:)/pt(:))**2)/(limaw%XTHCO*cst%XRV)) +          &amp; <span class="comment">! G</span></div>
 <div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>           (cst%XRV*pt(:))/(limaw%XDIVA*pevsat(:))))</div>

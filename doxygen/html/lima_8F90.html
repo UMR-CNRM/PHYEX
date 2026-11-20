@@ -86,11 +86,11 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a44669a04dd97ef6c68aeb7803059fd3c" id="r_a44669a04dd97ef6c68aeb7803059fd3c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a44669a04dd97ef6c68aeb7803059fd3c">lima</a> (limap, limaw, limac, limam, tnsv, d, cst, nebn, iced, icep, elecd, elecp, buconf, tbudgets, hactccn, kbudgets, krr, ptstep, oelec, prhodref, pexnref, pdzz, pthvrefzikb, prhodj, ppabst, kcarb, ksoa, ksp, odust, osalt, oorilam, odthrad, pdthrad, ptht, prt, psvt, pcit, pw_nu, paero, psolorg, pmi, pths, prs, psvs, pinprc, pindep, pinprr, pinpri, pinprs, pinprg, pinprh, pevap3d, pcldfr, picefr, pprcfr, pfpr, phlc_hcf, phlc_hrc, phli_hcf, phli_hri, platham_iaggs, pefieldw, psv_elec_t, psv_elec_s)</td></tr>
+<tr class="memitem:a5f98dbe628223792abab760dd21e9545" id="r_a5f98dbe628223792abab760dd21e9545"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5f98dbe628223792abab760dd21e9545">lima</a> (limap, limaw, limac, limam, tnsv, d, cst, nebn, iced, icep, elecd, elecp, buconf, tbudgets, hactccn, kbudgets, krr, ptstep, oelec, prhodref, pexnref, pdzz, pthvrefzikb, prhodj, ppabst, kcarb, ksoa, ksp, odust, osalt, oorilam, pdthrad, ptht, prt, psvt, pcit, pw_nu, paero, psolorg, pmi, pths, prs, psvs, pinprc, pindep, pinprr, pinpri, pinprs, pinprg, pinprh, pevap3d, pcldfr, picefr, pprcfr, pfpr, phlc_hcf, phlc_hrc, phli_hcf, phli_hri, platham_iaggs, pefieldw, psv_elec_t, psv_elec_s)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a44669a04dd97ef6c68aeb7803059fd3c" name="a44669a04dd97ef6c68aeb7803059fd3c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a44669a04dd97ef6c68aeb7803059fd3c">&#9670;&#160;</a></span>lima()</h2>
+<a id="a5f98dbe628223792abab760dd21e9545" name="a5f98dbe628223792abab760dd21e9545"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f98dbe628223792abab760dd21e9545">&#9670;&#160;</a></span>lima()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -253,12 +253,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">logical, intent(in)</td>          <td class="paramname"><span class="paramname"><em>odthrad</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real, dimension(merge(d%nijt,0,odthrad),                 merge(d%nkt,0,odthrad)), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pdthrad</em></span>, </td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,limap%lactit),                  merge(d%nkt, 0,limap%lactit)), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pdthrad</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -318,12 +313,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(out)</td>          <td class="paramname"><span class="paramname"><em>pinprc</em></span>, </td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,limap%lsedc)), intent(out)</td>          <td class="paramname"><span class="paramname"><em>pinprc</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(out)</td>          <td class="paramname"><span class="paramname"><em>pindep</em></span>, </td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,limap%ldepoc)), intent(out)</td>          <td class="paramname"><span class="paramname"><em>pindep</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -333,7 +328,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt), intent(out)</td>          <td class="paramname"><span class="paramname"><em>pinpri</em></span>, </td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,limap%lsedi)), intent(out)</td>          <td class="paramname"><span class="paramname"><em>pinpri</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -422,8 +417,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="lima_8F90_a44669a04dd97ef6c68aeb7803059fd3c_cgraph.png" border="0" usemap="#alima_8F90_a44669a04dd97ef6c68aeb7803059fd3c_cgraph" loading="lazy" alt=""/></div>
-<map name="alima_8F90_a44669a04dd97ef6c68aeb7803059fd3c_cgraph" id="alima_8F90_a44669a04dd97ef6c68aeb7803059fd3c_cgraph">
+<div class="center"><img src="lima_8F90_a5f98dbe628223792abab760dd21e9545_cgraph.png" border="0" usemap="#alima_8F90_a5f98dbe628223792abab760dd21e9545_cgraph" loading="lazy" alt=""/></div>
+<map name="alima_8F90_a5f98dbe628223792abab760dd21e9545_cgraph" id="alima_8F90_a5f98dbe628223792abab760dd21e9545_cgraph">
 <area shape="rect" title=" " alt="" coords="5,582,56,610"/>
 <area shape="rect" href="namespacemode__elec__tendencies.html#a47b4d8ed9feb35987c01d4315265c431" title=" " alt="" coords="127,96,298,141"/>
 <area shape="poly" title=" " alt="" coords="30,581,37,502,51,385,72,268,86,220,101,186,121,164,147,146,144,151,124,168,106,189,91,222,77,269,56,386,42,502,35,581"/>
@@ -531,8 +526,8 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="lima_8F90_a44669a04dd97ef6c68aeb7803059fd3c_icgraph.png" border="0" usemap="#alima_8F90_a44669a04dd97ef6c68aeb7803059fd3c_icgraph" loading="lazy" alt=""/></div>
-<map name="alima_8F90_a44669a04dd97ef6c68aeb7803059fd3c_icgraph" id="alima_8F90_a44669a04dd97ef6c68aeb7803059fd3c_icgraph">
+<div class="center"><img src="lima_8F90_a5f98dbe628223792abab760dd21e9545_icgraph.png" border="0" usemap="#alima_8F90_a5f98dbe628223792abab760dd21e9545_icgraph" loading="lazy" alt=""/></div>
+<map name="alima_8F90_a5f98dbe628223792abab760dd21e9545_icgraph" id="alima_8F90_a5f98dbe628223792abab760dd21e9545_icgraph">
 <area shape="rect" title=" " alt="" coords="144,5,194,33"/>
 <area shape="rect" href="main__lima_8F90.html#a98a6c25ee98634744f14468b1801c7ce" title=" " alt="" coords="5,5,96,33"/>
 <area shape="poly" title=" " alt="" coords="126,19,96,22,96,17,131,19"/>
