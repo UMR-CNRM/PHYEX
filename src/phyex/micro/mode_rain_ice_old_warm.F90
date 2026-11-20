@@ -477,28 +477,9 @@ USE MODD_IO, ONLY:NVERB_FATAL
     ENDDO
 !
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_WARM',1,ZHOOK_HANDLE)
-  END SUBROUTINE RAIN_ICE_OLD_WARM
-
-  FUNCTION MOMG(PALPHA,PNU,PP) RESULT (PMOMG)
-!
-!   auxiliary routine used to compute the Pth moment order of the generalized
-!   gamma law
-!
-!
-    IMPLICIT NONE
-!
-    REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the dimensionnal distribution
-    REAL, INTENT(IN)     :: PNU    ! second shape parameter of the dimensionnal distribution
-    REAL, INTENT(IN)     :: PP     ! order of the moment
-    REAL     :: PMOMG  ! result: moment of order ZP
-!
-!------------------------------------------------------------------------------
-!
-!
-    PMOMG = GAMMA(PNU+PP/PALPHA)/GAMMA(PNU)
-!
 CONTAINS
 INCLUDE "gamma.h"
-  END FUNCTION MOMG
+INCLUDE "momg.h"
+  END SUBROUTINE RAIN_ICE_OLD_WARM
 
 END MODULE MODE_RAIN_ICE_OLD_WARM
