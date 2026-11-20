@@ -1,37 +1,21 @@
-!@no_insert_drhook
-!     ######spl
-      MODULE MODE_TIWMX
-!     ###############
+!MNH_LIC Copyright 2014-2025 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+! ******* TO BE INCLUDED IN THE *CONTAINS* OF A SUBROUTINE, IN ORDER TO EASE AUTOMATIC INLINING ******
+! => Don't use drHook !!!
 !
-!!****  *MODE_TIWMX* - 
-!!
-!!    PURPOSE
-!!    -------
-!       The purpose of this  ...
+! Functions of temperature (saturation pressures and their derivatives, ice crystal and
+! water droplet growth functions...) read in the lookup tables of MODD_TIWMX (filled by
+! INI_TIWMX), the tables being given as argument (ICEP%TIWMX)
 !
-!!
-!!    REFERENCE
-!!    ---------
-!!      Book2 of documentation of Meso-NH (ha ha)
-!!          
-!!    AUTHOR
-!!    ------
-!!      K. I. Ivarsson   *SMHI*
-!!
-!!    MODIFICATIONS
-!!    -------------
-!!      Original    20/11/14  
-!-------------------------------------------------------------------------------
+! Author: K. I. Ivarsson *SMHI* (20/11/14), formerly in mode_tiwmx.F90
+! Modifications: S. Riette Nov. 2026: elemental functions in tiwmx.func.h
 !
-!*       0.   DECLARATIONS
-!             ------------
-!
-IMPLICIT NONE
-
-CONTAINS
-
-  PURE REAL FUNCTION ESATW(TIWMX, TT)
+  ELEMENTAL REAL FUNCTION ESATW(TIWMX, TT)
     USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
+    IMPLICIT NONE
 
 !$acc routine seq
 
@@ -40,8 +24,9 @@ CONTAINS
     ESATW = TIWMX%ESTABW(NINT(XNDEGR*TT))
   END FUNCTION ESATW
 
-  REAL FUNCTION DESDTW(TIWMX, TT)
+  ELEMENTAL REAL FUNCTION DESDTW(TIWMX, TT)
     USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
+    IMPLICIT NONE
 
 !$acc routine seq
 
@@ -50,8 +35,9 @@ CONTAINS
     DESDTW = TIWMX%DESTABW(NINT(XNDEGR*TT))
   END FUNCTION
 
-  PURE REAL FUNCTION ESATI(TIWMX, TT)
+  ELEMENTAL REAL FUNCTION ESATI(TIWMX, TT)
     USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
+    IMPLICIT NONE
 
 !$acc routine seq
 
@@ -60,8 +46,9 @@ CONTAINS
     ESATI = TIWMX%ESTABI(NINT(XNDEGR*TT))
   END FUNCTION
 
-  REAL FUNCTION DESDTI(TIWMX, TT)
+  ELEMENTAL REAL FUNCTION DESDTI(TIWMX, TT)
     USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
+    IMPLICIT NONE
 
 !$acc routine seq
 
@@ -71,8 +58,9 @@ CONTAINS
   END FUNCTION
 
 ! Water droplet function:
-  REAL FUNCTION AA2W(TIWMX, TT)
+  ELEMENTAL REAL FUNCTION AA2W(TIWMX, TT)
     USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
+    IMPLICIT NONE
 
 !$acc routine seq
 
@@ -82,8 +70,9 @@ CONTAINS
   END FUNCTION
 
 ! Ice crystal function
-  PURE REAL FUNCTION AA2(TIWMX, TT)
+  ELEMENTAL REAL FUNCTION AA2(TIWMX, TT)
     USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
+    IMPLICIT NONE
 
 !$acc routine seq
 
@@ -93,8 +82,9 @@ CONTAINS
   END FUNCTION
 
 ! Meyers IN concentration function:
-  PURE REAL FUNCTION AM3(TIWMX, TT)
+  ELEMENTAL REAL FUNCTION AM3(TIWMX, TT)
     USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
+    IMPLICIT NONE
 
 !$acc routine seq
 
@@ -104,8 +94,9 @@ CONTAINS
   END FUNCTION
 
 ! Fletchers IN concentration function:
-  PURE REAL FUNCTION AF3(TIWMX, TT)
+  ELEMENTAL REAL FUNCTION AF3(TIWMX, TT)
     USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
+    IMPLICIT NONE
 
 !$acc routine seq
 
@@ -115,8 +106,9 @@ CONTAINS
   END FUNCTION
 
 ! Ice crystal function
-  PURE REAL FUNCTION BB3(TIWMX, TT)
+  ELEMENTAL REAL FUNCTION BB3(TIWMX, TT)
     USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
+    IMPLICIT NONE
 
 !$acc routine seq
 
@@ -126,8 +118,9 @@ CONTAINS
   END FUNCTION
 
 ! Water droplet function:
-  REAL FUNCTION BB3W(TIWMX, TT)
+  ELEMENTAL REAL FUNCTION BB3W(TIWMX, TT)
     USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
+    IMPLICIT NONE
 
 !$acc routine seq
 
@@ -137,8 +130,9 @@ CONTAINS
   END FUNCTION
 
 ! Function for IN concentration reduction between 0 and -25 C:
-  PURE REAL FUNCTION REDIN(TIWMX, TT)
+  ELEMENTAL REAL FUNCTION REDIN(TIWMX, TT)
     USE MODD_TIWMX, ONLY: XNDEGR, TIWMX_t
+    IMPLICIT NONE
 
 !$acc routine seq
 
@@ -147,4 +141,3 @@ CONTAINS
     REDIN = TIWMX%REDINTAB(NINT(XNDEGR*TT))
   END FUNCTION REDIN
   
-END MODULE MODE_TIWMX
