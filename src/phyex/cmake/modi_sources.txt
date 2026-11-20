@@ -2,8 +2,7 @@
 # generated at build time by gen_modi.py: the interface of xxx.F90 is the
 # MODI_XXX module in modi_xxx.F90.
 # Used by src/phyex/CMakeLists.txt (cmake/phyex_modi.cmake).
-# modi_gamma.F90 and modi_minpack.F90 cannot be generated, they are kept in
-# the repository.
+# modi_minpack.F90 cannot be generated, it is kept in the repository.
 aux/gamma_inc.F90
 aux/general_gamma.F90
 aux/ini_phyex.F90

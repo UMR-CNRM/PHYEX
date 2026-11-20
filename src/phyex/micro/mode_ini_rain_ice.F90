@@ -122,6 +122,7 @@ USE MODD_RAIN_ICE_PARAM_n, ONLY: LNEWCOEFF, RAIN_ICE_PARAMN, RAIN_ICE_PARAM_ALLO
                                  XEXSRIMCG2, XFCACCR, XFCDRYG, XFGWETH, XFIAGGS, XFIDRYG, XFIDRYG2, &
                                  XFRACCSS, XFRDRYG, XFRMIN, XFRWETH, XFSACCRG, XFSCVMG, XFSDRYG, &
                                  XFSEDC, XFSEDG, XFSEDH, XFSEDI, XFSEDR, XFSEDS, XFSWETH, XFWETH, &
+                                 XGAC, XGC, XGAC2, XGC2, &
                                  XGAMINC_RIM1, XGAMINC_RIM2, XGAMINC_RIM4, XHON, XICFRR, XKER_GWETH, &
                                  XKER_RACCS, XKER_RACCSS, XKER_RDRYG, XKER_RWETH, XKER_SACCRG, &
                                  XKER_SDRYG, XKER_SWETH, XLBGWETH1, XLBGWETH2, XLBGWETH3, XLBRACCS1, &
@@ -132,7 +133,6 @@ USE MODD_RAIN_ICE_PARAM_n, ONLY: LNEWCOEFF, RAIN_ICE_PARAMN, RAIN_ICE_PARAM_ALLO
                                  XSRIMCG3, XT0CRIAUTI, XTEXAUTI, XTIMAUTC, XTIMAUTI
 USE MODD_PRECISION, ONLY: MNHREAL64
 !
-USE MODI_GAMMA, ONLY: GAMMA
 USE MODI_GAMMA_INC, ONLY: GAMMA_INC
 USE MODE_RRCOLSS, ONLY: RRCOLSS
 USE MODE_RZCOLX, ONLY: RZCOLX
@@ -485,8 +485,8 @@ IF (LSNOW_T) THEN
 !   XNUS    = 43.7   ! Generalized gamma law
    XALPHAS = 1.   ! Generalized gamma law
    XNUS    = 1.3   ! Generalized gamma law
-   XTRANS_MP_GAMMAS = SQRT( ( GAMMA(DBLE(XNUS + 2._MNHREAL64/XALPHAS))*GAMMA(DBLE(XNUS + 4._MNHREAL64/XALPHAS)) ) / &
-                            ( 8._MNHREAL64* GAMMA(DBLE(XNUS + 1._MNHREAL64/XALPHAS))*GAMMA(DBLE(XNUS + 3._MNHREAL64/XALPHAS)) ) )
+   XTRANS_MP_GAMMAS = SQRT( ( GAMMA_DBLE(XNUS + 2._MNHREAL64/XALPHAS)*GAMMA_DBLE(XNUS + 4._MNHREAL64/XALPHAS) ) / &
+                            ( 8._MNHREAL64* GAMMA_DBLE(XNUS + 1._MNHREAL64/XALPHAS)*GAMMA_DBLE(XNUS + 3._MNHREAL64/XALPHAS) ) )
 ELSE
    XALPHAS = 1.0  ! Exponential law
    XNUS    = 1.0  ! Exponential law
@@ -568,6 +568,12 @@ XFSEDC(1)  = GAMMA(XNUC+(XDC+3.)/XALPHAC)/GAMMA(XNUC+3./XALPHAC)*     &
             (ZRHO00)**XCEXVT
 XFSEDC(2)  = GAMMA(XNUC2+(XDC+3.)/XALPHAC2)/GAMMA(XNUC2+3./XALPHAC2)*     &
             (ZRHO00)**XCEXVT
+!
+! Gamma functions of the cloud droplet distributions (mean radius of the droplets)
+XGAC  = GAMMA(XNUC+1.0/XALPHAC)
+XGC   = GAMMA(XNUC)
+XGAC2 = GAMMA(XNUC2+1.0/XALPHAC2)
+XGC2  = GAMMA(XNUC2)
 !
 XEXSEDR = (XBR+XDR+1.0)/(XBR+1.0)
 XFSEDR  = XCR*XAR*XCCR*MOMG(XALPHAR,XNUR,XBR+XDR)*                         &
@@ -1786,31 +1792,10 @@ END IF
 IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',1,ZHOOK_HANDLE)
 CONTAINS
 !
-!------------------------------------------------------------------------------
-!
-  FUNCTION MOMG(PALPHA,PNU,PP) RESULT (PMOMG)
-!
-! auxiliary routine used to compute the Pth moment order of the generalized
-! gamma law
-!
-  USE MODI_GAMMA, ONLY: GAMMA
-!
-  IMPLICIT NONE
-!
-  REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the dimensionnal distribution
-  REAL, INTENT(IN)     :: PNU    ! second shape parameter of the dimensionnal distribution
-  REAL, INTENT(IN)     :: PP     ! order of the moment
-  REAL     :: PMOMG  ! result: moment of order ZP
-!
-!------------------------------------------------------------------------------
-!
-!
-  PMOMG = GAMMA(PNU+PP/PALPHA)/GAMMA(PNU)
-!
-  END FUNCTION MOMG
-!
 !-------------------------------------------------------------------------------
 !
 !
+INCLUDE "gamma.h"
+INCLUDE "momg.h"
 END SUBROUTINE INI_RAIN_ICE
 END MODULE MODE_INI_RAIN_ICE

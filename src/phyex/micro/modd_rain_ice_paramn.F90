@@ -47,6 +47,9 @@ IMPLICIT NONE
 !
 TYPE RAIN_ICE_PARAM_t
 REAL,DIMENSION(2)      :: XFSEDC                 ! Constants for sedimentation fluxes of C
+REAL      :: XGAC, XGC, XGAC2, XGC2             ! Gamma functions of the cloud droplet distributions:
+                                                ! GAMMA(XNUC+1/XALPHAC), GAMMA(XNUC),
+                                                ! GAMMA(XNUC2+1/XALPHAC2), GAMMA(XNUC2)
 REAL      :: XFSEDR,XEXSEDR,                   & ! Constants for sedimentation
              XFSEDI,XEXCSEDI,XEXRSEDI,         & ! fluxes of R, I, S and G
              XFSEDS,XEXSEDS,                   &
@@ -203,6 +206,10 @@ TYPE(RAIN_ICE_PARAM_t), POINTER, SAVE :: RAIN_ICE_PARAMN => NULL()
 REAL,DIMENSION(:),POINTER :: XFSEDC => NULL()
 REAL,DIMENSION(:),POINTER :: XFRMIN => NULL()
 
+REAL,POINTER :: XGAC => NULL(), &
+                XGC => NULL(), &
+                XGAC2 => NULL(), &
+                XGC2 => NULL()
 REAL,POINTER :: XFSEDR => NULL(), &
                 XEXSEDR => NULL(), &
                 XFSEDI => NULL(), &
@@ -399,6 +406,10 @@ IF(.NOT. ASSOCIATED(RAIN_ICE_PARAMN, RAIN_ICE_PARAM_MODEL(KTO))) THEN
   RAIN_ICE_PARAMN => RAIN_ICE_PARAM_MODEL(KTO)
   !
   XFSEDC => RAIN_ICE_PARAMN%XFSEDC
+  XGAC => RAIN_ICE_PARAMN%XGAC
+  XGC => RAIN_ICE_PARAMN%XGC
+  XGAC2 => RAIN_ICE_PARAMN%XGAC2
+  XGC2 => RAIN_ICE_PARAMN%XGC2
   XFRMIN => RAIN_ICE_PARAMN%XFRMIN
   !
   XFSEDR => RAIN_ICE_PARAMN%XFSEDR

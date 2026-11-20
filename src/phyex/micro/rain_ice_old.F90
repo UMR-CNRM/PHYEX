@@ -174,7 +174,6 @@
 USE MODD_PRECISION,  ONLY: MNHREAL64
 USE MODD_BUDGET,     ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, &
                            NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
-USE MODI_GAMMA,      ONLY: GAMMA
 USE MODE_TIWMX,      ONLY: ESATI, ESATW, AA2, BB3, AA2W, BB3W
 USE MODE_TIWMX_TAB,  ONLY: TIWMX_TAB
 !
@@ -479,8 +478,8 @@ IF (OSEDIC) THEN
         ZLBC(JIJ,JK)   = 0.5* (ICED%XLBC(2)+ICED%XLBC(1)) 
         ZFSEDC(JIJ,JK) = 0.5* (ICEP%XFSEDC(2)+ICEP%XFSEDC(1))
         ZFSEDC(JIJ,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
-        ZRAY(JIJ,JK)   = 0.5*( 0.5*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
-          0.5*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
+        ZRAY(JIJ,JK)   = 0.5*( 0.5*ICEP%XGAC/ICEP%XGC + &
+          0.5*ICEP%XGAC2/ICEP%XGC2)
       ENDDO
     ENDDO
   ELSE
@@ -489,8 +488,8 @@ IF (OSEDIC) THEN
         ZLBC(JIJ,JK)   = PSEA(JIJ)*ICED%XLBC(2) + (1.-PSEA(JIJ))*ICED%XLBC(1)
         ZFSEDC(JIJ,JK) = (PSEA(JIJ)*ICEP%XFSEDC(2) + (1.-PSEA(JIJ))*ICEP%XFSEDC(1))
         ZFSEDC(JIJ,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JIJ,JK))
-        ZRAY(JIJ,JK)   = 0.5*((1.-PSEA(JIJ))*GAMMA(ICED%XNUC + 1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) &
-                     & + PSEA(JIJ)*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
+        ZRAY(JIJ,JK)   = 0.5*((1.-PSEA(JIJ))*ICEP%XGAC/ICEP%XGC &
+                     & + PSEA(JIJ)*ICEP%XGAC2/ICEP%XGC2)
       ENDDO
     ENDDO
   ENDIF
@@ -1475,28 +1474,7 @@ END IF
 
 CONTAINS
 !
-!------------------------------------------------------------------------------
-!
-  FUNCTION MOMG(PALPHA,PNU,PP) RESULT (PMOMG)
-!
-! auxiliary routine used to compute the Pth moment order of the generalized
-! gamma law
-!
-    USE MODI_GAMMA, ONLY: GAMMA
-!
-    IMPLICIT NONE
-!
-    REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the dimensionnal distribution
-    REAL, INTENT(IN)     :: PNU    ! second shape parameter of the dimensionnal distribution
-    REAL, INTENT(IN)     :: PP     ! order of the moment
-    REAL     :: PMOMG  ! result: moment of order ZP
-!
-!------------------------------------------------------------------------------
-!
-!
-    PMOMG = GAMMA(PNU+PP/PALPHA)/GAMMA(PNU)
-!
-  END FUNCTION MOMG
-!
 !-------------------------------------------------------------------------------
+INCLUDE "gamma.h"
+INCLUDE "momg.h"
 END SUBROUTINE RAIN_ICE_OLD

@@ -22,6 +22,8 @@ reg_variable_name_simple = re.compile(r"::\s*(\w+)", re.IGNORECASE)
 reg_string = re.compile(r"'[^']*'|\"[^\"]*\"")
 reg_component = re.compile(r"%\s*\w+")  # derived type components (D%NIJT)
 reg_identifier = re.compile(r"[A-Z_][A-Z0-9_]*")
+# ACDC directives (!$ACDC singlecolumn...) must be kept, as they are, in the interface
+reg_acdc = re.compile(r"!\$ACDC\b", re.IGNORECASE)
 
 # Macro directives and Fortran include statements are case-sensitive so they must never be uppercased
 reg_case_is_important = re.compile(r"\s*#|\s*INCLUDE", re.IGNORECASE)
@@ -66,11 +68,16 @@ def is_modi_needed(lines):
 
 
 def simplify_code(src):
-    # Remove comments, remove double spaces, join lines using continuation marker (&)
+    # Remove comments (except ACDC directives), remove double spaces, join lines using
+    # continuation marker (&)
     lines = []
     buf = ""
     for line in src:
         line = line.strip()
+        if reg_acdc.match(line):
+            # directive kept as is
+            lines.append(line + "\n")
+            continue
         if line.startswith("!"):
             continue
         while "  " in line:
@@ -184,7 +191,8 @@ def get_proc_signature(line):
 def break_long_lines(lines):
     newlines = []
     for line in lines:
-        while len(line) > 80:
+        # Comments (ACDC directives) cannot be split
+        while len(line) > 80 and not line.lstrip().startswith("!"):
             break_idx_space = line[0:80].rfind(" ")
             break_idx_comma = line[0:80].rfind(",")
 

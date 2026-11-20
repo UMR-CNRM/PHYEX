@@ -108,7 +108,6 @@ use mode_tools,           only: Countjv
 !
 USE MODE_COMPUTE_LAMBDA, ONLY: COMPUTE_LAMBDA
 USE MODE_ELEC_COMPUTE_EX,ONLY: ELEC_COMPUTE_EX
-USE MODI_MOMG, ONLY: MOMG
 !
 IMPLICIT NONE
 !
@@ -3481,5 +3480,7 @@ END FUNCTION BI_LIN_INTP_V
 !
 !------------------------------------------------------------------
 !
+INCLUDE "gamma.h"
+INCLUDE "momg.h"
 END SUBROUTINE ELEC_TENDENCIES
 END MODULE MODE_ELEC_TENDENCIES
