@@ -88,7 +88,7 @@ USE MODD_PARAM_LIMA,      ONLY: NMOD_IFN, NSPECIE, XFRAC,                       
                                 LAERO_MASS, NDIAMR, NDIAMP, XT0SCAV, XTREF,       &
                                 XMUA0, XT_SUTH_A, XMFPA0, XVISCW, XRHO00,         &
                                 XRTMIN, XCTMIN
-USE MODD_PARAM_LIMA_WARM, ONLY: XCR, XDR
+USE MODD_PARAM_LIMA_WARM, ONLY: XCR, XDR, XSHAPE_FACTOR
 
 USE MODE_TOOLS,           only: COUNTJV
 
@@ -138,8 +138,7 @@ INTEGER                          :: IL       ! and PACK intrinsics
 INTEGER                          :: ISCAV
 !
 REAL                     :: ZDENS_RATIO, & !density ratio 
-                            ZNUM,        & !PNU-1.               
-                            ZSHAPE_FACTOR
+                            ZNUM           !PNU-1.               
 !
 REAL,    DIMENSION(D%NIJT,D%NKT)  :: ZCRT   ! cloud droplet conc.
 !
@@ -273,8 +272,6 @@ CALL GAULAG(ZABSCISSR,ZWEIGHTR,NDIAMR,ZNUM)
 ! environment conditions only, to avoid multiple identical computations in loops
 !
 !
-ZSHAPE_FACTOR = GAMMA(XNUR+3./XALPHAR)/GAMMA(XNUR) 
-!
 WHERE ( GRAIN(:,:) )
    !
    ZT_3D(:,:)      = PTHT(:,:) * ( PPABST(:,:)/CST%XP00 )**(CST%XRD/CST%XCPD)
@@ -287,7 +284,7 @@ WHERE ( GRAIN(:,:) )
    ! Viscosity ratio
    ZVISC_RATIO_3D(:,:) = ZVISCA_3D(:,:)/XVISCW   !!!!! inversé par rapport à orig. !
    ! Rain drops parameters
-   ZLAMBDAR_3D(:,:) = ( ((CST%XPI/6.)*ZSHAPE_FACTOR*CST%XRHOLW*ZCONCR_3D(:,:))  &
+   ZLAMBDAR_3D(:,:) = ( ((CST%XPI/6.)*XSHAPE_FACTOR*CST%XRHOLW*ZCONCR_3D(:,:))  &
                           /(PRHODREF(:,:)*PRRT(:,:)) )**(1./3.)         ![/m]
    ZFACTOR_3D(:,:) = CST%XPI*0.25*ZCONCR_3D(:,:)*XCR*(XRHO00/PRHODREF(:,:))**(0.4)
    !
@@ -822,5 +819,4 @@ FUNCTION COLL_EFFI (KSCAV,KDIAMP,KDIAMR, &
 !
 !------------------------------------------------------------------------------
 !
-INCLUDE "gamma.h"
 END SUBROUTINE LIMA_PRECIP_SCAVENGING
