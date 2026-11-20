@@ -281,7 +281,7 @@ DO ITIME = 1, NTIME
                PRHODREF=PRHODREF(:, :, IBL), PEXNREF=PEXNREF(:, :, IBL), PDZZ=PDZZ(:, :, IBL), PTHVREFZIKB=ZTHVREFZIKB,       &
                PRHODJ=PRHODJ(:, :, IBL), PPABST=PPABSM(:, :, IBL),                                 &
                KCARB=NCARB, KSOA=NSOA, KSP=NSP, ODUST=LDUST, OSALT=LSALT, OORILAM=LORILAM,  &
-               ODTHRAD=.TRUE., PDTHRAD=PDTHRAD(:, :, IBL), PTHT=PTHT(:, :, IBL), PRT=PRT(:, :, :, IBL), PSVT=PSVT(:, :, :, IBL), &
+               PDTHRAD=PDTHRAD(:, :, IBL), PTHT=PTHT(:, :, IBL), PRT=PRT(:, :, :, IBL), PSVT=PSVT(:, :, :, IBL), &
                PCIT=PCIT(:, :, IBL), PW_NU=PW_NU(:, :, IBL),                  &
                PAERO=PAERO(:,:,:, IBL), PSOLORG=PSOLORG(:,:,:,IBL), PMI=PMI(:,:,:,IBL), &
                PTHS=PTHS(:, :, IBL), PRS=PRS(:, :, :, IBL), PSVS=PSVS(:, :, :, IBL),                                &

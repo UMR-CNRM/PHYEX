@@ -109,7 +109,7 @@ GEVAP(:) = ODCOMPUTE(:)      .AND. &
 IF (LIMAP%LKHKO) THEN
 
    WHERE ( GEVAP )
-      ZZW1(:) = MAX((1.0 - PRVT(:)/ZZW1(:)),0.0)  ! Subsaturation
+      ZZW1(:) = MAX((1.0 - PRVT(:)/PRVSAT(:)),0.0)  ! Subsaturation
     
       ZZW2(:) = 1. / ( CST%XRHOLW*((((PLV(:)/PT(:))**2)/(LIMAW%XTHCO*CST%XRV)) +          & ! G
            (CST%XRV*PT(:))/(LIMAW%XDIVA*PEVSAT(:))))

@@ -73,6 +73,7 @@ TYPE(NEB_T),              INTENT(IN)    :: NEBN
 TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
 TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS 
+!
 INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
 LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 !
@@ -83,7 +84,8 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF   ! Reference density
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PT         ! Temperature
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDTHRAD    ! Radiative temperature tendency
+REAL, DIMENSION(MERGE(D%NIJT,0,LIMAP%LACTIT),  &
+                MERGE(D%NKT,0, LIMAP%LACTIT)), INTENT(IN) :: PDTHRAD   ! dT/dt due to radiation
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
 REAL, DIMENSION(D%NIJT, D%NKT ,TNSV%NSV), INTENT(INOUT) :: PAERO  ! Aerosol concentration
 REAL, DIMENSION(MERGE(D%NIJT,0,OORILAM), &

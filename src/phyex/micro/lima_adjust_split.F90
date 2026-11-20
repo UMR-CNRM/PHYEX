@@ -9,7 +9,7 @@ SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, TNSV, D, CST, NEBN, TURBN, BUCONF, TB
                              KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,           &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS, OMFCONV, PMFCONV,&
-                             PPABST, PZZ, ODTHRAD, PDTHRAD, PW_NU,              &
+                             PPABST, PZZ, PDTHRAD, PW_NU,                       &
                              PRT, PRS, PSVT, PSVS,                              &
                              HACTCCN, PAERO,PSOLORG, PMI,                       &
                              PTHS, OCOMPUTE_SRC, PSRCS, PCLDFR, PICEFR,         &
@@ -143,9 +143,8 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OMFCONV), &
                 MERGE(D%NKT,0,OMFCONV)),   INTENT(IN)   ::  PMFCONV   ! 
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)   ::  PPABST    ! Absolute Pressure at t     
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)   ::  PZZ       !     
-LOGICAL,                                INTENT(IN)   :: ODTHRAD    ! Use radiative temperature tendency
-REAL, DIMENSION(MERGE(D%NIJT,0,ODTHRAD), &
-                MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! Radiative temperature tendency
+REAL, DIMENSION(MERGE(D%NIJT,0,LIMAP%LACTIT),  &
+                MERGE(D%NKT, 0,LIMAP%LACTIT)), INTENT(IN) :: PDTHRAD   ! Radiative temperature tendency
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PW_NU     ! updraft velocity used for
 INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
 LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
