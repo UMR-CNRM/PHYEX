@@ -19,7 +19,7 @@ CONTAINS
                       PUM,PVM,PWM,PUSLOPEM,PVSLOPEM,PTHLM,PRM,PSVM,  &
                       PTKEM,PLM,PLEPS,                               &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PFRAC_ICE,     &
-                      PDP,PTP,PSIGS,                                 &
+                      PTURB_SPP,PDP,PTP,PSIGS,                       &
                       PTRH,                                          &
                       PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS               )
 !     ################################################################
@@ -159,7 +159,7 @@ USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_DIMPHYEX, ONLY : DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NTURB_S
 USE MODD_NEB_n, ONLY: NEB_t
 !
 USE MODD_IO, ONLY: TFILEDATA
@@ -250,6 +250,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PSRCM
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PFRAC_ICE    ! ri fraction of rc+ri
 !
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S),   INTENT(IN)  ::  PTURB_SPP ! SPP for turbulence
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS, PRWS, PRTHLS
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS    ! var. at t+1 -split-
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS   ! var. at t+1 -split-
@@ -378,7 +379,7 @@ IF (KSPLIT>1) THEN
                    ZUM,ZVM,ZWM,PUSLOPEM,PVSLOPEM,ZTHLM,ZRM,ZSVM,  &
                    PTKEM,PLM,PLEPS,                               &
                    PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PFRAC_ICE,     &
-                   PDP,PTP,PSIGS,                                 &
+                   PTURB_SPP,PDP,PTP,PSIGS,                       &
                    ZRUS,ZRVS,ZRWS,ZRTHLS,ZRRS,ZRSVS               )
 !
 ! horizontal transport of Tke
@@ -468,7 +469,7 @@ ELSE
                 PUM,PVM,PWM,PUSLOPEM,PVSLOPEM,PTHLM,PRM,PSVM,  &
                 PTKEM,PLM,PLEPS,                               &
                 PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PFRAC_ICE,     &
-                PDP,PTP,PSIGS,                                 &
+                PTURB_SPP,PDP,PTP,PSIGS,                       &
                 PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS               )
 
 ! horizontal transport of Tke

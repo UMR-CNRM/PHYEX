@@ -9,7 +9,7 @@ SUBROUTINE ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, PTSTEP, &
                         &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
                         &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
                         &PICLDFR, PZZZ, PCONC3D, PSSIO, PSSIU, PIFR, &
-                        &PBUDGETS, PLATHAM_IAGGS)
+                        &PBUDGETS, PLATHAM_IAGGS, PRCRIAUTI, PRCRIAUTC, PRDEPSRED, PRDEPGRED, PICENU)
 
 !$ACDC singlecolumn --nocreate-interface
 
@@ -90,6 +90,12 @@ REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PCONC3D ! Cloud
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PSSIO   ! Super-sat. with respect to ice in the supersat fraction
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PSSIU   ! Sub-sat. with respect to ice in the subsaturated fraction
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part
+! SPP microphysics perturbation arrays
+REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PRCRIAUTI
+REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PRCRIAUTC
+REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PRDEPSRED
+REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PRDEPGRED
+REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PICENU
 REAL,    DIMENSION(MERGE(D%NIJT,0,PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')), INTENT(INOUT) :: PHLC_HRC, &
                                                                                                                   & PHLC_HCF, &
                                                                                                                   & PHLI_HRI, &
@@ -308,7 +314,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE )<PTSTEP)) ! Loop to *really* compute tendencie
                         &ZRS_TEND, ZRG_TEND, ZRH_TEND, ZSSI, &
                         &ZA, ZB, ZATH, ZBTH, &
                         &PHLC_HCF, ZHLC_LCF, PHLC_HRC, ZHLC_LRC, &
-                        &PHLI_HCF, ZHLI_LCF, PHLI_HRI, ZHLI_LRI, PRAINFR)
+                        &PHLI_HCF, ZHLI_LCF, PHLI_HRI, ZHLI_LRI, PRAINFR, PRCRIAUTI, PRCRIAUTC, PRDEPSRED, PRDEPGRED, PICENU)
 
     ! External tendencies
     IF(PARAMI%LEXT_TEND) THEN

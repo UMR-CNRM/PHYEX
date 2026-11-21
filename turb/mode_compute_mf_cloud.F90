@@ -21,7 +21,7 @@ CONTAINS
                                   PPABSM, PRHODREF,                         &
                                   PRC_MF, PRI_MF, PCF_MF, PSIGMF, PTAUFUNC, &
                                   PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,   &
-                                  PWEIGHT_MF_CLOUD)
+                                  PWEIGHT_MF_CLOUD,PXCTV)
 
 !$ACDC singlecolumn 
 
@@ -113,6 +113,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PCF_MF            ! and cloud 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PSIGMF            ! SQRT(variance) for statistical cloud scheme
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF ! low/high cloud diagnostics
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PWEIGHT_MF_CLOUD ! weight coefficient for the mass-flux cloud
+REAL, DIMENSION(D%NIJT),         INTENT(IN)   ::  PXCTV            ! SPP parameter for turbulence   
 !
 !                       1.2  Declaration of local variables
 !
@@ -150,7 +151,7 @@ ELSEIF (PARAMMF%CMF_CLOUD == 'STAT') THEN
                             &PTHLM, PRTM, PPABSM, PRM,&
                             &PDZZ, PTHM, PEXNM,&
                             &PEMF, PTHL_UP, PRT_UP,&
-                            &PSIGMF,PTAUFUNC)
+                            &PSIGMF,PTAUFUNC,PXCTV)
 ELSEIF (PARAMMF%CMF_CLOUD == 'BIGA') THEN
   !Statistical scheme using the bi-gaussian PDF
   CALL COMPUTE_MF_CLOUD_BIGAUS(D, CST, PARAMMF, ICEP, KRR, &

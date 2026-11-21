@@ -20,7 +20,7 @@ SUBROUTINE ICE4_TENDENCIES(CST, PARAMI, ICEP, ICED, BUCONF, D, &
                           &PA, PB, PATH, PBTH, &
                           &PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
                           &PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, &
-                          &PRAINFR)
+                          &PRAINFR, PRCRIAUTI, PRCRIAUTC, PRDEPSRED, PRDEPGRED, PICENU)
 
 !$ACDC singlecolumn
 
@@ -125,6 +125,11 @@ REAL, DIMENSION(D%NIJT),       INTENT(INOUT) :: PHLI_LCF
 REAL, DIMENSION(D%NIJT),       INTENT(INOUT) :: PHLI_HRI
 REAL, DIMENSION(D%NIJT),       INTENT(INOUT) :: PHLI_LRI
 REAL, DIMENSION(D%NIJT),       INTENT(INOUT) :: PRAINFR   ! Rain fraction
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRCRIAUTI  ! SPP microphysics: ri->rs threshold
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRCRIAUTC  ! SPP microphysics: rc->rr threshold
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRDEPSRED  ! SPP microphysics: snow deposition reduction
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PRDEPGRED  ! SPP microphysics: graupel deposition reduction
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PICENU     ! SPP microphysics: nucleation factor
 !
 !*       0.2  declaration of local variables
 !
@@ -183,7 +188,7 @@ ELSE
 !NEC$ noinline
     CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LDCOMPUTE(JIJ), &
                      ZTH(JIJ), PPRES(JIJ), PRHODREF(JIJ), PEXN(JIJ), PLSFACT(JIJ), ZT(JIJ), &
-                     ZVART(JIJ,IRV), PICLDFR(JIJ), PZZZ(JIJ), &
+                     ZVART(JIJ,IRV), PICLDFR(JIJ), PZZZ(JIJ), PICENU(JIJ), &
                      PCIT(JIJ), PBU_INST(JIJ, IRVHENI_MR))
   ENDDO
   !$mnh_end_do()
@@ -358,7 +363,7 @@ ENDIF ! ODSOFT
 CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, D, PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF,&
                       LDCOMPUTE, PRHODREF, ZVART(:,IRC), ZVART(:,IRI), PCF, ZT, PSIGMA_RC, &
                       PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
-                      PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, ZRAINFR)
+                      PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, ZRAINFR, PARAMI, PRCRIAUTI, PRCRIAUTC)
 LLRFR=PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR'
 IF (LLRFR) THEN
   !To be exact, ICE4_RAINFR_VERT should be called here with the updated PRAINFR
@@ -448,7 +453,8 @@ CALL ICE4_SLOW(CST, PARAMI, ICEP, ICED, D, ODSOFT, OELEC, LDCOMPUTE, PRHODREF, Z
               &ZLBDAS, ZLBDAG, &
               &ZAI, ZCJ, PHLI_HCF, PHLI_HRI, &
               &PLATHAM_IAGGS, &
-              &PBU_INST(:, IRCHONI), PBU_INST(:, IRVDEPS), PBU_INST(:, IRIAGGS), PBU_INST(:, IRIAUTS), PBU_INST(:, IRVDEPG))
+              &PBU_INST(:, IRCHONI), PBU_INST(:, IRVDEPS), PBU_INST(:, IRIAGGS), PBU_INST(:, IRIAUTS), PBU_INST(:, IRVDEPG), &
+              &PRCRIAUTI)
 !
 ZDEPG_S(:)=0.0
 ZNODEPG_S(:)=1.0
@@ -481,7 +487,7 @@ IF(PARAMI%LWARM) THEN    !  Check if the formation of the raindrops by the slow
                 &PCF, PRAINFR, &
                 &ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRR), &
                 &ZCONC, ZACRF, &
-                &PBU_INST(:, IRCAUTR), PBU_INST(:, IRCACCR), PBU_INST(:, IRREVAV))
+                &PBU_INST(:, IRCAUTR), PBU_INST(:, IRCACCR), PBU_INST(:, IRREVAV), PRCRIAUTC)
 ELSE
 
   PBU_INST(:, IRCAUTR)=0.

@@ -13,6 +13,7 @@
                                    PTHT, PRT, PTHS, PRS,                                 &
                                    PINPRC, PINPRR, PEVAP3D,                              &
                                    PINPRS, PINPRG, PRAINFR, PSIGS,               &
+                                   PRCRIAUTI, PRCRIAUTC,                                 &
                                    TBUDGETS, KBUDGETS,                                   &
                                    PQCT, PQRT, PQIT, PQST, PQGT,           &
                                    PQCS, PQRS, PQIS, PQSS, PQGS,           &
@@ -225,6 +226,8 @@ REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRS! Snow instant precip
 REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRG! Graupel instant precip
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) :: PRAINFR !Precipitation fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
+REAL, DIMENSION(D%NIJT),         INTENT(IN)    :: PRCRIAUTI
+REAL, DIMENSION(D%NIJT),         INTENT(IN)    :: PRCRIAUTC
 !
 TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
@@ -289,6 +292,8 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZW3D
 REAL, DIMENSION(D%NIJT) :: ZCONC_TMP
 
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLW3D
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZPRCRIAUTI2D, ZPRCRIAUTC2D
+REAL :: ZICENU
 TYPE(DIMPHYEX_t) :: DD
 INTEGER :: ISIZE
 !
@@ -304,6 +309,7 @@ IKB=D%NKB
 IIJB=D%NIJB
 IIJE=D%NIJE
 IIJT=D%NIJT
+ZICENU=1.0
 ZICEDRTMIN(1:KRR)=ICED%XRTMIN(1:KRR)
 !-------------------------------------------------------------------------------
 !
@@ -511,7 +517,7 @@ DO JK=IKTB,IKTE
     CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(JIJ, JK), &
                          PTHT(JIJ, JK), PPABST(JIJ, JK), PRHODREF(JIJ, JK), &
                          PEXN(JIJ, JK), ZW3D(JIJ, JK), PT(JIJ, JK), &
-                         PRT(JIJ, JK, IRV), PICLDFR(JIJ, JK), PZZZZ(JIJ, JK), &
+                         PRT(JIJ, JK, IRV), PICLDFR(JIJ, JK), PZZZZ(JIJ, JK), ZICENU, &
                          PCIT(JIJ, JK), PRVHENI(JIJ, JK))
   ENDDO
 ENDDO
@@ -569,6 +575,8 @@ IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
   ENDIF
   !We cannot use PWR(:,IKTB:IKTE,IRC) which is not contiguous
   ISIZE=IIJT*(IKTE-IKTB+1)
+  ZPRCRIAUTI2D = SPREAD(PRCRIAUTI, 2, D%NKT)
+  ZPRCRIAUTC2D = SPREAD(PRCRIAUTC, 2, D%NKT)
 
   DD = D
   DD%NIJT = ISIZE
@@ -580,7 +588,7 @@ IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
                         PCLDFR(:,IKTB:IKTE), PT(:,IKTB:IKTE), ZSIGMA_RC(:,IKTB:IKTE), &
                         PHLC_HCF(:,IKTB:IKTE), ZHLC_LCF(:,IKTB:IKTE), PHLC_HRC(:,IKTB:IKTE), ZHLC_LRC(:,IKTB:IKTE), &
                         PHLI_HCF(:,IKTB:IKTE), ZHLI_LCF(:,IKTB:IKTE), PHLI_HRI(:,IKTB:IKTE), ZHLI_LRI(:,IKTB:IKTE), &
-                        PRAINFR(:,IKTB:IKTE))
+                        PRAINFR(:,IKTB:IKTE), PARAMI, ZPRCRIAUTI2D(:,IKTB:IKTE), ZPRCRIAUTC2D(:,IKTB:IKTE))
   IF (KRR==7) THEN
     CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, PWR(:,:,IRR), &
                          &PWR(:,:,IRS), PWR(:,:,IRG), PWR(:,:,IRH))

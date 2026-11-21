@@ -9,7 +9,7 @@ SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF, PTSTEP, &
                     &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
                     &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
                     &PICLDFR, PZZZ, PCONC3D, PSSIO, PSSIU, PIFR, &
-                    &PBUDGETS, PLATHAM_IAGGS)
+                    &PBUDGETS, PLATHAM_IAGGS, PRCRIAUTI, PRCRIAUTC, PRDEPSRED, PRDEPGRED, PICENU)
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -119,6 +119,13 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OSAVE_MICRO .OR. BUCONF%LBU_ENABLE), &
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), &
                                           OPTIONAL, INTENT(IN)    :: PLATHAM_IAGGS  ! E Function to simulate
                                                                           ! enhancement of IAGGS
+! SPP perturbation arrays
+REAL, DIMENSION(D%NIJT),  OPTIONAL, INTENT(IN)  :: PRCRIAUTI
+REAL, DIMENSION(D%NIJT),  OPTIONAL, INTENT(IN)  :: PRCRIAUTC
+REAL, DIMENSION(D%NIJT),  OPTIONAL, INTENT(IN)  :: PRDEPSRED
+REAL, DIMENSION(D%NIJT),  OPTIONAL, INTENT(IN)  :: PRDEPGRED
+REAL, DIMENSION(D%NIJT),  OPTIONAL, INTENT(IN)  :: PICENU
+REAL, DIMENSION(D%NIJT) :: ZPRCRIAUTI, ZPRCRIAUTC, ZPRDEPSRED, ZPRDEPGRED, ZPICENU
 !
 !
 !*       0.2   Declarations of local variables :
@@ -152,6 +159,31 @@ IKTE=D%NKTE
 IIJT=D%NIJT
 IIJB=D%NIJB
 IIJE=D%NIJE
+IF (PRESENT(PRCRIAUTI)) THEN
+  ZPRCRIAUTI = PRCRIAUTI
+ELSE
+ZPRCRIAUTI =ICEP%XCRIAUTI
+ENDIF
+IF (PRESENT(PRCRIAUTC)) THEN
+  ZPRCRIAUTC = PRCRIAUTC
+ELSE
+ZPRCRIAUTC =ICEP%XCRIAUTC
+ENDIF
+IF (PRESENT(PRDEPSRED)) THEN
+  ZPRDEPSRED = PRDEPSRED
+ELSE
+ZPRDEPSRED =1.
+ENDIF
+IF (PRESENT(PRDEPGRED)) THEN
+  ZPRDEPGRED = PRDEPGRED
+ELSE
+ZPRDEPGRED =1.
+ENDIF
+IF (PRESENT(PICENU)) THEN
+  ZPICENU = PICENU
+ELSE
+ZPICENU    =1.
+ENDIF
 LLSIGMA_RC=(PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')
 LL_AUCV_ADJU=(PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')
 !
@@ -203,7 +235,12 @@ REAL, DIMENSION(IPROMA) :: &
                         & ZRREVAV,  &
                         & ZSIGS,    & ! Standard deviation of rc at time t
                         & ZTHT,     &
-                        & ZTHS
+                        & ZTHS,   &
+                        & ZCRIT,   & ! SPP ri->rs threshold (packed)
+                        & ZCRTC,   & ! SPP rc->rr threshold (packed)
+                        & ZDEPSR,  & ! SPP snow deposition reduction (packed)
+                        & ZDEPGR,  & ! SPP graupel deposition reduction (packed)
+                        & ZICENU     ! SPP nucleation factor (packed)
 LOGICAL, DIMENSION(IPROMA) :: LLMICRO
 !
 !Output packed tendencies (for budgets only)
@@ -287,6 +324,11 @@ DO JMICRO=1,ISIZE,IPROMA
           ZRHODREF   (IDX)=PRHODREF(JIJ, JK)
           ZPABST     (IDX)=PPABST  (JIJ, JK)
           ZEXN       (IDX)=PEXN    (JIJ, JK)
+          ZCRIT(IDX)=ZPRCRIAUTI(JIJ)
+          ZCRTC(IDX)=ZPRCRIAUTC(JIJ)
+          ZDEPSR(IDX)=ZPRDEPSRED(JIJ)
+          ZDEPGR(IDX)=ZPRDEPGRED(JIJ)
+          ZICENU(IDX)=ZPICENU(JIJ)
           ZICLDFR    (IC)=PICLDFR (JIJ, JK)
           ZZZZ       (IC)=PZZZ    (JIJ, JK)
           ZCONC3D    (IC)=PCONC3D (JIJ, JK)
@@ -361,7 +403,7 @@ DO JMICRO=1,ISIZE,IPROMA
                     &ZICLDFR, ZZZZ, ZCONC3D, &
                     &ZSSIO, ZSSIU, ZIFR, &
                     &ZBUDGETS, &
-                    &ZLATHAM_IAGGS)
+                    &ZLATHAM_IAGGS, ZCRIT, ZCRTC, ZDEPSR, ZDEPGR, ZICENU)
   !
   !*       6.     UNPACKING
   !               ---------
