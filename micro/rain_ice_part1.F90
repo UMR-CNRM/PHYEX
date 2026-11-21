@@ -226,7 +226,6 @@ REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRS! Snow instant precip
 REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRG! Graupel instant precip
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) :: PRAINFR !Precipitation fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
-! SPP-PORT-REVIEW per-column perturbation, broadcast to col x level for the DD compute_pdf below
 REAL, DIMENSION(D%NIJT),         INTENT(IN)    :: PRCRIAUTI
 REAL, DIMENSION(D%NIJT),         INTENT(IN)    :: PRCRIAUTC
 !
@@ -293,7 +292,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZW3D
 REAL, DIMENSION(D%NIJT) :: ZCONC_TMP
 
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLW3D
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZPRCRIAUTI2D, ZPRCRIAUTC2D ! SPP-PORT-REVIEW broadcast per-column -> col x level
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZPRCRIAUTI2D, ZPRCRIAUTC2D
 REAL :: ZICENU
 TYPE(DIMPHYEX_t) :: DD
 INTEGER :: ISIZE
@@ -310,7 +309,7 @@ IKB=D%NKB
 IIJB=D%NIJB
 IIJE=D%NIJE
 IIJT=D%NIJT
-ZICENU=1.0 ! SPP-PORT-REVIEW warm-start nucleation left unperturbed (placeholder, as in source branch)
+ZICENU=1.0
 ZICEDRTMIN(1:KRR)=ICED%XRTMIN(1:KRR)
 !-------------------------------------------------------------------------------
 !
@@ -573,8 +572,8 @@ IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
   ENDIF
   !We cannot use PWR(:,IKTB:IKTE,IRC) which is not contiguous
   ISIZE=IIJT*(IKTE-IKTB+1)
-  ZPRCRIAUTI2D = RESHAPE(PRCRIAUTI, (/ D%NIJT, D%NKT /))  ! SPP-PORT-REVIEW broadcast (col) -> (col x level)
-  ZPRCRIAUTC2D = RESHAPE(PRCRIAUTC, (/ D%NIJT, D%NKT /))
+  ZPRCRIAUTI2D = SPREAD(PRCRIAUTI, 2, D%NKT)
+  ZPRCRIAUTC2D = SPREAD(PRCRIAUTC, 2, D%NKT)
 
   DD = D
   DD%NIJT = ISIZE

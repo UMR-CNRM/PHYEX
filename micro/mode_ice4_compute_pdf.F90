@@ -71,9 +71,9 @@ REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLI_LCF
 REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLI_HRI
 REAL, DIMENSION(D%NIJT), INTENT(INOUT) :: PHLI_LRI
 REAL, DIMENSION(D%NIJT), INTENT(OUT) :: PRF        ! Rain fraction
-TYPE(PARAM_ICE_t),       INTENT(IN)    :: PARAMI      ! SPP-PORT-REVIEW added for LCRIAUTI gate (was not a dummy in arome)
-REAL, DIMENSION(D%NIJT), INTENT(IN)    :: PRCRIAUTI   ! SPP-PORT-REVIEW SPP perturbed ri->rs threshold
-REAL, DIMENSION(D%NIJT), INTENT(IN)    :: PRCRIAUTC   ! SPP-PORT-REVIEW SPP perturbed rc->rr threshold
+TYPE(PARAM_ICE_t),       INTENT(IN)    :: PARAMI
+REAL, DIMENSION(D%NIJT), INTENT(IN)    :: PRCRIAUTI
+REAL, DIMENSION(D%NIJT), INTENT(IN)    :: PRCRIAUTC
 !
 !*       0.2  declaration of local variables
 !
@@ -85,7 +85,7 @@ REAL, DIMENSION(D%NIJT) :: ZRCRAUTC,      & !RC value to begin rain formation =X
                                                     !    note that ZRC/CF = ZHLC_HRCLOCAL+ ZHLC_LRCLOCAL
                                                     !                     = PHLC_HRC/HCF+ PHLC_LRC/LCF
                           ZSUMRC, ZSUMRI
-REAL, DIMENSION(D%NIJT) :: ZXACRIAUTI, ZXBCRIAUTI  ! SPP-PORT-REVIEW perturbed cirrus-law coefficients
+REAL, DIMENSION(D%NIJT) :: ZXACRIAUTI, ZXBCRIAUTI
 REAL :: ZCOEFFRCM
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: JIJ
@@ -97,7 +97,6 @@ IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 0, ZHOOK_HANDLE)
 !$mnh_undef(LOOP)
 #endif
 !
-! SPP-PORT-REVIEW derive perturbed cirrus-law coefficients (arome used ICEP%XACRIAUTI/XBCRIAUTI directly)
 IF (PARAMI%LCRIAUTI) THEN
   CALL CRIAUTI(PRCRIAUTI, ICEP%XT0CRIAUTI, ZXACRIAUTI, ZXBCRIAUTI)
 ELSE

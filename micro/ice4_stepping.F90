@@ -90,7 +90,7 @@ REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PCONC3D ! Cloud
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PSSIO   ! Super-sat. with respect to ice in the supersat fraction
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PSSIU   ! Sub-sat. with respect to ice in the subsaturated fraction
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part
-! SPP-PORT-REVIEW threaded microphysics perturbation arrays
+! SPP microphysics perturbation arrays
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PRCRIAUTI
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PRCRIAUTC
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PRDEPSRED
