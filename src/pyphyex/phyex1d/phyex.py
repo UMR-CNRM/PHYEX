@@ -18,6 +18,7 @@ from ctypesForFortran import MISSING
 from . import Phyex1DError
 from . import user_dir
 from . import wasp
+from .grid import FLUX
 from .physics_base import PhysicsBase
 
 
@@ -107,8 +108,12 @@ class PHYEX(PhysicsBase):
                 logging.warning('Unable to compute true minimal thickness, use 20m instead')
                 zdzmin = 20.
             numnml = 20
+            # DIMPHYEX_t components (D is flattened into NIT, NKT, NKL, NVEXT)
+            nkt = self.grid.len - 1 if self.grid.position in FLUX else self.grid.len
+            nijt, nkl, nvext = 1, 1 if self.grid.ascending else -1, 0
             # First call to really initialize
             self._pyphyex.PYINI_PHYEX(
+                nijt, nkt, nkl, nvext,
                 'PHX1D', 33, namel.name, False, numnml, 0, 1, self._dt, zdzmin,
                 nml['PHYEX']['CMICRO'], nml['PHYEX']['CSCONV'],
                 nml['PHYEX']['CTURB'],
@@ -118,6 +123,7 @@ class PHYEX(PhysicsBase):
             numnml = 21
             # Second call to only write the namelist
             self._pyphyex.PYINI_PHYEX(
+                nijt, nkt, nkl, nvext,
                 'PHX1D', 33, namel.name, False, numnml, 0, 1, self._dt, zdzmin,
                 nml['PHYEX']['CMICRO'], nml['PHYEX']['CSCONV'],
                 nml['PHYEX']['CTURB'],
