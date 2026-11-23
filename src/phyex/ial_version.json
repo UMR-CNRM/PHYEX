@@ -1,6 +1,6 @@
 {
 "IALrepo":"https://github.com/SebastienRietteMTO/IAL.git",
-"IALcommit":"051cc2c3318ea56a855cd93a45a5ca6ac916b7e7",
+"IALcommit":"3b01a5ccbd6d3eae96e78e6985c53e96d98a571c",
 "cycle":"50t2",
 "testing": {
             "small_3D":"f408244",
@@ -15,7 +15,7 @@
             "small_3D_alt9":"f408244",
             "small_3D_alt10":"f408244",
             "small_3D_alt11":"f408244",
-            "small_3D_lima":"f408244",
+            "small_3D_lima":"346fde1",
             "small_3D_np2":"f408244",
             "big_3D":"f408244",
             "arp_t31":"f408244"
