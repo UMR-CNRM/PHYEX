@@ -107,6 +107,14 @@ set(GLOB PHYEX_HEADERS
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/phyex/conv>
 )
 
+# Header files to install (flat, without their subdirectory)
+file(GLOB PHYEX_INSTALL_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/aux/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/turb/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/micro/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/conv/*.h
+)
+
 # Include directories
 set(PHYEX_INCLUDEDIRS
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/aux>
@@ -141,8 +149,6 @@ foreach(PRECISION ${precision_list})
       fiat
       parkind_${PRECISION}
     PUBLIC_INCLUDES ${PHYEX_HEADERS}
-    INSTALL_HEADERS ALL
-    HEADER_DESTINATION include/${PRECISION}
     PUBLIC_INCLUDES ${PHYEX_INCLUDEDIRS}
   ) 
   phyex_transformation_target(phyex_${PRECISION})
@@ -164,6 +170,13 @@ foreach(PRECISION ${precision_list})
     target_compile_options(phyex_${PRECISION} PRIVATE
     ${ECBUILD_IFS_Fortran_FLAGS})
   endif()
+
+  # Install headers directly in include/${PRECISION} (no subdirectory),
+  # as expected by the gmkpack compilation system
+  install(
+    FILES ${PHYEX_INSTALL_HEADERS}
+    DESTINATION include/${PRECISION}
+  )
 
   # Install Library 
   install(
