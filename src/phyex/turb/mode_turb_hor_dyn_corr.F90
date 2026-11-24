@@ -17,7 +17,7 @@ CONTAINS
                       PCDUEFF,PTAU11M,PTAU12M,PTAU22M,PTAU33M,       &
                       PUM,PVM,PWM,PUSLOPEM,PVSLOPEM,                 &
                       PTHLM,PRM,PSVM,                                &
-                      PTKEM,PLM,                                     &
+                      PTKEM,PLM,PTURB_SPP,                           &
                       PDP,PTP,                                       &
                       PRUS,PRVS,PRWS                                 )
 !     ################################################################
@@ -72,11 +72,10 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NTURB_S, NCMFS
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
-USE MODD_CTURB,          ONLY: CTURB_XCMFS => XCMFS
 use modd_field,          only: tfieldmetadata, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT
@@ -151,6 +150,7 @@ REAL, DIMENSION(D%NIJT),      INTENT(IN)   ::  PVSLOPEM     ! wind component alo
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S),   INTENT(IN)  ::  PTURB_SPP   ! Turb. SPP
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS, PRWS
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PDP,PTP      ! TKE production terms
@@ -196,14 +196,12 @@ REAL, DIMENSION(D%NIJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF , ZDZZ
                                     ! computation near the ground
 TYPE(TFIELDMETADATA) :: TZFIELD
 !
-REAL :: XCMFS
 !
 ! --------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
 !             ------------------------
 !
-XCMFS = CTURB_XCMFS
 !
 NULLIFY(TZFIELDS_ll)
 !
@@ -240,7 +238,7 @@ IF (.NOT. O2D) THEN
    !$acc kernels present_cr(zflx,gz_w_m_pwm) ! async(2)
    !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
       ZFLX(1:IIJT,1:IKT)= (2./3.) * PTKEM(1:IIJT,1:IKT)                            &
-           - XCMFS * PK(1:IIJT,1:IKT) *( (4./3.) * GX_U_M_PUM(1:IIJT,1:IKT)        &
+           - PTURB_SPP(1:IIJT,1:IKT,NCMFS) * PK(1:IIJT,1:IKT) *( (4./3.) * GX_U_M_PUM(1:IIJT,1:IKT)        &
            -(2./3.) * ( GY_V_M_PVM(1:IIJT,1:IKT)                     &
            +GZ_W_M_PWM(1:IIJT,1:IKT)                ) )
    !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
@@ -251,7 +249,7 @@ ELSE
   !$acc kernels ! async(2)
   !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
   ZFLX(1:IIJT,1:IKT)= (2./3.) * PTKEM(1:IIJT,1:IKT)                                  &
-    - XCMFS * PK(1:IIJT,1:IKT) *( (4./3.) * GX_U_M_PUM(1:IIJT,1:IKT)                 &
+    - PTURB_SPP(1:IIJT,1:IKT,NCMFS) * PK(1:IIJT,1:IKT) *( (4./3.) * GX_U_M_PUM(1:IIJT,1:IKT)                 &
                    -(2./3.) * ( GZ_W_M_PWM(1:IIJT,1:IKT)             ) ) 
   !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
   !$acc end kernels
@@ -340,7 +338,7 @@ ZDW_DZ(1:IIJT)=-ZDU_DX(1:IIJT)-ZDV_DY(1:IIJT)
 !$acc kernels present_cr(zdu_dx,zflx) ! async(3)
 !$mnh_expand_array(JIJ=1:IIJT)
    ZFLX(1:IIJT,IKB)   = (2./3.) * PTKEM(1:IIJT,IKB)                           &
-        - XCMFS * PK(1:IIJT,IKB) * 2. * ZDU_DX(1:IIJT)
+        - PTURB_SPP(1:IIJT,IKB,NCMFS) * PK(1:IIJT,IKB) * 2. * ZDU_DX(1:IIJT)
 !$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 
@@ -473,7 +471,7 @@ IF (.NOT. O2D) THEN
    !$acc kernels present_cr(gz_w_m_pwm,zflx) ! async(3)
    !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
       ZFLX(1:IIJT,1:IKT)= (2./3.) * PTKEM(1:IIJT,1:IKT)                                  &
-           - XCMFS * PK(1:IIJT,1:IKT) *( (4./3.) * GY_V_M_PVM(1:IIJT,1:IKT)                        &
+           - PTURB_SPP(1:IIJT,1:IKT,NCMFS) * PK(1:IIJT,1:IKT) *( (4./3.) * GY_V_M_PVM(1:IIJT,1:IKT)                        &
            -(2./3.) * ( GX_U_M_PUM(1:IIJT,1:IKT)                      &
            +GZ_W_M_PWM(1:IIJT,1:IKT)                ) )
    !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
@@ -485,7 +483,7 @@ ELSE
    !$acc kernels present_cr(gz_w_m_pwm,zflx) ! async(3)
    !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
       ZFLX(1:IIJT,1:IKT)= (2./3.) * PTKEM(1:IIJT,1:IKT)                           &
-           - XCMFS * PK(1:IIJT,1:IKT) *(-(2./3.) * ( GX_U_M_PUM(1:IIJT,1:IKT)        &
+           - PTURB_SPP(1:IIJT,1:IKT,NCMFS) * PK(1:IIJT,1:IKT) *(-(2./3.) * ( GX_U_M_PUM(1:IIJT,1:IKT)        &
                                       +GZ_W_M_PWM(1:IIJT,1:IKT)     ) )  
    !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
    !$acc end kernels
@@ -507,7 +505,7 @@ ZFLX(1:IIJT,IKE+1) = ZFLX(1:IIJT,IKE)
 !$acc kernels present_cr(zdv_dy,zflx) ! async(3)
 !$mnh_expand_array(JIJ=1:IIJT)
    ZFLX(1:IIJT,IKB)   = (2./3.) * PTKEM(1:IIJT,IKB)                           &
-        - XCMFS * PK(1:IIJT,IKB) * 2. * ZDV_DY(1:IIJT)
+        - PTURB_SPP(1:IIJT,IKB,NCMFS) * PK(1:IIJT,IKB) * 2. * ZDV_DY(1:IIJT)
 !$mnh_end_expand_array(JIJ=1:IIJT)
 !$acc end kernels
 
@@ -633,7 +631,7 @@ IF (.NOT. O2D) THEN
    !$acc kernels present_cr(gy_v_m_pvm,zflx) ! async(2)
    !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
       ZFLX(1:IIJT,1:IKT) = (2./3.) * PTKEM(1:IIJT,1:IKT)                                  &
-           - XCMFS * PK(1:IIJT,1:IKT) *( (4./3.) * GZ_W_M_PWM(1:IIJT,1:IKT)                        &
+           - PTURB_SPP(1:IIJT,1:IKT,NCMFS) * PK(1:IIJT,1:IKT) *( (4./3.) * GZ_W_M_PWM(1:IIJT,1:IKT)                        &
            -(2./3.) * ( GX_U_M_PUM(1:IIJT,1:IKT)                      &
            +GY_V_M_PVM(1:IIJT,1:IKT)                ) )
    !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
@@ -644,7 +642,7 @@ ELSE
    !$acc kernels present_cr(gx_u_m_pum,zflx) ! async(2)
    !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
       ZFLX(1:IIJT,1:IKT)= (2./3.) * PTKEM(1:IIJT,1:IKT)                           &
-           - XCMFS * PK(1:IIJT,1:IKT) *( (4./3.) * GZ_W_M_PWM(1:IIJT,1:IKT)          &
+           - PTURB_SPP(1:IIJT,1:IKT,NCMFS) * PK(1:IIJT,1:IKT) *( (4./3.) * GZ_W_M_PWM(1:IIJT,1:IKT)          &
            -(2./3.) * ( GX_U_M_PUM(1:IIJT,1:IKT)           ) ) 
    !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
    !$acc end kernels
@@ -664,7 +662,7 @@ ZFLX(1:IIJT,IKE+1)= ZFLX(1:IIJT,IKE)
 !$acc kernels present_cr(zdw_dz,zflx) ! async(2)
 !$mnh_expand_array(JIJ=1:IIJT)
    ZFLX(1:IIJT,IKB)   = (2./3.) * PTKEM(1:IIJT,IKB)                           &
-        - XCMFS * PK(1:IIJT,IKB) * 2. * ZDW_DZ(1:IIJT)
+        - PTURB_SPP(1:IIJT,IKB,NCMFS) * PK(1:IIJT,IKB) * 2. * ZDW_DZ(1:IIJT)
 !$mnh_end_expand_array(JIJ=1:IIJT)
 
 !$acc end kernels
@@ -722,7 +720,7 @@ END IF
 !PRWS(:,:)=PRWS(:,:) - DZM( PRHODJ*ZFLX/MZF(PDZZ) )
 !$acc kernels ! async(2)
 !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)
-ZDFDDWDZ(1:IIJT,1:IKT)    = - XCMFS * PK(1:IIJT,1:IKT) * (4./3.)
+ZDFDDWDZ(1:IIJT,1:IKT)    = - PTURB_SPP(1:IIJT,1:IKT,NCMFS) * PK(1:IIJT,1:IKT) * (4./3.)
 !$mnh_end_expand_array(JIJ=1:IIJT,JK=1:IKT)
 !$acc end kernels
 !$acc kernels ! async(2)
@@ -745,7 +743,8 @@ GZ_W_M_ZWP = GZ_W_M(ZWP,PDZZ)
 !$acc kernels present_cr(gz_w_m_pwm,zflx) ! async(2)
 !$mnh_expand_array(JIJ=1:IIJT,JK=IKB+1:IKT)
    ZFLX(1:IIJT,IKB+1:IKT)=ZFLX(1:IIJT,IKB+1:IKT) &
-        - XCMFS * PK(1:IIJT,IKB+1:IKT) * (4./3.) * (GZ_W_M_ZWP(1:IIJT,IKB+1:IKT) - GZ_W_M_PWM(1:IIJT,IKB+1:IKT))
+        - PTURB_SPP(1:IIJT,IKB+1:IKT,NCMFS) * PK(1:IIJT,IKB+1:IKT) * (4./3.) &
+          & * (GZ_W_M_ZWP(1:IIJT,IKB+1:IKT) - GZ_W_M_PWM(1:IIJT,IKB+1:IKT))
 !$mnh_end_expand_array(JIJ=1:IIJT,JK=IKB+1:IKT)
 !$acc end kernels
 !

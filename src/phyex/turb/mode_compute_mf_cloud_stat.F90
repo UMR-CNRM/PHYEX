@@ -15,7 +15,7 @@ CONTAINS
                             &PTHLM, PRTM, PPABSM, PRM,&
                             &PDZZ, PTHM, PEXNM, &
                             &PEMF, PTHL_UP, PRT_UP,&
-                            &PSIGMF, PTAUFUNC)
+                            &PSIGMF, PTAUFUNC,PXCTV)
 !$ACDC singlecolumn --dummy
 
 !     #################################################################
@@ -92,6 +92,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PEMF                    ! updra
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTAUFUNC                ! profile convection time scale
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHL_UP, PRT_UP         ! rc,w,Mass Flux,Thetal,rt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PSIGMF                  ! SQRT(variance) for statistical cloud scheme
+REAL, DIMENSION(D%NIJT),         INTENT(IN)   :: PXCTV                  ! SPP parameter for turbulence
 !
 !*                    0.1  Declaration of local variables
 !
@@ -100,6 +101,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZFLXZ,ZFLXZ2,ZFLXZ3
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZT
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZAMOIST, ZATHETA
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZWK,ZWK2
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZXCTV ! (possibly perturbed) XCTV, expanded on the vertical
 INTEGER :: JIJ, JK
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
 INTEGER :: IKT
@@ -112,6 +114,12 @@ IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_STAT',0,ZHOOK_HANDLE)
 IIJE=D%NIJE
 IIJB=D%NIJB
 IKT=D%NKT
+!
+DO JK=1, IKT
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZXCTV(IIJB:IIJE, JK) = PXCTV(IIJB:IIJE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+ENDDO
 !
 !----------------------------------------------------------------------------
 !
@@ -143,7 +151,7 @@ IF (KRRL > 0)  THEN
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ELSE
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-        ZFLXZ(IIJB:IIJE,1:IKT) = -2 * TURBN%XCTV* PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
+        ZFLXZ(IIJB:IIJE,1:IKT) = -2 * ZXCTV(IIJB:IIJE,1:IKT)* PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
                              & (PTHL_UP(IIJB:IIJE,1:IKT)-ZFLXZ(IIJB:IIJE,1:IKT)) * ZWK(IIJB:IIJE,1:IKT)
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ENDIF
@@ -182,7 +190,7 @@ IF (KRRL > 0)  THEN
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ELSE
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-        ZFLXZ2(IIJB:IIJE,1:IKT) = -2 * TURBN%XCTV * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
+        ZFLXZ2(IIJB:IIJE,1:IKT) = -2 * ZXCTV(IIJB:IIJE,1:IKT) * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
                              & (PRT_UP(IIJB:IIJE,1:IKT)-ZFLXZ2(IIJB:IIJE,1:IKT)) * ZWK2(IIJB:IIJE,1:IKT)
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ENDIF
@@ -216,7 +224,7 @@ IF (KRRL > 0)  THEN
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ELSE
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-        ZFLXZ3(IIJB:IIJE,1:IKT) = - TURBN%XCTV * PARAMMF%XTAUSIGMF * &
+        ZFLXZ3(IIJB:IIJE,1:IKT) = - ZXCTV(IIJB:IIJE,1:IKT) * PARAMMF%XTAUSIGMF * &
                       (PEMF(IIJB:IIJE,1:IKT)*(PRT_UP(IIJB:IIJE,1:IKT)-ZFLXZ2(IIJB:IIJE,1:IKT)) * &
                                      ZWK(IIJB:IIJE,1:IKT) + &
                                      PEMF(IIJB:IIJE,1:IKT)*(PTHL_UP(IIJB:IIJE,1:IKT)-ZFLXZ(IIJB:IIJE,1:IKT)) * &

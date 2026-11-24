@@ -13,7 +13,7 @@ CONTAINS
                       PDYY,PDZZ,PDZY,                                &
                       PRHODJ,PTHVREF,                                &
                       PVM,PWM,PTHLM,PRM,PSVM,                        &
-                      PTKEM,PLM,                                     &
+                      PTKEM,PLM,PTURB_SPP,                           &
                       PDP,                                           &
                       PRVS,PRWS                                      )
 !     ################################################################
@@ -62,10 +62,9 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NCMFS, NTURB_S
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
-USE MODD_CTURB,          ONLY: CTURB_XCMFS => XCMFS
 USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT
@@ -111,6 +110,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)    ::  PSVM
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S),     INTENT(IN)  ::  PTURB_SPP    ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRVS, PRWS   ! var. at t+1 -split-
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE production terms
@@ -132,14 +132,12 @@ REAL, DIMENSION(D%NIJT,D%NKT)  :: GY_W_VW_PWM
 REAL :: ZTIME1, ZTIME2
 TYPE(TFIELDMETADATA) :: TZFIELD
 !
-REAL :: XCMFS
 !
 ! ---------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
 !             ------------------------
 !
-XCMFS = CTURB_XCMFS
 !
 IKB = 1+JPVEXT               
 IKE = SIZE(PWM,2)-JPVEXT    
@@ -158,7 +156,7 @@ IF (.NOT. O2D) GY_W_VW_PWM = GY_W_VW(OFLAT,PWM,PDYY,PDZZ,PDZY)
 !
 IF (.NOT. O2D) THEN
   ZFLX(:,:) =                                                      &
-    - XCMFS * MYM(MZM(PK)) * GY_W_VW_PWM
+    - PTURB_SPP(:,:,NCMFS) * MYM(MZM(PK)) * GY_W_VW_PWM
 ELSE
 !$acc kernels
 !$mnh_expand_array(JIJ=1:IIJT,JK=1:IKT)

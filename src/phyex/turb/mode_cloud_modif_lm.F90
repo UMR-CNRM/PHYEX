@@ -14,7 +14,7 @@ CONTAINS
                              & PDZZ, PDXX, PDYY, PZZ, &
                              & PRT, PTKET, PTHLT, PTHLM, PRM, PTHVREF, &
                              & PLOCPEXNM, PSRCT, PCOEF_AMPL_SAT, PAMOIST, PATHETA, PDIRCOSZW, &
-                             & PCEI, PCEI_MIN, PCEI_MAX, PLM)
+                             & PCEI, PCEI_MIN, PCEI_MAX, PLM, PTURB_SPP)
     !     #########################
     !!
     !!*****CLOUD_MODIF_LM routine to:
@@ -66,7 +66,7 @@ CONTAINS
     USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
     USE MODD_IO, ONLY: TFILEDATA
     USE MODD_FIELD, ONLY: TFIELDMETADATA, TYPEREAL
-    USE MODD_TURB_n, ONLY: TURB_t
+    USE MODD_TURB_n, ONLY: TURB_t, NTURB_S
     USE MODD_CTURB, ONLY: CSTURB_t
 
     USE MODE_DELT, ONLY: DELT
@@ -107,6 +107,7 @@ CONTAINS
     REAL, INTENT(IN) :: PRM(D%NIJT, D%NKT, KRR)
     REAL, INTENT(IN) :: PLOCPEXNM(D%NIJT, D%NKT)
     REAL, INTENT(IN) :: PRT(D%NIJT, D%NKT, KRR)
+    REAL, INTENT(IN) :: PTURB_SPP(D%NIJT,D%NKT,NTURB_S)
     REAL, INTENT(INOUT) :: PLM(D%NIJT, D%NKT)
     REAL, INTENT(INOUT) :: PAMOIST(D%NIJT, D%NKT)
     REAL, INTENT(INOUT) :: PATHETA(D%NIJT, D%NKT)
@@ -189,7 +190,7 @@ CONTAINS
         ZSHEAR(IIJB:IIJE, 1:IKT) = 0.
 !$mnh_end_expand_array ( JIJ=IIJB:IIJE,JK=1:IKT )
 !$acc end kernels
-        CALL BL89(D, CST, CSTURB, TURBN, PZZ, PDZZ, PTHVREF, PTHLM, KRR, PRM, PTKET, ZSHEAR, PLM_CLOUD, OOCEAN)
+        CALL BL89(D, CST, CSTURB, TURBN, PZZ, PDZZ, PTHVREF, PTHLM, KRR, PRM, PTKET, ZSHEAR, PLM_CLOUD, OOCEAN,PTURB_SPP)
         !
         !*         3.2 Delta mixing length
         !           -------------------

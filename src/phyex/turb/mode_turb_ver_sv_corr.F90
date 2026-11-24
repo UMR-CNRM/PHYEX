@@ -11,7 +11,7 @@ SUBROUTINE TURB_VER_SV_CORR(D,CST,CSTURB,TURBN,TLES,KRR,KRRL,KRRI,OOCEAN, &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PPHI3,PPSI3,  &
                       PWM,PSVM,                                     &
-                      PTKEM,PLM,PLEPS,PPSI_SV                       )
+                      PTKEM,PLM,PLEPS,PPSI_SV,PTURB_SPP             )
 !     ###############################################################
 !
 !
@@ -57,7 +57,7 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NTURB_S, NCSHF, NCHF
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
 !
@@ -106,7 +106,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length   
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative length   
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.for scalars
-                            ! cumulated sources for the prognostic variables
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S), INTENT(IN)  ::  PTURB_SPP      ! SPP for turbulence
+! cumulated sources for the prognostic variables
 !
 !
 !
@@ -115,8 +116,8 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.fo
 !
 !
 REAL, DIMENSION(D%NIJT,D%NKT)  :: ZA, ZFLXZ, ZWKLES
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZCSV !constant (possibly perturbed) for the scalar flux
 !
-REAL :: ZCSV          !constant for the scalar flux
 !
 INTEGER             :: JSV          ! loop counters
 INTEGER             :: IIJB, IIJE, IKT
@@ -138,10 +139,10 @@ IKT=D%NKT
 CALL SECOND_MNH(ZTIME1)
 !
 IF(OBLOWSNOW) THEN
-! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables          
-   ZCSV= TURBN%XCHF/PRSNOW
+! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
+  ZCSV(:,:)=PTURB_SPP(:,:,NCHF)/PRSNOW
 ELSE
-   ZCSV= TURBN%XCHF
+  ZCSV(:,:)=PTURB_SPP(:,:,NCHF)
 ENDIF
 !
 DO JSV=1,KSV
@@ -153,7 +154,7 @@ DO JSV=1,KSV
   IF (TLES%LLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
     ZFLXZ(:,:) =  PPSI_SV(:,:,JSV)*GZ_M_W(PSVM(:,:,JSV),PDZZ)**2
-    ZFLXZ(:,:) = ZCSV / ZCSVD * PLM * PLEPS * MZF(ZFLXZ(:,:) )
+    ZFLXZ(:,:) = ZCSV(:,:) / ZCSVD * PLM * PLEPS * MZF(ZFLXZ(:,:) )
     ZWKLES(:,:) = -2.*ZCSVD*SQRT(PTKEM)*ZFLXZ/PLEPS
     CALL LES_MEAN_SUBGRID_PHY(D,TLES, ZWKLES, TLES%X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV) )
     ZWKLES(:,:) = MZF(PWM)*ZFLXZ
@@ -165,7 +166,7 @@ DO JSV=1,KSV
   IF (TLES%LLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
     CALL ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC,ZA)
-    ZFLXZ(:,:)= ( TURBN%XCSHF * PPHI3 + ZCSV * PPSI_SV(:,:,JSV) )              &
+    ZFLXZ(:,:)= ( PTURB_SPP(:,:,NCSHF) * PPHI3 + ZCSV(:,:) * PPSI_SV(:,:,JSV) )              &
                   *  GZ_M_W(PTHLM,PDZZ)                          &
                   *  GZ_M_W(PSVM(:,:,JSV),PDZZ)
     ZFLXZ(:,:)= PLM * PLEPS / (2.*ZCTSVD) * MZF(ZFLXZ)
@@ -176,7 +177,7 @@ DO JSV=1,KSV
     !
     IF (KRR>=1) THEN
       CALL EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN,ZA)
-      ZFLXZ(:,:)= ( ZCSV * PPSI3 + ZCSV * PPSI_SV(:,:,JSV) )             &
+      ZFLXZ(:,:)= ( ZCSV(:,:) * PPSI3 + ZCSV(:,:) * PPSI_SV(:,:,JSV) )             &
                     *  GZ_M_W(PRM(:,:,1),PDZZ)                 &
                     *  GZ_M_W(PSVM(:,:,JSV),PDZZ)
       ZFLXZ(:,:)= PLM * PLEPS / (2.*ZCQSVD) * MZF(ZFLXZ)

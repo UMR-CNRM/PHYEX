@@ -19,8 +19,8 @@ SUBROUTINE TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,TLES,KSV,O2D,OFLAT, &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
                       PTHLM,PRM,PSVM,PUM,PVM,PWM,PUSLOPEM,PVSLOPEM, &
                       PTKEM,PLM,MFMOIST,PWU,PWV,                    &
-                      PRUS,PRVS,PRWS,                               &
-                      PDP,PTP,PSSUFL_C,PSSVFL_C,PSSUFL,PSSVFL       )
+                      PRUS,PRVS,PRWS,PDP,PTP,                       &
+                      PTURB_SPP,PSSUFL_C,PSSVFL_C,PSSUFL,PSSVFL     )
 !     ###############################################################
 !
 !
@@ -218,7 +218,7 @@ USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_LES,            ONLY: TLES_t
 USE MODD_PARAMETERS,     ONLY: XUNDEF
-USE MODD_TURB_n,         ONLY: TURB_t
+USE MODD_TURB_n,         ONLY: TURB_t, NCMFS, NTURB_S
 !
 USE MODE_IO_FIELD_WRITE_PHY, only: IO_FIELD_WRITE_PHY
 USE MODE_TRIDIAG_WIND,   ONLY: TRIDIAG_WIND
@@ -296,6 +296,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)   ::  PRUS, PRVS, PRWS
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PDP          ! Dynamic TKE production term
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTP          ! Thermal TKE production term
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S), INTENT(IN)  ::  PTURB_SPP    ! Thermal TKE production term
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSUFL_C  ! Time evol Flux of U at sea surface (LOCEAN)
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSVFL_C  !
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSUFL   
@@ -335,7 +336,8 @@ REAL, DIMENSION(D%NIJT)   :: ZCOEFFLXU, &
                                     ! evaluation and copy of PUSLOPEM and
                                     ! PVSLOPEM in local 3D arrays
 !
-REAL :: ZTIME1, ZTIME2, ZCMFS
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZCMFS ! (possibly perturbed) constant for the momentum fluxes
+REAL :: ZTIME1, ZTIME2
 TYPE(TFIELDMETADATA) :: TZFIELD
 LOGICAL :: GOCEAN !Intermediate variable used to work around a Cray compiler bug (CCE 13.0.0)
 !----------------------------------------------------------------------------
@@ -364,8 +366,11 @@ PDP(:,:)=XUNDEF
 !
 ZSOURCE(:,:) = 0.
 ZFLXZ(:,:) = 0.
-ZCMFS = CSTURB%XCMFS
-IF (TURBN%LHARAT) ZCMFS=1.
+IF (TURBN%LHARAT) THEN
+  ZCMFS(:,:)=1.
+ELSE
+  ZCMFS(:,:) = PTURB_SPP(:,:,NCMFS)
+ENDIF
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZDIRSINZW(IIJB:IIJE) = SQRT(1.-PDIRCOSZW(IIJB:IIJE)**2)
@@ -408,7 +413,7 @@ ZFLUXSFCV(IIJB:IIJE)=PSFVM(IIJB:IIJE)
 !
 ! Preparation of the arguments for TRIDIAG_WIND
 !
-ZA(IIJB:IIJE,:)    = -PTSTEP * ZCMFS * MXM( ZKEFF(IIJB:IIJE,:) ) * &
+ZA(IIJB:IIJE,:)    = -PTSTEP * ZCMFS(IIJB:IIJE,:) * MXM( ZKEFF(IIJB:IIJE,:) ) * &
                MXM(MZM( PRHODJ(IIJB:IIJE,:) )) / MXM (PDZZ(IIJB:IIJE,:))**2
 !
 !
@@ -494,7 +499,7 @@ PRUS(IIJB:IIJE,:)=PRUS(IIJB:IIJE,:)+MXM(PRHODJ(IIJB:IIJE,:))*(ZRES(IIJB:IIJE,:)-
 !
 ! vertical flux of the U wind component
 !
-ZFLXZ(IIJB:IIJE,:)     = -ZCMFS * MXM(ZKEFF(IIJB:IIJE,:)) * &
+ZFLXZ(IIJB:IIJE,:)     = -ZCMFS(IIJB:IIJE,:) * MXM(ZKEFF(IIJB:IIJE,:)) * &
                   DZM(TURBN%XIMPL*ZRES(IIJB:IIJE,:) + PEXPL*PUM(IIJB:IIJE,:)) / MXM(PDZZ(IIJB:IIJE,:))
 !
 IF (GOCEAN) THEN
@@ -555,7 +560,7 @@ IF (TLES%LLES_CALL) THEN
   CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_SUBGRID_WU )
   ZWKLES = MZF(MXF(GZ_U_UW(PUM,PDZZ) *ZFLXZ))
   CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_RES_ddxa_U_SBG_UaU )
-  ZWKLES = ZCMFS * ZKEFF
+  ZWKLES(:,:) = ZCMFS(:,:) * ZKEFF(:,:)
   CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_SUBGRID_Km )
   CALL SECOND_MNH(ZTIME2)
   TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
@@ -655,7 +660,7 @@ END IF
 !
 ! Preparation of the arguments for TRIDIAG_WIND
 !!
-ZA(IIJB:IIJE,:) = -PTSTEP * ZCMFS * MYM(ZKEFF(IIJB:IIJE,:)) * MYM(MZM(PRHODJ(IIJB:IIJE,:))) / MYM(PDZZ(IIJB:IIJE,:))**2
+ZA(IIJB:IIJE,:) = -PTSTEP * ZCMFS(IIJB:IIJE,:) * MYM(ZKEFF(IIJB:IIJE,:)) * MYM(MZM(PRHODJ(IIJB:IIJE,:))) / MYM(PDZZ(IIJB:IIJE,:))**2
 !
 ! Compute the source of V wind component
 ! compute the coefficient between the vertical flux and the 2 components of the
@@ -743,7 +748,7 @@ PRVS(IIJB:IIJE,:)=PRVS(IIJB:IIJE,:)+MYM(PRHODJ(IIJB:IIJE,:))*(ZRES(IIJB:IIJE,:)-
 !
 !  vertical flux of the V wind component
 !
-ZFLXZ(IIJB:IIJE,:)   = -ZCMFS * MYM(ZKEFF(IIJB:IIJE,:)) * &
+ZFLXZ(IIJB:IIJE,:)   = -ZCMFS(IIJB:IIJE,:) * MYM(ZKEFF(IIJB:IIJE,:)) * &
               DZM( TURBN%XIMPL*ZRES(IIJB:IIJE,:) + PEXPL*PVM(IIJB:IIJE,:) ) / MYM(PDZZ(IIJB:IIJE,:))
 !
 IF (GOCEAN) THEN
@@ -905,7 +910,7 @@ END IF
 !
 IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. TURBN%CTURBDIM == '1DIM') THEN
   ZFLXZ(IIJB:IIJE,:)= (2./3.) * PTKEM(IIJB:IIJE,:)                     &
-     -ZCMFS*PLM(IIJB:IIJE,:)*SQRT(PTKEM(IIJB:IIJE,:))*GZ_W_M(PWM(IIJB:IIJE,:),PDZZ(IIJB:IIJE,:))
+     -ZCMFS(IIJB:IIJE,:)*PLM(IIJB:IIJE,:)*SQRT(PTKEM(IIJB:IIJE,:))*GZ_W_M(PWM(IIJB:IIJE,:),PDZZ(IIJB:IIJE,:))
   ! to be tested &
   !   +XCMFB*(4./3.)*PLM(:,:,:)/SQRT(PTKEM(:,:,:))*PTP(:,:,:)
   ! stores the W variance

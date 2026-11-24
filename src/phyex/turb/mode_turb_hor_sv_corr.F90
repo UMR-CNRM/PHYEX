@@ -12,7 +12,7 @@ CONTAINS
                       PLM,PLEPS,PTKEM,PTHVREF,                       &
                       PTHLM,PRM,                                     &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,               &
-                      PWM,PSVM                                       )
+                      PWM,PSVM,PTURB_SPP                             )
 !     ################################################################
 !
 !
@@ -51,7 +51,7 @@ CONTAINS
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY : CSTURB_t
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NCSHF, NCHF, NTURB_S
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
 !
@@ -99,6 +99,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PSRCM        ! normalized
                   ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PWM          ! w at t-1
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S), INTENT(IN) ::  PTURB_SPP    ! SPP for turbulence
 !
 !
 !
@@ -116,7 +117,7 @@ REAL :: ZCSVD  = 1.2  ! constant for scalar variance dissipation
 REAL :: ZCTSVD = 2.4  ! constant for temperature - scalar covariance dissipation
 REAL :: ZCQSVD = 2.4  ! constant for humidity - scalar covariance dissipation
 !
-REAL :: ZCSV          !constant for the scalar flux 
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZCSV !constant (possibly perturbed) for the scalar flux
 ! ---------------------------------------------------------------------------
 !
 IKU=SIZE(PTKEM,2)
@@ -126,9 +127,9 @@ CALL SECOND_MNH(ZTIME1)
 !
 IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables        
-   ZCSV= TURBN%XCHF/PRSNOW 
+  ZCSV(:,:)=PTURB_SPP(:,:,NCHF)/PRSNOW
 ELSE
-   ZCSV= TURBN%XCHF
+  ZCSV(:,:)=PTURB_SPP(:,:,NCHF)
 ENDIF
 !
 DO JSV=1,KSV
@@ -139,11 +140,11 @@ DO JSV=1,KSV
   !
   IF (TLES%LLES_CALL) THEN
     IF (.NOT. O2D) THEN
-      ZFLX(:,:) =  ZCSV / ZCSVD * PLM(:,:) * PLEPS(:,:) *   &
+      ZFLX(:,:) =  ZCSV(:,:) / ZCSVD * PLM(:,:) * PLEPS(:,:) *   &
          (  GX_M_M(OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX)**2             &
           + GY_M_M(OFLAT,PSVM(:,:,JSV),PDYY,PDZZ,PDZY)**2 )
     ELSE
-      ZFLX(:,:) =  ZCSV / ZCSVD * PLM(:,:) * PLEPS(:,:) *   &
+      ZFLX(:,:) =  ZCSV(:,:) / ZCSVD * PLM(:,:) * PLEPS(:,:) *   &
             GX_M_M(OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX)**2
     END IF
     ZWKLES = -2.*ZCSVD*SQRT(PTKEM)*ZFLX/PLEPS
@@ -161,11 +162,11 @@ CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
       ZFLX(:,:)=  PLM(:,:) * PLEPS(:,:)                                          &
           *  (  GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX)  &
               + GY_M_M(OFLAT,PTHLM,PDYY,PDZZ,PDZY) * GY_M_M(OFLAT,PSVM(:,:,JSV),PDYY,PDZZ,PDZY)  &
-             ) * (TURBN%XCSHF+ZCSV) / (2.*ZCTSVD)
+             ) * (PTURB_SPP(:,:,NCSHF)+ZCSV(:,:)) / (2.*ZCTSVD)
     ELSE
       ZFLX(:,:)=  PLM(:,:) * PLEPS(:,:)                                          &
               * GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX)  &
-              * (TURBN%XCSHF+ZCSV) / (2.*ZCTSVD)
+              * (PTURB_SPP(:,:,NCSHF)+ZCSV(:,:)) / (2.*ZCTSVD)
     END IF
     ZWKLES = ZA*ZFLX
     CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
@@ -178,11 +179,11 @@ CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
         ZFLX(:,:)=  PLM(:,:) * PLEPS(:,:)                                                 &
             *  (  GX_M_M(OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX)  &
                 + GY_M_M(OFLAT,PRM(:,:,1),PDYY,PDZZ,PDZY) * GY_M_M(OFLAT,PSVM(:,:,JSV),PDYY,PDZZ,PDZY)  &
-               ) * (TURBN%XCHF+ZCSV) / (2.*ZCQSVD)
+               ) * (PTURB_SPP(:,:,NCHF)+ZCSV(:,:)) / (2.*ZCQSVD)
       ELSE
         ZFLX(:,:)=  PLM(:,:) * PLEPS(:,:)                                                 &
                 * GX_M_M(OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX)  &
-                * (TURBN%XCHF+ZCSV) / (2.*ZCQSVD)
+                * (PTURB_SPP(:,:,NCHF)+ZCSV(:,:)) / (2.*ZCQSVD)
       END IF
       ZWKLES = ZA*ZFLX
       CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, TLES%X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)

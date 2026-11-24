@@ -50,6 +50,8 @@ REAL, ALLOCATABLE, DIMENSION(:,:)     :: PINPRH, PINPRH_OUT
 
 !spp stuff
 REAL, ALLOCATABLE, dimension(:,:)   :: PICENU, PKGN_ACON, PKGN_SBGR
+!SPP perturbed values (set to the unperturbed values)
+REAL, ALLOCATABLE, DIMENSION(:,:)   :: ZALPHAC2, ZRZNUC, ZRXCS, ZRCRIAUTI, ZRCRIAUTC, ZRDEPSRED, ZRDEPGRED
 !ocnd2 stuff
 REAL, ALLOCATABLE, DIMENSION(:,:,:) :: PICLDFR ! Ice cloud fraction
 REAL, ALLOCATABLE, DIMENSION(:,:,:) :: PIFR    ! Ratio cloud ice moist part to dry part
@@ -189,6 +191,17 @@ ENDIF
 PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
 CALL INIT_PHYEX(KRR, PHYEX, MISC, OWARM, OSEDIC, OCND2, C_SEDIM, CSUBG_AUCV_RC, PTSTEP)
+!No SPP perturbation
+ALLOCATE(ZALPHAC2(NPROMA, NGPBLKS), ZRZNUC(NPROMA, NGPBLKS), ZRXCS(NPROMA, NGPBLKS), &
+        &ZRCRIAUTI(NPROMA, NGPBLKS), ZRCRIAUTC(NPROMA, NGPBLKS), &
+        &ZRDEPSRED(NPROMA, NGPBLKS), ZRDEPGRED(NPROMA, NGPBLKS))
+ZALPHAC2(:,:) = PHYEX%RAIN_ICE_DESCRN%XALPHAC2
+ZRZNUC(:,:) = PHYEX%RAIN_ICE_DESCRN%XNUC
+ZRXCS(:,:) = PHYEX%RAIN_ICE_DESCRN%XCS
+ZRCRIAUTI(:,:) = PHYEX%RAIN_ICE_PARAMN%XCRIAUTI
+ZRCRIAUTC(:,:) = PHYEX%RAIN_ICE_PARAMN%XCRIAUTC
+ZRDEPSRED(:,:) = PHYEX%RAIN_ICE_PARAMN%XRDEPSRED
+ZRDEPGRED(:,:) = PHYEX%RAIN_ICE_PARAMN%XRDEPGRED
 TLES%LLES=.FALSE.
 
 D0%NIT  = NPROMA
@@ -249,7 +262,8 @@ DO ITIME = 1, NTIME
 !$acc      & copyin  (D0, TLES, LKOGAN, LMODICEDEP, KKA, KKU, KKL, KSPLITR, PTSTEP, KRR, ISIZEMICRO, &
 !$acc      &          LLMICRO, PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABSM, PCLDFR, PICLDFR, PSSIO, PSSIU, &
 !$acc      &          OAERONRT, OAEIFN, &
-!$acc      &          PTHT, PRT, PSIGS, PSEA, PTOWN, PICENU, PKGN_ACON, PKGN_SBGR, ZTWOTSTEP) &
+!$acc      &          PTHT, PRT, PSIGS, PSEA, PTOWN, PICENU, PKGN_ACON, PKGN_SBGR, ZTWOTSTEP, &
+!$acc      &          ZALPHAC2, ZRZNUC, ZRXCS, ZRCRIAUTI, ZRCRIAUTC, ZRDEPSRED, ZRDEPGRED) &
 !$acc      & copy    (PCIT, PIFR, PTHS, PRS) &
 !$acc      & copyout (ZINPRC, PINPRR, PEVAP, PINPRS, PINPRG, PFPR) &
 !$acc      & create  (PSTACK4, PSTACK8) 
@@ -338,7 +352,11 @@ DO ITIME = 1, NTIME
                         TBUDGETS=MISC%YLBUDGET, KBUDGETS=MISC%NBUDGET,                        &
                         PICENU=PICENU(:,IBL),                                                &
                         PKGN_ACON=PKGN_ACON(:,IBL), PKGN_SBGR=PKGN_SBGR(:,IBL),                &
-                        PFPR=PFPR(:,:,:,IBL) &
+                        PFPR=PFPR(:,:,:,IBL),                                                &
+                        LALPHAC2=.FALSE., LRZNUC=.FALSE.,                                    &
+                        PALPHAC2=ZALPHAC2(:,IBL), PRZNUC=ZRZNUC(:,IBL), PRXCS=ZRXCS(:,IBL),    &
+                        PRCRIAUTI=ZRCRIAUTI(:,IBL), PRCRIAUTC=ZRCRIAUTC(:,IBL),                &
+                        PRDEPSRED=ZRDEPSRED(:,IBL), PRDEPGRED=ZRDEPGRED(:,IBL) &
 #ifdef USE_STACK
                         , YDSTACK=YLSTACK &
 #endif

@@ -16,7 +16,7 @@ CONTAINS
                       PRHODJ,                                        &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU22M,PTAU33M,       &
                       PUM,PVM,PUSLOPEM,PVSLOPEM,                     &
-                      PDP,                                           &
+                      PTURB_SPP,PDP,                                 &
                       PRUS,PRVS                                      )
 !     ################################################################
 !
@@ -58,10 +58,9 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NCMFS, NTURB_S
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
-USE MODD_CTURB,          ONLY: CTURB_XCMFS => XCMFS
 USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT
@@ -124,6 +123,7 @@ REAL, DIMENSION(D%NIJT),      INTENT(IN)   ::  PUSLOPEM     ! wind component alo
 REAL, DIMENSION(D%NIJT),      INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
                                      ! direction normal to the maximum slope one
 !
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S),          INTENT(IN)  ::  PTURB_SPP    ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS   ! var. at t+1 -split-
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE production terms
@@ -146,14 +146,12 @@ REAL, DIMENSION(D%NIJT,D%NKT)  :: GX_V_UV_PVM
 REAL :: ZTIME1, ZTIME2
 TYPE(TFIELDMETADATA) :: TZFIELD
 !
-REAL :: XCMFS
 !
 ! ---------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
 !             ------------------------
 !
-XCMFS = CTURB_XCMFS
 !
 IKB = 1+JPVEXT               
 IKE = SIZE(PUM,2)-JPVEXT
@@ -175,10 +173,10 @@ IF (.NOT. O2D) GY_U_UV_PUM = GY_U_UV(OFLAT,PUM,PDYY,PDZZ,PDZY)
 !
 !
 IF (.NOT. O2D) THEN
-  ZFLX(:,:)= - XCMFS * MYM(MXM(PK)) *                           &
+  ZFLX(:,:)= - PTURB_SPP(:,:,NCMFS) * MYM(MXM(PK)) *                           &
           (GY_U_UV_PUM + GX_V_UV_PVM)
 ELSE
-  ZFLX(:,:)= - XCMFS * MYM(MXM(PK)) *                           &
+  ZFLX(:,:)= - PTURB_SPP(:,:,NCMFS) * MYM(MXM(PK)) *                           &
           (GX_V_UV_PVM)
 END IF
 !
@@ -191,7 +189,7 @@ ZFLX(1:IIJT,IKE+1)= ZFLX(1:IIJT,IKE)
 !
 ! Compute the correlation at the first physical level with the following 
 ! hypothesis du/dz vary in 1/z and w=0 at the ground
-ZFLX(:,IKB)   = - XCMFS * MYM2D(MXM2D(PK(:,IKB))) *  (     &
+ZFLX(:,IKB)   = - PTURB_SPP(:,IKB,NCMFS) * MYM2D(MXM2D(PK(:,IKB))) *  (     &
   ( DYM2D( PUM(:,IKB) )                                        &
    -MYM2D( (PUM(:,IKB+1)-PUM(:,IKB))                   &
         *(1./MXM2D(PDZZ(:,IKB+1))+1./MXM2D(PDZZ(:,IKB))))&

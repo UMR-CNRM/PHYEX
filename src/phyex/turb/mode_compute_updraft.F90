@@ -23,7 +23,7 @@ CONTAINS
                                  PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,PTKE_UP, &
                                  PEMF,PDETR,PENTR,                &
                                  PBUO_INTEG,KKLCL,KKETL,KKCTL,    &
-                                 PDEPTH, PDX, PDY     )
+                                 PDEPTH, PDX, PDY, PXCMF     )
 
 !$ACDC singlecolumn
 
@@ -146,6 +146,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PBUO_INTEG       ! Integrated 
 INTEGER, DIMENSION(D%NIJT),  INTENT(INOUT) :: KKLCL,KKETL,KKCTL! LCL, ETL, CTL
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)   :: PDEPTH           ! Deepness of cloud
 REAL,                   INTENT(IN)    :: PDX, PDY
+REAL, DIMENSION(D%NIJT), INTENT(IN)   ::  PXCMF           ! SPP parameter
 !                       1.2  Declaration of local variables
 !
 !
@@ -448,7 +449,7 @@ IF (OENTR_DETR) THEN
   ENDIF
   !$mnh_expand_where(JIJ=IIJB:IIJE)
   WHERE (ZWTHVSURF(IIJB:IIJE)>0.)
-    PEMF(IIJB:IIJE,IKB) = PARAMMF%XCMF * ZSURF(IIJB:IIJE) * ZRHO_F(IIJB:IIJE,IKB) *  &
+    PEMF(IIJB:IIJE,IKB) = PXCMF(IIJB:IIJE) * ZSURF(IIJB:IIJE) * ZRHO_F(IIJB:IIJE,IKB) *  &
             ((ZG_O_THVREF(IIJB:IIJE,IKB))*ZWTHVSURF(IIJB:IIJE)*ZLUPSURF(IIJB:IIJE))**(1./3.)
     PFRAC_UP(IIJB:IIJE,IKB)=MIN(PEMF(IIJB:IIJE,IKB)/(SQRT(ZW_UP2(IIJB:IIJE,IKB))*ZRHO_F(IIJB:IIJE,IKB)), &
                                    &PARAMMF%XFRAC_UP_MAX)

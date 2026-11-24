@@ -15,7 +15,7 @@ CONTAINS
                       PTHVREF,                                       &
                       PWM,PTHLM,PRM,                                 &
                       PTKEM,PLM,PLEPS,                               &
-                      PLOCPEXNM,PATHETA,PAMOIST,PSRCM,               &
+                      PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PTURB_SPP,     &
                       PSIGS                                          )
 !     ################################################################
 !
@@ -67,7 +67,7 @@ USE MODD_NEB_n,          ONLY: NEB_t
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_LES, ONLY: TLES_t
 USE MODD_PARAMETERS, ONLY: JPVEXT
-USE MODD_TURB_n,         ONLY: TURB_t
+USE MODD_TURB_n,         ONLY: TURB_t, NCTV, NCHT1, NCHT2, NTURB_S
 !
 USE MODE_IO_FIELD_WRITE_PHY, ONLY: IO_FIELD_WRITE_PHY
 !
@@ -114,6 +114,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)    ::  PRM          ! mixing ratio
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! Turb. Kin. Energy
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S),   INTENT(IN)  ::  PTURB_SPP    ! SPP for turbulence
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLEPS        ! dissipative length
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between 
@@ -177,17 +178,17 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
 !
   ! Computes the horizontal variance <THl THl>
   IF (.NOT. O2D) THEN
-    ZFLX(:,:) = TURBN%XCTV * PLM(:,:) * PLEPS(:,:) *                           &
+    ZFLX(:,:) = PTURB_SPP(:,:,NCTV) * PLM(:,:) * PLEPS(:,:) *                           &
        ( GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX)**2 + GY_M_M(OFLAT,PTHLM,PDYY,PDZZ,PDZY)**2 )
   ELSE
-    ZFLX(:,:) = TURBN%XCTV * PLM(:,:) * PLEPS(:,:) *                           &
+    ZFLX(:,:) = PTURB_SPP(:,:,NCTV) * PLM(:,:) * PLEPS(:,:) *                           &
          GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX)**2
   END IF
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
 !
-  ZFLX(:,IKB) = TURBN%XCTV * PLM(:,IKB)                  &
+  ZFLX(:,IKB) = PTURB_SPP(:,IKB,NCTV) * PLM(:,IKB)                  &
   * PLEPS(:,IKB) *  (                                    &
   ( MXF2D(DXM2D(PTHLM(:,IKB)) * PINV_PDXX(:,IKB))      &
    - ( ZCOEFF(:,IKB+2)*PTHLM(:,IKB+2)          &
@@ -261,18 +262,18 @@ IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPEN
             PLM(:,:) * PLEPS(:,:) *                                          &
             (GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX)  &
            + GY_M_M(OFLAT,PTHLM,PDYY,PDZZ,PDZY) * GY_M_M(OFLAT,PRM(:,:,1),PDYY,PDZZ,PDZY)  &
-            ) * (TURBN%XCHT1+TURBN%XCHT2)
+            ) * (PTURB_SPP(:,:,NCHT1)+PTURB_SPP(:,:,NCHT2))
     ELSE
       ZFLX(:,:)=                                                               &
             PLM(:,:) * PLEPS(:,:) *                                          &
             (GX_M_M(OFLAT,PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX)  &
-            ) * (TURBN%XCHT1+TURBN%XCHT2)
+            ) * (PTURB_SPP(:,:,NCHT1)+PTURB_SPP(:,:,NCHT2))
 
     END IF
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-    ZFLX(:,IKB) = (TURBN%XCHT1+TURBN%XCHT2) * PLM(:,IKB)         &
+    ZFLX(:,IKB) = (PTURB_SPP(:,IKB,NCHT1)+PTURB_SPP(:,IKB,NCHT2)) * PLM(:,IKB)         &
     * PLEPS(:,IKB)  *  (                                   &
     ( MXF2D(DXM2D(PTHLM(:,IKB)) * PINV_PDXX(:,IKB))      &
      - ( ZCOEFF(:,IKB+2)*PTHLM(:,IKB+2)          &

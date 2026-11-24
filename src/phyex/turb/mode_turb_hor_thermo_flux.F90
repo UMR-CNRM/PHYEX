@@ -16,7 +16,7 @@ CONTAINS
                       PSFTHM,PSFRM,                                  &
                       PWM,PTHLM,PRM,                                 &
                       PATHETA,PAMOIST,PSRCM,PFRAC_ICE,               &
-                      PRTHLS,PRRS                                    )
+                      PTURB_SPP,PRTHLS,PRRS                          )
 !     ################################################################
 !
 !
@@ -61,7 +61,7 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NCSHF, NCHF, NTURB_S
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
@@ -110,6 +110,7 @@ REAL, DIMENSION(D%NIJT),     INTENT(IN)    ::  PSFTHM,PSFRM
 ! Variables at t-1
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PWM 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTHLM 
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S),   INTENT(IN)  ::  PTURB_SPP    ! SPP for turbulence
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)    ::  PRM          ! mixing ratios at t-1,
                               !  where PRM(:,:,1) = conservative mixing ratio
 !
@@ -170,14 +171,14 @@ ZCOEFF(:,IKB)= - (PDZZ(:,IKB+2)+2.*PDZZ(:,IKB+1)) /      &
 #define UTHETA UTHETA_ON
 !!!!!!! UTHETA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef UTHETA
-ZFLX(:,:)     = -TURBN%XCSHF * MXM( PK ) * GX_M_U(OFLAT,PTHLM,PDXX,PDZZ,PDZX)
+ZFLX(:,:)     = -PTURB_SPP(:,:,NCSHF) * MXM( PK ) * GX_M_U(OFLAT,PTHLM,PDXX,PDZZ,PDZX)
 !$acc kernels present_cr(ZFLX)
 ZFLX(:,IKE+1) = ZFLX(:,IKE) 
 !$acc end kernels
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-ZFLX(:,IKB) = -TURBN%XCSHF * MXM2D( PK(:,IKB) ) *          &
+ZFLX(:,IKB) = -PTURB_SPP(:,IKB,NCSHF) * MXM2D( PK(:,IKB) ) *          &
   ( DXM2D(PTHLM(:,IKB)) * PINV_PDXX(:,IKB)           &
    -MXM2D( ZCOEFF(:,IKB+2)*PTHLM(:,IKB+2)        &
          +ZCOEFF(:,IKB+1)*PTHLM(:,IKB+1)       &
@@ -283,14 +284,14 @@ END IF
 #ifdef URNP
 IF (KRR/=0) THEN
   !
-  ZFLX(:,:)     = -TURBN%XCHF * MXM( PK ) * GX_M_U(OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX)
+  ZFLX(:,:)     = -PTURB_SPP(:,:,NCHF) * MXM( PK ) * GX_M_U(OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX)
 !$acc kernels present_cr(ZFLX)
   ZFLX(:,IKE+1) = ZFLX(:,IKE)
 !$acc end kernels
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-  ZFLX(:,IKB) = -TURBN%XCHF * MXM2D( PK(:,IKB) ) *           &
+  ZFLX(:,IKB) = -PTURB_SPP(:,IKB,NCHF) * MXM2D( PK(:,IKB) ) *           &
     ( DXM2D(PRM(:,IKB,1)) * PINV_PDXX(:,IKB)           &
      -MXM2D( ZCOEFF(:,IKB+2)*PRM(:,IKB+2,1)        &
            +ZCOEFF(:,IKB+1)*PRM(:,IKB+1,1)       &
@@ -435,7 +436,7 @@ END IF
 !!!!!! VTHETA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef VTHETA
 IF (.NOT. O2D) THEN
-  ZFLX(:,:)     = -TURBN%XCSHF * MYM( PK ) * GY_M_V(OFLAT,PTHLM,PDYY,PDZZ,PDZY)
+  ZFLX(:,:)     = -PTURB_SPP(:,:,NCSHF) * MYM( PK ) * GY_M_V(OFLAT,PTHLM,PDYY,PDZZ,PDZY)
 !$acc kernels present_cr(ZFLX)
   ZFLX(:,IKE+1) = ZFLX(:,IKE)
 !$acc end kernels
@@ -448,7 +449,7 @@ END IF
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-ZFLX(:,IKB) = -TURBN%XCSHF * MYM2D( PK(:,IKB) ) *          &
+ZFLX(:,IKB) = -PTURB_SPP(:,IKB,NCSHF) * MYM2D( PK(:,IKB) ) *          &
   ( DYM2D(PTHLM(:,IKB)) * PINV_PDYY(:,IKB)           &
    -MYM2D( ZCOEFF(:,IKB+2)*PTHLM(:,IKB+2)        &
          +ZCOEFF(:,IKB+1)*PTHLM(:,IKB+1)       &
@@ -559,7 +560,7 @@ END IF
 IF (KRR/=0) THEN
   !
   IF (.NOT. O2D) THEN
-    ZFLX(:,:)     = -TURBN%XCHF * MYM( PK ) * GY_M_V(OFLAT,PRM(:,:,1),PDYY,PDZZ,PDZY)
+    ZFLX(:,:)     = -PTURB_SPP(:,:,NCHF) * MYM( PK ) * GY_M_V(OFLAT,PRM(:,:,1),PDYY,PDZZ,PDZY)
 !$acc kernels present_cr(ZFLX)
     ZFLX(:,IKE+1) = ZFLX(:,IKE)
 !$acc end kernels
@@ -571,7 +572,7 @@ IF (KRR/=0) THEN
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-  ZFLX(:,IKB) = -TURBN%XCHF * MYM2D( PK(:,IKB) ) *           &
+  ZFLX(:,IKB) = -PTURB_SPP(:,IKB,NCHF) * MYM2D( PK(:,IKB) ) *           &
     ( DYM2D(PRM(:,IKB,1)) * PINV_PDYY(:,IKB)           &
      -MYM2D( ZCOEFF(:,IKB+2)*PRM(:,IKB+2,1)        &
            +ZCOEFF(:,IKB+1)*PRM(:,IKB+1,1)       &

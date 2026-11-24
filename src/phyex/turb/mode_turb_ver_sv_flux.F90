@@ -18,7 +18,7 @@ SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,TLES,ONOMIXLG,       &
                       PSFSVM,PSFSVP,                                &
                       PSVM,                                         &
                       PTKEM,PLM,MFMOIST,PPSI_SV,                    &
-                      PRSVS,PWSV                                    )
+                      PTURB_SPP,PRSVS,PWSV                          )
 !
 !
 !
@@ -222,7 +222,7 @@ USE MODD_FIELD,            ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,               ONLY: TFILEDATA
 USE MODD_LES,              ONLY: TLES_t
 USE MODD_PARAMETERS,       ONLY: NMNHNAMELGTMAX
-USE MODD_TURB_n,           ONLY: TURB_t
+USE MODD_TURB_n,           ONLY: TURB_t, NCHF, NTURB_S
 !
 USE MODE_IO_FIELD_WRITE_PHY, ONLY: IO_FIELD_WRITE_PHY
 USE MODE_TRIDIAG,        ONLY: TRIDIAG
@@ -274,6 +274,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PWM          ! vertical wind
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.for scalars
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S), INTENT(IN)  ::  PTURB_SPP      ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS
                             ! cumulated sources for the prognostic variables
@@ -295,6 +296,7 @@ REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
        ZWORK1, &   ! working var. for shuman operators (array syntax)
        ZMZMRHODJ, &
        ZWKLES       ! working var. for LES calls
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZCSV !constant (possibly perturbed) for the scalar flux
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IIJB,IIJE,IKB,IKE,IKA ! index value for the mass points of the domain 
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
@@ -305,7 +307,6 @@ INTEGER             :: JIJ,JK           ! loop
 REAL :: ZTIME1, ZTIME2
 
 REAL :: ZCSVP = 4.0  ! constant for scalar flux presso-correlation (RS81)
-REAL :: ZCSV          !constant for the scalar flux
 !
 CHARACTER(LEN=NMNHNAMELGTMAX) :: YMNHNAME
 REAL(KIND=JPHOOK)             :: ZHOOK_HANDLE
@@ -344,9 +345,9 @@ ENDIF
 !
 IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
-   ZCSV=TURBN%XCHF/PRSNOW
+  ZCSV(:,:)=PTURB_SPP(:,:,NCHF)/PRSNOW
 ELSE
-   ZCSV=TURBN%XCHF
+  ZCSV(:,:)=PTURB_SPP(:,:,NCHF)
 ENDIF
 !----------------------------------------------------------------------------
 !
@@ -369,7 +370,7 @@ DO JSV=1,KSV
     ELSE
 !$acc kernels
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZA(IIJB:IIJE,1:IKT) = -PTSTEP*ZCSV*PPSI_SV(IIJB:IIJE,1:IKT,JSV) *   &
+      ZA(IIJB:IIJE,1:IKT) = -PTSTEP*ZCSV(IIJB:IIJE,1:IKT)*PPSI_SV(IIJB:IIJE,1:IKT,JSV) *   &
            ZKEFF(IIJB:IIJE,1:IKT) * ZMZMRHODJ(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT)**2
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
@@ -422,7 +423,8 @@ DO JSV=1,KSV
   IF ( (TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. TLES%LLES_CALL .OR. OFLYER ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
-     ZFLXZ(IIJB:IIJE,:) = -ZCSV * PPSI_SV(IIJB:IIJE,:,JSV) * MZM(PLM(IIJB:IIJE,:)*SQRT(PTKEM(IIJB:IIJE,:))) / PDZZ(IIJB:IIJE,:) * &
+     ZFLXZ(IIJB:IIJE,:) = -ZCSV(IIJB:IIJE,:) * PPSI_SV(IIJB:IIJE,:,JSV) * MZM(PLM(IIJB:IIJE,:)*SQRT(PTKEM(IIJB:IIJE,:))) &
+       & / PDZZ(IIJB:IIJE,:) * &
                   DZM( TURBN%XIMPL*ZRES(IIJB:IIJE,:) + PEXPL*PSVM(IIJB:IIJE,:,JSV) )
     ! surface flux
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally

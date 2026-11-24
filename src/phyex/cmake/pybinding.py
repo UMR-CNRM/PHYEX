@@ -293,12 +293,13 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             #    extra.append('NSV')
             #    moduleList.append('USE MODD_NSV, ONLY: NSV')
             #    moduleListHelper.append('USE MODD_NSV, ONLY: NSV')
-            for vv in ('NSP', 'NCARB', 'NSOA'):
+            for vv, mod in (('NSP', 'MODD_CH_AEROSOL'), ('NCARB', 'MODD_CH_AEROSOL'),
+                            ('NSOA', 'MODD_CH_AEROSOL'), ('NTURB_S', 'MODD_TURB_n')):
                 if vv not in extra and \
                    vv in [elem for d in var['as'] for di in d for elem in findcomponents(di)]:
                     extra.append(vv)
-                    moduleList.append(f'USE MODD_CH_AEROSOL, ONLY: {vv}')
-                    moduleListHelper.append(f'USE MODD_CH_AEROSOL, ONLY: {vv}')
+                    moduleList.append(f'USE {mod}, ONLY: {vv}')
+                    moduleListHelper.append(f'USE {mod}, ONLY: {vv}')
 
     pftin.close()
 
@@ -456,7 +457,8 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                             pass
                         elif elem in argList1name:
                             pass  # This dimension is a dummy argument
-                        elif elem in ('JPSVMAX', 'NSV', 'NSP', 'NCARB', 'NSOA', 'KGRADIENTSLEO', 'KGRADIENTSGOG', 'KSOA'):
+                        elif elem in ('JPSVMAX', 'NSV', 'NSP', 'NCARB', 'NSOA', 'NTURB_S',
+                                      'KGRADIENTSLEO', 'KGRADIENTSGOG', 'KSOA'):
                             strdimpart = re.sub(rf'\b{elem}\b', f'_{elem}', strdimpart)
                         else:
                             try:

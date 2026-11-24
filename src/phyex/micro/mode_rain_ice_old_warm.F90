@@ -22,7 +22,7 @@ MODULE MODE_RAIN_ICE_OLD_WARM
                                ZAA2W, ZBB3W,                                         &
                                ZZT, ZPRES, ZESW,                                     &
                                PNT_C, PMVD_C, PMVD_R, PCCR_V,                        &
-                               TBUDGETS, KBUDGETS)
+                               TBUDGETS, KBUDGETS, ZZRCRIAUTC)
 
     USE YOMHOOK,               ONLY: LHOOK, DR_HOOK, JPHOOK
     USE MODD_PRECISION,        ONLY: MNHREAL64
@@ -116,6 +116,7 @@ USE MODD_IO, ONLY:NVERB_FATAL
 
     TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
     INTEGER, INTENT(IN) :: KBUDGETS
+    REAL, DIMENSION(KSIZE), INTENT(IN) :: ZZRCRIAUTC
 
     REAL, DIMENSION(KSIZE) :: ZUSW     ! Undersaturation over water
 
@@ -218,7 +219,7 @@ USE MODD_IO, ONLY:NVERB_FATAL
     ELSE
       DO JK = 1, KSIZE
         IF (ZRCS(JK) > 0.0 .AND. ZHLC_HCF(JK) > 0.0) THEN
-          ZZW(JK) = ICEP%XTIMAUTC*MAX(ZHLC_HRC(JK)/ZHLC_HCF(JK) - ICEP%XCRIAUTC/ZRHODREF(JK),0.0)
+          ZZW(JK) = ICEP%XTIMAUTC*MAX(ZHLC_HRC(JK)/ZHLC_HCF(JK) - ZZRCRIAUTC(JK)/ZRHODREF(JK),0.0)
           ZZW(JK) = MIN(ZRCS(JK),ZHLC_HCF(JK)*ZZW(JK))
           ZRCS(JK) = ZRCS(JK) - ZZW(JK)
           ZRRS(JK) = ZRRS(JK) + ZZW(JK)

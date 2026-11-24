@@ -15,7 +15,7 @@ CONTAINS
                       PRHODJ,PTHVREF,                                &
                       PUM,PWM,PTHLM,PRM,PSVM,                        &
                       PTKEM,PLM,                                     &
-                      PDP,                                           &
+                      PTURB_SPP,PDP,                                 &
                       PRUS,PRWS                                      )
 !     ################################################################
 !
@@ -63,10 +63,9 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NCMFS,  NTURB_S
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
-USE MODD_CTURB,          ONLY: CTURB_XCMFS => XCMFS
 USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT
@@ -112,6 +111,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)    ::  PSVM
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S), INTENT(IN)  ::  PTURB_SPP    ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRWS
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE production terms
@@ -134,14 +134,12 @@ REAL, DIMENSION(D%NIJT,D%NKT)  :: GX_W_UW_PWM
 REAL :: ZTIME1, ZTIME2
 TYPE(TFIELDMETADATA) :: TZFIELD
 !
-REAL :: XCMFS
 !
 ! ---------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
 !             ------------------------
 !
-XCMFS = CTURB_XCMFS
 !
 IKB = 1+JPVEXT               
 IKE = SIZE(PWM,2)-JPVEXT    
@@ -159,7 +157,7 @@ GX_W_UW_PWM = GX_W_UW(OFLAT,PWM,PDXX,PDZZ,PDZX)
 ! residual part of < U'W'> depending on dw/dx
 !
 ZFLX(:,:) =                                                      &
-  - XCMFS * MXM(MZM(PK)) * GX_W_UW_PWM
+  - PTURB_SPP(:,:,NCMFS) * MXM(MZM(PK)) * GX_W_UW_PWM
 !!         &  to be tested
 !!  - (2./3.) * XCMFB * MZM( ZVPTU * MXM( PLM / SQRT(PTKEM) * XG / PTHVREF ) )
 !
