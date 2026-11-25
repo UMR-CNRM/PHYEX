@@ -304,6 +304,9 @@ class CheckCommitBase:
         while i < len(sys.argv):
             arg = sys.argv[i]
             if not arg.startswith('-'):
+                if any(arg.startswith('-') for arg in sys.argv[i:]):
+                    raise CheckCommitError("Positional arguments must be specified at " +
+                                           "the end of the command line.")
                 break
             commitcmd.append(arg)
             action = parser._option_string_actions.get(arg)
