@@ -122,6 +122,7 @@ USE MODD_RAIN_ICE_PARAM_n, ONLY: LNEWCOEFF, RAIN_ICE_PARAMN, RAIN_ICE_PARAM_ALLO
                                  XEXSRIMCG2, XFCACCR, XFCDRYG, XFGWETH, XFIAGGS, XFIDRYG, XFIDRYG2, &
                                  XFRACCSS, XFRDRYG, XFRMIN, XFRWETH, XFSACCRG, XFSCVMG, XFSDRYG, &
                                  XFSEDC, XFSEDG, XFSEDH, XFSEDI, XFSEDR, XFSEDS, XFSWETH, XFWETH, &
+                                 XGAC, XGC, XGAC2, XGC2, &
                                  XGAMINC_RIM1, XGAMINC_RIM2, XGAMINC_RIM4, XHON, XICFRR, XKER_GWETH, &
                                  XKER_RACCS, XKER_RACCSS, XKER_RDRYG, XKER_RWETH, XKER_SACCRG, &
                                  XKER_SDRYG, XKER_SWETH, XLBGWETH1, XLBGWETH2, XLBGWETH3, XLBRACCS1, &
@@ -567,6 +568,12 @@ XFSEDC(1)  = GAMMA(XNUC+(XDC+3.)/XALPHAC)/GAMMA(XNUC+3./XALPHAC)*     &
             (ZRHO00)**XCEXVT
 XFSEDC(2)  = GAMMA(XNUC2+(XDC+3.)/XALPHAC2)/GAMMA(XNUC2+3./XALPHAC2)*     &
             (ZRHO00)**XCEXVT
+!
+! Gamma functions of the cloud droplet distributions (mean radius of the droplets)
+XGAC  = GAMMA(XNUC+1.0/XALPHAC)
+XGC   = GAMMA(XNUC)
+XGAC2 = GAMMA(XNUC2+1.0/XALPHAC2)
+XGC2  = GAMMA(XNUC2)
 !
 XEXSEDR = (XBR+XDR+1.0)/(XBR+1.0)
 XFSEDR  = XCR*XAR*XCCR*MOMG(XALPHAR,XNUR,XBR+XDR)*                         &

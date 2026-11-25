@@ -48,6 +48,7 @@ USE MODD_PARAM_LIMA_WARM, ONLY: NAHEN, NHYP, PARAM_LIMA_WARM_ALLOCATE, PARAM_LIM
                                 XACCR_RSMALL2, XAHENG, XAHENG2, XAHENG3, XAHENINTP1, XAHENINTP2, &
                                 XAR, XAUTO1, XAUTO2, XBC, XBR, XC1C, XCAUTR, XCC, XCCR, XCEVAP, &
                                 XCONCR_PARAM_INI, XCR, XCREC, XCRER, XCSTDCRIT, XCSTHEN, XCXR, XDC, &
+                                XSHAPE_FACTOR, &
                                 XDIVA, XDR, XEX0EVAR, XEX1EVAR, XEX2EVAR, XEXCACCR, XF0C, XF0R, &
                                 XF1R, XF2C, XFCACCR, XFREFFC, XFREFFR, XFSEDCC, XFSEDCR, XFSEDRC, &
                                 XFSEDRR, XGCC, XHYPF12, XHYPF32, XHYPINTP1, XHYPINTP2, XITAUTR, &
@@ -206,6 +207,9 @@ XFSEDRC  = XCC*GAMMA(XNUC+(XDC+3.)/XALPHAC)/GAMMA(XNUC+3./XALPHAC)*     &
             (ZRHO00)**XCEXVT
 XFSEDCC  = XCC*GAMMA(XNUC+XDC/XALPHAC)/GAMMA(XNUC)*     &
             (ZRHO00)**XCEXVT
+!
+! Shape factor of the raindrop distribution (precipitation scavenging)
+XSHAPE_FACTOR = GAMMA(XNUR+3./XALPHAR)/GAMMA(XNUR)
 
 !
 XLB(2)    = XLBC
