@@ -570,7 +570,7 @@ DO WHILE (GANYREMAINT)
                                PRHODREF(JIJ,JK)**(1.-ICED%XCEXVT) *  &
                                MAX( 0.05E6,-0.15319E6-0.021454E6*    & !    McF&H
                                     LOG(PRHODREF(JIJ,JK)*PRXT(JIJ,JK)) )**(3.*(1-ELECP%XEXQSEDI))
-              IF (OSEDIM_BEARD) ZLBDA3(JIJ,JK) = (2.14E-3 * MOMG(ICED%XALPHAI,ICED%XNUI,1.7) *     &
+              IF (OSEDIM_BEARD) ZLBDA3(JIJ,JK) = (2.14E-3 * ELECP%XMOMGI_BEARD *     &
                                                   ZNCI / (PRHODREF(JIJ,JK) * PRXT(JIJ,JK)))**0.588235
             ENDIF
           ENDIF
@@ -831,9 +831,6 @@ DO WHILE (GANYREMAINT)
 END DO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT', 1, ZHOOK_HANDLE)
-CONTAINS
-INCLUDE "gamma.h"
-INCLUDE "momg.h"
 END SUBROUTINE INTERNAL_SEDIM_SPLI
 !
 !!$END SUBROUTINE ICE4_SEDIMENTATION_SPLIT
