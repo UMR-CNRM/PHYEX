@@ -80,11 +80,11 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a06b95eda0366712b196aa5d42934f98d" id="r_a06b95eda0366712b196aa5d42934f98d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a06b95eda0366712b196aa5d42934f98d">turb_hor_dyn_corr</a> (d, turbn, tles, ksplt, ptstep, krr, ksv, oflat, o2d, tpfile, pk, pinv_pdzz, pdxx, pdyy, pdzz, pdzx, pdzy, pzz, pdircoszw, pcosslope, psinslope, prhodj, pcdueff, ptau11m, ptau12m, ptau22m, ptau33m, pum, pvm, pwm, puslopem, pvslopem, pthlm, prm, psvm, ptkem, plm, pdp, ptp, prus, prvs, prws)</td></tr>
+<tr class="memitem:a84412f9571ee16cb28f3dd85a4089315" id="r_a84412f9571ee16cb28f3dd85a4089315"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a84412f9571ee16cb28f3dd85a4089315">turb_hor_dyn_corr</a> (d, turbn, tles, ksplt, ptstep, krr, ksv, oflat, o2d, tpfile, pk, pinv_pdzz, pdxx, pdyy, pdzz, pdzx, pdzy, pzz, pdircoszw, pcosslope, psinslope, prhodj, pcdueff, ptau11m, ptau12m, ptau22m, ptau33m, pum, pvm, pwm, puslopem, pvslopem, pthlm, prm, psvm, ptkem, plm, pturb_spp, pdp, ptp, prus, prvs, prws)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a06b95eda0366712b196aa5d42934f98d" name="a06b95eda0366712b196aa5d42934f98d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a06b95eda0366712b196aa5d42934f98d">&#9670;&#160;</a></span>turb_hor_dyn_corr()</h2>
+<a id="a84412f9571ee16cb28f3dd85a4089315" name="a84412f9571ee16cb28f3dd85a4089315"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a84412f9571ee16cb28f3dd85a4089315">&#9670;&#160;</a></span>turb_hor_dyn_corr()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -277,6 +277,11 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,nturb_s), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pturb_spp</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>pdp</em></span>, </td>
         </tr>
         <tr>
@@ -306,8 +311,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__turb__hor__dyn__corr_a06b95eda0366712b196aa5d42934f98d_cgraph.png" border="0" usemap="#anamespacemode__turb__hor__dyn__corr_a06b95eda0366712b196aa5d42934f98d_cgraph" loading="lazy" alt=""/></div>
-<map name="anamespacemode__turb__hor__dyn__corr_a06b95eda0366712b196aa5d42934f98d_cgraph" id="anamespacemode__turb__hor__dyn__corr_a06b95eda0366712b196aa5d42934f98d_cgraph">
+<div class="center"><img src="namespacemode__turb__hor__dyn__corr_a84412f9571ee16cb28f3dd85a4089315_cgraph.png" border="0" usemap="#anamespacemode__turb__hor__dyn__corr_a84412f9571ee16cb28f3dd85a4089315_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacemode__turb__hor__dyn__corr_a84412f9571ee16cb28f3dd85a4089315_cgraph" id="anamespacemode__turb__hor__dyn__corr_a84412f9571ee16cb28f3dd85a4089315_cgraph">
 <area shape="rect" title=" " alt="" coords="5,632,188,677"/>
 <area shape="rect" href="namespacemode__argslist__ll__phy.html#a5d087a26c2d355ea231111a5f32e7200" title=" " alt="" coords="252,5,412,50"/>
 <area shape="poly" title=" " alt="" coords="98,631,113,514,140,344,159,256,181,175,206,108,234,62,241,57,239,62,238,65,211,111,186,177,164,257,146,345,118,515,103,632"/>
@@ -422,14 +427,14 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__turb__hor__dyn__corr_a06b95eda0366712b196aa5d42934f98d_icgraph.png" border="0" usemap="#anamespacemode__turb__hor__dyn__corr_a06b95eda0366712b196aa5d42934f98d_icgraph" loading="lazy" alt=""/></div>
-<map name="anamespacemode__turb__hor__dyn__corr_a06b95eda0366712b196aa5d42934f98d_icgraph" id="anamespacemode__turb__hor__dyn__corr_a06b95eda0366712b196aa5d42934f98d_icgraph">
+<div class="center"><img src="namespacemode__turb__hor__dyn__corr_a84412f9571ee16cb28f3dd85a4089315_icgraph.png" border="0" usemap="#anamespacemode__turb__hor__dyn__corr_a84412f9571ee16cb28f3dd85a4089315_icgraph" loading="lazy" alt=""/></div>
+<map name="anamespacemode__turb__hor__dyn__corr_a84412f9571ee16cb28f3dd85a4089315_icgraph" id="anamespacemode__turb__hor__dyn__corr_a84412f9571ee16cb28f3dd85a4089315_icgraph">
 <area shape="rect" title=" " alt="" coords="664,5,846,50"/>
-<area shape="rect" href="namespacemode__turb__hor.html#a392ed5235673e3faa3d5c1f17974a7cc" title=" " alt="" coords="434,14,616,42"/>
+<area shape="rect" href="namespacemode__turb__hor.html#a64236760426cabc897834e618468f4fa" title=" " alt="" coords="434,14,616,42"/>
 <area shape="poly" title=" " alt="" coords="645,28,616,30,616,25,651,28"/>
-<area shape="rect" href="namespacemode__turb__hor__splt.html#af567a0992241afa9a2e5ad86eb96f424" title=" " alt="" coords="236,5,386,50"/>
+<area shape="rect" href="namespacemode__turb__hor__splt.html#a39b0c606ec53811e1cfe049205233414" title=" " alt="" coords="236,5,386,50"/>
 <area shape="poly" title=" " alt="" coords="416,28,387,30,387,25,422,28"/>
-<area shape="rect" href="turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="141,14,188,42"/>
+<area shape="rect" href="turb_8F90.html#a1c4fdc75a2d21e77482a209c74e8b8b1" title=" " alt="" coords="141,14,188,42"/>
 <area shape="poly" title=" " alt="" coords="218,28,189,30,189,25,223,27"/>
 <area shape="rect" href="main__turb_8F90.html#ae55925d0151bca669f2e99235cf77eff" title=" " alt="" coords="5,14,93,42"/>
 <area shape="poly" title=" " alt="" coords="122,28,93,30,93,25,128,27"/>

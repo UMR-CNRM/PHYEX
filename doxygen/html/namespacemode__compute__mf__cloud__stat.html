@@ -80,11 +80,11 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:ae811f0315a54b49a32abcb7a9471fb26" id="r_ae811f0315a54b49a32abcb7a9471fb26"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae811f0315a54b49a32abcb7a9471fb26">compute_mf_cloud_stat</a> (d, cst, turbn, parammf, krr, krrl, krri, ostatnw, otauconv, pfrac_ice, pthlm, prtm, ppabsm, prm, pdzz, pthm, pexnm, pemf, pthl_up, prt_up, psigmf, ptaufunc)</td></tr>
+<tr class="memitem:a487e10c976ec2a0fa5f2e12df33136d3" id="r_a487e10c976ec2a0fa5f2e12df33136d3"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a487e10c976ec2a0fa5f2e12df33136d3">compute_mf_cloud_stat</a> (d, cst, turbn, parammf, krr, krrl, krri, ostatnw, otauconv, pfrac_ice, pthlm, prtm, ppabsm, prm, pdzz, pthm, pexnm, pemf, pthl_up, prt_up, psigmf, ptaufunc, pxctv)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
-<a id="ae811f0315a54b49a32abcb7a9471fb26" name="ae811f0315a54b49a32abcb7a9471fb26"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae811f0315a54b49a32abcb7a9471fb26">&#9670;&#160;</a></span>compute_mf_cloud_stat()</h2>
+<a id="a487e10c976ec2a0fa5f2e12df33136d3" name="a487e10c976ec2a0fa5f2e12df33136d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a487e10c976ec2a0fa5f2e12df33136d3">&#9670;&#160;</a></span>compute_mf_cloud_stat()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -197,7 +197,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)</td>          <td class="paramname"><span class="paramname"><em>ptaufunc</em></span>&#160;)</td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(in)</td>          <td class="paramname"><span class="paramname"><em>ptaufunc</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pxctv</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -206,8 +211,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_cgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_cgraph" loading="lazy" alt=""/></div>
-<map name="anamespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_cgraph" id="anamespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_cgraph">
+<div class="center"><img src="namespacemode__compute__mf__cloud__stat_a487e10c976ec2a0fa5f2e12df33136d3_cgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud__stat_a487e10c976ec2a0fa5f2e12df33136d3_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacemode__compute__mf__cloud__stat_a487e10c976ec2a0fa5f2e12df33136d3_cgraph" id="anamespacemode__compute__mf__cloud__stat_a487e10c976ec2a0fa5f2e12df33136d3_cgraph">
 <area shape="rect" title=" " alt="" coords="5,122,223,166"/>
 <area shape="rect" href="namespacemode__compute__function__thermo__mf.html#ad44bff713166d26e5a081206e25109cd" title=" " alt="" coords="271,5,495,67"/>
 <area shape="poly" title=" " alt="" coords="168,119,270,76,288,72,283,74,272,81,170,124"/>
@@ -222,12 +227,12 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_icgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_icgraph" loading="lazy" alt=""/></div>
-<map name="anamespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_icgraph" id="anamespacemode__compute__mf__cloud__stat_ae811f0315a54b49a32abcb7a9471fb26_icgraph">
+<div class="center"><img src="namespacemode__compute__mf__cloud__stat_a487e10c976ec2a0fa5f2e12df33136d3_icgraph.png" border="0" usemap="#anamespacemode__compute__mf__cloud__stat_a487e10c976ec2a0fa5f2e12df33136d3_icgraph" loading="lazy" alt=""/></div>
+<map name="anamespacemode__compute__mf__cloud__stat_a487e10c976ec2a0fa5f2e12df33136d3_icgraph" id="anamespacemode__compute__mf__cloud__stat_a487e10c976ec2a0fa5f2e12df33136d3_icgraph">
 <area shape="rect" title=" " alt="" coords="546,5,764,50"/>
-<area shape="rect" href="namespacemode__compute__mf__cloud.html#af5cc1f0ad743f83a43f5dfb47bdc4ced" title=" " alt="" coords="309,5,498,50"/>
+<area shape="rect" href="namespacemode__compute__mf__cloud.html#a359731d1879d82d3d4b5dc51023f2ff6" title=" " alt="" coords="309,5,498,50"/>
 <area shape="poly" title=" " alt="" coords="528,28,499,30,499,25,533,28"/>
-<area shape="rect" href="shallow__mf_8F90.html#aa22ee3808d718a1685bddf418c2e532e" title=" " alt="" coords="165,14,261,42"/>
+<area shape="rect" href="shallow__mf_8F90.html#a997dad679ebb1f43c84d2ddd1fc0c0ba" title=" " alt="" coords="165,14,261,42"/>
 <area shape="poly" title=" " alt="" coords="291,28,262,30,261,25,296,28"/>
 <area shape="rect" href="main__shallow_8F90.html#a09dc47f11bee90403577d0bea4be4bbd" title=" " alt="" coords="5,14,117,42"/>
 <area shape="poly" title=" " alt="" coords="146,28,117,30,117,25,152,27"/>

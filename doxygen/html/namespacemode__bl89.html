@@ -80,11 +80,11 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:aabf6cc78f3299d00fe3b2b80b5f146b8" id="r_aabf6cc78f3299d00fe3b2b80b5f146b8"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aabf6cc78f3299d00fe3b2b80b5f146b8">bl89</a> (d, cst, csturb, turbn, pzz, pdzz, pthvref, pthlm, krr, prm, ptkem, pshear, plm, oocean)</td></tr>
+<tr class="memitem:aff5113fd134526f67680a1f9d8b3c478" id="r_aff5113fd134526f67680a1f9d8b3c478"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aff5113fd134526f67680a1f9d8b3c478">bl89</a> (d, cst, csturb, turbn, pzz, pdzz, pthvref, pthlm, krr, prm, ptkem, pshear, plm, oocean, pturb_spp)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
-<a id="aabf6cc78f3299d00fe3b2b80b5f146b8" name="aabf6cc78f3299d00fe3b2b80b5f146b8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aabf6cc78f3299d00fe3b2b80b5f146b8">&#9670;&#160;</a></span>bl89()</h2>
+<a id="aff5113fd134526f67680a1f9d8b3c478" name="aff5113fd134526f67680a1f9d8b3c478"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff5113fd134526f67680a1f9d8b3c478">&#9670;&#160;</a></span>bl89()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -157,7 +157,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">logical, intent(in)</td>          <td class="paramname"><span class="paramname"><em>oocean</em></span>&#160;)</td>
+          <td class="paramtype">logical, intent(in)</td>          <td class="paramname"><span class="paramname"><em>oocean</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,nturb_s), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pturb_spp</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -166,12 +171,12 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__bl89_aabf6cc78f3299d00fe3b2b80b5f146b8_icgraph.png" border="0" usemap="#anamespacemode__bl89_aabf6cc78f3299d00fe3b2b80b5f146b8_icgraph" loading="lazy" alt=""/></div>
-<map name="anamespacemode__bl89_aabf6cc78f3299d00fe3b2b80b5f146b8_icgraph" id="anamespacemode__bl89_aabf6cc78f3299d00fe3b2b80b5f146b8_icgraph">
+<div class="center"><img src="namespacemode__bl89_aff5113fd134526f67680a1f9d8b3c478_icgraph.png" border="0" usemap="#anamespacemode__bl89_aff5113fd134526f67680a1f9d8b3c478_icgraph" loading="lazy" alt=""/></div>
+<map name="anamespacemode__bl89_aff5113fd134526f67680a1f9d8b3c478_icgraph" id="anamespacemode__bl89_aff5113fd134526f67680a1f9d8b3c478_icgraph">
 <area shape="rect" title=" " alt="" coords="453,44,583,72"/>
-<area shape="rect" href="namespacemode__cloud__modif__lm.html#a91fcf6eb3d25ab06062889e8dc300678" title=" " alt="" coords="236,5,405,50"/>
+<area shape="rect" href="namespacemode__cloud__modif__lm.html#a3d73f1c571611168df08144a8798ca0f" title=" " alt="" coords="236,5,405,50"/>
 <area shape="poly" title=" " alt="" coords="435,46,406,44,406,38,441,46"/>
-<area shape="rect" href="turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="141,44,188,72"/>
+<area shape="rect" href="turb_8F90.html#a1c4fdc75a2d21e77482a209c74e8b8b1" title=" " alt="" coords="141,44,188,72"/>
 <area shape="poly" title=" " alt="" coords="441,61,405,65,236,65,188,63,188,57,236,60,405,60,435,62"/>
 <area shape="poly" title=" " alt="" coords="223,47,189,56,188,51,218,48"/>
 <area shape="rect" href="main__turb_8F90.html#ae55925d0151bca669f2e99235cf77eff" title=" " alt="" coords="5,44,93,72"/>

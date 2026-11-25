@@ -80,11 +80,11 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a2c45442eb335f85a7ac45b7b56ad80ad" id="r_a2c45442eb335f85a7ac45b7b56ad80ad"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2c45442eb335f85a7ac45b7b56ad80ad">turb_ver_thermo_flux</a> (d, cst, csturb, turbn, tles, krr, krrl, krri, ksv, kgradients, oocean, odeepoc, oflyer, ocouples, ocompute_src, pexpl, ptstep, tpfile, pdxx, pdyy, pdzz, pdzx, pdzy, pdircoszw, pzz, prhodj, pthvref, phgrad, pzs, psfthm, psfrm, psfthp, psfrp, pwm, pthlm, prm, psvm, ptkem, plm, pleps, plocpexnm, patheta, pamoist, psrcm, pfrac_ice, pbeta, psqrt_tke, pdth_dz, pdr_dz, pred2th3, pred2r3, pred2thr3, pbll_o_e, petheta, pemoist, predth1, predr1, pphi3, ppsi3, pd, pfwth, pfwr, pfth2, pfr2, pfthr, mfmoist, pbl_depth, pwthv, prthls, prrs, pthlp, prp, ptp, pwth, pwrc, psstfl, psstfl_c, pssrfl_c)</td></tr>
+<tr class="memitem:a6f51bb07d7e4afc8442be75e16f7e505" id="r_a6f51bb07d7e4afc8442be75e16f7e505"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6f51bb07d7e4afc8442be75e16f7e505">turb_ver_thermo_flux</a> (d, cst, csturb, turbn, tles, krr, krrl, krri, ksv, kgradients, oocean, odeepoc, oflyer, ocouples, ocompute_src, pexpl, ptstep, tpfile, pdxx, pdyy, pdzz, pdzx, pdzy, pdircoszw, pzz, prhodj, pthvref, phgrad, pzs, psfthm, psfrm, psfthp, psfrp, pwm, pthlm, prm, psvm, ptkem, plm, pleps, plocpexnm, patheta, pamoist, psrcm, pfrac_ice, pbeta, psqrt_tke, pdth_dz, pdr_dz, pred2th3, pred2r3, pred2thr3, pbll_o_e, petheta, pemoist, predth1, predr1, pphi3, ppsi3, pd, pfwth, pfwr, pfth2, pfr2, pfthr, mfmoist, pbl_depth, pwthv, prthls, prrs, pthlp, prp, ptp, pwth, pwrc, psstfl, psstfl_c, pssrfl_c, pturb_spp)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a2c45442eb335f85a7ac45b7b56ad80ad" name="a2c45442eb335f85a7ac45b7b56ad80ad"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2c45442eb335f85a7ac45b7b56ad80ad">&#9670;&#160;</a></span>turb_ver_thermo_flux()</h2>
+<a id="a6f51bb07d7e4afc8442be75e16f7e505" name="a6f51bb07d7e4afc8442be75e16f7e505"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6f51bb07d7e4afc8442be75e16f7e505">&#9670;&#160;</a></span>turb_ver_thermo_flux()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -477,7 +477,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(merge(d%nijt,0,ocouples)), intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>pssrfl_c</em></span>&#160;)</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,ocouples)), intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>pssrfl_c</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,nturb_s), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pturb_spp</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -486,30 +491,30 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__turb__ver__thermo__flux_a2c45442eb335f85a7ac45b7b56ad80ad_cgraph.png" border="0" usemap="#anamespacemode__turb__ver__thermo__flux_a2c45442eb335f85a7ac45b7b56ad80ad_cgraph" loading="lazy" alt=""/></div>
-<map name="anamespacemode__turb__ver__thermo__flux_a2c45442eb335f85a7ac45b7b56ad80ad_cgraph" id="anamespacemode__turb__ver__thermo__flux_a2c45442eb335f85a7ac45b7b56ad80ad_cgraph">
+<div class="center"><img src="namespacemode__turb__ver__thermo__flux_a6f51bb07d7e4afc8442be75e16f7e505_cgraph.png" border="0" usemap="#anamespacemode__turb__ver__thermo__flux_a6f51bb07d7e4afc8442be75e16f7e505_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacemode__turb__ver__thermo__flux_a6f51bb07d7e4afc8442be75e16f7e505_cgraph" id="anamespacemode__turb__ver__thermo__flux_a6f51bb07d7e4afc8442be75e16f7e505_cgraph">
 <area shape="rect" title=" " alt="" coords="5,867,205,912"/>
-<area shape="rect" href="namespacemode__prandtl.html#a7a07eada50f01f56347dca4bb09b9dec" title=" " alt="" coords="276,137,432,181"/>
+<area shape="rect" href="namespacemode__prandtl.html#ac157f386391ac60d09495968c87d7dab" title=" " alt="" coords="276,137,432,181"/>
 <area shape="poly" title=" " alt="" coords="106,866,120,732,149,532,168,429,192,333,219,254,234,223,251,198,265,187,262,192,255,202,239,225,224,256,197,335,173,430,154,533,125,732,111,867"/>
-<area shape="rect" href="namespacemode__prandtl.html#a96cdf8d57113ebf8bdfcfd4f67f8da43" title=" " alt="" coords="532,137,688,181"/>
+<area shape="rect" href="namespacemode__prandtl.html#a418f68963d53a6dd6b44463a56deafe7" title=" " alt="" coords="532,137,688,181"/>
 <area shape="poly" title=" " alt="" coords="104,867,112,715,121,606,134,488,153,371,178,265,193,218,210,178,229,146,251,122,285,101,323,89,363,84,404,86,444,93,483,103,552,129,547,131,482,108,443,98,403,91,363,89,324,94,287,106,254,126,234,149,215,181,198,220,183,266,158,372,139,489,126,607,117,716,110,867"/>
 <area shape="rect" href="shugrad_8h.html#abacd9e8cce2826c376c2874e230a9d29" title=" " alt="" coords="844,470,898,498"/>
 <area shape="poly" title=" " alt="" coords="104,866,111,708,119,594,132,470,150,347,175,235,191,186,209,144,228,110,251,85,310,43,368,16,426,4,483,6,541,19,599,44,658,79,719,122,757,158,788,200,813,246,832,294,858,385,869,455,864,454,853,386,827,296,808,248,783,203,753,161,716,126,655,83,597,49,539,24,483,11,427,10,370,21,313,47,254,89,233,113,213,146,196,188,181,236,155,348,137,471,124,594,116,709,109,867"/>
-<area shape="rect" href="namespacemode__prandtl.html#a3e8b0ad21a69d6a2020a198794b0c048" title=" " alt="" coords="276,257,432,301"/>
+<area shape="rect" href="namespacemode__prandtl.html#ad245dd60612e913c478b02d4ad510a49" title=" " alt="" coords="276,257,432,301"/>
 <area shape="poly" title=" " alt="" coords="103,867,104,769,110,701,121,625,139,544,165,464,202,387,225,352,251,318,264,308,262,313,255,322,229,355,207,390,170,466,144,546,126,626,115,702,110,770,108,867"/>
-<area shape="rect" href="namespacemode__prandtl.html#a173abeabf46cac28dbf18a94fa9dbf2c" title=" " alt="" coords="532,257,688,301"/>
+<area shape="rect" href="namespacemode__prandtl.html#af78d610eda436cb099e300c8fdeaaaaf" title=" " alt="" coords="532,257,688,301"/>
 <area shape="poly" title=" " alt="" coords="105,866,117,736,143,546,162,448,186,360,215,289,232,262,251,242,285,221,323,209,363,205,404,207,483,223,552,249,547,251,482,228,404,212,364,210,324,215,288,226,254,246,237,265,220,291,191,361,167,449,148,547,122,737,110,867"/>
-<area shape="rect" href="namespacemode__prandtl.html#ac3853d43ecdde43b5436e89b3230028c" title=" " alt="" coords="276,953,432,997"/>
+<area shape="rect" href="namespacemode__prandtl.html#a9ab08273c878e89481fea03b5c7d2420" title=" " alt="" coords="276,953,432,997"/>
 <area shape="poly" title=" " alt="" coords="171,910,274,945,270,948,173,915"/>
-<area shape="rect" href="namespacemode__prandtl.html#aa7107838754dbe66f54eba8436e692cc" title=" " alt="" coords="532,910,688,955"/>
+<area shape="rect" href="namespacemode__prandtl.html#ab334b945fbc431c91a5ab696094c587a" title=" " alt="" coords="532,910,688,955"/>
 <area shape="poly" title=" " alt="" coords="204,895,519,922,515,926,206,900"/>
-<area shape="rect" href="namespacemode__prandtl.html#aa410af862c6591fde4530d91e25a56fa" title=" " alt="" coords="276,377,432,421"/>
+<area shape="rect" href="namespacemode__prandtl.html#a23fbc77670e0acf4a1ff47f52dc39e2c" title=" " alt="" coords="276,377,432,421"/>
 <area shape="poly" title=" " alt="" coords="105,866,112,787,134,674,153,612,178,550,210,491,251,438,265,428,262,432,255,442,215,494,183,552,158,613,140,675,118,788,110,867"/>
-<area shape="rect" href="namespacemode__prandtl.html#ad5872a842049743eb759e90bcc7ca6f7" title=" " alt="" coords="532,377,688,421"/>
+<area shape="rect" href="namespacemode__prandtl.html#a1fd40fc008a66373da50de5e9c596936" title=" " alt="" coords="532,377,688,421"/>
 <area shape="poly" title=" " alt="" coords="106,867,122,758,151,604,171,526,194,456,221,399,235,378,251,362,286,342,324,330,364,326,404,328,483,344,551,369,546,371,481,349,404,333,364,332,325,336,288,347,254,366,239,381,225,402,199,457,176,528,156,605,127,759,112,867"/>
-<area shape="rect" href="namespacemode__prandtl.html#ae7937237a17e9cd6d36fff26ef43ebb0" title=" " alt="" coords="276,1073,432,1117"/>
+<area shape="rect" href="namespacemode__prandtl.html#a7f0720e75e3d248cfd2987e845b3a5a2" title=" " alt="" coords="276,1073,432,1117"/>
 <area shape="poly" title=" " alt="" coords="121,909,177,979,213,1017,254,1051,274,1064,269,1066,251,1056,210,1021,173,982,122,915"/>
-<area shape="rect" href="namespacemode__prandtl.html#a965fbf8531746dbbd08fa1479a222c46" title=" " alt="" coords="532,1042,688,1087"/>
+<area shape="rect" href="namespacemode__prandtl.html#acc139d0495e0f2bcec1f964c53df14f2" title=" " alt="" coords="532,1042,688,1087"/>
 <area shape="poly" title=" " alt="" coords="126,910,182,961,216,986,254,1007,320,1031,389,1047,457,1056,519,1062,515,1065,456,1061,388,1052,318,1036,252,1012,213,991,178,965,127,915"/>
 <area shape="rect" href="namespacemode__prandtl.html#a117971a1e7c8278d804535c69668450e" title=" " alt="" coords="515,1153,705,1197"/>
 <area shape="poly" title=" " alt="" coords="113,910,132,959,160,1018,201,1079,226,1105,254,1127,296,1144,358,1156,502,1170,497,1173,357,1161,295,1149,251,1132,222,1109,197,1082,156,1021,127,961,113,915"/>
@@ -521,25 +526,25 @@ Here is the call graph for this function:</div>
 <area shape="poly" title=" " alt="" coords="106,910,112,1001,119,1062,130,1129,148,1200,174,1270,209,1335,254,1393,283,1411,316,1422,311,1424,280,1416,251,1397,205,1338,169,1272,143,1202,125,1131,113,1063,107,1001,106,915"/>
 <area shape="rect" href="shugrad_8h.html#a7b90452d79c2aeabcbd5ab57e6322afb" title=" " alt="" coords="317,1312,391,1339"/>
 <area shape="poly" title=" " alt="" coords="108,910,119,985,142,1087,161,1142,185,1196,216,1247,254,1292,277,1307,304,1318,299,1319,274,1311,251,1296,212,1250,181,1199,156,1144,137,1088,114,986,108,915"/>
-<area shape="rect" href="namespacemode__prandtl.html#a6d3344536647c1e66b9dee41a721a2a7" title=" " alt="" coords="257,496,451,523"/>
+<area shape="rect" href="namespacemode__prandtl.html#afc05cd1271cb723d3aaec8e901bd91ab" title=" " alt="" coords="257,496,451,523"/>
 <area shape="poly" title=" " alt="" coords="107,866,119,802,144,715,163,667,187,621,216,578,251,540,269,528,266,533,254,544,220,581,192,624,168,670,149,716,124,803,112,867"/>
-<area shape="rect" href="namespacemode__prandtl.html#a73186af55c2ca5d189f526180b82be09" title=" " alt="" coords="505,470,715,498"/>
+<area shape="rect" href="namespacemode__prandtl.html#a65b71e7ece017bc6ba77d463092208f1" title=" " alt="" coords="505,470,715,498"/>
 <area shape="poly" title=" " alt="" coords="104,867,109,790,116,738,128,682,147,626,173,571,207,522,251,482,287,462,325,450,366,443,407,441,486,448,554,464,549,467,485,454,407,446,366,448,327,455,289,467,254,486,211,526,177,574,152,628,134,684,121,739,114,790,109,867"/>
-<area shape="rect" href="namespacemode__prandtl.html#a04f15bc9ad60920a69e7323dde4c3714" title=" " alt="" coords="253,597,455,625"/>
+<area shape="rect" href="namespacemode__prandtl.html#ae453a92006276411d9359a33b35216e1" title=" " alt="" coords="253,597,455,625"/>
 <area shape="poly" title=" " alt="" coords="111,866,129,819,158,758,199,695,223,666,251,641,272,629,269,633,254,645,227,670,203,699,163,761,134,821,116,867"/>
-<area shape="rect" href="namespacemode__prandtl.html#a695e127ef14768c8387b9b56e783afb3" title=" " alt="" coords="509,546,711,574"/>
+<area shape="rect" href="namespacemode__prandtl.html#af0671b31fdee808526ce89e997dc0c50" title=" " alt="" coords="509,546,711,574"/>
 <area shape="poly" title=" " alt="" coords="107,866,119,807,145,729,164,688,187,648,216,613,251,583,283,565,317,552,388,538,459,536,525,542,521,545,459,541,389,543,318,557,285,570,254,588,220,616,192,651,168,690,150,730,125,808,112,867"/>
-<area shape="rect" href="namespacemode__prandtl.html#a55d6afcd991fc1cfb203b26d9432282b" title=" " alt="" coords="257,1514,451,1542"/>
+<area shape="rect" href="namespacemode__prandtl.html#a8448f9d34e010dffb95a73da1a7122d9" title=" " alt="" coords="257,1514,451,1542"/>
 <area shape="poly" title=" " alt="" coords="109,910,127,1033,157,1208,177,1298,200,1381,226,1449,240,1475,255,1494,267,1506,262,1507,251,1498,235,1478,221,1451,195,1382,171,1299,152,1209,122,1034,109,915"/>
-<area shape="rect" href="namespacemode__prandtl.html#af7aeebfed4cb28bec8056dffdd6d35b5" title=" " alt="" coords="505,1494,715,1522"/>
+<area shape="rect" href="namespacemode__prandtl.html#aeae6ea6ba080f76aa7aa9482b6218ce0" title=" " alt="" coords="505,1494,715,1522"/>
 <area shape="poly" title=" " alt="" coords="109,909,127,1026,156,1189,176,1273,199,1348,225,1410,240,1433,254,1450,270,1461,292,1470,351,1484,419,1494,492,1502,487,1504,419,1500,350,1490,291,1475,268,1465,251,1454,235,1436,221,1412,194,1350,171,1274,151,1190,122,1026,109,915"/>
-<area shape="rect" href="namespacemode__prandtl.html#a54b24af3185beea8ed9c4897658a18b2" title=" " alt="" coords="253,698,455,726"/>
+<area shape="rect" href="namespacemode__prandtl.html#a097570046ee9b5d0e96fecd67d6094ed" title=" " alt="" coords="253,698,455,726"/>
 <area shape="poly" title=" " alt="" coords="121,866,175,804,211,771,251,742,280,730,276,734,254,746,215,775,179,808,126,868"/>
-<area shape="rect" href="namespacemode__prandtl.html#aff3f033bb68e6cc264eade77afa109cf" title=" " alt="" coords="509,648,711,675"/>
+<area shape="rect" href="namespacemode__prandtl.html#aadde45f2599c9a2b2fe7840ea15f8811" title=" " alt="" coords="509,648,711,675"/>
 <area shape="poly" title=" " alt="" coords="112,866,131,825,161,774,201,724,225,702,251,685,311,660,374,647,437,642,498,644,494,647,437,647,375,652,312,665,254,689,228,707,205,728,165,777,136,827,118,868"/>
-<area shape="rect" href="namespacemode__prandtl.html#a8d08df435479ec383eee834aa4909168" title=" " alt="" coords="254,800,454,827"/>
+<area shape="rect" href="namespacemode__prandtl.html#a8a190d8b1c7a9444d556f3aadac6eb7c" title=" " alt="" coords="254,800,454,827"/>
 <area shape="poly" title=" " alt="" coords="179,865,293,830,290,835,182,869"/>
-<area shape="rect" href="namespacemode__prandtl.html#a2a709eb935cc85758a3382b4e7ad0260" title=" " alt="" coords="506,749,714,777"/>
+<area shape="rect" href="namespacemode__prandtl.html#ae3cfdb15eeec6baaceb037fc2a973351" title=" " alt="" coords="506,749,714,777"/>
 <area shape="poly" title=" " alt="" coords="128,865,182,822,216,802,252,786,312,769,373,759,434,754,493,754,489,757,435,760,374,764,313,774,254,791,218,807,185,827,133,868"/>
 <area shape="rect" href="shugrad_8h.html#a98b05500e5d00f5ab8af75ea445a0196" title=" " alt="" coords="330,1566,378,1594"/>
 <area shape="poly" title=" " alt="" coords="108,910,124,1044,152,1236,172,1336,195,1427,223,1502,238,1530,255,1552,268,1562,283,1569,317,1579,312,1580,281,1574,265,1566,251,1555,234,1533,218,1504,190,1429,167,1337,147,1237,119,1044,108,915"/>
@@ -595,12 +600,12 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__turb__ver__thermo__flux_a2c45442eb335f85a7ac45b7b56ad80ad_icgraph.png" border="0" usemap="#anamespacemode__turb__ver__thermo__flux_a2c45442eb335f85a7ac45b7b56ad80ad_icgraph" loading="lazy" alt=""/></div>
-<map name="anamespacemode__turb__ver__thermo__flux_a2c45442eb335f85a7ac45b7b56ad80ad_icgraph" id="anamespacemode__turb__ver__thermo__flux_a2c45442eb335f85a7ac45b7b56ad80ad_icgraph">
+<div class="center"><img src="namespacemode__turb__ver__thermo__flux_a6f51bb07d7e4afc8442be75e16f7e505_icgraph.png" border="0" usemap="#anamespacemode__turb__ver__thermo__flux_a6f51bb07d7e4afc8442be75e16f7e505_icgraph" loading="lazy" alt=""/></div>
+<map name="anamespacemode__turb__ver__thermo__flux_a6f51bb07d7e4afc8442be75e16f7e505_icgraph" id="anamespacemode__turb__ver__thermo__flux_a6f51bb07d7e4afc8442be75e16f7e505_icgraph">
 <area shape="rect" title=" " alt="" coords="465,5,665,50"/>
-<area shape="rect" href="namespacemode__turb__ver.html#ae492dc0352339b75c3d88aab638ab37b" title=" " alt="" coords="236,14,417,42"/>
+<area shape="rect" href="namespacemode__turb__ver.html#a999c1a87bc8db836f6fb3fc31767135f" title=" " alt="" coords="236,14,417,42"/>
 <area shape="poly" title=" " alt="" coords="447,28,418,30,418,25,452,28"/>
-<area shape="rect" href="turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="141,14,188,42"/>
+<area shape="rect" href="turb_8F90.html#a1c4fdc75a2d21e77482a209c74e8b8b1" title=" " alt="" coords="141,14,188,42"/>
 <area shape="poly" title=" " alt="" coords="218,28,188,30,188,25,223,27"/>
 <area shape="rect" href="main__turb_8F90.html#ae55925d0151bca669f2e99235cf77eff" title=" " alt="" coords="5,14,93,42"/>
 <area shape="poly" title=" " alt="" coords="122,28,93,30,93,25,128,27"/>

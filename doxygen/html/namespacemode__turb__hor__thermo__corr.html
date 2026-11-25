@@ -80,11 +80,11 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a63564dc2f9ebe3952970c1e1ca01853f" id="r_a63564dc2f9ebe3952970c1e1ca01853f"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a63564dc2f9ebe3952970c1e1ca01853f">turb_hor_thermo_corr</a> (d, cst, turbn, nebn, tles, krr, krrl, krri, oocean, ocompute_src, o2d, oflat, tpfile, pinv_pdxx, pinv_pdyy, pdxx, pdyy, pdzz, pdzx, pdzy, pthvref, pwm, pthlm, prm, ptkem, plm, pleps, plocpexnm, patheta, pamoist, psrcm, psigs)</td></tr>
+<tr class="memitem:a1834ae4557bd54e7b74a6a6894d37059" id="r_a1834ae4557bd54e7b74a6a6894d37059"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1834ae4557bd54e7b74a6a6894d37059">turb_hor_thermo_corr</a> (d, cst, turbn, nebn, tles, krr, krrl, krri, oocean, ocompute_src, o2d, oflat, tpfile, pinv_pdxx, pinv_pdyy, pdxx, pdyy, pdzz, pdzx, pdzy, pthvref, pwm, pthlm, prm, ptkem, plm, pleps, plocpexnm, patheta, pamoist, psrcm, pturb_spp, psigs)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a63564dc2f9ebe3952970c1e1ca01853f" name="a63564dc2f9ebe3952970c1e1ca01853f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a63564dc2f9ebe3952970c1e1ca01853f">&#9670;&#160;</a></span>turb_hor_thermo_corr()</h2>
+<a id="a1834ae4557bd54e7b74a6a6894d37059" name="a1834ae4557bd54e7b74a6a6894d37059"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1834ae4557bd54e7b74a6a6894d37059">&#9670;&#160;</a></span>turb_hor_thermo_corr()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -247,6 +247,11 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,nturb_s), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pturb_spp</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>psigs</em></span>&#160;)</td>
         </tr>
       </table>
@@ -256,8 +261,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__turb__hor__thermo__corr_a63564dc2f9ebe3952970c1e1ca01853f_cgraph.png" border="0" usemap="#anamespacemode__turb__hor__thermo__corr_a63564dc2f9ebe3952970c1e1ca01853f_cgraph" loading="lazy" alt=""/></div>
-<map name="anamespacemode__turb__hor__thermo__corr_a63564dc2f9ebe3952970c1e1ca01853f_cgraph" id="anamespacemode__turb__hor__thermo__corr_a63564dc2f9ebe3952970c1e1ca01853f_cgraph">
+<div class="center"><img src="namespacemode__turb__hor__thermo__corr_a1834ae4557bd54e7b74a6a6894d37059_cgraph.png" border="0" usemap="#anamespacemode__turb__hor__thermo__corr_a1834ae4557bd54e7b74a6a6894d37059_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacemode__turb__hor__thermo__corr_a1834ae4557bd54e7b74a6a6894d37059_cgraph" id="anamespacemode__turb__hor__thermo__corr_a1834ae4557bd54e7b74a6a6894d37059_cgraph">
 <area shape="rect" title=" " alt="" coords="5,230,207,275"/>
 <area shape="rect" href="shugrad_8h.html#a70720c1ee7f7e19ba33917749bf6eac0" title=" " alt="" coords="303,5,370,33"/>
 <area shape="poly" title=" " alt="" coords="115,228,136,189,166,139,205,88,253,44,290,27,286,31,256,48,209,92,170,142,140,191,120,231"/>
@@ -315,14 +320,14 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__turb__hor__thermo__corr_a63564dc2f9ebe3952970c1e1ca01853f_icgraph.png" border="0" usemap="#anamespacemode__turb__hor__thermo__corr_a63564dc2f9ebe3952970c1e1ca01853f_icgraph" loading="lazy" alt=""/></div>
-<map name="anamespacemode__turb__hor__thermo__corr_a63564dc2f9ebe3952970c1e1ca01853f_icgraph" id="anamespacemode__turb__hor__thermo__corr_a63564dc2f9ebe3952970c1e1ca01853f_icgraph">
+<div class="center"><img src="namespacemode__turb__hor__thermo__corr_a1834ae4557bd54e7b74a6a6894d37059_icgraph.png" border="0" usemap="#anamespacemode__turb__hor__thermo__corr_a1834ae4557bd54e7b74a6a6894d37059_icgraph" loading="lazy" alt=""/></div>
+<map name="anamespacemode__turb__hor__thermo__corr_a1834ae4557bd54e7b74a6a6894d37059_icgraph" id="anamespacemode__turb__hor__thermo__corr_a1834ae4557bd54e7b74a6a6894d37059_icgraph">
 <area shape="rect" title=" " alt="" coords="664,5,865,50"/>
-<area shape="rect" href="namespacemode__turb__hor.html#a392ed5235673e3faa3d5c1f17974a7cc" title=" " alt="" coords="434,14,616,42"/>
+<area shape="rect" href="namespacemode__turb__hor.html#a64236760426cabc897834e618468f4fa" title=" " alt="" coords="434,14,616,42"/>
 <area shape="poly" title=" " alt="" coords="645,28,616,30,616,25,651,28"/>
-<area shape="rect" href="namespacemode__turb__hor__splt.html#af567a0992241afa9a2e5ad86eb96f424" title=" " alt="" coords="236,5,386,50"/>
+<area shape="rect" href="namespacemode__turb__hor__splt.html#a39b0c606ec53811e1cfe049205233414" title=" " alt="" coords="236,5,386,50"/>
 <area shape="poly" title=" " alt="" coords="416,28,387,30,387,25,422,28"/>
-<area shape="rect" href="turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="141,14,188,42"/>
+<area shape="rect" href="turb_8F90.html#a1c4fdc75a2d21e77482a209c74e8b8b1" title=" " alt="" coords="141,14,188,42"/>
 <area shape="poly" title=" " alt="" coords="218,28,189,30,189,25,223,27"/>
 <area shape="rect" href="main__turb_8F90.html#ae55925d0151bca669f2e99235cf77eff" title=" " alt="" coords="5,14,93,42"/>
 <area shape="poly" title=" " alt="" coords="122,28,93,30,93,25,128,27"/>

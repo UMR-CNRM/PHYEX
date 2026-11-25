@@ -80,11 +80,11 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:ad03a9587f73e44844117e77ccc7cedeb" id="r_ad03a9587f73e44844117e77ccc7cedeb"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad03a9587f73e44844117e77ccc7cedeb">rmc01</a> (d, cst, csturb, turbn, pzz, pdxx, pdyy, pdzz, pdircoszw, psbl_depth, plmo, plk, pleps)</td></tr>
+<tr class="memitem:a88b279ec5da8773f6db696a13a634f76" id="r_a88b279ec5da8773f6db696a13a634f76"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a88b279ec5da8773f6db696a13a634f76">rmc01</a> (d, cst, csturb, turbn, pzz, pdxx, pdyy, pdzz, pdircoszw, psbl_depth, plmo, pturb_spp, plk, pleps)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
-<a id="ad03a9587f73e44844117e77ccc7cedeb" name="ad03a9587f73e44844117e77ccc7cedeb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad03a9587f73e44844117e77ccc7cedeb">&#9670;&#160;</a></span>rmc01()</h2>
+<a id="a88b279ec5da8773f6db696a13a634f76" name="a88b279ec5da8773f6db696a13a634f76"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a88b279ec5da8773f6db696a13a634f76">&#9670;&#160;</a></span>rmc01()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -147,6 +147,11 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,nturb_s), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pturb_spp</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>plk</em></span>, </td>
         </tr>
         <tr>
@@ -161,8 +166,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__rmc01_ad03a9587f73e44844117e77ccc7cedeb_cgraph.png" border="0" usemap="#anamespacemode__rmc01_ad03a9587f73e44844117e77ccc7cedeb_cgraph" loading="lazy" alt=""/></div>
-<map name="anamespacemode__rmc01_ad03a9587f73e44844117e77ccc7cedeb_cgraph" id="anamespacemode__rmc01_ad03a9587f73e44844117e77ccc7cedeb_cgraph">
+<div class="center"><img src="namespacemode__rmc01_a88b279ec5da8773f6db696a13a634f76_cgraph.png" border="0" usemap="#anamespacemode__rmc01_a88b279ec5da8773f6db696a13a634f76_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacemode__rmc01_a88b279ec5da8773f6db696a13a634f76_cgraph" id="anamespacemode__rmc01_a88b279ec5da8773f6db696a13a634f76_cgraph">
 <area shape="rect" title=" " alt="" coords="5,136,161,164"/>
 <area shape="rect" href="namespacemode__sbl__phy.html#a379def67dd41a72eddcb36417f6cf72c" title=" " alt="" coords="211,5,424,33"/>
 <area shape="poly" title=" " alt="" coords="95,134,142,89,173,64,207,43,227,37,223,40,210,48,176,69,145,93,99,137"/>
@@ -187,10 +192,10 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__rmc01_ad03a9587f73e44844117e77ccc7cedeb_icgraph.png" border="0" usemap="#anamespacemode__rmc01_ad03a9587f73e44844117e77ccc7cedeb_icgraph" loading="lazy" alt=""/></div>
-<map name="anamespacemode__rmc01_ad03a9587f73e44844117e77ccc7cedeb_icgraph" id="anamespacemode__rmc01_ad03a9587f73e44844117e77ccc7cedeb_icgraph">
+<div class="center"><img src="namespacemode__rmc01_a88b279ec5da8773f6db696a13a634f76_icgraph.png" border="0" usemap="#anamespacemode__rmc01_a88b279ec5da8773f6db696a13a634f76_icgraph" loading="lazy" alt=""/></div>
+<map name="anamespacemode__rmc01_a88b279ec5da8773f6db696a13a634f76_icgraph" id="anamespacemode__rmc01_a88b279ec5da8773f6db696a13a634f76_icgraph">
 <area shape="rect" title=" " alt="" coords="236,5,391,33"/>
-<area shape="rect" href="turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="141,5,188,33"/>
+<area shape="rect" href="turb_8F90.html#a1c4fdc75a2d21e77482a209c74e8b8b1" title=" " alt="" coords="141,5,188,33"/>
 <area shape="poly" title=" " alt="" coords="218,19,189,22,188,17,223,19"/>
 <area shape="rect" href="main__turb_8F90.html#ae55925d0151bca669f2e99235cf77eff" title=" " alt="" coords="5,5,93,33"/>
 <area shape="poly" title=" " alt="" coords="122,19,93,22,93,17,128,19"/>

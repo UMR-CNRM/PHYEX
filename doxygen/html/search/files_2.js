@@ -9,5 +9,6 @@ var searchData=
   ['compute_5fdiff_2ef90_6',['compute_diff.F90',['../compute__diff_8F90.html',1,'']]],
   ['compute_5ffrac_5fice_2efunc_2eh_7',['compute_frac_ice.func.h',['../compute__frac__ice_8func_8h.html',1,'']]],
   ['condensation_2ef90_8',['condensation.F90',['../condensation_8F90.html',1,'']]],
-  ['convect_5fsatmixratio_2eh_9',['convect_satmixratio.h',['../convect__satmixratio_8h.html',1,'']]]
+  ['convect_5fsatmixratio_2eh_9',['convect_satmixratio.h',['../convect__satmixratio_8h.html',1,'']]],
+  ['criauti_2efunc_2eh_10',['criauti.func.h',['../criauti_8func_8h.html',1,'']]]
 ];

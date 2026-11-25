@@ -86,12 +86,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a29825192db66ae4964a84f7e7c1ebc43" id="r_a29825192db66ae4964a84f7e7c1ebc43"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a29825192db66ae4964a84f7e7c1ebc43">ice_adjust</a> (d, cst, icep, nebn, turbn, parami, buconf, krr, hbuname, ptstep, psigqsat, prhodj, pexnref, prhodref, psigs, lmfconv, pmfconv, ppabst, pzz, pexn, pcf_mf, prc_mf, pri_mf, pweight_mf_cloud, picldfr, pwcldfr, pssio, pssiu, pifr, prv, prc, prvs, prcs, pth, pths, ocompute_src, psrcs, pcldfr, prr, pri, pris, prs, prg, tbudgets, kbudgets, pice_cld_wgt, prh, pout_rv, pout_rc, pout_ri, pout_th, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, phlc_hrc_mf, phlc_hcf_mf, phli_hri_mf, phli_hcf_mf)</td></tr>
+<tr class="memitem:a0abe6a247fb6b4576dec7a0af848a338" id="r_a0abe6a247fb6b4576dec7a0af848a338"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0abe6a247fb6b4576dec7a0af848a338">ice_adjust</a> (d, cst, icep, nebn, turbn, parami, buconf, krr, hbuname, ptstep, psigqsat, prhodj, pexnref, prhodref, psigs, lmfconv, pmfconv, ppabst, pzz, pexn, pcf_mf, prc_mf, pri_mf, pweight_mf_cloud, picldfr, pwcldfr, pssio, pssiu, pifr, prv, prc, prvs, prcs, pth, pths, ocompute_src, psrcs, pcldfr, prr, pri, pris, prs, prg, tbudgets, kbudgets, pice_cld_wgt, prh, prcriauti, prcriautc, pout_rv, pout_rc, pout_ri, pout_th, phlc_hrc, phlc_hcf, phli_hri, phli_hcf, phlc_hrc_mf, phlc_hcf_mf, phli_hri_mf, phli_hcf_mf)</td></tr>
 <tr class="memitem:a76a233164a9d077ddc32282fb018cb3c" id="r_a76a233164a9d077ddc32282fb018cb3c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a76a233164a9d077ddc32282fb018cb3c">iteration</a> (prv_in, prc_in, pri_in, prv_out, prc_out, pri_out)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a29825192db66ae4964a84f7e7c1ebc43" name="a29825192db66ae4964a84f7e7c1ebc43"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a29825192db66ae4964a84f7e7c1ebc43">&#9670;&#160;</a></span>ice_adjust()</h2>
+<a id="a0abe6a247fb6b4576dec7a0af848a338" name="a0abe6a247fb6b4576dec7a0af848a338"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0abe6a247fb6b4576dec7a0af848a338">&#9670;&#160;</a></span>ice_adjust()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -334,6 +334,16 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>prcriauti</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>prcriautc</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(d%nijt,d%nkt), intent(out), optional</td>          <td class="paramname"><span class="paramname"><em>pout_rv</em></span>, </td>
         </tr>
         <tr>
@@ -398,13 +408,15 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="ice__adjust_8F90_a29825192db66ae4964a84f7e7c1ebc43_cgraph.png" border="0" usemap="#aice__adjust_8F90_a29825192db66ae4964a84f7e7c1ebc43_cgraph" loading="lazy" alt=""/></div>
-<map name="aice__adjust_8F90_a29825192db66ae4964a84f7e7c1ebc43_cgraph" id="aice__adjust_8F90_a29825192db66ae4964a84f7e7c1ebc43_cgraph">
-<area shape="rect" title=" " alt="" coords="5,56,93,84"/>
-<area shape="rect" href="condensation_8F90.html#a932fe4eafeb129ea06fda6ec55f10f36" title=" " alt="" coords="265,56,373,84"/>
-<area shape="poly" title=" " alt="" coords="93,67,251,68,248,72,94,72"/>
-<area shape="rect" href="ice__adjust_8F90.html#a76a233164a9d077ddc32282fb018cb3c" title=" " alt="" coords="141,81,217,109"/>
-<area shape="poly" title=" " alt="" coords="92,76,128,84,123,86,94,81"/>
+<div class="center"><img src="ice__adjust_8F90_a0abe6a247fb6b4576dec7a0af848a338_cgraph.png" border="0" usemap="#aice__adjust_8F90_a0abe6a247fb6b4576dec7a0af848a338_cgraph" loading="lazy" alt=""/></div>
+<map name="aice__adjust_8F90_a0abe6a247fb6b4576dec7a0af848a338_cgraph" id="aice__adjust_8F90_a0abe6a247fb6b4576dec7a0af848a338_cgraph">
+<area shape="rect" title=" " alt="" coords="5,55,93,82"/>
+<area shape="rect" href="condensation_8F90.html#ae92f90f032afda4e4c5add1cff96b2b8" title=" " alt="" coords="265,56,373,84"/>
+<area shape="poly" title=" " alt="" coords="91,52,140,41,179,37,217,41,261,51,256,52,217,46,179,42,141,46,94,56"/>
+<area shape="rect" href="criauti_8func_8h.html#aca1e1cf023d224fea1ec6e0b47f4a7fa" title=" " alt="" coords="148,55,210,82"/>
+<area shape="poly" title=" " alt="" coords="92,66,134,67,130,70,94,71"/>
+<area shape="rect" href="ice__adjust_8F90.html#a76a233164a9d077ddc32282fb018cb3c" title=" " alt="" coords="141,107,217,134"/>
+<area shape="poly" title=" " alt="" coords="86,80,131,99,126,102,86,86"/>
 <area shape="rect" href="compute__frac__ice_8func_8h.html#a6acd9214f569a56dfe4b0fd2b94c133e" title=" " alt="" coords="444,5,580,33"/>
 <area shape="poly" title=" " alt="" coords="373,53,444,37,439,38,375,58"/>
 <area shape="rect" href="modd__tiwmx_8F90.html#ac0eeb2a00e14ce192423b42a243689e5" title=" " alt="" coords="797,107,857,134"/>
@@ -417,14 +429,14 @@ Here is the call graph for this function:</div>
 <area shape="poly" title=" " alt="" coords="550,132,651,175,646,175,549,138"/>
 <area shape="poly" title=" " alt="" coords="724,178,787,143,792,142,726,183"/>
 <area shape="poly" title=" " alt="" coords="677,179,673,172,676,163,685,157,700,155,715,157,725,166,719,165,713,162,700,160,687,162,680,166,679,172,682,182"/>
-<area shape="poly" title=" " alt="" coords="217,86,252,81,247,83,218,91"/>
+<area shape="poly" title=" " alt="" coords="216,104,267,88,262,91,218,109"/>
 </map>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="ice__adjust_8F90_a29825192db66ae4964a84f7e7c1ebc43_icgraph.png" border="0" usemap="#aice__adjust_8F90_a29825192db66ae4964a84f7e7c1ebc43_icgraph" loading="lazy" alt=""/></div>
-<map name="aice__adjust_8F90_a29825192db66ae4964a84f7e7c1ebc43_icgraph" id="aice__adjust_8F90_a29825192db66ae4964a84f7e7c1ebc43_icgraph">
+<div class="center"><img src="ice__adjust_8F90_a0abe6a247fb6b4576dec7a0af848a338_icgraph.png" border="0" usemap="#aice__adjust_8F90_a0abe6a247fb6b4576dec7a0af848a338_icgraph" loading="lazy" alt=""/></div>
+<map name="aice__adjust_8F90_a0abe6a247fb6b4576dec7a0af848a338_icgraph" id="aice__adjust_8F90_a0abe6a247fb6b4576dec7a0af848a338_icgraph">
 <area shape="rect" title=" " alt="" coords="181,5,268,33"/>
 <area shape="rect" href="main__ice__adjust_8F90.html#afeba0366abb7402856928b5c96e9e3e1" title=" " alt="" coords="5,5,133,33"/>
 <area shape="poly" title=" " alt="" coords="162,19,133,22,133,17,167,19"/>
@@ -472,14 +484,14 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="ice__adjust_8F90_source.html#l00504">504</a> of file <a class="el" href="ice__adjust_8F90_source.html">ice_adjust.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ice__adjust_8F90_source.html#l00546">546</a> of file <a class="el" href="ice__adjust_8F90_source.html">ice_adjust.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="ice__adjust_8F90_a76a233164a9d077ddc32282fb018cb3c_cgraph.png" border="0" usemap="#aice__adjust_8F90_a76a233164a9d077ddc32282fb018cb3c_cgraph" loading="lazy" alt=""/></div>
 <map name="aice__adjust_8F90_a76a233164a9d077ddc32282fb018cb3c_cgraph" id="aice__adjust_8F90_a76a233164a9d077ddc32282fb018cb3c_cgraph">
 <area shape="rect" title=" " alt="" coords="5,56,82,84"/>
-<area shape="rect" href="condensation_8F90.html#a932fe4eafeb129ea06fda6ec55f10f36" title=" " alt="" coords="130,56,238,84"/>
+<area shape="rect" href="condensation_8F90.html#ae92f90f032afda4e4c5add1cff96b2b8" title=" " alt="" coords="130,56,238,84"/>
 <area shape="poly" title=" " alt="" coords="81,67,116,68,112,71,83,72"/>
 <area shape="rect" href="compute__frac__ice_8func_8h.html#a6acd9214f569a56dfe4b0fd2b94c133e" title=" " alt="" coords="308,5,445,33"/>
 <area shape="poly" title=" " alt="" coords="238,53,309,36,304,39,240,58"/>
@@ -501,7 +513,7 @@ Here is the caller graph for this function:</div>
 <div class="center"><img src="ice__adjust_8F90_a76a233164a9d077ddc32282fb018cb3c_icgraph.png" border="0" usemap="#aice__adjust_8F90_a76a233164a9d077ddc32282fb018cb3c_icgraph" loading="lazy" alt=""/></div>
 <map name="aice__adjust_8F90_a76a233164a9d077ddc32282fb018cb3c_icgraph" id="aice__adjust_8F90_a76a233164a9d077ddc32282fb018cb3c_icgraph">
 <area shape="rect" title=" " alt="" coords="316,5,392,33"/>
-<area shape="rect" href="ice__adjust_8F90.html#a29825192db66ae4964a84f7e7c1ebc43" title=" " alt="" coords="181,5,268,33"/>
+<area shape="rect" href="ice__adjust_8F90.html#a0abe6a247fb6b4576dec7a0af848a338" title=" " alt="" coords="181,5,268,33"/>
 <area shape="poly" title=" " alt="" coords="298,19,268,22,268,17,303,19"/>
 <area shape="rect" href="main__ice__adjust_8F90.html#afeba0366abb7402856928b5c96e9e3e1" title=" " alt="" coords="5,5,133,33"/>
 <area shape="poly" title=" " alt="" coords="162,19,133,22,133,17,167,19"/>

@@ -86,11 +86,11 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:aac617e00711b1f228ad05964d1220850" id="r_aac617e00711b1f228ad05964d1220850"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aac617e00711b1f228ad05964d1220850">ice4_stepping</a> (d, cst, parami, icep, iced, buconf, ptstep, krr, osave_micro, ldmicro, oelec, pexn, prhodref, ppabst, pcit, pcldfr, phlc_hcf, phlc_hrc, phli_hcf, phli_hri, pths, prs, prrevav, prainfr, psigs, ptht, prt, picldfr, pzzz, pconc3d, pssio, pssiu, pifr, pbudgets, platham_iaggs)</td></tr>
+<tr class="memitem:a28d1838734056de7cda253c206e49507" id="r_a28d1838734056de7cda253c206e49507"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a28d1838734056de7cda253c206e49507">ice4_stepping</a> (d, cst, parami, icep, iced, buconf, ptstep, krr, osave_micro, ldmicro, oelec, pexn, prhodref, ppabst, pcit, pcldfr, phlc_hcf, phlc_hrc, phli_hcf, phli_hri, pths, prs, prrevav, prainfr, psigs, ptht, prt, picldfr, pzzz, pconc3d, pssio, pssiu, pifr, pbudgets, platham_iaggs, prcriauti, prcriautc, picenu)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
-<a id="aac617e00711b1f228ad05964d1220850" name="aac617e00711b1f228ad05964d1220850"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aac617e00711b1f228ad05964d1220850">&#9670;&#160;</a></span>ice4_stepping()</h2>
+<a id="a28d1838734056de7cda253c206e49507" name="a28d1838734056de7cda253c206e49507"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a28d1838734056de7cda253c206e49507">&#9670;&#160;</a></span>ice4_stepping()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -268,7 +268,22 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, dimension(merge(d%nijt,0,oelec)), intent(in)</td>          <td class="paramname"><span class="paramname"><em>platham_iaggs</em></span>&#160;)</td>
+          <td class="paramtype">real, dimension(merge(d%nijt,0,oelec)), intent(in)</td>          <td class="paramname"><span class="paramname"><em>platham_iaggs</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>prcriauti</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>prcriautc</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, dimension(d%nijt), intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>picenu</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -277,57 +292,60 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="ice4__stepping_8F90_aac617e00711b1f228ad05964d1220850_cgraph.png" border="0" usemap="#aice4__stepping_8F90_aac617e00711b1f228ad05964d1220850_cgraph" loading="lazy" alt=""/></div>
-<map name="aice4__stepping_8F90_aac617e00711b1f228ad05964d1220850_cgraph" id="aice4__stepping_8F90_aac617e00711b1f228ad05964d1220850_cgraph">
-<area shape="rect" title=" " alt="" coords="5,373,117,401"/>
-<area shape="rect" href="namespacemode__ice4__tendencies.html#acfc3a15e2b30dc84416b1e1caa77c534" title=" " alt="" coords="165,365,335,410"/>
-<area shape="poly" title=" " alt="" coords="116,385,151,386,147,389,119,389"/>
-<area shape="rect" href="ice4__compute__pdf_8func_8h.html#a1855894a5888c2c9ff0ee8f70041ac4f" title=" " alt="" coords="420,5,561,33"/>
-<area shape="poly" title=" " alt="" coords="250,363,259,300,280,213,297,167,319,121,347,79,381,42,408,29,404,33,385,47,351,82,324,124,302,169,285,215,264,301,255,365"/>
-<area shape="rect" href="namespacemode__ice4__fast__rg.html#a155511bd6687ec7771206c5790011824" title=" " alt="" coords="414,57,567,102"/>
-<area shape="poly" title=" " alt="" coords="253,363,267,312,291,245,329,174,353,141,381,112,403,100,399,103,385,116,357,144,333,176,296,247,272,314,258,365"/>
-<area shape="rect" href="namespacemode__ice4__fast__rh.html#a799d07bd4ab369b7d4d135887dd8fd1f" title=" " alt="" coords="414,126,567,171"/>
-<area shape="poly" title=" " alt="" coords="258,363,275,324,302,275,337,225,381,181,402,170,398,174,385,185,341,228,306,278,280,326,262,365"/>
-<area shape="rect" href="namespacemode__ice4__fast__ri.html#a14c91ba098502ca4ea30e435170166a2" title=" " alt="" coords="416,196,565,240"/>
-<area shape="poly" title=" " alt="" coords="266,363,314,307,346,276,382,250,404,241,400,244,384,255,349,281,318,310,270,366"/>
-<area shape="rect" href="namespacemode__ice4__fast__ri__rs.html#a7dc4e4e6078f3fffe538de0ac61f45ab" title=" " alt="" coords="411,593,570,638"/>
-<area shape="poly" title=" " alt="" coords="261,407,281,446,308,491,342,538,385,578,400,590,395,589,381,583,338,542,303,494,276,448,260,412"/>
-<area shape="rect" href="namespacemode__ice4__fast__rs.html#af4e380f6e1d0dbda96264489b3b9645d" title=" " alt="" coords="415,265,566,310"/>
-<area shape="poly" title=" " alt="" coords="292,362,382,319,403,314,398,317,384,324,295,367"/>
-<area shape="rect" href="ice4__nucleation_8func_8h.html#afc4446498e0a8eded764a80f11f087c5" title=" " alt="" coords="429,403,552,430"/>
-<area shape="poly" title=" " alt="" coords="335,395,416,406,411,408,336,400"/>
-<area shape="rect" href="namespacemode__ice4__rimltc.html#a6d35064ca9927ea44132093a21ccd628" title=" " alt="" coords="404,454,577,499"/>
-<area shape="poly" title=" " alt="" coords="303,407,384,439,405,448,400,449,382,444,304,413"/>
-<area shape="rect" href="namespacemode__ice4__rrhong.html#ac0c126625d7e5cb291cfd077828ba760" title=" " alt="" coords="402,524,579,568"/>
-<area shape="poly" title=" " alt="" coords="270,407,320,459,351,486,384,509,395,516,390,517,382,513,348,490,316,463,270,413"/>
-<area shape="rect" href="namespacemode__ice4__rsrimcg__old.html#a30790c981fb0f66331e4f216b42d85d1" title=" " alt="" coords="403,334,578,379"/>
-<area shape="poly" title=" " alt="" coords="334,374,390,368,385,371,337,379"/>
-<area shape="rect" href="namespacemode__ice4__slow.html#a75f9b2951449d5f670e373424ef4036b" title=" " alt="" coords="390,661,591,689"/>
-<area shape="poly" title=" " alt="" coords="257,407,272,459,296,524,333,591,357,622,385,648,390,654,385,653,381,652,353,625,329,594,291,526,267,461,255,412"/>
-<area shape="rect" href="namespacemode__ice4__warm.html#ad9602ae8e2b055f4a86eff2bebfdca90" title=" " alt="" coords="383,713,598,741"/>
-<area shape="poly" title=" " alt="" coords="255,408,267,468,290,547,306,588,327,629,353,666,385,699,392,706,387,705,381,702,349,669,323,631,301,590,284,548,262,470,253,413"/>
-<area shape="rect" href="interp__micro_8func_8h.html#a02fe946211ee3426ca91e94f8f54d7ab" title=" " alt="" coords="646,135,773,162"/>
-<area shape="poly" title=" " alt="" coords="563,99,651,129,646,130,564,105"/>
-<area shape="poly" title=" " alt="" coords="566,146,633,147,629,150,568,151"/>
-<area shape="rect" href="mode__ice4__fast__ri__rs_8F90.html#a3268a8301bcc44c9b3e8020e461c1efe" title=" " alt="" coords="660,601,759,629"/>
-<area shape="poly" title=" " alt="" coords="570,613,648,615,643,616,571,618"/>
-<area shape="poly" title=" " alt="" coords="565,265,597,250,647,212,685,176,689,172,650,216,600,255,568,270"/>
-<area shape="rect" href="interp__micro_8func_8h.html#a51805a9f6295fc647015d6fd65433055" title=" " alt="" coords="646,308,773,336"/>
-<area shape="poly" title=" " alt="" coords="566,297,634,309,628,310,568,302"/>
-<area shape="poly" title=" " alt="" coords="578,340,634,333,629,335,580,345"/>
+<div class="center"><img src="ice4__stepping_8F90_a28d1838734056de7cda253c206e49507_cgraph.png" border="0" usemap="#aice4__stepping_8F90_a28d1838734056de7cda253c206e49507_cgraph" loading="lazy" alt=""/></div>
+<map name="aice4__stepping_8F90_a28d1838734056de7cda253c206e49507_cgraph" id="aice4__stepping_8F90_a28d1838734056de7cda253c206e49507_cgraph">
+<area shape="rect" title=" " alt="" coords="5,360,117,388"/>
+<area shape="rect" href="namespacemode__ice4__tendencies.html#aeaa81e01ef5dbb42db4611667bba1ac8" title=" " alt="" coords="165,352,335,396"/>
+<area shape="poly" title=" " alt="" coords="116,372,151,372,147,376,119,376"/>
+<area shape="rect" href="ice4__compute__pdf_8func_8h.html#a715a4363b0472db8e4a2632bd4276bca" title=" " alt="" coords="420,5,561,33"/>
+<area shape="poly" title=" " alt="" coords="251,350,260,289,282,207,299,162,321,119,348,79,381,44,408,30,404,34,385,48,352,82,326,122,304,164,287,208,266,291,256,352"/>
+<area shape="rect" href="namespacemode__ice4__fast__rg.html#a155511bd6687ec7771206c5790011824" title=" " alt="" coords="414,109,567,154"/>
+<area shape="poly" title=" " alt="" coords="257,350,274,310,301,260,336,209,381,164,402,153,398,157,385,168,341,212,305,263,279,313,262,353"/>
+<area shape="rect" href="namespacemode__ice4__fast__rh.html#a799d07bd4ab369b7d4d135887dd8fd1f" title=" " alt="" coords="414,178,567,223"/>
+<area shape="poly" title=" " alt="" coords="265,350,313,292,345,260,382,233,402,224,398,228,384,237,349,264,317,295,269,353"/>
+<area shape="rect" href="namespacemode__ice4__fast__ri.html#a14c91ba098502ca4ea30e435170166a2" title=" " alt="" coords="416,386,565,431"/>
+<area shape="poly" title=" " alt="" coords="335,384,404,395,399,397,336,389"/>
+<area shape="rect" href="namespacemode__ice4__fast__ri__rs.html#a7dc4e4e6078f3fffe538de0ac61f45ab" title=" " alt="" coords="411,456,570,500"/>
+<area shape="poly" title=" " alt="" coords="290,394,384,441,402,449,397,450,382,446,290,399"/>
+<area shape="rect" href="namespacemode__ice4__fast__rs.html#af4e380f6e1d0dbda96264489b3b9645d" title=" " alt="" coords="415,248,566,292"/>
+<area shape="poly" title=" " alt="" coords="289,349,382,302,403,296,398,299,384,307,292,353"/>
+<area shape="rect" href="ice4__nucleation_8func_8h.html#a707608eb0d9d5b14ee74211b7ea281d9" title=" " alt="" coords="429,524,552,552"/>
+<area shape="poly" title=" " alt="" coords="267,394,316,453,348,484,384,510,417,525,411,526,382,515,345,488,312,457,266,399"/>
+<area shape="rect" href="namespacemode__ice4__rimltc.html#a6d35064ca9927ea44132093a21ccd628" title=" " alt="" coords="404,576,577,620"/>
+<area shape="poly" title=" " alt="" coords="262,394,282,432,308,476,343,522,385,561,394,569,389,569,381,565,339,525,304,479,277,434,261,399"/>
+<area shape="rect" href="namespacemode__ice4__rrhong.html#ac0c126625d7e5cb291cfd077828ba760" title=" " alt="" coords="402,645,579,690"/>
+<area shape="poly" title=" " alt="" coords="257,394,273,444,298,508,335,574,358,604,385,631,392,638,387,637,381,634,354,607,331,577,293,510,268,446,256,399"/>
+<area shape="rect" href="namespacemode__ice4__rsrimcg__old.html#a30790c981fb0f66331e4f216b42d85d1" title=" " alt="" coords="403,317,578,362"/>
+<area shape="poly" title=" " alt="" coords="334,359,390,353,385,355,337,364"/>
+<area shape="rect" href="namespacemode__ice4__slow.html#abd2665c3519c49172769089a09306500" title=" " alt="" coords="390,57,591,85"/>
+<area shape="poly" title=" " alt="" coords="253,350,265,298,289,228,306,192,327,156,352,123,381,94,389,91,386,95,385,99,356,126,331,159,311,194,294,230,270,299,258,352"/>
+<area shape="rect" href="namespacemode__ice4__warm.html#a1d0e8e98dcf9a35c913160acd7eea94b" title=" " alt="" coords="383,713,598,741"/>
+<area shape="poly" title=" " alt="" coords="254,394,266,457,287,540,304,584,325,626,352,666,385,700,389,706,384,704,381,704,348,669,321,629,299,586,282,541,260,458,252,399"/>
+<area shape="rect" href="criauti_8func_8h.html#aca1e1cf023d224fea1ec6e0b47f4a7fa" title=" " alt="" coords="678,32,741,60"/>
+<area shape="poly" title=" " alt="" coords="560,25,665,39,660,41,562,30"/>
+<area shape="rect" href="interp__micro_8func_8h.html#a02fe946211ee3426ca91e94f8f54d7ab" title=" " alt="" coords="646,187,773,214"/>
+<area shape="poly" title=" " alt="" coords="563,151,651,181,646,182,564,157"/>
+<area shape="poly" title=" " alt="" coords="566,198,633,199,629,202,568,203"/>
+<area shape="rect" href="mode__ice4__fast__ri__rs_8F90.html#a3268a8301bcc44c9b3e8020e461c1efe" title=" " alt="" coords="660,464,759,492"/>
+<area shape="poly" title=" " alt="" coords="570,475,648,477,643,478,571,480"/>
+<area shape="poly" title=" " alt="" coords="562,245,651,218,647,221,565,249"/>
+<area shape="rect" href="interp__micro_8func_8h.html#a51805a9f6295fc647015d6fd65433055" title=" " alt="" coords="646,291,773,318"/>
+<area shape="poly" title=" " alt="" coords="566,279,634,291,628,293,568,284"/>
+<area shape="poly" title=" " alt="" coords="578,323,634,316,629,318,580,328"/>
+<area shape="poly" title=" " alt="" coords="590,57,665,50,661,52,592,62"/>
 </map>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="ice4__stepping_8F90_aac617e00711b1f228ad05964d1220850_icgraph.png" border="0" usemap="#aice4__stepping_8F90_aac617e00711b1f228ad05964d1220850_icgraph" loading="lazy" alt=""/></div>
-<map name="aice4__stepping_8F90_aac617e00711b1f228ad05964d1220850_icgraph" id="aice4__stepping_8F90_aac617e00711b1f228ad05964d1220850_icgraph">
+<div class="center"><img src="ice4__stepping_8F90_a28d1838734056de7cda253c206e49507_icgraph.png" border="0" usemap="#aice4__stepping_8F90_a28d1838734056de7cda253c206e49507_icgraph" loading="lazy" alt=""/></div>
+<map name="aice4__stepping_8F90_a28d1838734056de7cda253c206e49507_icgraph" id="aice4__stepping_8F90_a28d1838734056de7cda253c206e49507_icgraph">
 <area shape="rect" title=" " alt="" coords="590,5,701,33"/>
-<area shape="rect" href="ice4__pack_8F90.html#a948eb6d3a84a58786759aaac6b911944" title=" " alt="" coords="286,5,372,33"/>
+<area shape="rect" href="ice4__pack_8F90.html#ae2f31a70ebeba4b51c5bee3d5bd06af0" title=" " alt="" coords="286,5,372,33"/>
 <area shape="poly" title=" " alt="" coords="571,19,373,22,373,17,577,19"/>
 <area shape="rect" href="ice4__pack_8F90.html#ae5885caf81262c3a3f0a4fd6ab24d5bd" title=" " alt="" coords="420,31,542,58"/>
 <area shape="poly" title=" " alt="" coords="577,30,542,38,542,32,572,30"/>
-<area shape="rect" href="rain__ice_8F90.html#a3fb8f0e1ffc8aec9460b0b326935c6f1" title=" " alt="" coords="166,5,238,33"/>
+<area shape="rect" href="rain__ice_8F90.html#a441166adaef34f6da960163ad1ba7c25" title=" " alt="" coords="166,5,238,33"/>
 <area shape="poly" title=" " alt="" coords="268,19,238,22,238,17,273,19"/>
 <area shape="rect" href="main__rain__ice_8F90.html#a99099c9da3ab35faf5226c772f061fde" title=" " alt="" coords="5,5,118,33"/>
 <area shape="poly" title=" " alt="" coords="147,20,118,22,118,17,152,19"/>

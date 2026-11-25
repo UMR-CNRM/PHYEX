@@ -86,11 +86,11 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a1855894a5888c2c9ff0ee8f70041ac4f" id="r_a1855894a5888c2c9ff0ee8f70041ac4f"><td class="memItemLeft" align="right" valign="top">elemental subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1855894a5888c2c9ff0ee8f70041ac4f">ice4_compute_pdf</a> (cst, icep, iced, hsubg_aucv_rc, hsubg_aucv_ri, hsubg_pr_pdf, ldmicro, prhodref, prct, prit, pcf, pt, psigma_rc, phlc_hcf, phlc_lcf, phlc_hrc, phlc_lrc, phli_hcf, phli_lcf, phli_hri, phli_lri, prf)</td></tr>
+<tr class="memitem:a715a4363b0472db8e4a2632bd4276bca" id="r_a715a4363b0472db8e4a2632bd4276bca"><td class="memItemLeft" align="right" valign="top">elemental subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a715a4363b0472db8e4a2632bd4276bca">ice4_compute_pdf</a> (cst, icep, iced, hsubg_aucv_rc, hsubg_aucv_ri, hsubg_pr_pdf, ldmicro, prhodref, prct, prit, pcf, pt, psigma_rc, phlc_hcf, phlc_lcf, phlc_hrc, phlc_lrc, phli_hcf, phli_lcf, phli_hri, phli_lri, prf, parami, prcriauti, prcriautc)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a1855894a5888c2c9ff0ee8f70041ac4f" name="a1855894a5888c2c9ff0ee8f70041ac4f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1855894a5888c2c9ff0ee8f70041ac4f">&#9670;&#160;</a></span>ice4_compute_pdf()</h2>
+<a id="a715a4363b0472db8e4a2632bd4276bca" name="a715a4363b0472db8e4a2632bd4276bca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a715a4363b0472db8e4a2632bd4276bca">&#9670;&#160;</a></span>ice4_compute_pdf()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -203,29 +203,54 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real, intent(out)</td>          <td class="paramname"><span class="paramname"><em>prf</em></span>&#160;)</td>
+          <td class="paramtype">real, intent(out)</td>          <td class="paramname"><span class="paramname"><em>prf</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="structmodd__param__ice__n_1_1param__ice__t.html">param_ice_t</a>), intent(in)</td>          <td class="paramname"><span class="paramname"><em>parami</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, intent(in)</td>          <td class="paramname"><span class="paramname"><em>prcriauti</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real, intent(in)</td>          <td class="paramname"><span class="paramname"><em>prcriautc</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p class="definition">Definition at line <a class="el" href="ice4__compute__pdf_8func_8h_source.html#l00009">9</a> of file <a class="el" href="ice4__compute__pdf_8func_8h_source.html">ice4_compute_pdf.func.h</a>.</p>
 <div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="ice4__compute__pdf_8func_8h_a715a4363b0472db8e4a2632bd4276bca_cgraph.png" border="0" usemap="#aice4__compute__pdf_8func_8h_a715a4363b0472db8e4a2632bd4276bca_cgraph" loading="lazy" alt=""/></div>
+<map name="aice4__compute__pdf_8func_8h_a715a4363b0472db8e4a2632bd4276bca_cgraph" id="aice4__compute__pdf_8func_8h_a715a4363b0472db8e4a2632bd4276bca_cgraph">
+<area shape="rect" title=" " alt="" coords="5,5,146,33"/>
+<area shape="rect" href="criauti_8func_8h.html#aca1e1cf023d224fea1ec6e0b47f4a7fa" title=" " alt="" coords="194,5,256,33"/>
+<area shape="poly" title=" " alt="" coords="146,17,181,19,175,19,146,22"/>
+</map>
+</div>
+<div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="ice4__compute__pdf_8func_8h_a1855894a5888c2c9ff0ee8f70041ac4f_icgraph.png" border="0" usemap="#aice4__compute__pdf_8func_8h_a1855894a5888c2c9ff0ee8f70041ac4f_icgraph" loading="lazy" alt=""/></div>
-<map name="aice4__compute__pdf_8func_8h_a1855894a5888c2c9ff0ee8f70041ac4f_icgraph" id="aice4__compute__pdf_8func_8h_a1855894a5888c2c9ff0ee8f70041ac4f_icgraph">
+<div class="center"><img src="ice4__compute__pdf_8func_8h_a715a4363b0472db8e4a2632bd4276bca_icgraph.png" border="0" usemap="#aice4__compute__pdf_8func_8h_a715a4363b0472db8e4a2632bd4276bca_icgraph" loading="lazy" alt=""/></div>
+<map name="aice4__compute__pdf_8func_8h_a715a4363b0472db8e4a2632bd4276bca_icgraph" id="aice4__compute__pdf_8func_8h_a715a4363b0472db8e4a2632bd4276bca_icgraph">
 <area shape="rect" title=" " alt="" coords="969,44,1110,72"/>
-<area shape="rect" href="namespacemode__ice4__tendencies.html#acfc3a15e2b30dc84416b1e1caa77c534" title=" " alt="" coords="751,5,921,50"/>
+<area shape="rect" href="namespacemode__ice4__tendencies.html#aeaa81e01ef5dbb42db4611667bba1ac8" title=" " alt="" coords="751,5,921,50"/>
 <area shape="poly" title=" " alt="" coords="952,45,922,43,922,38,957,46"/>
-<area shape="rect" href="rain__ice__part1_8F90.html#a0754f0f198bde13ed950ba6b4aec6f0f" title=" " alt="" coords="590,74,703,102"/>
+<area shape="rect" href="rain__ice__part1_8F90.html#a15788ddd6b908a39ab28d12a907ae576" title=" " alt="" coords="590,74,703,102"/>
 <area shape="poly" title=" " alt="" coords="956,65,703,86,703,81,951,65"/>
-<area shape="rect" href="ice4__stepping_8F90.html#aac617e00711b1f228ad05964d1220850" title=" " alt="" coords="591,14,702,42"/>
+<area shape="rect" href="ice4__stepping_8F90.html#a28d1838734056de7cda253c206e49507" title=" " alt="" coords="591,14,702,42"/>
 <area shape="poly" title=" " alt="" coords="733,28,703,30,702,25,738,28"/>
-<area shape="rect" href="ice4__pack_8F90.html#a948eb6d3a84a58786759aaac6b911944" title=" " alt="" coords="286,23,372,51"/>
+<area shape="rect" href="ice4__pack_8F90.html#ae2f31a70ebeba4b51c5bee3d5bd06af0" title=" " alt="" coords="286,23,372,51"/>
 <area shape="poly" title=" " alt="" coords="573,15,500,11,421,14,373,25,372,20,420,9,501,6,578,15"/>
 <area shape="rect" href="ice4__pack_8F90.html#ae5885caf81262c3a3f0a4fd6ab24d5bd" title=" " alt="" coords="420,23,542,51"/>
 <area shape="poly" title=" " alt="" coords="572,32,542,36,542,31,578,31"/>
-<area shape="rect" href="rain__ice_8F90.html#a3fb8f0e1ffc8aec9460b0b326935c6f1" title=" " alt="" coords="166,48,238,76"/>
+<area shape="rect" href="rain__ice_8F90.html#a441166adaef34f6da960163ad1ba7c25" title=" " alt="" coords="166,48,238,76"/>
 <area shape="poly" title=" " alt="" coords="273,48,239,58,238,53,268,49"/>
 <area shape="rect" href="main__rain__ice_8F90.html#a99099c9da3ab35faf5226c772f061fde" title=" " alt="" coords="5,48,118,76"/>
 <area shape="poly" title=" " alt="" coords="147,63,118,65,118,60,152,62"/>

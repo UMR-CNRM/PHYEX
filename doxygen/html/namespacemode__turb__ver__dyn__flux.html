@@ -80,11 +80,11 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a077a54e63ab22b827d3c526c990dd607" id="r_a077a54e63ab22b827d3c526c990dd607"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a077a54e63ab22b827d3c526c990dd607">turb_ver_dyn_flux</a> (d, cst, csturb, turbn, tles, ksv, o2d, oflat, krr, oocean, ocouples, pexpl, ptstep, tpfile, pdxx, pdyy, pdzz, pdzx, pdzy, pdircoszw, pzz, pcosslope, psinslope, psea_ucu, psea_vcu, prhodj, psfum, psfvm, pcdueff, ptau11m, ptau12m, ptau33m, pthlm, prm, psvm, pum, pvm, pwm, puslopem, pvslopem, ptkem, plm, mfmoist, pwu, pwv, prus, prvs, prws, pdp, ptp, pssufl_c, pssvfl_c, pssufl, pssvfl)</td></tr>
+<tr class="memitem:abca320138e995f0378530139b383a3cf" id="r_abca320138e995f0378530139b383a3cf"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abca320138e995f0378530139b383a3cf">turb_ver_dyn_flux</a> (d, cst, csturb, turbn, tles, ksv, o2d, oflat, krr, oocean, ocouples, pexpl, ptstep, tpfile, pdxx, pdyy, pdzz, pdzx, pdzy, pdircoszw, pzz, pcosslope, psinslope, psea_ucu, psea_vcu, prhodj, psfum, psfvm, pcdueff, ptau11m, ptau12m, ptau33m, pthlm, prm, psvm, pum, pvm, pwm, puslopem, pvslopem, ptkem, plm, mfmoist, pwu, pwv, prus, prvs, prws, pdp, ptp, pturb_spp, pssufl_c, pssvfl_c, pssufl, pssvfl)</td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a077a54e63ab22b827d3c526c990dd607" name="a077a54e63ab22b827d3c526c990dd607"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a077a54e63ab22b827d3c526c990dd607">&#9670;&#160;</a></span>turb_ver_dyn_flux()</h2>
+<a id="abca320138e995f0378530139b383a3cf" name="abca320138e995f0378530139b383a3cf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abca320138e995f0378530139b383a3cf">&#9670;&#160;</a></span>turb_ver_dyn_flux()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -342,6 +342,11 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">real, dimension(d%nijt,d%nkt,nturb_s), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pturb_spp</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">real, dimension(merge(d%nijt,0,ocouples)), intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>pssufl_c</em></span>, </td>
         </tr>
         <tr>
@@ -366,8 +371,8 @@ Functions/Subroutines</h2></td></tr>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__turb__ver__dyn__flux_a077a54e63ab22b827d3c526c990dd607_cgraph.png" border="0" usemap="#anamespacemode__turb__ver__dyn__flux_a077a54e63ab22b827d3c526c990dd607_cgraph" loading="lazy" alt=""/></div>
-<map name="anamespacemode__turb__ver__dyn__flux_a077a54e63ab22b827d3c526c990dd607_cgraph" id="anamespacemode__turb__ver__dyn__flux_a077a54e63ab22b827d3c526c990dd607_cgraph">
+<div class="center"><img src="namespacemode__turb__ver__dyn__flux_abca320138e995f0378530139b383a3cf_cgraph.png" border="0" usemap="#anamespacemode__turb__ver__dyn__flux_abca320138e995f0378530139b383a3cf_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacemode__turb__ver__dyn__flux_abca320138e995f0378530139b383a3cf_cgraph" id="anamespacemode__turb__ver__dyn__flux_abca320138e995f0378530139b383a3cf_cgraph">
 <area shape="rect" title=" " alt="" coords="5,769,187,814"/>
 <area shape="rect" href="shugrad_8h.html#a385c9cd68b2d9f0eeba9346f10a2b1e2" title=" " alt="" coords="533,120,575,148"/>
 <area shape="poly" title=" " alt="" coords="97,768,109,646,135,470,153,379,175,297,202,229,217,203,233,184,265,160,302,142,341,130,381,124,457,121,520,127,515,130,457,126,381,129,342,136,304,147,268,164,237,188,221,206,206,232,180,298,158,381,140,471,114,647,102,769"/>
@@ -497,12 +502,12 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacemode__turb__ver__dyn__flux_a077a54e63ab22b827d3c526c990dd607_icgraph.png" border="0" usemap="#anamespacemode__turb__ver__dyn__flux_a077a54e63ab22b827d3c526c990dd607_icgraph" loading="lazy" alt=""/></div>
-<map name="anamespacemode__turb__ver__dyn__flux_a077a54e63ab22b827d3c526c990dd607_icgraph" id="anamespacemode__turb__ver__dyn__flux_a077a54e63ab22b827d3c526c990dd607_icgraph">
+<div class="center"><img src="namespacemode__turb__ver__dyn__flux_abca320138e995f0378530139b383a3cf_icgraph.png" border="0" usemap="#anamespacemode__turb__ver__dyn__flux_abca320138e995f0378530139b383a3cf_icgraph" loading="lazy" alt=""/></div>
+<map name="anamespacemode__turb__ver__dyn__flux_abca320138e995f0378530139b383a3cf_icgraph" id="anamespacemode__turb__ver__dyn__flux_abca320138e995f0378530139b383a3cf_icgraph">
 <area shape="rect" title=" " alt="" coords="465,5,647,50"/>
-<area shape="rect" href="namespacemode__turb__ver.html#ae492dc0352339b75c3d88aab638ab37b" title=" " alt="" coords="236,14,417,42"/>
+<area shape="rect" href="namespacemode__turb__ver.html#a999c1a87bc8db836f6fb3fc31767135f" title=" " alt="" coords="236,14,417,42"/>
 <area shape="poly" title=" " alt="" coords="447,28,418,30,418,25,453,28"/>
-<area shape="rect" href="turb_8F90.html#a23227e569d418665dfb37602bf10a2f5" title=" " alt="" coords="141,14,188,42"/>
+<area shape="rect" href="turb_8F90.html#a1c4fdc75a2d21e77482a209c74e8b8b1" title=" " alt="" coords="141,14,188,42"/>
 <area shape="poly" title=" " alt="" coords="218,28,188,30,188,25,223,27"/>
 <area shape="rect" href="main__turb_8F90.html#ae55925d0151bca669f2e99235cf77eff" title=" " alt="" coords="5,14,93,42"/>
 <area shape="poly" title=" " alt="" coords="122,28,93,30,93,25,128,27"/>
