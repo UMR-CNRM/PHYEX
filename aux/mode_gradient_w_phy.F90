@@ -58,16 +58,16 @@ IMPLICIT NONE
 !*       0.1   declarations of arguments and result
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the W point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZX    ! metric coefficient dzx
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the W point
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZX    ! metric coefficient dzx
 LOGICAL, INTENT(IN) :: OFLAT
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),INTENT(OUT) :: PGX_W_UW ! result UW point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5
-INTEGER :: IIB,IJB,IIE,IJE,IKT
-INTEGER :: JI,JJ,JK
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(OUT) :: PGX_W_UW ! result UW point
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5
+INTEGER :: IIJB,IIJE,IKT
+INTEGER :: JIJ, JK
 !
 !
 !*       0.2   declaration of local variables
@@ -81,19 +81,15 @@ INTEGER :: JI,JJ,JK
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_W_UW',0,ZHOOK_HANDLE)
-IIE=D%NIEC
-IIB=D%NIBC
-IJE=D%NJEC
-IJB=D%NJBC
+IIJB=D%NIJB
+IIJE=D%NIJE
 IKT=D%NKT
 CALL MZM_PHY(D,PDXX,ZWORK1)
 CALL DXM_PHY(D,PA,ZWORK2)
 
 DO JK=1, IKT
-  DO JJ=IJB, IJE
-    DO JI=IIB, IIE
-      ZWORK3(JI, JJ, JK) = ZWORK2(JI, JJ, JK) / ZWORK1(JI, JJ, JK)
-    END DO
+  DO JIJ=IIJB, IIJE
+    ZWORK3(JIJ, JK) = ZWORK2(JIJ, JK) / ZWORK1(JIJ, JK)
   END DO
 END DO
 
@@ -106,22 +102,18 @@ IF (.NOT. OFLAT) THEN
   CALL MXM_PHY(D,PDZZ,ZWORK2)
   
   DO JK=1, IKT
-    DO JJ=IJB, IJE
-      DO JI=IIB, IIE
-        PGX_W_UW(JI, JJ, JK)= ZWORK3(JI, JJ, JK)    &
-                       - ZWORK5(JI, JJ, JK)*PDZX(JI, JJ, JK)  &
-                       / (ZWORK1(JI, JJ, JK)*ZWORK2(JI, JJ, JK))
-      END DO
+    DO JIJ=IIJB, IIJE
+      PGX_W_UW(JIJ, JK)= ZWORK3(JIJ, JK)    &
+                     - ZWORK5(JIJ, JK)*PDZX(JIJ, JK)  &
+                     / (ZWORK1(JIJ, JK)*ZWORK2(JIJ, JK))
     END DO
   END DO
   
 ELSE
   
   DO JK=1, IKT
-    DO JJ=IJB, IJE
-      DO JI=IIB, IIE
-        PGX_W_UW(JI, JJ, JK) = ZWORK3(JI, JJ, JK)
-      END DO
+    DO JIJ=IIJB, IIJE
+      PGX_W_UW(JIJ, JK) = ZWORK3(JIJ, JK)
     END DO
   END DO
   
@@ -189,16 +181,16 @@ IMPLICIT NONE
 !*       0.1   declarations of arguments and result
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the W point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDYY    ! metric coefficient dxx
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZY    ! metric coefficient dzx
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the W point
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDYY    ! metric coefficient dxx
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZY    ! metric coefficient dzx
 LOGICAL, INTENT(IN) :: OFLAT
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),INTENT(OUT) :: PGY_W_VW ! result UW point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5
-INTEGER :: IIB,IJB,IIE,IJE,IKT
-INTEGER :: JI,JJ,JK
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(OUT) :: PGY_W_VW ! result UW point
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5
+INTEGER :: IIJB,IIJE,IKT
+INTEGER :: JIJ, JK
 !
 !*       0.2   declaration of local variables
 !
@@ -219,19 +211,15 @@ IF (LHOOK) CALL DR_HOOK('GY_W_VW',0,ZHOOK_HANDLE)
 !  PGY_W_VW(:,:,:)= DYM(PA(:,:,:))/(MZM(PDYY(:,:,:), KKA, KKU, KL))
 !END IF
 !
-IIE=D%NIEC
-IIB=D%NIBC
-IJE=D%NJEC
-IJB=D%NJBC
+IIJB=D%NIJB
+IIJE=D%NIJE
 IKT=D%NKT
 CALL MZM_PHY(D,PDYY,ZWORK1)
 CALL DYM_PHY(D,PA,ZWORK2)
 
 DO JK=1, IKT
-  DO JJ=IJB, IJE
-    DO JI=IIB, IIE
-      ZWORK3(JI, JJ, JK) = ZWORK2(JI, JJ, JK) / ZWORK1(JI, JJ, JK)
-    END DO
+  DO JIJ=IIJB, IIJE
+    ZWORK3(JIJ, JK) = ZWORK2(JIJ, JK) / ZWORK1(JIJ, JK)
   END DO
 END DO
 
@@ -244,22 +232,18 @@ IF (.NOT. OFLAT) THEN
   CALL MYM_PHY(D,PDZZ,ZWORK2)
   
   DO JK=1, IKT
-    DO JJ=IJB, IJE
-      DO JI=IIB, IIE
-        PGY_W_VW(JI, JJ, JK)= ZWORK3(JI, JJ, JK)    &
-                       - ZWORK5(JI, JJ, JK)*PDZY(JI, JJ, JK)  &
-                       / (ZWORK1(JI, JJ, JK)*ZWORK2(JI, JJ, JK))
-      END DO
+    DO JIJ=IIJB, IIJE
+      PGY_W_VW(JIJ, JK)= ZWORK3(JIJ, JK)    &
+                     - ZWORK5(JIJ, JK)*PDZY(JIJ, JK)  &
+                     / (ZWORK1(JIJ, JK)*ZWORK2(JIJ, JK))
     END DO
   END DO
   
 ELSE
   
   DO JK=1, IKT
-    DO JJ=IJB, IJE
-      DO JI=IIB, IIE
-        PGY_W_VW(JI, JJ, JK)= ZWORK3(JI, JJ, JK) 
-      END DO
+    DO JIJ=IIJB, IIJE
+      PGY_W_VW(JIJ, JK)= ZWORK3(JIJ, JK) 
     END DO
   END DO
   
@@ -326,13 +310,13 @@ IMPLICIT NONE
 !*       0.1   declarations of arguments and result
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the W point
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) , INTENT(OUT):: PGZ_W_M ! result mass point
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PA      ! variable at the W point
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(D%NIJT,D%NKT) , INTENT(OUT):: PGZ_W_M ! result mass point
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWORK1, ZWORK2
-INTEGER :: IIB,IJB,IIE,IJE,IKT
-INTEGER :: JI,JJ,JK
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZWORK1, ZWORK2
+INTEGER :: IIJB,IIJE,IKT
+INTEGER :: JIJ,JK
 !
 !
 !*       0.2   declaration of local variables
@@ -346,19 +330,15 @@ INTEGER :: JI,JJ,JK
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GZ_W_M',0,ZHOOK_HANDLE)
-IIE=D%NIEC
-IIB=D%NIBC
-IJE=D%NJEC
-IJB=D%NJBC
+IIJB=D%NIJB
+IIJE=D%NIJE
 IKT=D%NKT
 CALL DZF_PHY(D,PA,ZWORK1)
 CALL MZF_PHY(D,PDZZ,ZWORK2)
 
 DO JK=1, IKT
-  DO JJ=IJB, IJE
-    DO JI=IIB, IIE
-      PGZ_W_M(JI, JJ, JK)= ZWORK1(JI, JJ, JK)/ZWORK2(JI, JJ, JK)    
-    END DO
+  DO JIJ=IIJB, IIJE
+    PGZ_W_M(JIJ, JK)= ZWORK1(JIJ, JK)/ZWORK2(JIJ, JK)
   END DO
 END DO
 
