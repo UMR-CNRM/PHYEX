@@ -1,12 +1,18 @@
-MODULE MODE_RAIN_ICE_OLD_ICENUMBER2
-
-  IMPLICIT NONE
-
-  CONTAINS
-
-  PURE FUNCTION ICENUMBER2(Q_ICE, T3D) RESULT(ICENUMBER)
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+! ******* TO BE INCLUDED IN THE *CONTAINS* OF A SUBROUTINE, IN ORDER TO EASE AUTOMATIC INLINING ******
+! => Don't use drHook !!!
+! Ice crystal number concentration from the ice mixing ratio and the temperature (radiative
+! effective radius of ice crystals as a function of temperature), used by RAIN_ICE_OLD
+! (formerly in mode_rain_ice_old_icenumber2.F90)
+!
+  ELEMENTAL FUNCTION ICENUMBER2(Q_ICE, T3D) RESULT(ICENUMBER)
 
     IMPLICIT NONE
+
 
     REAL, INTENT(IN) :: Q_ICE
     REAL, INTENT(IN) :: T3D
@@ -78,5 +84,3 @@ MODULE MODE_RAIN_ICE_OLD_ICENUMBER2
 !+---+-----------------------------------------------------------------+
 
   END FUNCTION ICENUMBER2
-
-END MODULE MODE_RAIN_ICE_OLD_ICENUMBER2

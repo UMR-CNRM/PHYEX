@@ -11,8 +11,6 @@ SUBROUTINE ICECLOUD  &
   USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
   USE MODD_CST,ONLY : CST_t
   USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
-  USE MODE_TIWMX, ONLY: ESATW, ESATI
-  USE MODE_QSATMX_TAB, ONLY: QSATMX_TAB
   IMPLICIT NONE
 !-----------------------------------------------------------------------
 !
@@ -207,5 +205,36 @@ DO JK = IKTB, IKTE
 ENDDO
 
 IF (LHOOK) CALL DR_HOOK('ICECLOUD',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "tiwmx.func.h"
+!
+! Saturation mixing ratio for an ice fraction FICE (formerly in mode_qsatmx_tab.F90)
+ELEMENTAL FUNCTION QSATMX_TAB(CST, TIWMX, P,T,FICE)
+
+  USE MODD_CST ,ONLY : CST_t
+  USE MODD_TIWMX, ONLY: TIWMX_t
+
+  IMPLICIT NONE
+
+
+
+  REAL :: QSATMX_TAB
+  TYPE(CST_t), INTENT(IN) :: CST
+  TYPE(TIWMX_t),   INTENT(IN)    :: TIWMX
+  REAL, INTENT(IN) :: P,T,FICE
+
+  REAL :: ZES
+
+  ZES = ESATI(TIWMX, T)*FICE + ESATW(TIWMX, T)*(1.-FICE)
+  IF(ZES >= P)THEN ! temp > boiling point, condensation not possible.
+                   ! Then this function lacks physical meaning, 
+                   ! here set to one
+     QSATMX_TAB = 1.
+  ELSE
+     QSATMX_TAB = CST%XEPSILO*ZES/(P-ZES) !r
+  ENDIF
+
+END FUNCTION QSATMX_TAB
+!
 END SUBROUTINE ICECLOUD
 END MODULE MODE_ICECLOUD

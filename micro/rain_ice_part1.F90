@@ -595,5 +595,6 @@ IF (LHOOK) CALL DR_HOOK('RAIN_ICE_PART1', 1, ZHOOK_HANDLE)
 !
 CONTAINS
 INCLUDE "ice4_nucleation.func.h"
+INCLUDE "tiwmx.func.h"
 INCLUDE "ice4_compute_pdf.func.h"
 END SUBROUTINE RAIN_ICE_PART1
