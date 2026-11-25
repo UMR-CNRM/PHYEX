@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['gamma_2ef90_0',['gamma.F90',['../gamma_8F90.html',1,'']]],
+  ['gamma_2eh_0',['gamma.h',['../gamma_8h.html',1,'']]],
   ['gamma_5finc_2ef90_1',['gamma_inc.F90',['../gamma__inc_8F90.html',1,'']]],
   ['gen_5fmodi_2epy_2',['gen_modi.py',['../gen__modi_8py.html',1,'']]],
   ['general_5fgamma_2ef90_3',['general_gamma.F90',['../general__gamma_8F90.html',1,'']]],

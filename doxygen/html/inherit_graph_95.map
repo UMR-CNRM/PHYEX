@@ -1,25 +1,7 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" title=" " alt="" coords="5,187,59,215"/>
-<area shape="rect" id="Node000001" href="$classpyphyex_1_1phyex1d_1_1experiment__runner_1_1__ExistingResult.html" title=" " alt="" coords="107,144,323,189"/>
-<area shape="poly" id="edge5_Node000000_Node000001" title=" " alt="" coords="73,191,108,185,104,189,75,195"/>
-<area shape="rect" id="Node000002" href="$classpyphyex_1_1phyex1d_1_1physics__base_1_1PhysicsBase.html" title=" " alt="" coords="120,213,310,258"/>
-<area shape="poly" id="edge6_Node000000_Node000002" title=" " alt="" coords="73,206,121,216,117,219,75,211"/>
-<area shape="rect" id="Node000003" href="$classpyphyex_1_1phyex1d_1_1phyex_1_1PHYEX.html" title=" " alt="" coords="371,152,599,180"/>
-<area shape="poly" id="edge7_Node000002_Node000003" title=" " alt="" coords="319,206,431,180,426,182,320,211"/>
-<area shape="rect" id="Node000009" href="$classpyphyex_1_1phyex1d_1_1simple__physics_1_1SimplePhysics.html" title=" " alt="" coords="392,248,578,293"/>
-<area shape="poly" id="edge13_Node000002_Node000009" title=" " alt="" coords="326,247,395,258,389,259,326,253"/>
-<area shape="rect" id="Node000004" href="$classpyphyex_1_1phyex1d_1_1phyex_1_1PhysicsArome.html" title=" " alt="" coords="647,40,882,85"/>
-<area shape="poly" id="edge8_Node000003_Node000004" title=" " alt="" coords="530,143,646,95,685,84,680,86,648,99,532,148"/>
-<area shape="rect" id="Node000007" href="$classpyphyex_1_1phyex1d_1_1phyex_1_1PhysicsForcingTQ.html" title=" " alt="" coords="647,109,882,154"/>
-<area shape="poly" id="edge11_Node000003_Node000007" title=" " alt="" coords="614,148,649,146,644,147,615,153"/>
-<area shape="rect" id="Node000008" href="$classpyphyex_1_1phyex1d_1_1phyex_1_1PhysicsForcingThetaR.html" title=" " alt="" coords="647,179,882,223"/>
-<area shape="poly" id="edge12_Node000003_Node000008" title=" " alt="" coords="615,180,650,186,644,187,615,185"/>
-<area shape="rect" id="Node000005" href="$classpyphyex_1_1phyex1d_1_1phyex_1_1PhysicsAromeTQ.html" title=" " alt="" coords="930,5,1164,50"/>
-<area shape="poly" id="edge9_Node000004_Node000005" title=" " alt="" coords="897,43,932,41,927,43,898,49"/>
-<area shape="rect" id="Node000006" href="$classpyphyex_1_1phyex1d_1_1phyex_1_1PhysicsAromeThetaR.html" title=" " alt="" coords="930,75,1164,119"/>
-<area shape="poly" id="edge10_Node000004_Node000006" title=" " alt="" coords="897,76,932,82,927,83,897,81"/>
-<area shape="rect" id="Node000010" href="$classpyphyex_1_1phyex1d_1_1simple__physics_1_1SimplePhysicsTQ.html" title=" " alt="" coords="668,248,861,293"/>
-<area shape="poly" id="edge14_Node000009_Node000010" title=" " alt="" coords="593,268,670,270,665,271,594,273"/>
-<area shape="rect" id="Node000011" href="$classpyphyex_1_1phyex1d_1_1simple__physics_1_1SimplePhysicsThetaR.html" title=" " alt="" coords="654,317,875,362"/>
-<area shape="poly" id="edge15_Node000009_Node000011" title=" " alt="" coords="593,294,674,317,669,317,593,300"/>
+<area shape="rect" id="Node000000" href="$classpyphyex_1_1phyex1d_1_1case_1_1Case.html" title=" " alt="" coords="5,48,213,76"/>
+<area shape="rect" id="Node000001" href="$classpyphyex_1_1phyex1d_1_1case_1_1CaseCommonFormat.html" title=" " alt="" coords="261,5,468,50"/>
+<area shape="poly" id="edge18_Node000000_Node000001" title=" " alt="" coords="228,44,263,41,258,42,229,49"/>
+<area shape="rect" id="Node000002" href="$classpyphyex_1_1phyex1d_1_1case_1_1CaseXarray.html" title=" " alt="" coords="261,75,468,119"/>
+<area shape="poly" id="edge19_Node000000_Node000002" title=" " alt="" coords="228,76,263,83,258,83,228,81"/>
 </map>

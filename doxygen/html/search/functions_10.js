@@ -29,7 +29,7 @@ var searchData=
   ['read_5fxker_5fsdryg_26',['read_xker_sdryg',['../namespacemode__read__xker__sdryg.html#a498c7099a2c1c351ed757cfab51c4c6c',1,'mode_read_xker_sdryg']]],
   ['read_5fxker_5fsweth_27',['read_xker_sweth',['../namespacemode__read__xker__sweth.html#a13e032184cc5693daf538a5ca70de9d1',1,'mode_read_xker_sweth']]],
   ['rect_28',['rect',['../namespacemode__lima__functions.html#a51d8231eb917aff6e1b62be65ce9d3f3',1,'mode_lima_functions']]],
-  ['redin_29',['redin',['../namespacemode__tiwmx.html#a06b7bfb78a936148ad9dba30e9584de5',1,'mode_tiwmx::redin()'],['../namespacemode__tiwmx__fun.html#abb23428362158b2881fbc3b535381f22',1,'mode_tiwmx_fun::redin()']]],
+  ['redin_29',['redin',['../tiwmx_8func_8h.html#a84bbd576cf2a5598091662531fa8a966',1,'tiwmx.func.h']]],
   ['remove_5fcontained_5fprocedures_30',['remove_contained_procedures',['../namespacegen__modi.html#afd80e9ab818171cab79e84a312e34ae6',1,'gen_modi']]],
   ['remove_5fdangling_5fifdef_31',['remove_dangling_ifdef',['../namespacegen__modi.html#ae266ce5e062a35f87f68a80373eabdc9',1,'gen_modi']]],
   ['remove_5funsed_5fmodules_32',['remove_unsed_modules',['../namespacegen__modi.html#a85447bd31fd4098a39547eeb3f7fc9bf',1,'gen_modi']]],

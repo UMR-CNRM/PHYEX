@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['bb3_0',['bb3',['../namespacemode__tiwmx.html#a94752d730294dfbcf6f055a5940d4926',1,'mode_tiwmx::bb3()'],['../namespacemode__tiwmx__fun.html#a310e9938ed840645b4b25051c70b371d',1,'mode_tiwmx_fun::bb3()']]],
+  ['bb3_0',['bb3',['../tiwmx_8func_8h.html#a2bfc7727a654905ef143c87607a5fba5',1,'tiwmx.func.h']]],
   ['bb3tab_1',['bb3tab',['../structmodd__tiwmx_1_1tiwmx__t.html#acb6092da30b0c0d53ac5a451e4993853',1,'modd_tiwmx::tiwmx_t']]],
-  ['bb3w_2',['bb3w',['../namespacemode__tiwmx.html#a01fe4514794b5224f631ba4db6af0284',1,'mode_tiwmx::bb3w()'],['../namespacemode__tiwmx__fun.html#ac2ffc885496b34815ab553f70d5ea4b8',1,'mode_tiwmx_fun::bb3w()']]],
+  ['bb3w_2',['bb3w',['../tiwmx_8func_8h.html#accaefb17cab2da3d932791205f97aaee',1,'tiwmx.func.h']]],
   ['bb3wtab_3',['bb3wtab',['../structmodd__tiwmx_1_1tiwmx__t.html#aacec898e0acda0a42552c08e22d87e05',1,'modd_tiwmx::tiwmx_t']]],
   ['betai_4',['betai',['../classpyphyex_1_1phyex1d_1_1Cst.html#a87334f5e0b831a78011e06465a796623',1,'pyphyex::phyex1d::Cst']]],
   ['betaw_5',['betaw',['../classpyphyex_1_1phyex1d_1_1Cst.html#a16455c3a284a641031a0e696bf5311d2',1,'pyphyex::phyex1d::Cst']]],

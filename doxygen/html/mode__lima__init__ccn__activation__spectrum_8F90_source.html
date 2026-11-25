@@ -254,7 +254,7 @@ $(function() {
 <div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>   iflag = 1</div>
 <div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>   <span class="keyword">CALL </span><a class="code hl_interface" href="interfacemodi__minpack_1_1lmdif1.html">lmdif1</a> ( distance, nm, nn, zparams, zfvec, ztol, iinfo )</div>
 <div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span><span class="comment">!</span></div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>   plimit_factor = gamma(zparams(2))*zparams(3)**(zparams(1)/2)/gamma(1+zparams(1)/2)/gamma(zparams(2)-zparams(1)/2)</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>   plimit_factor = <a class="code hl_function" href="gamma_8h.html#a4a6e88e1fd940d7bd90c336d01c26c1e">gamma</a>(zparams(2))*zparams(3)**(zparams(1)/2)/<a class="code hl_function" href="gamma_8h.html#a4a6e88e1fd940d7bd90c336d01c26c1e">gamma</a>(1+zparams(1)/2)/<a class="code hl_function" href="gamma_8h.html#a4a6e88e1fd940d7bd90c336d01c26c1e">gamma</a>(zparams(2)-zparams(1)/2)</div>
 <div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>   pk            = zparams(1)</div>
 <div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>   pmu           = zparams(2)</div>
 <div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>   pbeta         = zparams(3)</div>
@@ -528,7 +528,7 @@ $(function() {
 <div class="line"><a id="l00444" name="l00444"></a><span class="lineno">  444</span>    <span class="keywordflow">IF</span> ( any(px .LT.0.) .OR. px(1).GT.2*px(2)) <span class="keywordflow">THEN</span></div>
 <div class="line"><a id="l00445" name="l00445"></a><span class="lineno">  445</span>       pfvec(:) = 999999._mnhreal64</div>
 <div class="line"><a id="l00446" name="l00446"></a><span class="lineno">  446</span>    <span class="keywordflow">ELSE</span></div>
-<div class="line"><a id="l00447" name="l00447"></a><span class="lineno">  447</span>       zc=gamma(px(2))*px(3)**(px(1)/2)/gamma(1+px(1)/2)/gamma(px(2)-px(1)/2)</div>
+<div class="line"><a id="l00447" name="l00447"></a><span class="lineno">  447</span>       zc=<a class="code hl_function" href="gamma_8h.html#a4a6e88e1fd940d7bd90c336d01c26c1e">gamma</a>(px(2))*px(3)**(px(1)/2)/<a class="code hl_function" href="gamma_8h.html#a4a6e88e1fd940d7bd90c336d01c26c1e">gamma</a>(1+px(1)/2)/<a class="code hl_function" href="gamma_8h.html#a4a6e88e1fd940d7bd90c336d01c26c1e">gamma</a>(px(2)-px(1)/2)</div>
 <div class="line"><a id="l00448" name="l00448"></a><span class="lineno">  448</span>       <span class="keywordflow">DO</span> ii=1, km</div>
 <div class="line"><a id="l00449" name="l00449"></a><span class="lineno">  449</span>          <span class="comment">! ZS in &quot;no units&quot;, ie ZS=0.01 for a 1% suersaturation</span></div>
 <div class="line"><a id="l00450" name="l00450"></a><span class="lineno">  450</span>          <span class="comment">!       ZW= C * (ZS(I)/100)**X(1) * HYPGEO(X(2),X(1)/2,X(1)/2+1,X(3),ZS(I)/100)</span></div>
@@ -558,6 +558,7 @@ $(function() {
 </div>
 <div class="line"><a id="l00474" name="l00474"></a><span class="lineno">  474</span><span class="keyword">END SUBROUTINE </span><a class="code hl_function" href="namespacemode__lima__init__ccn__activation__spectrum.html#aa370a5cb12ef0e1019403bbd2f700f6a">lima_init_ccn_activation_spectrum</a></div>
 <div class="line"><a id="l00475" name="l00475"></a><span class="lineno">  475</span><span class="keyword">END MODULE </span><a class="code hl_namespace" href="namespacemode__lima__init__ccn__activation__spectrum.html">mode_lima_init_ccn_activation_spectrum</a></div>
+<div class="ttc" id="agamma_8h_html_a4a6e88e1fd940d7bd90c336d01c26c1e"><div class="ttname"><a href="gamma_8h.html#a4a6e88e1fd940d7bd90c336d01c26c1e">gamma</a></div><div class="ttdeci">elemental real function gamma(px)</div><div class="ttdef"><b>Definition</b> <a href="gamma_8h_source.html#l00013">gamma.h:14</a></div></div>
 <div class="ttc" id="agamma__inc_8F90_html_aef6cc1ff21be604c8916180e8b312764"><div class="ttname"><a href="gamma__inc_8F90.html#aef6cc1ff21be604c8916180e8b312764">gamma_inc</a></div><div class="ttdeci">real function gamma_inc(pa, px)</div><div class="ttdef"><b>Definition</b> <a href="gamma__inc_8F90_source.html#l00005">gamma_inc.F90:6</a></div></div>
 <div class="ttc" id="ainterfacemodi__hypgeo_1_1hypgeo_html"><div class="ttname"><a href="interfacemodi__hypgeo_1_1hypgeo.html">modi_hypgeo::hypgeo</a></div><div class="ttdef"><b>Definition</b> <a href="hypgeo_8F90_source.html#l00013">hypgeo.F90:13</a></div></div>
 <div class="ttc" id="ainterfacemodi__minpack_1_1lmdif1_html"><div class="ttname"><a href="interfacemodi__minpack_1_1lmdif1.html">modi_minpack::lmdif1</a></div><div class="ttdef"><b>Definition</b> <a href="modi__minpack_8F90_source.html#l00204">modi_minpack.F90:204</a></div></div>
