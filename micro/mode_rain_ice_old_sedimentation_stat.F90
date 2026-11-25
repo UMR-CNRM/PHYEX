@@ -551,6 +551,9 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
 
     IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_SEDIMENTATION_STAT',1,ZHOOK_HANDLE)
 
+CONTAINS
+INCLUDE "gamma.h"
+INCLUDE "momg.h"
   END SUBROUTINE RAIN_ICE_OLD_SEDIMENTATION_STAT
 
   SUBROUTINE COUNTJV2(D, IC, LTAB, I1)
@@ -572,27 +575,5 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
     END DO
 
   END SUBROUTINE COUNTJV2
-
-  FUNCTION MOMG(PALPHA,PNU,PP) RESULT (PMOMG)
-!
-!   auxiliary routine used to compute the Pth moment order of the generalized
-!   gamma law
-!
-!
-    IMPLICIT NONE
-!
-    REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the dimensionnal distribution
-    REAL, INTENT(IN)     :: PNU    ! second shape parameter of the dimensionnal distribution
-    REAL, INTENT(IN)     :: PP     ! order of the moment
-    REAL     :: PMOMG  ! result: moment of order ZP
-!
-!------------------------------------------------------------------------------
-!
-!
-    PMOMG = GAMMA(PNU+PP/PALPHA)/GAMMA(PNU)
-!
-CONTAINS
-INCLUDE "gamma.h"
-  END FUNCTION MOMG
 
 END MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
