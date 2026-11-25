@@ -62,7 +62,6 @@ END MODULE MODI_MOMG
 !
 !
 
-USE MODI_GAMMA, ONLY: GAMMA
 !
 IMPLICIT NONE
 !
@@ -74,6 +73,8 @@ REAL             :: PMOMG
 PMOMG = GAMMA(PNU+PP/PALPHA) / GAMMA(PNU)
 RETURN
 !
+CONTAINS
+INCLUDE "gamma.h"
 END FUNCTION MOMG_X0D
 !
 !-------------------------------------------------------------------------------
@@ -85,7 +86,6 @@ END FUNCTION MOMG_X0D
       FUNCTION MOMG_X1D(PALPHA, PNU, PP)  RESULT(PMOMG)
 !     ##############################################
 !
-USE MODI_GAMMA, ONLY: GAMMA
 !
 IMPLICIT NONE
 !
@@ -97,6 +97,8 @@ REAL, DIMENSION(SIZE(PP))      :: PMOMG
 PMOMG(:) = GAMMA(PNU+PP(:)/PALPHA) / GAMMA(PNU)
 RETURN
 !
+CONTAINS
+INCLUDE "gamma.h"
 END FUNCTION MOMG_X1D
 !
 !------------------------------------------------------------------------------

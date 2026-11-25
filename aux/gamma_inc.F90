@@ -30,7 +30,7 @@
 !!
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
-!!      MODULE MODI_GAMMA : computation of the Gamma function
+!!      gamma.h : computation of the Gamma function (GAMMA)
 !!
 !!    REFERENCE
 !!    ---------
@@ -52,7 +52,6 @@
 !
 USE MODE_MSG, ONLY: PRINT_MSG
 !
-USE MODI_GAMMA, ONLY: GAMMA
 USE MODD_IO, ONLY:NVERB_FATAL
 !
 IMPLICIT NONE
@@ -135,4 +134,6 @@ END IF
 IF (LHOOK) CALL DR_HOOK('GAMMA_INC',1,ZHOOK_HANDLE)
 RETURN
 !
+CONTAINS
+INCLUDE "gamma.h"
 END FUNCTION GAMMA_INC

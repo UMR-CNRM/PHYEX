@@ -17,7 +17,6 @@ CONTAINS
 !
   FUNCTION MOMG (PALPHA,PNU,PP) RESULT (PMOMG)
 ! Pth moment order of the generalized gamma law
-    USE MODI_GAMMA, ONLY: GAMMA
 USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
     IMPLICIT NONE
     REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the dimensionnal distribution
@@ -28,6 +27,8 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
     IF (LHOOK) CALL DR_HOOK('MOMG', 0, ZHOOK_HANDLE)
     PMOMG = GAMMA(PNU+PP/PALPHA)/GAMMA(PNU)
     IF (LHOOK) CALL DR_HOOK('MOMG', 1, ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "gamma.h"
 END FUNCTION MOMG
 !
 !------------------------------------------------------------------------------

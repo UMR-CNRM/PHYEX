@@ -174,7 +174,6 @@
 USE MODD_PRECISION,  ONLY: MNHREAL64
 USE MODD_BUDGET,     ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, &
                            NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
-USE MODI_GAMMA,      ONLY: GAMMA
 USE MODE_TIWMX,      ONLY: ESATI, ESATW, AA2, BB3, AA2W, BB3W
 USE MODE_TIWMX_TAB,  ONLY: TIWMX_TAB
 !
@@ -1482,7 +1481,6 @@ CONTAINS
 ! auxiliary routine used to compute the Pth moment order of the generalized
 ! gamma law
 !
-    USE MODI_GAMMA, ONLY: GAMMA
 !
     IMPLICIT NONE
 !
@@ -1499,4 +1497,5 @@ CONTAINS
   END FUNCTION MOMG
 !
 !-------------------------------------------------------------------------------
+INCLUDE "gamma.h"
 END SUBROUTINE RAIN_ICE_OLD
