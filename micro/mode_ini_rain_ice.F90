@@ -7,7 +7,7 @@
 MODULE MODE_INI_RAIN_ICE
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE INI_RAIN_ICE (HPROGRAM, KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD, ICE_T_PARAMETERS )
+      SUBROUTINE INI_RAIN_ICE (D, HPROGRAM, KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD, ICE_T_PARAMETERS )
 !     ###########################################################
 !
 !!****  *INI_RAIN_ICE * - initialize the constants necessary for the warm and
@@ -111,6 +111,7 @@ USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_ALLOCATE, XAC, XAG, XAH, XAI, XA
                                  XNUC, XNUC2, XNUG, XNUH, XNUI, XNUR, XNUS, XRTMIN, XTRANS_MP_GAMMAS, &
                                  RAIN_ICE_DESCRN
 USE MODD_RAIN_ICE_PARAM_n, ONLY: LNEWCOEFF, RAIN_ICE_PARAMN, RAIN_ICE_PARAM_ALLOCATE, X0DEPG, X0DEPH, &
+                                 NKPK, NKMK, &
                                  X0DEPI, X0DEPS, X0EVAR, X1DEPG, X1DEPH, X1DEPS, X1EVAR, X2DEPI, &
                                  XACRIAUTI, XALPHA1, XALPHA2, XALPHA3, XBCRIAUTI, XBETA1, XBETA2, &
                                  XBETA3, XCOLCS, XCOLEXGH, XCOLEXIG, XCOLEXIH, XCOLEXIS, XCOLEXSG, &
@@ -152,6 +153,8 @@ USE MODD_ICET_PARAM, ONLY: XRHO_G, XRHO_I, XBV_C, XD0C, XD0R, XBM_G, XBM_I, XR_C
 USE MODD_ICET_PARAM, ONLY: XN0R_EXP, XNT_IN, XMU_R, XMU_G, XMU_I, XMU_S, XBV_R, XBV_I
 USE MODD_ICET_PARAM, ONLY: NBC, NBR, NBS
 
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 
 IMPLICIT NONE
@@ -159,6 +162,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 !
+TYPE(DIMPHYEX_t),        INTENT(IN)    :: D         ! Dimensions of the physical domain
 CHARACTER(LEN=6),        INTENT(IN)    :: HPROGRAM  ! Current program
 INTEGER,                 INTENT(IN)    :: KLUOUT    ! Logical unit number for prints
 INTEGER,                 INTENT(OUT)   :: KSPLITR   ! Number of small time step
@@ -259,7 +263,7 @@ ELSE
   LNEWCOEFF=LSNOW_T .OR. HPROGRAM=='MESONH'
 ENDIF
 !
-!        1.     COMPUTE KSPLTR FOR EACH MODEL
+!        1.     COMPUTE KSPLTR FOR EACH MODEL, AND NKPK, NKMK
 !               ---------------------------------------------------------
 !
 !*       1.1    Set the hailstones maximum fall velocity
@@ -301,6 +305,24 @@ IF (HCLOUD == 'ICE4' .OR. HCLOUD=='LIMA') XRTMIN(7) = 1.0E-15
 IF (LICE_T) THEN
   CALL ICE_T_PARAMETERS%ALLOC()
 ENDIF
+!
+!*       1.3    Vertical index arrays used in condensation
+!
+!Precompute the JK+IKL and JK-IKL indices (clamped to [NKTB,NKTE]) used in the
+!condensation routine, so that they are not recomputed at each time step.
+!The arrays are only meaningful for JK in [NKTB,NKTE], other values are set
+!for completeness.
+!
+IF( .NOT.ASSOCIATED(NKPK) ) THEN
+  CALL RAIN_ICE_PARAM_ALLOCATE('NKPK', D%NKT)
+END IF
+IF( .NOT.ASSOCIATED(NKMK) ) THEN
+  CALL RAIN_ICE_PARAM_ALLOCATE('NKMK', D%NKT)
+END IF
+DO J1=1, D%NKT
+  NKPK(J1) = MAX(MIN(J1+D%NKL, D%NKTE), D%NKTB)
+  NKMK(J1) = MAX(MIN(J1-D%NKL, D%NKTE), D%NKTB)
+END DO
 !
 !-------------------------------------------------------------------------------
 !

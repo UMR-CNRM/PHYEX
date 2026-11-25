@@ -193,7 +193,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZDZFACT,ZDZREF
 ! LHGT_QS END
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER, DIMENSION(D%NKT) :: JKPK, JKMK
 REAL :: ZBLH
 !
 !
@@ -364,21 +363,13 @@ IF ( .NOT. OSIGMAS ) THEN
 END IF
 !-------------------------------------------------------------------------------
 !
-
-
-DO JK = IKTB, IKTE
- JKPK(JK) = MAX(MIN(JK+IKL, IKTE),IKTB)
- JKMK(JK) = MAX(MIN(JK-IKL, IKTE),IKTB)
-END DO
-
-!
 !
 IF (OCND2) THEN
 
 
   DO JK=IKTB,IKTE
     DO JIJ = IIJB, IIJE
-      ZDZ(JIJ,JK) = PZZ(JIJ,JKPK(JK)) - PZZ(JIJ,JKPK(JK)-IKL)
+      ZDZ(JIJ,JK) = PZZ(JIJ,ICEP%NKPK(JK)) - PZZ(JIJ,ICEP%NKPK(JK)-IKL)
     END DO
   END DO
 
@@ -467,9 +458,9 @@ DO JK=IKTB,IKTE
       ENDIF
   ELSE
       ! parameterize Sigma_s with first_order closure
-      DZZ(JIJ,JK)    =  PZZ(JIJ,JKPK(JK)) - PZZ(JIJ,JKMK(JK))
-      ZDRW(JIJ,JK)   =  ZRT(JIJ,JKPK(JK)) - ZRT(JIJ,JKMK(JK))
-      ZDTL(JIJ,JK)   =  ZTLK(JIJ,JKPK(JK)) - ZTLK(JIJ,JKMK(JK)) + CST%XG/ZCPD(JIJ,JK) * DZZ(JIJ,JK)
+      DZZ(JIJ,JK)    =  PZZ(JIJ,ICEP%NKPK(JK)) - PZZ(JIJ,ICEP%NKMK(JK))
+      ZDRW(JIJ,JK)   =  ZRT(JIJ,ICEP%NKPK(JK)) - ZRT(JIJ,ICEP%NKMK(JK))
+      ZDTL(JIJ,JK)   =  ZTLK(JIJ,ICEP%NKPK(JK)) - ZTLK(JIJ,ICEP%NKMK(JK)) + CST%XG/ZCPD(JIJ,JK) * DZZ(JIJ,JK)
       ZLL(JIJ,JK) = ZL(JIJ,JK)
       ! standard deviation due to convection
       ZSIG_CONV(JIJ,JK) =0.
