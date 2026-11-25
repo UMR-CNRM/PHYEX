@@ -9,7 +9,8 @@
 ELEMENTAL SUBROUTINE ICE4_COMPUTE_PDF(CST, ICEP, ICED, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
                                       LDMICRO, PRHODREF, PRCT, PRIT, PCF, PT, PSIGMA_RC,&
                                       PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
-                                      PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, PRF)
+                                      PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, PRF, &
+                                      PARAMI, PRCRIAUTI, PRCRIAUTC)
 !!
 !!**  PURPOSE
 !!    -------
@@ -32,6 +33,7 @@ ELEMENTAL SUBROUTINE ICE4_COMPUTE_PDF(CST, ICEP, ICED, HSUBG_AUCV_RC, HSUBG_AUCV
 USE MODD_CST,            ONLY: CST_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 !
 IMPLICIT NONE
 !
@@ -64,6 +66,9 @@ REAL,    INTENT(INOUT) :: PHLI_LCF
 REAL,    INTENT(INOUT) :: PHLI_HRI
 REAL,    INTENT(INOUT) :: PHLI_LRI
 REAL,    INTENT(OUT)   :: PRF        ! Rain fraction
+TYPE(PARAM_ICE_t),       INTENT(IN)    :: PARAMI
+REAL,    INTENT(IN)  :: PRCRIAUTI
+REAL,    INTENT(IN)  :: PRCRIAUTC
 !
 !*       0.2  declaration of local variables
 !
@@ -74,13 +79,24 @@ REAL :: ZRCRAUTC,      & !RC value to begin rain formation =XCRIAUTC/RHODREF
         ZHLC_HRCLOCAL, & !HLCLOUDS : LWC that is High LWC local in HCF
                          !    note that ZRC/CF = ZHLC_HRCLOCAL+ ZHLC_LRCLOCAL
                          !                     = PHLC_HRC/HCF+ PHLC_LRC/LCF
-        ZSUMRC, ZSUMRI
+        ZSUMRC, ZSUMRI, &
+        ZXACRIAUTI, ZXBCRIAUTI
+
 REAL :: ZCOEFFRCM
 !-------------------------------------------------------------------------------
 !
+IF (PARAMI%LCRIAUTI) THEN
+  IF(LDMICRO) THEN
+    CALL CRIAUTI(PRCRIAUTI, ICEP%XT0CRIAUTI, ZXACRIAUTI, ZXBCRIAUTI)
+  ENDIF
+ELSE
+  ZXACRIAUTI = ICEP%XACRIAUTI
+  ZXBCRIAUTI = ICEP%XBCRIAUTI
+ENDIF
+!
 !Cloud water split between high and low content part is done according to autoconversion option
 IF (LDMICRO) THEN
-  ZRCRAUTC=ICEP%XCRIAUTC/PRHODREF ! Autoconversion rc threshold
+  ZRCRAUTC=PRCRIAUTC/PRHODREF ! Autoconversion rc threshold
 ELSE
   ZRCRAUTC=0.
 END IF
@@ -299,7 +315,7 @@ ENDIF
 !Ice water split between high and low content part is done according to autoconversion option
 IF(LDMICRO) THEN
   ! Autoconversion ri threshold
-  ZCRIAUTI=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT-CST%XTT)+ICEP%XBCRIAUTI))
+  ZCRIAUTI=MIN(PRCRIAUTI,10**(ZXACRIAUTI*(PT-CST%XTT)+ZXBCRIAUTI))
 ELSE
   ZCRIAUTI=0.
 ENDIF

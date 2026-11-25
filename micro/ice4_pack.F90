@@ -9,7 +9,7 @@ SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF, PTSTEP, &
                     &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
                     &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
                     &PICLDFR, PZZZ, PCONC3D, PSSIO, PSSIU, PIFR, &
-                    &PBUDGETS, PLATHAM_IAGGS)
+                    &PBUDGETS, PLATHAM_IAGGS, PRCRIAUTI, PRCRIAUTC, PICENU)
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -119,11 +119,16 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OSAVE_MICRO .OR. BUCONF%LBU_ENABLE), &
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), &
                                           OPTIONAL, INTENT(IN)    :: PLATHAM_IAGGS  ! E Function to simulate
                                                                           ! enhancement of IAGGS
+! SPP perturbation arrays
+REAL, DIMENSION(D%NIJT),  OPTIONAL, INTENT(IN)  :: PRCRIAUTI
+REAL, DIMENSION(D%NIJT),  OPTIONAL, INTENT(IN)  :: PRCRIAUTC
+REAL, DIMENSION(D%NIJT),  OPTIONAL, INTENT(IN)  :: PICENU
 !
 !
 !*       0.2   Declarations of local variables :
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+REAL, DIMENSION(D%NIJT) :: ZPRCRIAUTI, ZPRCRIAUTC, ZPICENU ! SPP perturbations
 !
 INTEGER :: IPROMA ! cache-blocking factor for microphysic loop
 INTEGER :: ISIZE
@@ -152,6 +157,42 @@ IKTE=D%NKTE
 IIJT=D%NIJT
 IIJB=D%NIJB
 IIJE=D%NIJE
+!
+!SPP perturbations (default values if absent)
+IF (PRESENT(PRCRIAUTI)) THEN
+
+  DO JIJ=IIJB, IIJE
+    ZPRCRIAUTI(JIJ) = PRCRIAUTI(JIJ)
+  END DO
+
+ELSE
+
+  ZPRCRIAUTI(IIJB:IIJE) = ICEP%XCRIAUTI
+
+ENDIF
+IF (PRESENT(PRCRIAUTC)) THEN
+
+  DO JIJ=IIJB, IIJE
+    ZPRCRIAUTC(JIJ) = PRCRIAUTC(JIJ)
+  END DO
+
+ELSE
+
+  ZPRCRIAUTC(IIJB:IIJE) = ICEP%XCRIAUTC
+
+ENDIF
+IF (PRESENT(PICENU)) THEN
+
+  DO JIJ=IIJB, IIJE
+    ZPICENU(JIJ) = PICENU(JIJ)
+  END DO
+
+ELSE
+
+  ZPICENU(IIJB:IIJE) = 1.
+
+ENDIF
+!
 LLSIGMA_RC=(PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')
 LL_AUCV_ADJU=(PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')
 !
@@ -203,7 +244,10 @@ REAL, DIMENSION(IPROMA) :: &
                         & ZRREVAV,  &
                         & ZSIGS,    & ! Standard deviation of rc at time t
                         & ZTHT,     &
-                        & ZTHS
+                        & ZTHS,   &
+                        & ZCRIT,   & ! SPP ri->rs threshold (packed)
+                        & ZCRTC,   & ! SPP rc->rr threshold (packed)
+                        & ZICENU     ! SPP nucleation factor (packed)
 LOGICAL, DIMENSION(IPROMA) :: LLMICRO
 !
 !Output packed tendencies (for budgets only)
@@ -287,12 +331,15 @@ DO JMICRO=1,ISIZE,IPROMA
           ZRHODREF   (IDX)=PRHODREF(JIJ, JK)
           ZPABST     (IDX)=PPABST  (JIJ, JK)
           ZEXN       (IDX)=PEXN    (JIJ, JK)
-          ZICLDFR    (IC)=PICLDFR (JIJ, JK)
-          ZZZZ       (IC)=PZZZ    (JIJ, JK)
-          ZCONC3D    (IC)=PCONC3D (JIJ, JK)
-          ZSSIO      (IC)=PSSIO   (JIJ, JK)
-          ZSSIU      (IC)=PSSIU   (JIJ, JK)
-          ZIFR       (IC)=PIFR    (JIJ, JK)
+          ZCRIT      (IDX)=ZPRCRIAUTI(JIJ)
+          ZCRTC      (IDX)=ZPRCRIAUTC(JIJ)
+          ZICENU     (IDX)=ZPICENU(JIJ)
+          ZICLDFR    (IDX)=PICLDFR (JIJ, JK)
+          ZZZZ       (IDX)=PZZZ    (JIJ, JK)
+          ZCONC3D    (IDX)=PCONC3D (JIJ, JK)
+          ZSSIO      (IDX)=PSSIO   (JIJ, JK)
+          ZSSIU      (IDX)=PSSIU   (JIJ, JK)
+          ZIFR       (IDX)=PIFR    (JIJ, JK)
           IF(LLSIGMA_RC) THEN
             ZSIGS(IDX)    =PSIGS   (JIJ, JK)
           ENDIF
@@ -361,7 +408,7 @@ DO JMICRO=1,ISIZE,IPROMA
                     &ZICLDFR, ZZZZ, ZCONC3D, &
                     &ZSSIO, ZSSIU, ZIFR, &
                     &ZBUDGETS, &
-                    &ZLATHAM_IAGGS)
+                    &ZLATHAM_IAGGS, ZCRIT, ZCRTC, ZICENU)
   !
   !*       6.     UNPACKING
   !               ---------

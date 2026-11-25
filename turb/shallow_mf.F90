@@ -23,7 +23,7 @@
                 PU_UP, PV_UP, PTKE_UP, PTHV_UP, PW_UP,                &
                 PFRAC_UP,PEMF,PDETR,PENTR,PTAUFUNC,                   &
                 KKLCL,KKETL,KKCTL,PDX,PDY,PRSVS,PSVMIN,               &
-                BUCONF, TBUDGETS, KBUDGETS                            )
+                PXCTV,PXCMF,BUCONF, TBUDGETS, KBUDGETS                )
 
 !$ACDC singlecolumn --nocreate-interface
 
@@ -174,6 +174,8 @@ INTEGER,DIMENSION(D%NIJT),     INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,E
 REAL,                          INTENT(IN)  :: PDX, PDY
 REAL, DIMENSION(D%NIJT,D%NKT,KSV),      INTENT(IN),    OPTIONAL :: PRSVS ! sources of sv (for Budgets with lagrangian tracer)
 REAL,DIMENSION(JPSVMAX),                INTENT(IN),    OPTIONAL :: PSVMIN       ! minimum value for SV variables (for Budgets)
+REAL,DIMENSION(D%NIJT),                 INTENT(IN),    OPTIONAL :: PXCTV       ! SPP variable for turbulence
+REAL,DIMENSION(D%NIJT),                 INTENT(IN),    OPTIONAL :: PXCMF       ! SPP variable for shallow convection
 TYPE(TBUDGETCONF_t),                    INTENT(IN),    OPTIONAL :: BUCONF       ! budget structure
 TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT), OPTIONAL :: TBUDGETS
 INTEGER,                                INTENT(IN)              :: KBUDGETS     ! option. because not used in arpifs
@@ -195,6 +197,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV) ::  &
                                           ZSV_UP,&  ! updraft scalar var.
                                           ZFLXZSVMF ! Flux     
 REAL, DIMENSION(D%NIJT) :: ZDEPTH             ! Deepness of cloud
+REAL, DIMENSION(D%NIJT) :: ZXCTV, ZXCMF       ! 2D (possibly perturbed) version of TURBN%XCTV and PARAMMF%XCMF
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZFRAC_ICE_UP ! liquid/solid fraction in updraft
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRSAT_UP ! Rsat in updraft
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZTH_UP
@@ -214,6 +217,18 @@ IF (LHOOK) CALL DR_HOOK('SHALLOW_MF',0,ZHOOK_HANDLE)
 IIJE=D%NIJE
 IIJB=D%NIJB
 IKT=D%NKT
+!
+IF (PRESENT(PXCTV)) THEN
+  ZXCTV(:) = PXCTV(:)
+ELSE
+  ZXCTV(:) = TURBN%XCTV
+ENDIF
+!
+IF (PRESENT(PXCMF)) THEN
+  ZXCMF(:) = PXCMF(:)
+ELSE
+  ZXCMF(:) = PARAMMF%XCMF
+ENDIF
 !
 ! updraft governing variables
 IF (PARAMMF%CMF_UPDRAFT == 'EDKF'  .OR. PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
@@ -270,7 +285,7 @@ IF (PARAMMF%CMF_UPDRAFT == 'EDKF') THEN
                        PTHV_UP, PW_UP, PU_UP, PV_UP, ZSV_UP,     &
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PTKE_UP,PEMF,PDETR,&
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH,&
-                       PDX,PDY)
+                       PDX,PDY,ZXCMF)
 ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
   GENTR_DETR = .TRUE.
   CALL COMPUTE_UPDRAFT_RHCJ10(D, CST, NEBN, PARAMMF, TURBN, CSTURB,&
@@ -283,7 +298,8 @@ ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
                        ZTH_UP,PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,&
                        PTHV_UP, PW_UP, PU_UP, PV_UP, ZSV_UP,     &
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PTKE_UP,PEMF,PDETR,&
-                       PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH )
+                       PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH,&
+                       ZXCMF )
 ELSEIF (PARAMMF%CMF_UPDRAFT == 'RAHA') THEN
    CALL COMPUTE_UPDRAFT_RAHA(D, CST, NEBN, PARAMMF,              &
                        KSV, GENTR_DETR,                          &
@@ -320,7 +336,7 @@ CALL COMPUTE_MF_CLOUD(D,CST,TURBN,PARAMMF,ICEP,NEBN%LSTATNW, &
                       PPABSM,PRHODREF,                  &
                       PRC_MF,PRI_MF,PCF_MF,PSIGMF,PTAUFUNC,&
                       PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
-                      PWEIGHT_MF_CLOUD)
+                      PWEIGHT_MF_CLOUD,ZXCTV)
 
 !!! 3. Compute fluxes of conservative variables and their divergence = tendency
 !!!    ------------------------------------------------------------------------

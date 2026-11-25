@@ -17,7 +17,7 @@ CONTAINS
                       PCDUEFF,PTAU11M,PTAU12M,PTAU22M,PTAU33M,       &
                       PUM,PVM,PWM,PUSLOPEM,PVSLOPEM,                 &
                       PTHLM,PRM,PSVM,                                &
-                      PTKEM,PLM,                                     &
+                      PTKEM,PLM,PTURB_SPP,                           &
                       PDP,PTP,                                       &
                       PRUS,PRVS,PRWS                                 )
 !     ################################################################
@@ -72,11 +72,10 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NTURB_S, NCMFS
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
-USE MODD_CTURB,          ONLY: CTURB_XCMFS => XCMFS
 use modd_field,          only: tfieldmetadata, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT
@@ -157,6 +156,7 @@ REAL, DIMENSION(D%NIJT),      INTENT(IN)   ::  PVSLOPEM     ! wind component alo
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S),   INTENT(IN)  ::  PTURB_SPP   ! Turb. SPP
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS, PRWS
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PDP,PTP      ! TKE production terms
@@ -200,8 +200,6 @@ REAL :: ZTIME1, ZTIME2
 REAL, DIMENSION(D%NIJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF , ZDZZ
                                     ! coefficients for the uncentred gradient 
                                     ! computation near the ground
-TYPE(TFIELDMETADATA) :: TZFIELD
-!
 REAL, DIMENSION(D%NIJT) :: ZWORKSHUGRAD_2D_1
 REAL, DIMENSION(D%NIJT) :: ZWORKSHUGRAD_2D_2
 REAL, DIMENSION(D%NIJT) :: ZWORKSHUGRAD_2D_3
@@ -215,14 +213,14 @@ REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_7
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_8
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_9
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_10
-REAL :: XCMFS
+TYPE(TFIELDMETADATA) :: TZFIELD
+!
 !
 ! --------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
 !             ------------------------
 !
-XCMFS = CTURB_XCMFS
 !
 NULLIFY(TZFIELDS_ll)
 !
@@ -260,7 +258,7 @@ IF (.NOT. O2D) THEN
    DO JK=1, IKT
         DO JIJ=1, IIJT
           ZFLX(JIJ, JK)= (2./3.) * PTKEM(JIJ, JK)                            &
-               - XCMFS * PK(JIJ, JK) *( (4./3.) * GX_U_M_PUM(JIJ, JK)        &
+               - PTURB_SPP(JIJ, JK, NCMFS) * PK(JIJ, JK) *( (4./3.) * GX_U_M_PUM(JIJ, JK)        &
                -(2./3.) * ( GY_V_M_PVM(JIJ, JK)                     &
                +GZ_W_M_PWM(JIJ, JK)                ) )
      END DO
@@ -273,7 +271,7 @@ ELSE
   DO JK=1, IKT
     DO JIJ=1, IIJT
       ZFLX(JIJ, JK)= (2./3.) * PTKEM(JIJ, JK)                                  &
-        - XCMFS * PK(JIJ, JK) *( (4./3.) * GX_U_M_PUM(JIJ, JK)                 &
+        - PTURB_SPP(JIJ, JK, NCMFS) * PK(JIJ, JK) *( (4./3.) * GX_U_M_PUM(JIJ, JK)                 &
                        -(2./3.) * ( GZ_W_M_PWM(JIJ, JK)             ) ) 
     END DO
   END DO
@@ -394,7 +392,7 @@ END DO
 
 DO JIJ=1, IIJT
      ZFLX(JIJ, IKB)   = (2./3.) * PTKEM(JIJ, IKB)                           &
-          - XCMFS * PK(JIJ, IKB) * 2. * ZDU_DX(JIJ)
+          - PTURB_SPP(JIJ, IKB, NCMFS) * PK(JIJ, IKB) * 2. * ZDU_DX(JIJ)
 END DO
 
 
@@ -585,7 +583,7 @@ IF (.NOT. O2D) THEN
    DO JK=1, IKT
         DO JIJ=1, IIJT
           ZFLX(JIJ, JK)= (2./3.) * PTKEM(JIJ, JK)                                  &
-               - XCMFS * PK(JIJ, JK) *( (4./3.) * GY_V_M_PVM(JIJ, JK)                        &
+               - PTURB_SPP(JIJ, JK, NCMFS) * PK(JIJ, JK) *( (4./3.) * GY_V_M_PVM(JIJ, JK)                        &
                -(2./3.) * ( GX_U_M_PUM(JIJ, JK)                      &
                +GZ_W_M_PWM(JIJ, JK)                ) )
      END DO
@@ -599,7 +597,7 @@ ELSE
    DO JK=1, IKT
         DO JIJ=1, IIJT
           ZFLX(JIJ, JK)= (2./3.) * PTKEM(JIJ, JK)                           &
-               - XCMFS * PK(JIJ, JK) *(-(2./3.) * ( GX_U_M_PUM(JIJ, JK)        &
+               - PTURB_SPP(JIJ, JK, NCMFS) * PK(JIJ, JK) *(-(2./3.) * ( GX_U_M_PUM(JIJ, JK)        &
                                           +GZ_W_M_PWM(JIJ, JK)     ) )  
      END DO
       END DO
@@ -622,7 +620,7 @@ END DO
 
 DO JIJ=1, IIJT
      ZFLX(JIJ, IKB)   = (2./3.) * PTKEM(JIJ, IKB)                           &
-          - XCMFS * PK(JIJ, IKB) * 2. * ZDV_DY(JIJ)
+          - PTURB_SPP(JIJ, IKB, NCMFS) * PK(JIJ, IKB) * 2. * ZDV_DY(JIJ)
 END DO
 
 
@@ -810,7 +808,7 @@ IF (.NOT. O2D) THEN
    DO JK=1, IKT
         DO JIJ=1, IIJT
           ZFLX(JIJ, JK) = (2./3.) * PTKEM(JIJ, JK)                                  &
-               - XCMFS * PK(JIJ, JK) *( (4./3.) * GZ_W_M_PWM(JIJ, JK)                        &
+               - PTURB_SPP(JIJ, JK, NCMFS) * PK(JIJ, JK) *( (4./3.) * GZ_W_M_PWM(JIJ, JK)                        &
                -(2./3.) * ( GX_U_M_PUM(JIJ, JK)                      &
                +GY_V_M_PVM(JIJ, JK)                ) )
      END DO
@@ -823,7 +821,7 @@ ELSE
    DO JK=1, IKT
         DO JIJ=1, IIJT
           ZFLX(JIJ, JK)= (2./3.) * PTKEM(JIJ, JK)                           &
-               - XCMFS * PK(JIJ, JK) *( (4./3.) * GZ_W_M_PWM(JIJ, JK)          &
+               - PTURB_SPP(JIJ, JK, NCMFS) * PK(JIJ, JK) *( (4./3.) * GZ_W_M_PWM(JIJ, JK)          &
                -(2./3.) * ( GX_U_M_PUM(JIJ, JK)           ) ) 
      END DO
       END DO
@@ -844,7 +842,7 @@ END DO
 
 DO JIJ=1, IIJT
      ZFLX(JIJ, IKB)   = (2./3.) * PTKEM(JIJ, IKB)                           &
-          - XCMFS * PK(JIJ, IKB) * 2. * ZDW_DZ(JIJ)
+          - PTURB_SPP(JIJ, IKB, NCMFS) * PK(JIJ, IKB) * 2. * ZDW_DZ(JIJ)
 END DO
 
 
@@ -903,7 +901,7 @@ END IF
 
 DO JK=1, IKT
   DO JIJ=1, IIJT
-    ZDFDDWDZ(JIJ, JK)    = - XCMFS * PK(JIJ, JK) * (4./3.)
+    ZDFDDWDZ(JIJ, JK)    = - PTURB_SPP(JIJ, JK, NCMFS) * PK(JIJ, JK) * (4./3.)
   END DO
 END DO
 
@@ -937,7 +935,8 @@ CALL GZ_W_M_PHY(D, ZWP, PDZZ, GZ_W_M_ZWP)
 DO JK=IKB+1, IKT
      DO JIJ=1, IIJT
        ZFLX(JIJ, JK)=ZFLX(JIJ, JK) &
-            - XCMFS * PK(JIJ, JK) * (4./3.) * (GZ_W_M_ZWP(JIJ, JK) - GZ_W_M_PWM(JIJ, JK))
+            - PTURB_SPP(JIJ, JK, NCMFS) * PK(JIJ, JK) * (4./3.) &
+              & * (GZ_W_M_ZWP(JIJ, JK) - GZ_W_M_PWM(JIJ, JK))
   END DO
    END DO
 

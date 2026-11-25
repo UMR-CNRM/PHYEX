@@ -6,7 +6,7 @@
 ! "tiwmx.func.h" must be included at the same time (AM3 and REDIN functions)
 ELEMENTAL SUBROUTINE ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, ODCOMPUTE, &
                            PTHT, PPABST, PRHODREF, PEXN, PLSFACT, PT, &
-                           PRVT, PICLDFR, PZZZ, &
+                           PRVT, PICLDFR, PZZZ, PICENU, &
                            PCIT, PRVHENI_MR)
 !!
 !!**  PURPOSE
@@ -53,6 +53,7 @@ REAL,    INTENT(IN)    :: PICLDFR ! Subgrid fraction of
                                   ! supersaturation with
                                   ! respect to ice at t
 REAL,    INTENT(IN)    :: PZZZ    ! Model level height at t
+REAL,    INTENT(IN)    :: PICENU  ! Nucleation perturbation
 REAL,    INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
 REAL,    INTENT(OUT)   :: PRVHENI_MR ! Mixing ratio change due to the heterogeneous nucleation
 !
@@ -105,7 +106,7 @@ IF (.NOT. PARAMI%LOCND2 ) THEN
     ENDIF
   ENDIF
   IF (GNEGT) THEN
-    ZZW=ZZW-PCIT
+    ZZW=ZZW*PICENU-PCIT
     ZZW=MIN(ZZW, 50.E3) ! limitation provisoire a 50 l^-1
   END IF
 

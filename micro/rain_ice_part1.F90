@@ -13,6 +13,7 @@
                                    PTHT, PRT, PTHS, PRS,                                 &
                                    PINPRC, PINPRR, PEVAP3D,                              &
                                    PINPRS, PINPRG, PRAINFR, PSIGS,               &
+                                   PRCRIAUTI, PRCRIAUTC,                                 &
                                    TBUDGETS, KBUDGETS,                                   &
                                    PQCT, PQRT, PQIT, PQST, PQGT,           &
                                    PQCS, PQRS, PQIS, PQSS, PQGS,           &
@@ -224,6 +225,8 @@ REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRS! Snow instant precip
 REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRG! Graupel instant precip
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) :: PRAINFR !Precipitation fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
+REAL, DIMENSION(D%NIJT), OPTIONAL, INTENT(IN)    :: PRCRIAUTI
+REAL, DIMENSION(D%NIJT), OPTIONAL, INTENT(IN)    :: PRCRIAUTC
 !
 TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
@@ -251,6 +254,7 @@ REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail ins
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-air precipitation fluxes
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHT ! Hail electric charge at t
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHS ! Hail electric charge source
+REAL, DIMENSION(D%NIJT) :: ZRCRIAUTI, ZRCRIAUTC ! SPP perturbations (actual values used, even if optional arguments are absent)
 !
 ! Bridge variables
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PT
@@ -288,6 +292,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZW3D
 REAL, DIMENSION(D%NIJT) :: ZCONC_TMP
 
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLW3D
+REAL :: ZICENU
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE_PART1', 0, ZHOOK_HANDLE)
@@ -300,6 +305,7 @@ IKTE=D%NKTE
 IKB=D%NKB
 IIJB=D%NIJB
 IIJE=D%NIJE
+ZICENU=1.0
 ZICEDRTMIN(1:KRR)=ICED%XRTMIN(1:KRR)
 !-------------------------------------------------------------------------------
 !
@@ -308,6 +314,30 @@ ZINV_TSTEP=1./PTSTEP
 !
 LLSEA_AND_TOWN=PRESENT(PSEA).AND.PRESENT(PTOWN)
 LLCONC=PRESENT(PCONC3D)
+
+!SPP perturbations (default values if absent)
+IF (PRESENT(PRCRIAUTI)) THEN
+
+  DO JIJ=D%NIJB, D%NIJE
+    ZRCRIAUTI(JIJ) = PRCRIAUTI(JIJ)
+  END DO
+
+ELSE
+
+  ZRCRIAUTI(D%NIJB:D%NIJE) = ICEP%XCRIAUTI
+
+ENDIF
+IF (PRESENT(PRCRIAUTC)) THEN
+
+  DO JIJ=D%NIJB, D%NIJE
+    ZRCRIAUTC(JIJ) = PRCRIAUTC(JIJ)
+  END DO
+
+ELSE
+
+  ZRCRIAUTC(D%NIJB:D%NIJE) = ICEP%XCRIAUTC
+
+ENDIF
 !
 ! LSFACT and LVFACT without exner, and LLMICRO
 ! LLMICRO is a mask with a True value on points where microphysics is active
@@ -507,7 +537,7 @@ DO JK=IKTB,IKTE
     CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(JIJ, JK), &
                          PTHT(JIJ, JK), PPABST(JIJ, JK), PRHODREF(JIJ, JK), &
                          PEXN(JIJ, JK), ZW3D(JIJ, JK), PT(JIJ, JK), &
-                         PRT(JIJ, JK, IRV), PICLDFR(JIJ, JK), PZZZZ(JIJ, JK), &
+                         PRT(JIJ, JK, IRV), PICLDFR(JIJ, JK), PZZZZ(JIJ, JK), ZICENU, &
                          PCIT(JIJ, JK), PRVHENI(JIJ, JK))
   ENDDO
 ENDDO
@@ -573,7 +603,7 @@ IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
                             PCLDFR(JIJ,JK), PT(JIJ,JK), ZSIGMA_RC(JIJ,JK), &
                             PHLC_HCF(JIJ,JK), ZHLC_LCF(JIJ,JK), PHLC_HRC(JIJ,JK), ZHLC_LRC(JIJ,JK), &
                             PHLI_HCF(JIJ,JK), ZHLI_LCF(JIJ,JK), PHLI_HRI(JIJ,JK), ZHLI_LRI(JIJ,JK), &
-                            PRAINFR(JIJ,JK))
+                            PRAINFR(JIJ,JK), PARAMI, ZRCRIAUTI(JIJ), ZRCRIAUTC(JIJ))
     ENDDO
   ENDDO
 
@@ -597,4 +627,5 @@ CONTAINS
 INCLUDE "ice4_nucleation.func.h"
 INCLUDE "tiwmx.func.h"
 INCLUDE "ice4_compute_pdf.func.h"
+INCLUDE "criauti.func.h"
 END SUBROUTINE RAIN_ICE_PART1

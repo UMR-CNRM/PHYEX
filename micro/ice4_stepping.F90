@@ -9,7 +9,7 @@ SUBROUTINE ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, PTSTEP, &
                         &PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI, &
                         &PTHS, PRS, PRREVAV, PRAINFR, PSIGS, PTHT, PRT, &
                         &PICLDFR, PZZZ, PCONC3D, PSSIO, PSSIU, PIFR, &
-                        &PBUDGETS, PLATHAM_IAGGS)
+                        &PBUDGETS, PLATHAM_IAGGS, PRCRIAUTI, PRCRIAUTC, PICENU)
 
 !$ACDC singlecolumn --nocreate-interface
 
@@ -90,6 +90,10 @@ REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PCONC3D ! Cloud
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PSSIO   ! Super-sat. with respect to ice in the supersat fraction
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PSSIU   ! Sub-sat. with respect to ice in the subsaturated fraction
 REAL,    DIMENSION(D%NIJT),                     INTENT(IN)    :: PIFR    ! Ratio cloud ice moist part to dry part
+! SPP microphysics perturbation arrays
+REAL,    DIMENSION(D%NIJT), OPTIONAL,           INTENT(IN)    :: PRCRIAUTI
+REAL,    DIMENSION(D%NIJT), OPTIONAL,           INTENT(IN)    :: PRCRIAUTC
+REAL,    DIMENSION(D%NIJT), OPTIONAL,           INTENT(IN)    :: PICENU
 REAL,    DIMENSION(MERGE(D%NIJT,0,PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')), INTENT(INOUT) :: PHLC_HRC, &
                                                                                                                   & PHLC_HCF, &
                                                                                                                   & PHLI_HRI, &
@@ -117,7 +121,7 @@ REAL :: ZTSTEP ! length of sub-timestep in case of time splitting
 REAL :: ZINV_TSTEP ! Inverse ov PTSTEP
 REAL :: ZTIME_THRESHOLD ! Time to reach threshold
 !
-INTEGER :: JIJ, JV, JJV
+INTEGER :: JIJ, JV, JJV, IIJB, IIJE
 REAL, DIMENSION(D%NIJT) :: &
                         & ZTIME, & ! Current integration time (starts with 0 and ends with PTSTEP)
                         & ZMAXTIME, & ! Time on which we can apply the current tendencies
@@ -134,6 +138,7 @@ REAL, DIMENSION(D%NIJT) :: &
                         & ZHLI_LRI, &
                         & ZSIGMA_RC, &
                         & ZEXTTH
+REAL, DIMENSION(D%NIJT) :: ZRCRIAUTI, ZRCRIAUTC, ZICENU ! SPP perturbations
 REAL, DIMENSION(D%NIJT,7) :: ZEXTPK
 LOGICAL, DIMENSION(D%NIJT) :: LLCOMPUTE ! .TRUE. or points where we must compute tendencies,
 REAL, DIMENSION(SIZE(ICED%XRTMIN))   :: ZRSMIN
@@ -171,6 +176,43 @@ IF (LHOOK) CALL DR_HOOK('ICE4_STEPPING', 0, ZHOOK_HANDLE)
 !
 ZINV_TSTEP=1./PTSTEP
 ZRSMIN = ICED%XRTMIN
+IIJB=D%NIJB
+IIJE=D%NIJE
+!
+!SPP perturbations (default values if absent)
+IF (PRESENT(PRCRIAUTI)) THEN
+
+  DO JIJ=IIJB, IIJE
+    ZRCRIAUTI(JIJ) = PRCRIAUTI(JIJ)
+  END DO
+
+ELSE
+
+  ZRCRIAUTI(IIJB:IIJE) = ICEP%XCRIAUTI
+
+ENDIF
+IF (PRESENT(PRCRIAUTC)) THEN
+
+  DO JIJ=IIJB, IIJE
+    ZRCRIAUTC(JIJ) = PRCRIAUTC(JIJ)
+  END DO
+
+ELSE
+
+  ZRCRIAUTC(IIJB:IIJE) = ICEP%XCRIAUTC
+
+ENDIF
+IF (PRESENT(PICENU)) THEN
+
+  DO JIJ=IIJB, IIJE
+    ZICENU(JIJ) = PICENU(JIJ)
+  END DO
+
+ELSE
+
+  ZICENU(IIJB:IIJE) = 1.
+
+ENDIF
 !
 IF(BUCONF%LBU_ENABLE .OR. OSAVE_MICRO) THEN
   DO JV=1, IBUNUM-IBUNUM_EXTRA
@@ -308,7 +350,8 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE )<PTSTEP)) ! Loop to *really* compute tendencie
                         &ZRS_TEND, ZRG_TEND, ZRH_TEND, ZSSI, &
                         &ZA, ZB, ZATH, ZBTH, &
                         &PHLC_HCF, ZHLC_LCF, PHLC_HRC, ZHLC_LRC, &
-                        &PHLI_HCF, ZHLI_LCF, PHLI_HRI, ZHLI_LRI, PRAINFR)
+                        &PHLI_HCF, ZHLI_LCF, PHLI_HRI, ZHLI_LRI, PRAINFR, &
+                        &ZRCRIAUTI, ZRCRIAUTC, ZICENU)
 
     ! External tendencies
     IF(PARAMI%LEXT_TEND) THEN

@@ -16,7 +16,7 @@ CONTAINS
                       PSFTHM,PSFRM,                                  &
                       PWM,PTHLM,PRM,                                 &
                       PATHETA,PAMOIST,PSRCM,PFRAC_ICE,               &
-                      PRTHLS,PRRS                                    )
+                      PTURB_SPP,PRTHLS,PRRS                          )
 !     ################################################################
 !
 !
@@ -61,7 +61,7 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NCSHF, NCHF, NTURB_S
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
@@ -114,6 +114,7 @@ REAL, DIMENSION(D%NIJT),     INTENT(IN)    ::  PSFTHM,PSFRM
 ! Variables at t-1
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PWM 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PTHLM 
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S),   INTENT(IN)  ::  PTURB_SPP    ! SPP for turbulence
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)    ::  PRM          ! mixing ratios at t-1,
                               !  where PRM(:,:,1) = conservative mixing ratio
 !
@@ -197,7 +198,7 @@ CALL GX_M_U_PHY(D, OFLAT, PTHLM, PDXX, PDZZ, PDZX, ZWORKSHUGRAD_3D_2)
 
 DO JK=1, D%NKT
   DO JIJ=1, D%NIJT
-    ZFLX(JIJ, JK)     = -TURBN%XCSHF * ZWORKSHUGRAD_3D_1(JIJ, JK) * ZWORKSHUGRAD_3D_2(JIJ, JK)
+    ZFLX(JIJ, JK)     = -PTURB_SPP(JIJ, JK, NCSHF) * ZWORKSHUGRAD_3D_1(JIJ, JK) * ZWORKSHUGRAD_3D_2(JIJ, JK)
   END DO
 END DO
 
@@ -219,7 +220,7 @@ CALL MXM2D_PHY(D, ZWORKSHUGRAD_2D_2, ZWORKSHUGRAD_2D_3)
 CALL MXM2D_PHY(D, PK(:,IKB), ZWORKSHUGRAD_2D_4)
 
 DO JIJ=1, D%NIJT
-  ZFLX(JIJ, IKB) = -TURBN%XCSHF * ZWORKSHUGRAD_2D_4(JIJ) *          &
+  ZFLX(JIJ, IKB) = -PTURB_SPP(JIJ, IKB, NCSHF) * ZWORKSHUGRAD_2D_4(JIJ) *          &
     ( ZWORKSHUGRAD_2D_1(JIJ) * PINV_PDXX(JIJ, IKB)           &
      -ZWORKSHUGRAD_2D_3(JIJ)      &
           *0.5* ( PDZX(JIJ, IKB+1)+PDZX(JIJ, IKB))       &
@@ -724,7 +725,7 @@ IF (KRR/=0) THEN
   
   DO JK=1, D%NKT
     DO JIJ=1, D%NIJT
-      ZFLX(JIJ, JK)     = -TURBN%XCHF * ZWORKSHUGRAD_3D_1(JIJ, JK) * ZWORKSHUGRAD_3D_2(JIJ, JK)
+      ZFLX(JIJ, JK)     = -PTURB_SPP(JIJ, JK, NCHF) * ZWORKSHUGRAD_3D_1(JIJ, JK) * ZWORKSHUGRAD_3D_2(JIJ, JK)
     END DO
   END DO
   
@@ -746,7 +747,7 @@ IF (KRR/=0) THEN
   CALL MXM2D_PHY(D, PK(:,IKB), ZWORKSHUGRAD_2D_4)
   
   DO JIJ=1, D%NIJT
-    ZFLX(JIJ, IKB) = -TURBN%XCHF * ZWORKSHUGRAD_2D_4(JIJ) *           &
+    ZFLX(JIJ, IKB) = -PTURB_SPP(JIJ, IKB, NCHF) * ZWORKSHUGRAD_2D_4(JIJ) *           &
       ( ZWORKSHUGRAD_2D_1(JIJ) * PINV_PDXX(JIJ, IKB)           &
        -ZWORKSHUGRAD_2D_3(JIJ)      &
             *0.5* ( PDZX(JIJ, IKB+1)+PDZX(JIJ, IKB))       &
@@ -1291,7 +1292,7 @@ IF (.NOT. O2D) THEN
   
   DO JK=1, D%NKT
     DO JIJ=1, D%NIJT
-      ZFLX(JIJ, JK)     = -TURBN%XCSHF * ZWORKSHUGRAD_3D_1(JIJ, JK) * ZWORKSHUGRAD_3D_2(JIJ, JK)
+      ZFLX(JIJ, JK)     = -PTURB_SPP(JIJ, JK, NCSHF) * ZWORKSHUGRAD_3D_1(JIJ, JK) * ZWORKSHUGRAD_3D_2(JIJ, JK)
     END DO
   END DO
   
@@ -1319,7 +1320,7 @@ CALL MYM2D_PHY(D, ZWORKSHUGRAD_2D_2, ZWORKSHUGRAD_2D_3)
 CALL MYM2D_PHY(D, PK(:,IKB), ZWORKSHUGRAD_2D_4)
 
 DO JIJ=1, D%NIJT
-  ZFLX(JIJ, IKB) = -TURBN%XCSHF * ZWORKSHUGRAD_2D_4(JIJ) *          &
+  ZFLX(JIJ, IKB) = -PTURB_SPP(JIJ, IKB, NCSHF) * ZWORKSHUGRAD_2D_4(JIJ) *          &
     ( ZWORKSHUGRAD_2D_1(JIJ) * PINV_PDYY(JIJ, IKB)           &
      -ZWORKSHUGRAD_2D_3(JIJ)     &
           *0.5* ( PDZY(JIJ, IKB+1)+PDZY(JIJ, IKB))       &
@@ -1829,7 +1830,7 @@ IF (KRR/=0) THEN
     
     DO JK=1, D%NKT
       DO JIJ=1, D%NIJT
-        ZFLX(JIJ, JK)     = -TURBN%XCHF * ZWORKSHUGRAD_3D_1(JIJ, JK) * ZWORKSHUGRAD_3D_2(JIJ, JK)
+        ZFLX(JIJ, JK)     = -PTURB_SPP(JIJ, JK, NCHF) * ZWORKSHUGRAD_3D_1(JIJ, JK) * ZWORKSHUGRAD_3D_2(JIJ, JK)
       END DO
     END DO
     
@@ -1856,7 +1857,7 @@ IF (KRR/=0) THEN
   CALL MYM2D_PHY(D, PK(:,IKB), ZWORKSHUGRAD_2D_4)
   
   DO JIJ=1, D%NIJT
-    ZFLX(JIJ, IKB) = -TURBN%XCHF * ZWORKSHUGRAD_2D_4(JIJ) *           &
+    ZFLX(JIJ, IKB) = -PTURB_SPP(JIJ, IKB, NCHF) * ZWORKSHUGRAD_2D_4(JIJ) *           &
       ( ZWORKSHUGRAD_2D_1(JIJ) * PINV_PDYY(JIJ, IKB)           &
        -ZWORKSHUGRAD_2D_3(JIJ)     &
              *0.5* ( PDZY(JIJ, IKB+1)+PDZY(JIJ, IKB))      &

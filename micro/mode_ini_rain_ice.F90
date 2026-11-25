@@ -131,7 +131,7 @@ USE MODD_RAIN_ICE_PARAM_n, ONLY: LNEWCOEFF, RAIN_ICE_PARAMN, RAIN_ICE_PARAM_ALLO
                                  XLBRWETH2, XLBRWETH3, XLBSACCR1, XLBSACCR2, XLBSACCR3, XLBSDRYG1, &
                                  XLBSDRYG2, XLBSDRYG3, XLBSWETH1, XLBSWETH2, XLBSWETH3, XMNU0, XNU10, &
                                  XNU20, XRCFRI, XRDEPGRED, XRDEPSRED, XSCFAC, XSRIMCG, XSRIMCG2, &
-                                 XSRIMCG3, XT0CRIAUTI, XTEXAUTI, XTIMAUTC, XTIMAUTI
+                                 XSRIMCG3, XT0CRIAUTI, XTEXAUTI, XTIMAUTC, XTIMAUTI, XRHO00
 USE MODD_PRECISION, ONLY: MNHREAL64
 !
 USE MODI_GAMMA_INC, ONLY: GAMMA_INC
@@ -197,7 +197,6 @@ INTEGER :: IND                ! Number of interval to integrate the kernels
 REAL :: ZESR                  ! Mean efficiency of rain-aggregate collection
 REAL :: ZFDINFTY              ! Factor used to define the "infinite" diameter
 !
-REAL :: ZCRI0, ZTCRI0         ! Second point to determine 10**(aT+b) law of ri->rs autoconversion
 !
 !
 !
@@ -578,6 +577,7 @@ XCEXVT = 0.4
 ZE = (50./100.) * EXP(XALPW-XBETAW/293.15-XGAMW*LOG(293.15))
 ZRV = (XRD/XRV) * ZE / (101325.-ZE)
 ZRHO00 = 101325.*(1.+ZRV)/(XRD+ZRV*XRV)/293.15
+XRHO00 = ZRHO00
 IF(LUPDATE_SNOW)THEN
   ZRHO00_SNOW = XP00/(XRD*300.0)
 ELSE
@@ -740,12 +740,7 @@ XTEXAUTI = 0.015  !  Temperature factor of the I+I collection efficiency
 XCRIAUTI = XCRIAUTI_NAM
 IF(LCRIAUTI) THEN
   XT0CRIAUTI = XT0CRIAUTI_NAM
-  !second point to determine 10**(aT+b) law
-  ZTCRI0=-40.0
-  ZCRI0=1.25E-6
-  XBCRIAUTI=-( LOG10(XCRIAUTI) - LOG10(ZCRI0)*XT0CRIAUTI/ZTCRI0 )&
-                   *ZTCRI0/(XT0CRIAUTI-ZTCRI0)
-  XACRIAUTI=(LOG10(ZCRI0)-XBCRIAUTI)/ZTCRI0
+  CALL CRIAUTI(XCRIAUTI, XT0CRIAUTI, XACRIAUTI, XBCRIAUTI)
 ELSE
   XACRIAUTI=XACRIAUTI_NAM
   XBCRIAUTI=XBCRIAUTI_NAM
@@ -1820,4 +1815,7 @@ CONTAINS
 INCLUDE "gamma.h"
 INCLUDE "momg.h"
 END SUBROUTINE INI_RAIN_ICE
+
+INCLUDE "criauti.func.h"
+
 END MODULE MODE_INI_RAIN_ICE

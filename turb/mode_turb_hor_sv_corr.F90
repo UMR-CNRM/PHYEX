@@ -12,7 +12,7 @@ CONTAINS
                       PLM,PLEPS,PTKEM,PTHVREF,                       &
                       PTHLM,PRM,                                     &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,               &
-                      PWM,PSVM                                       )
+                      PWM,PSVM,PTURB_SPP                             )
 !     ################################################################
 !
 !
@@ -51,7 +51,7 @@ CONTAINS
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY : CSTURB_t
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NCSHF, NCHF, NTURB_S
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
 !
@@ -101,6 +101,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PSRCM        ! normalized
                   ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    ::  PWM          ! w at t-1
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S), INTENT(IN) ::  PTURB_SPP    ! SPP for turbulence
 !
 !
 !
@@ -124,7 +125,7 @@ REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_1
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_2
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_3
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_4
-REAL :: ZCSV          !constant for the scalar flux 
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZCSV !constant (possibly perturbed) for the scalar flux
 ! ---------------------------------------------------------------------------
 !
 IKU=SIZE(PTKEM,2)
@@ -134,9 +135,9 @@ CALL SECOND_MNH(ZTIME1)
 !
 IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables        
-   ZCSV= TURBN%XCHF/PRSNOW 
+  ZCSV(:,:)=PTURB_SPP(:,:,NCHF)/PRSNOW
 ELSE
-   ZCSV= TURBN%XCHF
+  ZCSV(:,:)=PTURB_SPP(:,:,NCHF)
 ENDIF
 !
 DO JSV=1,KSV
@@ -152,7 +153,7 @@ DO JSV=1,KSV
       
       DO JK=1, D%NKT
         DO JIJ=1, D%NIJT
-          ZFLX(JIJ, JK) =  ZCSV / ZCSVD * PLM(JIJ, JK) * PLEPS(JIJ, JK) *   &
+          ZFLX(JIJ, JK) =  ZCSV(JIJ, JK) / ZCSVD * PLM(JIJ, JK) * PLEPS(JIJ, JK) *   &
              (  ZWORKSHUGRAD_3D_1(JIJ, JK)**2             &
               + ZWORKSHUGRAD_3D_2(JIJ, JK)**2 )
         END DO
@@ -163,7 +164,7 @@ DO JSV=1,KSV
       
       DO JK=1, D%NKT
         DO JIJ=1, D%NIJT
-          ZFLX(JIJ, JK) =  ZCSV / ZCSVD * PLM(JIJ, JK) * PLEPS(JIJ, JK) *   &
+          ZFLX(JIJ, JK) =  ZCSV(JIJ, JK) / ZCSVD * PLM(JIJ, JK) * PLEPS(JIJ, JK) *   &
                 ZWORKSHUGRAD_3D_1(JIJ, JK)**2
         END DO
       END DO
@@ -198,7 +199,7 @@ CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
           ZFLX(JIJ, JK)=  PLM(JIJ, JK) * PLEPS(JIJ, JK)                                          &
               *  (  ZWORKSHUGRAD_3D_1(JIJ, JK) * ZWORKSHUGRAD_3D_2(JIJ, JK)  &
                   + ZWORKSHUGRAD_3D_3(JIJ, JK) * ZWORKSHUGRAD_3D_4(JIJ, JK)  &
-                 ) * (TURBN%XCSHF+ZCSV) / (2.*ZCTSVD)
+                 ) * (PTURB_SPP(JIJ, JK, NCSHF)+ZCSV(JIJ, JK)) / (2.*ZCTSVD)
         END DO
       END DO
       
@@ -210,7 +211,7 @@ CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
         DO JIJ=1, D%NIJT
           ZFLX(JIJ, JK)=  PLM(JIJ, JK) * PLEPS(JIJ, JK)                                          &
                   * ZWORKSHUGRAD_3D_2(JIJ, JK) * ZWORKSHUGRAD_3D_1(JIJ, JK)  &
-                  * (TURBN%XCSHF+ZCSV) / (2.*ZCTSVD)
+                  * (PTURB_SPP(JIJ, JK, NCSHF)+ZCSV(JIJ, JK)) / (2.*ZCTSVD)
         END DO
       END DO
       
@@ -233,7 +234,7 @@ CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
             ZFLX(JIJ, JK)=  PLM(JIJ, JK) * PLEPS(JIJ, JK)                                                 &
                 *  (  ZWORKSHUGRAD_3D_1(JIJ, JK) * ZWORKSHUGRAD_3D_2(JIJ, JK)  &
                     + ZWORKSHUGRAD_3D_3(JIJ, JK) * ZWORKSHUGRAD_3D_4(JIJ, JK)  &
-                   ) * (TURBN%XCHF+ZCSV) / (2.*ZCQSVD)
+                   ) * (PTURB_SPP(JIJ, JK, NCHF)+ZCSV(JIJ, JK)) / (2.*ZCQSVD)
           END DO
         END DO
         
@@ -245,7 +246,7 @@ CALL LES_MEAN_SUBGRID_PHY(D, TLES, ZWKLES, &
           DO JIJ=1, D%NIJT
             ZFLX(JIJ, JK)=  PLM(JIJ, JK) * PLEPS(JIJ, JK)                                                 &
                     * ZWORKSHUGRAD_3D_2(JIJ, JK) * ZWORKSHUGRAD_3D_1(JIJ, JK)  &
-                    * (TURBN%XCHF+ZCSV) / (2.*ZCQSVD)
+                    * (PTURB_SPP(JIJ, JK, NCHF)+ZCSV(JIJ, JK)) / (2.*ZCQSVD)
           END DO
         END DO
         

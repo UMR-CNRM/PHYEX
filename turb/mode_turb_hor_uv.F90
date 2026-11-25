@@ -16,7 +16,7 @@ CONTAINS
                       PRHODJ,                                        &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU22M,PTAU33M,       &
                       PUM,PVM,PUSLOPEM,PVSLOPEM,                     &
-                      PDP,                                           &
+                      PTURB_SPP,PDP,                                 &
                       PRUS,PRVS                                      )
 !     ################################################################
 !
@@ -58,10 +58,9 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_TURB_n, ONLY: TURB_t, NCMFS, NTURB_S
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
-USE MODD_CTURB,          ONLY: CTURB_XCMFS => XCMFS
 USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT
@@ -128,6 +127,7 @@ REAL, DIMENSION(D%NIJT),      INTENT(IN)   ::  PUSLOPEM     ! wind component alo
 REAL, DIMENSION(D%NIJT),      INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
                                      ! direction normal to the maximum slope one
 !
+REAL, DIMENSION(D%NIJT,D%NKT,NTURB_S),          INTENT(IN)  ::  PTURB_SPP    ! SPP for turbulence
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS   ! var. at t+1 -split-
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PDP          ! TKE production terms
@@ -148,8 +148,6 @@ REAL, DIMENSION(D%NIJT,D%NKT)  :: GY_U_UV_PUM
 REAL, DIMENSION(D%NIJT,D%NKT)  :: GX_V_UV_PVM
 !
 REAL :: ZTIME1, ZTIME2
-TYPE(TFIELDMETADATA) :: TZFIELD
-!
 REAL, DIMENSION(D%NIJT) :: ZWORKSHUGRAD_2D_1
 REAL, DIMENSION(D%NIJT) :: ZWORKSHUGRAD_2D_2
 REAL, DIMENSION(D%NIJT) :: ZWORKSHUGRAD_2D_3
@@ -191,14 +189,14 @@ REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_12
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_13
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_14
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZWORKSHUGRAD_3D_15
-REAL :: XCMFS
+TYPE(TFIELDMETADATA) :: TZFIELD
+!
 !
 ! ---------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
 !             ------------------------
 !
-XCMFS = CTURB_XCMFS
 !
 IKB = 1+JPVEXT               
 IKE = SIZE(PUM,2)-JPVEXT
@@ -225,7 +223,7 @@ IF (.NOT. O2D) THEN
   
   DO JK=1, D%NKT
     DO JIJ=1, D%NIJT
-      ZFLX(JIJ, JK)= - XCMFS * ZWORKSHUGRAD_3D_2(JIJ, JK) *                           &
+      ZFLX(JIJ, JK)= - PTURB_SPP(JIJ, JK, NCMFS) * ZWORKSHUGRAD_3D_2(JIJ, JK) *                           &
               (GY_U_UV_PUM(JIJ, JK) + GX_V_UV_PVM(JIJ, JK))
     END DO
   END DO
@@ -236,7 +234,7 @@ ELSE
   
   DO JK=1, D%NKT
     DO JIJ=1, D%NIJT
-      ZFLX(JIJ, JK)= - XCMFS * ZWORKSHUGRAD_3D_2(JIJ, JK) *                           &
+      ZFLX(JIJ, JK)= - PTURB_SPP(JIJ, JK, NCMFS) * ZWORKSHUGRAD_3D_2(JIJ, JK) *                           &
               (GX_V_UV_PVM(JIJ, JK))
     END DO
   END DO
@@ -290,7 +288,7 @@ CALL MYM2D_PHY(D, PDXX(:,IKB), ZWORKSHUGRAD_2D_17)
 CALL MYM2D_PHY(D, ZWORKSHUGRAD_2D_13, ZWORKSHUGRAD_2D_18)
 
 DO JIJ=1, D%NIJT
-  ZFLX(JIJ, IKB)   = - XCMFS * ZWORKSHUGRAD_2D_18(JIJ) *  (     &
+  ZFLX(JIJ, IKB)   = - PTURB_SPP(JIJ, IKB, NCMFS) * ZWORKSHUGRAD_2D_18(JIJ) *  (     &
     ( ZWORKSHUGRAD_2D_14(JIJ)                                        &
      -ZWORKSHUGRAD_2D_10(JIJ)&
       *0.5*ZWORKSHUGRAD_2D_6(JIJ)            &
