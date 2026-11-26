@@ -46,6 +46,9 @@ dependencies = [
     "f90nml",
     "ephem",
     "xarray",
+    # ecRad radiation scheme (python interface built from the ecRad sources,
+    # needs a Fortran compiler and NetCDF-Fortran)
+    "pyecrad @ git+https://github.com/SebastienRietteMTO/ecrad.git@pyecrad-main",
 ]
 
 [project.scripts]

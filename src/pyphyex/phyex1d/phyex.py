@@ -30,8 +30,8 @@ class PHYEX(PhysicsBase):
     """
 
     OPTIONS_HELP = {
-        'pyecrad': 'path to the pyecrad/__init__.py file to use (if not provided, the '
-                   'package must be found in the PYTHONPATH in order to use ecrad)',
+        'pyecrad': 'path to the pyecrad package directory (or its __init__.py file) to use '
+                   'instead of the installed pyecrad package',
         'namel': 'namelist name or file name (with a .namel extension)',
         'dx': 'mesh size along x (m), for scale aware parametrizations',
         'dy': 'mesh size along y (m), for scale aware parametrizations',
@@ -138,11 +138,16 @@ class PHYEX(PhysicsBase):
         if nml['PHYEX']['RAD'] == 'ECRAD' and self.case.radiation == 'on':
             try:
                 if self.pyecrad is None:
-                    # pyecrad.py should be found by python
+                    # installed pyecrad package
                     import pyecrad  # pylint: disable=import-outside-toplevel
                 else:
-                    # We import pyecrad.py by file path
-                    spec = importlib.util.spec_from_file_location('pyecrad', self.pyecrad)
+                    # We import the pyecrad package by path
+                    package_dir = os.path.abspath(self.pyecrad)
+                    if not os.path.isdir(package_dir):
+                        package_dir = os.path.dirname(package_dir)
+                    spec = importlib.util.spec_from_file_location(
+                        'pyecrad', os.path.join(package_dir, '__init__.py'),
+                        submodule_search_locations=[package_dir])
                     pyecrad = importlib.util.module_from_spec(spec)
                     sys.modules['pyecrad'] = pyecrad
                     spec.loader.exec_module(pyecrad)
@@ -150,14 +155,9 @@ class PHYEX(PhysicsBase):
                 logging.error("The module pyecrad has not been found.")
                 raise
 
-            with tempfile.NamedTemporaryFile() as namel:
-                nml = f90nml.read(namel.name)
-                if self.namel is not None:
-                    for k, v in self.namel.items():
-                        nml[k] = v
-                set_default(nml)
-                nml.write(namel.name, force=True)
-                self._pyecrad = pyecrad.Ecrad(namel.name)
+            # The namelist must contain the "radiation" group (data files are taken
+            # from the pyecrad package if they are installed with it)
+            self._pyecrad = pyecrad.Ecrad(nml)
 
     def finalize(self):
         """Close PHYEX resources"""
@@ -435,21 +435,25 @@ class PhysicsArome(PHYEX):
                 re_ice = numpy.minimum(numpy.maximum(re_ice, 40), 130) * 1.E-6
                 overlap_param = numpy.ones((nkt - 1, ))  # 1 for max
                 tskin = numpy.ones((nijt, )) * tskin
-                sw_albedo = numpy.ones((1, )) * state.get('albedo', 1.)  # albedo diffuse
+                sw_albedo = numpy.ones((nijt, )) * state.get('albedo', 1.)  # albedo diffuse
                 sw_albedo_direct = sw_albedo.copy()  # albedo direct
-                lw_emissivity = numpy.ones((1, )) * state.get('emissivity', 1.)  # emissivity
+                lw_emissivity = numpy.ones((nijt, )) * state.get('emissivity', 1.)  # emissivity
                 q = rv * qdm
 
+                # pyecrad arrays are dimensioned (ncol, nlev), top of atmosphere first
                 result = self._pyecrad.exec(
-                    pressure_flux[::order, x], temperature_flux[::order, x],
-                    solar_irradiance, spectral_solar_cycle_multiplier, cos_solar_zenith_angle,
-                    state['CF'][::order, x], fractional_std[::order, x], q_liquid[::order, x],
-                    re_liquid[::order, x], q_ice[::order, x], re_ice[::order, x],
-                    overlap_param[::order, x],
-                    tskin, sw_albedo[:, x], lw_emissivity[:, x],
-                    sw_albedo_direct=sw_albedo_direct[:, x],
-                    q_unit=self._pyecrad.IMassMixingRatio, q=q[::order, x])
-                result = {k: v[::order, 0] if len(v.shape) == 2 else v
+                    pressure_flux[x, ::order], temperature_flux[x, ::order],
+                    cos_solar_zenith_angle, tskin, sw_albedo, lw_emissivity,
+                    cloud_fraction=state['CF'][x, ::order],
+                    fractional_std=fractional_std[x, ::order],
+                    q_liquid=q_liquid[x, ::order], re_liquid=re_liquid[x, ::order],
+                    q_ice=q_ice[x, ::order], re_ice=re_ice[x, ::order],
+                    overlap_param=overlap_param[x, ::order],
+                    sw_albedo_direct=sw_albedo_direct,
+                    solar_irradiance=solar_irradiance,
+                    spectral_solar_cycle_multiplier=spectral_solar_cycle_multiplier,
+                    h2o=q[x, ::order], h2o_unit=self._pyecrad.IMassMixingRatio)
+                result = {k: v[0, ::order] if len(v.shape) == 2 else v
                           for (k, v) in result.items()}
                 for var in ('lw_up', 'lw_dn', 'sw_up', 'sw_dn'):
                     state[var] = result[var]
