@@ -104,6 +104,11 @@ for a single configuration. This mechanism is used by the GitHub workflow (.gith
 the files being stored in the GitHub cache (see .github/actions/refhash/action.yml): the references are
 compiled and run only when their hash is unknown.
 
+The exit status of the comparison step is 0 when the results are identical, 50 when they differ and
+another value in case of error. The GitHub workflow uses it to give two statuses for each tool and
+configuration: the 'compil/exec' job fails only on a hard failure (compilation, execution, error of
+the tools), the 'reproduction' job fails when the results differ from the references.
+
 ### phyex-check\_norms
 
 This command checks the coding norms (described in the [CodingNorms documentation](./CodingNorms.md)) of the source code (for instance: phyex-check\_norms -v src/phyex).

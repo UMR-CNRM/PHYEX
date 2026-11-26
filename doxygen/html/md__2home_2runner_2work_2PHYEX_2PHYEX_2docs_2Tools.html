@@ -134,6 +134,7 @@ Reference hashes (phyex-check_testprogs and phyex-check_phyex1d)</h2>
 <li>otherwise, the reference simulation is used (and computed if &ndash;computeRefIfNeeded is set) and its commit and hash are stored in the file (created if it does not exist).</li>
 </ul>
 <p>The hashes depend on the configuration (architecture, compiler, precision...): a file must be used for a single configuration. This mechanism is used by the GitHub workflow (.github/workflows/tests.yaml), the files being stored in the GitHub cache (see .github/actions/refhash/action.yml): the references are compiled and run only when their hash is unknown.</p>
+<p>The exit status of the comparison step is 0 when the results are identical, 50 when they differ and another value in case of error. The GitHub workflow uses it to give two statuses for each tool and configuration: the 'compil/exec' job fails only on a hard failure (compilation, execution, error of the tools), the 'reproduction' job fails when the results differ from the references.</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md82"></a>
 phyex-check_norms</h2>
 <p>This command checks the coding norms (described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2CodingNorms.html">CodingNorms documentation</a>) of the source code (for instance: phyex-check_norms -v src/phyex).</p>
