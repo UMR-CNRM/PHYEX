@@ -14,6 +14,13 @@ phyex1d is part of the pyphyex package (see the [Offline documentation](./Offlin
 pip install ./PHYEX       # from the PHYEX repository
 ```
 
+The ecRad radiation scheme is used through the pyecrad package, installed as a dependency from
+the [pyecrad-main branch](https://github.com/SebastienRietteMTO/ecrad/tree/pyecrad-main) of ecRad.
+Its installation compiles ecRad: a Fortran compiler, CMake and NetCDF-Fortran are needed (see the
+pyecrad documentation for the build options). A development version of pyecrad can be used
+instead with the 'pyecrad' option of the PHYEX physics (path to the pyecrad package directory,
+the libecrad4py library being given by the PYECRAD\_LIBRARY environment variable).
+
 This installs the following commands (each of them has a -h option):
 
   - phyex1d-cases\_install: install the DEPHY-SCM cases (download or link)
