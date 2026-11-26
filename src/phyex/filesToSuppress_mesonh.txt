@@ -35,7 +35,6 @@ aux/mode_gradient_w_phy.f90
 
 #files not used in Meso-NH
 aux/ini_phyex.f90
-aux/modi_ini_phyex.f90
 
 #old version of rain_ice
 micro/mode_rain_ice_old_fast_rg.f90
