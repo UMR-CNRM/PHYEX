@@ -77,6 +77,8 @@ Other developers must work with source code coming directly from the master bran
 
 Before submitting a pull request, the contribution can be checked with the tools described in the [Tools documentation](./Tools.md) (phyex-check\_norms for the coding norms, phyex-check\_testprogs for the bit-reproducibility of the test programs, phyex-check\_commit for all the checks).
 
+The title of a pull request must start with 'bugfix: ', 'feature: ' or 'bugfix+feature: ', in any case (this is checked automatically). The description is pre-filled by a template (.github/pull_request_template.md) asking for a description of the modifications and of their impact on the results; the coding norms, the compilation and the execution of the tests must be OK.
+
 ## Code documentation
 
 The code must contain comments.

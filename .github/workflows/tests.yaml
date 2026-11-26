@@ -15,22 +15,37 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # The testprogs and phyex1d jobs compare the results to the references (given in
-  # src/phyex/<tool>_version.json) using the hashes of the reference results stored in the
-  # GitHub cache (see .github/actions/refhash): a reference is compiled and run only when its
-  # hash is unknown (and its hash is then stored) or when the results differ (to get a
-  # detailed comparison).
+  # Each tool (testprogs, phyex1d) has two jobs, giving two statuses per configuration:
+  #   - compil/exec: compilation and execution of the test cases, then comparison to the
+  #     references (given in src/phyex/<tool>_version.json). This job fails only on a hard
+  #     failure (compilation, execution, error of the tools...), not when the results differ.
+  #   - reproduction: fails if the results differ from the references (or if the comparison
+  #     was not done because the compil/exec job failed).
+  # The results are reproduced when both jobs succeed; they differ when only the reproduction
+  # job fails.
+  # The comparison is done in the compil/exec job, on the runner which produced the results:
+  # the phyex1d results depend on the CPU model, which can differ between two jobs. The
+  # reproduction job only reports the outcome of the comparison (stored in an artifact).
+  #
+  # The comparison uses the hashes of the reference results stored in the GitHub cache (see
+  # .github/actions/refhash): a reference is compiled and run only when its hash is unknown
+  # (and its hash is then stored) or when the results differ (to get a detailed comparison).
   # The cache entries saved by a pull request can only be used by this pull request: the
   # references are made available to everyone by the runs on master.
+  #
+  # The exit status of the comparison (phyex-check_testprogs/phyex1d -C) is 0 when the results
+  # are identical, 50 when they differ, another value on error.
 
   testprogs:
+    name: testprogs compil/exec (${{ matrix.arch }}, ${{ matrix.prec }}, ${{ matrix.extrap }}, ${{ matrix.transformation }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        # The same configurations must be listed in refhash_keepalive.yaml (except the
-        # transformations which do not change the references: the references are always
-        # computed without transformation, the cache entry is shared)
+        # The same configurations must be listed in the testprogs_reproduction job and in
+        # refhash_keepalive.yaml (except the transformations which do not change the
+        # references: the references are always computed without transformation, the cache
+        # entry is shared)
         arch: [gnu]
         prec: [dp]
         extrap: [0]
@@ -39,6 +54,7 @@ jobs:
       PHYEXREPOuser: ${{ github.repository_owner }}
       OPTS: -a ${{ matrix.arch }} --prec ${{ matrix.prec }} -e ${{ matrix.extrap }} --no-perf
       TRANSFORMATION_OPTS: ${{ matrix.transformation == 'expand+shumantrans' && '--expand --shumantrans' || '' }}
+      OUTCOME: testprogs-outcome-${{ matrix.arch }}-${{ matrix.prec }}-${{ matrix.extrap }}-${{ matrix.transformation }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -61,12 +77,42 @@ jobs:
     - name: Compare to the references
       id: check
       run: |
+        set +e
         phyex-check_testprogs -C --computeRefIfNeeded \
-          --refHashFile ${{ steps.refhash.outputs.file }} ${OPTS} ${GITHUB_WORKSPACE} REF
+          --refHashFile ${{ steps.refhash.outputs.file }} ${OPTS} ${GITHUB_WORKSPACE} REF \
+          2>&1 | tee "${RUNNER_TEMP}/comparison.log"
+        status=${PIPESTATUS[0]}
+        echo "status=${status}" >> "$GITHUB_OUTPUT"
+        # Different results (50) are reported by the reproduction job
+        [ "${status}" -eq 0 ] || [ "${status}" -eq 50 ]
 
     - name: Detailed comparison (the references are computed if needed)
-      if: failure() && steps.check.outcome == 'failure'
-      run: phyex-check_testprogs -C --computeRefIfNeeded ${OPTS} ${GITHUB_WORKSPACE} REF
+      id: detailed
+      if: steps.check.outputs.status == '50'
+      run: |
+        set +e
+        phyex-check_testprogs -C --computeRefIfNeeded ${OPTS} ${GITHUB_WORKSPACE} REF \
+          2>&1 | tee -a "${RUNNER_TEMP}/comparison.log"
+        status=${PIPESTATUS[0]}
+        echo "status=${status}" >> "$GITHUB_OUTPUT"
+        [ "${status}" -eq 0 ] || [ "${status}" -eq 50 ]
+
+    # The detailed comparison, when done, gives the outcome (if the stored hash was wrong,
+    # the check of the stored hashes below fails)
+    - name: Record the outcome of the comparison
+      if: steps.check.outputs.status == '0' || steps.check.outputs.status == '50'
+      run: |
+        mkdir -p "${RUNNER_TEMP}/outcome"
+        echo '${{ steps.detailed.outputs.status || steps.check.outputs.status }}' > "${RUNNER_TEMP}/outcome/status"
+        cp "${RUNNER_TEMP}/comparison.log" "${RUNNER_TEMP}/outcome/"
+
+    - name: Upload the outcome of the comparison (for the reproduction job)
+      if: steps.check.outputs.status == '0' || steps.check.outputs.status == '50'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.OUTCOME }}
+        path: ${{ runner.temp }}/outcome
+        retention-days: 5
 
     - name: Check the stored hashes against the references computed
       if: always() && steps.check.outcome != 'skipped'
@@ -90,7 +136,7 @@ jobs:
         key: ${{ steps.refhash.outputs.save-key }}
 
     - name: Upload the results (diagnostic)
-      if: failure()
+      if: failure() || steps.check.outputs.status == '50'
       uses: actions/upload-artifact@v4
       with:
         name: testprogs-results-${{ matrix.arch }}-${{ matrix.prec }}-${{ matrix.extrap }}-${{ matrix.transformation }}
@@ -100,16 +146,55 @@ jobs:
           ${{ steps.refhash.outputs.dir }}
         if-no-files-found: ignore
 
-  phyex1d:
+  testprogs_reproduction:
+    name: testprogs reproduction (${{ matrix.arch }}, ${{ matrix.prec }}, ${{ matrix.extrap }}, ${{ matrix.transformation }})
+    needs: testprogs
+    # Also when a configuration of the compil/exec job failed: the other ones are reported
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        # The same configurations must be listed in refhash_keepalive.yaml
+        # Same configurations as in the testprogs job
+        arch: [gnu]
+        prec: [dp]
+        extrap: [0]
+        transformation: [none, expand+shumantrans]
+    steps:
+    - name: Get the outcome of the comparison
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: testprogs-outcome-${{ matrix.arch }}-${{ matrix.prec }}-${{ matrix.extrap }}-${{ matrix.transformation }}
+        path: outcome
+
+    - name: Are the results reproduced?
+      run: |
+        if [ ! -f outcome/status ]; then
+          echo "::error::No comparison: the compil/exec job of this configuration failed"
+          exit 1
+        fi
+        cat outcome/comparison.log
+        if [ "$(cat outcome/status)" != 0 ]; then
+          echo "::error::The results differ from the references (see the log above)"
+          echo "The results differ from the references" >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+        fi
+        echo "The results are identical to the references" >> "$GITHUB_STEP_SUMMARY"
+
+  phyex1d:
+    name: phyex1d compil/exec (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The same configurations must be listed in the phyex1d_reproduction job and in
+        # refhash_keepalive.yaml
         arch: [gnu]
     env:
       PHYEXREPOuser: ${{ github.repository_owner }}
       OPTS: -a ${{ matrix.arch }}
+      OUTCOME: phyex1d-outcome-${{ matrix.arch }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -136,12 +221,42 @@ jobs:
     - name: Compare to the references
       id: check
       run: |
+        set +e
         phyex-check_phyex1d -C --computeRefIfNeeded \
-          --refHashFile ${{ steps.refhash.outputs.file }} ${OPTS} ${GITHUB_WORKSPACE} REF
+          --refHashFile ${{ steps.refhash.outputs.file }} ${OPTS} ${GITHUB_WORKSPACE} REF \
+          2>&1 | tee "${RUNNER_TEMP}/comparison.log"
+        status=${PIPESTATUS[0]}
+        echo "status=${status}" >> "$GITHUB_OUTPUT"
+        # Different results (50) are reported by the reproduction job
+        [ "${status}" -eq 0 ] || [ "${status}" -eq 50 ]
 
     - name: Detailed comparison (the references are computed if needed)
-      if: failure() && steps.check.outcome == 'failure'
-      run: phyex-check_phyex1d -C --computeRefIfNeeded ${OPTS} ${GITHUB_WORKSPACE} REF
+      id: detailed
+      if: steps.check.outputs.status == '50'
+      run: |
+        set +e
+        phyex-check_phyex1d -C --computeRefIfNeeded ${OPTS} ${GITHUB_WORKSPACE} REF \
+          2>&1 | tee -a "${RUNNER_TEMP}/comparison.log"
+        status=${PIPESTATUS[0]}
+        echo "status=${status}" >> "$GITHUB_OUTPUT"
+        [ "${status}" -eq 0 ] || [ "${status}" -eq 50 ]
+
+    # The detailed comparison, when done, gives the outcome (if the stored hash was wrong,
+    # the check of the stored hashes below fails)
+    - name: Record the outcome of the comparison
+      if: steps.check.outputs.status == '0' || steps.check.outputs.status == '50'
+      run: |
+        mkdir -p "${RUNNER_TEMP}/outcome"
+        echo '${{ steps.detailed.outputs.status || steps.check.outputs.status }}' > "${RUNNER_TEMP}/outcome/status"
+        cp "${RUNNER_TEMP}/comparison.log" "${RUNNER_TEMP}/outcome/"
+
+    - name: Upload the outcome of the comparison (for the reproduction job)
+      if: steps.check.outputs.status == '0' || steps.check.outputs.status == '50'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.OUTCOME }}
+        path: ${{ runner.temp }}/outcome
+        retention-days: 5
 
     - name: Check the stored hashes against the references computed
       if: always() && steps.check.outcome != 'skipped'
@@ -165,7 +280,7 @@ jobs:
         key: ${{ steps.refhash.outputs.save-key }}
 
     - name: Upload the results (diagnostic)
-      if: failure()
+      if: failure() || steps.check.outputs.status == '50'
       uses: actions/upload-artifact@v4
       with:
         name: phyex1d-results-${{ matrix.arch }}
@@ -174,3 +289,36 @@ jobs:
           ~/PHYEX1D/*/tests/*/*/hash_result.txt
           ${{ steps.refhash.outputs.dir }}
         if-no-files-found: ignore
+
+  phyex1d_reproduction:
+    name: phyex1d reproduction (${{ matrix.arch }})
+    needs: phyex1d
+    # Also when a configuration of the compil/exec job failed: the other ones are reported
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Same configurations as in the phyex1d job
+        arch: [gnu]
+    steps:
+    - name: Get the outcome of the comparison
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: phyex1d-outcome-${{ matrix.arch }}
+        path: outcome
+
+    - name: Are the results reproduced?
+      run: |
+        if [ ! -f outcome/status ]; then
+          echo "::error::No comparison: the compil/exec job of this configuration failed"
+          exit 1
+        fi
+        cat outcome/comparison.log
+        if [ "$(cat outcome/status)" != 0 ]; then
+          echo "::error::The results differ from the references (see the log above)"
+          echo "The results differ from the references" >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+        fi
+        echo "The results are identical to the references" >> "$GITHUB_STEP_SUMMARY"

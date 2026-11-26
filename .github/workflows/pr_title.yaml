@@ -1,0 +1,27 @@
+name: PR title
+
+# The title of a pull request must start with 'bugfix: ', 'feature: ' or 'bugfix+feature: '
+# (in any case: 'Bugfix: ', 'FEATURE: '... are accepted)
+# (see .github/pull_request_template.md). Checked for the pull requests on all the branches;
+# 'edited': checked again when the title is modified.
+on:
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
+
+permissions: {}
+
+jobs:
+  check-title:
+    runs-on: ubuntu-latest
+    steps:
+    - name: The title must start with 'bugfix:', 'feature:' or 'bugfix+feature:'
+      env:
+        # Through an environment variable: the title must not be interpreted by the shell
+        TITLE: ${{ github.event.pull_request.title }}
+      run: |
+        echo "Title: ${TITLE}"
+        shopt -s nocasematch
+        if ! [[ "${TITLE}" =~ ^(bugfix|feature|bugfix\+feature):\ .+ ]]; then
+          echo "::error::The pull request title must start with 'bugfix: ', 'feature: ' or 'bugfix+feature: ' (for instance 'bugfix: wrong ice fall speed')"
+          exit 1
+        fi
