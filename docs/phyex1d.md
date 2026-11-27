@@ -15,9 +15,11 @@ pip install ./PHYEX       # from the PHYEX repository
 ```
 
 The ecRad radiation scheme is used through the pyecrad package, installed as a dependency from
-the [pyecrad-main branch](https://github.com/SebastienRietteMTO/ecrad/tree/pyecrad-main) of ecRad.
-Its installation compiles ecRad: a Fortran compiler, CMake and NetCDF-Fortran are needed (see the
-pyecrad documentation for the build options). A development version of pyecrad can be used
+PyPI (as pyecrad-SR, built from the [pyecrad-main branch](https://github.com/SebastienRietteMTO/ecrad/tree/pyecrad-main)
+of ecRad, until pyecrad is published by ECMWF). Prebuilt wheels are available for Linux (x86\_64 and
+aarch64); elsewhere, the installation compiles ecRad from the source distribution: a Fortran compiler,
+CMake and NetCDF-Fortran are then needed (see the pyecrad documentation for the build options).
+A development version of pyecrad can be used
 instead with the 'pyecrad' option of the PHYEX physics (path to the pyecrad package directory,
 the libecrad4py library being given by the PYECRAD\_LIBRARY environment variable).
 

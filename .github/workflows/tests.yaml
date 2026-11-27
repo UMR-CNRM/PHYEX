@@ -206,12 +206,6 @@ jobs:
         tool: phyex1d
         arch: ${{ matrix.arch }}
 
-    # ecrad (compiled for pyecrad) needs the Fortran interface of NetCDF
-    - name: Install NetCDF
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libnetcdff-dev
-
     - name: Install tools
       run: pip install -e tools/
 
