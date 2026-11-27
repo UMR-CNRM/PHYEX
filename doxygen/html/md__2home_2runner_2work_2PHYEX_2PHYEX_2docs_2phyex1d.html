@@ -75,11 +75,11 @@ $(function() {
   <div class="headertitle"><div class="title">PHYEX1D: 1D MODEL USING PHYEX </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md64"></a></p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md65"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md65"></a></p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md66"></a>
 About this section</h1>
 <p>The phyex1d module of the pyphyex python package runs 1D atmospheric simulations using ideal cases described in a "common format" file (or built from xarray data). The physics is provided by the PHYEX package (through the python binding, pyphyex.lowlevel), the same as the one used by the Meso-NH and AROME models. A simplified physics, not using PHYEX, is also available.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md66"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md67"></a>
 Installation</h1>
 <p>phyex1d is part of the pyphyex package (see the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html">Offline documentation</a>): </p><div class="fragment"><div class="line">pip install ./PHYEX       # from the PHYEX repository</div>
 </div><!-- fragment --><p>The ecRad radiation scheme is used through the pyecrad package, installed as a dependency from PyPI (as pyecrad-SR, built from the <a href="https://github.com/SebastienRietteMTO/ecrad/tree/pyecrad-main">pyecrad-main branch</a> of ecRad, until pyecrad is published by ECMWF). Prebuilt wheels are available for Linux (x86_64 and aarch64); elsewhere, the installation compiles ecRad from the source distribution: a Fortran compiler, CMake and NetCDF-Fortran are then needed (see the pyecrad documentation for the build options). A development version of pyecrad can be used instead with the 'pyecrad' option of the PHYEX physics (path to the pyecrad package directory, the libecrad4py library being given by the PYECRAD_LIBRARY environment variable).</p>
@@ -91,12 +91,12 @@ Installation</h1>
 <li>phyex1d-exp_list: list the experiments having results</li>
 <li>phyex1d-exp_plot: plot the results of experiments</li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md67"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md68"></a>
 Cases</h1>
 <p>The cases in the common format are provided by the <a href="https://github.com/GdR-DEPHY/DEPHY-SCM">DEPHY-SCM</a> repository. They are installed in ${PHYEXCONF}/phyex1d/DEPHY-SCM (the PHYEXCONF environment variable defaults to ${HOME}/.phyex): </p><div class="fragment"><div class="line">phyex1d-cases_install download       # clone (or update) the DEPHY-SCM repository (about 1 GB)</div>
 <div class="line">phyex1d-cases_install link PATH      # or use an existing DEPHY-SCM repository (symbolic link)</div>
 <div class="line">phyex1d-cases_list                   # list of the cases (CASE/SUBCASE) and of their driver files</div>
-</div><!-- fragment --><h1 class="doxsection"><a class="anchor" id="autotoc_md68"></a>
+</div><!-- fragment --><h1 class="doxsection"><a class="anchor" id="autotoc_md69"></a>
 Experiments</h1>
 <p>An experiment is run on a case given by the name of an installed case (CASE/SUBCASE) or by the path to a netCDF driver file. For instance, the ARMCU case can be run with the PHYEX physics (default) and with the simplified physics: </p><div class="fragment"><div class="line">phyex1d-exp_run ARMCU/REF -o out --name armcu --exp dt=60 name=phyex \</div>
 <div class="line">                                              --exp dt=60 name=simple class=SimplePhysicsTQ</div>
@@ -106,7 +106,7 @@ Experiments</h1>
 <p>Each &ndash;exp option describes an experiment with key=value strings: dt (timestep), name, grid, class (physics class: PhysicsAromeTQ, PhysicsAromeThetaR, SimplePhysicsTQ or SimplePhysicsThetaR) and the options of the physics class (namelist for the PHYEX physics, activation of the different processes for the simplified physics...). The list of the keys, with their default values, is given by phyex1d-exp_run -h.</p>
 <p>The results are stored in OUTPUT_DIR/&lt;comparison name&gt;/&lt;experiment name&gt;.hdf5 (OUTPUT_DIR is given by the -o option and the comparison name by the &ndash;name option). An experiment is not run again if its result file exists (use &ndash;force).</p>
 <p>Grids (.grid files) and namelists (.namel files) are searched in ${PHYEXCONF}/phyex1d/grids and ${PHYEXCONF}/phyex1d/namelists, then in the package. The description of the .grid file format is given by the docstring of the <a class="el" href="classpyphyex_1_1phyex1d_1_1grid_1_1Grid.html">pyphyex.phyex1d.Grid</a> class.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md69"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md70"></a>
 Usage from python</h1>
 <p>The experiments can also be run from python, with the ExperimentRunner class (<a class="el" href="namespacepyphyex_1_1phyex1d.html">pyphyex.phyex1d</a> module). Instead of using a netCDF driver file, a case can be built programmatically from an xarray Dataset using the CaseXarray class. Complete examples with profiles, forcing and plots are available in the src/pyphyex/phyex1d/examples directory (<a class="el" href="case__xarray__demo_8py.html">case_xarray_demo.py</a> with the PHYEX physics, and <a class="el" href="case__xarray__simple_8py.html">case_xarray_simple.py</a> with the simplified physics). </p>
 </div></div><!-- contents -->

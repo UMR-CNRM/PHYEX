@@ -133,6 +133,16 @@ Normal workflow for another contribution</h1>
 <li>regularly, he tags a new (minor) version of the master branch</li>
 </ul>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md48"></a>
+Releases</h1>
+<p>A release is a tag vX.Y.Z of the master branch, X.Y.Z being the version stored in the src/phyex/VERSION file. The push of such a tag triggers the "Release" GitHub workflow (.github/workflows/release.yaml), which:</p>
+<ul>
+<li>builds the pyphyex wheels for Linux (x86_64 and aarch64) in manylinux containers (.github/scripts/build_wheel.sh) and tests them;</li>
+<li>builds the source distribution (sdist);</li>
+<li>builds the release note with the phyex-changelog tool (see the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Tools.html">Tools documentation</a>): the commits since the previous release tag, sorted by category according to the titles of their pull requests;</li>
+<li>publishes the wheels and the sdist on PyPI (the PYPI_API_TOKEN secret of the repository must contain a PyPI API token allowed to upload the pyphyex package); the release note is an artifact of the workflow run.</li>
+</ul>
+<p>The workflow can also be run manually, on any branch (Actions tab, "Release" workflow, "Run workflow" button): everything is built as for a release, without checking the version and without publishing; the release note then lists the commits since the last release tag. This is useful to check that a release would succeed before tagging.</p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md49"></a>
 Tests</h1>
 <p>The source code must follow the coding norms and the strict mnh_expand directives (described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2CodingNorms.html">Coding Norms documentation</a>). They are checked by the phyex-check_norms tool (also run by the "tests" GitHub workflow).</p>
 <p>In addition to the scientific validation, the following tests must give the same results (with bit-reproducibility) in each of the model (arome, mesonh, lmdz and testprogs):</p>
@@ -143,7 +153,7 @@ Tests</h1>
 </ul>
 <p>When possible, the new version of PHYEX must reproduce the old results (scientific modifications must be activated with namelist keys).</p>
 <p>These tests are performed by the phyex-check_&lt;model&gt; tools; the reference commits for the test cases of each model are given in the 'testing' entry of the src/phyex/&lt;model&gt;_version.json files. The phyex-check_commit tool performs all the checks (coding norms, consistency, documentation generation, python wheel creation and test cases of the different models) and the clone_and_test.sh script can run them automatically (e.g. by cron) on the last commit of a branch, the result being attached to the commit on GitHub. These tools are described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Tools.html">Tools documentation</a>.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md49"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md50"></a>
 Code preparation</h1>
 <p>The source code stored in the master branches must be usable by all the models. But these models can have contradictory constraints. To bypass this difficulty, the source code is preprocessed before being included in the compilation environment of each model.</p>
 <p>This preprocessing step can be done on the fly (in this case the preprocessing tools must be available aside of the compilation tools, it is the case of the CMake build system of PHYEX, see the PHYEX_TRANSFORMATION option in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Offline.html">Offline documentation</a>), or the result of the preprocessing can be stored in the PHYEX package (in this case, the preprocessing is done once and can be used by several users). This second possibility is useful to historize the source code really used during the model compilation and enables contributions to the PHYEX package without the need of the preprocessing tools.</p>

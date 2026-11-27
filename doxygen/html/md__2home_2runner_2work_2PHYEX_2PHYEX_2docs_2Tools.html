@@ -75,11 +75,11 @@ $(function() {
   <div class="headertitle"><div class="title">PHYEX TOOLS DOCUMENTATION </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md73"></a></p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md74"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md74"></a></p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md75"></a>
 About this section</h1>
 <p>This document is intended for persons who want to use the tools provided with the PHYEX package: preparation of the source code for the different models and checks of the contributions (bit-reproducibility of the test cases between two commits, coding norms...).</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md75"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md76"></a>
 Installation</h1>
 <p>The tools are provided as a python package (pyphyextools, in the tools directory) which must be installed in editable mode (the tools use the files of the repository), for instance in a virtual environment:</p>
 <div class="fragment"><div class="line">python3 -m venv phyex.env</div>
@@ -91,7 +91,7 @@ Installation</h1>
 <li>all the phyex-check_* tools: FORTRAN and C compilers, CMake, git, wget, make and an internet connection (the model source codes, the test case data and some dependencies are downloaded)</li>
 </ul>
 <p>The tools can be used from a repository (the version of the tools is the version of the repository) to check another commit or another local repository.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md76"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md77"></a>
 User directories and environment variables</h1>
 <p>${PHYEXCONF} (the PHYEXCONF environment variable defaults to ${HOME}/.phyex) is the user directory containing:</p>
 <ul>
@@ -108,24 +108,24 @@ User directories and environment variables</h1>
 <li>$PHYEX1DDIR (default: $HOME/PHYEX1D) for the 1D model (phyex1d)</li>
 </ul>
 <p>The PHYEXREPOuser (default: UMR-CNRM), PHYEXREPOprotocol (https or ssh) and PHYEXREPOrepo environment variables give the GitHub repository from which the commits are cloned.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md77"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md78"></a>
 Tools</h1>
 <p>All the commands have a -h option describing their arguments.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md78"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md79"></a>
 phyex-prep_code</h2>
 <p>This command prepares the source code for a model: extraction of the source code (from a commit or from a local repository), transformations (with pyfortool), generation of the interface modules, and, optionally, push of the result as a new branch. It is used to build the model specific branches (see the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Integrator.html">Integrator documentation</a>) and by the phyex-check_&lt;model&gt; tools.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md79"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md80"></a>
 phyex-check_ial, phyex-check_mesonh, phyex-check_lmdz and phyex-check_testprogs</h2>
 <p>These commands compile a model (IAL, Meso-NH, LMDZ) or the test programs using the PHYEX source code of a given commit (or of a local repository), execute the test cases and compare the results against a reference simulation.</p>
 <p>The steps are selected with options: -p (creation of the compilation directory), -c (compilation), -r (execution), -C (comparison), &ndash;remove (suppression of the compilation directory). The first argument is the commit (or the directory) to test, the second one is the reference: a commit, a directory or REF (the references given, test case by test case, in the 'testing' entry of the src/phyex/&lt;model&gt;_version.json file).</p>
 <p>The version of the model to use is described in the src/phyex/&lt;model&gt;_version.json file (for instance, repository and commit of IAL in ial_version.json); the model source code is downloaded automatically.</p>
 <p>Example for the test programs, with the source code of a local repository: </p><div class="fragment"><div class="line">phyex-check_testprogs -p -c -r -C --computeRefIfNeeded $HOME/PHYEX REF</div>
 </div><!-- fragment --><p> The &ndash;computeRefIfNeeded option computes the reference simulations that do not exist yet.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md80"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md81"></a>
 phyex-check_phyex1d</h2>
 <p>This command checks the 1D model (see the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2phyex1d.html">phyex1d documentation</a>) with the same steps and arguments as phyex-check_testprogs: the source code is copied (or cloned) in $PHYEX1DDIR/&lt;name&gt;/PHYEX, a virtual environment is created next to it (-p), the pyphyex package is compiled and installed in this virtual environment (-c, the architecture is given with -a as for phyex-check_testprogs), the 1D model is run on DEPHY-SCM cases (-r, ARMCU/REF by default, -t to give other cases; the cases are installed in ${PHYEXCONF}/phyex1d if needed) and the results are compared to the reference (-C). The reference commits are given, case by case, in the 'testing' entry of the src/phyex/phyex1d_version.json file. As for phyex-check_testprogs, the &ndash;expand and &ndash;shumantrans options apply the corresponding source code transformations when building the package (PHYEX_TRANSFORMATION CMake variable); the reference simulations are always computed without transformation.</p>
 <p>Example, with the source code of a local repository: </p><div class="fragment"><div class="line">phyex-check_phyex1d -p -c -r -C --computeRefIfNeeded $HOME/PHYEX REF</div>
-</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="autotoc_md81"></a>
+</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="autotoc_md82"></a>
 Reference hashes (phyex-check_testprogs and phyex-check_phyex1d)</h2>
 <p>After each simulation, phyex-check_testprogs and phyex-check_phyex1d write the hash of the results in a hash_result.txt file next to them (for the test programs, the hash of the output listing starting at the first 'IBL' line, normalised as for the comparison; for phyex1d, the hash of the datasets of the result file, the attributes being ignored). Two results have the same hash if, and only if, the comparison step considers them identical.</p>
 <p>With the &ndash;refHashFile FILE option, the comparison step (-C) uses a json file containing, for each test case, the reference commit and the hash of its results:</p>
@@ -135,22 +135,22 @@ Reference hashes (phyex-check_testprogs and phyex-check_phyex1d)</h2>
 </ul>
 <p>The hashes depend on the configuration (architecture, compiler, precision...): a file must be used for a single configuration. This mechanism is used by the GitHub workflow (.github/workflows/tests.yaml), the files being stored in the GitHub cache (see .github/actions/refhash/action.yml): the references are compiled and run only when their hash is unknown.</p>
 <p>The exit status of the comparison step is 0 when the results are identical, 50 when they differ and another value in case of error. The GitHub workflow uses it to give two statuses for each tool and configuration: the 'compil/exec' job fails only on a hard failure (compilation, execution, error of the tools), the 'reproduction' job fails when the results differ from the references.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md82"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md83"></a>
 phyex-check_norms</h2>
 <p>This command checks the coding norms (described in the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2CodingNorms.html">CodingNorms documentation</a>) of the source code (for instance: phyex-check_norms -v src/phyex).</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md83"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md84"></a>
 phyex-check_consistency</h2>
 <p>This command checks the consistency of the repository: the version (src/phyex/VERSION file) is the version of the last release tag, the minimal pyfortool version is the same everywhere.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md84"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md85"></a>
 phyex-check_commit</h2>
 <p>This command performs all the checks (consistency, coding norms, documentation generation, python wheel creation and the test cases of IAL, Meso-NH, testprogs, LMDZ and phyex1d) on the repository containing the tools (with its uncommitted modifications); the &ndash;only option restricts the checks and the &ndash;parallel option checks the different models simultaneously. The report is written on the standard output; it can also be sent by email in case of an error (&ndash;mail) and attached as a status to a github commit (&ndash;github-status, the API url to use must be given).</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md85"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md86"></a>
 phyex-changelog</h2>
 <p>This command lists the commits between two commits or tags (for instance: phyex-changelog v0.9.3 v0.9.4), merge commits excluded (&ndash;merges to include them), sorted by category according to the title of the pull request which introduced each commit (see the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Developer.html">Developer documentation</a>): bugfixes, features, bugfixes and features, and others (commits not coming from a pull request, or coming from a pull request whose title does not follow the rule). Each line gives the pull request number, the date, the hash, the author and the first line of the commit message; &ndash;format markdown produces a markdown output. The commits must be present in the local repository (the one containing the tools, or &ndash;git-dir) and on GitHub, which is requested to find the pull requests (one request per commit). A GitHub token is recommended (GITHUB_TOKEN or GH_TOKEN environment variable, or .netrc file): without token, GitHub limits the number of requests to 60 per hour.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md86"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md87"></a>
 clone_and_test.sh</h2>
 <p>This script, at the root of the repository, is designed to be run periodically by cron. It clones (or updates) the PHYEX repository in ${PHYEXWORKDIR} (default: $HOME/PHYEXTESTING), checks out the last commit of a branch (or a given commit), installs the tools and runs phyex-check_commit, the result being attached as a status to the commit on GitHub (and sent by email in case of an error).</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md87"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md88"></a>
 Others</h2>
 <ul>
 <li>phyex-compare: comparison of model outputs (used by the phyex-check_&lt;model&gt; tools)</li>

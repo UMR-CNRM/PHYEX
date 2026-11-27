@@ -75,11 +75,11 @@ $(function() {
   <div class="headertitle"><div class="title">PHYEX OFFLINE DOCUMENTATION </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md50"></a></p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md51"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md51"></a></p>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md52"></a>
 About this section</h1>
 <p>This document is intended for persons who want to use PHYEX in an offline mode. Some offline test programs are provided with the package and a python package (python binding and 1D model) is also available.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md52"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md53"></a>
 Compilation</h1>
 <p>The library and the test programs are compiled with CMake (version 3.18 or later), from the main CMakeLists.txt file:</p>
 <div class="fragment"><div class="line">. PHYEX/arch/arch-&lt;architecture&gt;.env</div>
@@ -97,14 +97,14 @@ Compilation</h1>
 <li>ENABLE_PYTHON_WHEEL (OFF by default): generation of the python binding (used to build the python package, see below)</li>
 </ul>
 <p>The src/phyex directory can also be compiled alone, using its own CMakeLists.txt file (for instance when included in a bigger project providing ecbuild and fiat).</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md53"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md54"></a>
 Test programs</h1>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md54"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md55"></a>
 Usage through the phyex-check_testprogs tool</h2>
 <p>The phyex-check_testprogs tool (see the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Tools.html">Tools documentation</a>) compiles the test programs (with the CMake build system), executes them and compares the results with those of a reference version. The source code can be a commit of a remote repository or the content of a local repository (with its uncommitted modifications), for instance:</p>
 <div class="fragment"><div class="line">phyex-check_testprogs -p -c -r -C --computeRefIfNeeded $HOME/PHYEX REF</div>
 </div><!-- fragment --><p>This command creates a directory (in $TESTPROGSDIR, $HOME/TESTPROGS by default) with a copy of the source code, builds and executes the testprogs, then compares the results with the reference results (REF: the reference commits given in the 'testing' entry of the src/phyex/testprogs_version.json file, computed if needed).</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md55"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md56"></a>
 Data</h2>
 <p>The test programs need input data, stored in ${PHYEXCONF}/testprogs_data (the PHYEXCONF environment variable defaults to ${HOME}/.phyex). If this directory is empty, a reduced dataset is automatically downloaded and installed when phyex-check_testprogs is used.</p>
 <p>The data can also be generated:</p>
@@ -116,10 +116,10 @@ Data</h2>
 <p>Using these branches, in the drivers of the different parametrisations (aro_* files), output can be enable for the AROME model. Running the AROME model with these modifications outputs files in the running directory. This must be done once by parametrisation (note that the phyex-check_ial tool can be used to execute an AROME simulation).</p>
 <p>These files should be renamed with the following command: i=0; for file in ????_??_????????.dat; do mv $file <span class="tt">printf %08d $i</span>.dat; i=$((i+1)); done</p>
 <p>and put in the corresponding directories under ${PHYEXCONF}/testprogs_data.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md56"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md57"></a>
 Usage directly with the testprogs executables</h2>
 <p>The different main_*.exe programs obtained by the compilation can be run. Each of these executables is expecting the presence of a 'data' directory in their working directory containing the different files.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md57"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md58"></a>
 Python package</h1>
 <p>The pyphyex python package contains:</p>
 <ul>
@@ -129,7 +129,7 @@ Python package</h1>
 <p>The package is compiled and installed with pip (python &gt;= 3.10, a Fortran compiler and CMake &gt;= 3.18 are needed) from the root of the PHYEX repository:</p>
 <div class="fragment"><div class="line">pip install .          # or, to build a wheel: pip wheel . -w dist</div>
 </div><!-- fragment --><p>CMake options (e.g. toolchain file) can be given with '-C cmake.define.CMAKE_TOOLCHAIN_FILE=&lt;arch&gt;.ecbuild' or with the CMAKE_ARGS environment variable.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md58"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md59"></a>
 Development installation</h2>
 <p>The package can be installed in editable mode (pip install -e .):</p>
 <ul>
@@ -140,7 +140,7 @@ Development installation</h2>
 <p>For instance: </p><div class="fragment"><div class="line">pip install scikit-build-core pyfortool</div>
 <div class="line">pip install --no-build-isolation -e . -C build-dir=build/{wheel_tag} -C editable.rebuild=true</div>
 </div><!-- fragment --><p> or, without editable.rebuild, run the same command again after a Fortran modification.</p>
-<h2 class="doxsection"><a class="anchor" id="autotoc_md59"></a>
+<h2 class="doxsection"><a class="anchor" id="autotoc_md60"></a>
 Python binding</h2>
 <p>The low-level module can be used like in this example for ice_adjust:</p>
 <div class="fragment"><div class="line">#!/usr/bin/env python3</div>
