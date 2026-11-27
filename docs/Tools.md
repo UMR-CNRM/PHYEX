@@ -126,6 +126,19 @@ checks the different models simultaneously.
 The report is written on the standard output; it can also be sent by email in case of an error (--mail)
 and attached as a status to a github commit (--github-status, the API url to use must be given).
 
+### phyex-changelog
+
+This command lists the commits between two commits or tags (for instance: phyex-changelog v0.9.3 v0.9.4),
+merge commits excluded (--merges to include them), sorted by category according to the title of the pull
+request which introduced each commit (see the [Developer documentation](./Developer.md)): bugfixes, features,
+bugfixes and features, and others (commits not coming from a pull request, or coming from a pull request
+whose title does not follow the rule). Each line gives the pull request number, the date, the hash, the author
+and the first line of the commit message; --format markdown produces a markdown output.
+The commits must be present in the local repository (the one containing the tools, or --git-dir) and on GitHub,
+which is requested to find the pull requests (one request per commit). A GitHub token is recommended
+(GITHUB\_TOKEN or GH\_TOKEN environment variable, or .netrc file): without token, GitHub limits the number of
+requests to 60 per hour.
+
 ### clone\_and\_test.sh
 
 This script, at the root of the repository, is designed to be run periodically by cron. It clones (or updates) the PHYEX repository in ${PHYEXWORKDIR} (default: $HOME/PHYEXTESTING), checks out the last commit of a branch (or a given commit), installs the tools and runs phyex-check\_commit, the result being attached as a status to the commit on GitHub (and sent by email in case of an error).
