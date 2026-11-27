@@ -62,6 +62,18 @@ The PHYEX administrator:
   - integrates the contribution in the master branch
   - regularly, he tags a new (minor) version of the master branch
 
+## Releases
+
+A release is a tag vX.Y.Z of the master branch, X.Y.Z being the version stored in the src/phyex/VERSION file.
+The push of such a tag triggers the "Release" GitHub workflow (.github/workflows/release.yaml), which:
+
+  - builds the pyphyex wheels for Linux (x86\_64 and aarch64) in manylinux containers (.github/scripts/build\_wheel.sh) and tests them;
+  - builds the source distribution (sdist);
+  - builds the release note with the phyex-changelog tool (see the [Tools documentation](./Tools.md)): the commits since the previous release tag, sorted by category according to the titles of their pull requests;
+  - publishes the wheels and the sdist on PyPI (the PYPI\_API\_TOKEN secret of the repository must contain a PyPI API token allowed to upload the pyphyex package); the release note is an artifact of the workflow run.
+
+The workflow can also be run manually, on any branch (Actions tab, "Release" workflow, "Run workflow" button): everything is built as for a release, without checking the version and without publishing; the release note then lists the commits since the last release tag. This is useful to check that a release would succeed before tagging.
+
 ## Tests
 
 The source code must follow the coding norms and the strict mnh\_expand directives (described in the [Coding Norms documentation](./CodingNorms.md)). They are checked by the phyex-check\_norms tool (also run by the "tests" GitHub workflow).

@@ -1,0 +1,190 @@
+name: Release
+
+# Triggered by the push of a release tag (vX.Y or vX.Y.Z, equal to 'v' followed
+# by the content of src/phyex/VERSION; the model branch tags, e.g.
+# v0.9.4_arome, are excluded):
+#   - the pyphyex wheels are built (Linux x86_64 and aarch64) in manylinux
+#     containers, then tested (import of the package and of the PHYEX library)
+#     on the runner;
+#   - the sdist is built (not tested);
+#   - the release note is built by phyex-changelog (commits since the previous
+#     release tag, sorted by category according to the PR titles), available
+#     as an artifact of the run;
+#   - the wheels and the sdist are published on PyPI (the PYPI_API_TOKEN secret
+#     must contain a PyPI API token allowed to upload the pyphyex package).
+# The workflow can also be run manually (Actions tab, "Run workflow", on any
+# branch): everything is built as for a release, but the version is not
+# checked, the release note lists the commits since the last release tag and
+# nothing is published.
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read  # phyex-changelog looks for the PR of each commit
+
+jobs:
+  wheel:
+    name: Wheel (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+            image: quay.io/pypa/manylinux2014_x86_64
+          - arch: aarch64
+            runner: ubuntu-26.04-arm
+            image: quay.io/pypa/manylinux_2_28_aarch64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the version
+        if: github.ref_type == 'tag'
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [ "${TAG}" != "v$(cat src/phyex/VERSION)" ]; then
+            echo "::error::The tag (${TAG}) differs from v<src/phyex/VERSION> (v$(cat src/phyex/VERSION))"
+            exit 1
+          fi
+
+      - name: Build the wheel in the manylinux container
+        run: |
+          docker run --rm \
+            -v "${PWD}:/src" -w /src \
+            "${{ matrix.image }}" \
+            bash .github/scripts/build_wheel.sh "$(id -u)" "$(id -g)"
+
+      - name: Set up Python (test of the wheel outside the container)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Test the wheel
+        # Outside the container and the repository: the wheel must contain
+        # everything (the PHYEX library is loaded by pyphyex.lowlevel)
+        working-directory: ${{ runner.temp }}
+        run: |
+          wheel=$(ls "${GITHUB_WORKSPACE}"/wheelhouse/*.whl)
+          python -m pip install "${wheel}"
+          python -c 'import pyphyex, pyphyex.lowlevel; print("pyphyex", pyphyex.__version__)'
+
+      - name: Upload the wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-wheel-${{ matrix.arch }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+
+  sdist:
+    name: Source distribution
+    # Not tested: building a wheel from it is what the wheel jobs do
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the version
+        if: github.ref_type == 'tag'
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [ "${TAG}" != "v$(cat src/phyex/VERSION)" ]; then
+            echo "::error::The tag (${TAG}) differs from v<src/phyex/VERSION> (v$(cat src/phyex/VERSION))"
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build the sdist
+        run: |
+          python -m pip install build
+          python -m build --sdist -o dist/ .
+
+      - name: Upload the sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  release-note:
+    name: Release note
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # history and tags, for git log and git describe
+
+      - name: Build the release note
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          TAG: ${{ github.ref_name }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # Previous release tag (the model branch tags, vX.Y.Z_<model>, are
+          # excluded): the one before the tag, or the last one for a manual run
+          # on a branch
+          if [ "${REF_TYPE}" = tag ]; then
+            current="${TAG}"
+            title="PHYEX ${TAG}"
+            previous=$(git describe --tags --abbrev=0 --match 'v[0-9]*' --exclude '*_*' "${TAG}^")
+          else
+            current="${GITHUB_SHA}"
+            title="PHYEX, ${TAG} branch at ${GITHUB_SHA:0:9} (not a release)"
+            previous=$(git describe --tags --abbrev=0 --match 'v[0-9]*' --exclude '*_*' "${GITHUB_SHA}")
+          fi
+          echo "Changes from ${previous} to ${current}"
+          {
+            echo "# ${title}"
+            echo
+            echo "Changes since ${previous}."
+            echo
+            # The tools are not installed (heavy dependencies): only the
+            # standard library is needed by phyex-changelog
+            PYTHONPATH=tools/src python3 -m pyphyextools.changelog \
+              --format markdown --repo "${GITHUB_REPOSITORY}" "${previous}" "${current}"
+          } > release_note.md
+          cat release_note.md
+          cat release_note.md >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload the release note
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-note
+          path: release_note.md
+          if-no-files-found: error
+
+  publish:
+    name: Publish on PyPI
+    # Only for a release tag (not for a manual run on a branch), if the wheels
+    # of all the architectures have been built and tested, and the sdist and
+    # the release note have been built
+    needs: [wheel, sdist, release-note]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download the wheels and the sdist
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          merge-multiple: true
+          path: dist/
+
+      - name: List the distributions
+        run: ls -l dist/
+
+      - name: Publish on PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: dist/
