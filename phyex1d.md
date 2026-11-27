@@ -11,7 +11,8 @@ the Meso-NH and AROME models. A simplified physics, not using PHYEX, is also ava
 
 phyex1d is part of the pyphyex package (see the [Offline documentation](./Offline.md)):
 ```
-pip install ./PHYEX       # from the PHYEX repository
+pip install pyphyex       # from PyPI
+pip install ./PHYEX       # or from a clone of the PHYEX repository
 ```
 
 The ecRad radiation scheme is used through the pyecrad package, installed as a dependency from

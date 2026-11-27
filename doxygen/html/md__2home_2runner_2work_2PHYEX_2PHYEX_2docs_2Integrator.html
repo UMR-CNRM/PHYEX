@@ -139,7 +139,7 @@ Releases</h1>
 <li>builds the pyphyex wheels for Linux (x86_64 and aarch64) in manylinux containers (.github/scripts/build_wheel.sh) and tests them;</li>
 <li>builds the source distribution (sdist);</li>
 <li>builds the release note with the phyex-changelog tool (see the <a class="el" href="md__2home_2runner_2work_2PHYEX_2PHYEX_2docs_2Tools.html">Tools documentation</a>): the commits since the previous release tag, sorted by category according to the titles of their pull requests;</li>
-<li>publishes the wheels and the sdist on PyPI (the PYPI_API_TOKEN secret of the repository must contain a PyPI API token allowed to upload the pyphyex package); the release note is an artifact of the workflow run.</li>
+<li>publishes the wheels and the sdist on PyPI (the PYPI_API_TOKEN secret of the repository must contain a PyPI API token allowed to upload the pyphyex package); then, creates the GitHub release of the tag (<a href="https://github.com/UMR-CNRM/PHYEX/releases">https://github.com/UMR-CNRM/PHYEX/releases</a>), with the release note as description and the wheels and the sdist attached.</li>
 </ul>
 <p>The workflow can also be run manually, on any branch (Actions tab, "Release" workflow, "Run workflow" button): everything is built as for a release, without checking the version and without publishing; the release note then lists the commits since the last release tag. This is useful to check that a release would succeed before tagging.</p>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md49"></a>
