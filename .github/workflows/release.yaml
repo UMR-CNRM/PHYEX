@@ -11,7 +11,9 @@ name: Release
 #     release tag, sorted by category according to the PR titles), available
 #     as an artifact of the run;
 #   - the wheels and the sdist are published on PyPI (the PYPI_API_TOKEN secret
-#     must contain a PyPI API token allowed to upload the pyphyex package).
+#     must contain a PyPI API token allowed to upload the pyphyex package);
+#   - then, the GitHub release of the tag is created, with the release note as
+#     description and the wheels and the sdist attached.
 # The workflow can also be run manually (Actions tab, "Run workflow", on any
 # branch): everything is built as for a release, but the version is not
 # checked, the release note lists the commits since the last release tag and
@@ -188,3 +190,42 @@ jobs:
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           packages-dir: dist/
+
+  github-release:
+    name: GitHub release
+    # Release page of the tag, once the distributions have been published on
+    # PyPI: the release note is its description, the wheels and the sdist are
+    # attached to it
+    needs: publish
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # creation of the release
+    steps:
+      - name: Download the wheels, the sdist and the release note
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*'
+          merge-multiple: true
+          path: dist/
+
+      - name: Create (or update) the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          # The release note is moved out of the files to attach; its title
+          # (first line) is the title of the release
+          mv dist/release_note.md .
+          title=$(head -1 release_note.md | sed 's/^# *//')
+          tail -n +2 release_note.md | sed '/./,$!d' > notes.md
+          ls -l dist/
+          if gh release view "${TAG}" > /dev/null 2>&1; then
+            # Re-run of the workflow: the release already exists
+            gh release edit "${TAG}" --title "${title}" --notes-file notes.md
+            gh release upload "${TAG}" dist/* --clobber
+          else
+            gh release create "${TAG}" --verify-tag --title "${title}" \
+              --notes-file notes.md dist/*
+          fi

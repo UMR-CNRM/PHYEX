@@ -42,16 +42,35 @@ described in the [Plugging documentation](./docs/Plugging.md).
 ## Python users: the pyphyex package
 
 The pyphyex package provides a python binding of the main PHYEX routines (pyphyex.lowlevel)
-and a 1D model (pyphyex.phyex1d, with the phyex1d-\* commands). It can be installed from this
-repository (same requirements as for the FORTRAN library, CMake >= 3.18 and the compilers,
-python >= 3.10):
+and a 1D model (pyphyex.phyex1d, with the phyex1d-\* commands). It requires python >= 3.10.
+
+It is available on [PyPI](https://pypi.org/project/pyphyex/), with prebuilt wheels for Linux
+(x86\_64 and aarch64); on other platforms, pip compiles it from the source distribution (same
+requirements as for the FORTRAN library, CMake >= 3.18 and the compilers):
+```
+pip install pyphyex
+```
+
+It can also be installed from a clone of this repository (the library is then compiled, with
+the same requirements):
 ```
 pip install ./PHYEX
 ```
 
+Example: installation in a virtual environment and simulation of the ARMCU case with the 1D model
+```
+python3 -m venv venv
+. venv/bin/activate
+pip install pyphyex
+phyex1d-cases_install download  # or 'phyex1d-cases_install link <DIR>' if DEPHY-SCM is already on your computer
+phyex1d-cases_list
+phyex1d-exp_run ARMCU/REF --exp dt=60.  # lasts a few minutes
+phyex1d-exp_plot --plot rc.png y_var=P rc
+display rc.png
+```
+
 See the [Offline documentation](./docs/Offline.md) for the python binding and the
-[phyex1d documentation](./docs/phyex1d.md) for the 1D model (for instance:
-`phyex1d-cases_install download; phyex1d-exp_run ARMCU/REF --exp dt=60`).
+[phyex1d documentation](./docs/phyex1d.md) for the 1D model.
 
 ## Developers
 
